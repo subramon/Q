@@ -55,8 +55,7 @@ clean:
 	make -C ${Q_SRC_ROOT}/OPERATORS/COUNT/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/JOIN/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2_VAL/lua clean
-
-#	make -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ clean
 
 install: uninstall 
 	cd ../../;\

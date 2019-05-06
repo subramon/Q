@@ -6,6 +6,7 @@ require "Q/OPERATORS/MK_COL/lua/mk_col"
 require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
+require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
 require "Q/OPERATORS/PRINT/lua/print_csv"
 require "Q/OPERATORS/SORT/lua/sort"
 require "Q/OPERATORS/SORT2/lua/sort2"
@@ -40,7 +41,7 @@ require "Q/OPERATORS/AX_EQUALS_B/lua/linear_solver"
 require "Q/OPERATORS/APPROX/QUANTILE/lua/approx_quantile"
 require "Q/OPERATORS/APPROX/FREQUENT/lua/approx_frequent"
 require "Q/OPERATORS/PCA/lua/corr_mat"
-require 'libsclr'
+require 'libsclr' -- TODO P2 Do we need this here? If so, why not libcmem
 require 'Q/OPERATORS/WHERE/lua/where'
 require 'Q/OPERATORS/GROUPBY/lua/groupby'
 require 'Q/OPERATORS/INDEX/lua/indexing'

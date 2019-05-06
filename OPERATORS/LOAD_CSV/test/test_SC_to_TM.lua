@@ -27,10 +27,13 @@ tests.t1 = function ()
   local file_name = y:file_name()
   local in_col = lVector({file_name = file_name, qtype = "SC",
     width = width})
-  local outv = Q.SC_to_TM(in_col, format):eval()
-  assert(outv:fldtype() == "TM") 
-  assert(outv:check())
-  -- TODO More checking to be done
+  local out_col = Q.SC_to_TM(in_col, format):eval()
+  assert(out_col:fldtype() == "TM") 
+  assert(out_col:check())
+  -- TODO P3 More checking to be done
+  -- Now go the other way
+  local chk_in_col = Q.TM_to_SC(out_col, format):eval()
+  -- Q.print_csv({in_col, chk_in_col})
   
   print("Test t1 succeeded")
 end

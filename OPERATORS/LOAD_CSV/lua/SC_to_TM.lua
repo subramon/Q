@@ -28,7 +28,7 @@ local function SC_to_TM(
   local function gen(chunk_num)
     assert(chunk_num == chunk_idx)
     if ( first_call ) then 
-      out_buf = cmem.new(qconsts.chunk_size * out_width, out_qtype, "test")
+      out_buf = cmem.new(qconsts.chunk_size * out_width, out_qtype)
       cst_out_buf = ffi.cast(out_ctype .. "  *", get_ptr(out_buf))
       first_call = false
     end

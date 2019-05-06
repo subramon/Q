@@ -6,21 +6,25 @@ local qconsts     = require 'Q/UTILS/lua/q_consts'
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 local lVector     = require 'Q/RUNTIME/lua/lVector'
-local function SC_to_TM(
+local function TM_to_SC(
   inv, 
   format,
   optargs
   )
   assert(type(inv) == "lVector")
-  assert(inv:fldtype() == "SC")
+  local in_qtype = "TM"
+  assert(inv:fldtype() == in_qtype)
   assert(inv:has_nulls() == false)
   local in_width = inv:field_width()
   assert(type(format) == "string")
   assert(#format > 0)
+  assert(#format < 64) -- some sanity check 
+
   
-  local out_qtype = "TM"
-  local out_ctype = qconsts.qtypes[out_qtype].ctype
-  local out_width = qconsts.qtypes[out_qtype].width
+  local in_ctype = qconsts.qtypes[in_qtype].ctype
+  local cst_in_as = in_ctype .. " *"
+  local out_width = 32 -- TODO P3 Undo hard code
+  local out_qtype = "SC"
   local out_buf 
   local cst_out_buf
   local chunk_idx = 0
@@ -28,21 +32,21 @@ local function SC_to_TM(
   local function gen(chunk_num)
     assert(chunk_num == chunk_idx)
     if ( first_call ) then 
-      out_buf = cmem.new(qconsts.chunk_size * out_width, out_qtype, "test")
-      cst_out_buf = ffi.cast(out_ctype .. "  *", get_ptr(out_buf))
+      out_buf = cmem.new(qconsts.chunk_size * out_width)
+      cst_out_buf = ffi.cast("char  * const ", get_ptr(out_buf))
       first_call = false
     end
     local len, base_data = inv:chunk(chunk_idx)
     if ( len > 0 ) then 
-      local ptr_to_chars = ffi.cast("char *", get_ptr(base_data))
-      local status = qc["SC_to_TM"](
-        ptr_to_chars, in_width, len, format, cst_out_buf)
+      local in_ptr = ffi.cast(cst_in_as, get_ptr(base_data))
+      local status = qc["TM_to_SC"](in_ptr, len, format,
+        cst_out_buf, out_width)
       assert(status == 0)
       chunk_idx = chunk_idx + 1
     end
     return len, out_buf
   end
-  local outv = lVector({qtype = out_qtype, gen = gen, has_nulls = false})
+  local outv = lVector({qtype = out_qtype, width =  out_width, gen = gen, has_nulls = false})
   return outv
 end
-return require('Q/q_export').export('SC_to_TM', SC_to_TM)
+return require('Q/q_export').export('TM_to_SC', TM_to_SC)
