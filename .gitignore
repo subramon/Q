@@ -1,6 +1,9 @@
 # Compiled Lua sources
 luac.out
 
+#  test executables
+a.out
+
 # luarocks build files
 *.src.rock
 *.zip
