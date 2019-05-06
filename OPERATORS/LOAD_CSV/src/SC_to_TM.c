@@ -22,6 +22,7 @@ SC_to_TM(
 // TODO #pragma omp parallel for schedule(static, 1024)
   for ( uint64_t i = 0; i < n_in; i++ ) { 
     char *cptr = inv + (i*offset);
+    memset(outv+i, '\0', sizeof(struct tm));
     char *rslt = strptime(cptr, format, outv+i);
     /*  If strptime() fails to match all of  the  format  string
        and therefore an error occurred, the function returns NULL. */

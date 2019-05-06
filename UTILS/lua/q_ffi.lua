@@ -44,6 +44,8 @@ typedef struct tm
   const char *__tm_zone;	/* Timezone abbreviation.  */
 } ;
    ]])
+   --[[
+--]]
 
 -- TODO: Put this back later ffi.new = nil
 local t_ffi = {}

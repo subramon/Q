@@ -180,7 +180,7 @@ local qconsts = {}
     -- no max
     max_txt_width = 64,
     width = 64, -- TODO P2 Need to replace with ffi.sizeof("tm")
-    ctype = "tm",
+    ctype = "struct tm",
     -- txt_to_ctype = "txt_to_TM",
     -- ctype_to_txt = "TBD" 
   }

@@ -170,8 +170,8 @@ approx_quantile: q_basic
 approx_frequent: q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/APPROX/FREQUENT ${BUILD_TYPE}
 
-# mv_mul: q_basic
-# 	make  -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ ${BUILD_TYPE}
+mv_mul: q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ ${BUILD_TYPE}
 
 corrm: q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/PCA/src/

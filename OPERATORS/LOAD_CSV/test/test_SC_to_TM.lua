@@ -28,9 +28,10 @@ tests.t1 = function ()
   local in_col = lVector({file_name = file_name, qtype = "SC",
     width = width})
   local outv = Q.SC_to_TM(in_col, format):eval()
-  assert(chk_outv:fldtype() == "TM") 
+  assert(outv:fldtype() == "TM") 
+  assert(outv:check())
   -- TODO More checking to be done
   
-  print("Test t2 succeeded")
+  print("Test t1 succeeded")
 end
 return tests

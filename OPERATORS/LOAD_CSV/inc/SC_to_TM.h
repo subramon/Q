@@ -1,8 +1,9 @@
 #ifndef __SC_to_TM
 #define __SC_to_TM
-#define _XOPEN_SOURCE
-#define __USE_XOPEN
 #include <time.h>
+
+extern char *strptime(const char *s, const char *format, struct tm *tm);
+
 extern int
 SC_to_TM(
       char * const inv,
