@@ -33,7 +33,9 @@ tests.t1 = function ()
   -- TODO P3 More checking to be done
   -- Now go the other way
   local chk_in_col = Q.TM_to_SC(out_col, format):eval()
-  -- Q.print_csv({in_col, chk_in_col})
+  -- Convert to time in seconds since epoch
+  local secs = Q.TM_to_I8(out_col):eval()
+  -- Q.print_csv({in_col, chk_in_col, secs})
   
   print("Test t1 succeeded")
 end

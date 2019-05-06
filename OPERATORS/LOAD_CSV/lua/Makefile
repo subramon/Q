@@ -39,6 +39,10 @@ all : libload_csv.so
 	mkdir -p ../gen_inc/
 	lua ${UDIR}/cli_extract_func_decl.lua ../src/txt_to_SC.c ${INCDIR}
   
+../gen_inc/_TM_to_I8.h : 
+	mkdir -p ../gen_inc/
+	lua ${UDIR}/cli_extract_func_decl.lua ../src/TM_to_I8.c ${INCDIR}
+  
 #----------------------------------
 ../gen_src/_txt_to_I1.c :
 	lua gen_code_I.lua 
@@ -63,6 +67,8 @@ clean :
 
 ../src/TM_to_SC.c : ../inc/TM_to_SC.h
 
+../src/TM_to_I8.c : ../gen_inc/_TM_to_I8.h
+
 ../src/get_cell.c : ../gen_inc/_get_cell.h
 
 ../src/new_get_cell.c : ../gen_inc/_new_get_cell.h
@@ -78,6 +84,7 @@ clean :
 SRC_FILES =  \
 	../src/SC_to_TM.c  \
 	../src/TM_to_SC.c  \
+	../src/TM_to_I8.c  \
 	../src/get_cell.c  \
 	../src/new_get_cell.c  \
 	../src/set_up_qtypes.c  \
@@ -107,6 +114,7 @@ libload_csv.so : ${SRC_FILES} ${GEN_FILES} ${AUX_FILES}
 	cp ../inc/SC_to_TM.h ${Q_BUILD_DIR}/include/
 	cp ../inc/TM_to_SC.h ${Q_BUILD_DIR}/include/
 	cp ${GEN_INC_FILES}        ${Q_BUILD_DIR}/include/
+	cp ../gen_inc/_TM_to_I8.h ${Q_BUILD_DIR}/include/
 	cp ../gen_inc/_get_cell.h  ${Q_BUILD_DIR}/include/
 	cp ../gen_inc/_new_get_cell.h  ${Q_BUILD_DIR}/include/
 	cp ../gen_inc/_set_up_qtypes.h  ${Q_BUILD_DIR}/include/
