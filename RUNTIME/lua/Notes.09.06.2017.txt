@@ -1,0 +1,42 @@
+===========================
+In lVector.lua, I have added code as shown by *****
+Please review and tell me if you agree. If you do agree, 
+make sure there is a test case that forces this error message to occur
+
+  if ( chunk_num ) then
+    assert(type(chunk_num) == "number")
+    assert(chunk_num >= 0)
+    l_chunk_num = chunk_num
+  else
+    -- Note from Krushnakant: When I get_chunk() method for nascent
+    -- vector without passing chunk number, what should be it's behavior?
+    -- As per my thinking, it should return me the current chunk,
+    if ( is_nascent ) then
+      l_chunk_num = Vector.chunk_num(self._base_vec)
+****************************
+    else
+      assert(nil, "Provide chunk_num for get_chunk on materialized vector")
+****************************
+    end
+  end
+===========================
+
+In vector.c, we can ask for previous chunks for a nascent vector where is_memo has been set to true. See test_vec_prev_chunk.lua. Please review and add more tests as needed.
+
+========
+
+To support above feature at lVector level, I have modified cond2 as follows:
+local cond2 = 
+( Vector.is_nascent(self._base_vec) ) and 
+( ( ( Vector.chunk_num(self._base_vec) == l_chunk_num ) and 
+  ( Vector.num_in_chunk(self._base_vec) > 0 ) ) or 
+  ( ( Vector.chunk_num(self._base_vec) < l_chunk_num ) and 
+          ( Vector.is_memo(self._base_vec) == true ) ) )
+
+Please review code and test 
+
+
+====================
+I have renamed method lVector:get_chunk_num to lVector:chunk_num 
+
+I have renamed method lVector:get_chunk to lVector:get_chunk

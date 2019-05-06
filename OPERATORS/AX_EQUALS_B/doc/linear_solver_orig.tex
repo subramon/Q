@@ -1,0 +1,293 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\title{A Simple Solver for Matrix Equations}
+\author{Andrew Winkler, Ph.~D.}
+
+\begin{document}
+
+\maketitle
+
+\section{Abstract}
+
+We derive a solver for linear systems \begin{math}{}Ax=b\end{math}, which works for real, complex, rational,
+and certain other scalars. It is related to the Cholesky decomposition, but sidesteps creating a factorization
+to directly construct the solution. We include a C implementation of the most important case, that where
+real numbers are represented as double precision numbers and the matrix \begin{math}A\end{math} is symmetric and positive semi-definite.
+
+\section{Preliminaries}
+
+We consider the linear system \begin{math}{}Ax=b\end{math}. If your only interest is in the real numbers,
+you can skip the rest of this section with the notation that \begin{math}{}A^*\end{math} means the transpose of the matrix \begin{math}{}A\end{math}. In particular a number, which can be seen as a 1x1 matrix, is its own transpose.
+
+The algorithm we describe works perfectly well for finite dimensional Hilbert spaces over various fields, to be described. However, since the method implicitly constructs a basis for the vector space, for ease of exposition and with no real loss of generality, we assume already chosen an orthonormal basis, with respect to which A is a matrix, and x and b are column vectors.
+
+We can view rational numbers as lying in the larger field of real numbers; likewise the real numbers in the complex numbers, and the complex numbers in the quaternions. A quaternion satisfies \begin{math}{}(a + bi +cj + dk)^* = (a -bi -cj -dk)\end{math}, from which it is immediate that \begin{math}{}q^*q = a^2 + b^2 + c^2 + d^2 >= 0\end{math}. Moreover if \begin{math}{}q^*q =0\end{math} then \begin{math}{}q =0\end{math}. If
+\begin{math}{}q* = q\end{math} then \begin{math}q\end{math} is real, and conversely.
+
+The algorithm assumes only that the field is some subfield of the quaternions, which is closed under this conjugation operation, which is the same thing as saying that if \begin{math}{}\alpha\end{math} is in the field, so is \begin{math}{}\alpha^*\alpha\end{math}, or equivalently \begin{math}{}\alpha + \alpha^*\end{math}. This is of course true of the rationals, the reals, any subfield of the reals, the complexes, and the quaternions.
+
+Recall that the adjoint of a matrix \begin{math}A\end{math}, denoted \begin{math}A^*\end{math}, is the transpose of the matrix obtained from \begin{math}A\end{math} by replacing each number \begin{math}{}a_{ij}\end{math} by its complex/quaternion conjugate \begin{math}{}a_{ij}^*\end{math}.
+
+\section{Linear Equations}
+
+We seek all \begin{math}{}x\end{math} for which \begin{math}{}Ax=b\end{math}. We start by noticing that if
+\begin{math}{}Ax=b\end{math}, then also \begin{math}{}A^*Ax=A^*b\end{math}. The converse need not be true,
+but \begin{math}{}\{x|Ax=b\} \subset \{x|A^*Ax = A^*b\}\end{math}, and in fact it's the simplest sort of subset:
+it's either empty, or it's everything. To see this, note that if \begin{math}{}A^*Ax_1 = A^*Ax_2 \end{math},
+then \begin{math}{}A^*A(x_1-x_2)=0 \end{math}, so \begin{math}{}0=(x_1-x_2)^*A^*A(x_1-x_2)=(A(x_1-x_2))^*(A(x_1-x_2)) \end{math}. But then \begin{math}{}A(x_1-x_2)=0 \end{math}, or \begin{math}{}Ax_1 = Ax_2 \end{math}.
+
+In summary if \begin{math}{}A^*Ax_1 = A^*Ax_2 = A^*b \end{math}, then either \begin{math}{}Ax_1 = Ax_2 = b \end{math}, or else \begin{math}{}Ax_1 = Ax_2 \ne b \end{math}, in which case there is no solution. 
+
+So having found all solutions to the auxiliary equation, either they are precisely the solutions to the original equation, or the original equation has no solutions, as determined by picking any one of the candidate solutions and computing \begin{math}{}Ax\end{math}.
+
+Notice that \begin{math}{}(A^*A)^* = A^*A^{**} = A^*A\end{math}, and that \begin{math}{}x^*(A^*A)x=(Ax)^*(Ax) >= 0\end{math}. Thus the general problem reduces to the special case considered in the next section.
+
+\section{Linear Positive Equations}
+
+We consider then the problem \begin{math}{}Ax=b\end{math} in the special case where
+\begin{math}{}A^*=A\end{math} and \begin{math}{}x^*Ax >= 0\end{math} for all \begin{math}{}x\end{math}. Such a matrix is called positive semi-definite.
+
+We write \begin{math}{}A\end{math} as \begin{math}{}\begin{bmatrix}\alpha & b^* \\ a & A^{'}\end{bmatrix}\end{math}. It is possible
+that \begin{math}{}A\end{math} is 1x1 in which case all expressions involving
+\begin{math}{}A\end{math},
+\begin{math}{}a\end{math}, or
+\begin{math}{}b\end{math} are empty sums, and therefor 0. If 
+\begin{math}{}A\end{math} is 
+\begin{math}{}n\end{math} by
+\begin{math}{}n\end{math}, then 
+\begin{math}{}A^{'}\end{math} is 
+\begin{math}{}n-1\end{math} by
+\begin{math}{}n-1\end{math}, and
+\begin{math}{}a\end{math} and
+\begin{math}{}b\end{math} are 
+\begin{math}{}n-1\end{math} column vectors, while
+\begin{math}{}\alpha\end{math} is a scalar.
+
+Since \begin{math}{}A=A^*\end{math}, 
+ \begin{math}{}
+\begin{bmatrix}\alpha & b^* \\ a & A^{'}\end{bmatrix} = 
+\begin{bmatrix}\alpha & b^* \\ a & A^{'}\end{bmatrix}^* = 
+\begin{bmatrix}\alpha^* & a^* \\ b & A^{'*}\end{bmatrix} \end{math}, so 
+\begin{math}{}\alpha^*=\alpha\end{math}, \begin{math}{}a=b\end{math}, and
+\begin{math}{}A^{'*} = A^{'}\end{math}.
+
+Moreover, 
+\begin{math}{}
+0 <= \begin{bmatrix}1\\0\end{bmatrix}^*\begin{bmatrix}\alpha & a^* \\ a & A^{'}\end{bmatrix}\begin{bmatrix}1\\0\end{bmatrix}
+= \begin{bmatrix}1&0\end{bmatrix}\begin{bmatrix}\alpha \\ a\end{bmatrix}
+= \alpha
+\end{math}
+
+\subsection{Case 1}
+\begin{math}{}\alpha=0\end{math}
+
+Then in fact it's also true that \begin{math}{}a=0\end{math}. For 
+\begin{math}0 <= \begin{bmatrix}\chi\\a\end{bmatrix}^*\begin{bmatrix}0 & a^* \\ a & A^{'}\end{bmatrix}\begin{bmatrix}\chi\\a\end{bmatrix} = \begin{bmatrix}\chi^* & a^*\end{bmatrix} \begin{bmatrix}a^*a\\a\chi+A^{'}a\end{bmatrix}
+= \chi^*a^*a + a^*a\chi + a^*A^{'}a
+\end{math}.
+
+Notice that it is here that we make use of the assumption that we started with
+a positive semi-definite matrix.
+
+If we restrict attention to rational numbers, then we get the equation of a line. The only lines that have no negative values are horizontal, so the slope \begin{math}{}2a^*a\end{math} must be zero, which means \begin{math}{}a\end{math} must be zero.
+
+Our equation simplifies to 
+\begin{math}{}
+\begin{bmatrix}0 & 0 \\ 0 & A^{'}\end{bmatrix}\begin{bmatrix}\chi\\x^{'}\end{bmatrix} =\begin{bmatrix}\beta\\b^{'}\end{bmatrix}
+\end{math}, which reduces to the pair of equations \begin{math}0=\beta{}\end{math}, and
+\begin{math}{}A^{'}x^{'}=b^{'} \end{math}. The first equation tells us that there can be no solution unless
+\begin{math}{}\beta=0\end{math}. If, however, it is, then any solution \begin{math}{}x^{'}\end{math} of the
+second equation, which we note, satisfies the same properties we required of 
+\begin{math}{}A\end{math}, can be combined with any number \begin{math}{}z_n\end{math} (where we use the dimension n to tag the variable, to prevent recursive name collisions)
+into a solution, \begin{math}{}A\begin{bmatrix}z_n\\x^{'}\end{bmatrix} = b\end{math}
+
+In particular, we can always take \begin{math}{}z_n\end{math} to be 0.
+
+\subsection{Case 2}
+\begin{math}{}\alpha>0\end{math}
+
+Then 
+\begin{math}{}
+\begin{bmatrix}\alpha & a^* \\ a & A^{'}\end{bmatrix}\begin{bmatrix}\chi\\x^{'}\end{bmatrix}=\begin{bmatrix}\beta\\b^{'}\end{bmatrix}
+\end{math}
+if and only if
+\begin{math}{}\alpha\chi + a^*x^{'} = \beta\end{math} and
+\begin{math}{}a\chi + A^{'}x^{'} = b^{'}\end{math}
+if and only if
+\begin{math}{}\alpha\chi= \beta - a^*x^{'} \end{math} and
+\begin{math}{}a\chi + A^{'}x^{'} = b^{'}\end{math}
+if and only if
+\begin{math}{}\chi= \alpha^{-1}(\beta - a^*x^{'})\end{math} and
+\begin{math}{}a\alpha^{-1}(\beta - a^*x^{'}) + A^{'}x^{'} = b^{'}\end{math}
+if and only if
+\begin{math}{}\chi= \alpha^{-1}(\beta - a^*x^{'})\end{math} and
+\begin{math}{}a\alpha^{-1}(- a^*x^{'}) + A^{'}x^{'} = b^{'}-a\alpha^{-1}\beta\end{math}
+if and only if
+\begin{math}{}\chi= \alpha^{-1}(\beta - a^*x^{'})\end{math} and
+\begin{math}{}(A^{'} - a\alpha^{-1}a^*)x^{'} = b^{'}-a\alpha^{-1}\beta\end{math}
+
+So if we can solve the second equation, the first equation shows us how to convert it into a solution
+of the original equation. Notice that if 
+\begin{math}{}b =0\end{math}, then so is the derived right hand side; a homogeneous problem generates
+a homogeneous subproblem.
+
+But this second equation is again of the same form, because
+\begin{gather}{}(A^{'} - a\alpha^{-1}a^*)^* = 
+A^{'*} - a^{**}\alpha^{-1}a^* = 
+A^{'} - a\alpha^{-1}a^* 
+\end{gather}
+and moreover
+\begin{gather}{}
+0 <= \begin{bmatrix}-\alpha^{-1}a^*x\\x\end{bmatrix}^*\begin{bmatrix}\alpha & a^* \\ a & A^{'}\end{bmatrix}\begin{bmatrix}-\alpha^{-1}a^*x\\x\end{bmatrix}
+= 
+x^*(A^{'} - a\alpha^{-1}a^*)x
+\end{gather}. So the derived submatrix is nonnegative, and positive if the original matrix is.
+
+As in either case we have reduced to either the base case of dimension one or to a similar problem in one dimension smaller, the solution, whether it exists or
+not, and whether or not multiple solutions exist, is complete.
+
+\section{After-thought}
+This section can be safely skipped by anyone whose interest is confined to
+the real numbers, the complex numbers, the rational numbers, or even the quaternions.
+
+The method works provided the scalars are taken from any subfield of the
+quaternions which is closed under the * operation. More precisely, we really
+need \begin{math}\alpha^* = \alpha\end{math} if and only if \begin{math}\alpha\end{math} is real, that \begin{math}\alpha^*\alpha >= 0\end{math}, and that 
+\begin{math}\alpha^*\alpha = 0\end{math} only if \begin{math}\alpha=0\end{math}.
+
+But the method works, at least in some cases, even if the field is not *-closed.We can take the *-closure of any subfield of the quaternions, by intersecting all *-closed subfields containing it. Since the quaternions are *-closed, that *-closure is a *-closed subfield of the quaternions. We can then find all solutions composed of vectors having entries in the closure; it remains to determine
+which of those solutions, if any, lie in the original field. In the case where
+\begin{math}A\end{math} is positive, the solution is unique, and a solution whose entries lie in the original field does exist, so must coincide with the solution obtained by this method, which then must necessarily also have entries lying in the original field.
+
+\section{Implementation Notes}
+At each level of recursion, we only need to retain
+\begin{math}{}a\end{math},
+\begin{math}{}\alpha\end{math}
+and
+\begin{math}{}\beta\end{math}, allowing us to overwrite
+\begin{math}{}A^{'}\end{math}
+with \begin{math}{}(A^{'} - a\alpha^{-1}a^*)\end{math}
+and
+\begin{math}{}b^{'}\end{math} with
+\begin{math}{}b^{'}-a\alpha^{-1}\beta\end{math}
+.
+
+We conclude with a C-language implementation of a solver for the positive semi-definite case, where
+\begin{math}{}x^*Ax >=0 \end{math} for all \begin{math}{}x\end{math}.
+
+\begin{verbatim}
+$ cat positive_solver.h 
+extern
+double * positive_solver(double ** A, double * b, int n);
+
+$ cat positive_solver.c
+/* 
+ * Andrew Winkler
+
+This code solves the equation Ax=b, where A is a positive
+semi-definite matrix, so that x^t A x >= 0 for all x,
+provided a solution exists. If A is positive definite,
+it will be an isomorphism, but in general conditions
+must be imposed on b, for it to lie in the range of A.
+
+It has the virtue of dramatic simplicity - there's no need
+to explicitly construct the Cholesky decomposition, no need
+to do the explicit back-substitutions.  Yet it's essentially
+equivalent to that more labored approach, so its
+performance/stability/memory, etc. should be at least as good.
+
+There are two kinds of checks, both of which are disabled.
+This means that a solution will be generated; it is up to
+the caller to verify that the equation Ax=b is satisfied to
+the desired precision. If it does not, then no solution exists.
+
+The first kind of check is that Avec is 0 whenever A[0][0]
+is 0, which will always be true if A is positive semi-definite,
+but which could become false because of any small perturbation
+caused by roundoff error upstream in the computation of A.
+The second kind of check is that b[0] is 0 whenever A[0][0] is 0,
+which is necessary for b to lie in the range of A. The checks are
+disabled because the code does not deal with real numbers,
+but rather floating point numbers; it's up to the user to decide
+what is "close enough" to zero.
+
+*/
+
+#include <stdlib.h>
+#include <stdio.h>
+#include "positive_solver.h"
+
+void _consistency_checker(double * v, int n) {
+    for (int i=0; i<n; i++) {
+        if ( v[i] != 0.0 ) exit(-1);
+    }
+}
+
+void _positive_solver(
+    double ** A, 
+    double * b, 
+    double * x, 
+    int n
+    ) 
+{
+  if (n < 1) exit(-1);
+
+  if (n == 1) {
+    if (A[0][0] == 0.0) {
+        /* _consistency_checker(b, 1); */
+        x[0] = 0.0;
+        return;
+    }
+    x[0] = b[0] / A[0][0];
+    return;
+  }
+
+  double * bvec = b + 1;
+  double * Avec = A[0] + 1;
+  double ** Asub = A + 1;
+  double * xvec = x + 1;
+
+  int m = n -1;
+
+  if (A[0][0] == 0.0) {
+      /*
+      _consistency_checker(b, 1);
+      _consistency_checker(Avec, m);
+      */
+  } else {
+      for(int j=0; j < m; j++){
+        bvec[j] -= Avec[j] * b[0] / A[0][0];
+        for(int i=0; i < m - j; i++)
+          Asub[i][j] -= Avec[i] * Avec[i+j] / A[0][0];
+      }
+  }
+
+  _positive_solver(Asub, bvec, xvec, m);
+
+  if (A[0][0] == 0.0) {
+      x[0] = 0.0;
+      return;
+  }
+
+  double p = 0; for(int k=0; k<m; k++) p += Avec[k] * xvec[k];
+
+  x[0] = (b[0] - p) / A[0][0];
+
+  return;
+}
+
+#include <malloc.h>
+double * positive_solver(
+    double ** A, 
+    double * b, 
+    int n
+    ) 
+{
+  double * x = (double *) malloc(n * sizeof(double));
+  _positive_solver(A, b, x, n);
+  return x;
+}
+
+\end{verbatim}
+\end{document}

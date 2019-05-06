@@ -1,0 +1,56 @@
+
+\section{Introduction}
+
+\be
+\item 
+Reference to Lua \cite{Lua2011}.
+
+Similar to Tcl/Tk (\cite{Ousterhout2009}), in that the Tcl interpreter 
+was implemented as a library of C procedures, where applications 
+built using Tcl could extend the core functionality easily.
+
+\item multi stage programming
+
+Multi-stage programming (MSP) is a variety of metaprogramming in which
+compilation is divided into a series of intermediate phases, allowing typesafe
+run-time code generation. Statically defined types are used to verify that
+dynamically constructed types are valid and do not violate the type system.
+
+Provide forward reference to Operator Polymorphism in
+Section~\ref{polymorphism}.
+
+\item 
+
+Dealing with null values 
+
+\item interpreted versus compiled
+
+{\em  From ``Q for mortals''
+  Interpreted Q is interpreted, not compiled. During execution, data and
+  functions live in an in-memory workspace. Iterations of the development cycle
+  tend to be quick because all run-time information needed to test and debug is
+  immediately available in the workspace. Q programs are stored and executed as
+  simple text files called scripts. The interpreter's eval and parse routines
+  are exposed so that you can dynamically generate code in a controlled manner.
+
+}
+\item dyanmic typing
+
+  {\em 
+  Types Q is a dynamically typed language, in which type checking is mostly
+  unobtrusive. Each variable has the type of its currently assigned value and
+  type promotion is automatic for most numeric operations. Types are checked on
+  operations to homogenous lists.
+}
+
+\item in memory
+
+  {\em 
+  In-Memory Database One can think of kdb+ as an in-memory database with
+  persistent backing. Since data manipulation is performed with q, there is no
+  separate stored procedure language. In fact, kdb+ comprises serialized q
+  column lists written to the file system and then mapped into memory.
+}
+
+\item functional language 
+\ee

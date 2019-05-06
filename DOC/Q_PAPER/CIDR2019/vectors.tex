@@ -1,0 +1,122 @@
+\subsection{Vectors}
+\label{Vectors}
+A vector is essentially a map \(f(i)\) such that given \(i, 0 \leq i < n\), it
+returns a value of a given type. The main types that Q supports are four variants
+of integers (1, 2, 4, and 8 byte) and two variations of floating point (single
+and double precision). In addition, it supports bit vectors and constant length
+strings. There is limited support for variable length strings, which are used
+primarily as dictionaries. 
+
+Note that Q has 6 types of numbers, in contrast with Lua which uses a 
+single type {\tt number}, internally a double precision floating point.
+This is because data bandwidth plays a significant role in determining
+performance, as illustrated by Nvidia's
+introduction of half precision floating point  \cite{nvidia2017}. The user is
+encouraged (but not required) to use the smallest type that supports the actual
+dynamic range required. It is eye-opening to realize that this is often  less
+than what one expects. For example, while analyzing LinkedIn's endorsement feature
+(e.g. User A endorses User B's proficiency in Java),
+the number of unique endorsements that captured more than 99\% of the traffic
+was less than 32K, making a 2-byte integer adequate for the task at hand.
+
+It is relatively easy to add other types to Q, as long as these 
+are fixed width types. The real cost is in making sure that all relevant
+operators interpret that data meaningfully. For example, currently, {\tt add}
+accepts all combinations of number types, but we do not (yet)
+support adding a bit to a double.
+
+We
+encourage ``inexact'' types where justified. For example, a common use case is
+to trace a user's activity through a web session. This requires joining on a
+user ID across different log tables in the data warehouse. The user ID is
+often provided as a long alphanumeric string. While Q could represent this as a
+constant length string, it is better represented as an unsigned 64-bit integer
+containing the hash of the string, since join requires only equality comparisons.
+The number of distinct keys being hashed is often less than \(2^{32}\). When
+hashed to a \(2^{64}\) space, the probability of collisions is vanishingly
+small. Most business analyses are insensitive to this level of imprecision.
+
+When a vector is created, we need to specify (i) its type (ii) whether it has
+null values (iii) how it will be populuated. We can either (a) ''push'' data to
+it, much like writing to a file in append mode or (b) we can provide a generator function,
+which is invoked with the chunk index, \(i\), as parameter and which knows how to
+generate the \(i^{th}\) chunk.
+%% TODO Have not introduced chunk as yet
+
+Vectors are evaluated lazily. Hence, a statement like 
+{\tt x = Q.const(\{len = 10, qtype = I4, val = 0\})} does not actually create
+ten
+4-byte integers with value 0 as one might suspect. Data is populated only when
+{\tt eval()} is explicity invoked on the vector or the data is 
+implicitly required by some other operator e.g. {\tt Q.print\_csv(x)}
+
+Vectors are processed in chunks. Consider an expression  like \(\sum (a + b\times
+c)\), written in Q as {\tt d = Q.sum(Q.add(Q.mul(b,c), a))}.
+When {\tt d} is eval'd, computation alternates between the {\tt mul, add, sum}
+operators
+processing chunks of data at a time until there are
+no more.
+We had originally chosen co-routines to effect the {\tt resume} and
+{\tt yield} capabilities needed. However, Lua's support of closures allowed for
+a simpler implementation.
+The chunk size, \(n_C\), is chosen large enough that it is amenable to
+vectorization and parallelization and small enough that its memory consumption
+is low.
+
+Vectors are not mutable (with few exceptions)
+and must be produced sequentially. In other words, the \(i^{th}\) element must
+be produced before the \({i+1}^{th}\). Vectors
+operate in ``chunks'' of a fixed size. Let us say that the chunk size is 64K and
+that we have produced 65K elements. In that case, the current chunk would have
+only 1K elements. Whether one can get access to an element in the previous chunk
+depends on whether the vector has been ``memo-ized''. The default behavior, with
+a concomitant performance hit, is to memo-ize. However, when the programmer is
+aware that the vector will be consumed in a streaming fashion, they set memo
+to false. 
+
+A vector is fully materialized in one of two ways (1) if it was setup with a a generator function and invocation of the function produces 
+fewer elements than the chunk size (2) it was set up for streaming and {\tt
+eov()} was explicitly signaled.
+
+Memo-izing is done by appending previous chunks in binary format to a file.
+Subsequent reads of this vector are done by mmap-ing the file. Not all
+algorithms are readily transformed into streaming operations e.g. sort. There
+are a few cases where we support modifying a vector after it has been fully
+materialized by opening it in write mode and mmap-ing it.
+
+Mmap-ing gives us the illusion of a linear address space. This is useful to
+incoporate algorithms and libraries that have not been written with streaming in
+mind. For example, we have used this to call functions in the GNU Scientific
+Library and LAPACK from Q.
+
+Q's run time is an alternate approach to ``stream fusion''
+\cite{Mainland2017}. In
+that paper, the authors identify this as a technique that allows a compiler to
+`` cope with boxed numeric types, handle lazy evaluation, and
+eliminate intermediate data structures''.
+\subsection{Vectors versus Tables}
+\label{vectors_versus_tables}
+
+A deliberate choice in Q's design was that Vectors, not tables, were the basic
+data type. It is a design choice that we were (and continue to be) conflicted with. On the one hand,
+it led to simplicity and performance. On the other hand, it put the burden of
+table semantics on the programmer. In particular, consider a 
+Lua table \(T = \{f, g\}\) containing 2 Vectors \(f, g\). Maintaining table
+semantics means that \(T(i) = (f(i), g(i))\)  i.e., the \(i^{th}\) element of
+the table is the \(i^{th}\) element of \(f\) and the \(i^{th}\) element of \(g\). An 
+operation like {\tt Q.sort(T.f)} would destroy that contract. Q
+provides higher level functions (Figure~\ref{sort_tbl}) which are invoked when the entire table needs to
+be sorted e.g. {\tt Q.sort(T, f, "ascending")} 
+
+\begin{figure}[hbtp]
+\centering
+\fbox{
+\begin{minipage}{8 cm}
+\centering
+\verbatiminput{sort_tbl_lua}
+\caption{Re-ordering table based on sort of column f}
+\label{sort_tbl}
+\end{minipage}
+}
+\end{figure}
+%% TODO make sure permute is consistent with Terra code

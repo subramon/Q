@@ -1,0 +1,521 @@
+Terminals unused in grammar
+
+   FP
+   KEYWORD
+   VBAR
+   EQUALS
+   COMMA
+   LT
+   GT
+   NOOP
+   LEQ
+   GEQ
+   GEQANDLEQ
+   GTANDLT
+   LEQORGEQ
+   LTORGT
+   OPEN_CURLY
+   CLOSE_CURLY
+   OPEN_SQUARE
+   CLOSE_SQUARE
+   OPEN_ROUND
+   CLOSE_ROUND
+   ADD_TBL
+   ADD_FLD
+   DEL_TBL
+   DEL_FLD
+
+
+Grammar
+
+    0 $accept: command $end
+
+    1 command: QMARK
+    2        | VERB
+    3        | QMARK STRING
+    4        | QMARK STRING ASTERISK
+    5        | QMARK STRING PROPERTY
+    6        | QMARK STRING DOT STRING
+    7        | QMARK STRING DOT STRING ASTERISK
+    8        | QMARK STRING DOT STRING PROPERTY
+    9        | STRING DOT STRING COLON STRING ASSIGN STRING
+   10        | MINUS STRING DOT STRING COLON STRING
+   11        | PLUS STRING VERB INT
+   12        | STRING ASSIGN VERB OPTIONS
+   13        | MINUS STRING
+   14        | MINUS STRING DOT STRING
+   15        | STRING DOT STRING ASSIGN VERB OPTIONS
+   16        | VERB STRING DOT STRING
+   17        | STRING ADDTO STRING
+   18        | STRING ASSIGN STRING
+   19        | STRING MOVE STRING
+   20        | STRING DOT STRING ASSIGN STRING DOT STRING
+   21        | STRING DOT STRING MOVE STRING DOT STRING
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+INT (258) 11
+FP (259)
+STRING (260) 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21
+VERB (261) 2 11 12 15 16
+OPTIONS (262) 12 15
+KEYWORD (263)
+PROPERTY (264) 5 8
+VBAR (265)
+MINUS (266) 10 13 14
+PLUS (267) 11
+DOT (268) 6 7 8 9 10 14 15 16 20 21
+QMARK (269) 1 3 4 5 6 7 8
+COLON (270) 9 10
+EQUALS (271)
+COMMA (272)
+LT (273)
+GT (274)
+ASTERISK (275) 4 7
+NOOP (276)
+LEQ (277)
+GEQ (278)
+ASSIGN (279) 9 12 15 18 20
+ADDTO (280) 17
+MOVE (281) 19 21
+GEQANDLEQ (282)
+GTANDLT (283)
+LEQORGEQ (284)
+LTORGT (285)
+OPEN_CURLY (286)
+CLOSE_CURLY (287)
+OPEN_SQUARE (288)
+CLOSE_SQUARE (289)
+OPEN_ROUND (290)
+CLOSE_ROUND (291)
+ADD_TBL (292)
+ADD_FLD (293)
+DEL_TBL (294)
+DEL_FLD (295)
+
+
+Nonterminals, with rules where they appear
+
+$accept (41)
+    on left: 0
+command (42)
+    on left: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21,
+    on right: 0
+
+
+State 0
+
+    0 $accept: . command $end
+
+    STRING  shift, and go to state 1
+    VERB    shift, and go to state 2
+    MINUS   shift, and go to state 3
+    PLUS    shift, and go to state 4
+    QMARK   shift, and go to state 5
+
+    command  go to state 6
+
+
+State 1
+
+    9 command: STRING . DOT STRING COLON STRING ASSIGN STRING
+   12        | STRING . ASSIGN VERB OPTIONS
+   15        | STRING . DOT STRING ASSIGN VERB OPTIONS
+   17        | STRING . ADDTO STRING
+   18        | STRING . ASSIGN STRING
+   19        | STRING . MOVE STRING
+   20        | STRING . DOT STRING ASSIGN STRING DOT STRING
+   21        | STRING . DOT STRING MOVE STRING DOT STRING
+
+    DOT     shift, and go to state 7
+    ASSIGN  shift, and go to state 8
+    ADDTO   shift, and go to state 9
+    MOVE    shift, and go to state 10
+
+
+State 2
+
+    2 command: VERB .
+   16        | VERB . STRING DOT STRING
+
+    STRING  shift, and go to state 11
+
+    $default  reduce using rule 2 (command)
+
+
+State 3
+
+   10 command: MINUS . STRING DOT STRING COLON STRING
+   13        | MINUS . STRING
+   14        | MINUS . STRING DOT STRING
+
+    STRING  shift, and go to state 12
+
+
+State 4
+
+   11 command: PLUS . STRING VERB INT
+
+    STRING  shift, and go to state 13
+
+
+State 5
+
+    1 command: QMARK .
+    3        | QMARK . STRING
+    4        | QMARK . STRING ASTERISK
+    5        | QMARK . STRING PROPERTY
+    6        | QMARK . STRING DOT STRING
+    7        | QMARK . STRING DOT STRING ASTERISK
+    8        | QMARK . STRING DOT STRING PROPERTY
+
+    STRING  shift, and go to state 14
+
+    $default  reduce using rule 1 (command)
+
+
+State 6
+
+    0 $accept: command . $end
+
+    $end  shift, and go to state 15
+
+
+State 7
+
+    9 command: STRING DOT . STRING COLON STRING ASSIGN STRING
+   15        | STRING DOT . STRING ASSIGN VERB OPTIONS
+   20        | STRING DOT . STRING ASSIGN STRING DOT STRING
+   21        | STRING DOT . STRING MOVE STRING DOT STRING
+
+    STRING  shift, and go to state 16
+
+
+State 8
+
+   12 command: STRING ASSIGN . VERB OPTIONS
+   18        | STRING ASSIGN . STRING
+
+    STRING  shift, and go to state 17
+    VERB    shift, and go to state 18
+
+
+State 9
+
+   17 command: STRING ADDTO . STRING
+
+    STRING  shift, and go to state 19
+
+
+State 10
+
+   19 command: STRING MOVE . STRING
+
+    STRING  shift, and go to state 20
+
+
+State 11
+
+   16 command: VERB STRING . DOT STRING
+
+    DOT  shift, and go to state 21
+
+
+State 12
+
+   10 command: MINUS STRING . DOT STRING COLON STRING
+   13        | MINUS STRING .
+   14        | MINUS STRING . DOT STRING
+
+    DOT  shift, and go to state 22
+
+    $default  reduce using rule 13 (command)
+
+
+State 13
+
+   11 command: PLUS STRING . VERB INT
+
+    VERB  shift, and go to state 23
+
+
+State 14
+
+    3 command: QMARK STRING .
+    4        | QMARK STRING . ASTERISK
+    5        | QMARK STRING . PROPERTY
+    6        | QMARK STRING . DOT STRING
+    7        | QMARK STRING . DOT STRING ASTERISK
+    8        | QMARK STRING . DOT STRING PROPERTY
+
+    PROPERTY  shift, and go to state 24
+    DOT       shift, and go to state 25
+    ASTERISK  shift, and go to state 26
+
+    $default  reduce using rule 3 (command)
+
+
+State 15
+
+    0 $accept: command $end .
+
+    $default  accept
+
+
+State 16
+
+    9 command: STRING DOT STRING . COLON STRING ASSIGN STRING
+   15        | STRING DOT STRING . ASSIGN VERB OPTIONS
+   20        | STRING DOT STRING . ASSIGN STRING DOT STRING
+   21        | STRING DOT STRING . MOVE STRING DOT STRING
+
+    COLON   shift, and go to state 27
+    ASSIGN  shift, and go to state 28
+    MOVE    shift, and go to state 29
+
+
+State 17
+
+   18 command: STRING ASSIGN STRING .
+
+    $default  reduce using rule 18 (command)
+
+
+State 18
+
+   12 command: STRING ASSIGN VERB . OPTIONS
+
+    OPTIONS  shift, and go to state 30
+
+
+State 19
+
+   17 command: STRING ADDTO STRING .
+
+    $default  reduce using rule 17 (command)
+
+
+State 20
+
+   19 command: STRING MOVE STRING .
+
+    $default  reduce using rule 19 (command)
+
+
+State 21
+
+   16 command: VERB STRING DOT . STRING
+
+    STRING  shift, and go to state 31
+
+
+State 22
+
+   10 command: MINUS STRING DOT . STRING COLON STRING
+   14        | MINUS STRING DOT . STRING
+
+    STRING  shift, and go to state 32
+
+
+State 23
+
+   11 command: PLUS STRING VERB . INT
+
+    INT  shift, and go to state 33
+
+
+State 24
+
+    5 command: QMARK STRING PROPERTY .
+
+    $default  reduce using rule 5 (command)
+
+
+State 25
+
+    6 command: QMARK STRING DOT . STRING
+    7        | QMARK STRING DOT . STRING ASTERISK
+    8        | QMARK STRING DOT . STRING PROPERTY
+
+    STRING  shift, and go to state 34
+
+
+State 26
+
+    4 command: QMARK STRING ASTERISK .
+
+    $default  reduce using rule 4 (command)
+
+
+State 27
+
+    9 command: STRING DOT STRING COLON . STRING ASSIGN STRING
+
+    STRING  shift, and go to state 35
+
+
+State 28
+
+   15 command: STRING DOT STRING ASSIGN . VERB OPTIONS
+   20        | STRING DOT STRING ASSIGN . STRING DOT STRING
+
+    STRING  shift, and go to state 36
+    VERB    shift, and go to state 37
+
+
+State 29
+
+   21 command: STRING DOT STRING MOVE . STRING DOT STRING
+
+    STRING  shift, and go to state 38
+
+
+State 30
+
+   12 command: STRING ASSIGN VERB OPTIONS .
+
+    $default  reduce using rule 12 (command)
+
+
+State 31
+
+   16 command: VERB STRING DOT STRING .
+
+    $default  reduce using rule 16 (command)
+
+
+State 32
+
+   10 command: MINUS STRING DOT STRING . COLON STRING
+   14        | MINUS STRING DOT STRING .
+
+    COLON  shift, and go to state 39
+
+    $default  reduce using rule 14 (command)
+
+
+State 33
+
+   11 command: PLUS STRING VERB INT .
+
+    $default  reduce using rule 11 (command)
+
+
+State 34
+
+    6 command: QMARK STRING DOT STRING .
+    7        | QMARK STRING DOT STRING . ASTERISK
+    8        | QMARK STRING DOT STRING . PROPERTY
+
+    PROPERTY  shift, and go to state 40
+    ASTERISK  shift, and go to state 41
+
+    $default  reduce using rule 6 (command)
+
+
+State 35
+
+    9 command: STRING DOT STRING COLON STRING . ASSIGN STRING
+
+    ASSIGN  shift, and go to state 42
+
+
+State 36
+
+   20 command: STRING DOT STRING ASSIGN STRING . DOT STRING
+
+    DOT  shift, and go to state 43
+
+
+State 37
+
+   15 command: STRING DOT STRING ASSIGN VERB . OPTIONS
+
+    OPTIONS  shift, and go to state 44
+
+
+State 38
+
+   21 command: STRING DOT STRING MOVE STRING . DOT STRING
+
+    DOT  shift, and go to state 45
+
+
+State 39
+
+   10 command: MINUS STRING DOT STRING COLON . STRING
+
+    STRING  shift, and go to state 46
+
+
+State 40
+
+    8 command: QMARK STRING DOT STRING PROPERTY .
+
+    $default  reduce using rule 8 (command)
+
+
+State 41
+
+    7 command: QMARK STRING DOT STRING ASTERISK .
+
+    $default  reduce using rule 7 (command)
+
+
+State 42
+
+    9 command: STRING DOT STRING COLON STRING ASSIGN . STRING
+
+    STRING  shift, and go to state 47
+
+
+State 43
+
+   20 command: STRING DOT STRING ASSIGN STRING DOT . STRING
+
+    STRING  shift, and go to state 48
+
+
+State 44
+
+   15 command: STRING DOT STRING ASSIGN VERB OPTIONS .
+
+    $default  reduce using rule 15 (command)
+
+
+State 45
+
+   21 command: STRING DOT STRING MOVE STRING DOT . STRING
+
+    STRING  shift, and go to state 49
+
+
+State 46
+
+   10 command: MINUS STRING DOT STRING COLON STRING .
+
+    $default  reduce using rule 10 (command)
+
+
+State 47
+
+    9 command: STRING DOT STRING COLON STRING ASSIGN STRING .
+
+    $default  reduce using rule 9 (command)
+
+
+State 48
+
+   20 command: STRING DOT STRING ASSIGN STRING DOT STRING .
+
+    $default  reduce using rule 20 (command)
+
+
+State 49
+
+   21 command: STRING DOT STRING MOVE STRING DOT STRING .
+
+    $default  reduce using rule 21 (command)

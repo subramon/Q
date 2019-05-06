@@ -1,0 +1,21 @@
+As an example
+
+package.loaded['Q/UTILS/lua/q_consts'].debug = true
+
+so you can over-write your local version without modifying the 
+original file
+
+As an example, see how to change chunk size. This is more complicated because
+the Vector library accesses chunk size and sets it internally well before we
+would know the chunk size we want 
+
+  -- set chunk size to encompass data set (okay for small data sets)
+  local chunk_size = 1024
+  while chunk_size < nI do
+    chunk_size = chunk_size * 2
+  end
+  print("chunk_size set to ", chunk_size)
+  package.loaded['Q/UTILS/lua/q_consts'].chunk_size = chunk_size
+  Vector.set_chunk_size(chunk_size);
+
+

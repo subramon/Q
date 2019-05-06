@@ -1,0 +1,118 @@
+\documentclass[letterpaper]{article}
+\input{../../../latex/styles/ramesh_abbreviations}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\usepackage{hyperref}
+\usepackage{fancyheadings}
+\pagestyle{fancy}
+\usepackage{pmc}
+\usepackage{graphicx}
+\setlength\textwidth{6.5in}
+\setlength\textheight{8.5in}
+\begin{document}
+\title{Print to CSV}
+\author{ Ramesh Subramonian }
+\maketitle
+\thispagestyle{fancy}
+\lfoot{{\small Data Analytics Team}}
+\cfoot{}
+\rfoot{{\small \thepage}}
+
+\section{Introduction}
+
+This document describes how we print data in one or more columns into a CSV
+file. 
+
+\subsection{Invocation}
+
+\begin{verbatim}
+print(<table of columns|column>, [filter], [destination])
+\end{verbatim}
+So, the first argument to print could be just \(x\) or 
+it could be \(\{x, y\}\)
+
+\subsection{Print Filters}
+
+There are a few ways in which we can instruct the print to {\bf not}
+print all the elements of the column. We can use a range (Section~\ref{range})
+or a ``where clause'' represented as a bit column, Section~\ref{bit_column}.
+
+\subsubsection{Range}
+\label{range}
+
+Support
+\verb+lb:ub+ where {\tt lb} is the lower bound (inclusive) and {\tt
+ub} is the upper bound (exclusive). So a range of \(2:4\) would mean printing
+out the \(2^{th}\) element and the \(3^{th}\) element. 
+Recall that we do C style indexing, so the first element is the \(0^{th}\)
+element. 
+Some time in the future --- support Python's range specification style. 
+
+\subsubsection{Bit column}
+\label{bit_column}
+Prints only those rows where the corresponding bit is set.
+
+\subsection{Print Destination}
+
+The destination of a print can be either 
+\be
+\item nil, in this case print\_csv returns a string. 
+In following two cases, print will return true.  This is not meant to be used
+when the output is large. Its  a good aid for quick and dirty testing.
+\item stdout (user does not specify a file name)
+\item a text file 
+\ee
+
+It is important to note that the output of print should be consumable by the
+load csv function. For example, if the value to be printed contains a special
+character --- comma, double quote, eoln or backslash --- then it must be
+suitable escaped and possibly quoted as well. A null value will be printed out
+as two consescutive dquote characters.
+
+\section{Printing a single column}
+\label{single_column}
+
+Let's start with describing how a single column should be printed. As
+described in the data loading specification, every type that is
+registered with Q should have a C function that (i) converts an ascii
+string into the C type and (ii) converts a fixed set of bytes into an ascii
+string. We simply iterate through the elements and apply the text converter to
+each consecutive block. For example, we would apply {\t fprintf} with the
+\verb+%lf+ format on every successive 8 bytes if the field type were
+{\tt double}
+
+\section{Printing multiple columns}
+\label{multiple_columns}
+
+We require that 
+\be
+\item 
+the first argument is a Lua table where each element is a single column. 
+\item all columns have the same length
+\ee
+
+\subsection{Extensions}
+In this section, we describe what happens when the constraints imposed above are
+selectively relaxed.
+\subsubsection{Mismatched number of elements}
+In this case, the column with insufficient elements starts printing out null
+values once it has exhausted all its values. So, if \(x = \{1, 2,3\}\) and \(y
+= \{4, 5, 6, 7\}\), then we would get
+\begin{verbatim}
+1,4
+2,5
+3,6
+"",7
+\end{verbatim}
+
+\subsubsection{Scalar not column}
+If the table looked like \(\{1, x\}\) where \(x = \{2, 3, 4 \}\), then we would
+get
+\begin{verbatim}
+1,2
+1,3
+1,4
+\end{verbatim}
+
+\end{document}

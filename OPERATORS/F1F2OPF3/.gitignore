@@ -1,0 +1,17 @@
+gen_src/
+gen_inc/
+vvdiv_static_checker.lua
+vvdiv_white_list.lua
+vvmul_static_checker.lua
+vvmul_white_list.lua
+vvsub_static_checker.lua
+vvsub_white_list.lua
+vvor_static_checker.lua
+vvxor_static_checker.lua
+vvneq_static_checker.lua
+vvgt_static_checker.lua
+vvlt_static_checker.lua
+vvhash_static_checker.lua
+vvleq_static_checker.lua
+vvgeq_static_checker.lua
+

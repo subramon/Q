@@ -1,0 +1,32 @@
+2 bugs to fix. See below
+
+Currently load does not handle "" in a string.
+What this means is that if a field is of the form
+"abc""def"
+then the actual value of the string is 
+abc"def
+
+We handle this properly in the following case
+"abc\"def" 
+here the actual value of the string is 
+abc"def
+============================
+
+It is possible that now, an invalid CSV file , can be parsed successfully.  For example, if the CSV file contains all the I1 fields and in the format below 1, 2, 3
+
+                    1, 2
+
+                    1, 2
+
+                    1, 2
+
+After running the load script , 3 binary files will be created of type I1 as 
+1st Binary file   2nd Binary file    3rd Binary file
+
+    1                          2                                3 
+    1                          2                                1
+    2                          1                                2
+
+
+============================
+Should be able to handle base other than 10. 

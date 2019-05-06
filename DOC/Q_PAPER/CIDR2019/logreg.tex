@@ -1,0 +1,161 @@
+\subsection{Logistic Regression}
+
+A key subroutine in logistic regression \cite{Hastie2009} is improving the 
+estimates of the
+coefficients, \(\beta\), using the Newton-Raphson algorithm.
+In the course of this, we need to compute
+\(\frac{1}{1 + e^{-x}}\) and 
+\(\frac{1}{(1 + e^{-x})^2}\).
+We now discuss a sequence of increasingly sophisticated ways of implementing
+these operators in Q.
+
+\subsubsection{The Lua implementation}
+\label{Logit_Lua}
+The ``quick and dirty'' way is to implement it in Lua. To do so, we 
+(i) use the Vector's {\tt get\_chunk} method to access data, 
+(ii) use LuaJIT 's {\tt ffi.cast} to directly access C data from Lua 
+(iii) write the core operation in Lua as
+\begin{verbatim}
+for i=0,n1 do cd2[i]=1/(1+math.exp(-1*cd1[i])) end
+\end{verbatim}
+
+\subsubsection{The templatized implementation}
+\label{Logit_template}
+The design
+of the run time has been around providing machinery to move data and leaving
+the actual operator as a template that can be provided by the user. All the operator
+% NOTE ACTUALLY this is f1s1opf2 not v1s1opv2
+writer needs to (1) pick a template --- in this case it is {\tt v1s1opv2}, indicating that a
+vector v1 and an optional scalar s1 are used to produce another vector v2
+(2) provide the code fragment {\tt  v2 = 1/(1+exp(-1*v1)); )} (3)
+guard against improper usage e.g, we wouldn't apply this function to a string.
+
+In our experiments, 
+JIT compilation makes the Lua code 25\% faster than single-threaded C code,
+although 3 times slower than the multi-threaded C code which shows almost linear
+speedup.
+
+\subsubsection{Eliminating common sub-expressions}
+However, one quickly recognizes that creating separate operators for those 2
+functions would lead to 
+redundant computations, which can be eliminated as in Figure~\ref{sub_expr}.
+This cuts the time by half.
+
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{8 cm}
+\centering
+\verbatiminput{sub_expr.lua}
+\caption{Common sub-expression elimination}
+\label{sub_expr}
+\end{minipage}
+}
+\end{figure}
+
+
+\subsubsection{Lock step evaluation}
+However, the code in Figure~\ref{sub_expr} has a subtle but
+critical bug when the number of elements in \(x\) exceeds the chunk
+size.  If we were to call {\tt eval()} on \(y\), then we would
+end up consuming sucessive chunks of \(t_3\). Now, if we were to call
+{\tt eval()} on \(z\), we would fail when requesting the first
+chunk of \(t_3\), since it has {\bf not} been memo-ized. One solution
+is to ensure that \(y\) and \(z\) are evaluated in lock-step, after they have
+been created, as in Figure~\ref{lock_step}.
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{8 cm}
+\centering
+\verbatiminput{lock_step.lua}
+\caption{Lock step evaluation}
+\label{lock_step}
+\end{minipage}
+}
+\end{figure}
+
+The problem with this solution is that the burden of lock-step evaluation falls
+on the Q programmer. This is remedied by the {\tt conjoin} function
+(Figure~\ref{conjoin})
+
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{8 cm}
+\centering
+\verbatiminput{conjoin.lua}
+\caption{Conjoined Vectors}
+\label{conjoin}
+\end{minipage}
+}
+\end{figure}
+
+%% TODO Normalizing the 
+%% TODO \be
+%% TODO \item Lua versus C (single  threaded)
+%% TODO \item Lua versus C (multi threaded)
+%% TODO \item separate operators versus eliminating common sub expr
+%% TODO \ee
+
+\subsubsection{Custom Operators}
+
+As part of the \(\beta\) calculation step, we need to compute an \(m \times m\)
+matrix \(A\) as  \(x^T W x\) where (1) 
+\(x\) is a \(n \times m\) matrix and (2) \(W\) is a \(n \times n\) matrix where
+non-diagonal elements are 0 and can be represented as a vector, \(w\) of legnth
+\(n\). 
+The straight-forward Q code is in Figure~\ref{compute_A_Lua_basic}
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{8 cm}
+\centering
+\verbatiminput{compute_A_Lua_basic.lua}
+\caption{Q code for \(x^T W x\)}
+\label{compute_A_Lua_basic}
+\end{minipage}
+}
+\end{figure}
+
+However, with a little more effort, we created custom operator in C.
+The custom code uses
+chunking to avoid writing out to the entire temp array before reading it
+back in. Setting \(m=32\), we varied \(n\) from \(2^{16}\) to \(2^{24}\). With
+chunking, performance increases as we increase \(n\) but saturates after
+\(2^{20}\). Without chunking, performance peaks at \(n=2^{18}\) and steadily
+declines after that, to about a third of peak performance.
+What we hope to illustrate is that a
+simple data model allows us to move along the performance versus simplicity
+continuum as desired.
+
+
+This in turn raised the question: could we have ``chunked'' the computation 
+without resorting to a custom operator? To do so, (1)
+we first set up the reducers --- no actual
+computation happens. This is exactly as in Figure~\ref{compute_A_Lua_basic}, except that there is no call to
+{\tt eval()}. (2) We evaluate the reducer in chunks, stopping
+when the input vectors have no more data as in
+Figure~\ref{compute_A_Lua_chunked}.
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{8 cm}
+\centering
+\verbatiminput{compute_A_Lua_chunked.lua}
+\caption{Chunked Q code for \(x^T W x\)}
+\label{compute_A_Lua_chunked}
+\end{minipage}
+}
+\end{figure}
+
+%% \begin{table}
+%%   \centering
+%%   \begin{tabular}{|l|l|l|} \hline \hline
+%%     {\bf Chunking used?}    & {\bf Q} & {\bf Custom Operator} \\ \hline \hline
+%%     {\bf Yes} & TODO & TODO \\ \hline
+%%     {\bf No} & TODO & TODO \\ \hline
+%%     \hline
+%%   \end{tabular}
+%%   \caption{Rlative times for different computational strategies}
+%% \end{table}

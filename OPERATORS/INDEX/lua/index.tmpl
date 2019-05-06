@@ -1,0 +1,47 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+
+extern int
+${fn}(
+      const ${a_ctype} * restrict A,
+      uint64_t nA,
+      ${a_ctype} value,
+      int64_t *ptr_rslt,
+      uint64_t idx 
+/* idx specifies index of vector i.e., A[0] is idx'th element of vector */
+      );
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(
+      const ${a_ctype} * restrict A,
+      uint64_t nA,
+      ${a_ctype} value,
+      int64_t *ptr_rslt,
+      uint64_t idx // specifies index of vector
+      )
+{
+  int status = 0;
+  if ( A == NULL ) { go_BYE(-1); }
+  if ( nA == 0 ) { go_BYE(-1); }
+  if ( ptr_rslt == NULL ) { go_BYE(-1); }
+  for ( uint64_t i  = 0; i < nA; i++ ) {  
+    ${a_ctype} inv  = A[i];
+    if ( inv == value ){
+      // following check is just extra precaution
+      if ( *ptr_rslt >= (int64_t)(i + idx) ) { go_BYE(-1); }
+      *ptr_rslt = i + idx;
+      break;
+    }
+  }
+BYE:
+  return status;
+}
+]]
+}

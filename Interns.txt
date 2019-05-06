@@ -1,0 +1,27 @@
+Linear Equations Solver
+  Read and edit Andrew's paper. 
+  Add more examples. 
+  Make sure all definitions exist
+  See if code can be further tuned
+  Performance evaluation
+  Deliverable: PDF with math, experimental results to be published on blog
+
+Logistic Regression
+  Download Torch and figure out how to use it 
+  Find a few datasets on which to test LR (speed and accuracy)
+  Implement code in Q
+  Compare with other libraries, Torch in particular
+
+Matrix Multiply
+  Read paper from UCB CS 252 class on vector aware computations
+  Implement matrix multiply in Q
+  Peformance Evaluation
+
+Approximation Algorithms
+  Implement following operators in Q. 
+  There is existing code which is easily modified.
+  Number of distinct values
+  Top-K
+  Percentiles
+
+Get Q running on Raspberry Pi

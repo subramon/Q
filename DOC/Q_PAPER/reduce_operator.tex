@@ -1,0 +1,29 @@
+\subsection{The reduce operator}
+\label{reduce_operator}
+Consider the case where we want to perform many different reductions (e.g. min,
+max, sum, \ldots) over the same vector. The simple way to do this is
+\begin{verbatim}
+x = Q.sum(w); y = Q.min(w); z = Q.max(w)
+\end{verbatim}
+However, this necessitates several scans over the vector \(w\). It is more
+efficient to evaluate the vector \(w\) a chunk at a time, perform all the
+reductions on the chunk, store the partial results and then repeat over
+successive chunks. So, we can re-write the above as 
+{\tt x, y, z = Q.reduce({ "sum", "min", "max" }, w)}
+where {\tt Q.reduce} is described in Figure~\ref{fig_reduce}
+
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{14 cm}
+\centering
+\verbatiminput{reduce.lua}
+\caption{The ``reduce'' operator}
+\label{fig_reduce}
+\end{minipage}
+}
+\end{figure}
+We try to avoid memo-izing vectors when we don't have to because 
+of the cost of flushing to disk. In our experiments, for \(n > 2^{25}\), 
+memo-izing the input \(w\) and computing min/max/sum sequentially 
+is {\ul six} times slower than using the reduce operator.

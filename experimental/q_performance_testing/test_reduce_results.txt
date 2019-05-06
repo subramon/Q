@@ -1,0 +1,132 @@
+Below numbers are reported by Krushna, tried on GSLab bare metal
+
+test_reduce.lua performance numbers (cpu speed 3.2GHz)
+# Case 1: 
+- input vector creation time is not included
+- build with -O4 flag
+Result -> 3065169036.1 (average of 4 trials)
+ 
+# Case 2:
+- modified s_to_f expander, now it uses vector's buffer directly to write values (memcpy and malloc in vector is avoided)
+- input vector creation time is included
+- build with -O4 flag
+Result -> 4582299138.3 (average of 4 trials)
+
+# Case 3:
+- before modifying the s_to_f expander to use vectors buffer (memcpy and malloc in vector is happening)
+- input vector creation time is included
+- build with -O4 flag
+Result -> 7523887849 (average of 4 trials)
+
+
+	
+Case - 1:
+----------
+gslab@gs-1576:~/krushna/WORK/Q/experimental/q_performance_testing$ luajit test_reduce.lua
+reset timers
+print timers
+0,add,2048,197059
+0,check,0,0
+0,clone,0,0
+0,end_write,0,0
+0,eov,4,701
+0,free,0,0
+0,get,4617,1467996
+0,memo,4,590
+0,new,4,33109
+0,new_virtual,0,0
+0,persist,0,0
+0,set,0,0
+0,start_write,0,0
+1,flush_buffer,2048,356572
+1,memcpy,0,0
+1,memset,0,0
+1,malloc,0,0
+2,sz_malloc,0,0
+Time: sum((((a+b)-c)*d)/e) = time : 3011498135
+=========================
+0,sum_F8,512,134132865
+0,vvdiv_F8_F8_F8,512,654509206
+0,vvsub_F8_F8_F8,512,655729407
+0,Reducer.new,1,12231
+0,vvadd_F8_F8_F8,512,761945099
+0,Reducer.value,1,558
+0,Reducer.eval,1,3008574225
+0,Reducer.next,513,3004262101
+0,vvmul_F8_F8_F8,512,639178244
+Saved to /home/gslab/local/Q/meta/saved.meta
+
+
+Case 2:
+--------
+gslab@gs-1576:~/krushna/WORK/Q/experimental/q_performance_testing$ luajit test_reduce.lua
+reset timers
+print timers
+0,add,4608,639524
+0,check,0,0
+0,clone,0,0
+0,end_write,0,0
+0,eov,9,647
+0,free,0,0
+0,get,4617,1402931
+0,memo,4,284
+0,new,4,33401
+0,new_virtual,0,0
+0,persist,0,0
+0,set,0,0
+0,start_write,0,0
+1,flush_buffer,4608,550316
+1,memcpy,0,0
+1,memset,0,0
+1,malloc,0,0
+2,sz_malloc,0,0
+Time: sum((((a+b)-c)*d)/e) = time : 4575419161
+=========================
+0,sum_F8,512,91409363
+0,vvdiv_F8_F8_F8,512,663078674
+0,vvsub_F8_F8_F8,512,747044512
+0,vvmul_F8_F8_F8,512,657432024
+0,vvadd_F8_F8_F8,512,599382630
+0,Reducer.value,1,10889
+0,Reducer.eval,1,4572290658
+0,Reducer.next,513,4569171822
+0,Reducer.new,1,11968
+0,const_F8,2560,1576192098
+
+
+Case 3:
+--------
+gslab@gs-1576:~/krushna/WORK/Q/experimental/q_performance_testing$ luajit test_reduce.lua
+reset timers
+print timers
+0,add,4608,2280325686
+0,check,0,0
+0,clone,0,0
+0,end_write,0,0
+0,eov,9,1071
+0,free,0,0
+0,get,4617,1785721
+0,memo,4,348
+0,new,4,30229
+0,new_virtual,0,0
+0,persist,0,0
+0,set,0,0
+0,start_write,0,0
+1,flush_buffer,4603,757430
+1,memcpy,2560,2276222179
+1,memset,5,232
+1,malloc,5,117204
+2,sz_malloc,0,0
+Time: sum((((a+b)-c)*d)/e) = time : 7523728821
+=========================
+0,sum_F8,512,135155481
+0,vvdiv_F8_F8_F8,512,791945587
+0,vvsub_F8_F8_F8,512,802211296
+0,vvmul_F8_F8_F8,512,753658581
+0,vvadd_F8_F8_F8,512,855559256
+0,Reducer.value,1,850
+0,Reducer.eval,1,7520618088
+0,Reducer.next,513,7517288667
+0,Reducer.new,1,13526
+0,const_F8,2560,1580870470
+

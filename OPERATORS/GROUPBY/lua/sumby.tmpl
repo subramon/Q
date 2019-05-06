@@ -1,0 +1,92 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include <omp.h>
+#include "_get_bit_u64.h"
+${includes}
+extern int
+${fn}(  
+      const ${val_ctype} * const restrict val_fld,  /* [nR_in] */
+      uint64_t nR_in,
+      const ${grpby_ctype} * const restrict grpby_fld,  /* [nR_in] */
+
+      ${out_ctype} * restrict out_fld, /* [n_buf_per_core * nT] */
+      uint64_t nR_out,
+      unsigned int nT, //  number of threads
+      unsigned int n_buf_per_core,
+
+      const uint64_t * const restrict cfld, 
+      bool is_safe
+      ) 
+;
+
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(  
+      const ${val_ctype} * const restrict val_fld,  /* [nR_in] */
+      uint64_t nR_in,
+      const ${grpby_ctype} * const restrict grpby_fld,  /* [nR_in] */
+
+      ${out_ctype} * restrict out_fld, /* [nR_out] */
+      uint64_t nR_out,
+      unsigned int nT, //  number of threads
+      unsigned int n_buf_per_core,
+
+      const uint64_t * const restrict cfld, 
+      bool is_safe
+      )
+
+{ 
+  int status = 0;
+
+  /* Assumption: out_fld has been set to 0 prior to the call */
+  if ( is_safe ) {
+// TODO #pragma omp parallel for schedule(static, 1024)
+    for ( uint64_t i = 0; i < nR_in; i++ ) {
+      ${grpby_ctype} grpby = grpby_fld[i];
+      if ( ( grpby < 0 ) || ( grpby >= (${out_ctype})nR_out ) ) { 
+        status = -1;
+      }
+    }
+    cBYE(status);
+  }
+  if ( val_fld != NULL ) {
+    omp_set_num_threads(nT);
+    int block_size = nR_in / nT;
+#pragma omp parallel for schedule(static, 1)
+    for ( unsigned int tid = 0; tid < nT; tid++ ) { 
+      uint64_t lb = tid  * block_size;
+      uint64_t ub = lb + block_size;
+      if ( tid == 0      ) { lb = 0; }
+      if ( tid == (nT-1) ) { ub = nR_in; }
+      ${out_ctype} * l_out_fld = out_fld + (tid*n_buf_per_core);
+      ${ifpreamble}
+      for ( uint64_t i = lb; i < ub; i++ ) { 
+        ${ifcond}
+          ${val_ctype} val = val_fld[i];
+          ${grpby_ctype} grpby = grpby_fld[i];
+          l_out_fld[grpby] += val;
+        ${endif}
+        ${ifloop}
+      }
+    }
+  }
+  else {
+    // Aggregate partial results from threads 1, 2, ... into thread 0
+    for ( unsigned int tid = 1; tid < nT; tid++ ) {
+      for ( unsigned int j = 0; j < nR_out; j++ ) {
+        out_fld[j] += out_fld[tid*n_buf_per_core + j];
+      }
+    }
+  }
+BYE:
+  return status;
+}
+   ]]
+}

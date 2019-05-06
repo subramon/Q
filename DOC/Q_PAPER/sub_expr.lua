@@ -1,0 +1,6 @@
+t1 = Q.vsmul(x, Scalar.new(-1, fldtype)):memo(false)
+t2 = Q.exp(t1):memo(false)
+t3 = Q.incr(t2):memo(false)
+t4 = Q.sqr(t3):memo(false)
+y  = Q.reciprocal(t3)
+z  = Q.reciprocal(t4)

@@ -1,0 +1,16 @@
+return function (
+  in_qtype
+  )
+  local qconsts  = require 'Q/UTILS/lua/q_consts'
+  assert(qconsts.iorf[in_qtype] == "fixed", "in_qtype must be integer")
+  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/arith.tmpl"
+  local subs = {}
+  subs.fn = "<<operator>>_" .. in_qtype 
+  subs.in_ctype = assert(qconsts.qtypes[in_qtype].ctype)
+  subs.in_qtype = in_qtype
+  subs.out_qtype = in_qtype
+  subs.out_ctype = assert(qconsts.qtypes[subs.out_qtype].ctype)
+  subs.scalar_ctype = subs.out_ctype 
+  subs.c_code_for_operator = " <<c_code>> "
+  return subs, tmpl
+end

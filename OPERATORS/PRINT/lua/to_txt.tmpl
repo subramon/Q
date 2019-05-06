@@ -1,0 +1,43 @@
+return require 'Q/UTILS/lua/code_gen' {
+  declaration = [[
+#include "q_incs.h"
+
+extern int
+${qtype}_to_txt(
+//    const ${ctype} * const in,
+    ${ctype} * in,
+    const char * const fmt,
+    char *X,
+    size_t nX
+    );
+  ]],
+definition= [[
+#include "_${qtype}_to_txt.h"
+
+//START_FUNC_DECL
+int
+${qtype}_to_txt(
+//    const ${ctype} * const in,
+    ${ctype} * in,
+    const char * const fmt,
+    char *X,
+    size_t nX
+    )
+//STOP_FUNC_DECL
+{
+  int status = 0; size_t nw;
+  if ( X == NULL ) { go_BYE(-1); }
+  if ( nX < 8 ) { go_BYE(-1); }
+  memset(X, '\0', nX);
+  if ( ( fmt == NULL ) || ( *fmt == '\0' ) ) { 
+    nw = snprintf(X, nX-1, "%" ${default_fmt}, *in);
+  }
+  else {
+    nw = snprintf(X, nX-1, fmt, *in);
+  }
+  if ( nw >= nX ) { go_BYE(-1); }
+BYE:
+  return status ;
+}
+  ]]
+}

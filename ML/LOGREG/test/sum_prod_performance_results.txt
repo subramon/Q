@@ -1,0 +1,40 @@
+sum_prod performance numbers
+
+=======================================================================
+
+# Lua implementation - without chunking
+Command :
+$ cd Q/ML/LOGREG/test
+$ luajit -e "require 'test_sum_prod_performance'['t1']()"
+
+Execution time : 37814169946.67 / 10^8 = 378.14
+
+=======================================================================
+
+# Lua implementation - with chunking
+Command :
+$ cd Q/ML/LOGREG/test
+$ luajit -e "require 'test_sum_prod_performance'['t2']()"
+
+Execution time : 144297088343 / 10^8 = 1442.97
+
+=======================================================================
+
+C implementation - vanilla version
+Command :
+$ cd Q/ML/LOGREG/test
+$ bash test_sum_prod3.sh
+
+Execution time : 37414859887.33 / 10^8 = 374.15
+
+=======================================================================
+
+C implementation - blocking fashion
+Command :
+$ cd Q/ML/LOGREG/test
+- call function .sum_prod3(). instead of .vanilla_sum_prod3().  in test_sum_prod3.c 
+$ bash test_sum_prod3.sh
+
+Execution time : 10325303192.67 / 10^8 = 103.25
+
+=======================================================================

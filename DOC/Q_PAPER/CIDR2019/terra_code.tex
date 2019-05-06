@@ -1,0 +1,11 @@
+1   local t_permute = function(elemtyp, idxtyp)
+2     return terra(src: &elemtyp, idx: &idxtyp, 
+                   dest: &elemtyp, n: int, mode: string)
+3       if ( mode == "gather" ) then
+          for i = 0,n do dest[i]=src[idx[i]] end
+        else if ( mode == "scatter" ) then 
+          for i = 0,n do dest[idx[i]] = src[i] end
+        end
+      end
+    end
+4   t_permute = terralib.memoize(t_permute)

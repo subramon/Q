@@ -1,0 +1,41 @@
+{
+  "tmpl_pr_fld" :
+  [
+  {
+      "__XTYPE__" : "I1",
+      "__TYPE__" : "uint8_t",
+      "__FORMAT__" : "%%d",
+      "OUTFILE" : "pr_fld_I1"
+  },
+  {
+      "__XTYPE__" : "I2",
+      "__TYPE__" : "uint16_t",
+      "__FORMAT__" : "%%d",
+      "OUTFILE" : "pr_fld_I2"
+  },
+  {
+      "__XTYPE__" : "I4",
+      "__TYPE__" : "uint32_t",
+      "__FORMAT__" : "%%d",
+      "OUTFILE" : "pr_fld_I4"
+  },
+  {
+      "__XTYPE__" : "I8",
+      "__TYPE__" : "uint64_t",
+      "__FORMAT__" : "%%ld",
+      "OUTFILE" : "pr_fld_I8"
+  },
+  {
+      "__XTYPE__" : "F4",
+      "__TYPE__" : "float",
+      "__FORMAT__" : "%%f",
+      "OUTFILE" : "pr_fld_F4"
+  },
+  {
+      "__XTYPE__" : "F8",
+      "__TYPE__" : "double",
+      "__FORMAT__" : "%%lf",
+      "OUTFILE" : "pr_fld_F8"
+  }
+  ]
+}

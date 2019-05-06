@@ -1,0 +1,62 @@
+\subsection{Logistic Regression}
+
+A key subroutine in logistic regression \cite{Hastie2009} is improving the 
+estimates of the
+coefficients, \(\beta\), using the Newton-Raphson algorithm.
+In the course of this, we need to compute
+\(\frac{1}{1 + e^{-x}}\) and 
+\(\frac{1}{(1 + e^{-x})^2}\).
+We use this to motivate the ``conjoin'' feature of \Q.
+Performing common sub-expression elimination as in 
+Figure~\ref{sub_expr} yields a 2x speedup.
+
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{8 cm}
+\centering
+\verbatiminput{sub_expr.lua}
+\caption{Common sub-expression elimination}
+\label{sub_expr}
+\end{minipage}
+}
+\end{figure}
+
+
+\subsubsection{Lock step evaluation}
+However, the code in Figure~\ref{sub_expr} has a subtle but
+critical bug when the number of elements in \(x\) exceeds the chunk
+size.  If we were to call {\tt eval()} on \(y\), then we would
+end up consuming sucessive chunks of \(t_3\). Now, if we were to call
+{\tt eval()} on \(z\), we would fail when requesting the first
+chunk of \(t_3\), since it has {\bf not} been memo-ized. One solution
+is to ensure that \(y\) and \(z\) are evaluated in lock-step, after they have
+been created, as in Figure~\ref{lock_step}.
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{8 cm}
+\centering
+\verbatiminput{lock_step.lua}
+\caption{Lock step evaluation}
+\label{lock_step}
+\end{minipage}
+}
+\end{figure}
+
+The problem with this solution is that the burden of lock-step evaluation falls
+on the \Q\ programmer. This is remedied by the {\tt conjoin} function
+(Figure~\ref{conjoin})
+
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{8 cm}
+\centering
+\verbatiminput{conjoin.lua}
+\caption{Conjoined Vectors}
+\label{conjoin}
+\end{minipage}
+}
+\end{figure}
+

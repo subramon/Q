@@ -1,0 +1,63 @@
+\section{Q's Run Time System}
+
+\Q\ is a high-performance ``almost-relational'' 
+analytical, single-node, column-store database. 
+\be
+\item 
+By ``analytical'' we mean that data changes at the user's behest e.g.
+loading a data set.
+\item 
+By ``almost-relational'' we mean that it would more correctly
+be called a ``tabular model'' \cite{Codd1982}. As Codd states, ``Tables are
+at a lower level of abstraction than relations, since they give
+the impression that positional (array-type) addressing is applicable
+\ldots even with these minor flaws,
+{\bf tables are the most important conceptual representation of
+relations}, because they are universally understood.''
+\item By ``single-node'', we mean that \Q\ does not distribute computation across
+  machines. The flow of execution is inherently single-threaded. However,
+  OpenMP and CUDA are heavily used {\em within} individual operations so as
+  to exploit multi-core systems as well as GPUs.
+\item By ``column-store'', we mean that 
+\Q\ provides the Lua programmer with the Vector type, each
+individual element of which is a Scalar. A table in \Q\ is a Lua
+table of Vectors, where a Lua table is an
+associative array, like a Python dictionary.
+
+\ee
+
+\subsection{\Q: a Lua extension/Python module}
+
+It is useful to think of \Q\ as a domain specific language, targeted for data
+manipulation. In contrast with Wevers' work \cite{Wevers2014} on
+developing a persistent functional language with
+a relational database system inside, \Q\ works within the context of Lua, while
+inspired by functional programming ideas like memo-ization, lazy evaluation,
+etc.
+More accurately, \Q\ is a C library, embedded within an interpreted
+language.
+We chose to embed within an existing language because (i) we did not have to
+write a custom compiler (ii) it allowed us to leverage a rich eco-system of
+libraries, debuggers, web development environments, allowing the programmer to
+blur the distinction between application logic and database programming.
+
+We chose Lua
+because it was designed specifically as both an embedding and embedded language
+\cite{Lua2011,Lua2018} and it had a wickedly fast interpreter, LuaJIT. 
+In typical workloads, 90\% of the time is usefully spent in the computational
+code; the balance 10\% splits roughly 20:80 between the
+run time system and the Lua glue logic. Among other things, the glue logic
+serves as the bridge between the dynamic typing that \Q\
+supports and the static typing required by the C code underneath.
+
+Recognizing that Python is the dominant language of data science, we built a
+Python interface so that \Q\ can be imported as just another module.
+
+Data is stored in memory and, when necessary, is persisted (uncompressed) in
+binary format to the file system. This allows us to quickly access data by
+mmapp-ing the file.  Like kdb+ \cite{Borror2015}, one can think of \Q\ as 
+an in-memory database with persistent backing to the file system.
+
+\input{vectors}
+
+\input{reducers}

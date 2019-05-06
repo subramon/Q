@@ -1,0 +1,20 @@
+logit - Lua Vs C performance test
+=================================
+
+Test to compare the performance of Q.logit() and logit.lua (lua implementation) at below location
+"Q/DOC/Q_PAPER/CIDR2019/test_logit_performance.lua".
+
+Execution time:
+Q.logit() : 6610523505.5 / 10^8 = 66.105 (pragma omp enabled)
+logit.lua - 20415872953.5 / 10^8 = 204.16
+Q.logit() : 21006819957.4 / 10^8 = 210.07 (pragma omp disabled)
+
+Command to run:
+# Q.logit() test
+$ cd Q/DOC/Q_PAPER/CIDR2019/
+$ luajit -e "require 'test_logit_performance'['t1']()"
+
+# logit.lua test
+$ cd DOC/Q_PAPER/CIDR2019/
+$ luajit -e "require 'test_logit_performance'['t2']()"
+

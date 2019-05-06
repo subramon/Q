@@ -1,0 +1,131 @@
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|l|l|l|} \hline \hline
+{\bf operator} & {\bf explanation} & {\bf reference} \\ \hline \hline
+get\_val\_by\_idx & get value by index & 
+Section~\ref{get_val_by_idx} \\ \hline
+
+set\_sclr\_val\_by\_idx & set scalar value by index & 
+Section~\ref{set_sclr_val_by_idx} \\ \hline
+
+add\_vec\_val\_by\_idx & Accumulate vector value by index & 
+Section~\ref{add_vec_val_by_idx} \\ \hline
+
+vvmul & vector-vector multiply & Section~\ref{vvmul} \\ \hline
+
+vsleq & vector-scalar \(\leq\) comparison & Section~\ref{vsleq} \\ \hline
+
+ifxthenyelsez & ternary operator \verb+ x ? y : z+ & 
+Section~\ref{ifxthenyelsez} \\ \hline
+
+where & select rows where condition is true & 
+Section~\ref{where} \\ \hline
+
+const & create constant vector Section~\ref{const} \\ \hline
+\hline
+\end{tabular}
+\caption{Selected Q operators}
+\label{tbl_q_ops}
+\end{table}
+\section{Details of Q Operators}
+\label{Q_ops}
+
+\subsection{get\_val\_by\_idx}
+\label{get_val_by_idx}
+\bi
+\item Inputs: (1) \(x\), Vector  (2) \(y\), Vector
+
+\item Outputs: \(z\), Vector, same length as \(x\)
+
+\item Operation: \(z[i] \leftarrow y[x_i]\)
+\ei
+
+\subsection{set\_sclr\_val\_by\_idx}
+\label{set_sclr_val_by_idx}
+\bi
+\item Inputs: (1) \(x\), Vector  (2) \(s\), Scalar
+
+\item Modified: \(z\), Vector
+
+\item Operation: \(x[i] = j \Rightarrow z[j] \leftarrow s\)
+\ei
+
+\subsection{add\_vec\_val\_by\_idx}
+\label{add_vec_val_by_idx}
+\bi
+\item Inputs: (1) \(x\), Vector  (2) \(y\), Vector, same length
+
+\item Modified: \(z\), Vector \(\forall i: 0 \leq y[i] \leq z:\mathrm{length}() - 1\)
+
+\item Operation: \(x[i] = j \Rightarrow z[j] \leftarrow z[j] + y[i]\)
+\ei
+
+
+\subsection{vvmul}
+\label{vvmul}
+\bi
+\item Inputs: (1) \(x\), Vector  (2) \(y\), Vector, same length as \(x\)
+
+\item Outputs: \(z\), Vector, same length as \(x\)
+
+\item Operation: \(z[i] \leq x[i] + y[i]\)
+\ei
+
+\subsection{vsleq}
+\label{vsleq}
+\bi
+\item Inputs: (1) \(x\), Vector  (2) \(y\), Scalar
+
+\item Outputs: \(z\), bit-Vector, same length as \(x\)
+
+\item Operation: \(x[i] \leq y \Rightarrow z[i] = 1\); else, \(z[i] = 0\)
+\ei
+
+%% \subsection{ainb}
+%% \bi
+%% \item Inputs: (1) \(x\), Vector  (2) \(y\), Vector
+%% 
+%% \item Outputs: \(z\), bit-Vector of same length as \(x\)
+%% 
+%% \item Operation: \(z[i] = 1\) if \(\exists j: x[i] = y[j]\); else, 0
+%% 
+%% \ei
+
+\subsection{ifxthenyelsez}
+\label{ifxthenyelsez}
+\bi
+\item Inputs: (1) \(x\), bit-Vector (2) \(y\), Scalar (3) \(z\), Vector, all of
+the same length
+
+\item Outputs: \(w\) Vector of same length and type as \(y\)
+
+\item Operation: \(x[i] = 1 \Rightarrow w[i] \leftarrow y\); else, \(w[i]
+\leftarrow z[i]\)
+
+\ei
+
+
+\subsection{where}
+\label{where}
+\bi
+\item Inputs: (1) \(x\), Vector  (2) \(y\), bit-Vector, same length as \(x\)
+
+\item Outputs: \(z\), Vector of same type as \(x\)
+
+\item Operation: \(z\) contains \(x[i]\) only if
+\(y[i] = 1\). Order of elements in  \(z\) same as \(x\)
+
+\ei
+
+\subsection{const}
+\label{const}
+\bi
+\item Inputs: (1) \(s\), Scalar 
+
+\item Outputs: \(x\), Vector of same type as \(s\)
+
+\item Operation: \(x[i] = s\)
+
+\ei
+

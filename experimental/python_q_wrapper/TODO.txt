@@ -1,0 +1,88 @@
+Things to verify
+1) run the Q/Python code through a standard Python debugger?
+2) run the Q/Python code through Jupyter Notebooks
+3) execute individual lVector methods like set_name(), eval(), ...
+4) When running through debugger, 
+  set breakpoint, 
+  execute Q.save(), 
+  start CLI, 
+  restore meta data in CLI, 
+  execute Q.save() again, 
+  exit CLI, 
+  resume IDE and
+  see effect of CLI changes if any
+5) Restoring an earlier session
+  a) start IDE
+  b) do some stuff
+  c) execute Q.restore(...)
+  d) verify that you can access things in saved session
+6) Concatenate operators e.g.,
+  x = Q.add(Q.sub(Q.mul(Q.const, {})))
+6) Concatenate lVector methods
+  x = Q.const, {}):set_name("xxx"):eval()
+7) What about creating pScalar to match up with Scalar?
+8) What about arguments that could have more than one type?
+  Q.print_csv(x) and Q.print_csv({x, y})
+9) What about null arguments 
+  Q.print_csv(x, nil)
+  versus 
+  Q.print_csv(x, opt_args)
+  or
+  Q.cum_cnt(c1, nil, { cnt_qtype = cnt_qtype } ):eval()
+10) Can we re-write the test runner to run from Python instead of from LuaJIT?
+
+11) Consider being influenced by numpy. For example, we are currently 
+using I1, I2, ... whereas numpy uses int8, int16, int32, int64, ...
+
+12) You have
+sys.stdout.write(Q.print_csv(vec, opfile=""))
+why does the following not work?
+Q.print_csv(vec, opfile="")
+
+13) As another example, 
+x = np.array([1, 2, 3]) -- one can provide a dtype or data type
+type(x) = numpy.ndarray
+
+in contrast with 
+x = Q.mk_col([1,2, 3], "I1")
+type(x) == pVector
+
+
+14) Can we overload operators (low priority)
+
+x = y + 2
+versus
+Q.vsadd(y, 2)
+
+
+x == (x - ( x + y ) )
+
+15) Garbage collection
+>>> From the experiment that I tried, it looks like lua garbage collector is taking care of performing the cleanup activity (deleting vector files when python scope is over) for the vectors that get created from python.
+Experiment:
+- created two vectors, performed operations like add, sub etc
+- when out vector is eval'ed, files were generated in Q data dir
+- after completion of the test, those get deleted
+
+In that case, create a stress test as follows. loop of 1M iterations. In each iteration create a big vector of say 1M elements and eval it. But the vector is local to the loop and hence should get destroyed on the next iteration. Look at some of our stress*lua examples in RUNTIME/test/
+
+16) Pip install Q (Q1 2019)
+ Break down aio.sh into smaller parts, convert to Lua
+
+17) Convert to and from Pandas dataframe
+
+18) To extend pVector to handle nn vector as well
+
+19) consider whether we should use pcall from python to lua and also what
+happens if we just do assert(nil) 
+
+20) where does error message go?
+
+21) what happens with multiple returns from Lua
+
+22) do we handle returns of tables of Vectors 
+Please make a list of all the things that we can return and test for each
+
+23) What about returning Reducers
+
+24) Think about a stub file to enable auto-suggestions of name and signature

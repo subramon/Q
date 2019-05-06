@@ -1,0 +1,27 @@
+Use below steps to install Jupyter
+
+prerequisite - python (3.3 or greater, or python 2.7, Note - I tried with python 2.7)
+
+- Install python-dev and python-pip packages
+$ sudo apt-get update
+$ sudo apt-get install python-dev
+$ sudo apt-get install python-pip
+
+- Upgrage pip
+$ sudo pip install --upgrade pip
+
+- Install Jupyter package
+$ sudo -H pip install jupyter
+
+- Start Jupyter server as below
+$ jupyter notebook
+This will open notebook in browser
+
+Following are some options that can be used while starting Jupyter server
+--allow-root ==> allows root user
+--no-browser ==> doesnot open browser when server is started
+--port ==> specify port number (default port is 8888)
+--ip ==> specify the ip (default listens on localhost)
+
+Eg.
+$ jupyter notebook --allow-root --no-browser --port 9999 --ip 192.168.85.149

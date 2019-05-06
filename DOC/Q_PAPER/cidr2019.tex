@@ -1,0 +1,35 @@
+% \startreport{Manual Over-rides for Analytical Databases}
+\startreport{Analytical database design: F1 racing car or SUV?}
+\reportauthor{Ramesh Subramonian et al}
+
+\makeatletter
+    \let\@internalcite\cite
+    \def\cite{\def\citeauthoryear##1##2{##1, ##2}\@internalcite}
+    \def\shortcite{\def\citeauthoryear##1{##2}\@internalcite}
+    \def\@biblabel#1{\def\citeauthoryear##1##2{##1, ##2}[#1]\hfill}
+\makeatother
+\newcommand{\Q}{{\tt Q} }
+
+
+\input{abstract}
+
+\input{intro}
+
+\input{rts}
+
+\input{applications}
+
+\input{q_features}
+
+% \input{terra_permute}
+
+\input{debugging}
+
+% \input{ffi}
+\input{future}
+\input{end}
+
+% \bibliographystyle{ACM-Reference-Format}
+\bibliographystyle{alpha}
+\bibliography{cidr2019}
+

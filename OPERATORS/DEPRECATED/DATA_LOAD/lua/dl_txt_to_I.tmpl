@@ -1,0 +1,58 @@
+return require 'Q/UTILS/lua/code_gen' { 
+declaration = [[
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <errno.h>
+#include <float.h>
+#include <inttypes.h>
+#include <limits.h>
+#include "q_macros.h"
+#include "_is_valid_chars_for_num.h"
+
+extern int
+txt_to_${out_type_displ}(
+      char * const X,
+      int base,
+      ${out_type} *ptr_out
+      );
+
+]],
+
+definition = [[
+#include "_txt_to_${out_type_displ}.h"
+
+//START_FUNC_DECL
+int
+txt_to_${out_type_displ}(
+      char * const X,
+      int base,
+      ${out_type} *ptr_out
+      )
+//STOP_FUNC_DECL
+{
+  int status = 0;
+  char *endptr;
+  errno = 0;
+  ${big_out_type} out = 0;
+  if ( ( X == NULL ) || ( *X == '\0' ) ) { go_BYE(-1); }
+  if ( !is_valid_chars_for_num(X) ) { go_BYE(-1); }
+  out = ${converter}(X, &endptr, base);
+  if ( ( *endptr != '\0' ) && ( *endptr != '\n' ) ) { go_BYE(-1); }
+  if ( ( out < ${min_val} ) || ( out > ${max_val} ) ) { go_BYE(-1); }
+  if ( ((errno == ERANGE) && ((out == ${max_val}) || (out == ${min_val})))
+      || ((errno != 0) && (out == 0))) {
+    fprintf(stderr, "Could not convert [%s] to ${out_type_displ}\n", X);
+    go_BYE(-1);
+  }
+
+  if (endptr == X) {
+    fprintf(stderr, "No digits were found\n"); go_BYE(-1);
+  }
+
+  *ptr_out = (${out_type})out;
+BYE:
+  return status ;
+}
+]]
+}

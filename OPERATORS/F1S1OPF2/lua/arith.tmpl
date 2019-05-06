@@ -1,0 +1,56 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include <unistd.h>
+#include <stdint.h>
+
+extern int
+${fn}(  
+      const ${in_ctype} * restrict in,  
+      uint64_t *nn_in,
+      uint64_t nR,
+      ${in_ctype} *ptr_sval,
+      ${out_ctype} * out,
+      uint64_t *nn_out
+      ) 
+;
+
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(  
+      const ${in_ctype} * restrict in,
+      uint64_t *nn_in,
+      uint64_t nR,  
+      ${in_ctype} *ptr_sval,
+      ${out_ctype} * out,
+      uint64_t *nn_out
+      )
+
+{
+  int status = 0;
+
+  if ( in == NULL ) { go_BYE(-1); }
+  if ( out == NULL ) { go_BYE(-1); }
+  if ( ptr_sval == NULL ) { go_BYE(-1); }
+  if ( nR == 0 ) { go_BYE(-1); }
+  ${in_ctype} sval = *ptr_sval;
+
+#pragma omp parallel for schedule(static, 1024)
+  for ( uint64_t i = 0; i < nR; i++ ) { 
+    ${in_ctype} a = in[i]; 
+    ${in_ctype} b = sval; 
+    ${out_ctype} c; 
+    ${c_code_for_operator}
+    out[i] = c;
+  } 
+  BYE:
+  return status;
+}
+   ]]
+}

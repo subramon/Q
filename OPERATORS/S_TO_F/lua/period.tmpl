@@ -1,0 +1,63 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_macros.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+// Below structure needs to be same as structure template in period_mem_initialize.lua
+typedef struct _period_${out_qtype}_rec_type {
+   ${out_ctype} start;
+   ${out_ctype} by;
+   int period;
+} PERIOD_${out_qtype}_REC_TYPE;
+
+extern int
+period_${out_qtype}(
+  ${out_ctype} *X,
+  uint64_t nX,
+  PERIOD_${out_qtype}_REC_TYPE *ptr_in,
+  uint64_t idx
+  );
+   ]],
+
+   definition = [[
+
+#include "_period_${out_qtype}.h"
+
+//START_FUNC_DECL
+int
+period_${out_qtype}(
+  ${out_ctype} *X,
+  uint64_t nX,
+  PERIOD_${out_qtype}_REC_TYPE *ptr_in,
+  uint64_t idx
+  )
+//STOP_FUNC_DECL
+{
+  int status = 0;
+
+  ${out_ctype} start = ptr_in->start;
+  ${out_ctype} by    = ptr_in->by;
+  int         period = ptr_in->period;
+
+  int offset = idx % period;
+  ${out_ctype} j = start + (by * ( idx % period));
+  for ( uint64_t i = 0; i < nX; i += 1 ) { 
+    X[i] = j;
+    offset++;
+    if ( offset == period ) { 
+      offset = 0;
+      j = start;
+    }
+    else {
+      j += by;
+    }
+  }
+  return status;
+}
+
+   ]]
+}

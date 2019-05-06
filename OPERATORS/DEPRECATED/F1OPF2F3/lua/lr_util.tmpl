@@ -1,0 +1,43 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include <math.h>
+#include "q_incs.h"
+${includes}
+extern int
+${fn}(  
+      const ${in1_ctype} * restrict in1,  
+      uint64_t nR,  
+      ${out1_ctype} * restrict out1,
+      ${out2_ctype} * restrict out2
+      ) 
+;
+
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(  
+      const ${in1_ctype} * restrict in,  
+      uint64_t nR,  
+      ${out1_ctype} * restrict out1,
+      ${out2_ctype} * restrict out2
+      )
+
+{ 
+  int status = 0;
+#pragma omp parallel for schedule(static, Q_MIN_CHUNK_SIZE_OPENMP)
+  for ( uint64_t i = 0; i < nR; i++ ) {  
+    ${out1_ctype} temp1 = exp(in[i]);
+    ${out1_ctype} temp2 = 1 + temp1;
+    out1[i] = temp1 / (1 + temp1);
+    out2[i] = temp1 / (temp2 * temp2 );
+  } 
+  return status;
+}
+
+   ]]
+}

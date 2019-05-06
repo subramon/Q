@@ -1,0 +1,322 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage[margin=1in]{geometry}
+
+\title{A Simple Solver for Matrix Equations}
+\author{Andrew Winkler, Ph.~D.}
+
+\newcommand{\bmat}[1]{\begin{bmatrix}#1\end{bmatrix}}
+
+\begin{document}
+
+\maketitle
+
+\section{Abstract}
+
+We derive a solver for linear systems $Ax=b$, which works for real, complex, rational,
+and certain other scalars. It is related to the Cholesky decomposition, but sidesteps creating a factorization
+to directly construct the solution. We include a C implementation of the most important case, that where
+real numbers are represented as double precision numbers and the matrix $A$ is symmetric and positive semi-definite.
+
+\section{Definitions}
+
+The adjoint of a matrix, denoted $A^*$, is equivalent to the transpose when the
+matrix has real entries. The transpose is exchanging the rows and columns of the
+matrix, so that $A_{i, j} = A^*_{j, i}$.
+
+A symmetric matrix is symmetric along its diagonal, so that $A_{i, j} = A_{j,
+  i}$. Notice that this is equivalent to saying that $A = A^*$.
+
+A positive definite matrix $A$ satisfies the property that for any non-zero
+vector $x$, $x^*Ax > 0$. A positive semi-definite matrix only needs to satisfy
+$x^tAx \geq 0$. Notice that for any matrix $A$, we have $(A^*A) = A^* A^{**} =
+A^*A$, and $x^*(A^*A)x = (Ax)^*(Ax) \geq 0$ for any $x$. So $A^*A$ is always
+symmetric and positive semi-definite.
+
+\section{Linear Equations}
+
+We seek all $x$ for which $Ax=b$. We start by noticing that if
+$Ax=b$, then also $A^*Ax=A^*b$. The converse need not be true,
+but $\{x|Ax=b\} \subset \{x|A^*Ax = A^*b\}$, and in fact it's the simplest sort of subset:
+it's either empty, or it's everything. To see this, note that if $A^*Ax_1 = A^*Ax_2 $,
+then $$0 = A^*A(x_1-x_2)
+0=(x_1-x_2)^*A^*A(x_1-x_2)=(A(x_1-x_2))^*(A(x_1-x_2)) $$ But then $A(x_1-x_2)=0
+$, so $Ax_1 = Ax_2 $. Thus any solutions $x_1, x_2$ to $A^*Ax = A^*b$ must satisfy
+$Ax_1 = Ax_2$, and so they are either all equal to $b$ or there is no solution.
+
+So if we find any solution to $A^*Ax = A^*b$, we can then compare $Ax$ to $b$
+and either $x$ is a solution, or there is no solution.
+
+But recall that $A^*A$ is positive and semidefinite, and so an algorithm for
+solving positive semidefinite linear equations can easily be adapted to solve
+any linear equation through the conversion described above. We describe such an
+algorithm in the next section.
+
+\section{Linear Positive Equations}
+
+Let $A$ be a symmetric and positive semidefinite matrix in $n$ dimensions. We want to find a solution to
+$Ax = b$.
+
+We write $A = A_n$ as $\bmat{\alpha_n & a^*_{n - 1} \\ a_{n - 1} & A_{n
+    - 1}}$, tagging each element with their dimension.
+If $n = 1$, then all expressions involving $A_{n-1}$, $a_{n - 1}$, or $b_{n - 1]}$ are
+empty sums, and therefore 0. Otherwise, $A_{n - 1}$ is $n-1$ by $n-1$, and $a_{n
+- 1}$ and $b_{n - 1}$ are $n-1$ column vectors, while $\alpha_n$ is a scalar.
+
+Since $A_n=A^*_n$, we have
+$$ \bmat{\alpha_n & a^*_{n-1} \\ a_{n - 1} & A_{n - 1}} = 
+   \bmat{\alpha_n & a_{n-1}^* \\ a_{n-1} & A_{n-1}}^* = 
+   \bmat{\alpha_n^* & a_{n-1}^* \\ a_{n-1} & A_{n-1}} $$
+and it follows that $\alpha_n^*=\alpha_n$, $A_{n-1}^{*} = A_{n-1}$.
+
+Moreover, 
+$$
+0 \leq \bmat{1\\0}^*\bmat{\alpha_n & a_{n-1}^* \\ a_{n-1} & A_{n-1}}\bmat{1\\0}
+= \bmat{1&0}\bmat{\alpha_n \\ a_{n-1}}
+= \alpha_n
+$$
+There are then two cases to consider, $\alpha = 0$ and $\alpha > 0$. In either
+case, we will reduce the problem to a new equation $A'x = b'$, where $A'$ in
+$b'$ are in $n - 1$ dimensions, and then recursively apply the algorithm until
+the problem is solved.
+
+\subsection{Case 1}
+Suppose $\alpha_n=0$. Then in fact it's also true that $a_{n-1}=0$, since for
+any $\chi$ we must have
+\begin{align*}
+  0 &\leq \bmat{\chi\\a_{n-1}}^*\bmat{0 & a_{n-1}^*
+  \\ a_{n-1} & A_{n-1}}\bmat{\chi\\a_{n - 1}} \\&= \bmat{\chi^* & a_{n-1}^*} \bmat{a_{n-1}^*a_{n-1}\\a_{n-1}\chi+A_{n-1}a_{n-1}}
+\\&= \chi^*a_{n-1}^*a_{n-1} + a_{n-1}^*a_{n-1}\chi + a_{n-1}^*A_{n-1}a_{n-1}
+\end{align*}
+
+Notice that the first inequality relies on the assumption that $A_n$ was
+positive semidefinite. To see that this equation forces $a_{n-1}$ to be zero,
+notice that this is the equation of a line. The only lines that have no negative
+values are horizontal, so the slope $2a_{n-1}^*a_{n-1}$ must be zero, which means $a_{n-1}$ must
+be zero.
+
+Our equation then simplifies to 
+$$\bmat{0 & 0 \\ 0 & A_{n-1}}\bmat{\chi_n\\x_{n-1}} =\bmat{\beta_n\\b_{n-1}}$$,
+or $0=\beta_n$, and$A_{n-1}x_{n-1}=b_{n-1} $. The first equation tells us that
+there can be no solution unless $\beta_n=0$. If, however, it is, then any
+solution $x_{n-1}$ of the second equation, which we note, satisfies the same
+properties we required of $A_n$, can be combined with any number $z_n$ into a
+solution, $A_n\bmat{z_n\\x_{n-1}} = b_n$
+
+
+In particular, we can always take $z_n$ to be 0.
+
+\subsection{Case 2}
+Suppose $\alpha_n>0$. Then
+\begin{align*}
+&\bmat{\alpha_n & a_{n-1}^* \\ a_n & A_{n-1}}\bmat{\chi_n\\x_{n-1}}=\bmat{\beta_n\\b_{n-1}}
+\\\iff&
+\alpha_n\chi_n + a_{n-1}^*x_{n-1} = \beta_n &\text{ and }\hspace{2em}&
+a_n\chi_n + A_{n-1}x_{n-1} = b_{n-1}
+\\\iff&
+\alpha_n\chi_n= \beta_n - a_{n-1}^*x_{n-1}  &\text{ and }\hspace{2em}&
+a_n\chi_n + A_{n-1}x_{n-1} = b_{n-1}
+\\\iff&
+\chi_n= \alpha_n^{-1}(\beta_n - a_{n-1}^*x_{n-1}) &\text{ and }\hspace{2em}&
+a_n\alpha_n^{-1}(\beta_n - a_{n-1}^*x_{n-1}) + A_{n-1}x_{n-1} = b_{n-1}
+\\\iff&
+\chi_n= \alpha_n^{-1}(\beta_n - a_{n-1}^*x_{n-1}) &\text{ and }\hspace{2em}&
+a_n\alpha_n^{-1}(- a_{n-1}^*x_{n-1}) + A_{n-1}x_{n-1} = b_{n-1}-a\alpha_n^{-1}\beta_n
+\\\iff&
+\chi_n= \alpha_n^{-1}(\beta_n - a_{n-1}^*x_{n-1}) &\text{ and }\hspace{2em}&
+(A_{n-1} - a_{n-1}\alpha_n^{-1}a_{n-1}^*)x_{n-1} = b_{n-1}-a_{n-1}\alpha_n^{-1}\beta_n
+\end{align*}
+
+  
+So if we can solve the second equation, the first equation shows us how to convert it into a solution
+of the original equation. Notice that if 
+$b_n =0 $, then so is the derived right hand side; a homogeneous problem generates
+a homogeneous subproblem.
+
+But this second equation is again of the same form, because
+\begin{gather}{}(A_{n-1} - a_{n-1}\alpha_n^{-1}a_{n-1}^*)^* = 
+A_{n-1}^{*} - a_{n-1}^{**}\alpha_n^{-1}a_{n-1}^* = 
+A_{n-1} - a_{n-1}\alpha_n^{-1}a_{n-1}^* 
+\end{gather}
+and moreover, for any vector $x$ we have
+\begin{gather}{}
+0 \leq \bmat{-\alpha_n^{-1}a_{n-1}^*x\\x}^*\bmat{\alpha_n & a_{n-1}^* \\ a_{n-1} & A_{n-1}}\bmat{-\alpha_n^{-1}a_{n-1}^*x\\x}
+= 
+x^*(A_{n-1} - a_{n-1}\alpha_n^{-1}a_{n-1}^*)x
+\end{gather} So the derived submatrix is nonnegative, and positive if the original matrix is.
+
+As in either case we have reduced to either the base case of dimension one or to a similar problem in one dimension smaller, the solution, whether it exists or
+not, and whether or not multiple solutions exist, is complete.
+\newpage  
+\section{Example}
+
+We'll run the algorithm to find a solution to the following equation:
+$$ Ax = \bmat{1 & -4 & 3\\-2 & 3 & 0\\3 & 1 & 1}x = \bmat{ 2\\ -3 \\ 1 } = b $$
+
+We first compute
+$$A^*A = \bmat{14 & -7 & 6\\ -7 & 26 & -11\\6 & -11 & 10} = A_3 \hspace{5em} A^*b =
+\bmat{11\\ -16\\ 7} = \bmat{\beta_3\\b_2}$$
+and then we have
+$$\alpha_3 = 14 \hspace{3em} a_2 = \bmat{-7\\6} \hspace{3em} A_2 = \bmat{26 &
+  -11\\-11 & 10}$$
+Since $\alpha_3 > 0$, we're in case 2, which tells us that that $\chi_n$, the
+first entry in $x$, will be equal to $\alpha_3^{-1}(\beta_3 - a^*_2x_2) = (11 -
+\bmat{-7 & 6}x_2)/14$, and we can find $x_2$ by solving the smaller equation
+$$ (A_2 - a_2\alpha_3^{-1}a_2^*)x_2 = b_2 - a_2\alpha_3^{-1}\beta_3$$
+We compute
+$$ A_2 - a_2\alpha_3^{-1} a_2^* = \bmat{26 & -11\\-11 & 10} - \bmat{-7 \\
+  6}\bmat{-7&6}/14 = \bmat{26 & -11\\-11 & 10} - \bmat{7/2 & -3\\-3 & 18/7} =
+\bmat{45/2 & -8\\-8 & 52/7}$$
+and
+$$ b_2 - a_2\alpha_3^{-1}\beta_3 = \bmat{-16\\7} - \tfrac{11}{14}\bmat{-7\\6} =
+\bmat{-21/2\\ 16/7} = \bmat{\beta_2\\b_1} $$
+
+We now have $\alpha_2 = 45/2$, $a_1 = -8$, $A_1 = 52/7$, and from case 2
+we know $\chi_2 = \alpha_2^{-1}(\beta_2 - a_1x_1)$ and $(A_1 - a_1^2/\alpha_2)x_1
+= b_1 - a_1\beta_2/\alpha_2$. This is a linear equation which we can solve to
+get
+$$ x_1 = \frac{16/7 - (-8)(-21/2)/(45/2)}{52/7 - (-8)^2/(45/2)} =
+\frac{-6}{19} $$
+Substituting $x_1$ into our above equation for $\chi_2$, we find
+$$ \alpha_2^{-1}(\beta_2 - a_1x_1) = (-21/2 - (-8)(-6/19))/(45/2) = \frac{-11}{19} $$
+Plugging everything back into the first equation for $\chi_3$ we find
+$$(\beta_3 - a_2^*x_2)/\alpha_3 = (11 - \bmat{-7 & 6}\bmat{-11/19\\-6/19})/14
+= 12/19$$
+It remains to check that this solution is valid for $A$ and $b$, and indeed
+$$ \bmat{1 & -4 & 3\\-2 & 3 & 0\\3 & 1 & 1}\bmat{12/19\\-11/19\\-6/19} =
+\bmat{2\\ -3 \\ 1}  $$
+
+\section{Generalizing}
+
+We'll here describe how to generalize the algorithm to fields beyond the reals.
+$A^*$ now denotes the adjoint operation, which is transposing and then
+conjugating the elements of a matrix. If $a$ is a single number, then $a^*$ is
+just its conjugate.
+
+The algorithm works perfectly well for finite dimensional Hilbert spaces over various fields, to be described. However, since the method implicitly constructs a basis for the vector space, for ease of exposition and with no real loss of generality, we assume already chosen an orthonormal basis, with respect to which A is a matrix, and x and b are column vectors.
+
+We can view rational numbers as lying in the larger field of real numbers; likewise the real numbers in the complex numbers, and the complex numbers in the quaternions. A quaternion satisfies $(a + bi +cj + dk)^* = (a -bi -cj -dk)$, from which it is immediate that $q^*q = a^2 + b^2 + c^2 + d^2 >= 0$. Moreover if $q^*q =0$ then $q =0$.
+$q* = q$ if and only if $q$ is real.
+
+The algorithm assumes only that the field is some subfield of the quaternions, which is closed under this conjugation operation, which is the same thing as saying that if $\alpha$ is in the field, so is $\alpha^*\alpha$, or equivalently $\alpha + \alpha^*$. This is of course true of the rationals, the reals, any subfield of the reals, the complexes, and the quaternions.
+
+\section{After-thought}
+This section can be safely skipped by anyone whose interest is confined to
+the real numbers, the complex numbers, the rational numbers, or even the quaternions.
+
+As described above, the method works provided the scalars are taken from any subfield of the
+quaternions which is closed under the * operation. More precisely, we really
+need $\alpha^* = \alpha$ if and only if $\alpha$ is real, that $\alpha^*\alpha >= 0$, and that 
+$\alpha^*\alpha = 0$ only if $\alpha=0$.
+
+But the method works, at least in some cases, even if the field is not *-closed.We can take the *-closure of any subfield of the quaternions, by intersecting all *-closed subfields containing it. Since the quaternions are *-closed, that *-closure is a *-closed subfield of the quaternions. We can then find all solutions composed of vectors having entries in the closure; it remains to determine
+which of those solutions, if any, lie in the original field. In the case where
+$A$ is positive, the solution is unique, and a solution whose entries lie in the original field does exist, so must coincide with the solution obtained by this method, which then must necessarily also have entries lying in the original field.
+\newpage
+\section{Implementation Notes}
+\subsection{Code}
+At each level of recursion, we only need to retain
+$a_n$,
+$\alpha_n$
+and
+$\beta_n$, allowing us to overwrite
+$A_{n-1}$
+with $(A_{n-1} - a_n\alpha_n^{-1}a_n^*)$
+and
+$b_{n-1}$ with
+$b_{n-1}-a_n\alpha_n^{-1}\beta_n$
+.
+
+We conclude with a C-language implementation of a solver for the positive semi-definite case, where
+$x^*Ax >=0 $ for all $x$.
+
+\begin{verbatim}
+static int _positive_solver_rec(
+    double ** A,
+    double * x,
+    double * b,
+    int n
+    )
+{
+  int status = 0;
+  /// printf("The alpha is %f\n", A[0][0]);
+  if (n < 1) { go_BYE(-1); }
+  if (n == 1) {
+    if (A[0][0] == 0.0) {
+        if (b[0] != 0.0) { go_BYE(-1); }
+        x[0] = 0.0;
+        return 0;
+    }
+    x[0] = b[0] / A[0][0];
+    return 0;
+  }
+
+  double * bvec = b + 1;
+  double * Avec = A[0] + 1;
+  double ** Asub = A + 1;
+  double * xvec = x + 1;
+
+  int m = n -1;
+
+  if (A[0][0] != 0.0) {
+    for(int i=0; i < m; i++){
+      bvec[i] -= Avec[i] * b[0] / A[0][0];
+      for(int j=0; j < m - i; j++)
+        Asub[i][j] -= Avec[i] * Avec[i+j] / A[0][0];
+    }
+  } /* else check that Avec is 0 */
+
+  status = _positive_solver_rec(Asub, xvec, bvec, m);
+  cBYE(status);
+  if ( status < 0 ) { return status; }
+
+  if (A[0][0] == 0.0) {
+      if (b[0] != 0.0) { go_BYE(-1); }  /* or close enough... */
+      x[0] = 0.0;
+      return status;
+  }
+
+  double p = 0;
+  for ( int k = 0; k < m; k++ ) {
+    p += Avec[k] * xvec[k];
+  }
+
+  x[0] = (b[0] - p) / A[0][0];
+
+BYE:
+  return status;
+}
+\end{verbatim}
+
+\subsection{Benchmarks}
+
+In the following table, $n$ is the dimension of the matrix,
+POSDEF refers to solvers that only work on positive
+semi-definite matrices, FULL refers to solvers that work on any matrix, and SLOW
+and FAST differentiates whether the solver copies its input to avoid destroying
+it.
+
+The numbers given are in CPU cycles, as reported by the RDTSC function.
+
+There are two additional functions in the API not included in the table, which
+work on fully specified positive definite matrices (rather than the compact
+symmetric form which our work function expects). Their performance was
+equivalent to the corresponding POSDEF functions.
+
+The benchmarking was done on a VirtualBox instance which was given full access
+to one core of a 2.80GHZ i7-4980HQ.
+\\
+
+\makebox[\textwidth][c]{
+  \begin{tabular}{c | c | c | c | c | c}
+    $n$ & POSDEF\_SLOW & POSDEF\_FAST & LAPACK\_POSDEF & FULL & LAPACK\_FULL\\\hline
+    $2^6$ & 3.145e05 & 2.767e05 & 1.344e05 & 5.400e05 & 2.295e05\\
+    $2^7$ & 2.082e06 & 2.245e06 & 0.816e06 & 4.860e06 & 1.522e06\\
+    $2^8$ & 1.705e07 & 1.645e07 & 0.679e07 & 3.560e07 & 1.176e07\\
+    $2^9$ & 1.280e08 & 1.252e08 & 0.520e08 & 2.822e08 & 0.833e08\\
+    $2^{10}$ & 1.010e09 & 0.995e09 & 0.420e09 & 2.288e09 & 0.683e09\\
+    $2^{11}$ & 7.709e09 & 7.784e09 & 3.281e09 & 17.73e09 & 4.674e09\\
+    $2^{12}$ & 6.115e10 & 6.152e10 & 2.742e10 & 14.63e10 & 4.039e10
+  \end{tabular}
+}
+\end{document}

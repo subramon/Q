@@ -1,0 +1,13 @@
+static verus dynamic scheduling for OpenMP
+
+all specializers should return
+1) fn == name of function
+2) proto = function prototype
+3) anything else needed e.g, output type for f1f2opf3 and so on
+
+
+
+I will write a new function called
+
+Q.eq(x, y, epsilon), which takes 2 vectors x, y and a Scalar epsilon and returns true if abs(x[I]-y[I]) < epsilon for all I
+

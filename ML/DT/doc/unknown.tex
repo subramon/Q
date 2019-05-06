@@ -1,0 +1,50 @@
+\section{Unknown Values}
+\label{unknowns}
+
+\begin{quote}
+When you come to a fork in the road, take it \footnote{attributed to Yogi Berra}
+\end{quote}
+Assume that we have \(X\) instances of which the fraction which have class
+``Heads'' is \(p_H\) and Tails is \(p_T\).
+Assume that we are considering splitting using
+a feature \(f\) such that \(X' \subseteq X\) of the instances have unknown
+values for this feature. 
+the form \(x \leq y\). 
+
+In terms of the training process, unknown values affect the process 
+as follows.  With each instance \(x_i \in X\) is associated a weight \(w_i\),
+initialized to 1. Let \(X'\) be the instances where the value of the splitting feature is unknown.
+
+\be
+\item Benefit benefit calculation of Section~\ref{XXX}. 
+For all \(x_i \in X'\), we treat it as if it were two instances, one with a class of Heads and a weight of \(w_i \times p_H\) and the other with a class of Tails and a weight of \(w_i \times p_T\)
+\item Partitioning the subsets of the data passed to the left child and right child.  All elements of \(X'\) are passed to the left child with a weight of \(w_i \times p_H\) and to the right child with a weight of \(w_i \times p_T\).  See Figure~\ref{fig_unknown_values}.
+\ee
+
+In terms of the testing process, the change in evaluation is as follows.
+Hitherto, a test instance given to a decision tree ends up at precisely one leaf
+node. The proportion of heads and tails at that leaf is used to make a
+prediction, the simplest being that \(p_H = \frac{n_H}{n_H+n_T}\). Now, if
+decision requires knowing the value of a feature that is unknown, we send the
+instance down to both left and right childs and combine the resulting decision,
+weighted by the proportions of heads and tails at that node. In
+Figure~\ref{fig_unknown_accuracy}, we show how the accuracy of classification
+falls off as the proportion of unknown values in the data set increases. We
+change the proportion of unknown values by randomly selecting instances and
+randomly selecting features to artificially turn to null values. The results are
+reported for the data sets of Table~\ref{tbl_data_sets}.
+
+
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{35cm}
+TODO 
+\end{minipage}
+}
+\label{fig_unknown_values}
+\caption{Change in weight of datum when split involves unknown values}
+\end{figure}
+
+
+

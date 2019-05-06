@@ -1,0 +1,59 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include "_get_bit_u64.h"
+extern int
+${fn}(
+      const uint64_t * restrict A,
+      uint64_t *ptr_aidx,
+      uint64_t nA,
+      int64_t *C,
+      uint64_t nC,
+      int64_t *ptr_num_in_C,
+      uint64_t idx // specifies index of vector
+      );
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(
+      const uint64_t * restrict A,
+      uint64_t *ptr_aidx,
+      uint64_t nA,
+      int64_t *C,
+      uint64_t nC,
+      int64_t *ptr_num_in_C,
+      uint64_t idx // specifies index of vector
+      )
+{
+  int status = 0;
+  
+  if ( A == NULL ) { go_BYE(-1); }
+  if ( nA == 0 ) { go_BYE(-1); }
+  if ( ptr_num_in_C == NULL ) { go_BYE(-1); }
+  if ( ptr_aidx == NULL ) { go_BYE(-1); }
+
+  uint64_t num_in_C = *ptr_num_in_C;
+  uint64_t aidx = *ptr_aidx;
+  if ( num_in_C > nC ) { go_BYE(-1); }
+  
+  for ( ; aidx < nA; aidx++ ) { 
+    int b = get_bit_u64(A, aidx);
+    if ( b == 1 ) {
+      if ( num_in_C == nC ) { break; }
+      //printf("\n%u", aidx);
+      C[num_in_C++] = aidx + idx;
+    }
+    // TODO if ( b > 1 ) { ERROR } 
+  }
+  *ptr_num_in_C = num_in_C;
+  *ptr_aidx     = aidx;
+BYE:
+  return status;
+}
+   ]]
+}

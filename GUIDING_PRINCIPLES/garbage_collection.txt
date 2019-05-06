@@ -1,0 +1,19 @@
+---------- Forwarded message ----------
+From: Saptarshi Guha <saptarshi.guha@gmail.com>
+Date: Wed, May 3, 2017 at 9:46 PM
+Subject: [terralang] Support for 64 bit on osx
+To: "terralang@lists.stanford.edu" <terralang@lists.stanford.edu>
+
+
+Hello
+It appears that luajit can now support being loaded as a library without recompiling the main application.
+
+Can the Terra binary downloads released on the website be compiled with this feature turned on? Would it affect other operating systems?
+Or would I need to build Terra myself?
+
+Kind regards
+Saptarshi
+
+
+
+LuaJIT for x64 can optionally be built for LJ_GC64 mode by enabling the -DLUAJIT_ENABLE_GC64 line in src/Makefile or via 'msvcbuild.bat gc64'." "This mode removes the 32 bit limitation for garbage collected memory on 64 bit systems.

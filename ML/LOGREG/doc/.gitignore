@@ -1,0 +1,11 @@
+.meta
+TEMP.*
+*.dvi
+*.ps
+*.aux
+*.log
+*.toc
+*.pdf
+_*
+*.*~
+/auto

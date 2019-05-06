@@ -1,0 +1,33 @@
+Name of the utility: delete_bad_lines
+Name of the file: delete_bad_lines.lua
+Input: 
+(1) text file
+(2) a spec of which lines are "bad"
+Output: 
+(1) text file
+
+The specification of which lines are bad looks like 
+return {
+  fld1 = "regex 1",
+  fld2 = "regex 2",
+  fld3 = "",
+  }
+where fld1, fld2 are names of fields and regex1, regex2 are regular expressions.
+
+So, here is what the program does.  It reads the input, a line at a
+time. It then checks whether the number of columns is the same as the
+expected number of columns. Else, it decides to skip the line.
+Assuming, this test passes, it matches each field against the
+corresponding regular expression. If any field fails to match, the entire
+line is considered as "to be skipped". As an example, if the 
+string is 
+abc0123
+and the pattern is [a-zA-Z]
+then this is a FAIL because it will not match the entire string. 
+On the other hand, if the pattern were [a-zA-Z0-9], then this is a PASS
+
+Once a decision has been made, if the line is to be skipped, we have
+nothing to do. Else, we write it to the output file.
+
+
+

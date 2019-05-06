@@ -1,0 +1,50 @@
+\subsection{Operator polymorphism in Q}
+\label{polymorphism}
+
+Operators in Q are intrinsically overloaded i.e. the same Q operator
+(Lua function) can be invoked with vectors of any of the supported Q data-types,
+Section~\ref{Vectors}.
+Overloading is achieved as follows.
+\be
+\item static compilation: In this case, the operator writer implements
+  templatized C-like code. At build time, the template is fleshed out for all
+  relevant combinations of data types to generate the {\tt .c} and {\tt +.h}
+  files, which are then compiled into a single {\tt .so}. LuaJIT is made aware
+  of these functions by passing the {\tt .h} files to it using 
+the {\tt cdef} function.
+\item dynamic compilation: 
+  In this case too, we require the existence of templates. 
+  The server starts up with a minimal set of core functionality. 
+  However, the generation of the source file, compiling and loading
+  are done on demand. The results are cached
+  so that subsequent calls to the same operator do not incur this overhead.
+  This approach is refered to as  ``multi-stage programming''
+\item we define a function for a particular combination of data types
+  dynamically, in a strongly typed (low-level) language, that can bind seamlessly
+  with the host language (Lua, in our case). The low-level language should ideally support templating so we can define templatized functions that can be compiled on-demand within the host-language's runtime.
+  We found that the Terra language seemed to satisfy our precise wishlist for
+  the low-level language \cite{devito2015}.
+Terra is ``a low-level system programming language that is embedded in and
+meta-programmed by the Lua programming language''. Unfortunately, immaturity in
+the language forced us to abandon this very promising line of work e.g., simply
+including the line {\tt require 'terra'} can drop performance by 50\%,
+regardless of whether Terra is actually used by the script.
+\ee
+
+%% 
+%% Some of the key features of the Lua/Terra combination that we benefit 
+%% from are:
+%% \be
+%% \item Lua/Terra interoperability does not require glue code since Terra type and function declarations are first-class Lua statements, providing bindings between the two languages automatically. Lua code can call Terra functions directly.
+%% 
+%% \item Terra functions include type annotations and are statically typed in the sense that types are checked at compile time, but Terra functions are compiled during the execution of the Lua program, which gives us the ability to meta-program their behavior.
+%% 
+%% \item Compilation of Terra itself occurs dynamically as the Lua program executes. Though Terra programs/functions are embedded inside Lua and share a lexical runtime, the two languages have compartmentalized runtimes. One way to think of this design is that the Terra compiler
+%% is part of the Lua runtime.
+%% 
+%% \item Terra entities (e.g. types, functions, expressions, symbols) are all first class values in Lua.
+%% They can be held in Lua variables and passed through Lua functions. In particular, there are Lua variables {\tt int, double} etc. representing the primitive Terra types.
+%% 
+%% \ee
+%% 
+%%   \ee

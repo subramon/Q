@@ -1,0 +1,22 @@
+If Input type 1 == Input type 2 then Output type = Input type 1
+
+Input type 1    Input type 2    Output type
+I1      I2      I2
+i1      I4      I4
+i1      I8      I8
+I1      F4      F4
+I1      F8      F8
+                
+I2      I4      I4
+I2      I8      I8
+I2      F4      F4
+I2      F8      F8
+                
+I4      I8      I8
+I4      F4      F4
+I4      F8      F8
+                
+I8      F4      F4
+I8      F8      F8
+                
+F4      F8      F8

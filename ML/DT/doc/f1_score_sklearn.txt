@@ -1,0 +1,21 @@
+Below is the f1_score specification in sklearn
+sklearn.metrics.f1_score(y_true, y_pred, labels=None, pos_label=1,
+average=’binary’, sample_weight=None)
+
+gridsearchcv uses this method for f1_score calculation (The scoring parameter)
+
+In gridsearchcv, when we provide the scoring method as 'f1' or 'f1_weighted', it
+get mapped to sklearn.metrics.f1_score() method as below 
+'f1' => 'average' = 'binary'
+'f1_weighted' => 'average' = 'weighted'
+
+Below is the explanation about sklearn.metrics.f1_score() 'average' parameter
+
+'binary': Only report results for the class specified by pos_label. This is
+applicable only if targets (y_{true,pred}) are binary.
+
+'weighted': Calculate metrics for each label, and find their average weighted by
+support (the number of true instances for each label). This alters ‘macro’ to
+account for label imbalance; it can result in an F-score that is not between
+precision and recall.
+

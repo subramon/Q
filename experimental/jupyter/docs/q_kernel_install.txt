@@ -1,0 +1,17 @@
+Following are the instructions to install q_kernel
+
+- confirm Q/experimental/jupyter/q_kernel/__init__.py & Q/experimental/jupyter/q_kernel/__main__.py files are present, if not, please follow below commands
+$ cp Q/experimental/jupyter/q_kernel/bak_init.py Q/experimental/jupyter/q_kernel/__init__.py
+$ cp Q/experimental/jupyter/q_kernel/bak_main.py Q/experimental/jupyter/q_kernel/__main__.py
+
+- copy 'q_kernel' directory from Q/experimental/jupyter/ to /usr/local/lib/python2.7/dist-packages/
+$ cd Q/experimental/jupyter/
+$ sudo cp -r q_kernel /usr/local/lib/python2.7/dist-packages/
+
+- Install q_kernel
+$ cd /usr/local/lib/python2.7/dist-packages/q_kernel
+$ python install.py
+
+- Validate q_kernel installation
+$ jupyter kernelspec list
+This would list the q kernel entry

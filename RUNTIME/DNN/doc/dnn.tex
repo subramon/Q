@@ -1,0 +1,89 @@
+\startreport{Dense Neural Networks}
+\reportauthor{Ramesh Subramonian}
+
+\section{Computational Considerations}
+We start by describing the dense neural network (DNN) computation. In
+Section~\ref{the_math}, we will discuss the underyling mathematics. 
+\subsection{Data Structure of DNN}
+\label{data_struct}
+We start by presenting the data structure of the DNN
+\begin{figure}
+\centering
+% TODO: Following should be auto-generated not hard-coded
+\verbatiminput{dnn_types.h}
+\end{figure}
+
+We now explain each element of the 
+\be
+\item \(n\) --- {\tt nl}, number of layers. The simplest DNN has 3 layers --- 
+an input layer, a hidden layer and an output layer.
+\item \(p\) -- {\tt npl}, number of neurons per layer. \(p_l\) is number of
+neurons in layer \(l\), where \(0 \leq l < n\). The network of
+Figure~\ref{sample_network} would have \(n = 3, p = \{3,4,1\}\)
+\item \(W\) --- the weights on the edges. 
+\(W_i\) contains the edges from layer \(i-1\) to layer \(i\). 
+Hence, 
+\be
+\item \(W_0 = \bot\)
+\item \(W_i = \) edges from layer \(i-1\) to layer \(i\). Note that 
+\(0 < i < n\)
+\item \(W_{i,j} = \) edges from neuron \(j\) of layer \(i-1\) to layer \(i\).
+Note that \( 0 \leq < p_{i-1}\).
+\item \(W_{i,j,k} = \) edge from neuron \(j\) of layer \(i-1\) to 
+neuron \(k\) of layer \(i\).
+Note that \(0 \leq k < p_i\).
+\ee
+\item \(b\) --- the bias of the neurons.
+\(b_i\) contains the bias of neurons in layer \(i\). 
+Note that \(0 < i < n\).
+Hence, 
+\be
+\item \(b_0 = \bot\)
+\item \(b_i = \) biases of neurons in layer \(i\)
+\item \(b_{i,j} = \) bias of neuron \(j\) of layer \(i\), 
+where \(0 \leq j < p_i\)
+\ee
+\item \(z\) --- the intermediate output of a neuron
+\(z_i\) contains the intermediate output of neurons in layer \(i\). 
+Hence, 
+\be
+\item \(z_0 = \bot\)
+\item \(z_i = \) intermediate output of neurons in layer \(i\)
+Note that \(0 < i < n\).
+\item \(z_{i,j} = \) intermediate output of neuron \(j\) of layer \(i-1\) 
+\ee
+\item \(a\) --- the output output of a neuron --- after intermediate output has been
+passed through activation function.
+\(a_i\) contains the output of neurons in layer \(i\). 
+Hence, 
+\be
+\item \(a_0 = \bot\)
+\item \(a_i = \) output of neurons in layer \(i\)
+Note that \(0 < i < n\).
+\item \(a_{i,j} = \) output of neuron \(j\) of layer \(i-1\) 
+\ee
+The observant reader would have noticed that the above description indicates
+that \(z, a\) are 2-dimensional arrays whereas they have been defined as {\tt
+float ***}. This is because the network is evaluated in batches, explained in
+Section~\ref{batching}
+\ee
+
+\subsection{Batching}
+What is batching? Assume that we have \(n\) instances and a batch size of \(m <
+n\). Then, it means that an epoch consists of performing the forward pass 
+for \(m\) instances, then the back propagation, then doing the same for the next
+\(m\) instances and so on.
+
+This makes \(z, a\) 3-dimensional arrays such that 
+\(a_{i,j, k} = \) output of neuron \(j\) of layer \(i-1\) for \(k^{th}\)
+instance.
+
+\section{The Math}
+
+\subsection{Dropouts}
+Dropouts are explained in \cite{Srivastava14}.
+
+\TBC
+\newpage
+\bibliographystyle{alpha}
+\bibliography{../../../DOC/Q_PAPER/ref}

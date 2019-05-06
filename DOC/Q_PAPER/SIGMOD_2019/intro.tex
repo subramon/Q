@@ -1,0 +1,53 @@
+\section{Introduction}
+
+It is undeniable that there has been an explosive growth in the 
+amount of data available for analysis. Solutions that 
+deal with the reliable storage and analysis of large amounts of data have seen tremendous
+improvements. What has sometimes been
+obscured is the understanding of the actual reality of the life of a data
+scientist or analyst. More often than not, the actual amount of data that needs
+to be analyzed is in the order of terabytes\cite{Dittrich2015}. The user may spend
+several months on this sliver of data, augmenting it or eliminating parts of it
+as insights emerge. Therefore, the mantra of ``velocity, volume and variety'',
+while entirely true for data in general, does not translate as readily to the
+sustained, concentrated effort that goes into most work that we have
+encountered. The familiarity gained about the nature of the data 
+while working on a given problem for a length of time should not be discounted. The
+user becomes aware of what approximations can be made, what dynamic range is
+truly needed, typical data distributions, etc.
+
+The fact that we are better off scaling up before scaling out has been suggested
+by several authors \cite{Rowstron2012,Dittrich2015,McSherry2015,Kyrola2012}.
+Fault tolerance on large distributed systems is a difficult
+problem and adds significant system complexity but is it really needed?
+If we consider the mean time between failure of a single server and
+the cost of a ``re-do'' in the event of failure,
+it is hard to justify that investment. 
+Further, the emergence of GPUs --- both their increased compute power and the
+increased  bandwidth to the GPU --- pack the single server solution with
+considerable punch.
+
+While \Q\ shares many design goals with \cite{Weld2017}, there are some key
+differences. (1) \Q\ performs data layout and locality optimizations, 
+using hints provided by the user such as marking Vectors as 
+ephemeral or indicating that memo-ization is not needed. (2) Because we control
+the data layout, we have been able to use \cite{UnifiedMemory2018} to offload
+computationally intensive activities to the GPU.
+
+In this paper, we describe the design of \Q\ as motivated by the 
+production data science needs at NerdWallet and (earlier) at LinkedIn.
+The simplicity and power of \Q\ does not come for free. We have abandoned many
+cherished tenets of databases, like fault tolerance, multi-tenancy, concurrency,
+etc. While it is hard to argue against these features, our experience leads us
+to question as to whether they truly assist the work of the 
+data scientist in building machine learning models and performing analyses.
+
+While total cost of ownership has been the primary motivator for \Q\ at
+NerdWallet, we have run performance benchmarks. Even on simple arthimetic
+expressions, \Q\ outperforms the publicly available version of TensorFlow
+\cite{Tensorflow2016} by a factor of 4 (Ubuntu) to 10 (MacOSX). Computing the
+degree histogram on the Friendster dataset takes 105 seconds on a single 2.5 GHz
+Intel core compared to 208 seconds on a 64-node Hadoop cluster \cite{Lim2015}.
+
+%% Maybe its time that
+%% analytical databases look more like Jupyter notebooks on steroids.

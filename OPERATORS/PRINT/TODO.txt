@@ -1,0 +1,12 @@
+
+1. testing pending with columns of different length
+2. testing required with load test cases.
+3. testing required with border cases.
+
+
+To run PRINT script , 
+go to PRINT/test folder
+and run
+bash test_print.sh
+
+

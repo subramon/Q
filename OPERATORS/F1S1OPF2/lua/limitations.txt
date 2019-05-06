@@ -1,0 +1,6 @@
+This file lists all the limitations or constraints wrt to operations involved in F1S1OPF2
+
+# convert
+1. convert routine does not support following conversions 
+     B1 -> F4/F8 & vice-versa
+2. B1 type is not supported incase of safe convert

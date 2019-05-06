@@ -1,0 +1,18 @@
+
+return function (
+  f1type, 
+  f2type
+  )
+  local qconsts = require 'Q/UTILS/lua/q_consts'
+  assert(f1type == "B1", "f1type must be B1")
+  assert(f2type == "B1", "f2type must be B1")
+  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1F2OPF3/lua/bop.tmpl"
+  local subs = {} ; 
+  subs.fn = "<<operator>>"
+  subs.in1_ctype = qconsts.qtypes[f1type].ctype
+  subs.in2_ctype = qconsts.qtypes[f2type].ctype
+  subs.out_ctype = "uint64_t"
+  subs.out_qtype = "B1"
+  subs.c_code_for_operator = "c = (a <<mathsymbol>> b); "
+  return subs, tmpl
+end

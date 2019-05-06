@@ -1,0 +1,32 @@
+\section{Debugging}
+\label{Debugging}
+
+Our experience has been that ease of debugging has often been made
+subservient to bragging rights on performance. Q deals with this as follows.
+
+\be
+\item 
+Since Q is implemented as a Lua package, the CLION IDE from IntelliJ 
+with the Lua plugin allows interactive debugging sessions. 
+\item Sharing sessions. 
+We have embedded Q in an HTTP server and have provided a command line
+interface.
+Two
+developers could issue commands to the server, the commands being serialized at the
+server. 
+\item ``print''-ing a variable is less useful when the variable is a long
+  vector. What is needed instead is 
+to query some {\it property} of the vector e.g., min, max, is it sorted. 
+We can {\tt Q.save} a session from the IDE, restore it in another session in
+read-only mode and, when done with diagnosis, continue from the IDE.
+\item Modifying state. In addition to inspecting variables, it is often useful
+  to modify them so as to continue the debugging session without having to
+  start over. For example, say that we hit a breakpoint and discover  
+  that we had forgotten to sort a vector or load a table. We 
+  (i) {\tt Save} from the IDE
+  (ii) {\tt Restore} in a parallel session 
+  (iii) perform the modifications in that session 
+  (iv) {\tt Save} and quit the session 
+  (v) lastly, {\tt Restore} in the IDE.
+
+\ee

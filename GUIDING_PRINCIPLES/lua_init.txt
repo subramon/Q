@@ -1,0 +1,18 @@
+ndrajeet,
+This is what I did to make it work. Please confirm that this is what is needed. Without the first export, I got an error. Note the @ symbol in the second export.
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/subramon/WORK/Q/Q2/code
+export LUA_INIT="@/home/subramon/WORK/Q/init.lua”
+
+In order to test it, I added a line
+x=10
+in init.lua
+
+Then, when I type
+$ lua
+> print(x)
+10
+
+Everybody: Please read https://www.lua.org/pil/1.4.html
+
+Before it starts running arguments, lua looks for an environment variable called LUA_INIT. If there is such a variable and its content is @filename, then lua loads the given file. If LUA_INIT is defined but does not start with `@´, then lua assumes that it contains Lua code and runs it. This variable gives you great power when configuring the stand-alone interpreter, because you have the full power of Lua in the configuration. You can pre-load packages, change the prompt and the path, define your own functions, rename or delete functions, and so on.
+-------------------------------------

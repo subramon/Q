@@ -1,0 +1,10 @@
+git merge dev -m "ok"
+git commit -am “Adding files” 
+git push 
+# merging with dev
+git checkout dev
+git merge dev_ramesh #merging updates from dev_ramesh to dev
+git push
+# now switch back to dev_ramesh and fast forward your repo
+git checkout dev_ramesh
+git merge dev

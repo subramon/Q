@@ -1,0 +1,8 @@
+>>> Download as follows and place git_prompt.sh in your home directory
+
+curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -o ~/git-prompt.sh
+
+>>> Put following lines in your .bashrc file
+# Following to change prompt so that I know which branch I am on
+. ~/git-prompt.sh
+PS1='\W:$(__git_ps1 "(%s)")\$ '

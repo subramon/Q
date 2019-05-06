@@ -1,0 +1,215 @@
+Please refer mail with subject : 
+
+Or 
+
+have look at html file in the same directory - luajit_vs_luaffi_performance_result.htm
+
+============================================================================================================================================
+Performance loss by discarding LuaJIT, shall we go with luaFFI?
+12 messages
+Krushnakant Mardikar <krushnakant.mardikar@gslab.com>	Mon, Apr 2, 2018 at 12:23 AM
+To: Ramesh Subramonian <rsubramonian@nerdwallet.com>
+Cc: Indrajeet Singh <isingh@nerdwallet.com>, "<projectq@gslab.com>" <projectq@gslab.com>
+Hi Ramesh,
+
+This mail is reference with current ongoing thought about completely eliminating LuaJIT and using LuaFFI.
+
+Currently we are not using LuaJIT for memory allocation, memory allocation is happening at C level (in vector as well as for other operators using CMEM) but still LuaJIT is playing role in performance improvement (i.e improved execution time to complete operation e.g vector creation/read-write or any operator execution)
+
+While playing with lua and luaFFI (while testing aio.sh with debug flag i.e '-d'), we did the performance comparison between luaJIT and luaFFI and following are the results
+
+Test Name: RUNTIME/test/stress_test_bvec.lua
+num_trials - 5000
+Iteration	Luajit	Lua + Luaffi
+1	21m21.648s	49m52.535s
+
+Test Name: RUNTIME/test/stress_test_vec.lua
+num_trials - 1000
+Iteration	Luajit	Lua + Luaffi
+1	4m39.569s	8m41.660s
+2	4m51.317s	8m26.618s
+
+
+Also tried a testcases which was creating two columns with 100M elements and then performing vvadd operation, results are as follows
+Test Name: TESTS/performance_test_vvadd.lua
+(dev_luaffi branch)
+num_elements - 100M
+Iteration	Luajit (sec)	Lua + Luaffi (sec)
+1	Mk_col: 112.24891
+vvadd: 2.00612275	Mk_col: 231.193054
+vvadd: 5.1180295
+2	Mk_col: 118.3250265
+vvadd: 1.06995525	Mk_col: 230.3201015
+vvadd: 3.9825365
+3	Mk_col: 113.25314475
+vvadd: 0.2033325	Mk_col: 221.6648815
+vvadd: 5.70215425
+
+
+So overall more than 50% of performance loss that we are observing in case of luaFFI. Then, shall we discard LuaJIT?
+
+Also, the main issue with luajit that we observed was the memory allocation and that we overcame by using C for memory allocation, then why should we discard luajit?
+
+Regards,
+Krushna.
+Ramesh Subramonian <rsubramonian@nerdwallet.com>	Mon, Apr 2, 2018 at 7:14 AM
+To: Krushnakant Mardikar <krushnakant.mardikar@gslab.com>
+Cc: Indrajeet Singh <isingh@nerdwallet.com>, "<projectq@gslab.com>" <projectq@gslab.com>
+Can you collect one more statistic and then we will discuss on Monday evening.
+
+Can you set a timer on the Lua side just before and after the call to C? While its unlikely that there should be a change in the C code timing, I'd like to double-check that.
+
+Also, Indrajeet had put together some code that would do some automatic profiling. We will have him present that to us (maybe on Wednesday)
+
+Ramesh
+[Quoted text hidden]
+-- 
+Ramesh Subramonian 
+ 
+rsubramonian@nerdwallet.com
+					
+			(415) 549-8913 
+875 Stevenson St. - 5th Floor 
+San Francisco, CA 94103
+Providing clarity for all of life's financial decisions
+Indrajeet Singh <isingh@nerdwallet.com>	Mon, Apr 2, 2018 at 7:45 AM
+To: Ramesh Subramonian <rsubramonian@nerdwallet.com>, Krushnakant Mardikar <krushnakant.mardikar@gslab.com>
+Cc: "<projectq@gslab.com>" <projectq@gslab.com>
+Hi Ramesh,
+
+There can be some difference there too as the call to the C function can be inlined or not (JIT compiled actually). The difference should be small though.
+
+The code i used is in the experimental folder.
+
+Thanks
+Indrajeet
+[Quoted text hidden]
+Krushnakant Mardikar <krushnakant.mardikar@gslab.com>	Mon, Apr 2, 2018 at 12:01 PM
+To: "<projectq@gslab.com>" <projectq@gslab.com>
+FYI
+[Quoted text hidden]
+Krushnakant Mardikar <krushnakant.mardikar@gslab.com>	Tue, Apr 3, 2018 at 12:18 PM
+To: Ramesh Subramonian <rsubramonian@nerdwallet.com>
+Cc: Indrajeet Singh <isingh@nerdwallet.com>, "<projectq@gslab.com>" <projectq@gslab.com>
+Hi Ramesh,
+
+Below are the numbers considering C execution time and total execution time for vvseq and vvadd operation
+
+Here, we are creating two vectors using Q.seq()
+vvseq1 C total_time  =  C execution time for first vector
+vvseq2 C total_time  =  C execution time for second vector
+vvadd C total_time    =  C execution time for vvadd operation
+total_time                =  Time to complete the Q.vvadd() operation when called from lua script
+
+Test Description:
+- create two vectors using Q.seq() of I4
+- perform vvadd
+num_elements - 1000M
+Iteration	Luajit (sec)	Lua + Luaffi (sec)
+1	vvseq1 C total_time 8.394377000
+vvseq2 C total_time 10.3356895
+vvadd C total_time 20.04335375
+total_time: 168.06464	vvseq1 C total_time 5.5570405
+vvseq2 C total_time 5.554203
+vvadd C total_time 13.2520965
+total_time: 350.363269
+2	vvseq1 C total_time 7.50769975
+vvseq2 C total_time 6.949572
+vvadd C total_time 16.18329825
+total_time: 168.25013525	vvseq1 C total_time 5.5570405
+vvseq2 C total_time 5.554203
+vvadd C total_time 13.2520965
+total time: 350.363269
+3	vvseq1 C total_time 4.849111
+vvseq2 C total_time 4.8614015
+vvadd C total_time 11.769251
+total_time: 173.7832	vvseq1 C total_time 5.45447625
+vvseq2 C total_time 5.462005
+vvadd C total_time 12.6968395
+total_time: 367.93117025
+
+
+From the numbers it seems that, C execution time is improved with LuaFFI but Luajit defeats LuaFFI in total execution time by margin.
+
+Also I tried one more test with nascent vector and adding 100M scalars to it using put1, below are the results
+
+Test Description:
+- Creating a nascent vector
+- Adding 100M scalars to created vector using put1
+Iteration	Luajit	Lua + Luaffi
+1	real 6m58.397s	real 12m12.774s
+2	real 6m51.749s	real 11m29.229s
+
+
+Regards,
+Krushna.
+[Quoted text hidden]
+Indrajeet Singh <isingh@nerdwallet.com>	Wed, Apr 4, 2018 at 8:20 AM
+To: Ramesh Subramonian <rsubramonian@nerdwallet.com>, Krushnakant Mardikar <krushnakant.mardikar@gslab.com>
+Cc: "<projectq@gslab.com>" <projectq@gslab.com>
+Hi Krushnakant
+
+Could you please run vvseq1 in a loop 10-15 times and then report the average numbers? Maybe just running it once is not letting the JIT kick in. Otherwise this would be simply shocking.
+
+Thanks
+Indrajeet
+[Quoted text hidden]
+Krushnakant Mardikar <krushnakant.mardikar@gslab.com>	Wed, Apr 4, 2018 at 3:26 PM
+To: Indrajeet Singh <isingh@nerdwallet.com>
+Cc: Ramesh Subramonian <rsubramonian@nerdwallet.com>, "<projectq@gslab.com>" <projectq@gslab.com>
+Ran Q.seq() in loop of 10 and captured the total execution time and total C execution time, below are the average numbers
+
+Test Description:
+- Run Q.seq() of I4 in loop of 10
+num_elements - 1000M
+Operation	Luajit (sec)	Lua + Luaffi (sec)
+Q.seq()	Average
+C execution time - 6.773755275
+total execution time - 52.419646375	Average
+C execution time - 5.69058195
+total execution time - 135.3659745
+
+
+Regards,
+Krushna.
+[Quoted text hidden]
+Srinath Krishnamurthy <srinath.krishnamurthy@gslab.com>	Wed, Apr 4, 2018 at 4:28 PM
+To: Krushnakant Mardikar <krushnakant.mardikar@gslab.com>
+is "total exec time" the average of the "total exec time" where "total" is the overall-exec-time ?
+
+[Quoted text hidden]
+Krushnakant Mardikar <krushnakant.mardikar@gslab.com>	Wed, Apr 4, 2018 at 5:54 PM
+To: Indrajeet Singh <isingh@nerdwallet.com>
+Cc: Ramesh Subramonian <rsubramonian@nerdwallet.com>, "<projectq@gslab.com>" <projectq@gslab.com>
+In the above run, following are the naming conventions
+
+C execution time - average time required to complete the C execution
+total execution time - average time required to complete the Q.seq() operation from lua
+
+Regards,
+Krushna.
+
+On Wed, Apr 4, 2018 at 3:26 PM, Krushnakant Mardikar <krushnakant.mardikar@gslab.com> wrote:
+[Quoted text hidden]
+
+Krushnakant Mardikar <krushnakant.mardikar@gslab.com>	Wed, Apr 4, 2018 at 5:56 PM
+To: Srinath Krishnamurthy <srinath.krishnamurthy@gslab.com>
+Did I clear about naming convention or still has some ambiguity?
+[Quoted text hidden]
+Srinath Krishnamurthy <srinath.krishnamurthy@gslab.com>	Wed, Apr 4, 2018 at 6:13 PM
+To: Krushnakant Mardikar <krushnakant.mardikar@gslab.com>
+looks unambiguous to me now.
+[Quoted text hidden]
+Indrajeet Singh <isingh@nerdwallet.com>	Wed, Apr 4, 2018 at 7:21 PM
+To: Krushnakant Mardikar <krushnakant.mardikar@gslab.com>
+Cc: "<projectq@gslab.com>" <projectq@gslab.com>, Ramesh Subramonian <rsubramonian@nerdwallet.com>
+Wow. The fact that luajit is slowing down ty C part is quite worthy of a report to mike pall. 
+
+Let.s talk about this more sometime.
+
+Thanks
+Indrajeet
+[Quoted text hidden]
+-- 
+Indrajeet Singh 
+==================================================================================================================================================

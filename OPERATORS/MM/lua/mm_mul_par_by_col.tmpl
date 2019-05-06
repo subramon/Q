@@ -1,0 +1,45 @@
+-- Parallelization by column of output matrix 
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+#include "q_incs.h"
+#include <omp.h>
+#include <sys/sysinfo.h>
+extern int 
+${fn}(
+    ${in1_ctype} ** x,  /* M by K */
+    ${in2_ctype} ** y,  /* K by N */
+    ${out_ctype} ** z,  /* M by N */
+    int M,
+    int K,
+    int N
+    );
+    ]],
+    definition = [[
+#include "_mm_mul_simple_${in1_qtype}_${in2_qtype}_${out_qtype}.h"
+
+int 
+${fn}(
+    ${in1_ctype} ** x,  /* M by K */
+    ${in2_ctype} ** y,  /* K by N */
+    ${out_ctype} ** z,  /* M by N */
+    int M,
+    int K,
+    int N
+    )
+{
+  int status = 0;
+
+  for ( int n = 0; n < N; n++) {
+    for ( int m = 0; m < M; m++) {
+      double sum = 0;
+      for(int k = 0; k < K; k++){
+        sum += x[k][m] * y[n][k];
+      }
+      z[n][m] = sum;
+    }
+  }
+  return status; 
+}
+]]
+}

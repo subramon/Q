@@ -1,0 +1,46 @@
+\section{Power to the People}
+
+It is well accepted that large data systems benefit significantly 
+from careful optimization of data movement. Optimizing compilers and query plan
+rewriters aim to do this automatically.
+\Q\ takes a fundamentally different approach. It is our belief that the
+choreography of computations can be left to the database programmer {\bf if} 
+they have 
+(i) some understanding of the underyling system architecture and (ii) 
+relatively simple knobs to influence the run time system.  
+
+In many analytical tasks, one repeatedly performs very similar operations on slowly
+changing data. In these cases, 
+it is not onerous to maintain (and periodically refresh) summary statistics that
+can significantly speed up more complex operations. For example, \Q's sort
+routine gets linear speed up on up to 8 cores, when provided with
+a rough distribution of the keys. 
+Note that the fidelity demanded of these summary statistics is often low ---
+they need to be only as good as the use to which they are put. 
+
+\subsection{Building indexes --- the social graph}
+\label{social_graph}
+
+At LinkedIn, we used \Q\ to analyze the social graph, given its importance in
+extracting insights.
+Assume that a social graph is presented as a 
+a table, {\tt E}, with 2 columns, {\tt from} and {\tt to}. \Q\ supports the
+creation of auxiliary data structures to enable fast access but, in keeping with
+our minimalist philosophy, does not provide them out of the box. We describe the
+pre-processing performed to provide efficient access.
+\be
+\item {\tt f, t = Q.sort2(E.from, E.to, "ascending")}, sorts {\tt E}
+with {\tt from} as primary key and {\tt to} as
+secondary key
+\item {\tt V.m = Q.unique(f)} creates a Vector of 
+member IDs, sorted ascending. 
+\item For each member in {\tt V.m}, we determine the contiguous edges out of it
+  by 
+  \be
+\item {\tt V.lb = Q.join(f, V.m, min\_index)}
+\item {\tt V.ub = Q.join(f, V.m, max\_index)}
+  \ee
+Now, we can assert that member
+{\tt m = V.m[i]} is connected to members {\tt t[V.lb[i] .. V.ub[i]]}
+\ee
+

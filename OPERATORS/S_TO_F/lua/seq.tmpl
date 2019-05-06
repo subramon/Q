@@ -1,0 +1,60 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_macros.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+// Below structure needs to be same as structure template in seq_mem_initialize.lua
+typedef struct _seq_${out_qtype}_rec_type {
+   ${out_ctype} start;
+   ${out_ctype} by;
+} SEQ_${out_qtype}_REC_TYPE;
+
+extern int
+seq_${out_qtype}(
+  ${out_ctype} *X,
+  uint64_t nX,
+  SEQ_${out_qtype}_REC_TYPE *ptr_in,
+  uint64_t idx
+  );
+   ]],
+
+   definition = [[
+
+#include "_seq_${out_qtype}.h"
+
+//START_FUNC_DECL
+int
+seq_${out_qtype}(
+  ${out_ctype} *X,
+  uint64_t nX,
+  SEQ_${out_qtype}_REC_TYPE *ptr_in,
+  uint64_t idx
+  )
+//STOP_FUNC_DECL
+{
+  int status = 0;
+
+  ${out_ctype} start = ptr_in->start;
+  ${out_ctype} by = ptr_in->by;
+
+  start += (idx *by); // offset based on index
+
+  if ( by == 0 ) {
+    by = (${out_ctype}) 1;
+  }
+
+  ${out_ctype} j = start;
+  for ( uint64_t i = 0; i < nX; i++ ) { 
+    X[i] = (${out_ctype}) j;
+    j += by;
+  }
+  return status;
+}
+
+   ]]
+}

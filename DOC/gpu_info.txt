@@ -1,0 +1,17 @@
+We can get the GPU details using below command
+
+- update PCI ID database 
+$ sudo update-pciids
+
+- get gpu info
+$ lspci -nn | grep '\[03'
+
+Following is the information on GSLab machine
+
+krushna@gpuserver:~/sample_programs/cuda_programs$ lspci -nn | grep '\[03'
+02:00.0 3D controller [0302]: NVIDIA Corporation GP100GL [Tesla P100 PCIe 12GB]
+[10de:15f7] (rev a1)
+05:00.0 VGA compatible controller [0300]: ASPEED Technology, Inc. ASPEED
+Graphics Family [1a03:2000] (rev 30)
+82:00.0 3D controller [0302]: NVIDIA Corporation GP100GL [Tesla P100 PCIe 12GB]
+[10de:15f7] (rev a1)

@@ -1,0 +1,68 @@
+-- CUDA: template change for cuda programming
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+#include "q_incs.h"
+${includes}
+extern int
+${fn}(
+// Removed the 'restrict' keyworkd from below lines as nvcc compiler was recognising it
+      const ${in1_ctype} * in1,
+      const ${in2_ctype} * in2,
+      uint64_t nR,
+      ${out_ctype} *  out
+      )
+;
+
+   ]],
+   definition = [[
+extern "C" {
+#include "_${fn}.h"
+}
+__global__
+static void
+__operation(
+      const ${in1_ctype} *d_a,
+      const ${in2_ctype} *d_b,
+      ${out_ctype} *d_c,
+      uint64_t size
+      )
+      {
+      uint64_t index = blockIdx.x * blockDim.x + threadIdx.x;
+      uint64_t stride = blockDim.x * gridDim.x;
+      for (uint64_t i = index; i < size; i += stride) {
+        ${c_code_for_operator}
+      }
+      }
+
+int
+${fn}(
+      const ${in1_ctype} * in1,
+      const ${in2_ctype} * in2,
+      uint64_t nR,
+      ${out_ctype} * out
+      )
+
+{
+  int status = 0;
+// TODO #pragma omp parallel for schedule(static, Q_MIN_CHUNK_SIZE_OPENMP)
+
+  // Decide runtime configuration
+  uint64_t blockSize = 256;
+  uint64_t numBlocks = (nR + 256 - 1) / blockSize;
+  
+  // Launch Kernel
+  /*
+  if ( ( numBlocks * blockSize ) > nR ) {
+    numBlocks = 1;
+    blockSize = nR;
+  }
+  */
+  __operation<<<numBlocks, blockSize>>>(in1, in2, out, nR);
+  cudaDeviceSynchronize();
+  return status;
+}
+
+   ]]
+}
+

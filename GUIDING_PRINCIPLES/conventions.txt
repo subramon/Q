@@ -1,0 +1,40 @@
+1) Do not define functions as 
+function foo () 
+end
+
+Instead
+return function ()
+end
+
+When using it, say 
+local foo = require ‘foo’
+
+Usually, one file to a function. If not, see UTILS/lua/gen_code.luas as an example of what to do 
+
+==============================
+
+2) You should not have package.path anywhere in your code. If  you feel otherwise, please appeal to me for a waiver. I am likely to grant waivers if your code is not called by any other lua code e.g., it is a test driver
+
+===============================
+
+You should not have relative paths in your require statement
+
+local gen_code = require  ‘../../../UTILS/lua/gen_code.lua’ is BAD
+
+local gen_code = require  ‘gen_code.lua’ is GOOD
+
+======================================
+
+This will require a little more work but by the end of the week, we will implement following
+
+1) Your machine must have $HOME/local/bin, $HOME/local/include/ $HOME/local/templates, and maybe a few more like these
+
+2) In $HOME/local/libs, you will find the following. Your LD_LIBRARY_PATH MUST include this directory
+q.so —> for all of Q
+q_core.so —> for C functions required by Lua (e.g., txt_to_I4, get_cell). These are mainly utility functions where Lua cannot do the job to we think Lua cannot do the job or C can do it much better
+
+3) We will also be creating smaller .so files for each operator. More to follow on this in a later email.
+
+Ramesh
+
+

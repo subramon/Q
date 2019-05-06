@@ -1,0 +1,19 @@
+
+return function (
+  f1type, 
+  f2type
+  )
+  local promote = require 'Q/UTILS/lua/promote'
+  local qconsts = require 'Q/UTILS/lua/q_consts'
+  local out_qtype = promote(f1type, f2type)
+  local tmpl = 'f1f2opf3.tmpl'
+  local subs = {}; 
+  subs.fn = "<<operator>>_" .. f1type .. "_" .. f2type .. "_" .. out_qtype 
+  subs.in1_ctype = qconsts.qtypes[f1type].ctype
+  subs.in2_ctype = qconsts.qtypes[f2type].ctype
+  subs.out_qtype = out_qtype
+  subs.out_ctype = qconsts.qtypes[out_qtype].ctype
+  -- CUDA: below change is according to updated template with cuda changes
+  subs.c_code_for_operator = "d_c[i] = d_a[i] <<mathsymbol>> d_b[i]; "
+  return subs, tmpl
+end

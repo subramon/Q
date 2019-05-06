@@ -1,0 +1,71 @@
+\subsection{The social graph}
+\label{social_graph}
+
+One of the problems we investigated at LinkedIn was using the social graph to
+guide and power the design of data-driven products.
+Assume that a social graph is presented as a 
+a table, {\tt E}, with 2 columns, {\tt from} and {\tt to}. Q supports the
+creation of auxiliary data structures to enable fast access but, in keeping with
+our minimalist philosophy, does not prvoide them out of the box.
+\be
+\item {\tt f, t = Q.sort2(E.from, E.to, "ascending")}, sorts {\tt E}
+with {\tt from} as primary key and {\tt to} as
+secondary key (Section~\ref{par_sort})
+\item {\tt V.m = Q.unique(f)} creates a Vector of 
+member IDs, sorted ascending. 
+\item For each member in {\tt V.m}, we determine the contiguous edges out of it
+  by 
+  \be
+\item {\tt V.lb = Q.join(f, V.m, min\_index)}
+\item {\tt V.ub = Q.join(f, V.m, max\_index)}
+  \ee
+Now, we can assert that member
+{\tt m = V.m[i]} is connected to members {\tt t[V.lb[i] .. V.ub[i]]}
+\ee
+
+
+\subsubsection{Speeding up sort}
+\label{par_sort}
+Consider a simple parallelization of the sort routine. Assume that we 
+were given a set of bins such
+that each bin would get ``roughly'' the same number of elements of an input
+Vector \(x\). Then a simple parallel sort consists of 
+(1) partitioning \(n\) elements of \(x\) into \(n_B\) bins so that each bin has
+\(n(b)\) elements
+(2) sorting each bin in parallel
+(3) copying each bin into the right place. Probabilistic guarantees
+of the form \(P[n(b) \geq (1+\beta) \times(n/n_B)] \leq \epsilon\) 
+allow us to allocate slightly more space (specified by \(\beta\)) than absoutely necessary and to 
+fall back to the sequential sort in the small probability (specified by
+\(\epsilon\))  that our estimates are off.
+
+But where do these bins come from? As in the social graph example above, where
+new connections are being created and deleted all the time, the change in these
+overall distribution is much, much slower. Each sort uses the previous estimates
+and produces a new estimate, good enough for load balancing.
+{\tt Q.sort} operator accepts ``hints'' in the form of
+optional arguments. In this case, the hint is a Vector whose length is the
+number of bins and each element is the upper bound of that bin. For Vectors of
+length greater than \(2^{20}\), we obtained linear speedup on an Intel Core i7.
+
+To quote George Santayana, ``those who don't remember the past are condemned to
+repeat it''.  Q minimizes re-work in several ways
+\be
+\item 
+Remembering basic statistics such as min, max, sum, average, whenever the
+corresponding operators are invoked. 
+Such meta-data is often the by product of other operators.
+\item the sorted-ness of a vector is
+stored as one of (a) unknown (b) ascending (c) descending (d) not sorted. 
+Q
+uses sort heavily to simplify other operators by converting them into linear
+scans. 
+%% explain difference between unknown and not sorted
+For example, consider {\tt x, y  = Q.count(z)} where \(x\) contains the
+unique values of \(z\) and \(y\) the number of occurrences. If \(z\) is not
+sorted, then the count operator internally (a) creates a copy, \(z'\), of \(z\)
+(b) sorts \(z'\) (c) passes \(z'\) to the core {\tt count} code and (d) \(z'\) gets
+garbage collected when the count operator returns. Of course, if \(z\) is
+sorted, then this cost of sorting \(z'\) is eliminated.
+
+\ee

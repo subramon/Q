@@ -1,0 +1,59 @@
+def softmax_back_propagate(da, cache):
+    """
+    Implements back propagation for a softmax unit.
+
+    Arguments:
+        da -- post-activation gradient, of any shape
+        cache -- (z,) from the forward propagate of curr layer
+
+    Returns:
+        dz -- gradient of cost wrt z
+    """
+    z = cache
+    y_hat = np.exp(z) / np.exp(z).sum()
+    dz = da * (1 - y_hat)
+    assert (dz.shape == z.shape)
+    return dz
+
+
+def relu_back_propagate(da, cache):
+    """
+    Implements back propagate for a single relu unit.
+
+    Arguments:
+        da -- post-activation gradient, of any shape
+        cache -- (z,) from forward propagattion of curr layer
+
+    Returns:
+        dz -- gradient cost wrt z
+    """
+    z = cache
+    dz = np.array(da, copy=True)  # converting dz to correct type
+    # when z <= 0, set dz to 0
+    dz[z <= 0] = 0.
+    assert (dz.shape == z.shape)
+    return dz
+
+
+def dense_back_propagate(dz, cache):
+    """
+    Implements dense layer back propagation.
+
+    Arguments:
+        dz -- gradient of cost wrt output of curr layer
+        cache -- (a_prev, w, b) from forward propagate in current layer
+
+    Returns:
+        da_prev -- gradient of cost wrt prev layer activation, shape as a_prev
+        dw -- gradient of cost wrt curr layer w, shape as w
+        db -- gradient of cost wrt b, shape as b
+    """
+    a_prev, w, b = cache
+    m = a_prev.shape[1]
+    dw = (1. / m) * np.dot(dz, a_prev.T)
+    db = (1. / m) * np.sum(dz, axis=1, keepdims=True)
+    da_prev = np.dot(w.T, dz)
+    assert (da_prev.shape == a_prev.shape)
+    assert (dw.shape == w.shape)
+    assert (db.shape == b.shape)
+    return da_prev, dw, db

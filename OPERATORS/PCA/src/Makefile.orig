@@ -1,0 +1,30 @@
+CC = gcc
+DBG_FLAGS = 
+DBG_FLAGS = -g
+
+OPT_FLAGS = -O4
+OPT_FLAGS = 
+
+# FLAGS= $(OPT_FLAGS) $(DBG_FLAGS) -std=gnu99 -fPIC -Wall -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -pedantic 
+# LINK_FLAGS =  -lm -lgomp -llapacke  -llapack -lblas
+LINK_FLAGS = -llapacke -llapack -lblas -lm -Wall
+DEPS = matrix_multiply.h
+
+INCS= -I../../../UTILS/inc
+
+t: eigenvectors.o test_eigenvectors.o
+	$(CC) $(INCS) $(FLAGS)  \
+	/usr/lib/liblapacke.a \
+	/usr/lib/liblapack.a \
+	/usr/lib/libblas.a \
+	eigenvectors.o test_eigenvectors.o  -o t $(LINK_FLAGS)
+
+.c.o : $(DEPS)
+	$(CC) $(INCS) $(FLAGS)  -c -o $@ $< 
+
+clean:
+	rm -f *.o 
+	rm -f t 
+
+
+

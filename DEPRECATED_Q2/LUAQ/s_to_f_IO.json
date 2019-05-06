@@ -1,0 +1,34 @@
+{
+  "OP" :    [ "Constant", "Sequence", "Period", "Random" ],
+  "Constant" : {
+    "ARGS" : {
+      "Mandatory" : [ "Value", "FldType" ],
+      "FldType" : [ "I1", "I2", "I4", "I8", "F4", "F8", "SC" ]
+    }
+  },
+  "Sequence" : {
+    "ARGS" : {
+    "Mandatory" : [ "Start", "Increment", "FldType" ],
+    "FldType" : ["I1", "I2", "I4", "I8", "F4", "F8"]
+    }
+  },
+  "Period" : { 
+    "ARGS" : {
+    "Mandatory" : [ "Start", "Increment", "Period", "FldType" ],
+    "FldType" : ["I1", "I2", "I4", "I8" ]
+    }
+  },
+  "Random" : { 
+    "ARGS" : {
+      "Mandatory" : [ "Distribution", "FldType" ],
+      "FldType" : ["I1", "I2", "I4", "I8", "F4", "F8"],
+      "Distribution" : [ "Uniform", "Gaussian" ],
+      "Distribution_Uniform" : {
+        "Mandatory" : [ "MinVal", "MaxVal" ]
+      },
+      "Distribution_Gaussian" : {
+        "Mandatory" : [ "Mu", "Sigma" ]
+      }
+     }
+  }
+}

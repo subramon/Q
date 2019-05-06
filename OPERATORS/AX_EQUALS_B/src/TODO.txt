@@ -1,0 +1,2 @@
+Currently we only support F8. Support F4 as well.
+

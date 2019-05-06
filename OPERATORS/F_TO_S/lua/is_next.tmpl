@@ -1,0 +1,65 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+
+typedef struct _${rec_name}  {
+  ${ctype} prev_val; 
+  int is_violation;
+  int64_t num_seen;
+} ${rec_name};
+
+extern int
+${fn}(  
+      const ${ctype} * restrict in,  
+      uint64_t nR,
+      ${rec_name} *ptr_args,
+      uint64_t idx // not used for now
+      ) 
+;
+
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(  
+      const ${ctype} * restrict in,  
+      uint64_t nR,
+      ${rec_name} *ptr_args,
+      uint64_t idx // not used for now
+      )
+
+{
+  int status = 0;
+  ${ctype} prev_val = ptr_args->prev_val;
+
+  if ( ptr_args->is_violation != 0 ) { go_BYE(-1); }
+  if ( nR == 0 ) { go_BYE(-1); }
+  if ( in == NULL ) { go_BYE(-1); }
+  if ( ptr_args->num_seen == 0 ) { 
+    // no comparison to make 
+  }
+  else {
+    if ( in[0] ${comparison_operator} prev_val ) { 
+      ptr_args->is_violation = 1;
+      ptr_args->num_seen++;
+      return status;
+    }
+  }
+  for ( uint64_t i = 1; i < nR; i++ ) { 
+    if ( in[i] ${comparison_operator} in[i-1] ) { 
+      ptr_args->is_violation = 1;
+      ptr_args->num_seen += i;
+      goto BYE;
+    }
+  }
+  ptr_args->prev_val = in[nR-1];
+  ptr_args->num_seen += nR;
+BYE:
+  return status;
+}
+   ]]
+}

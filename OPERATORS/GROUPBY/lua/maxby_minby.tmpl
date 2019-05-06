@@ -1,0 +1,52 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+${includes}
+extern int
+${fn}(  
+      const ${val_ctype} * restrict val_fld, /* [nR_in] */ 
+      uint64_t nR_in,
+      const ${grpby_ctype} * restrict grpby_fld, /* [nR_in] */ 
+      uint64_t nR_out,
+      ${out_ctype} * restrict out, /* [nR_out] */
+      bool is_safe
+      ) 
+;
+
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(  
+      const ${val_ctype} * restrict val_fld,  
+      uint64_t nR_in,
+      const ${grpby_ctype} * restrict grpby_fld,  
+      uint64_t nR_out,
+      ${out_ctype} * restrict out,
+      bool is_safe
+      )
+
+{ 
+  int status = 0;
+
+  if ( is_safe ) {
+    for ( uint64_t i = 0; i < nR_in; i++ ) {
+      ${grpby_ctype} grpby = grpby_fld[i];
+      if ( ( grpby < 0 ) || ( grpby >= (${out_ctype})nR_out ) ) { go_BYE(-1); }
+    }
+  }
+
+  for ( uint64_t i = 0; i < nR_in; i++ ) { 
+    ${val_ctype} val = val_fld[i];
+    ${grpby_ctype} grpby = grpby_fld[i];
+    out[grpby] = ${t_reducer}(out[grpby], val);
+  }
+BYE:
+  return status;
+}
+   ]]
+}

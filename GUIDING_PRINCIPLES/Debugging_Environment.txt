@@ -1,0 +1,51 @@
+IDE for development (especially debugging):  
+https://studio.zerobrane.com/
+
+Even if you prefer the shell for coding and despise IDEs, in case of Lua the ZeroBrane studio seems to have the best debugger. And this IDE does minimal “magic” - so you can code and run from the shell, but use IDE just for debugging.
+
+Installation: Simply download the Linux installer shell script from “Downloads” and execute it.
+
+Faqs : https://studio.zerobrane.com/doc-faq
+ 
+Complete debugger feature set:  https://studio.zerobrane.com/doc-lua-debugging
+
+Interpreter
+The ZeroBrane studio defaults to using LuaJIT 2.0.2 as the interpreter.
+The interpreter can be changed from Project->Lua Interpreter
+Note: Lua 5.1 isn’t shipped by default
+
+Gotchas:
+
+- Debugger steps into lua functions in another file only if the other file is open; otherwise it steps over. See faq question “Why stepping into function calls doesn’t work in some cases?”
+- With LuaJIT, occasionally it steps on same line multiple times; see https://studio.zerobrane.com/doc-luajit-debugging
+- If you require any other files, set package.path at start of script accordingly
+package.path = package.path .. ';/home/foo/bar/Q/experimental/SUM/?.lua'
+     Setting package.path is least magic so I prefer this approach for now.
+  CORRECTION: This is different from command line semantic; to be checked.
+  
+Practical points:
+I set the project directory to the top-level folder (e.g. Q) – that gives me access to all files.
+For a “project” setup, we should have an explicit “point of entry” lua file (e.g. main.lua), that sets paths, loads libraries etc. as needed
+
+TODOs:
+Debugging (stepping) into C functions invoked from Lua programs
+Lua 5.1 interpreter
+
+Environment specific notes: 
+While we test and support Ubuntu (14.04), this section captures any observations reported on other environments.
+
+<Indrajeet Jan 17 2017>
+On mac os x when I compiled and attached my dynamic libs I got an error stating "mach-o, but wrong architecture”.  We need to compile the libs with a -m32 flag. 
+</Indrajeet Jan 17 2017>
+
+Alternate IDEs
+This section lists any other IDEs explored, observations, drawbacks.
+Eclipse LDT
+https://eclipse.org/ldt/
+Pluses:
+It’s eclipse :)
+Multiple “projects” view etc
+Minuses:
+Debugger configuration has extra dependencies and was too time-consuming to get going
+Does some “magic” w.r.t. paths, so command-line compatibility would require additional overseeing
+

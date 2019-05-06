@@ -1,0 +1,31 @@
+Following are the steps to build lupa with lua5.1 (Assuming lua5.1 is default)
+
+- Install required package
+$ sudo apt-get install python-dev
+
+- Download lupa and luajit source code (lupa source location - https://pypi.python.org/pypi/lupa/ -- lupa-1.5.tar.gz) 
+$ mkdir ~/jupyter
+$ cd ~/jupyter
+# wget https://pypi.python.org/packages/8b/ee/1bb9803bbe6f06bd5dc6272cbf700f0e604906cf84a4a9ef581667e689d2/lupa-1.5.tar.gz#md5=6d05162b810863f99c44722b31592708
+$ wget http://luajit.org/download/LuaJIT-2.0.5.tar.gz
+
+- Extract lupa & Luajit Tarball (Note: Extract Luajit tarball inside lupa extracted directory)
+$ tar zxf lupa-1.5.tar.gz
+$ cd lupa-1.5/
+$ tar zxf ../LuaJIT-2.0.5.tar.gz
+
+- Build Luajit
+$ cd LuaJIT-2.0.5/
+$ make CFLAGS="-fPIC"
+
+- Build & Install lupa
+$ cd ..
+$ sudo python setup.py install --with-cython
+
+- Test lupa installation
+start python interpreter and try importing lupa
+$ cd /tmp
+$ python
+import lupa
+
+above command should work

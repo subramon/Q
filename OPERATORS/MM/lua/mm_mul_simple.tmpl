@@ -1,0 +1,44 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+#include "q_incs.h"
+#include <omp.h>
+#include <sys/sysinfo.h>
+extern int 
+${fn}(
+    ${x_ctype} ** x, 
+    ${y_ctype} ** y, 
+    ${z_ctype} ** z, 
+    int m,
+    int k,
+    int n
+    );
+    ]],
+    definition = [[
+#include "_mm_mul_simple_${in1_qtype}_${y_qtype}_${z_qtype}.h"
+
+int 
+${fn}(
+    ${x_ctype} ** x, 
+    ${y_ctype} ** y, 
+    ${z_ctype} ** z, 
+    int m,
+    int k,
+    int n
+    )
+{
+  int status = 0;
+
+  for ( int i = 0; i < m; i++) {
+    for ( int j = 0; j < n; j++) {
+      double sum = 0;
+      for(int t = 0; t < k; t++){
+        sum += x[t][i] * y[j][t];
+      }
+      z[j][i] = sum;
+    }
+  }
+  return status; 
+}
+]]
+}

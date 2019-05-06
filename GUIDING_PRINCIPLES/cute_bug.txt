@@ -1,0 +1,27 @@
+
+On 15 Nov 2017 04:28, "Ramesh Subramonian" <rsubramonian@nerdwallet.com> wrote:
+Interesting why this failed. Very subtle bug. Basically, the code that got generated was
+
+x = (x, y)
+
+Instead of x = min(x, y
+
+Because of an error in the substitutions.  The code is legal!!!
+
+#include <stdio.h>
+main()
+{
+  int x = 10, y = 20;
+  int z = (x, y);
+  printf("z = %d \n", z);
+}
+
+=======================================================
+C is so cutely bewildering at times :)
+
+https://en.m.wikipedia.org/wiki/Comma_operator
+
+Particularly the "uses" section is fascinating... Amazing ... the tricks used to accomplish a lot of things (e.g. assert) we take for granted in newer languages.
+
+Thanks a lot for pointing out this"bug",
+Srinath.

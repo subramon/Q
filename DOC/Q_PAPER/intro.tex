@@ -1,0 +1,47 @@
+\section{Introduction}
+
+It is undeniable that there has been an explosive growth in the 
+amount of data available for analysis. Solutions that 
+deal with the reliable storage of large amounts of data have seen tremendous
+improvements, as also tools to analyze large data sets. What has sometimes been
+obscured is the understanding of the actual reality of the life of a data
+scientist or analyst. More often than not, the actual amount of data that needs
+to be analyzed seldom exceeds a few tera bytes\cite{Dittrich2015}. The user may spend
+several months on this sliver of data, augmenting it or eliminating parts of it
+as insights emerge. Therefore, the mantra of ``velocity, volume and variety'',
+while entirely true for data in general, does not translate as readily to the
+sustained, concentrated effort that goes into most work that we have
+encountered. The familiarity gained about the nature of the data 
+while working on a given problem for a length of time should not be discounted. The
+user becomes aware of what approximations can be made, what dynamic range is
+truly needed, at what point can a value be saturated, etc.
+
+The fact that we are better off scaling up before scaling out has been suggested
+by several authors \cite{Rowstron2012,Dittrich2015}. 
+%Kyrola2012
+Fault tolerance on large distributed systems is a difficult
+problem and adds significant system complexity but is it really needed?
+If we consider the mean time between failure of a single server and
+the cost of a ``re-do'' in the event of failure,
+it is hard to justify that investment. 
+Further, the emergence of GPUs --- both their increased compute power and the
+increased  bandwidth to the GPU --- pack the single server solution with
+considerable punch.
+
+In this paper, we present Q, our answer to both technological trends and actual
+user needs. Q is an analytical database that invites the participation of the
+user in tuning performance and writing new operators. 
+%% Its architecture makes it amenable to integrating it in 
+%% other eco-systems such as Jupyter notebooks.
+
+The simplicity and power of Q does not come for free. We have abandoned many
+cherished tenets of databases, like fault tolerance, multi-tenancy, concurrency,
+etc. While it is hard to argue against these features, our experience leads us
+to question as to whether they truly assist the work of the data scientist, the
+business analyst, the machine learning model builder. 
+%% Maybe its time that
+%% analytical databases look more like Jupyter notebooks on steroids.
+
+Due to the page limitation, we have heavily edited code fragments and
+have substituted the insights gained from performance experiments instead of
+performance graphs. These are available in the unabridged version.

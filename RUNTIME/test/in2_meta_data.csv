@@ -1,0 +1,18 @@
+local qconsts = require 'Q/UTILS/lua/q_consts'
+
+ return { base_field_type = "I4",
+base_num_in_chunk = "0",
+base_chunk_size = tostring(qconsts.chunk_size),
+base_chunk_num = "0",
+base_file_size = "40",
+base_num_elements = "10",
+base_open_mode = "NOT_OPEN",
+base_field_size = "4",
+base_file_name = "_in3_I4.bin",
+base_is_persist = "false",
+base_is_eov = "true",
+base_is_nascent = "false",
+base_name = "",
+base_is_memo = "true",
+aux_rand_key = "some other rand val",
+ } 

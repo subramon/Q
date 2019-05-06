@@ -1,0 +1,14 @@
+Also to indent your code properly use gnu indent
+the command being 
+# bap blank-lines-after-procedure
+# br and nce for the if else
+#pcs for space after procedure name
+#prs for space after any parenthesis
+# -bfde to put args of func on different lines and closing brace
+# brs to format struct
+
+indent -bap -bfda -br -nce -pcs -prs -bfde -brs -l80 $1
+
+
+where $1 is the file name
+

@@ -1,0 +1,46 @@
+?
+? table_name
+? table_name *
+? table_name PROP=NumRows
++ table_name OP=new 5678
+OP=none
+? table_name.field_name
+? table_name.field_name *
+? table_name.field_name PROP=FldType
+
+table_name.field_name : Sum := Value
+table_name.field_name : Min := Value
+table_name.field_name : Max := Value
+table_name.field_name : NDV := Value
+table_name.field_name : NumNN := Value
+table_name.field_name : ApproxNDV := Value
+
+- table_name.field_name : ApproxNDV 
+
+T := OP=new (5678)
+T := OP=LoadCSV (datafile=xxx,metadatafile=yyy,ignore_hdr=true,fld_sep=comma)
+T := OP=LoadBinary (datafile=xxx,fld_spec=I8:I8:I8,fld_list=f1:f2:f3)
+- T 
+- T.f 
+TD += TS
+
+TD := TS
+TX <- TS
+
+TD.fD := TS.fS
+TD.fD <- TS.fS
+
+TD.fD := TD.fS
+TD.fD <- TD.fS
+
+OP=Sum T.f
+OP=Min T.f
+OP=Max T.f
+OP=NumNN T.f
+OP=NumNDV T.f
+OP=ApproxNDV T.f
+
+T.f := OP=const (fldtype=I4,val=1)
+T.f := OP=seqeunce (fldtype=I4,start=1,incr=2)
+T.f := OP=cycle (fldtype=I4,start=1,incr=2,period=8)
+T.f := OP=random (fldtype=I4,min=1,max=2,distribution=uniform)

@@ -1,0 +1,346 @@
+\startreport{Q: A Developer's Guide}
+\reportauthor{Ramesh Subramonian}
+
+\section{Introduction}
+
+This document is written with two distinct audiences in mind.
+\be
+\item Library developer: The folks developing the Q library 
+\item Q programmer aka user: The developers who'll use the Q library
+\ee
+Note these are just roles, the same person can play both.
+
+The aim of this document is to provide a step-by-step guide to being a
+library developer, working on the internals of Q. We will also
+discuss how packaging and installation are done and how to operate as
+a Q programmer. A Q programmer need have {\bf no} idea about the
+internals of Q --- it is just another Lua package. Of course,
+understanding the internals, to some extent, allows for more efficient
+usage of the Q primitives.
+
+
+\section{Getting Started}
+\label{getting_started}
+
+\subsection{Building your machine for the first time}
+
+Starting with a minimal Ubuntu install, you should execute Indrajeet \TBC
+
+Check that we are building LuaJIT with pthread in Make. \TBC
+
+
+
+\subsection{Environment Variables}
+\label{env_var}
+So, you want to modify the guts of Q? Here's a step by step guide.
+
+\be
+\item Say, you are in \verb+/home/subramon/WORK/+ 
+\item \verb+git clone https://github.com/NerdWalletOSS/Q.git+
+\item Set the following environment variables
+using \verb+source setup.sh -f+. Note that this is just a convenience. If you
+want, you can set them yourself but then the onus is on you to get things right.
+These are
+\be
+\item \verb+QC_FLAGS+ --- these will be used as flags to gcc when creating
+\verb+.o+ files
+\item\verb+Q_LINK_FLAGS+ --- these will be used as flags to gcc when creating
+\verb+.so+ files
+\item \verb+Q_ROOT+ ---  This is where artifacts created by the build provess
+will be stored. As of now, they are
+\be
+\item \verb+Q_ROOT/lib/+ --- contains \verb+libq_core.so+
+\item \verb+Q_ROOT/include/+ --- contains \verb+q_core.h+
+\item \verb+Q_ROOT/tmpl/+ --- contains templates, used for dynamic code
+generation
+\ee
+\item \verb+Q_DATA_DIR+ --- This is where data files will be stored. Think of
+this as a tablespace and keep a separate one for each project you are working
+\item \verb+Q_METADATA_DIR+ --- This is where meta data files will be stored. Think of
+this as a tablespace and keep a separate one for each project you are working
+on. Default will be \verb+Q_ROOT/meta/+
+\item 
+\verb+LD_LIBRARY_PATH+ Make sure that this includes \verb+Q_ROOT/lib/+ This is
+where \verb+libq_core.so+ will be created
+\item \verb+LUA_PATH+, Section~\ref{masquerade}
+\ee
+\ee
+
+\subsubsection{Consequences}
+
+There are some important consequences of the above. 
+\be
+\item {\bf Do  not set} above environment variables in any of your scripts.
+\item {\bf Do not use} \verb+Q_ROOT+ anywhere except in \verb+Q/UTILS/build+
+\item In your Lua scripts, you must specify the entire path of the file you want
+to require e.g.,
+\begin{center}
+{\tt local foo = require 'Q/UTILS/lua/foo' }
+\end{center}
+\item There are a few ``requires'' that I would like to highlight.
+\begin{verbatim}
+local qconsts = require 'Q/UTILS/lua/q_consts'
+local ffi     = require 'Q/UTILS/lua/q_ffi'
+local qc      = require 'Q/UTILS/lua/q_core'
+\end{verbatim}
+\be
+\item qconsts contains constants e.g., \verb+qconsts.qtypes+ describes the
+various qtypes.
+\item qc contains all C functions that are accessible to Lua. See  Section~\ref{two_kinds_c_functions}. Example, \verb+qc["txt_to_I8"]+
+\item ffi is the same as on \url{http://luajit.org}, except that malloc has been
+modified a bit.
+\ee
+\ee
+
+
+\subsection{Building}
+
+\subsubsection{Two kinds of C functions}
+\label{two_kinds_c_functions}
+C programs are used to augment Lua in two important ways
+\be
+\item to help with code generation and to perform some functionality that 
+could not be done easily (or in a performant manner) in Lua. Examples
+of these are text converters like \verb+txt_to_I8+ or \verb+get_cell+
+\item the computational workhorse. This is where the heavy lifting happens.
+\ee
+
+\subsubsection{Breaking circular dependency}
+You will note a bit of a circular dependency. We need C code to create
+C code.  This is broken in one of two ways
+\be
+\item Execute \verb+Q/UTILS/mk_core_so.lua+ This creates the following 
+files 
+\be
+\item \verb+Q_ROOT/include/q_core.h+ --- which is used for \verb+ffi.cdef()+
+\item \verb+Q_ROOT/lib/libq_core.so+ --- which is used for \verb+ffi.load()+
+\ee
+You are have the C functionality needed for code generation
+
+\item Within \verb+Q/UTILS/build/+, do {\tt make clean; make} 
+\ee
+
+\subsection{Registering an operator}
+
+When you create an operator, a functionality that will be used by the Q
+programmer e.g, add, sort, \ldots, you need to {\em register} that in the
+following manner. Consider \verb+mk_col+ as an example
+
+\begin{verbatim}
+local mk_col = function(input, qtype)
+local Q       = require 'Q/q_export'
+......
+return require('Q/q_export').export('mk_col', mk_col)
+\end{verbatim}
+
+You need to know a few things to understand the underlying mechanism
+\be
+\item 
+\verb+Q_SRC_ROOT/init.lua+ is called when Q programmer does 
+\verb+require ('Q')+
+\item \verb+ q_export+ is the table that Q programmer will use
+\ee
+
+
+
+\subsection{Masquerading as a Q programmer}
+\label{masquerade}
+
+From time to time, you will need to pretend to be a Q programmer so that you can
+test your code. Assume that you have checked out the code in 
+\verb+/home/subramon/WORK/+. 
+To enable this to happen without re-installing Q, you set
+\verb+LUA_PATH+ as below. Note the double semi-colon at the end. That is needed.
+\begin{verbatim}
+/home/subramon/WORK/?.lua;/home/subramon/WORK/?/init.lua;;
+\end{verbatim}
+
+\subsection{Installation}
+
+At some point in the not too distant future, Q will be installed as 
+\begin{verbatim}
+sudo luarocks install Q
+\end{verbatim}
+Until then, it is installed as 
+\begin{verbatim}
+cd $Q_SRC_ROOT; sudo bash q_install.sh 
+\end{verbatim}
+%$
+\subsection{Usage}
+
+The Q programmer does not need to set any of the environment variables of
+Section~\ref{env_var}, except for 
+\verb+Q_DATA_DIR, Q_METADATA_DIR+, which {\em must} be set. 
+In an earlier version, we had required them
+to set \verb+LUA_INIT+. That is no longer needed.
+A sample Q script looks as follows
+\begin{verbatim}
+Q = require 'Q'
+x = Q.mk_col({10, 20, 30, 40}, 'I4')
+Q.print_csv(x, nil, "")
+os.exit()
+\end{verbatim}
+
+If you want to change the environment variables, 
+\verb+Q_DATA_DIR, Q_METADATA_DIR+, this means that you want to work on a
+different project or tablespace. In that case, 
+\be
+\item \verb+Q.save()+
+\item exit the script 
+\item reset the environment variables
+\item restart the Q server or execute a new script
+\ee
+
+\section{Lua Coding Conventions}
+This section deals with coding conventions to be followed by a library developer
+writing Lua code. 
+\be
+\item Do {\bf not} pollute the global name space. So, all variables are {\bf
+local}.
+\item Do not use {\tt dofile}. Use {\tt require instead}
+\item LuaJIT scripts that invoke pthreads (indirectly) should end with
+\verb+os.exit()+
+\ee
+
+\section{LuaJIT}
+ I am going to make a difficult decision, favoring immediate 
+ expediency for long term portability.  Basically, decision is to tie 
+ ourselves to LuaJIT. This means we do {\bf not}  use features of Lua that 
+ come after 5.1.3. This is a moving target, depending on what Mike Pall is
+ willing to support. 
+
+ Andrew: I think the value terra brings alone is probably worth that. 
+
+\subsection{Performance tips}
+Following are all available on \url{luajit.org} and reproduced for convenience. 
+
+\be
+\item 
+ffi.copy() may be used as a faster (inlinable) replacement
+ for the C library functions memcpy(), strcpy() and strncpy().
+\ee
+
+\subsection{Converting numbers: C to Lua}
+\label{cnum_to_lnum}
+
+Consider the following scenario. 
+You need a C function, {\tt foo}, to create an F8 number.
+Lua would allocate space for it, pass the pointer to C to set it and the Lua
+would need to convert that back to a Lua number.
+\begin{verbatim}
+local conv_cnum_to_lnum = require "Q/UTILS/lua/conv_lnum_to_cnum"
+local ctype = q_consts.qtypes[qtype].width
+local c_mem = ffi.malloc(width)
+qc.foo(...., c_mem)
+local rslt = 
+\end{verbatim}
+
+\subsection{Converting numbers: Lua to C}
+\label{lnum_to_cnum}
+
+\subsubsection{What to do}
+
+\begin{verbatim}
+local conv_lnum_to_cnum = require "Q/UTILS/lua/conv_lnum_to_cnum"
+local c_mem = conv_lnum_to_cnum(123, "I4")
+local c_mem = conv_lnum_to_cnum("123", "I4") -- for large I8 numbers
+\end{verbatim}
+
+\subsubsection{Rationale}
+A simple way to convert Lua Number to C data struture using FFI API is
+\begin{verbatim}
+local chunk = ffi.new(ctype .. "[?]", length, input)
+\end{verbatim}
+where
+\be
+\item 
+\item chunk  ---  C data struture of type ctype
+\item ctype  ---  datatype e.g. -  int, char, float etc.
+\item input  ---  Lua table of Lua number
+\item length ---  number of elements
+\ee
+
+Reference link \url{http://luajit.org/ext_ffi.html}
+
+Extensions to the Lua Parser. 
+The parser for Lua source code treats numeric literals with the suffixes LL
+or ULL as signed or unsigned 64 bit integers. Case doesn't matter, but
+uppercase is recommended for readability. It handles both decimal (42LL)
+and hexadecimal (0x2aLL) literals.
+
+
+\subsection{Writing tests}
+
+\subsubsection{strict}
+
+In all your Lua tests, remember to start with 
+\begin{verbatim}
+require 'Q/UTILS/lua/strict'
+\end{verbatim}
+\subsection{Where to place your require statements in a function}
+In many functions, we have something like
+
+\begin{verbatim}
+local function foo (...)
+local ffi     = require ‘Q/UTILS/lua/q_ffi.lua
+local qconsts = require ‘Q/UTILS/lua/q_consts.lua
+.....
+end
+\end{verbatim}
+
+I propose we adopt the convention that the above kind of require’s occur 
+at the {\bf start} of the function, before any of the ``real'' code.  While it can be 
+done anywhere, standardization is better to read and maintain the code.
+
+%----------------------------------
+
+\subsection{LuaJIT and OpenMP}
+
+Ciprian Tomoiaga wrote:
+{\it I have a C function containing OpenMP clause which I call with ffi. On my
+machine, the program terminates with a segmentation fault. However, it
+works without a problem on a Mac and on another machine. }
+
+Mike Pall responded: 
+The most likely cause is the dreaded pthread issue: the main
+executable must be compiled/linked with -pthread (note: this is
+not the same as -lpthread!). Otherwise a shared library which is
+loaded later on and uses threads may cause a crash.
+The easiest way to test this hypothesis is to rebuild LuaJIT with:
+\begin{verbatim}
+  make TARGET_FLAGS=-pthread
+\end{verbatim}
+and then try again.
+
+Ciprian Tomoiaga wrote:
+{\it I recompiled with the specified opition, but it still crashes. :(
+Do I have any other options? }
+
+Mike Pall responded: 
+Well I tried myself and it prints two lines, but then crashes when
+the shared library is unloaded (as a consequence of \verb+lua_close()+).
+Looks like OpenMP doesn't like to be unloaded --- this never
+happens with programs that are statically linked against it.
+
+\url{https://www.freelists.org/post/luajit/Segmentation-fault-on-FFI-call-containing-OpenMP-clause,3}
+
+\section{Data Types}
+
+\subsection{Bit Vectors}
+
+\section{General coding guidelines}
+\subsection{No seg faults}
+Number of things we need to achieve this. 
+\be 
+\item  Trust nobody. Assert everything. 
+\item \TBC
+\ee
+
+
+\subsection{Makefiles for operators}
+
+\be
+\item You must have a target called {\tt clean} which deletes all files created
+by {\tt make}
+\ee
+

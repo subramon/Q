@@ -1,0 +1,29 @@
+return function (
+  ftype,
+  scalars
+  )
+    local qconsts = require 'Q/UTILS/lua/q_consts'
+    assert(( ftype == "I1" ) or ( ftype == "I2") or ( ftype == "I4" ) or 
+       ( ftype == "I8" ) or ( ftype == "F4") or ( ftype == "F8" ),
+       "type must be I1/I2/I4/I8/F4/F8")
+    local tmpl = 'f1s1opf2_cmp2.tmpl'
+    local subs = {}; 
+    assert((type(scalars) == "table"), "Need lb/ub sent as Lua table")
+    local lb = assert(scalars.lb, "lb not specified")
+    local ub = assert(scalars.ub, "ub not specified")
+    assert( ((type(lb) == "string") or (type(lb) == "number")), 
+    "lb not specified")
+    assert( ((type(ub) == "string") or (type(ub) == "number")), 
+    "lb not specified")
+    -- TODO  convert lb/ub to appropriate ctypes
+    subs.fn = "<<operator>>" .. ftype 
+    subs.fldtype = qconsts.qtypes[ftype].ctype
+    subs.out_qtype = "B1"
+    subs.comp1 = ' <<comparator1>>  '
+    subs.comp2 = ' <<comparator2>>  '
+    subs.combiner = ' <<combiner>>  '
+    subs.c_lb = 0 -- TODO 
+    subs.c_ub = 0 -- TODO 
+    subs.out_ctype = "uint8_t"
+    return subs, tmpl
+end

@@ -1,0 +1,16 @@
+# OPTIONAL
+# Following to change prompt so that I know which branch I am on
+. ~/git_prompt.sh
+PS1='\W:$(__git_ps1 "(%s)")\$ '
+alias L='luajit'
+alias clean='find . -name "_*" -print -exec rm -f {} \;'
+# Mandatory
+export LUA_INIT="@$HOME/WORK/Q/init.lua"
+# Set PATH for Lua
+export PATH=$PATH:$HOME/TERRA_STUFF/terra-Linux-x86_64-2fa8d0a/bin
+export QC_FLAGS=" -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -pedantic -fopenmp"
+export Q_SRC_ROOT=$HOME/WORK/Q/
+export Q_ROOT=$HOME/Q/
+
+#--------
+export Q_LINK_FLAGS=" -fPIC -shared -lgomp -lpthread -lm "

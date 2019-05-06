@@ -1,0 +1,576 @@
+\startreport{The Janus Project}
+\reportauthor{Ramesh Subramonian}
+
+\section{Introduction}
+
+This document is meant to capture my understanding of what Janus is
+intended to do and a proposal of how it could do it. It does seem
+presumptuous to write this with barely a week of study. Therefore,
+this document should be read as a strawman to be debated and not a
+product of deep thought. Several assumptions will be made as the paper proceeds,
+some of which are limitations of the current approach.
+Relevant prior work can be found in \cite{sarawagi99}
+and \cite{Fagin05}
+
+Of the three proposals made in \cite{Fagin05} --- DIVIDE,
+DIFFERENTIATE, DISCOVER --- only DIFFERENTIATE seems worth pursuing. 
+I am less convinced about the value of the other two, although they do 
+make for an interesting academic exercise. 
+Therefore, this paper will focus on DIFFERENTIATE.
+
+At a high level, the purpose of DIFFERENTIATE is to point out the salient
+differences between two populations. For example, the ratio of Males to Females
+may be much higher in one population than in the other. The problem becomes
+harder when the difference manifests itself only when more than one attribute is
+considered at a time. For example, as Table~\ref{tbl_sample_multi_dim_diff}
+shows, there is no difference between populations A and B when viewed along
+the Gender dimension or the Income dimension. Yet, when Income and Gender are
+viewed simultaneously, the difference is apparent.
+
+\begin{table}[hbtp]
+\centering
+\begin{tabular}{|l|l|l||l|l|l|} \hline \hline
+           &  {\bf A}   &  {\bf A}     &  {\bf B}   &  {\bf B}    \\ \hline
+           & {\bf Male} & {\bf Female} &{\bf Male} & {\bf Female} \\ \hline
+{\bf Rich} &    80      &     20       &    20      &     80      \\ \hline
+{\bf Poor} &    20      &     80       &    80      &     20      \\ \hline
+\hline
+\end{tabular}
+\caption{2 dimensions needed to explain difference between A and B}
+\label{tbl_sample_multi_dim_diff}
+\end{table}
+
+
+
+The implementation is discussed in the context of Q. We take some liberties when
+presenting pseudo-code in Q --- for ease of exposition, we suppress some
+details. However, doing so does not detract from their correctness.
+As part of some preliminary performance prototyping, we used a VM runnining
+Ubuntu 18.04, configured with 6 cores, where the physical hardware was a MacBook
+Pro, with a 6 core 2.2 Ghz Intel Core i7, with 9 MB of L3 cache and 32 GB RAM.
+
+
+\subsection{Notation}
+\subsubsection{Input Data}
+Following \cite{Fagin05}, we assume that the input is a 
+single relational
+table where columns are either dimensions or measures. 
+
+Each row refers to an item or a transaction or a document. 
+Therefore, note that each item is associated with a single value of a
+categorical dimension. For example, an item can be associated with Gender = Male
+or Gender = Female but not both.
+Using an example from \cite{Fagin05}'s work, if a dimension were Language which had 
+values English, Chinese, Russian, then a document could be not be clsassified as
+both English and Russian.
+
+
+\subsubsection{Dimensions}
+Dimensions are
+attributes along which aggregations will be performed e.g., time, age,
+gender, product category. These may be numeric, like time or
+categorical, like gender.
+Conversions of ``raw'' values like a datetime value to a day of the week or a
+month are discussed in Section~\ref{Discretization}
+
+\subsubsection{Measures}
+Measures are numerical and are the target of aggregations. Examples are sale
+price, number of items, \ldots We might want to know how average sale price
+differs based on Gender. Here, Price and Number are the measures and Gender is
+the dimension.
+
+\section{Building Blocks}
+DIFFERENTIATE can be broken up into the following building blocks
+\be
+\item Discretization --- Section~\ref{Discretization}
+\item Select A, B  --- Section~\ref{SelectAB}
+\item Select Dimensions and Measures --- Section~\ref{DimsAndMeasures}
+\item Core Differentiation  --- Section~\ref{Differentiation}
+\item Refinement --- Section~\ref{Refinement}
+\item Classification --- Section~\ref{Classification}
+\ee
+
+
+\subsection{Discretization}
+\label{Discretization}
+
+Given a ``raw'' attribute, we can create derived attributes. This is most often
+performed for numeric dimensions, like time. This is done by providing a mapping
+function, the input of which is value of the raw attribute and the output is a
+value of the derived attribute e.g., input = datetime, output = day of week.
+
+Several different discretizations of the same raw attribute can be performed.  So, timestamp could be used to create day of week, month, holiday or not, \ldots
+Categorical attributes, whether raw or created by discretization, can be further
+summarized. Hence, the values CA, OR, WA of the dimesnion State could be mapped to the value ``West Coast''  of the derived dimension Region.
+
+From an implementation standpoint, the following should be noted.
+\be
+\item Differentiation is done using only categorical attributes, except
+as discussed in Section~\ref{Classification}
+\item the number of distinct values of a categorical 
+attribute used for differentiation is small, in particular less than 255., which
+allows us to represent the value in one byte. We will relax this assumption in
+Section~\ref{Refinement}
+\item 
+We have not yet discovered any efficiencies in the case where one derived
+attribute dovetails into another, such as what happens when Month 
+dovetails into Quarter.
+\item We assume that discretization is a pre-processing step and not the
+responsibility of Janus.
+\item If discretization is to be performed by Janus, we will have to evaluate
+the time space tradeoff of whether it is performed once at the start or
+repeatedly on the fly.
+\ee
+
+
+\subsection{Select A, B}
+\label{SelectAB}
+
+The aim of differentiation is to provide the user with a synopsis of
+``interesting'' ways in which two subsets of the input table differ. 
+More on what constitutes ``interesting'' in Section~\ref{interesting}
+
+Note that A and B do not need to be mutually exclusive and exhaustive. 
+\bi
+\item not mutually exclusive --- 
+A could be rows categorized as Janaury and B could be those
+categorized as Male
+\item not exhaustive  ---
+A could be rows categorized as California and B could be those
+categorized as Texas. 
+\ei
+
+We leave it to the user to define meaningful A, B sets.
+Clearly, poor choices of A and B are likely to result in meaningless
+answers, the infamous GIGO\footnote{Garbage In, Garbage Out} phenomenon.
+
+The Q operators needed for selection are 
+\be
+\item vseq --- Section~\ref{vseq}
+\item ainb --- Section~\ref{ainb}
+\item vvand --- Section~\ref{vvand}
+\item sum --- Section~\ref{sum}
+\ee
+
+For example, if we wanted to provide the user with the count of elements of A,
+where A is defined as rows where state = California or Texas and Gender = Male,
+then we would write
+\begin{verbatim}
+Q.sum(Q.vvand(Q.vseq(Gender, Male), Q.ainb(State, {California, Texas})))
+\end{verbatim}
+
+%% TODO: The above operation takes XX seconds with 4B rows.
+
+\subsubsection{What if A, B not provided?}
+
+What if the user does not provide us A, B? This is tantamount to being told,
+``Surprise me''. In effect, all possible choices of A, B are now up for grabs.
+Which means that we would have to perform the subsequent computations for {\bf
+all} ``meaningful'' choices of A, B. For example, consider the dimension State.
+Possible choices for A, B would be
+\be 
+\item  hold out one. This gives us 50 choices of A, B of the form California
+versus the remaining 49 states, New York versus the remaining 49 states, \ldots
+\item pair wise. This gives us \((50 \times (50-1)/2) = 1225\) choices of the
+form California versu New York, Oregon versus Texas, \ldots
+\ee
+
+As a practical matter, I am unconvinced that such unconstrained exploration is
+meaningful. I believe that analysts come to the table with a scope of work in
+mind or an ambit of responsibility. We are better served by incorporating these
+constraints into the search process.
+
+
+
+\subsection{Select Dimensions and Measures}
+\label{DimsAndMeasures}
+
+We assume that the user will select one or more dimensions. For example, they
+may be interested in geographical dimensions but not care about how transactions
+differ when aggregated by Gender. 
+
+Similarly, we assume that the user will select one or more measures. For
+example, they may care about the average
+price of a transaction but not the number of transactions.
+
+\subsection{Core Differentiation}
+\label{Differentiation}
+
+The following Lua code extract is meant for illustrative purposes. We hope that
+the reader is able to get the gist of the process without being distracted by
+the syntax. In this case, we are computing the difference for every
+dimension/measure combination
+\begin{verbatim}
+for attr, vec in pairs(dimensions) do 
+  local nvals = Q.max(vec):eval():to_num() + 1
+  avals[attr] = {}
+  bvals[attr] = {}
+  for _, measure in pairs(measures) do 
+    avals[attr][measure] = Q.sumby(metric, vec, nvals, {where=a} ):eval()
+    bvals[attr][measure] = Q.sumby(metric, vec, nvals, {where=b} ):eval()
+    -- Compute difference between avals and bvals
+  end
+end
+\end{verbatim}
+Performing {\tt sumby} for A, B on a billion rows (\(2^{30}\), takes 
+\be
+\item 2.5 seconds When the measure is a 1 byte integer, 
+\item 4.0 seconds When the measure is a 4 byte float.
+\ee
+
+\subsubsection{Difference of Multiple Attributes}
+
+We discuss how {\tt sumby} is performed on more than one attribute. While the
+general problem is very hard, we believe there is a simple solution in practce
+that works when
+\be
+\item the number of simultaneous attributes is small --- 1, 2, 3
+\item the number of values for each categorical attrbute being considered is
+small
+\ee
+Assume we have 2 categorical attributes
+\be
+\item \(s\) --- State, which can take on 50 values and hence can be represented in 6 bits
+\item \(g\) --- Gender, which can take on 3 values (Male, Female, Unknown) and hence can
+be represented in 2 bits
+\ee
+We can create a single composite attribute \(x\) as either one of the following
+and then apply {\tt sumby} as before. 
+\be
+\item \verb+x = Q.vvor(Q.shift_left(s, 2), g)+
+\item \verb+x = Q.vvor(Q.shift_left(g, 6), s)+
+\ee
+
+\subsubsection{Chunking}
+\label{Chunking}
+
+Before we present Section~\ref{MemoryConsiderations}, we need to digress to
+discuss chunking of vectors. Q processes vectors a chunk at a time. The size of
+the chunk has an impact on performance. We want it 
+\bi
+\item small enough that it fits in cache, especially if the vector is likely to
+be re-used in a subsequent computation which is temporally close.
+\item large enough that there is enough work to do to offset the overhead of
+using multiple cores (using OpenMP) and that there is enough work per core for
+vectorization to be of use.
+\ei
+
+\subsubsection{Memory Considerations}
+\label{MemoryConsiderations}
+
+A well known technique to extract performance is to choreograph the computation
+so that when data is moved higher up the memory hierarchy, we extract as much
+usage of it before it is flushed.
+
+Consider the case where we had to compute differences in terms of single
+attributes and pairs of attributes. 
+Let there be  8 attributes of length \(2^{20}\).
+Assume only 4 chunks of size \(2^{18}\)
+could fit in cache at the same time. 
+Then, we would perform \(2^{20-18} = 4\) outer loops. 
+In iteration \(i\) of the outer loop, we would process rows \(i 2^{18}\) to
+\((i+1)2^{18}\), where \(i = 0, 1, 2, 3\). For a particular iteration,
+we would perform the computation in 6 phases, as shown in
+Table~\ref{tbl_choreography}. More optimal assignments are possible --- this is
+purely illustrative.
+
+
+\begin{table}[hbtp]
+\centering
+\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|} \hline \hline
+  & A   & B   & C   & D   & E   & F   & G   & H \\ \hline
+A &  1  &  1  &  1  &  1  &  3  &  3  &  4  &  4  \\ \hline
+B & --- &  1  &  1  &  1  &  3  &  3  &  4  &  4  \\ \hline
+C & --- & --- &  1  &  1  &  6  &  6  &  5  &  5  \\ \hline
+D & --- & --- & --- &  1  &  6  &  6  &  5  &  5  \\ \hline
+E & --- & --- & --- & --- &  2  &  2  &  2  &  2  \\ \hline
+F & --- & --- & --- & --- & --- &  2  &  2  &  2  \\ \hline
+G & --- & --- & --- & --- & --- & --- &  2  &  2  \\ \hline
+H & --- & --- & --- & --- & --- & --- & --- &  2  \\ \hline
+
+\end{tabular}
+\caption{Order of computations}
+\label{tbl_choreography}
+\end{table}
+
+How does Q make it possible to do the computational choreography described
+above? Recall that {\tt sumby} is a Reducer. What this means is that it consumes
+a vector a chunk at a time and condenses it into a much smaller summary. 
+For example, consider the input 
+\{(1, 1), (2, 2), (1, 2), (2, 2), (1, 3), (2, 2), (1, 4), (2, 2)\}, where the
+first value of each pair is the measure and the second is the dimension.
+This is condensed
+into \((1, 10), (2, 8)\). If the chunk size were 4, then the first invocation of
+the Reducer 
+would result in the partial result 
+\((1, 3), (2, 4)\) and the second invocation 
+would yield the final result of 
+\((1, 10), (2, 8)\). 
+
+\subsubsection{Approximately associative operators}
+\label{approx}
+
+As discussed above, the operator {\tt sumby} is implemented as a Reducer.  
+This opens up the possibility of using other Q operators like
+\be
+\item approximate quantiles
+\item top K
+\item number of distinct values  \cite{Flajolet07}
+\item \ldots
+\ee
+Note that these are not strictly associatve but almost so.
+
+\subsubsection{Comparison with deferred writes}
+
+The current RocksDB based implementation takes advantage of the fact that the
+address being written to does not need to be read until much later. So, if we
+had to increment \(x\) by 1 and some time later by \(2\), we could simply
+``issue'' the writes, have them be coalesced at some future point in time, with
+the guarantee that, when the computation is quiescent, \(x\) would have been
+incremented by \(1 + 2 = 3\).
+
+Without further benchmarking, it is hard to offer up a proper comparison with
+the Q implementation proposed here. Nonetheless, I am suspicious that the costs
+of a write despatch can be subsumed within the computational cost. The heart of
+the {\tt submy} operation, whether performed by Q or as a deferred write,
+consists of 3 reads, one add and one write as shown below.
+\begin{verbatim}
+  float  val     = val_fld[i];
+  int8_t grpby   = grpby_fld[i];
+  out_fld[grpby] += val;
+\end{verbatim}
+
+\subsubsection{Where do the results go?}
+
+A critical point that we have not addressed is what happens after the
+differentiation is performed for the user's selections in terms of A, B,
+dimensions, measures, \ldots One possibility is to keep it in some kind of key
+value store that supports large binary objects as keys
+
+\TBC
+
+
+
+\subsection{Refinement}
+\label{Refinement}
+
+Refinement in the context of Janus is drill-down in the context of OLAP. 
+Let us say that we find a significant difference between A and B in terms of
+Gender. This could then prompt a further refinement of how Females in A differ
+from Females in B. If \(a, b\) were the boolean vectors identifying A and B,
+and \(g\) is the numeric vector for Gender,
+then we would repeat the computation after doing:
+\begin{verbatim}
+a = Q.vvand(a, Q.vseq(g, Female))
+\end{verbatim}
+
+Note that when the cardinality of \(a', b'\) is small, it makes sense 
+to materialize the selection on the original data. This allows us to gain the
+efificiency from not having to scan the entire data set and discard rows which
+do not match \(a\) or \(b\)
+
+\subsection{Classification}
+\label{Classification}
+
+We propose the use of Machine Learning (ML) techniques for differentiation as
+follows. 
+In contrast with the discussion so far, for this approach
+\be
+\item we require that the sets A and B be mutually exclusive.
+\item we drop the distinction between measures and dimensions and
+consider the both simply as attributes.
+\item we merge the sets A and B into one but add an additional 
+binary attribute, with values A and B, indicating whether it came from the A set
+or the B set
+\item we make sure that the number of rows marked and B are roughly the same
+\ee
+
+We now build a binary classifier that predicts \(p_a(x), p_b(x)\) for each \(x \in
+X\), where \(p_a + p_b = 1\). We can now apply the formula of
+Section~\ref{KLDistance} where \(p_x(a) = P(x), p_x(b) = Q(x)\)
+
+Note the implicit assumption that the attributes used to build 
+the classifier were selected by the user. What is this were not the case? Assume
+that the attributes were \(x, y, z\). In this case, we would have to repeat the
+building of the classifier and the evaluation of the distance for every
+combination of attributes. In this case, there are 7 
+--- \(x, y, z, \{x, y\}, \{y, z\}, \{z, x\}, \{x, y, z\}\)
+
+
+\subsubsection{Notes on classifiers}
+\be
+\item We no longer need to discretize dimensions e.g., age could be a real
+valued attribute that does not have to be broken into bands
+\item This approach does not obviate the need for ``feature engineering'' e.g.,
+converting zip codes into economic groups based on census data may make it a
+better predictor than treating a zip code as an integer.
+\ee
+
+\section{Q Operators}
+
+In this section, we list the various Q operators needed
+
+\subsection{sum}
+\label{sum}
+
+\begin{itemize}
+\item \verb+s = Q.sum(x)+ 
+\item \(x\) is a numeric vector of length \(n\)
+\item \(s\) is a scalar of the same type as \(x\) and \(s = \sum_i x_i\)
+\end{itemize}
+
+\subsection{vseq}
+\label{vseq}
+
+\begin{itemize}
+\item \verb+y = Q.vseq(x, s)+ 
+\item \(x\) is a numeric vector of length \(n\)
+\item \(s\) is a scalar of the same type as \(x\)
+\item \(y\) is a boolean vector of length \(n\), where \(y_i = \mathrm{true}\)
+if \(x_i = s\) and false otherwise.
+\end{itemize}
+
+\subsection{ainb}
+\label{ainb}
+
+\begin{itemize}
+\item \verb+z = Q.vseq(x, y)+ 
+\item \(x\) is a numeric vector of length \(n\)
+\item \(y\) is a numeric vector of length \(m\), where usually \(m\) is small
+\item \(y\) is a boolean vector of length \(n\), where \(y_i = \mathrm{true}\)
+if \(\exists j x_i = y_j\) and false otherwise.
+\end{itemize}
+
+
+\subsection{where}
+\label{where}
+
+\begin{itemize}
+\item \verb+z = Q.where(x, y)+ 
+\item \(x\) is a numeric vector of length \(n\)
+\item \(y\) is a boolean vector of length \(n\)
+\item \(z\) is a numeric vector of the same type as \(x\). Consists of each
+element of \(x\) for which the corresponding element of \(y\) is true. The
+boundary cases are \(z = x\) when \(y\) is all true and \(z =\) {\tt nil} when
+\(y\) is all false
+\end{itemize}
+
+\subsection{vvand}
+\label{vvand}
+
+\begin{itemize}
+\item \verb+z = Q.vvand(x, y)+ 
+\item \(x\) is a boolean vector of length \(n\)
+\item \(y\) is a boolean vector of length \(n\)
+\item \(z\) is a boolean vector of length \(n\) such that \(z_i = x_i \wedge z_i\)
+\end{itemize}
+
+\subsection{sumby}
+\label{sumby}
+\begin{itemize}
+\item \verb+w = Q.sumby(x, y, n_y, z)+ 
+\item \(x\) is a numeric vector of length \(n\)
+\item \(y\) is a numeric vector of length \(n\)
+\item \(n_y\) is a number such that 
+\(0 \leq \mathrm{min}(y) \leq \mathrm{max}(y) \leq n_y-1\)
+\item \(z\) is a boolean vector of length \(n\)
+\item \(w\) is a numeric vector of length \(n+1\) such that 
+\(w_i = \sum_{j=1}^{j=m} \delta(y_j, i) x_i\), where \(\delta(x, y) = 1 \) if
+\(x = y\) and 0 otherwise.
+\ei
+
+\section{What's Interesting}
+\label{interesting}
+
+What is interesting is often what is different from the expected. This requires
+us to define ``different''.
+
+
+\subsection{Defining difference}
+
+Consider an example where we have selected the dimension Gender and the measure Number of Purchases. Assume that 
+the {\tt sumby} operator yields Table~\ref{tbl_sample_diff}. We can
+``model'' these numbers as having been obtained from repeated trials from a
+probability distribution with parameters shown in columns 4 and 5. This allows
+us to use a distance metric, such as Section~\ref{KLDistance} to quantify how
+different these distributions are.
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l|l|l|l|l|} \hline \hline
+{\bf Gender}   & {\bf A } & {\bf B } & \(p_A\) & \(p_B\)  \\ \hline
+Male   & 100 & 400  & \(p_M|A = 1/4\) & \(p_M|B = 4/6\)  \\ \hline
+Female & 300 & 200  & \(p_F|A = 3/4\) & \(p_F|B = 2/6\)  \\ \hline
+\hline
+\end{tabular}
+\caption{Sample difference between A and B}
+\label{tbl_sample_diff}
+\end{table}
+
+\subsubsection{Dealing with other measures}
+
+The above example works when we are counting the number of occurrences.
+That is what allows us to think about something like \(p_M|A\). This does not
+translate in a straight-forward manner to the 
+case where we are aggregating a measure like price. Say  we want to quantify
+how the distribution of price for Males in Group A differs from the 
+distribution of price for Males in Group B. 
+We could use Section~\ref{KLDistance} if we had an estimate of the pdf of price for these two sets. To do so, we could either
+\be
+\item assume a Normal distribution and compute the mean and variance 
+\item compute the approximate quantiles (Section~\ref{approx}), use this to 
+approximate a cumulative distribution function, fit a polynomial curve to it and
+then differentiate to get the pdf.
+\ee
+
+\subsubsection{Sample Distance Measures}
+
+In Section\ref{Differentiation}, for a given choice of A,B, dimension and
+measure, we get 2 vectors, one for A and one for B, with the length of the
+vectors being the number of categories of the dimension. There are many ways to
+measure the difference. The following code snippet counts the ``distance''
+between \(x\) and \(y\) as the number times 
+\(|\frac{x_i-y_i}{\mathrm{max}(x,y)}|\) exceeds a prescribed scalar \(s\)
+\begin{verbatim}
+sum(vsgt(div(abs(sub(x, y)), vvmax(x, y)), s))
+\end{verbatim}
+The above sample is purely illustrative --- it is relatively easy to create a
+menu of measures which are meaningful in different business contexts.
+
+\subsubsection{Kullback-Leibler Divergence}
+\label{KLDistance}
+
+\begin{displaymath}
+D_{KL}(P | Q ) = - \sum_{x \in X} P(x) \log ( \frac{Q(x)}{P(x)})
+\end{displaymath}
+
+\subsection{What's New}
+\label{WhatsNew}
+
+If Janus is successful at finding meaningful differences, our problem will very
+soon morph from discovery to relevance. Like the apocryphal correlation between
+beer and diapers purchase on Friday evenings, an insight is insightful the first
+time it is offered up, obvious the second time and downright annoying the third.
+This means that we will have to build a system that represents the insights that
+the user has come to accept as knowledge and to alert them only when there is a
+new insight or the new data contradicts a previously held truth.
+
+\begin{quote}
+Those who don't remember the past are condemned to repeat it\footnote{George
+Santayana}
+\end{quote}
+
+\section{Miscellaneous Notes}
+
+\subsection{Distributed Computing}
+
+What happens when the amount of data exceeds what can be reasonably processed on one machine?
+As long as the
+metrics we are computing are amenable to decomposition into associative
+operations, we might consider sharding the data across multiple machines. 
+In this case, we would need to aggregate the results of the {\tt sumby}
+operators across all the machines before the metric can be evaluated.
+
+\bibliographystyle{alpha}
+\bibliography{../../DOC/Q_PAPER/ref} 
+

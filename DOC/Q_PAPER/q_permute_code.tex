@@ -1,0 +1,22 @@
+permute = function(val_vec, idx_vec, mode)
+  -- get Q and Terra type of input vecor
+  local val_qtype = assert(val_vec:fldtype())
+  local val_ttype = q_to_terra[val_qtype]  
+  -- get Q and Terra type of index vector
+  local idx_qtype = assert(idx_vec:fldtype())
+  local idx_ttype = q_to_terra[idx_qtype]  
+  -- get pointers to vectors
+  local val_n, val_vec = val_vec:get_all()
+  local     _, idx_vec = idx_vec:get_all()
+  -- allocate space for output vector
+  local val_width = qconsts.qtypes[val_qtype].width
+  local out = ffi.malloc(val_width * val_n)
+  -- get Terra function for given types, and invoke it
+  t_permute(val_ttype, idx_ttype)(
+    val_vec, idx_vec, out, val_n, mode)
+  -- create output Vector and write to it
+  local out_vec = Vector({qtype = val_qtype})
+  out_vec:put_chunk(out, nil, val_n) 
+  out_vec:eov() -- indicate no more data
+  return out_vec
+end

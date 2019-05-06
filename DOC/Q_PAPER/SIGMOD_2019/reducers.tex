@@ -1,0 +1,30 @@
+\subsection{Reducers}
+\label{reducers}
+
+A Reducer is a construct that takes one or more Vectors as input and produces
+one or more Scalars as output, similar to ``Builders'' in \cite{Weld2017}.
+
+The simplest Reducers are those for {\tt min},
+{\tt max}, {\tt sum} and other associative functions. 
+In this case, the Reducer takes 1 Vector as input and 
+returns 2 Scalars, one
+being the value of the function being computed and the other being the number of
+non-null values observed. 
+
+An example of a more advanced Reducer is {\tt minK}. 
+Given 2 Vectors, \(d\) and \(g\), minK returns 2
+Lua tables of Scalars, \(d'\) and \(g'\) such that \(d'\) contains the \(k\)
+smallest values of \(d\) and \(g'\) contains the corresponding values of \(g\).
+See Section~\ref{knn} for a use case.
+
+A few notes about Reducers: (a) 
+The value of a Reducer can be queried even before it has been evaluated 
+completely, a facility that has proven useful while debugging
+(Section~\ref{knn})
+(b) Given that Reducers can return a table of Scalars,
+it is possible to 
+convert a Lua table of scalars, \(s1, s2, \ldots\) into a vector by
+\(Q.\mathrm{pack}(\{s1, s2, \ldots\})\).
+Equivalently, \(S = Q.\mathrm{unpack}(x)\) creates a Lua table of Scalars from a
+Vector \(x\).
+

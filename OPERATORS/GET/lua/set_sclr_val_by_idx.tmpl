@@ -1,0 +1,45 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+#include "q_incs.h"
+extern int
+${fn}(  
+      const ${idx_ctype} * restrict in,   /* [nR1] */
+      uint64_t nR1,  
+      ${val_ctype} * out,   /* [nR2] */
+      uint64_t nR2,
+      ${val_ctype} *ptr_out_sclr
+      ) 
+;
+   ]],
+   definition = [[
+#include "_${fn}.h"
+
+int
+${fn}(  
+      const ${idx_ctype} * restrict in,   /* [nR1] */
+      uint64_t nR1,  
+      ${val_ctype} * out,   /* [nR2] */
+      uint64_t nR2,
+      ${val_ctype} *ptr_out_sclr // TODO P3 No need for de-reference
+      )
+
+{ 
+  int status = 0;
+  if ( in == NULL ) { go_BYE(-1); }
+  if ( out == NULL ) { go_BYE(-1); }
+  ${val_ctype} out_sclr = *ptr_out_sclr;
+
+// TODO #pragma omp parallel for schedule(static, 1024)
+  for ( uint64_t i = 0; i < nR1; i++ ) {  
+    ${idx_ctype} inv1 = in[i]; 
+    if ( ( inv1 < 0 ) || ( inv1 >= (int64_t)nR2 ) ) {
+      continue; 
+    }
+    out[inv1] = out_sclr;
+  } 
+BYE:
+  return status;
+}
+   ]]
+}

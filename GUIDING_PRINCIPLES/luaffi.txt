@@ -1,0 +1,33 @@
+Changes required in Q to work with LuaFFI
+
+1)Changes in syntax:
+
+	i) when get_ptr() returns a <void *> pointer, we need to explicitly cast it to the appropriate type required by C
+	>> i.e. ffi.cast(c_type, get_ptr(in_buf))
+
+	ii) ffi.C.strlen(in_buf) returns value of type userdata
+	>> need to use tonumber() for accessing ffi.C.strlen() returned value
+	>> i.e. tonumber(ffi.C.strlen(in_buf))
+
+	iii) x_idx = qc.get_cell(X, nX, x_idx, is_last_col, in_buf_ptr, sz_in_buf) -- userdata
+	>> need to use tonumber() for accessing the values returned in variables from C 
+	>> i.e. tonumber(x_idx)
+
+	iv) local ret_addr, ret_len = vec:get_chunk(chunk_num)
+		local ctype =  qconsts.qtypes[qtype]["ctype"]
+		local casted = ffi.cast(ctype.." *", get_ptr(ret_addr))
+	>> need to use tonumber() for getting actual value
+	>> i.e. tonumber(casted[chunk_idx]) 
+
+
+2) need to use loadstring() instead of  load() function for loading strings
+>> With Lua interpreter, load() is not supported with strings 
+>> Luajit supports function as well as strings with load()
+
+
+3) goto is not supported in Lua 5.1.5 version(which we are using), but goto works with luajit(LuaJIT 2.1.0-beta3)
+
+
+4) "jit" variable error in debugger.lua while using lua as an interpreter
+>> Failed to load suit Q/UTILS/lua/debugger.lua:422: variable 'jit' is not declared
+This error is because of "require 'Q/UTILS/lua/strict'" statement in test file

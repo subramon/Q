@@ -1,0 +1,9 @@
+1) implement load, print, f1f2opf3 and concatenation of operators e.g.,
+add(sub(b, c), d)
+2) make decisions on run time environment
+3) make decisions on how code is built and deployed
+4) code organization
+5) essentially, make decisions on how we move forward. 
+6) how to do unit testing
+7) how to do integration testing
+8) packaging. How to bring up a new machine from scratch 

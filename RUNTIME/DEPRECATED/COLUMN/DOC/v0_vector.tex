@@ -1,0 +1,236 @@
+\startreport{Q's Vector Data Type}
+\reportauthor{Ramesh Subramonian}
+\newcommand{\Assign}{\verb+:=+ }
+
+\section{Introduction}
+
+For now, I am being blase in mixing Lua and C but this is pseudo-code 
+so I will take the liberty of doing so.
+
+\TBC
+
+
+\section{Data storage and access}
+
+Q supports only one data structure, a vector. All elements of the
+vector must be of the same type,  Section~\ref, {q_types}. Note that all
+elements of a field have the same length. 
+
+A vector is best thought of as an object. Lua provides basic but
+entirely servicable object oriented
+support \url{https://www.lua.org/pil/16.html}. For something to be a
+vector, it must satisfy the following contractual obligations,
+Section~\ref{vector_contract}.
+
+\subsection{Q Types}
+\label{q_types}
+Q currently supports the types listed in Table~\ref{tbl_q_types}
+
+\begin{table}[hb]
+\centering
+\begin{tabular}{|l|l|l|l|l|} \hline \hline
+  {\bf Name} & {\bf Input Type} & {\bf Output Type} & {\bf Return Value} \\ \hline \hline
+  logit & Vector \(x\) & Vector \(y\) & \(y = \frac{e^x}{1 + 1^x}\) \\ \hline
+  constant & Scalar \(x\) & Vector \(y\) & \(\forall i:~y_i = x \) \\ \hline
+  vvadd & Vector \(x\), Vector \(y\) & Vector \(z\) & \(z = x + y \)  \\ \hline
+  vvsub & Vector \(x\), Vector \(y\) & Vector \(z\) & \(z = x - y \)  \\ \hline
+  vvmul & Vector \(x\), Vector \(y\) & Vector \(z\) & \(z = x \times y \)  \\ \hline
+  vvdiv & Vector \(x\), Vector \(y\) & Vector \(z\) & \(z = x / y \)  \\ \hline
+  vsmul & Vector \(x\), Scalar \(y\) & Vector \(z\) & \(\forall i:~z_i = x_ \times y \)  \\ \hline
+  sumprod & Vector \(x\), Vector \(y\) & Scalar \(z\) & \(z = \sum_i (x_i \times y_i)\) \\ \hline
+  sumprod2 & Vector \(x\), Vector \(y\), Vector \(z\) & Scalar \(w\) &  \(w = \sum_i (x_i \times y_i \times z_i)\) \\ \hline
+\hline
+\end{tabular}
+\caption{Necessary Operators}
+\label{tbl_custom_ops}
+\end{table}
+
+
+\section{Details}
+
+
+\section{Definitions}
+In this section, we make some important definitions which will be useful for the
+subsequent discussion. 
+
+\subsection{Chunks}
+While a vector may have many elements, for efficiency reasons, we will
+often access that data in chunks. The size of a chunk is fixed at the
+time the server boots up and stays the same as long as the server is
+running. In particular, this means that the same chunk size is used
+regardless of which vector is accessed. So, if chunk \(n\) refers to
+elements \(m_1\) through \( m_2\) of vector \(x\), then it refers to
+the same elements of any other vector \(y\).
+
+In future implementations, we may relax this assumption. Why would we
+want to do so? The reason is that we want to adjust the length of the
+chunk to be small enough that intermediate results do not have to get
+flushed to lower levels of the memory hierarchy yet large enough that
+we get the benefits of vectorization.  Given that the memory size is
+fixed, expressions which have more partial results would prefer to
+have smaller chunk sizes.
+
+\subsection{Materialization}
+A vector is said to have been completely materialized if it can return {\bf any}
+chunk of data without computation.
+
+
+\section{Vector Contract}
+\label{vector_contract}
+
+\be
+\item len() --- returns number of elements. 
+
+Before the vector is completely materialized, the return value may or may not be
+known, in which case {\tt nil} is returned.
+Once the vector is completely materialized, it must return a non-negative
+integer .
+
+Can a vector have zero length? Any special treatment? \TBC
+%-------
+\item num\_null() --- returns number of elements that are null.
+
+Once again, there are cases where we won't know for sure whether there are null
+values or not until the vector is completely materialized. In such cases, we
+will return {\tt nil}. 
+After the vector is completely materialized, we must a non-negative integer.
+%-------
+\item fldtype() --- returns kind of element in the vector. 
+We support 6 types.
+\begin{center}
+{\tt int8\_t, int16\_t, int32\_t, int64\_t, float, double}
+\end{center}
+In the near  future, we will extend these to include 
+\begin{center}
+{\tt uint8\_t, uint16\_t, uint32\_t, uint64\_t, constant length strings}
+\end{center}
+%----------
+\item materialized() --- returns true or false depending on whether the vector
+has been completely materialized.
+\item sz() ---  This is sizeof(fldtype) and
+hence this is redundant except when the fldtype is ``constant length
+string''.
+\item memo(bool) --- this tells the vector whether or not it should remember
+anything other than the most recent chunk that it generated. It must be called
+before any calls to chunk() are made. It returns true or false depending
+on whether it was called at the right time. 
+
+\item ismemo() --- returns true or false depending on how memo() was called
+earlier. If memo() was never called, it will return true, the default behavior.
+
+\item lastchunk() --- returns nil before any calls to chunk() are made. After
+that, returns the highest valid number with which chunk() was called.
+\item chunk(int n) --- The expected response depends as follows
+\be
+\item If the vector has been materialized
+\be
+\item \(n \geq 0\) 
+\be
+\item If there are more than (n \(\times\) chunksize) elements, a pointer t
+contiguous area of memory containing that data is returned
+\item Else, nil
+\ee
+\item \(n < 0\)
+
+A pointer to a contiguous area of memory containing the data of the
+entire vector is returned
+\ee
+\item If the vector has {\bf not} been materialized
+\be
+\item If n == lastchunk(), the data for the last chunk generated is returned
+without any computation
+\item If n == lastchunk()+1, the next chunk is generated and the data is
+returned.
+\item If n \(>\) lastchunk()+1, error 
+\item If n \(<\) lastchunk(), 
+
+\be
+\item If memo set to true, then the data for that chunk is available to us and
+is returned
+\item If memo set to false, error
+\ee
+\ee
+\ee
+\ee
+
+{\bf Important}
+The novice Q programmer should be unaware of any of the details discussed in
+this section.
+The advanced Q programmer can squeeze additional performance by judiciously 
+\be
+\item using memo(false)
+\item using fold (Section~\ref{fold}) where several functions are applied inlock
+step to a vector
+\ee
+
+\section{Implementation Details}
+\label{vector_implementation}
+
+These represent suggestions on how to efficiently meet the contract described in
+Section~\ref{vector_contract}. While it behooves library writers to follow the
+same patterns when creating functions that return vectors, they are not bound to
+do so.
+
+A vector consists of the following
+\be
+\item {\bf M1}, a Lua table which contains mandatory meta-data such as 
+\be
+\item {\bf cdata}, \verb+char *+, a pointer to a region of {\bf contiguous} memory
+containing data 
+\item {\bf filename}, \verb+char []+, The name of the file where cdata has been
+persisted, if at all. 
+
+At least one of cdata and filename must be non-null.
+If filename is defined and cdata is null, then mmap can be used to set cdata. If
+cdata is defined and filename is null, then this memory was obtained from
+malloc()
+and has not yet been persisted to disk.
+%----------------------
+\item {\bf nncdata}, \verb+char *+, a pointer to a region of {\bf contiguous} memory
+containing boolean information about whether corresponding data is null or not.
+As an implementation detail, this is stored as bytes, although it could be
+stored as bits. In particular, nncdata[i] can be either 0 or 1 where 
+1 means that the \(i^{th}\) value is not null and 
+0 means that the \(i^{th}\) value is null. 
+
+\item {\bf nnfilename}, \verb+char []+, The name of the file where nncdata has been
+persisted, if at all. 
+
+It is possible for nncdata and nnfilename to both be null.
+%----------------------
+If there are null values, then either nncdata or nnfilename should be non-null.  Else, both nncdata and nnfilename should be null
+%-------
+\item {\bf lastchunkbuf}, this is a buffer which contains the last chunk
+generated. It is allocated before the first call to chunk(). 
+
+When is it freed? Do we care? 
+\ee
+\item {\bf M2}, a Lua table which contains optional meta-data such as 
+\be
+\item min, max, sum, \ldots
+\item number of null values. If this is 0, then nncdata and nnfilename must be
+null. It is possible for this to be nil and one of nncdata and nnfilename to be
+defined. This means we {\em may} have null values but haven't calculated that as
+yet. 
+\item number of distinct values
+\item md5hash of data, used as a check that data has not gotten corrupted
+\item filesz, size of file referenced in filename. Used for checking.
+
+Note that the size of the file, if one exists, may be set to a
+multiple of the file block size and hence may be greater than
+required.
+\item nnfilesz, size of file referenced in nnfilename. Used for checking.
+\item \ldots
+\ee
+
+\ee
+
+\subsection{Dealing with memo-ization}
+
+When a vector has been materialized, its data is available either in (cdata,
+nncdata) or in (filename, nnfilename). In this case, returning any valid chunk
+is simply a matter of pointer arithmetic and an optional mmap step.
+
+Let's consider what happens when chunk() is called on the vector for the firs
+time. The buffer, lastchunkbuf, is allocated and 
+

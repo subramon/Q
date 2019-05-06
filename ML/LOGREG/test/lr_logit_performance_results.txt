@@ -1,0 +1,30 @@
+lr_logit Vs Q.logit & Q.logit2
+
+=======================================================================
+
+logit operator combination - Q.logit + Q.logit2
+Command:
+$ cd Q/ML/LOGREG/test
+$ luajit -e "require 'test_lr_logit_performance'['t1']()"
+
+Execution time : 23790302868 / 10^8 = 237.90
+
+=========================================================================
+
+lr_logit lock operation
+Command:
+$ cd Q/ML/LOGREG/test
+$ luajit -e "require 'test_lr_logit_performance'['t2']()"
+
+Execution time : 13174708165.5 / 10^8 = 131.75
+
+=========================================================================
+
+lr_logit with conjoin
+Command:
+$ cd Q/ML/LOGREG/test
+$ luajit -e "require 'test_lr_logit_performance'['t3']()"
+
+Execution time : 9028081233.25 / 10^8 = 90.28
+
+=========================================================================

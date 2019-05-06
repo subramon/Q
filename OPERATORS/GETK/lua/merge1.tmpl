@@ -1,0 +1,73 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include <unistd.h>
+#include <stdint.h>
+#include <math.h>
+
+extern int 
+merge_${min_or_max}_${qtype}(
+    ${ctype} *X, /* [nX] */
+    int nX,
+    ${ctype} *Y, /* [nY] */
+    int nY,
+    ${ctype} *Z, /* [nX] */
+    int nZ,
+    ${ctype} *ptr_num_in_Z
+    );
+
+]],
+definition = [[
+#include "_${fn}.h"
+int 
+merge_${min_or_max}_${qtype}(
+    ${ctype} *X, /* [nX] */
+    int nX,
+    ${ctype} *Y, /* [nY] */
+    int nY,
+    ${ctype} *Z, /* [nX] */
+    int nZ,
+    ${ctype} *ptr_num_in_Z
+    )
+{
+  int status = 0;
+  int xidx = 0, yidx = 0, zidx = 0;
+
+  // Basic checks on parameters
+  if ( ( X == NULL ) && ( nX > 0 ) ) { go_BYE(-1); }
+  if ( ( Y == NULL ) && ( nY > 0 ) ) { go_BYE(-1); }
+  if ( ( Z == NULL ) || ( nZ == 0 ) ) { go_BYE(-1); }
+  //-----------------------------------
+  for ( ; zidx < nZ; ) {
+    if ( xidx >= nX ) {
+      // copy whatever is needed from Y
+      for ( ; (( yidx < nY ) && ( zidx < nZ )); ) { 
+        Z[zidx++] = Y[yidx++];
+      }
+      break;
+    }
+    if ( yidx >= nY ) {
+      // copy whatever is needed from X
+      for ( ; (( xidx < nX ) && ( zidx < nZ )); ) {
+        Z[zidx++] = X[xidx++];
+      }
+      break;
+    }
+    if ( Y[yidx] ${comparator} X[xidx] ) { 
+      Z[zidx] = Y[yidx];
+      yidx++;
+    }
+    else  {
+      Z[zidx] = X[xidx];
+      xidx++;
+    }
+    zidx++;
+  }
+  *ptr_num_in_Z = zidx;
+BYE:
+  return status;
+}
+]]
+}

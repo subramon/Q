@@ -1,0 +1,50 @@
+A simple way to convert Lua Number to C data struture using FFI API is
+
+local chunk = ffi.new(ctype .. "[?]", length, input)
+
+where
+
+chunk  -  C data struture of type ctype
+ctype  -  datatype e.g. -  int, char, float etc.
+input  -  Lua table of Lua number
+length -  number of elements
+
+Reference link 
+http://luajit.org/ext_ffi.html
+
+
+Hi Ramesh,
+ 
+ There’s one point specific to LuaJIT (i.e. likely won’t work with Lua) that we
+ could use to great advantage, not just for us but possibly also Q devs; but it
+ will make us dependent on LuaJIT (rather than Lua).
+  
+  For example, if we allow this, we might be able to allow I8 fully even with
+  current mk_col spec (need to test) but it’s then a LuaJIT-dependent
+  specification.
+   
+   Need your decision on whether it’s okay to use this (but document
+   explicitly).
+    
+    http://luajit.org/ext_ffi_api.html
+     
+     Extensions to the Lua Parser
+
+     The parser for Lua source code treats numeric literals with the suffixes LL
+     or ULL as signed or unsigned 64 bit integers. Case doesn't matter, but
+     uppercase is recommended for readability. It handles both decimal (42LL)
+     and hexadecimal (0x2aLL) literals.
+
+      
+      ---------
+      Slightly tangential, nevertheless …  to what extent should we “look over
+      our shoulder” for compatibility with LuaFFI? E.g. see points in “Known
+      Issues” at https://github.com/jmckaskill/luaffi ; if we’re *very* serious
+      on compatibility with LuaFFI, then should we invest time to ensure all
+      test-cases also run with Lua+LuaFFI?
+       
+       (I understand spec-compatibility is much more serious than runtime
+       compatibility, but just clarifying both points together.)
+        
+        Thanks,
+        Srinath.

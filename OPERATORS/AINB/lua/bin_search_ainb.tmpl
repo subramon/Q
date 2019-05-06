@@ -1,0 +1,52 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include "_set_bit_u64.h"
+#include "_bin_search_${b_qtype}.h"
+extern int
+${fn}(  
+      const ${a_ctype} * restrict a,  
+      uint64_t nA,
+      const ${b_ctype} * restrict b,  
+      uint32_t nB,
+      uint64_t *C // output  nA bytes
+      );
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(  
+      const ${a_ctype} * restrict A,  
+      uint64_t nA,
+      const ${b_ctype} * restrict B,  
+      uint32_t nB,
+      uint64_t *C // nA bytes
+      )
+{
+  int status = 0;
+
+  memset(C, 0, nA); // Note that C must have nA bytes
+#pragma omp parallel for schedule(static, 256)
+  for ( uint64_t i = 0; i < nA; i++ ) { 
+    int64_t pos;
+    int l_status = 0;
+    int x_status = bin_search_${b_qtype}(B, nB, ((${b_ctype})(A[i])), NULL, &pos);
+    if ( x_status < 0 ) {  
+      if ( l_status == 0 ) { 
+        l_status = -1;
+        status = -1;
+      }
+    }
+    if ( pos >= 0 ) {
+      set_bit_u64(C, i, 1);
+    }
+  }
+
+  return status;
+}
+   ]]
+}

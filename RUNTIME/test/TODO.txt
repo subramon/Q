@@ -1,0 +1,31 @@
+test_lVector_nascent, 194:t3, t5
+test_read_write, t1
+test_vec, t8
+test_vec_no_chunk_num, t7
+test_vec_writable, t1
+
+
+-- The main problem I have is that we are getting memory corruption
+-- in CMEM_REC_TYPE. Look atr l_cmem_free()
+-- Lua is sending me pointers into this function that I did not allocate
+
+
+
+y test_lVector_materialized.lua 
+y test_get_chunk_one.lua
+y test_vec_prev_chunk.lua
+y test_vec.lua 
+y test_vec_name.lua
+y test_vec_writable.lua
+y test_vec_SC.lua
+y test_bvec.lua
+y test_lVector_get_all.lua
+y test_vec_no_chunk_num.lua
+y test_vec_B1.lua
+y test_vec_clone.lua
+y test_lVector_reincarnate.lua 
+y test_gen4.lua
+y test_lVector_get_all.lua
+y test_get_chunk_one.lua
+
+x test_gen3.lua

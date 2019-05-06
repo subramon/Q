@@ -1,0 +1,53 @@
+Following are some Q examples that you can try in jupyter cell
+
+=============================================================
+local col1 = Q.mk_col({1, 2, 3}, "I4")
+local col2 = Q.mk_col({1, 2, 3}, "I4")
+local res = Q.vvadd(col1, col2)
+res:eval()
+return Q.print_csv(res, nil, nil)
+=============================================================
+local col1 = Q.mk_col({1, 2, 3}, "I4")
+local col2 = Q.mk_col({1, 2, 3}, "I4")
+local res = Q.vvadd(col1, col2)
+return Q.sum(res):eval():to_num()
+=============================================================
+Scalar = require 'libsclr'
+local x = Q.rand( { lb = 1, ub = 10, qtype = "F4", len = 10 })
+assert(Q.vvseq(Q.reciprocal(Q.reciprocal(x)), x, Scalar.new(0.01, "F4")))
+return "Succeeded in test reciprocal t1"
+=============================================================
+-- Negative Series
+local a = Q.seq( {start = -100, by = 1, qtype = "I4", len = 100} )
+-- Positive Series
+local b = Q.seq( {start = 1, by = 1, qtype = "I4", len = 100} )
+-- Sort a
+Q.sort(a:eval(), "dsc")
+-- Vector Sum of sorted dsc a & b
+local c = Q.vvadd(a, b)
+assert(type(c) == "lVector")
+-- Expected Outcome
+assert(Q.sum(c):eval():to_num() == 0)
+return "Test Passed"
+=============================================================
+-- TEST SORT TWICE TEST
+local x = Q.mk_col({10,50,40,30}, 'I4')
+local y = Q.mk_col({10,30,40,50}, 'I4')
+local z = Q.mk_col({50,40,30,10}, 'I4')
+assert(type(x) == "lVector")
+assert(type(y) == "lVector")
+assert(type(z) == "lVector")
+-- Dsc & Asc = Asc
+Q.sort(x, "dsc")
+Q.sort(x, "asc")
+local s1 = Q.vveq(x, y)
+assert(type(s1) == "lVector")
+assert(Q.sum(s1):eval():to_num() == y:length())
+-- Asc & Dsc = Dsc
+local x = Q.mk_col({10,50,40,30}, 'I4')
+Q.sort(x, "asc")
+Q.sort(x, "dsc")
+local s2 = Q.vveq(x, z)
+assert(type(s2) == "lVector")
+assert(Q.sum(s2):eval():to_num() == z:length())
+return "Succeeded in test sort twice t1"

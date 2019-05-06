@@ -1,0 +1,11 @@
+return {
+
+  ["include"] = {"../lua/.*"},
+
+  ["exclude"] = {
+    "/usr/local/share/.*",
+    "globals"
+  },
+  statsfile = "mk_col.stats.txt",
+  reportfile = "mk_col.report.txt"
+}

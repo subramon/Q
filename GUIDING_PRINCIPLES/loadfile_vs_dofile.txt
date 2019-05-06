@@ -1,0 +1,26 @@
+lua:(dev)$ pwd
+/home/subramon/WORK/Q/OPERATORS/F1S1OPF2/lua
+lua:(dev)$ !he
+head arith_generator.lua
+#!/usr/bin/env lua
+  local gen_code = require("gen_code")
+  local plpath = require "pl.path"
+  loadfile ‘globals.lua'
+
+
+When I used dofie it failed but when I used loadfile it worked. Why?
+
+loadfile searches over standard paths and does no need the .lua extension
+dofile on the other hand requires the entire path to a file (relative paths are ok too).
+
+Using dofile
+Lua 5.1.5  Copyright (C) 1994-2012 Lua.org, PUC-Rio
+> dofile ("./globals.lua")
+> print(type(g_valid_types))
+table
+using loadfile
+Lua 5.1.5  Copyright (C) 1994-2012 Lua.org, PUC-Rio
+> loadfile('globals')
+> print(type(g_valid_types))
+table
+

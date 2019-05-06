@@ -1,0 +1,52 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+
+typedef struct _dotp_${qtype}_args {
+  ${ctype} val;
+  uint64_t num; // number of non-null elements inspected
+  } DOTP_${qtype}_ARGS;
+  
+${includes}
+extern int
+${fn}(  
+      const ${ctype} * const X,  
+      const ${ctype} * const Y,  
+      uint64_t nR,
+      void *in_ptr_args
+      ) 
+;
+
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(  
+      const ${ctype} * const X,
+      const ${ctype} * const Y,
+      uint64_t nR,  
+      void *in_ptr_args
+      )
+
+{
+  int status = 0;
+  DOTP_${qtype}_ARGS *ptr_args = (DOTP_${qtype}_ARGS *)in_ptr_args;
+
+  if ( X == NULL ) { go_BYE(-1); }
+  if ( Y == NULL ) { go_BYE(-1); }
+  if ( nR == 0 ) { go_BYE(-1); }
+
+#pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)  
+  ${ctype} result = 0;
+  for ( uint64_t i=0; i < n; i++) {
+    result = result + (a[i] * b[i]);
+  }
+  ptr_args->val += result;
+  ptr_args->num += n;
+BYE:
+  return status;
+}

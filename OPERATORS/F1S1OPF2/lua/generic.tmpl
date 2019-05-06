@@ -1,0 +1,84 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include <unistd.h>
+#include <stdint.h>
+#include <math.h>
+#include "_set_bit_u64.h"
+#include "_get_bit_u64.h"
+extern int
+${fn}(  
+      const ${in_ctype} * restrict in,  
+      uint64_t *nn_in,
+      uint64_t nR,
+      ${scalar_type} *ptr_sval,
+      ${out_ctype} * out,
+      uint64_t *nn_out
+      ) 
+;
+
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+static void __operation(
+  ${in_ctype} a,
+  ${scalar_type} b,
+  ${out_ctype} *ptr_c
+  )
+{
+  ${out_ctype} c;
+  ${c_code_for_operator}  
+  *ptr_c = c;
+}
+
+int
+${fn}(  
+      const ${in_ctype} * restrict in,
+      uint64_t *nn_in,
+      uint64_t nR,  
+      ${scalar_type} *ptr_sval,
+      ${out_ctype} * out,
+      uint64_t *nn_out,
+      uint64_t *ptr_num_null
+      )
+
+{
+  int status = 0;
+  if ( in == NULL ) { go_BYE(-1); }
+  if ( out == NULL ) { go_BYE(-1); }
+  if ( nn_out == NULL ) { go_BYE(-1); }
+  if ( nR == 0 ) { go_BYE(-1); }
+  uint64_t num_null = 0;
+  ${scalar_ctype} sval = *ptr_sval;
+
+  for ( uint64_t i = 0; i < nR; i++ ) { 
+    if ( nn_in ) { 
+      uint8_t nn_in_i = get_bit_u64(nn_in, i);
+    }
+    uint8_t nn_out_i = 1;
+    if ( ( nn_in == NULL ) || ( nn_in_i == 1 ) ) {
+      ${in_ctype} inv; 
+      ${out_ctype} outv; 
+      inv = in[i];
+      __operation(inv, sval, &outv, &nn_out_i);
+      out[i] = outv;
+    }
+    else {
+      nn_out_i = 0;
+      out[i] = 0;
+      num_null++;
+    }
+    if ( nn_out_i ) {
+      set_bit_u64(nn_out, i 1);
+    }
+  } 
+  *ptr_num_null += num_null;
+  BYE:
+  return status;
+}
+   ]]
+}

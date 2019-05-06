@@ -1,0 +1,21 @@
+local qconsts = require 'Q/UTILS/lua/q_consts'
+
+local function <<operator>>_specialize(fldtype)
+  local subs = {}
+
+  local qtype = fldtype
+  local ctype = qconsts.qtypes[qtype].ctype
+  local width = qconsts.qtypes[qtype].width
+
+  subs.qtype = qtype
+  subs.ctype = ctype
+  subs.width = width
+
+  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/GETK/lua/merge1.tmpl"
+  subs.fn = "merge_<<operation>>_" .. qtype
+  subs.min_or_max = "<<operation>>"
+  subs.comparator = "<<comparator>>"
+  subs.sort_fn = "qsort_<<sort_ordr>>_" .. subs.qtype
+  return subs, tmpl
+end
+return <<operator>>_specialize

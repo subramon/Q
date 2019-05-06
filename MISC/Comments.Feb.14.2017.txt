@@ -1,0 +1,109 @@
+
+Overall, the code is well structured. That's the good news. Here are
+areas for improvement
+
+1) Assert *everything*!!! When the error is likely to have been made
+by the Q programmer, provide feedback which will allow them to fix
+their mistake. If th error is likely to have come from the internals
+writer, then a stack trace is adequate.
+
+--==========================
+
+2) I need a *LOT* more examples of bad meta data files. Notice the aim
+is to be clever in the choice of a bad file, since the world of what
+is bad is huge. For example,
+
+o) Check README.txt on DATA_LOAD/test/
+
+o) Read csv_load.pdf in DATA_LOAD/doc/
+
+--==========================
+
+3) Performance test. Use Indrajeet's random string generator to create
+some large text files. CSV file should be approx 1 GBytes. Binary
+files will be somewhat smaller. All of them can be deleted once test
+is complete.  Do about 1024 columns.
+
+For SC, try column width of 2 and 1024
+
+For SV, pick string length randomly from 1 to 32767
+
+--=============================
+
+4) There needs to be a lot more testing of SV and dictionary. For
+example, if there are 8 unique values in the data, then there should
+be the same 8 unique values in the dictionary created by the load.
+
+o) The numbers assigned to strings should be 1, 2, ...
+
+o) If an existing dictionary has 8 unique values and we load a data
+set whcih has 2 additional values (and the meta data allows us to add
+new values), then the dictionary should have 10 unique values *after*
+the data load
+
+--===============================
+
+5) You need to make sure that you got back what you put in. So, I
+would suggest you create synthetic data where the data can be
+*calculated* using the index.  For example, for an I4 column, we might
+say that the value of X[i] = i*i+ i
+
+If it an SC columnm, we might say that the values look like
+
+a
+aa
+aaa
+aaaa
+a
+aa
+aaa
+aaaa
+
+Then, after doing the load, you will get back a table of vectors. For
+each vector, get chunk -1 from Indrajeet's vector class. This gives
+you the address of the binary data. Now, write a C function that
+traverses the data and verifies that the data is what was expected.
+
+I would also like you to make sure that you test the boundary
+conditions. What this means is that for an I8 column, at least one
+value should be LLONG_MIN and one should be LLONG_MAX
+
+--==============================================
+
+6) Automation:
+
+Would be good to have one script (which in turn can call other
+scripts) which runs and returns SUCCESS or FAILURE.
+
+--=============================================
+8) Utilities
+
+If you sense a utility function is needed, please put it in Q/UTILS/lua/ 
+Let's document common usages. For example, I'd like to have a standard way of
+checking whether a file exists, a directory exists, ...
+
+If you see improper uses of utility functions in other parts of the code, please
+let me know. 
+
+--=============================================
+
+9) Code Coverage
+
+I would like the use of some code coverage tool to give us confidence
+that the suite of tests does cover the code adequately.
+
+10) NN field
+
+There needs to be some testing of the NN field. Once again, the way to do is it
+to say that every 4th element will be null when you create the data and then
+verify that this is in fact the case. Note that when a value is null, you are
+effectively doing "memset(X, '\0', width_of_element)" so that when you read it
+back, you will get a 0 for null values. 
+
+
+Indrajeet has some macros GET_BIT, SET_BIT, ... in UTILS/inc/ you may need these
+for the nn vector 
+
+
+
+

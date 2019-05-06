@@ -1,0 +1,62 @@
+Mail with subject : Reason behind "Q/RUNTIME/test/test_rand2.lua" failure
+
+======================================================================================================================================================
+Krushnakant Mardikar <krushnakant.mardikar@gslab.com>
+	
+Mar 22
+	
+to Ramesh, Indrajeet, projectq
+Hi Ramesh,
+
+Currently a test from Q/RUNTIME/test/test_rand2.lua is failing, this test calls memo() and persist() method with random value (i.e true or false) in a loop.
+
+The test was failing in vec:check() method where it finds "ptr_vec->is_memo" is false but "ptr_vec->is_persist" is true (line no. 578 from core_vec.c).
+
+  // Cannot persist a vector that is not memo-ized
+  if ( ptr_vec->is_memo == false ) {
+    if ( ptr_vec->is_persist == true ) { go_BYE(-1); }
+  }
+
+The reason behind this is,
+Consider a nascent vector with default values of is_persist and is_memo as below
+is_persist = false
+is_memo = true
+
+Now if I modify vector as below
+vec:persist(true)
+vec:memo(false)
+
+This will work without any failure, but as per condition in check() (mentioned above) this state is not valid.
+
+To overcome this, I thought of below ways
+1. Update core_vec.c vec_memo() and add below condition, i.e internally set the is_persist to false if is_memo is set to false
+
+    if (( ptr_vec->is_memo == false ) && ( ptr_vec->is_persist == true )) {
+      ptr_vec->is_persist = false;
+    }
+   But in this way, user will be unaware of is_persist modification
+
+2. Don't allow user to modify is_memo to false if is_persist is set to true but this restriction doesn't seem to be relevant
+ 
+3. Relax the condition in vec_check()
+
+I would like to understand your view on it.
+
+Regards,
+Krushna.
+
+===================================================================================================================================================
+
+Ramesh Subramonian
+	
+Apr 5 (4 days ago)
+	
+to me, Indrajeet, projectq
+Let.s do as discussed today (Option 2) and cut-paste this email in the test or in some other spot where we won.t lose it
+
+====================================================================================================================================================
+
+We decided to go with option 2, i.e 
+2. Don't allow user to modify is_memo to false if is_persist is set to true
+
+because we don't want vector to be pushed to this state where is_memo = false and is_persist = true

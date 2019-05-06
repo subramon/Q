@@ -1,0 +1,141 @@
+\startreport{Rough k-means in Q}
+\reportauthor{Ramesh Subramonian}
+
+\section{Introduction}
+
+We describe the rough k-means algorithm \cite{Peters2012}. 
+We assume that the reader is familiar with the \(k\)-means algorithm
+\cite{Hastie2009}. We make a minor change to their terminology, 
+refering to the 
+\bi
+\item lower approximation as the ``inner'' approximation
+\item upper approximation as the ``outer'' approximation
+\ei
+
+\subsection{Notation}
+
+\be
+\item Let \(n_J\) be the number of features. 
+We shall use \(j\) as the feature index. 
+\item Let \(n_I\) be the number of objects/instances/observations
+We shall use \(i\) as the instance index. 
+\item Let \(n_K\) be the number of means/centroids.
+We shall use \(k\) as the centroid index. 
+\item Let \(X\) be a set of observations in \(n_J\) dimensional space, 
+such that \(X_{j, i}\) is the value of the \(j^{th}\) feature of 
+the \(i^{th}\) instance. 
+
+We store the observations as \(n_J\) vectors of length \(n_I\). So, \(X_j\) is
+the vector corresponding to the \(j^{th}\) feature and \(X_{j, i}\) is the value
+of the \(j^{th}\) feature of the \(i^{th}\) observation.
+\item Let \(\mu_{k, j}\) be the value of the \(j^{th}\) feature of the \(k^{th}\)
+centroid
+\item Let \(I_{k, i}\) be true if instance \(i\) is part of the 
+{\bf I}nner approximation of centroid \(k\)
+\item Let \(O_{k, i}\) be true if instance \(i\) is part of the 
+{\bf O}uter approximation of centroid \(k\)
+\item We shall treat the boolean value ``true'' and the integer
+1 interchangeably. 
+\item We shall treat the boolean value ``false'' and the integer
+0 interchangeably. 
+\item Let \(w_I\) and \(w_O\) be the weights assigned to the Inner and Outer
+approximations
+\item Let \(\alpha\) be the threshold for determining whether an instance
+belongs to the outer approximation. This is explained in 
+Section~\ref{update}
+\item Identifying \(i, j, k\) as feature indexes simplifies the notation. For
+example, \(\sum_k\) is actually \(\sum_{k=1}^{k=n_K}\). Similarly, \(\forall k\)
+means for all centroids, numbered \(1, \ldots, n_K\)
+\item We use the following conventions for types
+\bd 
+\item F4 4-byte floating point
+\item I4 4-byte signed integer
+\item B1 1-bit boolean
+\ed
+\item Define \(\delta(x, y) = 1 \) if \(x = y\) and 0 otherwise.
+\ee
+
+\subsection{Invariants}
+
+\begin{invariant}
+An instance can belong to the inner approximation of at most one centroid.
+
+\(\forall i: \sum_k I_{k, i} = 1\)
+\end{invariant}
+
+\begin{invariant}
+If an instance is not part of any inner approximation, it must belong to 
+two or more outer approximations. This implies that an instance cannot belong to only a single boundary region.
+
+\(\sum_k I_{k, i} = 0 \Rightarrow \sum_k O_{k, i} \geq 2\)
+
+\end{invariant}
+
+
+\subsection{Mathematics to Code}
+\label{math_to_code}
+The mathematical terms we use are terse, the variable names in the code somewhat
+more verbose. A mapping is provided in Table~\ref{tbl_mapping}.
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|l|l|l|} \hline
+{\bf Math} & {\bf Code}     & {\bf Type} & {\bf Length} \\ \hline
+\(d_k\) & dist[k] & F4 Vector & \(n_I\) \\ \hline
+\(\bar{d}\) & best\_dist & F4 Vector & \(n_I\) \\ \hline
+\(\bar{k}\) & best\_clss & I4 Vector & \(n_I\) \\ \hline
+\(O_k\) & is\_outer[k] & B1 Vector & \(n_I\)  \\ \hline
+\(N^O_k\) & num\_in\_outer[k] & I4 Vector & \(n_I\)  \\ \hline
+\(\hat{I}\) & inner & I4 Vector & \(n_I\) \\ \hline
+\hline
+\end{tabular}
+\caption{Math symbols to names in code}
+\label{tbl_mapping}
+\end{table}
+
+
+\section{Computation}
+
+\subsection{The Update Step}
+\label{update}
+
+\be
+\item \(\forall k: d_k \) is a F4 Vector of length \(n_I\) such that \(d_{k, i}\)
+is distance of instance \(i\) from centroid \(k\)
+\item \(\bar{d}\) is a F4 Vector of length \(n_I\) such that \(\bar{d}_i\) is
+smallest distance of instance \(i\) from any centroid i.e.,
+\(\bar{d}_i = \min_k d_{k, i}\)
+\item \(\bar{k}\) is an I4 Vector of length \(n_I\) such that \(\bar{k}_i\) identifies
+the centroid that is closest to instance \(i\). Note that 
+\(\bar{k}_i \in [1, \ldots n_K]\)
+\item \(\forall k: O_k\) is a B1 Vector of length \(n_I\) such that 
+\(d_{k, i} \leq \bar{d}_i \times \alpha \Rightarrow O_{k, i} = \mathrm{true}\)
+\item \(N^O\) is an I4 Vector of length \(n_I\), 
+where \(N^O_i  = \sum_k O_k[i]\)
+\item Let \(\hat{I}\) be a Vector of length \(n_I\) such that 
+\(N^O_i \geq 2 \Rightarrow \hat{I}_i = 0\); else, \(\hat{I}_i = \bar{k}_i\). What
+we are doing here is stating that if nobody else has a claim on instance \(i\), then
+it belongs to the inner approximation of \(\bar{k}_i\). In other words,
+\be
+\item \(\hat{I}_i = 0 \Rightarrow \) instance \(i\) not in inner approximation
+of any centroid
+\item \(\hat{I}_i = k' \Rightarrow \) instance \(i\) in inner approximation
+of centroid \(k'\)
+\ee
+\ee
+
+\subsection{The Assignment Step}
+\label{assignment}
+
+\be
+\item The contribution of the inner and outer sets are weighted and then
+combined into the value of the centroid as follows:
+\(\mu_{k, j} = w_I \times \mu^I_{k, j} +  w_O \times \mu^O_{k, j} \)
+\item 
+\(\mu^I_{k, j} = \frac{\sum_i \delta(\hat{I}_i, k) X_{k, i}}{D^I_k}\)
+\item 
+\(\mu^O_{k, j} = \frac{\sum_i (O_{k, i} \times X_{k, i})}{D^O_k}\)
+\item \(D^I_k = \sum_i \delta(\hat{I}, k)\)
+\item \(D^O_k = \sum_i O_{k, i}\)
+\ee
+\bibliographystyle{alpha}
+\bibliography{../../DT/doc/ref}

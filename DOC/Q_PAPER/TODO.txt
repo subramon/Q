@@ -1,0 +1,120 @@
+
+Should we add section on comparisons of 
+1) dyncall (see PhD thesis adler 2012)
+2) LuaFFI 
+3) LuaJIT
+
+--------------
+Making Logistic Regression a Core Data Mining Tool
+  should we compare against this paper?
+--------------
+
+In defense of blocking
+
+Blocking: Blocking is a well-known optimization that can help
+avoid memory bandwidth bottlenecks in a number of applications.
+The key idea behind blocking is to exploit the inherent data reuse
+available in the application by ensuring that data remains in caches
+across multiple uses. 
+
+Can Traditional Programming Bridge the Ninja Performance Gap
+for Parallel Computing Applications?
+Nadathur Satish†, Changkyu Kim†, Jatin Chhugani†, Hideki Saito, Rakesh
+Krishnaiyer,
+Mikhail Smelyanskiy†, Milind Girkar, and Pradeep Dubey†
+
+Proceeding
+ISCA '12 Proceedings of the 39th Annual International Symposium on Computer
+Architecture
+Pages 440-451 
+
+Portland, Oregon — June 09 - 13, 2012 
+IEEE Computer Society Washington, DC, USA ©2012 
+table of contents ISBN: 978-1-4503-1642-2
+
+==================
+
+Cache line prefetching. See Google paper
+
+=======
+
+Why a single PC is enough
+OSDI 2012: GraphChi: Large-Scale Graph Computation on Just a PC
+More generally, distributed
+systems and their users must deal with managing
+a cluster, fault tolerance, and often unpredictable performance.
+From the perspective of programmers, debugging
+and optimizing distributed algorithms is hard.
+===============================
+
+Why a single PC is enough
+
+Nobody ever got fired for using Hadoop on a cluster
+
+1st International Workshop on Hot Topics in Cloud Data Processing (HotCDP 2012)
+
+We also speculate that many algorithms are complex
+to scale out and therefore expensive in terms of human
+engineering. Many important analytics jobs, for example
+iterative-machine learning algorithms, do not map trivially
+to MapReduce. Typically the algorithm is mapped into a
+series of MapReduce “rounds”, and to achieve scalability
+it often has to be approximated thus sacrificing accu
+
+Scale-up vs Scale-out for Hadoop: Time to rethink?
+October 2, 2013
+
+ACM Symposium on Cloud Computing 
+1–3 Oct. 2013, Santa Clara, California, USA.
+ACM 978-1-4503-2428-1.
+http://dx.doi.org/10.1145/2523616.2523629
+
+========================
+
+Motivation for I16
+
+Data Sketching
+By Graham Cormode 
+Communications of the ACM, September 2017, Vol. 60 No. 9, Pages 48-55
+The aim of this article has been to introduce a selection of recent techniques
+that provide approximate answers to some general questions that often occur in
+data analysis and manipulation. In all cases, simple alternative approaches can
+provide exact answers, at the expense of keeping complete information. The
+examples shown here have illustrated, however, that in many cases the
+approximate approach can be faster and more space efficient. The use of these
+methods is growing. Bloom filters are sometimes said to be one of the core
+technologies that "big data experts" must know. At the very least, it is
+important to be aware of sketching techniques to test claims that solving a
+problem a certain way is the only option. Often, fast approximate sketch-based
+techniques can provide a different trade-off.
+=============================================
+
+to compare with
+
+Exploiting Vector Instructions with Generalized Stream Fusion
+Proceedings of the 18th ACM SIGPLAN International
+Conference on Functional Programming (ICFP ’13),
+http://dx.doi.org/10.1145/2500365.2500601.
+-----------------------------------------
+
+---
+In particular introducing "mode" is pretty nice - apologies for my laziness in not taking that step (I felt it was rather awkward to have two terms and then define both of them etc., but didn't give enough effort to finding the right way... your's is rather simple and neat and always).
+>>> Thanks
+---
+y = Q.permute(x, idx)
+
+This isn't actually how the function is invoked; there's a third parameter needed, but maybe you did this for simplicity?
+>>> CHANGED to y = Q.permute(x, idx, mode)
+---
+Fig1 : should 'scatter'/'gather' be enclosed in quotes? (Also, are we just targeting pseudo code? Else should we have Krushnakant run it once to ensure it's correct?)
+>>> Done
+---
+Regarding note about .so files' dynamic compilation - I'm not sure about that (never understood it sufficiently), we'll need to check with Indrajeet maybe?
+>>> I really like the idea of customizing the server on the fly. Indrajeet had done a proof of concept. I'd like to finish this before the paper is submitted.
+---
+Not clear on reason why you removed the "status/next-steps" points... can talk about it later.
+>>> I thought the "In conclusion, ..." paragraph provided an adequate summary. Let's discuss
+---
+Also see numerous small edits scattered that have gone into improving it significantly overall... nice to see this.
+>>> Thanks
+

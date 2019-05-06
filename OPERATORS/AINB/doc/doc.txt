@@ -1,0 +1,11 @@
+Inputs
+Column A of length n1, n1 : expected to be large
+Column B of length n2, n2 expected to be small
+
+Neither column 1 nor column 2 need to be sorted
+
+Output: Bit vector X of length n1
+X[i] = 1 \Rightarrow \exists j: B[j] = A[i]
+X[i] = 0 \Rightarrow \not \exists j: B[j] = A[i]
+
+

@@ -1,0 +1,17 @@
+The way myvec is used is similar to this example n
+https://www.lua.org/pil/6.2.html
+
+A subtle point arises in the definition of recursive local functions. The naive approach does not work here:
+
+    local fact = function (n)
+      if n == 0 then return 1
+      else return n*fact(n-1)   -- buggy
+      end
+    end
+When Lua compiles the call fact(n-1), in the function body, the local fact is not yet defined. Therefore, that expression calls a global fact, not the local one. To solve that problem, we must first define the local variable and then define the function:
+    local fact
+    fact = function (n)
+      if n == 0 then return 1
+      else return n*fact(n-1)
+      end
+    end

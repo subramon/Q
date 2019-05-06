@@ -1,0 +1,35 @@
+\subsection{k-Nearest Neighbors}
+\label{knn}
+
+A key subroutine of the {\tt knn} algorithm \cite{Hastie2009} is finding the class labels of the
+\(k\) points closest to the point \(x\) being classified. 
+We assume that we have \(n\) points in \(m\)-dimensional space, represented as a
+Lua table, \(T\), of \(m\) Vectors of length \(n\)
+
+Note that the operations are performed in column
+order rather than the more intuitive row order. Row ordering means computing the
+distance from \(x\) to a point in \(T\) completely before proceeding to the next
+point. We invite the reader to judge from Figure~\ref{knn_core} the merits of our claim that the programming burden of being aware of data layout and
+operation ordering is not onerous.
+
+Given \Q's lazy evaluation in chunks, note that the operation is actually
+performed in batches. In other words, had we written 
+{\tt d1, g1 = Q.mink(d, g, k)} and then done {\tt g1:next()} instead  of {\tt
+g1:eval()}, 
+we would have gotten the class labels of the \(k\) points
+closest to \(x\) from the {\bf first} \(n_C\) points of \(T\). 
+
+\begin{figure}[hbtp]
+\centering
+\fbox{
+\begin{minipage}{8 cm}
+\centering
+\verbatiminput{knn.lua}
+%% TODO Change mink_reducer to mink in final paper
+\caption{core of k-nn algorithm}
+\label{knn_core}
+\end{minipage}
+}
+\end{figure}
+
+

@@ -1,0 +1,60 @@
+local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local cmem    = require 'libcmem'
+local ffi     = require 'Q/UTILS/lua/q_ffi'
+local Scalar  = require 'libsclr'
+
+local function <<operator>>_mem_initialize(subs)
+  local hdr = [[
+    typedef struct _reduce_<<operator>>_<<v_qtype>>_<<d_qtype>>_args {
+      <<reduce_v_ctype>> *val; // [k]
+      <<reduce_d_ctype>> *drag; // [k]
+      uint64_t n; // actual occupancy
+      uint64_t k; // max occupancy
+    } REDUCE_<<operator>>_<<v_qtype>>_<<d_qtype>>_ARGS;
+  ]]
+
+  hdr = string.gsub(hdr,"<<v_qtype>>", subs.v_qtype)
+  hdr = string.gsub(hdr,"<<d_qtype>>", subs.d_qtype)
+  hdr = string.gsub(hdr,"<<reduce_v_ctype>>",  subs.reduce_v_ctype)
+  hdr = string.gsub(hdr,"<<reduce_d_ctype>>",  subs.reduce_d_ctype)
+  pcall(ffi.cdef, hdr)
+
+  -- Set c_mem and initialize it
+  local rec_type = "REDUCE_<<operator>>_" .. subs.v_qtype .. "_" .. subs.d_qtype .. "_ARGS"
+  local cst_as = rec_type .. " *"
+  local sz_c_mem = ffi.sizeof(rec_type)
+  local c_mem = assert(cmem.new(sz_c_mem), "malloc failed")
+  local c_mem_ptr = ffi.cast(cst_as, get_ptr(c_mem))
+
+  c_mem_ptr.n = 0
+  c_mem_ptr.k = subs.k
+
+  local val_cmem = cmem.new(subs.k * ffi.sizeof(subs.v_ctype), subs.v_qtype)
+  if subs.a == "mink" then
+    val_cmem:set_max()
+  elseif subs.a == "maxk" then
+    val_cmem:set_min()
+  else
+    assert(nil)
+  end
+  c_mem_ptr.val = ffi.cast(subs.v_ctype .. "*", get_ptr(val_cmem))
+
+  local drag_cmem = cmem.new(subs.k * ffi.sizeof(subs.d_ctype), subs.d_qtype)
+  drag_cmem:zero()
+  c_mem_ptr.drag = ffi.cast(subs.d_ctype .. "*", get_ptr(drag_cmem))
+
+  --===============================================
+
+  local getter = function (x)
+    local y = ffi.cast(cst_as, get_ptr(c_mem))
+    local vals = {}
+    local drag = {}
+    for i = 0, tonumber(y[0].n)-1 do
+      vals[#vals+1] = Scalar.new(y[0].val[i], subs.v_qtype)
+      drag[#drag+1] = Scalar.new(y[0].drag[i], subs.d_qtype)
+    end
+    return vals, drag
+  end 
+  return c_mem, cst_as, getter
+end
+return <<operator>>_mem_initialize

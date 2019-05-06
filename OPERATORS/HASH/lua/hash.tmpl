@@ -1,0 +1,55 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include "spooky_hash.h"
+#include <unistd.h>
+#include <stdint.h>
+#include <math.h>
+
+extern int
+${fn}(  
+      char * restrict in,
+      void *dummy1,
+      uint64_t nR,
+      void *args,
+      ${out_ctype} * restrict out,
+      void *dummy2
+      ) 
+;
+
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(  
+      char * restrict in,
+      void *dummy1,
+      uint64_t nR,
+      void *args,
+      ${out_ctype} * restrict out,
+      void *dummy2
+      )
+
+{
+  int status = 0;
+  SPOOKY_STATE *spooky_state = (SPOOKY_STATE *)args;
+  if ( in == NULL ) { go_BYE(-1); }
+  if ( out == NULL ) { go_BYE(-1); }
+  if ( nR == 0 ) { go_BYE(-1); }
+
+  uint64_t seed = spooky_state->q_seed;
+  size_t len = spooky_state->q_stride;
+  if ( len == 0 ) { go_BYE(-1); }
+  for ( uint64_t i = 0; i < nR; i++ ) {
+    out[i] = spooky_hash64(in, len, seed);
+    in += len;
+  }
+BYE:
+  return status;
+}
+   ]]
+}

@@ -1,0 +1,160 @@
+VVADD time distribution for different chunk size (pragma omp is disabled)
+
+Observation:
+- As we go on increasing the chunk size, the contribution of C business logic (i.e vvadd_I4_I4_I4) is increasing.
+When chunk_size is 1024 * 1024, contribution of C business logic is around 92% in total execution time,
+where as when chunk_size is 64 * 1024, contribution of C business logic is around 52%.
+ 
+==========================================================================================================
+
+gslab@gs-1576:~/krushna/Q/experimental/q_performance_testing$ luajit test_vvadd.lua
+reset timers
+print timers
+0,add,20000,2555780
+0,check,0,0
+0,clone,0,0
+0,end_write,0,0
+0,eov,20000,1922017
+0,free,8588,969045730
+0,get,90000,28764133
+0,memo,10000,702387
+0,new,10000,78687783
+0,new_virtual,0,0
+0,persist,0,0
+0,set,0,0
+0,start_write,0,0
+1,flush_buffer,20000,496147
+1,memcpy,0,0
+1,memset,0,0
+1,malloc,0,0
+vvadd total execution time : 79789154190
+=========================
+0,vvadd_I4_I4_I4,20000,73405899604
+
+C business logic contribution - ~92%
+Runtime contribution - 1.35%
+
+==========================================================================================================
+
+#### Chunk Size = 512 * 1024
+
+gslab@gs-1576:~/krushna/Q/experimental/q_performance_testing$ luajit test_vvadd.lua
+reset timers
+print timers
+0,add,20000,1519678
+0,check,0,0
+0,clone,0,0
+0,end_write,0,0
+0,eov,20000,1033896
+0,free,9070,274029566
+0,get,90000,13519108
+0,memo,10000,789987
+0,new,10000,60345658
+0,new_virtual,0,0
+0,persist,0,0
+0,set,0,0
+0,start_write,0,0
+1,flush_buffer,20000,615454
+1,memcpy,0,0
+1,memset,0,0
+1,malloc,0,0
+vvadd total execution time : 34397648620
+=========================
+0,vvadd_I4_I4_I4,20000,30535793705
+
+C business logic contribution - 88.77%
+Runtime contribution - 1.02%
+
+==========================================================================================================
+
+#### Chunk Size = 256 * 1024
+
+gslab@gs-1576:~/krushna/Q/experimental/q_performance_testing$ luajit test_vvadd.lua
+reset timers
+print timers
+0,add,20000,1415355
+0,check,0,0
+0,clone,0,0
+0,end_write,0,0
+0,eov,20000,382073
+0,free,9833,176495151
+0,get,90000,7097092
+0,memo,10000,262935
+0,new,10000,37952781
+0,new_virtual,0,0
+0,persist,0,0
+0,set,0,0
+0,start_write,0,0
+1,flush_buffer,20000,493404
+1,memcpy,0,0
+1,memset,0,0
+1,malloc,0,0
+vvadd total execution time : 13121814583
+=========================
+0,vvadd_I4_I4_I4,20000,10782728160
+
+C business logic contribution - 82.17%
+Runtime contribution - 1.7%
+
+==========================================================================================================
+
+#### Chunk Size = 128 * 1024
+
+gslab@gs-1576:~/krushna/Q/experimental/q_performance_testing$ luajit test_vvadd.lua
+reset timers
+print timers
+0,add,20000,1270438
+0,check,0,0
+0,clone,0,0
+0,end_write,0,0
+0,eov,20000,348916
+0,free,9594,96887380
+0,get,90000,6939122
+0,memo,10000,289971
+0,new,10000,33760985
+0,new_virtual,0,0
+0,persist,0,0
+0,set,0,0
+0,start_write,0,0
+1,flush_buffer,20000,482929
+1,memcpy,0,0
+1,memset,0,0
+1,malloc,0,0
+vvadd total execution time : 5788735215
+=========================
+0,vvadd_I4_I4_I4,20000,4007139851
+
+C business logic contribution - 69.22%
+Runtime contribution - 2.40%
+
+==========================================================================================================
+
+#### Chunk Size = 64 * 1024
+
+gslab@gs-1576:~/krushna/Q/experimental/q_performance_testing$ luajit test_vvadd.lua
+reset timers
+print timers
+0,add,20000,1408637
+0,check,0,0
+0,clone,0,0
+0,end_write,0,0
+0,eov,20000,350152
+0,free,9736,74585626
+0,get,90000,6648213
+0,memo,10000,292074
+0,new,10000,33166893
+0,new_virtual,0,0
+0,persist,0,0
+0,set,0,0
+0,start_write,0,0
+1,flush_buffer,20000,477872
+1,memcpy,0,0
+1,memset,0,0
+1,malloc,0,0
+vvadd total execution time : 3585475152
+=========================
+0,vvadd_I4_I4_I4,20000,1895672302
+
+C business logic contribution - 52.87%
+Runtime contribution - 3.24%
+

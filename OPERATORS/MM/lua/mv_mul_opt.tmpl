@@ -1,0 +1,45 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+#include "q_incs.h"
+#include <omp.h>
+#include <sys/sysinfo.h>
+
+extern int 
+${fn}(
+    ${x_ctype} ** x,  /* M by K */
+    const ${y_ctype} * const y,  /* K by 1 */
+    ${z_ctype} * const restrict z,  /* M by 1 */
+    int M,
+    int K
+    );
+    ]],
+
+    definition = [[
+#include "_${fn}.h"
+int 
+${fn}(
+    ${x_ctype} ** const x,  /* M rows by K columns */
+    const ${y_ctype} * const y,  /* K by 1 */
+    ${z_ctype} * const restrict z,  /* M by 1 */
+    int M,
+    int K
+    )
+{
+  int status = 0;
+#pragma omp parallel for schedule (static, 4096)
+  for ( int m = 0; m < M; m++ ) {
+    z[m] = 0;
+  }
+  for ( int k = 0; k < K; k++ ) { 
+    ${y_ctype} y_k = y[k];
+    ${x_ctype} *x_k = x[k];
+#pragma omp parallel for schedule (static, 4096)
+    for ( int m = 0; m < M; m++ ) { // fused multiply add
+      z[m] = z[m] + (y_k * x_k[m]);
+    }
+  }
+  return status;
+}
+]]
+}

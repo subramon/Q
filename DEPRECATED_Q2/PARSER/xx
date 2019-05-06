@@ -1,0 +1,59 @@
+{ 
+  "verb" : "add_tbl", 
+  "tbl" : "table_name", 
+  "num_rows" : "1234" 
+} 
+{ 
+  "verb" : "add_tbl", 
+  "tbl" : "table_name", 
+  "num_rows" : "5678" 
+} 
+{ 
+  "verb" : "del_tbl", 
+  "tbl" : "table_name" 
+} 
+{ 
+  "verb" : "del_fld", 
+  "tbl" : "table_name", 
+  "fld" : "fld_name" 
+} 
+{ 
+  "verb" : "del_fld", 
+  "tbl" : "T1", 
+  "num_flds" : "3" 
+    "0" : "f1" ,  
+    "1" : "f2" ,  
+    "2" : "f3"  
+  ] 
+} 
+{ 
+  "verb" : "reduce", 
+  "op" : "sum", 
+  "tbl" : "T1", 
+  "fld" : "f1" 
+{ 
+{ 
+  "verb" : "reduce", 
+  "op" : "min", 
+  "tbl" : "T1", 
+  "fld" : "f1" 
+{ 
+{ 
+  "verb" : "reduce", 
+  "op" : "max", 
+  "tbl" : "T1", 
+  "fld" : "f1" 
+{ 
+{ 
+  "verb" : "reduce", 
+  "op" : "num_nn", 
+  "tbl" : "T1", 
+  "fld" : "f1" 
+{ 
+{ 
+  "verb" : "reduce", 
+  "op" : "sum", 
+  "tbl" : "T1", 
+  "cfld" : "x", 
+  "fld" : "f1" 
+{ 

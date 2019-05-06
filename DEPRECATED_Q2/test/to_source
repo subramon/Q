@@ -1,0 +1,1 @@
+ alias run="lua -e 'dofile \"../LUAQ/qinit.lua\"; qinit(); load_meta(\"_dump.json\") ' -i"

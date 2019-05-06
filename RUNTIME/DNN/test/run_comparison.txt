@@ -1,0 +1,40 @@
+To produce the input files using dnn.py, refer Q/RUNTIME/DNN/python/README.txt
+
+Produced files are as below
+
+5 lua files (in "Q/RUNTIME/DNN/python/" directory)
+    _Xin.lua
+    _Xout.lua
+    _npl.lua
+    _dpl.lua
+    _afns.lua
+
+ and the following 4 C files (in "Q/RUNTIME/DNN/python/" directory)
+    _set_W.c
+    _set_B.c
+    _set_Z.c
+    _set_A.c
+    _set_Wprime.c -- W at the end of back prop
+    _set_Bprime.c -- b at the end of back prop
+
+These files are required before running the comparison test
+
+==================================
+
+Run python Vs C comparison_test.lua
+
+> copy the generated files from pytyon directory to test directory
+    $ cp Q/RUNTIME/DNN/python/_* Q/RUNTIME/DNN/test/
+
+> Build the DNN
+    $ cd Q/RUNTIME/DNN/src/ 
+    $ make clean
+    $ make with CFLAGS set as following
+      CFLAGS = $(QC_FLAGS) -DTEST_VS_PYTHON 
+
+> run test t1 in comparison_test.lua
+    $ luajit -e "require 'comparison_test'['t1']()" 
+
+A few things to note:
+Keep the number of instances small.
+The batch size must be set to the number of instances

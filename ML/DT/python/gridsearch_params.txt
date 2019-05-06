@@ -1,0 +1,13 @@
+In the process of finding out best estimator (best DT classifier) in sklearn with given train and test data, we are using GridSearchCV with below param_grid
+
+"max_depth" : [ 1 to 20 ],
+"min_samples_split" : [ 5 to 20 ],
+"min_samples_leaf" : [ 1 to 5 ],
+"criterion" : ['gini','entropy']
+
+And the scoring method that we are considering are -
+1. accuracy
+2. f1
+3. f1_weighted
+
+So in this way, for each scoring method we are getting the best estimator, which we are loading in Q and finding the metric score (eg. credit-debit score etc).

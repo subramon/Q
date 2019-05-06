@@ -1,0 +1,87 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+declaration = [[
+
+#include "q_incs.h"
+
+typedef struct _reduce_${op}_${v_qtype}_${d_qtype}_args {
+  ${reduce_v_ctype} *val; // [k]
+  ${reduce_d_ctype} *drag; // [k]
+  uint64_t n; // actual occupancy
+  uint64_t k; // max occupancy
+  } REDUCE_${op}_${v_qtype}_${d_qtype}_ARGS;
+
+${includes}
+extern int
+${fn}(
+    const ${v_ctype} * restrict vals, // distance vector [n]
+    uint64_t n, // size of distance/goal vectors
+    const ${d_ctype} * restrict drags, // goal vector [n]
+    void *ptr_in_args // structure maintaining k min/max distances and respective goals
+   );
+
+]],
+
+definition = [[
+#include "_${fn}.h"
+int
+${fn}(
+    const ${v_ctype} * restrict vals, // distance vector [n]
+    uint64_t n, // size of distance/goal vectors
+    const ${d_ctype} * restrict drags, // goal vector [n]
+    void *ptr_in_args // structure maintaining k min/max distances and respective goals
+   )
+
+{
+  int status = 0;
+
+  if ( vals == NULL ) { go_BYE(-1); }
+  if ( n == 0 ) { go_BYE(-1); }
+  if ( drags == NULL ) { go_BYE(-1); }
+  if ( ptr_in_args == NULL ) { go_BYE(-1); }
+  // This is okay. Will explain. if ( k > n ) { go_BYE(-1); }
+
+  ${reducer_struct_type} *args = NULL;
+  args = (${reducer_struct_type} *)ptr_in_args;
+  // REDUCE_mink_ARGS args = *((REDUCE_mink_ARGS *) ptr_in_args);
+
+  int k = args->k; if ( k < 1 ) { go_BYE(-1); }
+
+  for ( uint64_t i = 0; i < n; i++ ) {
+    ${v_ctype} val  = vals[i];
+    ${d_ctype} drag = drags[i];
+
+    // first guy in gets a free pass
+    if ( args->n == 0 ) {
+      args->val[0]  = val;
+      args->drag[0] = drag;
+      args->n++;
+      continue;
+    }
+
+    if ( val ${comparator} args->val[k-1] ) {
+      // find a spot for yourself
+      int pos = -1;
+      for ( uint64_t j = 0; j < args->k; j++ ) {
+        if ( val ${comparator} args->val[j] ) {
+          pos = j; break;
+        }
+      }
+      if ( pos < 0 ) { go_BYE(-1); }
+      // Move everybody one to the right
+      for ( int j = args->k - 2; j >= pos; j-- ) {
+        args->val[j+1] = args->val[j];
+      }
+      args->val[pos]  = val; // put yourself in
+      args->drag[pos] = drag; // put yourself in
+      if ( args->n < args->k ) { // if there was space => one more
+        args->n++;
+      }
+    }
+  }
+BYE:
+  return status;
+}
+
+]]
+}

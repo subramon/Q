@@ -1,0 +1,39 @@
+{
+  "OP" :    [ "Min", "Max", "Sum", "Avg", "NDV", "Print",
+  "ValAtIdx", "IdxAtVal", "ApproxNDV" ],
+  "Print" : {
+    "ARGS" : {
+      "FldType" : [ "I1", "I2", "I4", "I8", "F4", "F8", "SC", "SV" ]
+    }
+  },
+  "Min" : {
+    "ARGS" : {
+      "FldType" : [ "I1", "I2", "I4", "I8", "F4", "F8" ]
+    }
+  },
+  "Max" : {
+    "ARGS" : {
+      "FldType" : [ "I1", "I2", "I4", "I8", "F4", "F8" ]
+    }
+  },
+  "Sum" : {
+    "ARGS" : {
+      "FldType" : [ "I1", "I2", "I4", "I8", "F4", "F8" ]
+    }
+  },
+  "Avg" : {
+    "ARGS" : {
+      "FldType" : [ "I1", "I2", "I4", "I8", "F4", "F8" ]
+    }
+  },
+  "NDV" : {
+    "ARGS" : {
+      "FldType" : [ "I1", "I2", "I4", "I8" ]
+    }
+  },
+  "ApproxNDV" : {
+    "ARGS" : {
+      "FldType" : [ "I1", "I2", "I4", "I8" ]
+    }
+  }
+}

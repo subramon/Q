@@ -1,0 +1,35 @@
+We ran the test with both version of luajit (current version - luajit-2.1.0-beta3 and previous version - luajit-2.0.4) with below cases
+- current luajit version + terra
+- current luajit version + without terra
+- previous luajit version + terra
+- previous luajit version + without terra
+
+In the first test, we were facing the issue which I mentioned in separate mail with subject .Terra test error when using current luajit version (luajit-2.1.0-beta3)..
+Below are the numbers for remaining 3 cases
+
+# current luajit version + without terra
+Command:
+$ cd Q/experimental/luajit_vs_terra_logit
+$ bash run_logit.sh luajit-2.1.0-beta3 false
+
+    Execution time - 43136927252.4/10^8 = 431.37
+
+=============================================================
+
+previous luajit version + terra
+Command:
+$ cd Q/experimental/luajit_vs_terra_logit
+$ bash run_logit.sh luajit-2.0.4 true
+
+    Execution time - 44387482332.6/10^8 = 443.87
+
+=============================================================
+    
+previous luajit version + without terra
+    Command:
+$ cd Q/experimental/luajit_vs_terra_logit
+$ bash run_logit.sh luajit-2.0.4 false
+
+Execution time - 42966761788.6/10^8 = 429.67
+
+=============================================================

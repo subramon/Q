@@ -1,0 +1,468 @@
+\startreport{Gambling on Decision Trees}
+\reportauthor{Ramesh Subramonian}
+\newcommand{\extra}{0}
+
+\section{Introduction}
+
+Decision trees are a well understood statistical technique \cite{Hastie2009}.
+This paper makes the following contributions:
+\be
+\item Well known metrics used to determine the best decision to be made 
+at a given node are (i) gini impurity (ii) information gain and (iii) 
+variance reduction. In contrast, we propose a metric that is inspired by looking
+at the decision making as a gambling problem, the aim being to maximize the
+expected gain at each step.
+\item 
+Well known metrics used to measure the quality of the decision tree 
+induced by the splitting metric chosen above are 
+precision, recall, accuracy, f1-score, \ldots
+In contrast, continuing the gambling metaphor, we propose a ``payout'' metric which
+measures the quality of the decision tree. 
+\item Lastly, we show that the quality of the decision tree is affected by the
+choice of splitting metric. What this means is that one should choose the
+splitting metric {\bf after} one has decided which quality metric is most
+appropriate for the problem at hand.
+\ee
+
+We believe that the proposed changes to the way decision trees are created and
+evaluated is particularly relevant to the case where relative
+confidences are involved. This is often the case when multiple candidates are
+competing for a limited resource, like user attention. 
+For example, supposed we have 2 decision trees, \(C_A, C_B\), one for product A and one for
+product B.  We need \(C_A, C_B\) to return \(p_A, p_B\), where \(p_A\) is
+\(C_A\)'s estimate of how likely the user is to select product A. In order to
+make the best business decision, we would like \(p_A, p_B\) to be as asccurate
+as possible.
+
+Random forests are a common way is which an ensemble of decision tres can be
+used to produce better results than any single tree. This paper specifically
+does not address how random forests are created. For example, different decision
+trees can be created by withholding some of the features, or some of the
+instances. What we focus on is creating the ``best'' possible decision tree
+given the inputs.
+
+%% \subsection{Conventions}
+%% Throughout the paper, we use the data sets listed in Table~\ref{tbl_data_sets}
+%% for our experiments. 
+%% \begin{table}
+%% \centering
+%% \begin{tabular}{|l|l|l|l|} \hline \hline
+%% {\bf Data Set Name } & {\bf Rows} & {\bf Columns} & {\bf Location} \\ \hline 
+%% Breast Cancer & X & X & \\ \hline
+%% Titanic & X & X & \\ \hline
+%% \ldots & X & X & \\ \hline
+%% \end{tabular}
+%% \label{tbl_data_sets}
+%% \caption{Data Sets used for experimentation}
+%% \end{table}
+%% 
+\subsection{A brief introduction to \cal{Q}}
+
+\cal{Q} is a column oriented database that is used to implement the decision
+tree algorithm. In this section, we present the essential aspects of \cal{Q}.
+
+\cal{Q} allows efficient manipulation of vectors. All elements of vectors are
+the same type. The 2 types we use in this paper are F4 and I4, representing
+single precision floating point and 4-byte signed integers. A vector has a fixed
+length \(n\) and can be thought of as a map from \(i\) to \(f(i)\), 
+where \(i \in [0, n-1]\).
+
+
+\subsection{Notations}
+
+\bi
+\item Let \(T = \{t_i\}\) be a table of vectors of type F4, representing the features.
+\item Let \(g\) be a vector of type I4, representing the {\bf goal} or 
+outcome which we wish to
+predict. We assume the goal can be either Heads, represented by the integer value 1 or Tails, represented as 0.
+\item boolean features are
+modeled as having type F4 and the comparison is always \(\leq 0\), so that the
+left branch has instances where the feature value is false and the
+right branch has instances where the feature value is true.
+\ei
+
+A decision tree is a Lua table where each element identifies
+\be
+\item a feature e.g., age
+\item the comparison to be made e.g., age \(\leq 40\). Currently, the comparison
+is {\bf always} \(\leq\)
+\item a left decision tree, which may be null
+\item a right decision tree, which may be null
+\ee
+
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{35cm}
+\begin{tabbing} \hspace*{0.25in} \=  \hspace*{0.25in} \=
+                \hspace*{0.25in} \=  \hspace*{0.25in} \= \kill
+Let \(\alpha\) be minimum benefit required to continue branching \\
+Let \(n_G = 2\) be the number of values of the goal attribute \\
+Let \(n_T =\) number of instances classified as tails \\
+Let \(n_H =\) number of instances classified as heads \\
+Let \(T\) be table of vectors, each vector being an attribute \\
+Initialize, decision tree \(D = \{\}\) \\
+\(F, g\) as described above \\
+{\bf function } MakeDecisionTree(D, T, g) \+ \ \\
+  \(C = Q.\mathrm{numby}(g, n_G);~n_T = C[0];~n_H = C[1]\) \\
+  {\bf forall} \(f \in T:~ b(f), s(f) = \mathrm{Benefit}(f, g, n_T, n_H)\) \\
+  Let \(f'\) be feature with maximum benefit. \\
+  {\bf if} \(b(f') < \alpha\) {\bf then } \+  \\
+    {\bf return} \- \\
+  {\bf endif} \\
+    \(x = \mathrm{Q.vsgt}(f', s(f'))\) \\
+    \(T_L = T_R = \{\}\) \\
+    {\bf forall} \(f \in F\) {\bf do} \+ \\
+      \(f_L = Q.\mathrm{where}(f, x)\) \\
+      \(f_R = Q.\mathrm{where}(f, \mathrm{Q.not}(x))\) \\
+      {\bf if } \(Q.max(f_L) > Q.min(f_L)\) {\bf then} \+ \\
+        \(T_L = T_L \cup f_L \) \- \\
+      {\bf endif} \\
+      {\bf if } \(Q.max(f_R) > Q.min(f_R)\) {\bf then} \+ \\
+        \(T_R = T_R \cup f_R \) \- \\
+      {\bf endif} \- \\
+    {\bf endfor} \\
+    D.feature = \(f'\) \\
+    D.threshold = \(b(f')\) \\
+    D.left = \(\{\}\) \\
+    D.right = \(\{\}\) \\
+    \(DT(D.left, g_L, T_L)\) \\
+    \(DT(D.right, F_R, g_R, T_R)\) \- \\
+{\bf end} 
+\end{tabbing}
+\end{minipage}
+}
+\label{dt_pseudo_code}
+\caption{Decision Tree algorithm}
+\end{figure}
+
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{15cm}
+\begin{tabbing} \hspace*{0.25in} \=  \hspace*{0.25in} \= 
+                \hspace*{0.25in} \=  \hspace*{0.25in} \= \kill
+{\bf function } \(\mathrm{Benefit}(f, g, n_T, n_H)\) \+  \\
+  \(f', h^0, h^1 = CountIntervals(f, g)\) \\
+  \(b = \mathrm{Q.wtbnft}(h^0, h^1, n_T, n_H)\) (Table~\ref{algo_weighted_benefit}) \\
+  \(b', \_, i = \mathrm{Q.max}(b)\) \\
+  {\bf return} \(b', f'[i]\)  \- \\
+{\bf end} 
+\end{tabbing}
+\end{minipage}
+}
+\label{compute_benefit_numeric}
+\caption{Benefit Computation (numeric attributes)}
+\end{figure}
+%%-------------------------------------------
+\begin{table}
+\centering
+\begin{tabular}{|l|l|l|} \hline \hline
+{\bf Variable} & {\bf Formula} & {\bf Explanation} \\ \hline \hline
+\(n_T^L\)  & & number of tails on left \\ \hline
+\(n_H^L\)  & & number of heads on left \\ \hline
+\(n_T^R\)  & & number of tails on right \\ \hline
+\(n_H^R\) & & number of heads on right \\ \hline
+
+\(n_L\)    & \(n_T^L + n_H^L \) & number on left \\ \hline
+\(n_R\)    & \(n_T^R + n_H^R \) & number on right \\ \hline
+
+\(n\)      & \(n_T + n_H \) & total number \\ \hline
+
+\(w_L \) & \( n^L/n\)  & weight on left \\ \hline
+\(w_R \) & \( n^R/n\)  & weight on left \\ \hline
+\hline
+\(o_H \) & \( n_T/n_H\) & odds for heads \\ \hline
+\(o_T \) & \( n_H/n_T\) & odds for tails \\ \hline
+\hline
+
+\(p_H^L \) & \( n_H^L/n_L\) & probability of heads on left \\ \hline
+\(p_H^R \) & \( n_H^R/n_R\) & probability of heads on right \\ \hline
+\(p_T^L \) & \( n_T^L/n_L\) & probability of tails on left \\ \hline
+\(p_T^R \) & \( n_T^R/n_R\) & probability of tails on right \\ \hline
+\hline
+
+\(b_H^L\) &  \(o_H^L \times p_H^L + (-1)  \times p_T^L\) &
+            benefit of betting heads on left \\ \hline
+\(b_T^L\) & \(o_T^L \times p_T^L + (-1)  \times p^H_L \) &
+            benefit of betting tails on left \\ \hline
+
+\(b_H^R\) & \(o_H^R \times p_H^R + (-1)  \times p_T^R \) &
+            benefit of betting heads on right \\ \hline
+\(b_T^R\) & \(o_T^R \times p_T^R + (-1)  \times p_H^R \) &
+            benefit of betting tails on right \\ \hline
+\hline
+
+\(b_L\) & \( \mathrm{max}(b_H^L, b_T^L)\) & benefit on left \\ \hline
+\(b_R\) & \( \mathrm{max}(b_H^R, b_T^R)\) & benefit on right \\ \hline
+\hline
+
+\(b\) &  \(b_L \times w_L + b_R \times w_R\) & weighted benefit \\ \hline
+\end{tabular}
+\label{algo_weighted_benefit}
+\caption{Weighted Benefit Computation}
+\end{table}
+%%-------------------------------------------
+\begin{figure}
+\centering
+\fbox{
+\begin{minipage}{15cm}
+\begin{tabbing} \hspace*{0.25in} \=  \hspace*{0.25in} \= \kill
+{\bf function } \(\mathrm{CountIntervals}(f, g)\) \+  \\
+{\bf Inputs} \+ \\  
+Vector \(f\) of length \(n\) type F4 \\
+Vector \(g\) of length \(n\) type I4 with values 0, 1 \- \\
+{\bf Outputs} \+ \\
+Vector \(f'\) of length \(n'\) type F4 \\
+Vector \(h^0\) of length \(n'\) type I4  \\
+Vector \(h^1\) of length \(n'\) type I4  \- \\
+\(f'\) is the unique values of \(f\), sorted ascending \\
+Let \(\delta(x)\) = 1 if \(x\) is true and 0 otherwise \\
+For \(k = 0, 1\), compute \(h^k_j = \sum_{i=1}^{i=n} \delta(g_i = k \wedge f_i \leq f_j)\) \- \\
+
+{\bf end} 
+\end{tabbing}
+\end{minipage}
+}
+\label{count_intervals}
+\caption{Count Intervals}
+\end{figure}
+%%-------------------------------------------
+
+\section{Algorithm}
+
+Since decision trees have been well documented, we focus our attention on the
+salient characteristics of our approach which are
+\be
+\item how does one decide on the comparison to be performed at a node?
+\item how does one decide when to not split a node further, assuming that asplit
+is possible at all.
+\ee
+
+Given the simple recursive nature of decision trees, we focus our 
+decision on what is done at a single node. Without loss of generality, 
+let this be the root node. At this point, we know the number of elements
+classified as Heads and Tails, \(n_H, n_T\) respectively. This allows us to set
+the odds of betting on heads or tails. At each node, we are asked to a single
+question. 
+\bi
+\item For a numeric attribute, it is of the form \(x \leq y\)
+\item For a boolean attribute, it is of the form \(x == y\), where 
+\(y\) can be true or false
+%% TODO LATER
+%% \item For an unordered categorical attribute that can take on values in \(X\),
+%% it is of the form \(x \in y \subset X\)
+\ei
+We iterate over all possible values of \(y\) for each attribute and find the
+attribute and decision that produces the maximum benefit. If this benefit
+exceeds a pre-defined threshold, we split the data into two, a left branch and a
+right branch and proceed recursively. Else, the expansion of the decision tree
+stops at this point.
+Figure~\ref{dt_pseudo_code} describes the algorithm at this level. For clarity of 
+exposition, we only describe the treatment of numeric attributes.
+
+
+\subsection{Q Operators Used}
+The Q operators used in Table~\ref{tbl_q_op}.
+\begin{table}
+\centering
+\begin{tabular}{|l|l|l|l|} \hline \hline
+{\bf Operator} & {\bf Input} & {\bf Output} & {\bf Explanation} \\ \hline \hline
+y = not(x) & x B1 Vector & y B1 Vector & \(y_i = ~x_i\) \\ \hline
+y = vsgt(x, s) & x Vector, s Scalar & \(y\) B1 Vector & 
+\(x_i \geq s \Rightarrow y_i = \) true; else, \(y_i = \)  false \\ \hline
+y = sum(x) & x Vector & y Scalar & \(y = \sum_i x_i\)  \\ \hline
+numby(x, n) & x Vector, n number, 
+% \(x_i \in [0, n-1]\)
+&
+y Vector & \(y_i = \) number of elements of \(x\) that have value \(i\) \\ \hline
+% . Note that \(y:\mathrm{length} == n\)
+\hline
+\end{tabular}
+\caption{Q Operators Used}
+\label{tbl_q_op}
+\end{table}
+
+\subsection{Benefit Computation}
+It is useful to model this problem as a gambling problem where we are 
+sampling with replacement. 
+\bi
+\item Let there be 100 balls, with 60  being marked Heads and 40
+being marked Tails. 
+\item Assume that we have to gamble on whether a ball picked at random is Heads
+ot Tails. If the ``house'' sets odds to ensure a fair game, then it would offer
+a payout of 4/6 if you bet heads and 6/4 if you bet tails. 
+\item If you bet heads, then the expected benefit is 
+\(\frac{60}{100} \times \frac{4}{6} + 
+\frac{40}{100} \times (-1)  = 0\)
+\item If you bet tails, then the expected benefit is 
+\(\frac{60}{100} \times (-1) + 
+\frac{40}{100} \times \frac{6}{4}  = 0\)
+\ei
+
+Now, assume that before we place out bet, we are allowed to ask one question
+which has an answer of left or right. If left, we are told that the ball was
+selected from a population of 40 heads and 15 tails. If right, we are told that
+the ball was selected from a population of 20 heads and 25 tails. Clearly, we
+would bet heads if the answer is left and tails if the answer is right. The
+question is: What is the expected benefit for 100 trials? 
+The answer is \(29 \frac{1}{6}\) and not 0 as before, calculated as follows.
+
+\(100 ( \times ( \frac{40+15}{100} \times ( 
+  \frac{40}{40+15} \times \frac{4}{6}  + 
+  \frac{15}{40+15} \times -1 ) ) + 
+  ( \frac{20+25}{100} \times ( 
+  \frac{20}{20+25} \times -1 + 
+  \frac{25}{20+25} \times \frac{6}{4}  ) ) )
+  \)
+which is \(
+ = (40 \times  \frac{4}{6}) -15 - 20 + (25 \times \frac{6}{4} )
+ = 29 \frac{1}{6}\)
+
+\ifthenelse{\equal{extra}{1}}{
+\subsubsection{Categorical Attributes}
+We deal with categorical attributes as follows. Let \(X\) be a categorical
+attribute that takes on values \(\{x_1, x_2, \ldots x_M\}\), where \(M\) is
+typically small. We can assume less than 100 values.
+
+Let \(Y = \{(x_i, g_i)\}\) be the data set, where \(i = 1, \ldots N\). 
+By this we ean
+that the \(i^{th}\) point has value \(x_i \in X\) and its goal attribute has
+value \(g_i \in \{0, 1\}\). 
+\(Y\) may have other features but for now we are concentrating on \(X\).
+
+Create a table, \(Z\), of vectors \(N, P, \rho\) of length \(M\) as follows.  
+\begin{enumerate}
+\item 
+\(n_j = \sum_{i=1}^{i=N} z(i, j)\) where 
+\(z_j = 1 \) if \(x_i = x_j \) and \(g_i = 0\)
+\item 
+\(p_j = \sum_{i=1}^{i=N} z(i, j)\) where 
+\(z_j = 1 \) if \(x_i = x_j \) and \(g_i = 1\)
+\item 
+\(rho_j = \frac{p_j}{p_j+n_j}\)
+\end{enumerate}
+Sort \(Z\) on \(rho\). Create vectors, \(N', P'\) of length \(M\) as follows
+\be
+\item 
+\ee
+}{}
+
+\newpage
+\section{Evaluating a decision tree}
+\label{payout}
+In addition to the standard metrics, such as classification accuracy, we
+evaluate decision trees using the ``payout'' metric.
+Table~\ref{dt_eval_code} describes what happens at a particular leaf of the decision tree. Let's explain the intuition with an example. Consider a leaf which had 
+\bi
+\item 20 Heads and 30 Tails in the training set and 
+\item 10 Heads and 40 Tails in the testing set 
+\ei
+When a head is presented to this leaf, the prediction is Tails. We award the
+algorithm a credit of 2/5 and a debit of 3/5.
+Similarly, when a tail is presented to this leaf, the prediction is Tails. We award the
+algorithm a credit of 3/5 and a debit of 2/5. We average the payout for every
+testing instance and that is construed to be the ``benefit'' of this decision tree.
+
+
+Let \(b_x, w_x\) be the values for leaf \(x\). Then, the total payout of the tree is \(\frac{\sum_x b_x}{\sum_x w_x}\)
+
+\begin{table}[hbtp]
+\centering
+\begin{tabular}{|l|l|l|} \hline \hline
+\(n^H_1\) & number of heads in test data & \\ \hline
+\(n^T_1\) & number of tails in test data & \\ \hline
+\(n^H_0\) & number of heads in train data&  \\ \hline
+\(n^T_0\) & number of tails in train data&  \\ \hline
+%%
+\(p^H\) & probability of heads at leaf & \(n^H_0 / (n^H_0 + n^T_0)\) \\ \hline
+\(p^T\) & probability of tails at leaf & \(n^T_0 / (n^H_0 + n^T_0)\) \\ \hline
+%%
+\(b^H\) & payout for heads in test data & \(n^H_1 \times ( p^H - p^T )\)  \\ \hline
+\(b^T\) & payout for tails in test data & \(n^T_1 \times ( p^T - p^H )\)  \\ \hline
+%%
+\(b\) & payout for test data & \(b_H + b_T\) \\ \hline
+
+\(w\) & number of test instances & \(n^H_1 + n^T_1\) \\ \hline
+\(\bar{b}\) & payout per instance & \(b/w\) \\ \hline
+\hline
+\end{tabular}
+\label{dt_eval_code}
+\caption{How a Leaf of a Decision Tree is evaluated}
+\end{table}
+
+\section{When to stop splitting?}
+
+In Figure~\ref{dt_pseudo_code}, we stated that we stop splitting when the weighted benefit
+is less than a threshold of \(\alpha\). We are now in a position to describe how
+\(\alpha\) is determined. We search the space of possible values of \(\alpha =
+(0, 1)\), evaluating the ``payout'' (Section~\ref{payout}) for each \(\alpha\). 
+We pick the \(\alpha\) which produces the maximum payout. 
+%% A sample on the breast cancer data set (reference TODO) is in
+%% Figure~\ref{fig_breast_cancer_cost_versus_alpha}.
+%
+\section{Evalaution}
+
+For evaluation, we chose the following data sets
+\be
+\item 2 publicly available data sets, the breast cancer data set and the
+Titanic data set from the UCI ML Repository.
+\item 3 proprietary data sets --- ds1, ds2, ds3
+\item 2 synthetic data sets generated as follows
+\be
+\item \TBC
+\item \TBC
+\ee
+\ee
+
+We compare Q against sklearn. 
+In case of Q, the hyper-parameter to be optimized is \(\alpha\). 
+In case of sklearn, we use grid search to optimize for the hyper-parameters.We
+pick the model that optimizes f1 score. 
+
+See \verb+../python/grid*txt+ \TBC
+
+\begin{table}
+\centering
+\begin{tabular}{|l||l|l|l|l|l|l|l|} \hline \hline
+{\bf Data Set} & {\bf Algorithm} & {\bf accuracy} & {\bf precision} & {\bf recall} & {\bf f1 score} & {\bf payout} \\ \hline \hline    
+cancer & Q &      92.0962 & 0.9385 &  0.9333 &  0.9359 &  \textcolor{red}{0.8385} \\ \hline
+cancer & sklearn & 94.1581 & 0.9605 &  0.9444 &  0.9524 &  0.8196 \\ \hline
+\hline                                        
+titanic & Q &      78.7946 & 0.7453 &  0.6897 &  0.7164 &  \textcolor{red}{0.5609} \\ \hline
+titanic & sklearn &       81.0268 & 0.7871 &  0.7011 &  0.7416 &  0.4937 \\ \hline
+\hline                                        
+ds1 & Q &    76.7681 &0.2441  &0.1511  & 0.1866  & \textcolor{red}{0.4723} \\ \hline
+ds1 &  sklearn &     75.6626 & 0.2659 &  0.2155 &  0.238 &   0.4687 \\ \hline
+\hline                                        
+ds2 & Q &     62.0271 & 0.5597 &  0.7833 &  0.6529 &  \textcolor{red}{0.1505} \\ \hline
+ds2 & sklearn &     60.8696 & 0.5424 &  0.9077 &  0.679 &   0.1102 \\ \hline
+\hline                                        
+ds3 & Q &   60.1256 & 0.5714 &  0.6323 &  0.6003 &  \textcolor{red}{0.1722} \\ \hline
+ds3 & sklearn &   59.056 &  0.5386 &  0.944 &   0.6859 &  0.0787 \\ \hline
+\hline
+\end{tabular}
+\label{tbl_results}
+\caption{Results comparing Q versus sklearn}
+\end{table}
+
+\subsection{Discussion}
+
+The key takeaway from the results is that you get what you look for. In case of
+Q, we are building the decision tree with optimizing payout in mind. In the case
+of sk-learn, we are building the decision tree with optimizing f1 score in mind.
+It should not come as a surprise that Q out performs sklearn when payout is the
+quality metric and that sklearn out performs Q when f1 score is the quality
+metric.
+
+This leads us to the conclusion that the choice of splitting decision 
+should not be made independent of the metric that will be used to judge the
+resultant decision tree. Of course, the quality metric should be chosen
+base on how well it models the business problem at hand.
+
+\subsection{Grid Search specifications for sklearn}
+
+See \verb+f1_score_sklearn.txt+ \TBC
+
+\bibliographystyle{alpha}
+\bibliography{../../../DOC/Q_PAPER/ref.bib}

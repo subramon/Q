@@ -1,0 +1,21 @@
+Modified the WHERE operator C template to have bit manipulation in slort of 64.
+
+Initially the code snippet was like below
+
+  for ( ; aidx < nA; aidx++ ) {
+    uint64_t widx = aidx >> 8; // word index
+    uint64_t bidx = aidx & 0xFF; // bit index
+    uint64_t b = B[widx];
+    b = ( b >> bidx ) & 1;
+
+the bit manipulation was happening in window of 256 bit but the type of b is uint64_t, so we were not getting expected result
+
+Modified the code to look like below
+
+  for ( ; aidx < nA; aidx++ ) {
+    uint64_t widx = aidx >> 6; // word index
+    uint64_t bidx = aidx & 0x3F; // bit index
+    uint64_t b = B[widx];
+    b = ( b >> bidx ) & 0x1;
+
+With this change, now bit manipulation is happening in window of 64 bit and getting the expected result.

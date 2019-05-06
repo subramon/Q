@@ -1,0 +1,85 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+
+typedef struct _reduce_${op}_${qtype}_args {
+  ${reduce_ctype} ${op}_val;
+  uint64_t num; // number of non-null elements inspected
+  int64_t ${op}_index; // storing min value index (signed integer)
+  } REDUCE_${op}_${qtype}_ARGS;
+  
+${includes}
+extern int
+${fn}(  
+      const ${ctype} * restrict in,  
+      uint64_t nR,
+      void *ptr_args,
+      uint64_t idx
+      ) 
+;
+
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(  
+      const ${ctype} * restrict in,
+      uint64_t nR,  
+      void *in_ptr_args,
+      uint64_t idx
+      )
+
+{
+  int status = 0;
+  ${ctype} inv; 
+  REDUCE_${op}_${qtype}_ARGS *ptr_args;
+  ptr_args = (REDUCE_${op}_${qtype}_ARGS *)in_ptr_args;
+
+  if ( idx == 0 ) {
+    ptr_args->${op}_val = ${initial_val};
+    ptr_args->num     = 0;
+    ptr_args->${op}_index = -1;
+  }
+  
+  ${reduce_ctype} curr_val = ptr_args->${op}_val;
+  int64_t curr_index = ptr_args->${op}_index;
+  uint32_t num_threads = sysconf(_SC_NPROCESSORS_ONLN);
+
+  ${reduce_ctype} ${op}_val = ${initial_val};
+  uint64_t block_size = nR / num_threads;
+#pragma omp parallel for schedule(static)
+  for ( uint32_t t = 0; t < num_threads; t++ ) { 
+    uint64_t lb = t * block_size;
+    uint64_t ub = lb + block_size;
+    if ( t == (num_threads-1) ) { ub = nR; }
+    ${reduce_ctype} lval = ${initial_val};
+    ${reduce_ctype} val = ${initial_val};
+    int64_t index = -1;
+    for ( uint64_t i  = lb; i < ub; i++ ) {  
+      inv = in[i];
+      val = ${reducer}(lval, inv);
+      if (val != lval){
+        lval = val;
+        index = i + idx;
+      }
+    }
+#pragma omp critical (_${fn})
+    {
+    ${op}_val = ${t_reducer}(curr_val, lval);
+    if ((${op}_val != curr_val) || ((${op}_val == curr_val) && (index < curr_index))){
+       curr_val = ${op}_val;
+       curr_index = index;
+    }
+    }
+  }
+  ptr_args->${op}_val = curr_val;
+  ptr_args->${op}_index = curr_index;
+  ptr_args->num     += nR;
+  return status;
+}
+   ]]
+}

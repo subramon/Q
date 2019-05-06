@@ -1,0 +1,25 @@
+in branch dev_ramesh first exec
+git merge dev # ensures you are in the current step and not in anything old
+git commit -am “Adding files” # add your files here
+git push # making sure that things are upstream
+
+# merging with dev
+git checkout dev
+git merge dev_ramesh #merging updates from dev_ramesh to dev
+git push
+
+# now switch back to dev_ramesh and fast forward your repo
+git checkout dev_ramesh
+git merge dev
+
+
+Second method
+
+git rebase dev
+git commit -am “…”
+git push
+
+git checkout dev
+git merge dev-ramesh
+
+git checkout dev-ramesh

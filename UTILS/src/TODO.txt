@@ -1,0 +1,1 @@
+gen_files should read .c files from a file and execute in loop

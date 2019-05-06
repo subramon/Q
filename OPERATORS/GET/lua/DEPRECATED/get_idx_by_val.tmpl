@@ -1,0 +1,57 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+#include "q_incs.h"
+extern int
+${fn}(  
+      const ${in_ctype} * restrict in1,  
+      const ${in_ctype} * restrict in2,  
+      uint64_t nR1,  
+      uint64_t nR2,
+      uint64_t *ptr_lb2,
+      ${out_ctype} * restrict out 
+      ) 
+;
+   ]],
+   definition = [[
+#include "_${fn}.h"
+
+int
+${fn}(  
+      const ${in_ctype} * restrict in1,  
+      const ${in_ctype} * restrict in2,  
+      uint64_t nR1,  
+      uint64_t nR2,
+      uint64_t *ptr_lb2,
+      ${out_ctype} * restrict out 
+      )
+
+{ 
+  int status = 0;
+  uint64_t lb2 = *ptr_lb2;
+  if ( in1 == NULL ) { go_BYE(-1); }
+  if ( in2 == NULL ) { go_BYE(-1); }
+  if ( out == NULL ) { go_BYE(-1); }
+  uint64_t idx2 = lb2;
+  for ( uint64_t idx1 = 0; idx1 < nR1; idx1++ ) {  
+    // check if you can match at all
+    if ( idx2 >= nR2 ) { out[idx1] = -1; continue; }
+    ${in_ctype} inv1 = in1[idx1]; 
+    ${in_ctype} inv2 = in2[idx2]; 
+    while ( inv1 < inv2 ) { 
+      if ( idx2 >= nR2 ) { out[idx1] = -1; break; }
+      inv2 = in2[++idx2]; 
+    }
+    if ( inv1 == inv2 ) {
+      out[idx1] = idx2;
+    }
+    else { //  inv1 > inv2 
+      out[idx1] = -1;
+    }
+  } 
+  *ptr_lb2 = idx2;
+BYE:
+  return status;
+}
+   ]]
+}

@@ -1,0 +1,69 @@
+{
+  "OP" : [ "Smear", "IdxWithReset",  "Cast", "Convert", "BitCount",
+  "Sqrt", "Reciprocal", "Abs", "Accumulate", "CRC32", "Mix", "Negate", "Increment ", "Decrement" ],
+  "Smear" : {
+    "F1Type" : [ "I1" ],
+    "F2Type" : "I1",
+    "ARGS" : {
+      "Mandatory" : [ "Up", "Down" ]
+    }
+  },
+  "IdxWithReset" : {
+    "F1Type" : [ "I1" ],
+    "F2Type" : [ "NewFldType", "I8" ]
+  },
+  "Cast" : {
+    "F1Type" : [ "I4", "F4", "I8", "F8" ],
+    "ARGS" : {
+       "Mandatory" : [ "NewFldType" ]
+    },
+    "F2Type" : { "I4" : "F4" , "I8" : "F8" , "F4" : "I4" , "F8" : "I8" }
+  },
+  "Convert" : { 
+    "F1Type" : [ "I1", "I2", "I4", "I8", "F4", "F8" ],
+    "ARGS" : {
+      "NewFldType" : "Mandatory"
+    },
+    "F2Type" : "NewFldType"
+  },
+  "BitCount" : {
+      "F1Type" : [ "I1", "I2", "I4", "I8" ],
+      "F2Type" : "I1"
+  },
+  "Sqrt" : {
+     "F1Type" : [ "F4", "F8" ],
+     "F2Type" : "F1Type"
+  },
+  "Reciprocal" : {
+     "F1Type" : [ "F4", "F8" ],
+     "F2Type" : "F1Type"
+  },
+  "Abs" : {
+     "F1Type" : [ "I1", "I2", "I4", "I8", "F4", "F8" ],
+     "F2Type" : "F1Type"
+  },
+  "Accumulate" : {
+    "F1Type" : [ "I1", "I2", "I4", "I8", "F4", "F8" ],
+    "F2Type" : [ "F1Type", "NewFldType" ]
+  },
+  "CRC32" : {
+    "F1Type" : [ "I4", "I8" ],
+    "F2Type" : "F1Type"
+  },
+  "Mix" : {
+    "F1Type" : [ "I4", "I8" ],
+    "F2Type" : "F1Type"
+  },
+  "Negate" : {
+    "F1Type" : [ "I1", "I2", "I4", "I8" ],
+    "F2Type" : "F1Type"
+  },
+  "Increment" : {
+    "F1Type" : [ "I1", "I2", "I4", "I8" ],
+    "F2Type" : "F1Type"
+  },
+  "Decrement" : {
+    "F1Type" : [ "I1", "I2", "I4", "I8" ],
+    "F2Type" : "F1Type"
+  }
+}

@@ -1,0 +1,23 @@
+\section{Power to the People}
+
+It is well accepted that large data systems benefit significantly 
+from careful optimization of data movement. Optimizing compilers and query plan
+rewriters aim to do this automatically.
+Q takes a fundamentally different approach. It is our belief that the
+choreography of computations can be left to the database programmer {\bf if} 
+they have (i) some understanding of the underyling
+system architecture and (ii) relatively simple knobs to influence the run time
+system.  An example is provided in Section~\ref{reduce_operator}
+
+In many analytical tasks, one repeatedly performs very similar operations on slowly
+changing data. In these cases, 
+it is not onerous to maintain (and periodically refresh) such statistics. 
+Note that the fidelity demanded of these summary statistics is often low ---
+they need to be only as good as the use to which they are put. For example, when
+used for load balancing, they need to be good enough to guard against excessive
+skew.
+An example is discussed in Section~\ref{social_graph}
+
+\input{reduce_operator}
+
+\input{sort}

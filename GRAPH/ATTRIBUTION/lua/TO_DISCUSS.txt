@@ -1,0 +1,6 @@
+1) How to build partially
+2) How to set environment variables
+3) How to get meta for is_sorted
+4) How to restart Q from scratch
+5) Check CLI again
+6) Check browser again
