@@ -4,7 +4,8 @@ gcc -g $QC_FLAGS  \
   test_SC_to_TM.c \
   ../src/SC_to_TM.c \
   ../src/TM_to_SC.c \
-  -I../../../UTILS/inc -I../inc/ \
+  ../src/TM_to_I8.c \
+  -I../../../UTILS/inc -I../gen_inc/ -I../inc/ \
   -o a.out
 ./a.out
 
