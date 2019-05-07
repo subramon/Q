@@ -7,7 +7,8 @@
 #include <inttypes.h>
 #include "avx.h"
 
-#define REG_WIDTH_IN_BITS 256
+#define REGISTER_WIDTH_IN_BITS 512
+#define BITS_IN_BYTE      8
 
 static uint64_t
 RDTSC(
@@ -22,8 +23,9 @@ RDTSC(
 int main() {
   int status = 0;
   int32_t nI = 35;
-  float *A = memalign(32, nI * sizeof(float));
-  float *B = memalign(32, nI * sizeof(float));
+  size_t alignment = REGISTER_WIDTH_IN_BITS / BITS_IN_BYTE;
+  float *A = memalign(alignment, nI * sizeof(float));
+  float *B = memalign(alignment, nI * sizeof(float));
   float sum = 0;
   for ( int i = 0; i < nI; i++ ) { A[i] = i; }
   for ( int i = 0; i < nI; i++ ) { B[i] = i*4; }

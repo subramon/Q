@@ -7,7 +7,8 @@
 #include <inttypes.h>
 #include "avx.h"
 
-#define REG_WIDTH_IN_BITS 256
+#define REGISTER_WIDTH_IN_BITS 512
+#define BITS_IN_BYTE      8
 
 static uint64_t
 RDTSC(
@@ -22,17 +23,18 @@ RDTSC(
 int main() {
   int status = 0;
   int32_t nI = 35;
-  float *A = memalign(32, nI * sizeof(float));
+ size_t alignment = REGISTER_WIDTH_IN_BITS / BITS_IN_BYTE;
+  float *A = memalign(alignment, nI * sizeof(float));
   float B = 10;
-  float *C = memalign(32, nI * sizeof(float));
-  float *D = memalign(32, nI * sizeof(float));
+  float *C = memalign(alignment, nI * sizeof(float));
+  float *D = memalign(alignment, nI * sizeof(float));
   for ( int i = 0; i < nI; i++ ) { A[i] = i; }
   for ( int i = 0; i < nI; i++ ) { C[i] = i*4; }
 
   uint64_t t_end = 0, t_start = RDTSC();
-  status = a_times_sb_plus_c(A, B, C, D, nI);
+  status = va_times_sb_plus_vc(A, B, C, D, nI);
   t_end = RDTSC();
-  fprintf(stdout, "cycles  = %" PRIu64 "\n", ( t_end - t_start ) );
+  // fprintf(stdout, "cycles  = %" PRIu64 "\n", ( t_end - t_start ) );
 
   for ( int i = 0; i < nI; i++ ) { 
     printf("A = %lf \t", A[i]);

@@ -71,7 +71,7 @@ int fstep_a(
       if ( d_out[k] ) { continue; }
       float w_jk = W_j[k];
       float *out_z_k = out_z[k];
-      status = a_times_sb_plus_c(in_j, w_jk, out_z_k, out_z_k, nI);
+      status = va_times_sb_plus_vc(in_j, w_jk, out_z_k, out_z_k, nI);
       //cBYE(status);
       float *out_a_k = out_a[k];
       afn(out_z_k, nI, out_a_k);

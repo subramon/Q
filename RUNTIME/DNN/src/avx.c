@@ -1,10 +1,10 @@
-#include <immintrin.h>
-
+#include "q_incs.h"
 #include "avx.h"
 
 #define REG_WIDTH_IN_BITS 256
+#define BITS_PER_BYTE     8
 
-int a_times_sb_plus_c(
+int va_times_sb_plus_vc(
     float *A,
     float sB,
     float *C,
@@ -13,11 +13,14 @@ int a_times_sb_plus_c(
     )
 {
   int status = 0;
+  if ( A == NULL ) { go_BYE(-1); }
+  if ( C == NULL ) { go_BYE(-1); }
+  if ( D == NULL ) { go_BYE(-1); }
+  if ( nI <= 0   ) { go_BYE(-1); }
 
 #ifdef AVX
 
-  int bits_per_byte = 8;
-  int stride = REG_WIDTH_IN_BITS / (bits_per_byte * sizeof(float));
+  int stride = REG_WIDTH_IN_BITS / (BITS_PER_BYTE * sizeof(float));
   int nI_rem = ( nI % stride );
 
   // loop with fma
@@ -57,7 +60,7 @@ BYE:
 }
 //===========================================================================
 
-int a_dot_b(
+int va_dot_vb(
     float *A,
     float *B,
     float *C,
@@ -65,10 +68,13 @@ int a_dot_b(
     )
 {
   int status = 0;
+  if ( A == NULL ) { go_BYE(-1); }
+  if ( B == NULL ) { go_BYE(-1); }
+  if ( C == NULL ) { go_BYE(-1); }
+  if ( nI <= 0   ) { go_BYE(-1); }
   float sum = 0;
 #ifdef AVX
-  int bits_per_byte = 8;
-  int stride = REG_WIDTH_IN_BITS / (bits_per_byte * sizeof(float));
+  int stride = REG_WIDTH_IN_BITS / (BITS_PER_BYTE * sizeof(float));
   int nI_rem = ( nI % stride );
 
   // loop with avx

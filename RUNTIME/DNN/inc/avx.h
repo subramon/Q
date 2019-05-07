@@ -1,5 +1,9 @@
+#ifndef __AVX_H_
+#define __AVX_H_
+#include <smmintrin.h>
+#include <immintrin.h>
 extern int
-a_times_sb_plus_c(
+va_times_sb_plus_vc(
     float *A,
     float sB,
     float *C,
@@ -8,9 +12,10 @@ a_times_sb_plus_c(
     );
 
 extern int
-a_dot_b(
+va_dot_vb(
     float *A,
     float *B,
     float *C,
     int32_t nI
     );
+#endif

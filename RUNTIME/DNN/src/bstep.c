@@ -110,7 +110,7 @@ int bstep(
       for ( int jprime = 0; jprime < n_out; jprime++ ) { // for neurons in out_layer
         float *W_jprime = W[jprime];
         float *da_prev_jprime = da_prev[jprime];
-        status = a_times_sb_plus_c(dz_j, W_jprime[j], da_prev_jprime, da_prev_jprime, nI);
+        status = va_times_sb_plus_vc(dz_j, W_jprime[j], da_prev_jprime, da_prev_jprime, nI);
         //cBYE(status)
       }
     }
@@ -126,7 +126,8 @@ int bstep(
       // for neurons in out_layer
       sum = 0;
       float *a_prev_jprime = a_prev[jprime];
-      status = a_dot_b(dz_j, a_prev_jprime, &sum, nI);
+      status = va_dot_vb(dz_j, a_prev_jprime, &sum, nI);
+      // TODO P1 Put this status check back
       //cBYE(status);
       sum /= nI;
 #ifdef COUNT
