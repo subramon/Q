@@ -1,6 +1,11 @@
 #include "q_incs.h"
 #include "avx.h"
 
+#if defined(__GNUC__)
+#define PORTABLE_ALIGN16 __attribute__((aligned(16)))
+#else
+#define PORTABLE_ALIGN16 __declspec(align(16))
+#endif
 #define REG_WIDTH_IN_BITS 256
 #define BITS_PER_BYTE     8
 
@@ -77,19 +82,30 @@ int va_dot_vb(
   int stride = REG_WIDTH_IN_BITS / (BITS_PER_BYTE * sizeof(float));
   int nI_rem = ( nI % stride );
 
-  // loop with avx
-  __m256 s = _mm256_setr_ps(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-  for ( int i = 0; i < (nI-nI_rem); i += stride ) {
-    __m256 a = _mm256_load_ps(A+i);
-    __m256 b = _mm256_load_ps(B+i);
-    __m256 d = _mm256_dp_ps(a, b, 0xFF);
-    s = _mm256_add_ps(d, s);
-  }
-  float tmp_prod[8] = {0};
-  _mm256_store_ps(tmp_prod, s);
-  //printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", tmp_prod[0], tmp_prod[1], tmp_prod[2], tmp_prod[3], tmp_prod[4], tmp_prod[5], tmp_prod[6], tmp_prod[7]);
-  // TODO: update sum properly
+  __m256 num1, num2, num3, num4;
 
+  float PORTABLE_ALIGN16 tmpres[stride];
+  num4 = _mm256_setzero_ps();  //sets sum to zero
+
+
+  for ( i = 0; i < n; i += stride) {
+
+    //loads array a into num1  num1= a[7]  a[6] ... a[1]  a[0]
+    num1 = _mm256_loadu_ps(a+i);   
+
+    //loads array b into num2  num2= b[7]  b[6] ... b[1]  b[0]
+    num2 = _mm256_loadu_ps(b+i);   
+
+    // performs multiplication   
+    // num3 = a[7]*b[7]  a[6]*b[6]  ... a[1]*b[1]  a[0]*b[0]
+    num3 = _mm256_mul_ps(num1, num2); 
+
+    //horizontal addition by converting to scalars
+    _mm256_store_ps(tmpres, num3);
+    // accumulate in sum
+    sum += tmpres[0] + tmpres[1] + tmpres[2] + tmpres[3] + 
+             tmpres[4] + tmpres[5] + tmpres[6] + tmpres[7];
+  }
   // loop for remaining elements
   for ( int i = (nI-nI_rem); i < nI; i++ ) {
     sum += A[i] * B[i];

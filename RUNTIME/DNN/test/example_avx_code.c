@@ -3,6 +3,13 @@
 #include <smmintrin.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#if defined(__GNUC__)
+#define PORTABLE_ALIGN16 __attribute__((aligned(16)))
+#else
+#define PORTABLE_ALIGN16 __declspec(align(16))
+#endif
+
 /*
 
  * [Description]
@@ -154,14 +161,15 @@ float dot_product_256(
 
 {
   float arr[4];
-  float total;
+  float total = 0;
   int i;
+  int stride = 256 / (8*sizeof(float));
 
   __m256 num1, num2, num3, num4;
 
+  float PORTABLE_ALIGN16 tmpres[stride];
   num4 = _mm256_setzero_ps();  //sets sum to zero
 
-  int stride = 256 / (8*sizeof(float));
 
   for ( i = 0; i < n; i += stride) {
 
@@ -175,23 +183,12 @@ float dot_product_256(
     // num3 = a[7]*b[7]  a[6]*b[6]  ... a[1]*b[1]  a[0]*b[0]
     num3 = _mm256_mul_ps(num1, num2); 
 
-    //performs horizontal addition
-    num3 = _mm_hadd_ps(num3, num3); 
-
-    //num3=  
-    //  a[3]*b[3]+ a[2]*b[2]  
-    //  a[1]*b[1]+a[0]*b[0]  
-    //  a[3]*b[3]+ a[2]*b[2]  
-    //  a[1]*b[1]+a[0]*b[0]
-
-    num4 = _mm256_add_ps(num4, num3);  //performs vertical addition
-
+    //horizontal addition by converting to scalars
+    _mm256_store_ps(tmpres, num3);
+    // accumulate in total
+    total += tmpres[0] + tmpres[1] + tmpres[2] + tmpres[3] + 
+             tmpres[4] + tmpres[5] + tmpres[6] + tmpres[7];
   }
-
-  num4= _mm_hadd_ps(num4, num4);
-
-  _mm_store_ss(&total,num4);
-
   return total;
 
 }
