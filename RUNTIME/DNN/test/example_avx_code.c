@@ -3,6 +3,9 @@
 #include <smmintrin.h>
 #include <stdio.h>
 #include <stdlib.h>
+/*
+ * https://github.com/searchivarius/BlogCode/blob/master/2016/bench_sums/testsum256.cc
+ * */
 
 #if defined(__GNUC__)
 #define PORTABLE_ALIGN16 __attribute__((aligned(16)))
