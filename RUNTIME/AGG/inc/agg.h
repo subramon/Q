@@ -10,10 +10,9 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
-#include "scalar.h"
 
 #include "q_incs.h"
-#include "core_agg.h"
+#include "agg.h"
 
 //----------------------------------------
 static int l_agg_new( lua_State *L) 
@@ -31,13 +30,13 @@ static int l_agg_new( lua_State *L)
   luaL_getmetatable(L, "Aggregator"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = agg_new(initial_size, keytype, valtype, ptr_agg);
+  status = agg_new(ptr_agg, qtype_sz, q_data_dir, chunk_size, is_memo, file_name, num_elements);
   cBYE(status);
 
   return 1; // Used to be return 2 because of errbuf return
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, __func__);
+  lua_pushstring(L, "ERROR: Could not create aggregator\n");
   return 2;
 }
 //-----------------------
@@ -49,74 +48,8 @@ static int l_agg_delete( lua_State *L) {
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, __func__);
+  lua_pushstring(L, "ERROR: agg_end_write. ");
   return 2;
-}
-//----------------------------------------
-static int l_agg_check( lua_State *L) {
-  int status = 0;
-  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
-  status = agg_check(ptr_agg); cBYE(status);
-  lua_pushboolean(L, true);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//----------------------------------------
-static int l_agg_set_name( lua_State *L) {
-  int status = 0;
-  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
-  const char * const name  = luaL_checkstring(L, 2);
-  status = agg_set_name(ptr_agg, name); cBYE(status);
-  lua_pushboolean(L, true);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//-----------------------------------
-static int l_agg_get_name( lua_State *L) {
-  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
-  lua_pushstring(L, ptr_agg->name);
-  return 1;
-}
-//----------------------------------------
-static int l_agg_num_elements( lua_State *L) {
-  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
-  lua_pushnumber(L, agg_num_elements(ptr_agg));
-  return 1;
-}
-//----------------------------------------
-static int l_agg_put1( lua_State *L) {
-  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
-  SCLR_REC_TYPE *ptr_key = (SCLR_REC_TYPE *)luaL_checkudata(L, 2, "Scalar");
-  SCLR_REC_TYPE *ptr_val = (SCLR_REC_TYPE *)luaL_checkudata(L, 3, "Scalar");
-  lua_pushboolean(L, true);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 1;
-}
-//----------------------------------------
-static int l_agg_meta( lua_State *L) {
-  char opbuf[4096]; // TODO P3 try not to hard code bound
-  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
-
-  memset(opbuf, '\0', 4096);
-  int status = agg_meta(ptr_agg, opbuf);
-  if ( status == 0) { 
-    lua_pushstring(L, opbuf);
-    return 1;
-  }
-  else {
-    lua_pushnil(L);
-    lua_pushstring(L, __func__);
-    return 2;
-  }
 }
 //----------------------------------------
 static const struct luaL_Reg aggregator_methods[] = {
@@ -126,7 +59,6 @@ static const struct luaL_Reg aggregator_methods[] = {
     { "meta",         l_agg_meta },
     { "num_elements", l_agg_num_elements },
     { "set_name",     l_agg_set_name },
-    { "put1",         l_agg_put1 },
     { NULL,          NULL               },
 };
  
@@ -138,7 +70,6 @@ static const struct luaL_Reg aggregator_functions[] = {
     { "meta",         l_agg_meta },
     { "num_elements", l_agg_num_elements },
     { "set_name",     l_agg_set_name },
-    { "put1",         l_agg_put1 },
     { NULL,  NULL         }
   };
 

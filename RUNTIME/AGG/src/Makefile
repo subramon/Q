@@ -1,4 +1,4 @@
-# Why are we depending on print and load csv?
+
 INCS= -I../inc/ \
 	-I../../inc/ \
 	-I../../../UTILS/gen_inc/ \
@@ -14,24 +14,34 @@ all: libagg.so
 clean:
 	rm -r -f *.so *.o _*
 		
+QSRCS=`luajit expand.lua`
+QOBJS=$(QSRCS:.c=.o)
+
 CSRCS := $(wildcard *.c)
+CSRCS := $(filter-out $(QSRCS), $(CSRCS))
+CSRCS := $(filter-out q_rhashmap.tmpl.c, $(CSRCS))
 COBJS = $(CSRCS:.c=.o)
+COBJS := $(filter-out q_rhashmap.o,$(COBJS))
 
-AVX = -mavx2 -mfma 
-
-CFLAGS = $(QC_FLAGS) $(AVX)
-
-count : CFLAGS = $(QC_FLAGS) 
-count : all
+CFLAGS = $(QC_FLAGS)
 
 .c.o : 
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS)
 
-libagg.so: agg.o core_agg.o q_rhashmap.o murmurhash.o siphash.o 
+q_rhashmap.h : _buckets.h
+
+_buckets.h : 
+	luajit mk_buckets.lua  > _buckets.h
+
+libagg.so: agg.o core_agg.o murmurhash.o _xx
 	$(CC) ${CFLAGS} $(INCS) \
-	agg.o \
-	core_agg.o \
-	murmurhash.o \
-	q_rhashmap.o \
-	siphash.o \
+	$(COBJS) \
+	$(QOBJS) \
 	-shared -lm -o libagg.so
+
+t1 :
+	echo $(QOBJS)
+
+_xx :
+	luajit expand.lua
+	touch _xx

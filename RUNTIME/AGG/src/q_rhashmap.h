@@ -11,51 +11,54 @@
 #define	RHM_NOCOPY		0x01
 #define	RHM_NONCRYPTO		0x02
 
-#define __KEYTYPE__ uint64_t
-#define __VALTYPE__  int64_t
+#define KEYTYPE __KEYTYPE__
+#define VALTYPE  __VALTYPE__
+#define KV __KV__
+#define PASTER(x,y) x ## _ ## y
+#define EVALUATOR(x,y)  PASTER(x,y)
+#define NAME(fun) EVALUATOR(fun, KV)
 
-typedef struct _rh_bucket_t {
-	__KEYTYPE__  key; 
-	__VALTYPE__ val;
+typedef struct {
+	KEYTYPE  key; 
+	VALTYPE val;
 	uint64_t	hash	: 32;
 	uint64_t	psl	: 16;
-} rh_bucket_t;
+} NAME(rh_bucket_);
 
-typedef struct _q_rhashmap_t {
+typedef struct {
 	unsigned	size;
 	unsigned	nitems;
 	unsigned	flags;
 	uint64_t	divinfo;
-	rh_bucket_t *	buckets;
+	NAME(rh_bucket_) *	buckets;
 	uint64_t	hashkey;
 	unsigned	minsize;
-} q_rhashmap_t;
+} NAME(rhashmap_);
 
-extern q_rhashmap_t *	
-q_rhashmap_create(
-    size_t, 
-    unsigned
+extern NAME(rhashmap_) *	
+NAME(q_rhashmap_create)(
+    size_t initial_size
     );
 extern void		
-q_rhashmap_destroy(
-    q_rhashmap_t *
+NAME(q_rhashmap_destroy)(
+    NAME(rhashmap_) *
     );
 
-extern __VALTYPE__
-q_rhashmap_get(
-    q_rhashmap_t *, 
-    __KEYTYPE__ key
+extern VALTYPE
+NAME(q_rhashmap_get)(
+    NAME(rhashmap_) *, 
+    KEYTYPE key
     );
-extern __VALTYPE__
-q_rhashmap_put(
-    q_rhashmap_t *, 
-    __KEYTYPE__ key,
-    __VALTYPE__ val
+extern VALTYPE
+NAME(q_rhashmap_put)(
+    NAME(rhashmap_) *, 
+    KEYTYPE key,
+    VALTYPE val
     );
-extern __VALTYPE__
-q_rhashmap_del(
-    q_rhashmap_t *, 
-    __KEYTYPE__ key
+extern VALTYPE
+NAME(q_rhashmap_del)(
+    NAME(rhashmap_) *, 
+    KEYTYPE key
     );
 
 #endif

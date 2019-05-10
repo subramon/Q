@@ -26,7 +26,7 @@
 #include <limits.h>
 #include <assert.h>
 
-#include "q_rhashmap.h"
+#include "_q_rhashmap___KV__.h"
 #include "fastdiv.h"
 #include "utils.h"
 
@@ -36,27 +36,11 @@
 #define	APPROX_85_PERCENT(x)	(((x) * 870) >> 10)
 #define	APPROX_40_PERCENT(x)	(((x) * 409) >> 10)
 
-static inline uint32_t __attribute__((always_inline))
-compute_hash(
-    const q_rhashmap_t *hmap, 
-    const void *key, 
-    const size_t len
-    )
-{
-  /*
-   * Avoiding the use function pointers here; test and call relying
-   * on branch predictors provides a better performance.
-   */
-  if (hmap->flags & RHM_NONCRYPTO) {
-    return murmurhash3(key, len, hmap->hashkey);
-  }
-  return halfsiphash(key, len, hmap->hashkey);
-}
 
 static int __attribute__((__unused__))
 validate_psl_p(
-    q_rhashmap_t *hmap, 
-    const rh_bucket_t *bucket, 
+    NAME(rhashmap_) *hmap, 
+    const NAME(rh_bucket_) *bucket, 
     unsigned i
     )
 {
@@ -70,15 +54,15 @@ validate_psl_p(
  *
  * => If key is present, return its associated value; otherwise NULL.
  */
-__VALTYPE__
-q_rhashmap_get(
-    q_rhashmap_t *hmap, 
-    __KEYTYPE__  key
+VALTYPE
+NAME(q_rhashmap_get)(
+    NAME(rhashmap_) *hmap, 
+    KEYTYPE  key
     )
 {
-  const uint32_t hash = compute_hash(hmap, &key, sizeof(__KEYTYPE__));
+  const uint32_t hash = murmurhash3(&key, sizeof(KEYTYPE), hmap->hashkey);
   unsigned n = 0, i = fast_rem32(hash, hmap->size, hmap->divinfo);
-  rh_bucket_t *bucket;
+  NAME(rh_bucket_) *bucket;
 
   /*
    * Lookup is a linear probe.
@@ -111,15 +95,15 @@ probe:
 /*
  * rhashmap_insert: internal rhashmap_put(), without the resize.
  */
-static __VALTYPE__ // TODO CHeck this type
+static VALTYPE // TODO CHeck this type
 q_rhashmap_insert(
-    q_rhashmap_t *hmap, 
-    __KEYTYPE__ key,
-    __VALTYPE__ val
+    NAME(rhashmap_) *hmap, 
+    KEYTYPE key,
+    VALTYPE val
     )
 {
-  const uint32_t hash = compute_hash(hmap, &key, sizeof(__KEYTYPE__));
-  rh_bucket_t *bucket, entry;
+  const uint32_t hash = murmurhash3(&key, sizeof(KEYTYPE), hmap->hashkey);
+  NAME(rh_bucket_) *bucket, entry;
   unsigned i;
 
   ASSERT(key != 0);
@@ -165,7 +149,7 @@ probe:
      * We found a "rich" bucket.  Capture its location.
      */
     if (entry.psl > bucket->psl) {
-      rh_bucket_t tmp;
+      NAME(rh_bucket_) tmp;
 
       /*
        * Place our key-value pair by swapping the "rich"
@@ -195,14 +179,14 @@ probe:
 
 static int
 q_rhashmap_resize(
-    q_rhashmap_t *hmap, 
+    NAME(rhashmap_) *hmap, 
     size_t newsize
     )
 {
-  const size_t len = newsize * sizeof(rh_bucket_t);
-  rh_bucket_t *oldbuckets = hmap->buckets;
+  const size_t len = newsize * sizeof(NAME(rh_bucket_));
+  NAME(rh_bucket_) *oldbuckets = hmap->buckets;
   const size_t oldsize = hmap->size;
-  rh_bucket_t *newbuckets;
+  NAME(rh_bucket_) *newbuckets;
 
   ASSERT(newsize > 0);
   ASSERT(newsize > hmap->nitems);
@@ -222,7 +206,7 @@ q_rhashmap_resize(
   hmap->hashkey ^= random() | (random() << 32);
 
   for (unsigned i = 0; i < oldsize; i++) {
-    const rh_bucket_t *bucket = &oldbuckets[i];
+    const NAME(rh_bucket_) *bucket = &oldbuckets[i];
 
     /* Skip the empty buckets. */
     if (!bucket->key) {
@@ -247,11 +231,11 @@ q_rhashmap_resize(
  * => If the key is already present, return its associated value.
  * => Otherwise, on successful insert, return the given value.
  */
-__VALTYPE__ 
-q_rhashmap_put(
-    q_rhashmap_t *hmap, 
-    __KEYTYPE__ key, 
-    __VALTYPE__ val
+VALTYPE 
+NAME(q_rhashmap_put)(
+    NAME(rhashmap_) *hmap, 
+    KEYTYPE key, 
+    VALTYPE val
     )
 {
   const size_t threshold = APPROX_85_PERCENT(hmap->size);
@@ -279,17 +263,17 @@ q_rhashmap_put(
  *
  * => If key was present, return its associated value; otherwise NULL.
  */
-__VALTYPE__ 
-q_rhashmap_del(
-    q_rhashmap_t *hmap, 
-    __KEYTYPE__ key
+VALTYPE 
+NAME(q_rhashmap_del)(
+    NAME(rhashmap_) *hmap, 
+    KEYTYPE key
     )
 {
   const size_t threshold = APPROX_40_PERCENT(hmap->size);
-  const uint32_t hash = compute_hash(hmap, &key, sizeof(__KEYTYPE__));
+  const uint32_t hash = murmurhash3(&key, sizeof(KEYTYPE), hmap->hashkey);
   unsigned n = 0, i = fast_rem32(hash, hmap->size, hmap->divinfo);
-  rh_bucket_t *bucket;
-  __VALTYPE__ val;
+  NAME(rh_bucket_) *bucket;
+  VALTYPE val;
 
 probe:
   /*
@@ -322,7 +306,7 @@ probe:
    * Use the backwards-shifting method to maintain low variance.
    */
   for (;;) {
-    rh_bucket_t *nbucket;
+    NAME(rh_bucket_) *nbucket;
 
     bucket->key = 0;
 
@@ -360,19 +344,17 @@ probe:
  * => If size is non-zero, then pre-allocate the given number of buckets;
  * => If size is zero, then a default minimum is used.
  */
-q_rhashmap_t *
-q_rhashmap_create(
-      size_t size, 
-        unsigned flags
+NAME(rhashmap_) *
+NAME(q_rhashmap_create)(
+      size_t size
         )
 {
-  q_rhashmap_t *hmap;
+  NAME(rhashmap_) *hmap;
 
-  hmap = calloc(1, sizeof(q_rhashmap_t));
+  hmap = calloc(1, sizeof(NAME(rhashmap_)));
   if (!hmap) {
     return NULL;
   }
-  hmap->flags = flags;
   hmap->minsize = MAX(size, HASH_INIT_SIZE);
   if (q_rhashmap_resize(hmap, hmap->minsize) != 0) {
     free(hmap);
@@ -389,8 +371,8 @@ q_rhashmap_create(
  * => It is the responsibility of the caller to remove elements if needed.
  */
 void
-q_rhashmap_destroy(
-    q_rhashmap_t *hmap
+NAME(q_rhashmap_destroy)(
+    NAME(rhashmap_) *hmap
     )
 {
   free(hmap->buckets);
