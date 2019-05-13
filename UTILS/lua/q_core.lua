@@ -17,7 +17,7 @@ local fileops  = require 'Q/UTILS/lua/fileops'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 
 local trace_logger = Logger.new({outfile = Q_TRACE_DIR .. "/qcore.log"})
--- cdef the basic  
+-- cdef the basic   XXX
 assertx(fileops.isfile(incfile), "File not found ", incfile)
 ffi.cdef(fileops.read(incfile))
 local qc = ffi.load('libq_core.so')
