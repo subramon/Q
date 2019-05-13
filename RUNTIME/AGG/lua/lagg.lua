@@ -52,6 +52,12 @@ function lagg.set_input_mode(generator)
   self._generator = generator
 end
 
+function lagg.save()
+  -- returns 2 vectors, one for key and one for value 
+  -- we don't have a corresponding restore, the "new" suffices
+  -- TODO
+end
+
 function lagg.put(key, val)
   assert(self._generator)
   assert( type(self._generator) == "boolean" )

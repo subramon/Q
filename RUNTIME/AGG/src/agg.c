@@ -15,16 +15,21 @@
 #include "q_incs.h"
 #include "core_agg.h"
 
+int luaopen_libagg (lua_State *L);
 //----------------------------------------
 static int l_agg_new( lua_State *L) 
 {
   int status = 0;
   AGG_REC_TYPE *ptr_agg = NULL;
 
-  int initial_size            = luaL_checknumber(L, 1);
-  const char * const keytype  = luaL_checkstring(L, 2);
-  const char * const valtype  = luaL_checkstring(L, 3);
+  const char * const keytype  = luaL_checkstring(L, 1);
+  const char * const valtype  = luaL_checkstring(L, 2);
+  int initial_size = 0;
+  if ( lua_gettop(L) > 3 ) {
+    initial_size            = luaL_checknumber(L, 3);
+  }
 
+  if ( initial_size < 0 ) { initial_size = 0; }
   ptr_agg = (AGG_REC_TYPE *)lua_newuserdata(L, sizeof(AGG_REC_TYPE));
   return_if_malloc_failed(ptr_agg);
   memset(ptr_agg, '\0', sizeof(AGG_REC_TYPE));
@@ -142,24 +147,6 @@ static const struct luaL_Reg aggregator_functions[] = {
     { NULL,  NULL         }
   };
 
-  /*
-  ** Implementation of luaL_testudata which will return NULL in case if udata is not of type tname
-  ** TODO: Check for the appropriate location for this function
-  */
-  LUALIB_API void *luaL_testudata (lua_State *L, int ud, const char *tname) {
-    void *p = lua_touserdata(L, ud);
-    if (p != NULL) {  /* value is a userdata? */
-      if (lua_getmetatable(L, ud)) {  /* does it have a metatable? */
-        lua_getfield(L, LUA_REGISTRYINDEX, tname);  /* get correct metatable */
-        if (lua_rawequal(L, -1, -2)) {  /* does it have the correct mt? */
-          lua_pop(L, 2);  /* remove both metatables */
-          return p;
-        }
-      }
-    }
-    return NULL;  /* to avoid warnings */
-  }
-   
   /*
   ** Open aggregator library
   */

@@ -4,6 +4,7 @@
 #include "q_incs.h"
 #include "lauxlib.h"
 #include "core_agg.h"
+#include "_files_to_include.h"
 
 static int 
 chk_name(
@@ -72,6 +73,23 @@ agg_new(
     )
 {
   int status = 0;
+  if ( ( strcmp(keytype, "I4") != 0 ) && ( strcmp(keytype, "I8") != 0 ) ) {
+    go_BYE(-1);
+  }
+  if ( ( strcmp(valtype, "I1") != 0 ) && ( strcmp(valtype, "I2") != 0 ) &&
+       ( strcmp(valtype, "I4") != 0 ) && ( strcmp(valtype, "I8") != 0 ) && 
+       ( strcmp(valtype, "F4") != 0 ) && ( strcmp(valtype, "F8") != 0 ) ) {
+    go_BYE(-1);
+  }
+  strcpy(ptr_agg->valtype, valtype);
+  strcpy(ptr_agg->keytype, keytype);
+  void *x = NULL;
+  if ( ( strcmp(keytype, "I4") == 0 ) &&  ( strcmp(valtype, "I1") == 0 ) ) {
+    x = q_rhashmap_create_I4_I1(initial_size);
+  }
+  if ( x == NULL ) { go_BYE(-1); }
+  ptr_agg->hmap = x;
+
 BYE:
   return status;
 }

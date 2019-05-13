@@ -28,20 +28,22 @@ CFLAGS = $(QC_FLAGS)
 .c.o : 
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS)
 
-q_rhashmap.h : _buckets.h
+agg.o : agg.c
 
-_buckets.h : 
-	luajit mk_buckets.lua  > _buckets.h
+core_agg.c : ../inc/core_agg.h _files_to_include.h
 
-libagg.so: agg.o core_agg.o murmurhash.o _xx
+agg.c : ../inc/agg.h ../inc/core_agg.h
+
+libagg.so: agg.o core_agg.o murmurhash.o _q_rhashmap_I8_I8.c
 	$(CC) ${CFLAGS} $(INCS) \
 	$(COBJS) \
 	$(QOBJS) \
 	-shared -lm -o libagg.so
 
-t1 :
-	echo $(QOBJS)
-
-_xx :
+_files_to_include.h : 
 	luajit expand.lua
-	touch _xx
+
+_q_rhashmap_I8_I8.o : _q_rhashmap_I8_I8.c
+
+_q_rhashmap_I8_I8.c :
+	luajit expand.lua

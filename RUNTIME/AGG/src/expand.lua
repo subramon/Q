@@ -11,6 +11,7 @@ cp $hfile _
 ]]
 
 cfiles = {}
+hfiles = {}
 for _, key in pairs(keytypes) do 
   for _, val in pairs(valtypes) do 
     local hstr = plfile.read("q_rhashmap.h")
@@ -22,6 +23,7 @@ for _, key in pairs(keytypes) do
     hstr = string.gsub(hstr, "__KV__", kv);
     local outh = "_q_rhashmap_" .. key .. "_" .. val .. ".h"
     plfile.write(outh, hstr)
+    hfiles[#hfiles+1] = '#include "' .. outh .. '"'
 
     local cstr = plfile.read("q_rhashmap.c")
     cstr = string.gsub(cstr, "__KV__", kv);
@@ -30,4 +32,6 @@ for _, key in pairs(keytypes) do
     cfiles[#cfiles+1] = outc
   end
 end
+hfiles[#hfiles+1] = "\n"
 print(table.concat(cfiles, ' '))
+plfile.write("_files_to_include.h", table.concat(hfiles, '\n'))

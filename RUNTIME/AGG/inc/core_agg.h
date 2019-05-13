@@ -5,7 +5,7 @@ typedef struct _agg_rec_type {
   char keytype[Q_MAX_LEN_QTYPE_NAME+1]; 
   char valtype[Q_MAX_LEN_QTYPE_NAME+1];
   char name[Q_MAX_LEN_INTERNAL_NAME+1];
-  // TODO Q_RHASHMAP_TYPE q_rhash_map; 
+  void *hmap; 
 } AGG_REC_TYPE;
 
 extern int
@@ -30,6 +30,10 @@ agg_delete(
     );
 extern int
 agg_num_elements(
+    AGG_REC_TYPE *ptr_agg
+    );
+extern int
+agg_free(
     AGG_REC_TYPE *ptr_agg
     );
 extern int
