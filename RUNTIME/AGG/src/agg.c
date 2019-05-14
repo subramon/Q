@@ -28,15 +28,14 @@ static int l_agg_new( lua_State *L)
   if ( lua_gettop(L) > 3 ) {
     initial_size            = luaL_checknumber(L, 3);
   }
-
-  if ( initial_size < 0 ) { initial_size = 0; }
+  if ( initial_size < 0 ) { go_BYE(-1); }
   ptr_agg = (AGG_REC_TYPE *)lua_newuserdata(L, sizeof(AGG_REC_TYPE));
   return_if_malloc_failed(ptr_agg);
   memset(ptr_agg, '\0', sizeof(AGG_REC_TYPE));
   luaL_getmetatable(L, "Aggregator"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = agg_new(initial_size, keytype, valtype, ptr_agg);
+  status = agg_new(keytype, valtype, initial_size, ptr_agg);
   cBYE(status);
 
   return 1; // Used to be return 2 because of errbuf return
@@ -99,6 +98,8 @@ static int l_agg_put1( lua_State *L) {
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
   SCLR_REC_TYPE *ptr_key = (SCLR_REC_TYPE *)luaL_checkudata(L, 2, "Scalar");
   SCLR_REC_TYPE *ptr_val = (SCLR_REC_TYPE *)luaL_checkudata(L, 3, "Scalar");
+  int status = agg_put1(ptr_key, ptr_val, ptr_agg); 
+  if ( status < 0 ) { WHEREAMI; goto BYE; }
   lua_pushboolean(L, true);
   return 1;
 BYE:

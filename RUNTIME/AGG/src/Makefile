@@ -30,9 +30,9 @@ CFLAGS = $(QC_FLAGS)
 
 agg.o : agg.c
 
-core_agg.c : ../inc/core_agg.h _files_to_include.h
+core_agg.c : ../inc/core_agg.h _files_to_include.h _creation.c
 
-agg.c : ../inc/agg.h ../inc/core_agg.h
+agg.c : ../inc/core_agg.h
 
 libagg.so: agg.o core_agg.o murmurhash.o _q_rhashmap_I8_I8.c
 	$(CC) ${CFLAGS} $(INCS) \
@@ -41,7 +41,10 @@ libagg.so: agg.o core_agg.o murmurhash.o _q_rhashmap_I8_I8.c
 	-shared -lm -o libagg.so
 
 _files_to_include.h : 
-	luajit expand.lua
+	luajit expand.lua 1>/dev/null
+
+_creation.c : 
+	luajit expand.lua 1>/dev/null
 
 _q_rhashmap_I8_I8.o : _q_rhashmap_I8_I8.c
 

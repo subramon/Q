@@ -15,9 +15,9 @@ agg_meta(
     );
 extern int
 agg_new(
-    uint32_t     initial_size,
     const char * const keytype,
     const char * const valtype,
+    uint32_t     initial_size,
     AGG_REC_TYPE *ptr_agg
     );
 extern int
@@ -41,5 +41,10 @@ agg_set_name(
     AGG_REC_TYPE *ptr_agg,
     const char * const name
     );
+extern int 
+agg_put1(
+    SCLR_REC_TYPE *ptr_key,
+    SCLR_REC_TYPE *ptr_val,
+    AGG_REC_TYPE *ptr_agg
+    );
 #endif
-

@@ -2,6 +2,7 @@
 #include <time.h>
 #include <malloc.h>
 #include "q_incs.h"
+#include "scalar.h"
 #include "lauxlib.h"
 #include "core_agg.h"
 #include "_files_to_include.h"
@@ -65,10 +66,27 @@ BYE:
 }
 
 int 
+agg_put1(
+    SCLR_REC_TYPE *ptr_key,
+    SCLR_REC_TYPE *ptr_val,
+    AGG_REC_TYPE *ptr_agg
+    )
+{
+  int status = 0;
+  // TODO P1 Need to deal properly with return value of put
+  /* We need something like this for all key/val types. This is scripted
+  }
+  */
+#include "_put.c"
+BYE:
+  return status;
+}
+
+int 
 agg_new(
-    uint32_t initial_size,
     const char * const keytype,
     const char * const valtype,
+    uint32_t initial_size,
     AGG_REC_TYPE *ptr_agg
     )
 {
@@ -84,9 +102,12 @@ agg_new(
   strcpy(ptr_agg->valtype, valtype);
   strcpy(ptr_agg->keytype, keytype);
   void *x = NULL;
+  /* We need something like this for all key/val types. This is scripted
   if ( ( strcmp(keytype, "I4") == 0 ) &&  ( strcmp(valtype, "I1") == 0 ) ) {
     x = q_rhashmap_create_I4_I1(initial_size);
   }
+  */
+#include "_creation.c"
   if ( x == NULL ) { go_BYE(-1); }
   ptr_agg->hmap = x;
 

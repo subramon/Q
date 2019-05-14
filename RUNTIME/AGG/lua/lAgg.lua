@@ -7,22 +7,22 @@ local qc              = require 'Q/UTILS/lua/q_core'
 local get_ptr         = require 'Q/UTILS/lua/get_ptr'
 local parse_params    = require 'Q/RUNTIME/AGG/lua/parse_params'
 --====================================
-local lagg = {}
-lagg.__index = lagg
+local lAggregator = {}
+lAggregator.__index = lAggregator
 
-setmetatable(lagg, {
+setmetatable(lAggregator, {
    __call = function (cls, ...)
       return cls.new(...)
    end,
 })
 
-register_type(lagg, "lagg")
+register_type(lAggregator, "lAggregator")
 
-function lagg.new(params)
-  local agg = setmetatable({}, lagg)
+function lAggregator.new(params)
+  local agg = setmetatable({}, lAggregator)
   initial_size, keytype, valtype = parse_params(params)
   --==========================================
-  agg._agg = assert(Aggregator.new(initial_size, keytype, valtype))
+  agg._agg = assert(Aggregator.new(keytype, valtype, initial_size))
   agg._keytype  = keytype 
   agg._valtype  = valtype 
   agg._num_puts = 0
@@ -44,7 +44,7 @@ function lagg.new(params)
   return agg
 end
 
-function lagg.set_input_mode(generator)
+function lAggregator:set_input_mode(generator)
   assert(generator)
   assert( ( type(generator) == "function" ) or 
           ( type(generator) == "boolean" ) )
@@ -52,22 +52,22 @@ function lagg.set_input_mode(generator)
   self._generator = generator
 end
 
-function lagg.save()
+function lAggregator.save()
   -- returns 2 vectors, one for key and one for value 
   -- we don't have a corresponding restore, the "new" suffices
   -- TODO
 end
 
-function lagg.put(key, val)
+function lAggregator:put1(key, val)
   assert(self._generator)
   assert( type(self._generator) == "boolean" )
-  local key = toscalar(key, self._keytype)
-  local val = toscalar(val, self._valtype)
-  agg._num_puts = agg._num_puts + 1
-  assert(Aggregator.put1(key, val))
+  assert(type(key) == "Scalar")
+  assert(type(val) == "Scalar")
+  self._num_puts = self._num_puts + 1
+  assert(Aggregator.put1(self._agg, key, val))
 end
 
-function lagg.get_chunk()
+function lAggregator.get_chunk()
   assert(self._generator)
   assert( type(self._generator) == "function" )
   agg._chunk_index = agg._chunk_index + 1
@@ -75,8 +75,8 @@ function lagg.get_chunk()
   assert(Aggregator.put1(key, val))
 end
 
-function lagg:delete()
+function lAggregator:delete()
   assert(Aggregator.delete())
 end
 
-return lagg
+return lAggregator

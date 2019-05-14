@@ -39,8 +39,8 @@
 
 static int __attribute__((__unused__))
 validate_psl_p(
-    NAME(rhashmap_) *hmap, 
-    const NAME(rh_bucket_) *bucket, 
+    q_rhashmap___KV___t *hmap, 
+    const rh_bucket___KV___t *bucket, 
     unsigned i
     )
 {
@@ -54,15 +54,15 @@ validate_psl_p(
  *
  * => If key is present, return its associated value; otherwise NULL.
  */
-VALTYPE
-NAME(q_rhashmap_get)(
-    NAME(rhashmap_) *hmap, 
-    KEYTYPE  key
+__VALTYPE__
+q_rhashmap_get___KV__(
+  q_rhashmap___KV___t * hmap,
+    __KEYTYPE__  key
     )
 {
-  const uint32_t hash = murmurhash3(&key, sizeof(KEYTYPE), hmap->hashkey);
+  const uint32_t hash = murmurhash3(&key, sizeof(__KEYTYPE__), hmap->hashkey);
   unsigned n = 0, i = fast_rem32(hash, hmap->size, hmap->divinfo);
-  NAME(rh_bucket_) *bucket;
+  rh_bucket___KV___t *bucket;
 
   /*
    * Lookup is a linear probe.
@@ -95,15 +95,15 @@ probe:
 /*
  * rhashmap_insert: internal rhashmap_put(), without the resize.
  */
-static VALTYPE // TODO CHeck this type
+static __VALTYPE__ // TODO CHeck this type
 q_rhashmap_insert(
-    NAME(rhashmap_) *hmap, 
-    KEYTYPE key,
-    VALTYPE val
+    q_rhashmap___KV___t *hmap, 
+    __KEYTYPE__ key,
+    __VALTYPE__ val
     )
 {
-  const uint32_t hash = murmurhash3(&key, sizeof(KEYTYPE), hmap->hashkey);
-  NAME(rh_bucket_) *bucket, entry;
+  const uint32_t hash = murmurhash3(&key, sizeof(__KEYTYPE__), hmap->hashkey);
+  rh_bucket___KV___t *bucket, entry;
   unsigned i;
 
   ASSERT(key != 0);
@@ -149,7 +149,7 @@ probe:
      * We found a "rich" bucket.  Capture its location.
      */
     if (entry.psl > bucket->psl) {
-      NAME(rh_bucket_) tmp;
+      rh_bucket___KV___t tmp;
 
       /*
        * Place our key-value pair by swapping the "rich"
@@ -179,14 +179,14 @@ probe:
 
 static int
 q_rhashmap_resize(
-    NAME(rhashmap_) *hmap, 
+    q_rhashmap___KV___t *hmap, 
     size_t newsize
     )
 {
-  const size_t len = newsize * sizeof(NAME(rh_bucket_));
-  NAME(rh_bucket_) *oldbuckets = hmap->buckets;
+  const size_t len = newsize * sizeof(rh_bucket___KV___t);
+  rh_bucket___KV___t *oldbuckets = hmap->buckets;
   const size_t oldsize = hmap->size;
-  NAME(rh_bucket_) *newbuckets;
+  rh_bucket___KV___t *newbuckets;
 
   ASSERT(newsize > 0);
   ASSERT(newsize > hmap->nitems);
@@ -206,7 +206,7 @@ q_rhashmap_resize(
   hmap->hashkey ^= random() | (random() << 32);
 
   for (unsigned i = 0; i < oldsize; i++) {
-    const NAME(rh_bucket_) *bucket = &oldbuckets[i];
+    const rh_bucket___KV___t *bucket = &oldbuckets[i];
 
     /* Skip the empty buckets. */
     if (!bucket->key) {
@@ -231,11 +231,11 @@ q_rhashmap_resize(
  * => If the key is already present, return its associated value.
  * => Otherwise, on successful insert, return the given value.
  */
-VALTYPE 
-NAME(q_rhashmap_put)(
-    NAME(rhashmap_) *hmap, 
-    KEYTYPE key, 
-    VALTYPE val
+__VALTYPE__ 
+q_rhashmap_put___KV__(
+    q_rhashmap___KV___t *hmap, 
+    __KEYTYPE__ key, 
+    __VALTYPE__ val
     )
 {
   const size_t threshold = APPROX_85_PERCENT(hmap->size);
@@ -263,17 +263,17 @@ NAME(q_rhashmap_put)(
  *
  * => If key was present, return its associated value; otherwise NULL.
  */
-VALTYPE 
-NAME(q_rhashmap_del)(
-    NAME(rhashmap_) *hmap, 
-    KEYTYPE key
+__VALTYPE__ 
+q_rhashmap_del___KV__(
+    q_rhashmap___KV___t *hmap, 
+    __KEYTYPE__ key
     )
 {
   const size_t threshold = APPROX_40_PERCENT(hmap->size);
-  const uint32_t hash = murmurhash3(&key, sizeof(KEYTYPE), hmap->hashkey);
+  const uint32_t hash = murmurhash3(&key, sizeof(__KEYTYPE__), hmap->hashkey);
   unsigned n = 0, i = fast_rem32(hash, hmap->size, hmap->divinfo);
-  NAME(rh_bucket_) *bucket;
-  VALTYPE val;
+  rh_bucket___KV___t *bucket;
+  __VALTYPE__ val;
 
 probe:
   /*
@@ -306,7 +306,7 @@ probe:
    * Use the backwards-shifting method to maintain low variance.
    */
   for (;;) {
-    NAME(rh_bucket_) *nbucket;
+    rh_bucket___KV___t *nbucket;
 
     bucket->key = 0;
 
@@ -344,14 +344,14 @@ probe:
  * => If size is non-zero, then pre-allocate the given number of buckets;
  * => If size is zero, then a default minimum is used.
  */
-NAME(rhashmap_) *
-NAME(q_rhashmap_create)(
+q_rhashmap___KV___t *
+q_rhashmap_create___KV__(
       size_t size
         )
 {
-  NAME(rhashmap_) *hmap;
+  q_rhashmap___KV___t *hmap = NULL;
 
-  hmap = calloc(1, sizeof(NAME(rhashmap_)));
+  hmap = calloc(1, sizeof(q_rhashmap___KV___t));
   if (!hmap) {
     return NULL;
   }
@@ -371,8 +371,8 @@ NAME(q_rhashmap_create)(
  * => It is the responsibility of the caller to remove elements if needed.
  */
 void
-NAME(q_rhashmap_destroy)(
-    NAME(rhashmap_) *hmap
+q_rhashmap_destroy___KV__(
+    q_rhashmap___KV___t *hmap
     )
 {
   free(hmap->buckets);
