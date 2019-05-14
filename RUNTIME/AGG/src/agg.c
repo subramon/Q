@@ -94,6 +94,29 @@ static int l_agg_num_elements( lua_State *L) {
   return 1;
 }
 //----------------------------------------
+static int l_agg_get1( lua_State *L) {
+  SCLR_REC_TYPE *ptr_old_val = NULL;
+  ptr_old_val = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
+  memset(ptr_old_val, '\0', sizeof(SCLR_REC_TYPE));
+
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
+  SCLR_REC_TYPE *ptr_key = (SCLR_REC_TYPE *)luaL_checkudata(L, 2, "Scalar");
+  const char * const val_qtype = luaL_checkstring(L, 3);
+
+  strcpy(ptr_old_val->field_type, val_qtype);
+  bool is_found;
+  int status = agg_get1(ptr_key, val_qtype, &(ptr_old_val->cdata), &is_found,ptr_agg); 
+  if ( status < 0 ) { WHEREAMI; goto BYE; }
+  if ( !is_found  ) {           goto BYE; }
+  luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
+  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 1;
+}
+//----------------------------------------
 static int l_agg_put1( lua_State *L) {
   SCLR_REC_TYPE *ptr_old_val = NULL;
   ptr_old_val = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
@@ -154,6 +177,7 @@ static const struct luaL_Reg aggregator_methods[] = {
     { "num_elements", l_agg_num_elements },
     { "set_name",     l_agg_set_name },
     { "put1",         l_agg_put1 },
+    { "get1",         l_agg_get1 },
     { NULL,          NULL               },
 };
  
@@ -166,6 +190,7 @@ static const struct luaL_Reg aggregator_functions[] = {
     { "num_elements", l_agg_num_elements },
     { "set_name",     l_agg_set_name },
     { "put1",         l_agg_put1 },
+    { "get1",         l_agg_get1 },
     { NULL,  NULL         }
   };
 

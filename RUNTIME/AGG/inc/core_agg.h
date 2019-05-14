@@ -49,4 +49,12 @@ agg_put1(
     CDATA_TYPE *ptr_oldval,
     AGG_REC_TYPE *ptr_agg
     );
+extern int 
+agg_get1(
+    SCLR_REC_TYPE *ptr_key,
+    const char *const valqtype,
+    CDATA_TYPE *ptr_oldval,
+    bool *ptr_is_found,
+    AGG_REC_TYPE *ptr_agg
+    );
 #endif

@@ -66,6 +66,24 @@ BYE:
 }
 
 int 
+agg_get1(
+    SCLR_REC_TYPE *ptr_key,
+    const char *const valqtype,
+    CDATA_TYPE *ptr_oldval,
+    bool *ptr_is_found,
+    AGG_REC_TYPE *ptr_agg
+    )
+{
+  int status = 0;
+  /* 
+   * We need something like this for all key/val types. This is scripted
+  */
+#include "_get1.c"
+BYE:
+  return status;
+}
+
+int 
 agg_put1(
     SCLR_REC_TYPE *ptr_key,
     SCLR_REC_TYPE *ptr_val,
@@ -75,11 +93,10 @@ agg_put1(
     )
 {
   int status = 0;
-  // TODO P1 Need to deal properly with return value of put
-  /* We need something like this for all key/val types. This is scripted
-  }
+  /* 
+   * We need something like this for all key/val types. This is scripted
   */
-#include "_put.c"
+#include "_put1.c"
 BYE:
   return status;
 }

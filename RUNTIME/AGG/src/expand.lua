@@ -90,5 +90,34 @@ for _, key in pairs(keytypes) do
   end
 end
 tbl[#tbl+1] = "\n"
-plfile.write("_put.c", table.concat(tbl, '\n'))
+plfile.write("_put1.c", table.concat(tbl, '\n'))
+--======================================
+instr= [[
+  else if ( ( strcmp(ptr_key->field_type, "KEY") == 0 ) && 
+       ( strcmp(valqtype, "VAL") == 0 ) ) {
+    status = q_rhashmap_get_KEY_VAL(
+      (q_rhashmap_KEY_VAL_t *)ptr_agg->hmap,
+      ptr_key->cdata.valKEY, 
+      (VCTYPE *)ptr_oldval,
+      ptr_is_found
+      );
+  }
+]]
+tbl = {}
+local first = true
+for _, key in pairs(keytypes) do 
+  for _, val in pairs(valtypes) do 
+    local str = instr
+    if ( first ) then
+      str = string.gsub(str, "else if", "if")
+      first = false
+    end
+    str = string.gsub(str, "KEY", key)
+    str = string.gsub(str, "VAL", val)
+    str = string.gsub(str, "VCTYPE", qconsts.qtypes[val].ctype)
+    tbl[#tbl+1] = str
+  end
+end
+tbl[#tbl+1] = "\n"
+plfile.write("_get1.c", table.concat(tbl, '\n'))
 --======================================
