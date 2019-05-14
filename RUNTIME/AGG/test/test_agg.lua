@@ -1,4 +1,4 @@
-lAggregator = require 'Q/RUNTIME/AGG/lua/lAgg'
+lAggregator = require 'Q/RUNTIME/AGG/lua/lAggregator'
 Scalar = require 'libsclr'
 
 local tests = {}
