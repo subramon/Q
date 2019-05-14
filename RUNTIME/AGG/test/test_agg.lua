@@ -13,7 +13,11 @@ tests.t2 = function()
   A:set_input_mode(true)
   local key = Scalar.new(123, "I8")
   local val = Scalar.new(456, "F4")
-  A:put1(key, val)
+  local oldval = A:put1(key, val)
+  assert(type(oldval) == "Scalar")
+  -- print(type(oldval))
+  -- print(oldval)
+  assert(oldval == Scalar.new(0, "F4"))
   print("Success on test t2")
   
 end

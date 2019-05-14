@@ -65,8 +65,13 @@ plfile.write("_creation.c", table.concat(tbl, '\n'))
 instr = [[
   else if ( ( strcmp(ptr_key->field_type, "KEY") == 0 ) && 
        ( strcmp(ptr_val->field_type, "VAL") == 0 ) ) {
-    q_rhashmap_put_KEY_VAL((q_rhashmap_KEY_VAL_t *)ptr_agg->hmap,
-    ptr_key->cdata.valKEY, ptr_key->cdata.valVAL);
+    status = q_rhashmap_put_KEY_VAL(
+      (q_rhashmap_KEY_VAL_t *)ptr_agg->hmap,
+      ptr_key->cdata.valKEY, 
+      ptr_val->cdata.valVAL,
+      update_type,
+      (VCTYPE *)ptr_oldval
+      );
   }
   ]]
 tbl = {}
@@ -80,6 +85,7 @@ for _, key in pairs(keytypes) do
     end
     str = string.gsub(str, "KEY", key)
     str = string.gsub(str, "VAL", val)
+    str = string.gsub(str, "VCTYPE", qconsts.qtypes[val].ctype)
     tbl[#tbl+1] = str
   end
 end

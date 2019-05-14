@@ -45,6 +45,8 @@ extern int
 agg_put1(
     SCLR_REC_TYPE *ptr_key,
     SCLR_REC_TYPE *ptr_val,
+    int update_type,
+    CDATA_TYPE *ptr_oldval,
     AGG_REC_TYPE *ptr_agg
     );
 #endif

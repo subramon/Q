@@ -95,12 +95,33 @@ static int l_agg_num_elements( lua_State *L) {
 }
 //----------------------------------------
 static int l_agg_put1( lua_State *L) {
+  SCLR_REC_TYPE *ptr_old_val = NULL;
+  ptr_old_val = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
+  memset(ptr_old_val, '\0', sizeof(SCLR_REC_TYPE));
+
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
   SCLR_REC_TYPE *ptr_key = (SCLR_REC_TYPE *)luaL_checkudata(L, 2, "Scalar");
   SCLR_REC_TYPE *ptr_val = (SCLR_REC_TYPE *)luaL_checkudata(L, 3, "Scalar");
-  int status = agg_put1(ptr_key, ptr_val, ptr_agg); 
+
+  int update_type = 1; // TODO UNDO HARD CODE 
+  if ( lua_gettop(L) > 4 ) {
+    const char * const str_update_type = luaL_checkstring(L, 4);
+    if ( strcasecmp(str_update_type, "SET") == 0 ) {
+      update_type = 1;
+    }
+    else if ( strcasecmp(str_update_type, "INCR") == 0 ) {
+      update_type = 2;
+    }
+    else {
+      WHEREAMI; goto BYE;
+    }
+  }
+  strcpy(ptr_old_val->field_type, ptr_val->field_type);
+  int status = agg_put1(ptr_key, ptr_val, update_type, 
+      &(ptr_old_val->cdata), ptr_agg); 
   if ( status < 0 ) { WHEREAMI; goto BYE; }
-  lua_pushboolean(L, true);
+  luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
+  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
   return 1;
 BYE:
   lua_pushnil(L);

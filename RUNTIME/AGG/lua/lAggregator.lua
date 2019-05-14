@@ -40,7 +40,6 @@ function lAggregator.new(params)
             ( type(generator) == "boolean" ) )
     agg._generator = generator
   end
-  print("CREATED Aggregator")
   return agg
 end
 
@@ -58,13 +57,15 @@ function lAggregator.save()
   -- TODO
 end
 
-function lAggregator:put1(key, val)
+function lAggregator:put1(key, val, update_type)
   assert(self._generator)
   assert( type(self._generator) == "boolean" )
   assert(type(key) == "Scalar")
   assert(type(val) == "Scalar")
+  if ( not update_type ) then update_type = "set" end 
+  local oldval = Aggregator.put1(self._agg, key, val, update_type)
   self._num_puts = self._num_puts + 1
-  assert(Aggregator.put1(self._agg, key, val))
+  return oldval
 end
 
 function lAggregator.get_chunk()
