@@ -66,22 +66,6 @@ function recursive_descent(
         end
     end
 end
---==========================
-function xcopy(
-        pattern,
-        root,
-        dirs_to_exclude,
-        files_to_exclude,
-        destdir
-        )
-    -- dbg()
-    --  print(root, destdir)
-    --  if ( plpath.isdir(destdir) ) then
-    --    plpath.rmdir(destdir)
-    --  end
-    --  plpath.mkdir(destdir)
-    recursive_descent(pattern, root, dirs_to_exclude, files_to_exclude, destdir)
-end
 --============
 local function clean_defs(file)
    local cmd = string.format("cat %s | grep -v '#include'| cpp | grep -v '^#'", file)
@@ -123,13 +107,13 @@ local pattern = "*.c"
 local cdir = opdir .. "/LUAC"
 os.execute("rm -r -f " .. cdir)
 plpath.mkdir(cdir)
-xcopy(pattern, root, dirs_to_exclude, files_to_exclude, cdir)
+recursive_descent(pattern, root, dirs_to_exclude, files_to_exclude, cdir)
 --==========================
 local pattern = "*.h"
 local hdir = opdir .. "/LUAH"
 os.execute("rm -r -f " .. hdir)
 plpath.mkdir(hdir)
-xcopy(pattern, root, dirs_to_exclude, files_to_exclude, hdir)
+recursive_descent(pattern, root, dirs_to_exclude, files_to_exclude, hdir)
 local q_core_struct_files = {}
 local q_core_h_files = {}
 local q_core_h_set = {}

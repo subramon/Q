@@ -15,6 +15,7 @@ static: q_core
 	cd ${Q_SRC_ROOT}
 	echo "Q statically compiled"
 
+# Why does dynamic depent on q_core and not on q_basic?
 dynamic: q_core
 	cd ${Q_SRC_ROOT}
 	echo "Q dynamically compiled"

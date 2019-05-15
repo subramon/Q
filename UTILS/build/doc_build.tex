@@ -1,0 +1,57 @@
+\startreport{Documenting the Build Process}
+\reportauthor{Ramesh Subramonian}
+
+\section{Relevant Environment Variables}
+\be
+\item Q\_BUILD\_DIR e.g., \verb/tmp/q/+
+\item Q\_SRC\_ROOT e.g., \verb+/home/subramon/WORK/Q/+
+\item Q\__ROOT e.g., \verb+/home/subramon/local/Q/+
+\ee
+
+\subsection{Derived Environment Variables}
+\be
+\item CDIR --- Q\_BUILD\_DIR + \/src/ e.g., \verb+/tmp/q/src/+
+\item HDIR --- Q\_BUILD\_DIR + \/include/ e.g., \verb+/tmp/q/include/+
+\ee
+
+\section{copy generated files}
+\label{copy_generated_files}
+
+Starting from a root directory (Q\_SRC\_ROOT), traverse sub-diretoriies
+recursively, ignoring sub-directories that do {\bf NOT} match a particular
+pattern (e.g., \verb+gen_src+ or \verb+gen_inc+), copy all files that exist in
+those directories to a specified destination directory (e.g., \verb+/tmp/q/src/+
+or /verb+/tmp/q/include+)
+
+The aim of this is to get all the auto-generated files into one directory.
+
+What about non-auto-generated files? \TBC
+
+\begin{table}[hbtp]
+\centering
+\begin{tabular}{|l|l|l|} \hline \hline
+                & {\bf Calls} & {\bf Called by} \\ \hline \hline
+copy\_generated\_files & recursive\_copy & \\ \hline
+recursive\_descent &  exclude\_file, exclude\_dir & \\ \hline
+\hline
+\end{tabular}
+\caption{Call graph}
+\label{tbl_call_graph}
+\end{table}
+
+\section{Makefile}
+
+\subsection{q core}
+\label{q_core}
+
+These represent the basic functions that must be compiled.
+
+\section{Appendix}
+
+Bogus reference: \cite{sarawagi99}
+\bibliographystyle{alpha}
+\bibliography{../../DOC/Q_PAPER/ref} 
+
+
+
+

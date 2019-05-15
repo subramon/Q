@@ -2,8 +2,6 @@
 set -e 
 gcc -std=gnu99 -fPIC -shared -xc -o libload_csv.so \
    ../src/get_cell.c \
-   ../../../UTILS/src/f_mmap.c \
-   ../../../UTILS/src/f_munmap.c \
    ../gen_src/_txt_to_I4.c \
    ../gen_src/_txt_to_F4.c \
    ../../PRINT/gen_src/_I4_to_txt.c \
@@ -13,6 +11,9 @@ gcc -std=gnu99 -fPIC -shared -xc -o libload_csv.so \
    -I../../../UTILS/gen_inc \
    -I../gen_inc \
    -I../../PRINT/gen_inc
+
+# NOT NEEDED I THINK   ../../../UTILS/src/f_mmap.c \
+# NOT NEEDED I THINK   ../../../UTILS/src/f_munmap.c \
 
 echo "Completed $0 in $PWD"
 exit 0
