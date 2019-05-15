@@ -1,11 +1,10 @@
 -- Acts like the C pre-processor in terms of dealing with ifndef statements
 --
 --
-
--- return function(
-function cpp(
+local function cpp(
   infile,
-  outfile)
+  outfile
+  )
 
   local plpath = require 'pl.path'
   assert(plpath.isfile(infile), "Input file not found" .. infile)
@@ -51,9 +50,4 @@ function cpp(
   io.output(outfile)
   io.write(table.concat(outlines, "\n"), "\n")
 end
-
-
-local nargs = assert(#arg == 2, "Arguments are <infile> <outfile>")
-local infile = arg[1]
-local outfile = arg[2]
-cpp(infile, outfile)
+return cpp

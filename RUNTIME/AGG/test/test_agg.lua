@@ -38,4 +38,18 @@ tests.t2 = function()
   print("Success on test t2")
   
 end
+tests.t3 = function(n)
+  n = n or 32*1048576
+  local params = { initial_size = 1048576, keytype = "I4", valtype = "F4"}
+  for i = 1, n do
+    local A = lAggregator(params)
+    A:set_input_mode(true)
+    if ( ( i % 1048576 ) == 0 ) then
+      print("Iteration ", i)
+    end
+    A:delete()
+  end
+  --============================================
+  print("Success on test t3")
+end
 return tests

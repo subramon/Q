@@ -17,7 +17,7 @@ local qcflags = assert(os.getenv("QC_FLAGS"))
 local qlflags = assert(os.getenv("Q_LINK_FLAGS"))
 
 local fn_protos = {}
--- special case for mmap_struct
+--[[ special case for mmap_struct
 file = assert(io.open(src_root .. "/UTILS/inc/mmap_types.h"))
 for line in file:lines() do
   print(line)
@@ -26,6 +26,7 @@ for line in file:lines() do
     fn_protos[#fn_protos+1] = line
   end
 end
+--]]
 --===============================
 io.close()
 local file = io.open(corefiles, "r");

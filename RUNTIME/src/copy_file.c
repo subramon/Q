@@ -1,8 +1,4 @@
-//START_INCLUDES
-#include "q_incs.h"
-#include "_buf_to_file.h"
-//STOP_INCLUDES
-#include "_copy_file.h"
+#include "copy_file.h"
 
 //START_FUNC_DECL
 int

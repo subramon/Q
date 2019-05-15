@@ -25,14 +25,14 @@ libvec.so: libcmem.so
 		vector.c \
 		../../UTILS/src/err.c \
 		core_vec.c \
+		buf_to_file.c \
 		cmem.c \
+                copy_file.c \
 		../../UTILS/src/mmap.c \
 		../../OPERATORS/LOAD_CSV/gen_src/_txt_to_I4.c \
 		../../UTILS/src/is_valid_chars_for_num.c \
 		../../UTILS/src/rand_file_name.c \
 		../../UTILS/src/get_file_size.c \
-		../../UTILS/src/buf_to_file.c \
-                ../../UTILS/src/copy_file.c \
 		../../UTILS/src/file_exists.c \
                 ../../UTILS/src/isfile.c \
                 ../../UTILS/src/isdir.c \

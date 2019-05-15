@@ -87,16 +87,17 @@ function lAggregator:del1(key)
 end
 
 
-function lAggregator.get_chunk()
+function lAggregator:next()
   assert(self._generator)
   assert( type(self._generator) == "function" )
-  agg._chunk_index = agg._chunk_index + 1
   -- TODO Lot more to do here
-  assert(Aggregator.put1(key, val))
+  agg._chunk_index = agg._chunk_index + 1
+  -- TODO assert(Aggregator.putn(key, val))
 end
 
 function lAggregator:delete()
-  assert(Aggregator.delete())
+  assert(Aggregator.delete(self._agg))
+  for k, v in pairs(self) do self.k = nil end 
 end
 
 return lAggregator

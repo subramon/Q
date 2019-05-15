@@ -46,6 +46,8 @@ agg_free(
 {
   int status = 0;
   if ( ptr_agg == NULL ) {  go_BYE(-1); }
+  free_if_non_null(ptr_agg->hmap);
+  memset(ptr_agg, '\0', sizeof(AGG_REC_TYPE));
   // Don't do this in C. Lua will do it: free(ptr_agg);
 BYE:
   return status;
@@ -59,8 +61,6 @@ agg_delete(
   int status = 0;
   if ( ptr_agg == NULL ) { go_BYE(-1); }
   status = agg_free(ptr_agg); cBYE(status);
-  // Set aggregator fields to default
-  // ptr_agg->field_size = 0;
 BYE:
   return status;
 }

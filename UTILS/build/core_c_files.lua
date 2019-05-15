@@ -1,6 +1,5 @@
 return { -- ordering is VERY VERY important
    { -- The doth files
-      "mmap_types.h"
    }
    ,
    { --The dotc file

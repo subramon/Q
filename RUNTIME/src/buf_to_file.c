@@ -1,10 +1,5 @@
-//START_INCLUDES
-#include <math.h>
-#include "q_incs.h"
-#include "mmap_types.h"
-//STOP_INCLUDES
-#include "_buf_to_file.h"
-//START_FUNC_DECL
+#include "buf_to_file.h"
+
 int
 buf_to_file(
    const char * const addr,
@@ -12,7 +7,7 @@ buf_to_file(
    size_t nmemb,
    const char * const file_name
 )
-//STOP_FUNC_DECL
+
 {
   int status = 0;
   FILE *fp = NULL;

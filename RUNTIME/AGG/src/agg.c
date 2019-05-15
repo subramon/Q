@@ -193,15 +193,16 @@ static int l_agg_meta( lua_State *L) {
 }
 //----------------------------------------
 static const struct luaL_Reg aggregator_methods[] = {
+    { "__gc",         l_agg_free   },
     { "check",        l_agg_check },
-    { "__gc",         l_agg_delete   },
+    { "del1",         l_agg_del1 },
+    { "delete",       l_agg_delete },
+    { "get1",         l_agg_get1 },
     { "get_name",     l_agg_get_name },
     { "meta",         l_agg_meta },
     { "num_elements", l_agg_num_elements },
-    { "set_name",     l_agg_set_name },
     { "put1",         l_agg_put1 },
-    { "get1",         l_agg_get1 },
-    { "del1",         l_agg_del1 },
+    { "set_name",     l_agg_set_name },
     { NULL,          NULL               },
 };
  
