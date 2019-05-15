@@ -24,6 +24,17 @@ tests.t2 = function()
   -- print(chkval)
   -- print(chkval:fldtype())
   assert(chkval == Scalar.new(456, "F4"))
+  --============================================
+  local chkval = A:del1(key)
+  assert(type(chkval) == "Scalar")
+  -- print(chkval)
+  -- print(chkval:fldtype())
+  assert(chkval == Scalar.new(456, "F4"))
+  --============================================
+  local chkval = A:get1(key)
+  print("XXX", chkval)
+  assert(not chkval)
+  --============================================
   print("Success on test t2")
   
 end

@@ -27,6 +27,7 @@ function lAggregator.new(params)
   agg._valtype  = valtype 
   agg._num_puts = 0
   agg._num_gets = 0
+  agg._num_dels = 0
   agg._chunk_index = 0
   if ( qconsts.debug ) then agg:check() end
   --==========================================
@@ -74,6 +75,14 @@ function lAggregator:get1(key)
   assert(type(key) == "Scalar")
   local val = Aggregator.get1(self._agg, key, self._valtype)
   self._num_gets = self._num_gets + 1
+  return val
+end
+
+function lAggregator:del1(key)
+  assert(self._generator)
+  assert(type(key) == "Scalar")
+  local val = Aggregator.del1(self._agg, key, self._valtype)
+  self._num_dels = self._num_dels + 1
   return val
 end
 

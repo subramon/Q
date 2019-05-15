@@ -121,3 +121,7 @@ end
 tbl[#tbl+1] = "\n"
 plfile.write("_get1.c", table.concat(tbl, '\n'))
 --======================================
+-- Produce del1 - similar to get1
+instr = plfile.read("_get1.c")
+instr = string.gsub(instr, "_get_", "_del_");
+plfile.write("_del1.c", instr)

@@ -65,8 +65,8 @@ extern int
 q_rhashmap_del___KV__(
     q_rhashmap___KV___t *, 
     __KEYTYPE__ key,
-    bool *ptr_key_exists,
-    __VALTYPE__ *ptr_oldval
+    __VALTYPE__ *ptr_oldval,
+    bool *ptr_is_found
     );
 
 #endif

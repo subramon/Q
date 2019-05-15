@@ -278,8 +278,8 @@ int
 q_rhashmap_del___KV__(
     q_rhashmap___KV___t *hmap, 
     __KEYTYPE__ key,
-    bool *ptr_key_exists,
-    __VALTYPE__ *ptr_oldval
+    __VALTYPE__ *ptr_oldval,
+    bool *ptr_is_found
     )
 {
   int status = 0;
@@ -295,10 +295,10 @@ probe:
    */
   bucket = &hmap->buckets[i];
   if (bucket->key == 0 ) { 
-    *ptr_key_exists = false; goto BYE;
+    *ptr_is_found = false; goto BYE;
   }
   if ( n > bucket->psl ) { 
-    *ptr_key_exists = false; goto BYE;
+    *ptr_is_found = false; goto BYE;
   }
   ASSERT(validate_psl_p(hmap, bucket, i));
 
@@ -312,7 +312,7 @@ probe:
   // Free the bucket.
   bucket->key  = 0; 
   *ptr_oldval  = bucket->val;
-  *ptr_key_exists = true;
+  *ptr_is_found = true;
   bucket->val  = 0; 
   // TODO Should we do this? bucket->hash = 0; 
   // TODO Should we do this? bucket->psl  = 0; 

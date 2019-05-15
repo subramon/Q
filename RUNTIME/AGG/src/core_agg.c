@@ -66,6 +66,24 @@ BYE:
 }
 
 int 
+agg_del1(
+    SCLR_REC_TYPE *ptr_key,
+    const char *const valqtype,
+    CDATA_TYPE *ptr_oldval,
+    bool *ptr_is_found,
+    AGG_REC_TYPE *ptr_agg
+    )
+{
+  int status = 0;
+  /* 
+   * We need something like this for all key/val types. This is scripted
+  */
+#include "_del1.c"
+BYE:
+  return status;
+}
+
+int 
 agg_get1(
     SCLR_REC_TYPE *ptr_key,
     const char *const valqtype,
