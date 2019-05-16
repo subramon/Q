@@ -120,6 +120,20 @@ All sub Makefiles will have a target called {\tt so}. This  will cause a local \
 just as a sanity check.
 
 
+\section{Quick Compiles}
+
+We don't have a very good way of doing just the work that needs to be done. That
+is going to take more time and effort. That said, we have a couple of useful
+``hacks''
+\subsection{Modifying an operator}
+Let's say that you are modifying F1F2OPF3. Then, to re-compile, you need to do 
+\begin{verbatim}
+cd Q/UTILS/build; rm _f1f2opf3; make 
+\end{verbatim}
+
+\subsection{Modifying a single file}
+See \verb+build_hack.sh+ documented in \verb+README_build_hack.txt+
+
 \section{Appendix}
 
 Bogus reference: \cite{sarawagi99}

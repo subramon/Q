@@ -14,7 +14,9 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
-all : libs_to_f.so _s_to_f.lua
+all : _s_to_f.lua $(TMPL_FILES) $(SRC_FILES) $(INCL_FILES)
+
+so : libs_to_f.so 
 
 all_for_dc : \
 	_s_to_f.lua
@@ -49,7 +51,8 @@ libs_to_f.so : ${GEN_FILES} ${SRC_FILES} ${INC_FILES} ${TMPL_FILES}
 	cp ${SRC_FILES} ${Q_BUILD_DIR}/src/
 	cp ${INC_FILES} ${Q_BUILD_DIR}/include/
 
-_s_to_f.lua : 
+_s_to_f.lua : $(TMPL_FILES) $(SRC_FILES) $(INCL_FILES)
+	luajit generator.lua operators.lua
 	lua pkg_s_to_f.lua
 
 test_q : libs_to_f.so
