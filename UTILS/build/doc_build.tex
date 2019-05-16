@@ -76,6 +76,17 @@ These are copied into the target locations e.g.,
 
 \section{Makefile}
 
+\subsection{Makefiles for modules}
+The master Makefile calls individual Makefiles to do their work. For example,
+take \verb+UTILS/src/Makefile+. It is the responsibility of this Makefile to
+\be
+\item generate a local \verb+.so+ file. This will not be used, it is created
+just as a sanity check.
+\item copy all relevant \verb+.h+ files, whether auto-generated or otherwise
+into HDIR 
+\item Anything else? \TBC
+\ee
+
 \subsection{q core}
 \label{q_core}
 
