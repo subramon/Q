@@ -3,7 +3,7 @@ set -e
 INCS=" -I.  -I../../../UTILS/inc/ -I../gen_inc/ "
 test -f ../lua/libf1f2opf3.so
 if [ $? != 0 ]; then 
-  make -C ../lua/
+  make -C ../lua/ so
 fi
 #---------------
 gcc -g ${INCS} ${QC_FLAGS} -Werror concat.c ../lua/libf1f2opf3.so

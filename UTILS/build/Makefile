@@ -85,7 +85,6 @@ uninstall:
 
 _q_core: _q_basic _q_operators
 	cd ${Q_SRC_ROOT}/UTILS/lua/
-	lua copy_generated_files.lua 
 	luajit mk_so.lua
 	touch _q_core
 

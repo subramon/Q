@@ -1,6 +1,7 @@
 local plpath = require 'pl.path'
 local pldir  = require 'pl.dir'
 local plfile = require 'pl.file'
+local md5 = require 'md5'
 --=================================
 local function recursive_copy( 
   file_pattern, 
@@ -23,16 +24,26 @@ directory that matches dir_pattern
   assert(currdir ~= destdir)
   if string.find(currdir, dir_pattern)  then 
     -- print(currdir)
-    local F = pldir.getfiles(currdir, file_pattern)
-    assert(#F > 0, "No files like " .. file_pattern .. " in " .. currdir)
-    for k, v in pairs(F) do
-       plfile.copy(v, destdir)
-       num_files_copied = num_files_copied + 1
-     end
+    local files = pldir.getfiles(currdir, file_pattern)
+    assert(#files > 0, 
+      "No files like " .. file_pattern .. " in " .. currdir)
+    for k, file in pairs(files) do
+      local skip = false -- skip if old file == new file
+      local oldfile = destdir .. string.gsub(file, "^.*/", "")
+      if ( plpath.isfile(oldfile) ) then 
+        local m1 = md5.sumhexa(file)
+        local m2 = md5.sumhexa(oldfile)
+        skip = true
+      end
+      if ( not skip ) then 
+        plfile.copy(file, destdir)
+        num_files_copied = num_files_copied + 1
+      end
+    end
   end
-  local D = pldir.getdirectories(currdir)
-  for index, v in ipairs(D) do
-    local n = recursive_copy(file_pattern, dir_pattern, v, destdir)
+  local dirs = pldir.getdirectories(currdir)
+  for _, dir in ipairs(dirs) do
+    local n = recursive_copy(file_pattern, dir_pattern, dir, destdir)
     num_files_copied  = num_files_copied + n
   end
   return num_files_copied
