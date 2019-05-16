@@ -1,7 +1,7 @@
 function gen_code(T1, T3)
   hdr = [[
 #include "q_incs.h"
-#include "scalar.h"
+#include "scalar_struct.h"
 extern int 
 eval_cmp(
     const char *const fldtype1,

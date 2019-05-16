@@ -13,7 +13,8 @@ libapprox_frequent.so: gen_inc/* gen_src/*
 	gcc ${SRC_INCLUDES} ${QC_FLAGS} ${INCLUDES} -shared -o libapprox_frequent.so
 
 test: gen_inc/* gen_src/* test/testApproxFrequent.c
-	gcc ${SRC_INCLUDES} ${QC_FLAGS} ${INCLUDES} test/testApproxFrequent.c -o testApproxFrequent
+	gcc ${SRC_INCLUDES} ${QC_FLAGS} ${INCLUDES} 
+	test/testApproxFrequent.c -o testApproxFrequent
 	./testApproxFrequent
 
 clean:

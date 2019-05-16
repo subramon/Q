@@ -1,15 +1,6 @@
 local ffi     = require 'Q/UTILS/lua/q_ffi'
--- TODO Need to delete this cdef from here
-ffi.cdef([[
-typedef struct _cmem_rec_type {
-  void *data;
-  int64_t size;
-  char field_type[4]; // MAX_LEN_FIELD_TYPE TODO Fix hard coding
-  char cell_name[16]; // 15 chaarcters + 1 for nullc, mainly for debugging
-} CMEM_REC_TYPE;
-]]
-)
 local qconsts = require 'Q/UTILS/lua/q_consts'
+local qc      = require 'Q/UTILS/lua/q_core'
 local function get_ptr( x, qtype
 )
   if not x then return nil end

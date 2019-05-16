@@ -3,41 +3,76 @@
 
 \section{Relevant Environment Variables}
 \be
-\item Q\_BUILD\_DIR e.g., \verb/tmp/q/+
-\item Q\_SRC\_ROOT e.g., \verb+/home/subramon/WORK/Q/+
-\item Q\__ROOT e.g., \verb+/home/subramon/local/Q/+
+\item Q\_BUILD\_DIR e.g., \verb+/tmp/q/+
+\item Q\_SRC\_ROOT e.g., \verb+/home/subramon/Q/+
+\item Q\_ROOT e.g., \verb+/home/subramon/local/Q/+
 \ee
 
 \subsection{Derived Environment Variables}
 \be
-\item CDIR --- Q\_BUILD\_DIR + \/src/ e.g., \verb+/tmp/q/src/+
-\item HDIR --- Q\_BUILD\_DIR + \/include/ e.g., \verb+/tmp/q/include/+
+\item CDIR e.g., \verb+/tmp/q/src/+ (from Q\_BUILD\_DIR)
+\item HDIR e.g., \verb+/tmp/q/include/+ (from Q\_BUILD\_DIR)
 \ee
+
+\section{struct files}
+\label{struct_files}
+
+This is an important file. If you have {\tt typedef struct} in your .h file, it
+needs to be listed here. This is because we put together a bunch of .h files
+into a single {\tt q\_core.h} file and then cdef that. The order in which the individual {\tt .h} files are concatenated is important.
 
 \section{copy generated files}
 \label{copy_generated_files}
 
-Starting from a root directory (Q\_SRC\_ROOT), traverse sub-diretoriies
-recursively, ignoring sub-directories that do {\bf NOT} match a particular
-pattern (e.g., \verb+gen_src+ or \verb+gen_inc+), copy all files that exist in
+The aim of {\tt copy\_generated\_files.lua} is to get all the auto-generated 
+{\tt .c} files into one directory.
+and all {\tt .h} files into another directory. It calls {\tt
+recursive\_copy.lua}. It is called by the Makefile
+
+\bi
+\item Starting from a root directory (Q\_SRC\_ROOT), 
+\item traverse sub-diretoriies recursively, 
+\item ignoring sub-directories that do {\bf NOT} match a particular
+pattern (e.g., \verb+gen_src+ or \verb+gen_inc+), 
+\item copying all files that exist in
 those directories to a specified destination directory (e.g., \verb+/tmp/q/src/+
 or /verb+/tmp/q/include+)
+\ei
 
-The aim of this is to get all the auto-generated files into one directory.
 
 What about non-auto-generated files? \TBC
 
-\begin{table}[hbtp]
-\centering
-\begin{tabular}{|l|l|l|} \hline \hline
-                & {\bf Calls} & {\bf Called by} \\ \hline \hline
-copy\_generated\_files & recursive\_copy & \\ \hline
-recursive\_descent &  exclude\_file, exclude\_dir & \\ \hline
-\hline
-\end{tabular}
-\caption{Call graph}
-\label{tbl_call_graph}
-\end{table}
+\section{Make so}
+
+The script {\tt mk\_so.lua} is called by the Makefile and calls
+\be 
+\item {\tt chk\_env\_vars.lua}
+\item {\tt is\_struct\_file.lua}
+\item {\tt add\_h\_files\_to\_list.lua}
+\ee
+
+\subsection{Pre-requisites}
+It assumes that 
+\be
+\item all necessary .c files have been copied into CDIR
+\item all necessary .h files have been copied into HDIR
+\ee
+
+\subsection{What it does}
+
+The script \verb+mk_so.lua+ gets called twice, 
+once to build q\_basic and once to build q\_core.
+In both cases, it needs to create 2 things, both of which are needed so that we
+can invoke C functionality from LuaJIT.
+\be
+\item \verb+q_core.h+ -- this is given to {\tt ffi.cdef}
+\item \verb+libq_core.so+ -- this is given to {\tt ffi.load}
+\ee
+These are copied into the target locations e.g.,
+\be
+\item \verb+/home/subramon/local/Q/include/q_core.h+
+\item \verb+/home/subramon/local/Q/lib/libq_core.so+
+\ee
 
 \section{Makefile}
 

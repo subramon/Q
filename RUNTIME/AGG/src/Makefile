@@ -17,8 +17,11 @@ clean:
 QSRCS=`luajit expand.lua`
 QOBJS=$(QSRCS:.c=.o)
 
+USRCS := $(wildcard _*.c)
+
 CSRCS := $(wildcard *.c)
 CSRCS := $(filter-out $(QSRCS), $(CSRCS))
+CSRCS := $(filter-out $(USRCS), $(CSRCS))
 CSRCS := $(filter-out q_rhashmap.tmpl.c, $(CSRCS))
 COBJS = $(CSRCS:.c=.o)
 COBJS := $(filter-out q_rhashmap.o,$(COBJS))
@@ -27,6 +30,14 @@ CFLAGS = $(QC_FLAGS)
 
 .c.o : 
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS)
+
+_creation.o : _creation.c
+
+_creation.c : 
+	luajit expand.lua 1>/dev/null
+
+junk : 
+	echo $(USRCS)
 
 agg.o : agg.c
 
@@ -41,9 +52,6 @@ libagg.so: agg.o core_agg.o murmurhash.o _q_rhashmap_I8_I8.c
 	-shared -lm -o libagg.so
 
 _files_to_include.h : 
-	luajit expand.lua 1>/dev/null
-
-_creation.c : 
 	luajit expand.lua 1>/dev/null
 
 _q_rhashmap_I8_I8.o : _q_rhashmap_I8_I8.c

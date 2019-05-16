@@ -2,7 +2,7 @@
 #include <time.h>
 #include <malloc.h>
 #include "q_incs.h"
-#include "scalar.h"
+#include "scalar_struct.h"
 #include "lauxlib.h"
 #include "core_agg.h"
 #include "_files_to_include.h"

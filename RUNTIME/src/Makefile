@@ -46,9 +46,12 @@ libvec.so: libcmem.so
 		../../OPERATORS/PRINT/gen_src/_F8_to_txt.c \
 		libmm.so \
 		-shared -o libvec.so
+	cp ../inc/core_vec.h ${Q_BUILD_DIR}/include/
+	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
 
 libmm.so :
 	gcc ${QC_FLAGS} ${INCS} -shared mm.c -o libmm.so 
+	cp ../inc/mm.h ${Q_BUILD_DIR}/include/
 
 libcmem.so:  libmm.so
 	gcc ${QC_FLAGS} ${INCS} \
@@ -63,6 +66,8 @@ libcmem.so:  libmm.so
 		../../UTILS/src/err.c \
 		libmm.so \
 		-shared -o libcmem.so
+	cp ../inc/cmem.h ${Q_BUILD_DIR}/include/
+	cp ../inc/cmem_struct.h ${Q_BUILD_DIR}/include/
 
 libsclr.so: gen_cmp gen_arith libcmem.so libmm.so
 	rm -f _*.c
@@ -89,6 +94,7 @@ libsclr.so: gen_cmp gen_arith libcmem.so libmm.so
 		../../UTILS/src/is_valid_chars_for_num.c \
 		libmm.so \
 		-shared -o libsclr.so
+	cp ../inc/scalar_struct.h ${Q_BUILD_DIR}/include/
 
 gen_cmp:
 	lua gen_cmp.lua

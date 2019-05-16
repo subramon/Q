@@ -10,7 +10,7 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
-#include "scalar.h"
+#include "scalar_struct.h"
 
 #include "q_incs.h"
 #include "core_agg.h"
@@ -45,6 +45,18 @@ BYE:
   return 2;
 }
 //-----------------------
+static int l_agg_free( lua_State *L) {
+  int status = 0;
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
+  status = agg_delete(ptr_agg); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_agg_delete( lua_State *L) {
   int status = 0;
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");

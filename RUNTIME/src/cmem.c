@@ -22,6 +22,7 @@
 #include "_F4_to_txt.h"
 #include "_F8_to_txt.h"
 
+#include "cmem_struct.h"
 #include "cmem.h"
 #include "mm.h"
 

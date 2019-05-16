@@ -21,8 +21,9 @@
 #include "_txt_to_F4.h"
 #include "_txt_to_F8.h"
 
+#include "cmem_struct.h"
 #include "cmem.h"
-#include "scalar.h"
+#include "scalar_struct.h"
 int luaopen_libvec (lua_State *L);
 
 extern int luaopen_libsclr (lua_State *L);

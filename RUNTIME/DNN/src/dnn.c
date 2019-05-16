@@ -5,7 +5,7 @@
 #include "lualib.h"
 #include "dnn_types.h"
 #include "core_dnn.h"
-#include "cmem.h"
+#include "cmem_struct.h"
 
 int luaopen_libdnn (lua_State *L);
 //----------------------------------------

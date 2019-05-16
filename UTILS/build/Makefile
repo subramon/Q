@@ -21,19 +21,26 @@ dynamic: q_core
 	echo "Q dynamically compiled"
 
 clean:
+	rm -f _*
 	find ${Q_SRC_ROOT} -name "*.o" -o -name "_*" | xargs rm -rf
 	rm -f ${Q_ROOT}/lib/*.so
 	rm -f ${Q_ROOT}/include/*.h
-	rm -f ${Q_BUILD_DIR}/src/*
-	rm -f ${Q_BUILD_DIR}/include/*
+	rm -r -f ${Q_BUILD_DIR}/
+	mkdir -p ${Q_BUILD_DIR}/
 	#removing the stub file which is required by python-Q wrapper
 	rm -f ${Q_SRC_ROOT}/experimental/python_q_wrapper/lua/q_op_stub_file.pyi
+	#---
+	make -C ${Q_SRC_ROOT}/RUNTIME/src/      clean
+	make -C ${Q_SRC_ROOT}/RUNTIME/DNN/src/  clean
+	make -C ${Q_SRC_ROOT}/RUNTIME/AGG/src/  clean
+	#---
 	make -C ${Q_SRC_ROOT}/UTILS/src/  clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/ clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/ clean
+	#---
 	make -C ${Q_SRC_ROOT}/OPERATORS/HASH/lua/ clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/AINB/lua/ clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/IFXTHENYELSEZ/lua/ clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/ clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1OPF2F3/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua clean
@@ -76,134 +83,177 @@ uninstall:
 	rm -f /usr/lib/libq_core.so;\
 	echo "Q uninstalled"
 
-
-q_core: q_basic q_operators
+q_core: _q_basic q_operators
 	cd ${Q_SRC_ROOT}/UTILS/lua/
 	lua copy_generated_files.lua 
 	luajit mk_so.lua
 
-q_basic: utils load_csv print runtime
+_q_basic: _utils _load_csv _print _runtime
 	luajit mk_so.lua /tmp/
+	touch _q_basic
 
-runtime:
-	cd ${Q_SRC_ROOT}/RUNTIME/src;
+_vec: _load_csv _print _utils 
 	make  -C ${Q_SRC_ROOT}/RUNTIME/src/
+	touch _vec
 
-utils:
+_dnn: _load_csv _print _utils _vec 
+	make  -C ${Q_SRC_ROOT}/RUNTIME/DNN/src/
+	touch _dnn
+
+_agg: _load_csv _print _utils _vec 
+	make  -C ${Q_SRC_ROOT}/RUNTIME/AGG/src/
+	touch _agg
+
+_runtime: _load_csv _print _utils _vec _dnn _agg
+	touch _runtime
+
+
+_utils:
 	make  -C ${Q_SRC_ROOT}/UTILS/src/ 
+	touch _utils
 
-drop_nulls:
-	make  -C ${Q_SRC_ROOT}/OPERATORS/DROP_NULLS/lua/ ${BUILD_TYPE}
-
-ifxthenyelsez:
-	make  -C ${Q_SRC_ROOT}/OPERATORS/IFXTHENYELSEZ/lua/ ${BUILD_TYPE}
-
-ainb:
-	make  -C ${Q_SRC_ROOT}/OPERATORS/AINB/lua/ ${BUILD_TYPE}
-
-where:
-	make  -C ${Q_SRC_ROOT}/OPERATORS/WHERE/lua/ ${BUILD_TYPE}
-
-sumby:
-	make  -C ${Q_SRC_ROOT}/OPERATORS/GROUPBY/lua/ ${BUILD_TYPE}
-
-getk:
-	make  -C ${Q_SRC_ROOT}/OPERATORS/GETK/lua/ ${BUILD_TYPE}
-
-index:
-	make  -C ${Q_SRC_ROOT}/OPERATORS/INDEX/lua/ ${BUILD_TYPE}
-
-unique:
-	make  -C ${Q_SRC_ROOT}/OPERATORS/UNIQUE/lua/ ${BUILD_TYPE}
-
-count:
-	make  -C ${Q_SRC_ROOT}/OPERATORS/COUNT/lua/ ${BUILD_TYPE}
-
-join:
-	make  -C ${Q_SRC_ROOT}/OPERATORS/JOIN/lua/ ${BUILD_TYPE}
-
-load_csv:
+_load_csv: _utils
 	make  -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/
+	touch _load_csv
 
-hash:
-	make  -C ${Q_SRC_ROOT}/OPERATORS/HASH/lua/
-
-print:
+_print: _utils
 	make  -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/
+	touch _print
 
-f1opf2f3: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/F1OPF2F3/lua ${BUILD_TYPE}
-
-f1f2opf3: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua ${BUILD_TYPE}
-
-f1s1opf2: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua ${BUILD_TYPE}
-
-f1s1opf2_val: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2_VAL/lua ${BUILD_TYPE}
-
-sort: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/SORT/lua ${BUILD_TYPE}
-
-sort2: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/SORT2/lua ${BUILD_TYPE}
-
-get: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/GET/lua ${BUILD_TYPE}
-
-idx_sort: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/IDX_SORT/lua ${BUILD_TYPE}
-
-s_to_f: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua ${BUILD_TYPE}
-
-f_to_s: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua ${BUILD_TYPE}
-
-ax_equals_b: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/AX_EQUALS_B/
-
-approx_quantile: q_basic
+#-----------------------------------
+_approx_quantile: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/APPROX/QUANTILE/lua ${BUILD_TYPE}
+	touch _approx_quantile
 
-approx_frequent: q_basic
+_approx_frequent: _q_basic _sort
 	make  -C ${Q_SRC_ROOT}/OPERATORS/APPROX/FREQUENT ${BUILD_TYPE}
+	touch _approx_frequent
 
-mv_mul: q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ ${BUILD_TYPE}
+_ainb:
+	make  -C ${Q_SRC_ROOT}/OPERATORS/AINB/lua/ ${BUILD_TYPE}
+	touch _ainb
 
-corrm: q_basic
+_ax_equals_b: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/AX_EQUALS_B/
+	touch _ax_equals_b
+
+_corrm: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/PCA/src/
+	touch _corrm
+
+_count: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/COUNT/lua/ ${BUILD_TYPE}
+	touch _count
+
+_drop_nulls: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/DROP_NULLS/lua/ ${BUILD_TYPE}
+	touch _drop_nulls
+
+_f_to_s: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua ${BUILD_TYPE}
+	touch _f_to_s
+
+_f1opf2f3: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/F1OPF2F3/lua ${BUILD_TYPE}
+	touch _f1opf2f3
+
+_f1f2opf3: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua ${BUILD_TYPE}
+	touch _f1f2opf3
+
+_f1s1opf2: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua ${BUILD_TYPE}
+	touch _f1s1opf2
+
+_f1s1opf2_val: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2_VAL/lua ${BUILD_TYPE}
+	touch _f1s1opf2_val
+
+_get: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/GET/lua ${BUILD_TYPE}
+	touch _get
+
+_getk: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/GETK/lua/ ${BUILD_TYPE}
+	touch _getk
+
+_hash: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/HASH/lua/
+	touch _hash
+
+_index: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/INDEX/lua/ ${BUILD_TYPE}
+	touch _index
+
+_ifxthenyelsez: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/IFXTHENYELSEZ/lua/ ${BUILD_TYPE}
+	touch _ifxthenyelsez
+
+_join: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/JOIN/lua/ ${BUILD_TYPE}
+	touch _join
+
+_idx_sort: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/IDX_SORT/lua ${BUILD_TYPE}
+	touch _idx_sort
+
+_mv_mul: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ ${BUILD_TYPE}
+	touch _mv_mul
+
+_s_to_f: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua ${BUILD_TYPE}
+	touch _s_to_f
+
+_sort: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/SORT/lua ${BUILD_TYPE}
+	touch _sort
+
+_sort2: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/SORT2/lua ${BUILD_TYPE}
+	touch _sort2
+
+_sumby:
+	make  -C ${Q_SRC_ROOT}/OPERATORS/GROUPBY/lua/ ${BUILD_TYPE}
+	touch _sumby
+
+_unique:
+	make  -C ${Q_SRC_ROOT}/OPERATORS/UNIQUE/lua/ ${BUILD_TYPE}
+	touch _unique
+
+_where:
+	make  -C ${Q_SRC_ROOT}/OPERATORS/WHERE/lua/ ${BUILD_TYPE}
+	touch _where
 
 # maintain following list in alphabetical order
 q_operators: \
-	ainb \
-	approx_quantile \
-	approx_frequent \
-	ax_equals_b \
-	corrm \
-	f_to_s \
-	f1f2opf3 \
-  	f1opf2f3 \
-	f1s1opf2 \
-	f1s1opf2_val \
-	get \
-	ifxthenyelsez \
-	idx_sort \
-	sort \
-	sort2 \
-	s_to_f \
-	drop_nulls \
-	sumby  \
-	index \
-	unique \
-	count \
-	join \
-	mv_mul \
-	getk \
-	hash \
-	where 
+	_ainb \
+	_approx_frequent \
+	_approx_quantile \
+	_ax_equals_b \
+	_corrm \
+	_count \
+	_drop_nulls \
+	_f_to_s \
+	_f1f2opf3 \
+  	_f1opf2f3 \
+	_f1s1opf2 \
+	_f1s1opf2_val \
+	_get \
+	_getk \
+	_hash \
+	_idx_sort \
+	_ifxthenyelsez \
+	_index \
+	_join \
+	_mv_mul \
+	_s_to_f \
+	_sort \
+	_sort2 \
+	_sumby  \
+	_unique \
+	_where  
+	touch _q_operators 
 	echo "all done for operators"
 
 

@@ -14,7 +14,8 @@
 // #include "q_constants.h" // gets us Q_CHUNK_SIZE 
 #include "q_incs.h"
 #include "core_vec.h"
-#include "scalar.h"
+#include "scalar_struct.h"
+#include "cmem_struct.h"
 #include "cmem.h"
 #include "mm.h"
 #include "_txt_to_I4.h"
