@@ -11,12 +11,12 @@ static: BUILD_TYPE="all"
 
 dynamic: BUILD_TYPE="all_for_dc"
 
-static: q_core
+static: _q_core
 	cd ${Q_SRC_ROOT}
 	echo "Q statically compiled"
 
-# Why does dynamic depent on q_core and not on q_basic?
-dynamic: q_core
+# Why does dynamic depend on q_core and not on q_basic?
+dynamic: _q_core
 	cd ${Q_SRC_ROOT}
 	echo "Q dynamically compiled"
 
@@ -83,13 +83,14 @@ uninstall:
 	rm -f /usr/lib/libq_core.so;\
 	echo "Q uninstalled"
 
-q_core: _q_basic q_operators
+_q_core: _q_basic _q_operators
 	cd ${Q_SRC_ROOT}/UTILS/lua/
 	lua copy_generated_files.lua 
 	luajit mk_so.lua
+	touch _q_core
 
 _q_basic: _utils _load_csv _print _runtime
-	luajit mk_so.lua /tmp/
+	luajit mk_so.lua 
 	touch _q_basic
 
 _vec: _load_csv _print _utils 
@@ -226,7 +227,7 @@ _where:
 	touch _where
 
 # maintain following list in alphabetical order
-q_operators: \
+_q_operators: \
 	_ainb \
 	_approx_frequent \
 	_approx_quantile \
@@ -255,5 +256,3 @@ q_operators: \
 	_where  
 	touch _q_operators 
 	echo "all done for operators"
-
-
