@@ -125,3 +125,26 @@ plfile.write("_get1.c", table.concat(tbl, '\n'))
 instr = plfile.read("_get1.c")
 instr = string.gsub(instr, "_get_", "_del_");
 plfile.write("_del1.c", instr)
+--======================================
+instr= [[
+  else if ( ( strcmp(ptr_agg->keytype, "KEY") == 0 ) &&  ( strcmp(ptr_agg->valtype, "VAL") == 0 ) ) {
+    q_rhashmap_destroy_KEY_VAL(ptr_agg->hmap);
+  }
+]]
+tbl = {}
+local first = true
+for _, key in pairs(keytypes) do 
+  for _, val in pairs(valtypes) do 
+    local str = instr
+    if ( first ) then
+      str = string.gsub(str, "else if", "if")
+      first = false
+    end
+    str = string.gsub(str, "KEY", key)
+    str = string.gsub(str, "VAL", val)
+    tbl[#tbl+1] = str
+  end
+end
+tbl[#tbl+1] = "\n"
+plfile.write("_destroy.c", table.concat(tbl, '\n'))
+--======================================

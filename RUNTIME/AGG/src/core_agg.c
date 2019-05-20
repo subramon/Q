@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <time.h>
-#include <malloc.h>
 #include "q_incs.h"
 #include "scalar_struct.h"
 #include "lauxlib.h"
@@ -46,7 +45,7 @@ agg_free(
 {
   int status = 0;
   if ( ptr_agg == NULL ) {  go_BYE(-1); }
-  free_if_non_null(ptr_agg->hmap);
+#include "_destroy.c"
   memset(ptr_agg, '\0', sizeof(AGG_REC_TYPE));
   // Don't do this in C. Lua will do it: free(ptr_agg);
 BYE:

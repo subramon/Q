@@ -393,7 +393,8 @@ q_rhashmap_destroy___KV__(
     q_rhashmap___KV___t *ptr_hmap
     )
 {
-  free(ptr_hmap->buckets);
+  if ( ptr_hmap == NULL ) { WHEREAMI; return ; }
+  free_if_non_null(ptr_hmap->buckets);
   free(ptr_hmap);
   ptr_hmap = NULL;
 }

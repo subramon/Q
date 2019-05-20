@@ -142,10 +142,10 @@ static int l_agg_get1( lua_State *L) {
   bool is_found;
   int status = agg_get1(ptr_key, val_qtype, &(ptr_old_val->cdata), &is_found,ptr_agg); 
   if ( status < 0 ) { WHEREAMI; goto BYE; }
-  if ( !is_found  ) {           goto BYE; }
   luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
-  return 1;
+  lua_pushboolean(L, is_found);
+  return 2;
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
@@ -167,7 +167,7 @@ static int l_agg_put1( lua_State *L) {
     if ( strcasecmp(str_update_type, "SET") == 0 ) {
       update_type = 1;
     }
-    else if ( strcasecmp(str_update_type, "INCR") == 0 ) {
+    else if ( strcasecmp(str_update_type, "ADD") == 0 ) {
       update_type = 2;
     }
     else {

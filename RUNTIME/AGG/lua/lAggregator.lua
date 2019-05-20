@@ -64,7 +64,12 @@ function lAggregator:put1(key, val, update_type)
   assert( type(self._generator) == "boolean" )
   assert(type(key) == "Scalar")
   assert(type(val) == "Scalar")
-  if ( not update_type ) then update_type = "set" end 
+  if ( not update_type ) then 
+    update_type = "SET" 
+  else
+    update_type = string.upper(update_type)
+    assert ( ( update_type == "SET" ) or ( update_type == "ADD" ) )
+  end 
   local oldval = Aggregator.put1(self._agg, key, val, update_type)
   self._num_puts = self._num_puts + 1
   return oldval
@@ -73,9 +78,10 @@ end
 function lAggregator:get1(key)
   assert(self._generator)
   assert(type(key) == "Scalar")
-  local val = Aggregator.get1(self._agg, key, self._valtype)
+  local val, is_found = Aggregator.get1(self._agg, key, self._valtype)
+  assert(type(val) == "Scalar")
   self._num_gets = self._num_gets + 1
-  return val
+  if ( is_found ) then return val else return nil end 
 end
 
 function lAggregator:del1(key)
