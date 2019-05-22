@@ -16,7 +16,6 @@ tests.t2 = function()
   -- get item with key k, should get null
   local params = { initial_size = 1024, keytype = "I4", valtype = "F4"}
   local A = lAggregator(params)
-  A:set_input_mode(true)
   local key = Scalar.new(123, "I8")
   local val = Scalar.new(456, "F4")
   local oldval = A:put1(key, val)
@@ -52,7 +51,6 @@ tests.t3 = function(n)
   for j = 1, 2 do 
     for i = 1, n do
       local A = lAggregator(params)
-      A:set_input_mode(true)
       -- if ( ( i % 1048576 ) == 0 ) then print("Iteration ", i) end
       if ( j == 1 ) then 
         A:delete()
@@ -69,7 +67,6 @@ tests.t4 = function(n)
   local params = { initial_size = 1048576, keytype = "I4", valtype = "F4"}
   n = n or 32*1048576
   local A = lAggregator(params)
-  A:set_input_mode(true)
   local key = Scalar.new(1, "I4")
   local oldval = A:put1(key,  Scalar.new(0, "F4"))
   local chkval, newval
@@ -90,7 +87,6 @@ tests.t5 = function(n)
   local params = { initial_size = 1048576, keytype = "I4", valtype = "F4"}
   n = n or 65536
   local A = lAggregator(params)
-  A:set_input_mode(true)
   local key = Scalar.new(1, "I4")
   local oldval = A:put1(key,  Scalar.new(0, "F4"))
   local sumval = Scalar.new(0, "F4")

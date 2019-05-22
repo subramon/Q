@@ -116,9 +116,23 @@ into CDIR  {\bf QUESTION: TODO } Is this necessary?
 \item Anything else? \TBC
 \ee
 
-All sub Makefiles will have a target called {\tt so}. This  will cause a local \verb+.so+ file to be generated. This will not be used, it is created
-just as a sanity check.
+The contract that each of the sub Makefiles is expected to fulfill is
+\be
+\item 
+have a target called {\tt so}. This will cause a local \verb+.so+ file 
+to be generated. This will not be used, it is created just as a 
+sanity check.
+\item have a target called {\tt all}. This will cause all files needed for
+static compilation to be gernated but will not actually compile them. Hence, an
+error could be discovered later on if the generated files are incorrect.
+\item have a target called {\tt dc}. This will cause only the files needed for
+dynamic compilation, {\bf if any}, to be generated.
 
+\item have a target called {\tt clean}. This will cause delete all generated
+files
+\ee
+Currently, we also require the Makefile to copy {\tt .h} and {\tt .c} files to
+HDIR and CDIR. I think this is not needed \TBC
 
 \section{Quick Compiles}
 

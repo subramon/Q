@@ -10,20 +10,25 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
-all : libsort.so
-
-all_for_dc :
-	     echo "nothing to do"
+all : _gen_files
 	
-#----------------------------------
+so : libsort.so
+
+dc :
+	echo "nothing to do"
+
 clean :
 	rm -r -f ../gen_src; 
 	rm -r -f ../gen_inc; 
 	rm -f _* *.so
+#----------------------------------
+_gen_files : qsort.tmpl
+	luajit generator.lua 
+	touch _gen_files
+
 		
 
-libsort.so : ${SRC_FILES}
-	luajit generator.lua 
+libsort.so : ${SRC_FILES} qsort.tmpl _gen_files
 	gcc ../gen_src/*.c ${CFLAGS} ${INCS} -shared -o libsort.so
 	test -d ${Q_BUILD_DIR}
 	cp ../gen_src/*.c ${Q_BUILD_DIR}/src/
