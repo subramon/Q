@@ -156,4 +156,56 @@ function lAggregator:check()
   return true
 end 
 
+function lAggreggator:set_in(keyvec, valvec)
+  if ( qconsts.debug ) then self:check() end
+  assert(type(keyvec) == "lAggregator")
+  assert(type(valvec) == "lAggregator")
+  local ktype = keyvec:fldtype()
+  assert( ( ktype == "I1" ) or ( ktype == "I1" ) or 
+          ( ktype == "I4" ) or ( ktype == "I8" ) )
+  assert( ( vtype == "I1" ) or ( vtype == "I1" ) or 
+          ( vtype == "I4" ) or ( vtype == "I8" ) or
+          ( vtype == "F4" ) or ( vtype == "F8" ) )
+  assert(not keyvec:has_nulls()) -- currently no support for nulls
+  assert(not valvec:has_nulls()) -- currently no support for nulls
+
+   self._keyvec = keyvec
+   self._valvec = valvec
+   self._chunk_idx = 0
+   -- Note currently hash is uint64_t
+   local hashwidth = ffi.sizeof("uint64_t")
+   -- Note currently number of elements is uint32_t
+   local locwidth  = ffi.sizeof("uint32_t")
+   -- Allocate space for hash buffer and location buffer 
+   self._hashbuf = cmem.new(qconsts.chunk_size * hashwidth)
+   self._locbuf  = cmem.new(qconsts.chunk_size * locwidth)
+   assert(self._hashbuf)
+   assert(self._locbuf)
+  if ( qconsts.debug ) then self:check() end
+  return self
+end
+
+function lAggreggator:consume()
+  if ( qconsts.debug ) then self:check() end
+  assert(self._keyvec) 
+  assert(self._valvec)
+  local v, vlen = self._valvec:get_chunk(chunk_idx)
+  local k, klen = self._keyvec:get_chunk(chunk_idx)
+  -- either both k and v are null or neither are
+  assert ( ( v and k ) or ( not v and not k ) )
+  assert(vlen == klen)
+  if ( vlen == 0 ) then -- nothing more to consume
+    -- delete links to val and key vec
+    self._valvec = nil
+    self._keyvec = nil
+    -- free buffers created for hash and loc
+    self._hashbuf:delete()
+    self._locbuf:delete()
+  else
+    -- TODO do something here
+  end
+  if ( qconsts.debug ) then self:check() end
+  return self
+end
+
 return lAggregator
