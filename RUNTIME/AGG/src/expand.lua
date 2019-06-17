@@ -1,14 +1,38 @@
 local plfile = require 'pl.file'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
+--======================================
+-- Produce all variations of mk_hash
+local keytypes = { "I4", "I8" }
 
+cfiles = {}
+hfiles = {}
+tbl = {}
+for _, key in pairs(keytypes) do 
+    local hstr = plfile.read("mk_hash.tmpl.h")
+    local keyctype = qconsts.qtypes[key].ctype
+    hstr = string.gsub(hstr, "__KEYTYPE__", keyctype);
+    hstr = string.gsub(hstr, "__KEY__", key);
+    local outh = "_mk_hash_" .. key .. ".h"
+    plfile.write(outh, hstr)
+    hfiles[#hfiles+1] = '#include "' .. outh .. '"'
+
+    local cstr = plfile.read("mk_hash.tmpl.c")
+    cstr = string.gsub(cstr, "__KEYTYPE__", keyctype);
+    cstr = string.gsub(cstr, "__KEY__", key);
+    local outc = "_mk_hash_" .. key ..  ".c"
+    plfile.write(outc, cstr)
+    cfiles[#cfiles+1] = outc
+end
+print(table.concat(cfiles, ' '))
+
+hfiles[#hfiles+1] = "\n"
+plfile.write("_mk_hash_files_to_include.h", table.concat(hfiles, '\n'))
+--======================================
+
+--======================================
 local keytypes = { "I4", "I8" }
 local valtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
-local cmd = [[
-hfile=q_rhashmap.h;
-cfile=q_rhashmap.c;
-cp $hfile _
-]]
 
 cfiles = {}
 hfiles = {}
@@ -126,6 +150,7 @@ instr = plfile.read("_get1.c")
 instr = string.gsub(instr, "_get_", "_del_");
 plfile.write("_del1.c", instr)
 --======================================
+-- Produce *destroy.c
 instr= [[
   else if ( ( strcmp(ptr_agg->keytype, "KEY") == 0 ) &&  ( strcmp(ptr_agg->valtype, "VAL") == 0 ) ) {
     q_rhashmap_destroy_KEY_VAL(ptr_agg->hmap);

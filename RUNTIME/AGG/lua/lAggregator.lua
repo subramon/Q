@@ -156,7 +156,7 @@ function lAggregator:check()
   return true
 end 
 
-function lAggreggator:set_in(keyvec, valvec)
+function lAggregator:set_in(keyvec, valvec)
   if ( qconsts.debug ) then self:check() end
   assert(type(keyvec) == "lAggregator")
   assert(type(valvec) == "lAggregator")
@@ -172,8 +172,8 @@ function lAggreggator:set_in(keyvec, valvec)
    self._keyvec = keyvec
    self._valvec = valvec
    self._chunk_idx = 0
-   -- Note currently hash is uint64_t
-   local hashwidth = ffi.sizeof("uint64_t")
+   -- Note currently hash is uint32_t
+   local hashwidth = ffi.sizeof("uint32_t")
    -- Note currently number of elements is uint32_t
    local locwidth  = ffi.sizeof("uint32_t")
    -- Allocate space for hash buffer and location buffer 
@@ -185,10 +185,12 @@ function lAggreggator:set_in(keyvec, valvec)
   return self
 end
 
-function lAggreggator:consume()
+function lAggregator:consume()
   if ( qconsts.debug ) then self:check() end
   assert(self._keyvec) 
   assert(self._valvec)
+  assert(self._hashbuf) 
+  assert(self._locbuf)
   local v, vlen = self._valvec:get_chunk(chunk_idx)
   local k, klen = self._keyvec:get_chunk(chunk_idx)
   -- either both k and v are null or neither are

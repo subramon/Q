@@ -5,6 +5,7 @@
 #include "lauxlib.h"
 #include "core_agg.h"
 #include "_files_to_include.h"
+#include "_mk_hash_files_to_include.h"
 
 static int 
 chk_name(
