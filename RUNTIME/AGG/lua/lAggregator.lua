@@ -176,11 +176,11 @@ function lAggregator:set_in(keyvec, valvec)
    local hashwidth = ffi.sizeof("uint32_t")
    -- Note currently number of elements is uint32_t
    local locwidth  = ffi.sizeof("uint32_t")
+   local tidwidth  = ffi.sizeof("uint8_t")
    -- Allocate space for hash buffer and location buffer 
-   self._hashbuf = cmem.new(qconsts.chunk_size * hashwidth)
-   self._locbuf  = cmem.new(qconsts.chunk_size * locwidth)
-   assert(self._hashbuf)
-   assert(self._locbuf)
+   self._hashbuf = assert(cmem.new(qconsts.chunk_size * hashwidth))
+   self._locbuf  = assert(cmem.new(qconsts.chunk_size * locwidth))
+   self._tidbuf  = assert(cmem.new(qconsts.chunk_size * tidwidth))
   if ( qconsts.debug ) then self:check() end
   return self
 end
@@ -191,6 +191,7 @@ function lAggregator:consume()
   assert(self._valvec)
   assert(self._hashbuf) 
   assert(self._locbuf)
+  assert(self._tidbuf)
   local v, vlen = self._valvec:get_chunk(chunk_idx)
   local k, klen = self._keyvec:get_chunk(chunk_idx)
   -- either both k and v are null or neither are
@@ -203,6 +204,34 @@ function lAggregator:consume()
     -- free buffers created for hash and loc
     self._hashbuf:delete()
     self._locbuf:delete()
+    self._tidbuf:delete()
+  else
+    -- TODO do something here
+  end
+  if ( qconsts.debug ) then self:check() end
+  return self
+end
+
+function lAggregator:unset_in()
+  if ( qconsts.debug ) then self:check() end
+  self._keyvec = nil 
+  self._valvec = nil
+  if ( self._hashbuf ) then self._hashbuf:delete() end
+  if ( self._locbuf ) then self._locbuf:delete() end
+  if ( self._tidbuf ) then self._tidbuf:delete() end
+  self._hashbuf = nil 
+  self._locbuf = nil
+  self._tidbuf = nil
+  local v, vlen = self._valvec:get_chunk(chunk_idx)
+  local k, klen = self._keyvec:get_chunk(chunk_idx)
+  -- either both k and v are null or neither are
+  assert ( ( v and k ) or ( not v and not k ) )
+  assert(vlen == klen)
+  if ( vlen == 0 ) then -- nothing more to consume
+    -- delete links to val and key vec
+    self._valvec = nil
+    self._keyvec = nil
+    -- free buffers created for hash and loc
   else
     -- TODO do something here
   end
