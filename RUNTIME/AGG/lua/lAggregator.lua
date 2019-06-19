@@ -156,10 +156,27 @@ function lAggregator:check()
   return true
 end 
 
-function lAggregator:set_in(keyvec, valvec)
+function lAggregator:set_in(key, val)
   if ( qconsts.debug ) then self:check() end
-  assert(type(keyvec) == "lAggregator")
-  assert(type(valvec) == "lAggregator")
+  if (type(keyvec) == "lVector") then 
+    return lAggregator:set_in_vec(key, val)
+  elseif (type(keyvec) == "CMEM") then 
+    return lAggregator:set_in_cmem(key, val)
+  else
+    assert(nil, "Input to Aggregator must be vector or CMEM")
+  end
+end
+
+function lAggregator:set_in_cmem(keyvec, valvec)
+  if ( qconsts.debug ) then self:check() end
+  assert(nil, "TODO To be implemented")
+  return true
+end
+
+function lAggregator:set_in_vec(keyvec, valvec)
+  if ( qconsts.debug ) then self:check() end
+  assert(type(keyvec) == "lVector")
+  assert(type(valvec) == "lVector")
   local ktype = keyvec:fldtype()
   assert( ( ktype == "I1" ) or ( ktype == "I1" ) or 
           ( ktype == "I4" ) or ( ktype == "I8" ) )
@@ -182,7 +199,7 @@ function lAggregator:set_in(keyvec, valvec)
    self._locbuf  = assert(cmem.new(qconsts.chunk_size * locwidth))
    self._tidbuf  = assert(cmem.new(qconsts.chunk_size * tidwidth))
   if ( qconsts.debug ) then self:check() end
-  return self
+  return true
 end
 
 function lAggregator:consume()
