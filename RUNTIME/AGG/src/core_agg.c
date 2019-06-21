@@ -6,6 +6,7 @@
 #include "core_agg.h"
 #include "_files_to_include.h"
 #include "_mk_hash_files_to_include.h"
+#include "_q_rhashmap_I8_I8.h"
 
 static int 
 chk_name(
@@ -97,6 +98,23 @@ agg_get1(
    * We need something like this for all key/val types. This is scripted
   */
 #include "_get1.c"
+BYE:
+  return status;
+}
+
+int 
+agg_get_meta(
+    AGG_REC_TYPE *ptr_agg,
+    uint32_t *ptr_nitems,
+    uint32_t *ptr_size
+    )
+{
+  int status = 0;
+  /* Note that to access these values we don't really care about 
+   * type of hmap */
+  q_rhashmap_I8_I8_t *ptr_hmap = (q_rhashmap_I8_I8_t *)(ptr_agg->hmap);
+  *ptr_nitems = ptr_hmap->nitems;
+  *ptr_size   = ptr_hmap->size;
 BYE:
   return status;
 }

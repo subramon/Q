@@ -65,4 +65,10 @@ agg_del1(
     bool *ptr_is_found,
     AGG_REC_TYPE *ptr_agg
     );
+extern int 
+agg_get_meta(
+    AGG_REC_TYPE *ptr_agg,
+    uint32_t *ptr_nitems,
+    uint32_t *ptr_size
+    );
 #endif

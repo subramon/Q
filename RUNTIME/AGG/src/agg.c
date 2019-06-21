@@ -100,10 +100,19 @@ static int l_agg_get_name( lua_State *L) {
   return 1;
 }
 //----------------------------------------
-static int l_agg_num_elements( lua_State *L) {
+static int l_agg_get_meta( lua_State *L) {
+  int status = 0;
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
-  lua_pushnumber(L, agg_num_elements(ptr_agg));
-  return 1;
+  uint32_t nitems;
+  uint32_t size;
+  status = agg_get_meta(ptr_agg, &nitems, &size); cBYE(status);
+  lua_pushnumber(L, nitems);
+  lua_pushnumber(L, size);
+  return 2;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
 }
 //----------------------------------------
 static int l_agg_del1( lua_State *L) {
@@ -212,7 +221,7 @@ static const struct luaL_Reg aggregator_methods[] = {
     { "get1",         l_agg_get1 },
     { "get_name",     l_agg_get_name },
     { "meta",         l_agg_meta },
-    { "num_elements", l_agg_num_elements },
+    { "get_meta",   l_agg_get_meta },
     { "put1",         l_agg_put1 },
     { "set_name",     l_agg_set_name },
     { NULL,          NULL               },
@@ -224,7 +233,7 @@ static const struct luaL_Reg aggregator_functions[] = {
     { "delete",       l_agg_delete   },
     { "get_name",     l_agg_get_name },
     { "meta",         l_agg_meta },
-    { "num_elements", l_agg_num_elements },
+    { "get_meta",   l_agg_get_meta },
     { "set_name",     l_agg_set_name },
     { "put1",         l_agg_put1 },
     { "get1",         l_agg_get1 },

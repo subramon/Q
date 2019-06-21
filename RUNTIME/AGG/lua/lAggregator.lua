@@ -66,6 +66,10 @@ function lAggregator:put1(key, val, update_type)
   return oldval
 end
 
+function lAggregator:get_meta()
+  return  Aggregator.get_meta(self._agg)
+end
+
 function lAggregator:get1(key)
   assert(type(key) == "Scalar")
   local val, is_found = Aggregator.get1(self._agg, key, self._valtype)
@@ -81,19 +85,6 @@ function lAggregator:del1(key)
   return val
 end
 
-
-function lAggregator:attach_input(k, v)
-  assert(type(k) == "lVector")
-  assert(type(v) == "lVector")
-  local ktype = k:fldtype()
-  local vtype = v:fldtype()
-  assert(good_key_types(ktype))
-  assert(good_val_types(vtype))
-  agg._key_vec = k
-  agg._val_vec = v
-  agg._chunk_index = 0
-  return self
-end
 
 function lAggregator:is_input()
   if ( self._val_vec ) then return true else return false end
@@ -215,13 +206,7 @@ function lAggregator:consume()
   assert ( ( v and k ) or ( not v and not k ) )
   assert(vlen == klen)
   if ( vlen == 0 ) then -- nothing more to consume
-    -- delete links to val and key vec
-    self._valvec = nil
-    self._keyvec = nil
-    -- free buffers created for hash and loc
-    self._hashbuf:delete()
-    self._locbuf:delete()
-    self._tidbuf:delete()
+    clean(self)
   else
     -- TODO do something here
   end
@@ -229,31 +214,19 @@ function lAggregator:consume()
   return self
 end
 
+local function clean(x)
+  x._keyvec = nil 
+  x._valvec = nil
+  if ( x._hashbuf ) then x._hashbuf:delete() end
+  if ( x._locbuf ) then x._locbuf:delete() end
+  if ( x._tidbuf ) then x._tidbuf:delete() end
+  x._hashbuf = nil 
+  x._locbuf = nil
+  x._tidbuf = nil
+end
+
 function lAggregator:unset_in()
-  if ( qconsts.debug ) then self:check() end
-  self._keyvec = nil 
-  self._valvec = nil
-  if ( self._hashbuf ) then self._hashbuf:delete() end
-  if ( self._locbuf ) then self._locbuf:delete() end
-  if ( self._tidbuf ) then self._tidbuf:delete() end
-  self._hashbuf = nil 
-  self._locbuf = nil
-  self._tidbuf = nil
-  local v, vlen = self._valvec:get_chunk(chunk_idx)
-  local k, klen = self._keyvec:get_chunk(chunk_idx)
-  -- either both k and v are null or neither are
-  assert ( ( v and k ) or ( not v and not k ) )
-  assert(vlen == klen)
-  if ( vlen == 0 ) then -- nothing more to consume
-    -- delete links to val and key vec
-    self._valvec = nil
-    self._keyvec = nil
-    -- free buffers created for hash and loc
-  else
-    -- TODO do something here
-  end
-  if ( qconsts.debug ) then self:check() end
-  return self
+  clean(self)
 end
 
 return lAggregator

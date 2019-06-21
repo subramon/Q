@@ -23,8 +23,8 @@
 typedef struct {
   __KEYTYPE__  key; 
   __VALTYPE__ val;
-  uint64_t hash: 32;
-  uint64_t psl: 16;
+  uint32_t hash;
+  uint16_t psl;
 } q_rh_bucket___KV___t;
 
 typedef struct {

@@ -45,7 +45,7 @@ core_agg.c : ../inc/core_agg.h _files_to_include.h _creation.c
 
 agg.c : ../inc/core_agg.h
 
-libagg.so: agg.o core_agg.o mk_loc.o murmurhash.o _q_rhashmap_I8_I8.c
+libagg.so: agg.o core_agg.o mk_tid.o mk_loc.o murmurhash.o _q_rhashmap_I8_I8.c
 	$(CC) ${CFLAGS} $(INCS) \
 	$(COBJS) \
 	$(QOBJS) \
