@@ -1,12 +1,8 @@
 #ifndef __AGG_H
 #define __AGG_H
+#include "agg_struct.h"
+#include "cmem_struct.h"
 
-typedef struct _agg_rec_type {
-  char keytype[Q_MAX_LEN_QTYPE_NAME+1]; 
-  char valtype[Q_MAX_LEN_QTYPE_NAME+1];
-  char name[Q_MAX_LEN_INTERNAL_NAME+1];
-  void *hmap; 
-} AGG_REC_TYPE;
 
 extern int
 agg_meta(
@@ -70,5 +66,18 @@ agg_get_meta(
     AGG_REC_TYPE *ptr_agg,
     uint32_t *ptr_nitems,
     uint32_t *ptr_size
+    );
+extern int 
+agg_putn(
+    AGG_REC_TYPE *ptr_agg,
+    CMEM_REC_TYPE *keys,
+    int update_type,
+    CMEM_REC_TYPE *hashes,
+    CMEM_REC_TYPE *locs,
+    CMEM_REC_TYPE *tids,
+    int nT,
+    CMEM_REC_TYPE *vals,
+    int nkeys, /* TODO P4 Undo Assumption that nkeys <= 2^31 */
+    CMEM_REC_TYPE *is_founds
     );
 #endif

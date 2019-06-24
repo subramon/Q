@@ -19,6 +19,7 @@
  *	https://cs.uwaterloo.ca/research/tr/1986/CS-86-14.pdf
  */
 
+#include "_q_rhashmap_struct___KV__.h"
 #include "_q_rhashmap___KV__.h"
 #include "fastdiv.h"
 #include "utils.h"
@@ -147,7 +148,7 @@ probe:
       if ( update_type == Q_RHM_SET ) { 
         bucket->val = val;
       }
-      else if ( update_type == Q_RHM_INCR ) { 
+      else if ( update_type == Q_RHM_ADD ) { 
         bucket->val += val;
       }
       else {
@@ -395,6 +396,122 @@ q_rhashmap_destroy___KV__(
 {
   if ( ptr_hmap == NULL ) { WHEREAMI; return ; }
   free_if_non_null(ptr_hmap->buckets);
+  ptr_hmap->buckets = NULL;
+  ptr_hmap->size = 0;
+  ptr_hmap->nitems = 0;
+  ptr_hmap->divinfo = 0;
+  ptr_hmap->buckets = 0;
+  ptr_hmap->hashkey = 0;
+  ptr_hmap->minsize = 0;
   free(ptr_hmap);
   ptr_hmap = NULL;
+}
+
+
+// Given 
+// (1) a set of keys 
+// (2) hash for each key
+// (3) value for each key
+// Update as follows. If j^{th} key found, then 
+// (A) set is_found[j]  to true
+// (B) update value with new value provided (either set or add)
+// Else, set is_found[j] to false
+int 
+q_rhashmap_putn___KV__(
+    q_rhashmap___KV___t *hmap,  // INPUT
+    int update_type, // INPUT
+    __KEYTYPE__ *keys, // INPUT [nkeys] 
+    uint32_t *hashes, // INPUT [nkeys]
+    uint32_t *locs, // INPUT [nkeys] -- starting point for probe
+    uint8_t *tids, // INPUT [nkeys] -- thread who should work on it
+    int nT,
+    __VALTYPE__ *vals, // INPUT [nkeys] 
+    uint32_t nkeys, // INPUT
+    uint8_t *is_founds // OUTPUT [nkeys bits] TODO: Change from byte to bit 
+    )
+{
+  int status = 0;
+  int *is_new = NULL;
+  int num_new = 0;
+  bool need_sequential_put = false;
+  register uint32_t hmap_size    = hmap->size;
+  register uint64_t hmap_divinfo = hmap->divinfo;
+  // quick sanity check 
+  switch ( update_type ) { 
+    case Q_RHM_SET : case Q_RHM_ADD : break;
+    default: go_BYE(-1); break;
+  }
+  is_new = malloc(nT * sizeof(int));
+  return_if_malloc_failed(is_new);
+  for ( int i = 0; i < nT; i++ ) { is_new[i] = 0; }
+
+#pragma omp parallel
+  {
+    // TODO P3 Can I avoid get_thread_num() in each iteration?
+    register uint32_t mytid = omp_get_thread_num();
+    for ( uint32_t j = 0; j < nkeys; j++ ) {
+      register uint32_t hash = hashes[j];
+      register q_rh_bucket___KV___t *buckets = hmap->buckets;
+      register __KEYTYPE__ key = keys[j];
+      register __VALTYPE__ val = vals[j];
+      uint32_t i = locs[j]; // fast_rem32(hash, hmap_size, hmap_divinfo);
+      // Following so that 2 threads don't deal with same key
+      if ( tids[j] != mytid )  { continue; }
+      is_founds[j] = 0;
+      uint32_t n = 0; 
+
+      for ( ; ; ) { // search until found 
+        q_rh_bucket___KV___t *bucket = buckets + i;
+        ASSERT(validate_psl_p(hmap, bucket, i)); // TODO P4 needed?
+
+        if ( ( bucket->hash == hash ) && ( bucket->key == key ) ) {
+          switch ( update_type ) {
+            case Q_RHM_SET : bucket->val  = val; break; 
+            case Q_RHM_ADD : bucket->val += val; break;
+          }
+          is_founds[j] = 1;
+          break; 
+        }
+        if ( ( !bucket->key ) || ( n > bucket->psl ) ) { // not found
+          is_founds[j] = 0; 
+          break; 
+        }
+        n++;
+        i = fast_rem32(i + 1, hmap_size, hmap_divinfo);
+      }
+      if ( is_founds[j] == 0 ) { 
+        if ( is_new[mytid] == 0 ) {
+          is_new[mytid] = 1;
+        }
+      }
+    }
+  }
+  // Find out if new keys were provided in the above loop
+  for ( int i = 0; i < nT; i++ ) { 
+    if ( is_new[i] != 0 ) { need_sequential_put = true; }
+  }
+  // If so, we have no choice but to put these in sequentially
+  // TODO P2: Currently, we are scannning the entire list of keys, 
+  // looking for the ones to add. Ideally, each thread should keep 
+  // a list of keys to be added and we should just scan that list.
+  if ( need_sequential_put ) { 
+    for ( unsigned int i = 0; i < nkeys; i++ ) {
+      if ( is_founds[i] == 0 ) {
+        __VALTYPE__ oldval;
+        status = q_rhashmap_put___KV__(hmap, keys[i], vals[i], update_type,
+            &oldval);
+        cBYE(status);
+        /* Following has been commented out because it is a wrong check
+          By definition, these keys don't exist and hence oldval == 0
+          if ( oldval != 0 ) { go_BYE(-1); }
+        */
+        num_new++;
+      }
+    }
+    // TODO P1: Should return num_new as diagnostic information
+    if ( num_new == 0 ) { go_BYE(-1); }
+  }
+BYE:
+  free_if_non_null(is_new);
+  return status;
 }

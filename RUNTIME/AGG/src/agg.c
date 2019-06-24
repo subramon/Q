@@ -14,6 +14,7 @@
 
 #include "q_incs.h"
 #include "core_agg.h"
+#include "cmem_struct.h"
 
 int luaopen_libagg (lua_State *L);
 //----------------------------------------
@@ -128,10 +129,12 @@ static int l_agg_del1( lua_State *L) {
   bool is_found;
   int status = agg_del1(ptr_key, val_qtype, &(ptr_old_val->cdata), &is_found,ptr_agg); 
   if ( status < 0 ) { WHEREAMI; goto BYE; }
-  if ( !is_found  ) {           goto BYE; }
+  if ( !is_found  ) { // set scalar output value to 0
+  }
   luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
-  return 1;
+  lua_pushboolean(L, is_found);
+  return 2;
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
@@ -160,6 +163,28 @@ BYE:
   lua_pushstring(L, __func__);
   return 1;
 }
+static int l_agg_putn( lua_State *L) {
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata( L, 1, "Aggregator");
+  CMEM_REC_TYPE *keys   = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
+  int update_type       = luaL_checknumber(                L, 3);
+  CMEM_REC_TYPE *hashes = (CMEM_REC_TYPE *)luaL_checkudata(L, 4, "CMEM");
+  CMEM_REC_TYPE *locs   = (CMEM_REC_TYPE *)luaL_checkudata(L, 5, "CMEM");
+  CMEM_REC_TYPE *tids   = (CMEM_REC_TYPE *)luaL_checkudata(L, 6, "CMEM");
+  int num_threads       = luaL_checknumber(                L, 7);
+  CMEM_REC_TYPE *vals   = (CMEM_REC_TYPE *)luaL_checkudata(L, 8, "CMEM");
+  int nkeys             = luaL_checknumber(                L, 9);
+  CMEM_REC_TYPE *isfs   = (CMEM_REC_TYPE *)luaL_checkudata(L, 10, "CMEM");
+
+  int status = agg_putn(ptr_agg, keys, update_type, 
+      hashes, locs, tids, num_threads, vals, nkeys, isfs);
+  if ( status < 0 ) { WHEREAMI; goto BYE; }
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 1;
+}
 //----------------------------------------
 static int l_agg_put1( lua_State *L) {
   SCLR_REC_TYPE *ptr_old_val = NULL;
@@ -169,20 +194,8 @@ static int l_agg_put1( lua_State *L) {
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
   SCLR_REC_TYPE *ptr_key = (SCLR_REC_TYPE *)luaL_checkudata(L, 2, "Scalar");
   SCLR_REC_TYPE *ptr_val = (SCLR_REC_TYPE *)luaL_checkudata(L, 3, "Scalar");
+  int update_type        = luaL_checknumber(L, 4);
 
-  int update_type = 1; // TODO UNDO HARD CODE 
-  if ( lua_gettop(L) > 4 ) {
-    const char * const str_update_type = luaL_checkstring(L, 4);
-    if ( strcasecmp(str_update_type, "SET") == 0 ) {
-      update_type = 1;
-    }
-    else if ( strcasecmp(str_update_type, "ADD") == 0 ) {
-      update_type = 2;
-    }
-    else {
-      WHEREAMI; goto BYE;
-    }
-  }
   strcpy(ptr_old_val->field_type, ptr_val->field_type);
   int status = agg_put1(ptr_key, ptr_val, update_type, 
       &(ptr_old_val->cdata), ptr_agg); 
@@ -223,6 +236,7 @@ static const struct luaL_Reg aggregator_methods[] = {
     { "meta",         l_agg_meta },
     { "get_meta",   l_agg_get_meta },
     { "put1",         l_agg_put1 },
+    { "putn",         l_agg_putn },
     { "set_name",     l_agg_set_name },
     { NULL,          NULL               },
 };
@@ -235,7 +249,7 @@ static const struct luaL_Reg aggregator_functions[] = {
     { "meta",         l_agg_meta },
     { "get_meta",   l_agg_get_meta },
     { "set_name",     l_agg_set_name },
-    { "put1",         l_agg_put1 },
+    { "putn",         l_agg_putn },
     { "get1",         l_agg_get1 },
     { "del1",         l_agg_del1 },
     { NULL,  NULL         }

@@ -3,10 +3,12 @@
 #include "q_incs.h"
 #include "scalar_struct.h"
 #include "lauxlib.h"
+#include "cmem_struct.h"
 #include "core_agg.h"
 #include "_files_to_include.h"
 #include "_mk_hash_files_to_include.h"
 #include "_q_rhashmap_I8_I8.h"
+#include "_q_rhashmap_I4_F4.h" // TODO UNDO P1 
 
 static int 
 chk_name(
@@ -133,6 +135,49 @@ agg_put1(
    * We need something like this for all key/val types. This is scripted
   */
 #include "_put1.c"
+BYE:
+  return status;
+}
+
+int 
+agg_putn(
+    AGG_REC_TYPE *ptr_agg,
+    CMEM_REC_TYPE *keys,
+    int update_type,
+    CMEM_REC_TYPE *cmem_hashes,
+    CMEM_REC_TYPE *cmem_locs,
+    CMEM_REC_TYPE *cmem_tids,
+    int nT,
+    CMEM_REC_TYPE *vals,
+    int nkeys, /* TODO P4 Undo Assumption that nkeys <= 2^31 */
+    CMEM_REC_TYPE *cmem_isfs
+    )
+{
+  int status = 0;
+  uint32_t *hashes = (uint32_t *)cmem_hashes->data;
+  uint32_t *locs   = (uint32_t *)cmem_locs->data;
+  uint8_t  *tids   = (uint8_t  *)cmem_tids->data;
+  uint8_t  *isfs   = (uint8_t  *)cmem_isfs->data;
+  if ( ( strcmp(keys->field_type, "I4") == 0 ) && 
+      ( strcmp(vals->field_type, "F4") == 0 ) ) {
+    status = q_rhashmap_putn_I4_F4(
+    (q_rhashmap_I4_F4_t *)ptr_agg->hmap,  
+    update_type, 
+    (int32_t *)keys->data,
+    hashes, 
+    locs, 
+    tids,
+    nT,
+    (float *)vals->data,
+    nkeys, 
+    isfs
+    );
+  }
+  else {
+    go_BYE(-1);
+  }
+
+
 BYE:
   return status;
 }

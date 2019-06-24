@@ -1,5 +1,6 @@
 lAggregator = require 'Q/RUNTIME/AGG/lua/lAggregator'
 Scalar = require 'libsclr'
+lVector = require 'libvec'
 
 local tests = {}
 tests.t1 = function()
@@ -76,8 +77,8 @@ tests.t4 = function(n)
     local oldval = A:put1(key, newval)
     assert(oldval == chkval)
     oldval = newval
-    local nitems, size = A:get_meta()
-    assert(nitems == 1)
+    local M = A:get_meta()
+    assert(M.nitems == 1)
   end
   --============================================
   print("Success on test t4")
@@ -99,8 +100,8 @@ tests.t5 = function(n)
     chkval = A:get1(key)
     sumval = sumval + newval
     assert(sumval == chkval)
-    local nitems, size = A:get_meta()
-    assert(nitems == 1)
+    local M = A:get_meta()
+    assert(M.nitems == 1)
   end
   --============================================
   print("Success on test t5")
@@ -113,17 +114,29 @@ tests.t6 = function(n)
   for i = 1, n do 
     local key = Scalar.new(i, "I4")
     local oldval = A:put1(key,  Scalar.new(i+1, "F4"))
-    local nitems, size = A:get_meta()
-    assert(nitems == i)
+    local M = A:get_meta()
+    assert(M.nitems == i)
+    -- put the same key in again. should be no change in nitems
+    local oldval = A:put1(key,  Scalar.new(i+1, "F4"))
+    local M = A:get_meta()
+    assert(M.nitems == i)
   end
   for i = 1, n do 
     local key = Scalar.new(i, "I4")
-    local chkval = A:del1(key)
+    local chkval, is_found = A:del1(key)
     assert(chkval == Scalar.new(i+1, "F4"))
-    local nitems, size = A:get_meta()
-    assert(nitems == n-i)
+    local M = A:get_meta()
+    assert(M.nitems == n-i)
+    assert(is_found)
+    -- delete the same key in again. should be no change in nitems
+    local chkval, is_found = A:del1(key)
+    assert(chkval == Scalar.new(0, "F4"))
+    local M = A:get_meta()
+    assert(not is_found)
+    assert(M.nitems == n-i)
   end
   --============================================
   print("Success on test t6")
 end
+
 return tests

@@ -39,6 +39,7 @@ hfiles = {}
 tbl = {}
 for _, key in pairs(keytypes) do 
   for _, val in pairs(valtypes) do 
+    --================================================
     local hstr = plfile.read("q_rhashmap.h")
     local keyctype = qconsts.qtypes[key].ctype
     local valctype = qconsts.qtypes[val].ctype
@@ -46,9 +47,17 @@ for _, key in pairs(keytypes) do
     hstr = string.gsub(hstr, "__KEYTYPE__", keyctype);
     hstr = string.gsub(hstr, "__VALTYPE__", valctype);
     hstr = string.gsub(hstr, "__KV__", kv);
-    local outh = "_q_rhashmap_" .. key .. "_" .. val .. ".h"
+    local outh = "../inc/_q_rhashmap_" .. key .. "_" .. val .. ".h"
     plfile.write(outh, hstr)
     hfiles[#hfiles+1] = '#include "' .. outh .. '"'
+    --================================================
+    local hstr = plfile.read("q_rhashmap_struct.h")
+    hstr = string.gsub(hstr, "__KEYTYPE__", keyctype);
+    hstr = string.gsub(hstr, "__VALTYPE__", valctype);
+    hstr = string.gsub(hstr, "__KV__", kv);
+    local outh = "../inc/_q_rhashmap_struct_" .. key .. "_" .. val .. ".h"
+    plfile.write(outh, hstr)
+    --================================================
 
     local cstr = plfile.read("q_rhashmap.c")
     cstr = string.gsub(cstr, "__KV__", kv);
