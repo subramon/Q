@@ -32,6 +32,22 @@ local function good_val_types(vtype)
   return true
 end
 
+
+local function clean(x)
+  if ( x._vecinfo ) then 
+    if ( x._vecinfo._hashbuf ) then x._vecinfo._hashbuf:delete() end
+    if ( x._vecinfo._locbuf  ) then x._vecinfo._locbuf:delete() end
+    if ( x._vecinfo._tidbuf  ) then x._vecinfo._tidbuf:delete() end
+    if ( x._vecinfo._isfbuf  ) then x._vecinfo._isfbuf:delete() end
+  end
+  x._vecinfo = nil
+end
+
+local function is_clean(x)
+  assert(x._vecinfo == nil)
+  return true
+end
+
 function lAggregator.new(params)
   local agg = setmetatable({}, lAggregator)
   local initial_size, keytype, valtype = parse_params(params)
@@ -203,10 +219,14 @@ local function set_in_vec(agg, keyvec, valvec, update_type)
   local tidwidth  = ffi.sizeof("uint8_t")
   local isfwidth  = ffi.sizeof("uint8_t")
   -- Allocate space for hash buffer and location buffer 
-  vecinfo._hashbuf = assert(cmem.new(qconsts.chunk_size * hashwidth, "I4"))
-  vecinfo._locbuf  = assert(cmem.new(qconsts.chunk_size * locwidth,  "I4"))
-  vecinfo._tidbuf  = assert(cmem.new(qconsts.chunk_size * tidwidth,  "I1"))
-  vecinfo._isfbuf  = assert(cmem.new(qconsts.chunk_size * isfwidth,  "I1"))
+  vecinfo._hashbuf = assert(cmem.new(qconsts.chunk_size * hashwidth, 
+  "I4", "hashbuf"))
+  vecinfo._locbuf  = assert(cmem.new(qconsts.chunk_size * locwidth,  
+  "I4", "locbuf"))
+  vecinfo._tidbuf  = assert(cmem.new(qconsts.chunk_size * tidwidth,  
+  "I1", "tidbuf"))
+  vecinfo._isfbuf  = assert(cmem.new(qconsts.chunk_size * isfwidth,  
+  "I1", "isfbuf"))
   vecinfo._num_threads = qc['q_omp_get_num_procs']()
   if ( qconsts.debug ) then agg:check() end
   agg._vecinfo = vecinfo
@@ -215,6 +235,8 @@ end
 
 function lAggregator:set_in(key, val, update_type)
   if ( qconsts.debug ) then self:check() end
+  status = pcall(is_clean, self)
+  if ( not status ) then return false end
   self._update_type = set_update_type(update_type)
   if (type(key) == "lVector") then 
     return set_in_vec(self, key, val, update_type)
@@ -223,6 +245,7 @@ function lAggregator:set_in(key, val, update_type)
   else
     assert(nil, "Input to Aggregator must be vector or CMEM")
   end
+  return true
 end
 
 function lAggregator:consume()
@@ -246,22 +269,9 @@ function lAggregator:consume()
   if ( qconsts.debug ) then self:check() end
   return self
 end
-
-local function clean(x)
-  x._keyvec = nil 
-  x._valvec = nil
-  if ( x._hashbuf ) then x._hashbuf:delete() end
-  if ( x._locbuf ) then x._locbuf:delete() end
-  if ( x._tidbuf ) then x._tidbuf:delete() end
-  if ( x._isfbuf ) then x._isfbuf:delete() end
-  x._hashbuf = nil 
-  x._locbuf = nil
-  x._tidbuf = nil
-  x._isfbuf = nil
-end
-
 function lAggregator:unset_in()
   clean(self)
+  return true
 end
 
 return lAggregator

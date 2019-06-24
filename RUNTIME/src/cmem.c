@@ -445,37 +445,33 @@ static int l_cmem_free( lua_State *L)
       /* all is well */
     }
     else {
+      printf("not good\n");
       go_BYE(-1); 
     }
   } 
-  if ( ptr_cmem->size <= 0 ) {
-    // Control should never come here except as nelow
-    if ( ( ptr_cmem->size == -1 ) && 
-         ( strcmp(ptr_cmem->field_type, "XXX") == 0 ) && 
-         ( strcmp(ptr_cmem->cell_name, "Uninitialized") == 0 ) ) {
-      /* okay */
+  else {
+    if ( ptr_cmem->is_foreign ) { 
+      /* Foreign indicates somebody else responsible for free */
     }
     else {
-      WHEREAMI; goto BYE; 
+      // garbage collection of Lua
+      if ( ( ptr_cmem->size == -1 ) && 
+          ( strcmp(ptr_cmem->field_type, "XXX") == 0 ) && 
+          ( strcmp(ptr_cmem->cell_name, "Uninitialized") == 0 ) ) {
+        /* nothing to do */
+      }
+      else {
+        if ( ptr_cmem->data == NULL ) { go_BYE(-1); }
+        free(ptr_cmem->data);
+        bool is_add = false, is_vec = false;
+        uint64_t sz1, sz2;
+        status = mm(ptr_cmem->size, is_add, is_vec, &sz1, &sz2); cBYE(status);
+        strcpy(ptr_cmem->field_type, "XXX");
+        strcpy(ptr_cmem->cell_name, "Uninitialized");
+        ptr_cmem->size = -1;
+      }
     }
   }
-  if ( !ptr_cmem->is_foreign ) { 
-    // garbage collection of Lua
-    if ( ( ptr_cmem->size == -1 ) && 
-         ( strcmp(ptr_cmem->field_type, "XXX") == 0 ) && 
-         ( strcmp(ptr_cmem->cell_name, "Uninitialized") == 0 ) ) {
-      /* nothing to do */
-    }
-    else {
-      // CONTROL SHOULD NEVER COME HERE
-      if ( ptr_cmem->data == NULL ) { WHEREAMI; goto BYE; }
-      free(ptr_cmem->data);
-      bool is_add = false, is_vec = false;
-      uint64_t sz1, sz2;
-      status = mm(ptr_cmem->size, is_add, is_vec, &sz1, &sz2); cBYE(status);
-    }
-  }
-  memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
   // printf("Freeing %x \n", ptr_cmem);
   // OLD lua_pushboolean(L, true);
 BYE:

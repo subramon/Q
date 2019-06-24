@@ -44,4 +44,24 @@ tests.t1 = function()
   --=========================
   print("Success on test t1")
 end
+tests.t2 = function()
+  -- testing putn()
+  local status
+  local params = { keytype = "I4", valtype = "F4"}
+  local chunk_size = qconsts.chunk_size
+  n = chunk_size* 16  --- must be me a multiple of chunk size for this test
+  local A = lAggregator(params)
+  local K = Q.seq({start = 1, by = 1, qtype = "I4", len = n})
+  local V = Q.seq({start = 1, by = 1, qtype = "F4", len = n})
+  status = A:set_in(K, V)
+  assert(status)
+  status = A:set_in(K, V)
+  assert(not status)
+  status = A:unset_in()
+  assert(status)
+  status = A:set_in(K, V)
+  assert(status)
+  --=========================
+  print("Success on test t2")
+end
 return tests
