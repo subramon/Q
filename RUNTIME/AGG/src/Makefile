@@ -39,7 +39,7 @@ _creation.c :
 junk : 
 	echo $(USRCS)
 
-agg.o : agg.c
+agg.o : agg.c _mk_hash_I4.h  _mk_hash_I8.h 
 
 core_agg.c : ../inc/core_agg.h _files_to_include.h _creation.c
 
@@ -50,6 +50,9 @@ libagg.so: agg.o core_agg.o mk_tid.o mk_loc.o murmurhash.o _q_rhashmap_I8_I8.c
 	$(COBJS) \
 	$(QOBJS) \
 	-shared -lm -o libagg.so
+
+_mk_hash_I4.h : 
+	luajit expand.lua 1>/dev/null
 
 _files_to_include.h : 
 	luajit expand.lua 1>/dev/null

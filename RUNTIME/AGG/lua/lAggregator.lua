@@ -79,7 +79,7 @@ local function set_update_type(update_type)
       assert(nil)
     end
   end 
-  return update_type
+  assert(nil)
 end
 
 function lAggregator.save()
@@ -92,7 +92,7 @@ function lAggregator:put1(key, val, update_type)
   assert(type(key) == "Scalar")
   assert(type(val) == "Scalar")
   self._update_type = set_update_type(update_type)
-  local oldval = Aggregator.put1(self._agg, key, val, update_type)
+  local oldval = Aggregator.put1(self._agg, key, val, self._update_type)
   self._meta._num_puts = self._meta._num_puts + 1
   return oldval
 end
@@ -187,13 +187,7 @@ function lAggregator:check()
   return true
 end 
 
-local function set_in_cmem(agg, keyvec, valvec, update_type)
-  if ( qconsts.debug ) then self:check() end
-  assert(nil, "TODO To be implemented")
-  return true
-end
-
-local function set_in_vec(agg, keyvec, valvec, update_type)
+local function set_key_val_vec(agg, keyvec, valvec, update_type)
   if ( qconsts.debug ) then self:check() end
   local vecinfo = {}
   assert(type(agg) == "lAggregator")
@@ -233,20 +227,29 @@ local function set_in_vec(agg, keyvec, valvec, update_type)
   return true
 end
 
-function lAggregator:set_in(key, val, update_type)
+function lAggregator:set_key_val(key, val, update_type)
   if ( qconsts.debug ) then self:check() end
   status = pcall(is_clean, self)
   if ( not status ) then return false end
   self._update_type = set_update_type(update_type)
-  if (type(key) == "lVector") then 
-    return set_in_vec(self, key, val, update_type)
-  elseif (type(key) == "CMEM") then 
-    return set_in_cmem(self, key, val, update_type)
+  if ( (type(key) == "lVector") and (type(val) == "lVector") ) then 
+    return set_key_val_vec(self, key, val, update_type)
   else
-    assert(nil, "Input to Aggregator must be vector or CMEM")
+    assert(nil, "Input to Aggregator must be key vector, val vector ")
   end
   return true
 end
+
+function lAggregator:get_in(key, update_type)
+  if ( qconsts.debug ) then self:check() end
+  if (type(key) == "lVector") then 
+    return get_in_vec(self, val)
+  else
+    assert(nil, "Input to Aggregator must be vector ")
+  end
+  return true
+end
+
 
 function lAggregator:consume()
   if ( qconsts.debug ) then self:check() end
@@ -269,9 +272,27 @@ function lAggregator:consume()
   if ( qconsts.debug ) then self:check() end
   return self
 end
-function lAggregator:unset_in()
+function lAggregator:unset_key_val()
   clean(self)
   return true
+end
+
+function lAggregator:get_vals()
+  if ( qconsts.debug ) then self:check() end
+  assert(self._vecinfo)
+  local v = assert(self._vecinfo._valvec)
+  local k = assert(self._vecinfo._keyvec)
+  local vecinfo = {}
+  assert(type(keyvec) == "lVector")
+  local ktype = keyvec:fldtype()
+  assert( ktype == self._keytype )
+  local vtype = self._valtype
+
+  local valvec 
+  local function valgen ()
+  end
+  valvec = Vector( { qtype = vtype, gen = valgen, has_nulls = false} )
+  return valvec
 end
 
 return lAggregator

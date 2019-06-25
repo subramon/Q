@@ -1,7 +1,5 @@
 #define LUA_LIB
 
-#define ALIGNMENT  256 // TODO P2 DOCUMENT AND PLACE CAREFULLY
-
 #include <stdlib.h>
 #include <math.h>
 
@@ -15,6 +13,12 @@
 #include "q_incs.h"
 #include "core_agg.h"
 #include "cmem_struct.h"
+#include "_q_rhashmap_I8_I8.h"
+
+#include "_mk_hash_I4.h"
+#include "_mk_hash_I8.h"
+#include "mk_loc.h"
+#include "mk_tid.h"
 
 int luaopen_libagg (lua_State *L);
 //----------------------------------------
@@ -164,6 +168,7 @@ BYE:
   return 1;
 }
 static int l_agg_putn( lua_State *L) {
+  int status = 0;
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata( L, 1, "Aggregator");
   CMEM_REC_TYPE *keys   = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
   int update_type       = luaL_checknumber(                L, 3);
@@ -175,7 +180,27 @@ static int l_agg_putn( lua_State *L) {
   int nkeys             = luaL_checknumber(                L, 9);
   CMEM_REC_TYPE *isfs   = (CMEM_REC_TYPE *)luaL_checkudata(L, 10, "CMEM");
 
-  int status = agg_putn(ptr_agg, keys, update_type, 
+  q_rhashmap_I8_I8_t *hmap = ( q_rhashmap_I8_I8_t *)(ptr_agg->hmap);
+  /* TODO P3: Fix following. agg.c should be just a bridge from Lua to C
+   * No processing should be done here. Violated this principle */
+  if ( strcmp(keys->field_type, "I4") == 0 ) {
+    status = mk_hash_I4((int32_t *)keys->data, nkeys, 
+        hmap->hashkey, (uint32_t *)hashes->data);
+  }
+  else if ( strcmp(keys->field_type, "I8") == 0 ) {
+    status = mk_hash_I8((int64_t *)keys->data, nkeys, 
+        hmap->hashkey, (uint32_t *)hashes->data);
+  }
+  else {
+    go_BYE(-1);
+  }
+  cBYE(status);
+  status = mk_loc((uint32_t *)hashes->data, nkeys, hmap->size, 
+      (uint32_t *)locs->data); cBYE(status);
+  status = mk_tid((uint32_t *)hashes->data, nkeys, num_threads, 
+      (uint8_t *)tids->data); cBYE(status);
+
+  status = agg_putn(ptr_agg, keys, update_type, 
       hashes, locs, tids, num_threads, vals, nkeys, isfs);
   if ( status < 0 ) { WHEREAMI; goto BYE; }
   lua_pushboolean(L, true);
@@ -249,6 +274,7 @@ static const struct luaL_Reg aggregator_functions[] = {
     { "meta",         l_agg_meta },
     { "get_meta",   l_agg_get_meta },
     { "set_name",     l_agg_set_name },
+    { "put1",         l_agg_put1 },
     { "putn",         l_agg_putn },
     { "get1",         l_agg_get1 },
     { "del1",         l_agg_del1 },

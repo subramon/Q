@@ -158,24 +158,18 @@ agg_putn(
   uint32_t *locs   = (uint32_t *)cmem_locs->data;
   uint8_t  *tids   = (uint8_t  *)cmem_tids->data;
   uint8_t  *isfs   = (uint8_t  *)cmem_isfs->data;
+#include "_putn.c"
+  /*
   if ( ( strcmp(keys->field_type, "I4") == 0 ) && 
       ( strcmp(vals->field_type, "F4") == 0 ) ) {
-    status = q_rhashmap_putn_I4_F4(
-    (q_rhashmap_I4_F4_t *)ptr_agg->hmap,  
-    update_type, 
-    (int32_t *)keys->data,
-    hashes, 
-    locs, 
-    tids,
-    nT,
-    (float *)vals->data,
-    nkeys, 
-    isfs
-    );
+    status = q_rhashmap_putn_I4_F4( (q_rhashmap_I4_F4_t *)ptr_agg->hmap,  
+    update_type, (int32_t *)keys->data, hashes, locs, tids, nT,
+    (float *)vals->data, nkeys, isfs);
   }
   else {
     go_BYE(-1);
   }
+  */
 
 
 BYE:

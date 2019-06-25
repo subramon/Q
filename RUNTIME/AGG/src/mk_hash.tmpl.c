@@ -4,7 +4,7 @@
 //------------------------------------------------------
 int 
 mk_hash___KEY__(
-    __KEYTYPE__ *keys, // input  [nkeys] 
+    __KCTYPE__ *keys, // input  [nkeys] 
     uint32_t nkeys, // input 
     uint64_t hmap_hashkey, // input 
     uint32_t *hashes// output 
@@ -14,7 +14,7 @@ mk_hash___KEY__(
   int chunk_size = 1024;
 #pragma omp parallel for schedule(static, chunk_size)
   for ( uint32_t i = 0; i < nkeys; i++ ) {
-    hashes[i] = murmurhash3(&(keys[i]), sizeof(__KEYTYPE__), hmap_hashkey);
+    hashes[i] = murmurhash3(&(keys[i]), sizeof(__KCTYPE__), hmap_hashkey);
   }
   return status;
 }

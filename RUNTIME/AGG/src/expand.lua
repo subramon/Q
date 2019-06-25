@@ -11,14 +11,14 @@ tbl = {}
 for _, key in pairs(keytypes) do 
     local hstr = plfile.read("mk_hash.tmpl.h")
     local keyctype = qconsts.qtypes[key].ctype
-    hstr = string.gsub(hstr, "__KEYTYPE__", keyctype);
+    hstr = string.gsub(hstr, "__KCTYPE__", keyctype);
     hstr = string.gsub(hstr, "__KEY__", key);
     local outh = "_mk_hash_" .. key .. ".h"
     plfile.write(outh, hstr)
     hfiles[#hfiles+1] = '#include "' .. outh .. '"'
 
     local cstr = plfile.read("mk_hash.tmpl.c")
-    cstr = string.gsub(cstr, "__KEYTYPE__", keyctype);
+    cstr = string.gsub(cstr, "__KCTYPE__", keyctype);
     cstr = string.gsub(cstr, "__KEY__", key);
     local outc = "_mk_hash_" .. key ..  ".c"
     plfile.write(outc, cstr)
@@ -181,4 +181,31 @@ for _, key in pairs(keytypes) do
 end
 tbl[#tbl+1] = "\n"
 plfile.write("_destroy.c", table.concat(tbl, '\n'))
+--======================================
+instr = [[
+  else if ( ( strcmp(keys->field_type, "KEY") == 0 ) && 
+      ( strcmp(vals->field_type, "VAL") == 0 ) ) {
+    status = q_rhashmap_putn_KEY_VAL( (q_rhashmap_KEY_VAL_t *)ptr_agg->hmap,  
+    update_type, (KCTYPE *)keys->data, hashes, locs, tids,
+    nT, (VCTYPE *)vals->data, nkeys, isfs);
+  }
+  ]]
+tbl = {}
+local first = true
+for _, key in pairs(keytypes) do 
+  for _, val in pairs(valtypes) do 
+    local str = instr
+    if ( first ) then
+      str = string.gsub(str, "else if", "if")
+      first = false
+    end
+    str = string.gsub(str, "KEY", key)
+    str = string.gsub(str, "VAL", val)
+    str = string.gsub(str, "VCTYPE", qconsts.qtypes[val].ctype)
+    str = string.gsub(str, "KCTYPE", qconsts.qtypes[key].ctype)
+    tbl[#tbl+1] = str
+  end
+end
+tbl[#tbl+1] = "\n"
+plfile.write("_putn.c", table.concat(tbl, '\n'))
 --======================================
