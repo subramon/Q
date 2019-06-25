@@ -90,4 +90,14 @@ q_rhashmap_putn___KV__(
     uint32_t nkeys, // INPUT
     uint8_t *is_founds // OUTPUT [nkeys bits] TODO: Change from byte to bit 
     );
+extern int 
+q_rhashmap_getn___KV__(
+    q_rhashmap___KV___t *hmap, // INPUT
+    __KEYTYPE__ *keys, // INPUT: [nkeys] 
+    uint32_t *hashes, // INPUT [nkeys]
+    uint32_t *locs, // INPUT [nkeys] 
+    __VALTYPE__ *vals, // OUTPUT [nkeys] 
+    uint32_t nkeys // INPUT 
+    // TODO P4 we won't do is_found for the first implementation
+    );
 #endif

@@ -67,4 +67,31 @@ tests.t2 = function()
   --=========================
   print("Success on test t2")
 end
+tests.t3 = function()
+  -- testing getn()
+  local status
+  local params = { keytype = "I4", valtype = "F4"}
+  local chunk_size = qconsts.chunk_size
+  n = chunk_size* 16  --- must be me a multiple of chunk size for this test
+  local A = lAggregator(params)
+  local K = Q.seq({start = 1, by = 1, qtype = "I4", len = n})
+  local V = Q.seq({start = 1, by = 1, qtype = "F4", len = n})
+  status = A:set_consume(K, V)
+  A:consume()
+  -- Now let's do a getn
+  len2 = 16 
+  local K2 = Q.seq({start = 1, by = 1, qtype = "I4", len = len2})
+  local chk_V2 = Q.seq({start = 1, by = 1, qtype = "F4", len = len2})
+  local V2 = A:set_produce(K2)
+  assert(type(V2) == "lVector")
+  local x, y = V2:chunk(0)
+  assert(x == len2, "x = " .. x )
+  assert(V2:is_eov())
+  local n1, n2 = Q.sum(Q.vvneq(chk_V2, V2)):eval()
+  assert(n1:to_num() == 0)
+  assert(n2:to_num() == len2)
+  --=========================
+  print("Success on test t3")
+end
+-- TODO P2 Write more tests for getn
 return tests

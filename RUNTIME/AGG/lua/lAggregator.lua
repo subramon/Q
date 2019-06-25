@@ -6,6 +6,7 @@ local register_type   = require 'Q/UTILS/lua/q_types'
 local qc              = require 'Q/UTILS/lua/q_core'
 local get_ptr         = require 'Q/UTILS/lua/get_ptr'
 local parse_params    = require 'Q/RUNTIME/AGG/lua/parse_params'
+local lVector         = require 'Q/RUNTIME/lua/lVector'
 --====================================
 local lAggregator = {}
 lAggregator.__index = lAggregator
@@ -19,7 +20,7 @@ setmetatable(lAggregator, {
 register_type(lAggregator, "lAggregator")
 
 local Q_RHM_SET = 1 -- TODO P3 Need better way to keep this in sync with C
-local Q_RHM_ADD = 2  -- TODO P3 Need better way to keep this in sync with C
+local Q_RHM_ADD = 2 -- TODO P3 Need better way to keep this in sync with C
 local function good_key_types(ktype)
   assert( ( ktype == "I4" ) or ( ktype == "I8" ) )
   return true
@@ -33,7 +34,8 @@ local function good_val_types(vtype)
 end
 
 
-local function clean(x)
+local function clean(x, str)
+  if ( str ) then print(str) end 
   if ( x._bufinfo ) then 
     if ( x._bufinfo._hashbuf ) then x._bufinfo._hashbuf:delete() end
     if ( x._bufinfo._locbuf  ) then x._bufinfo._locbuf:delete() end
@@ -89,10 +91,36 @@ local function set_update_type(update_type)
   assert(nil)
 end
 
+local function mk_bufs(p)
+  if ( p ) then print("mk_bufs: " .. p) end -- for debugging
+  -- Note currently hash is uint32_t
+  local hashwidth = ffi.sizeof("uint32_t")
+  -- Note currently number of elements is uint32_t
+  local locwidth  = ffi.sizeof("uint32_t")
+  local tidwidth  = ffi.sizeof("uint8_t")
+  local isfwidth  = ffi.sizeof("uint8_t")
+  local bufinfo = {}
+  bufinfo._hashbuf = assert(cmem.new(qconsts.chunk_size * hashwidth, 
+  "I4", "hashbuf"))
+  bufinfo._locbuf  = assert(cmem.new(qconsts.chunk_size * locwidth,  
+  "I4", "locbuf"))
+  bufinfo._tidbuf  = assert(cmem.new(qconsts.chunk_size * tidwidth,  
+  "I1", "tidbuf"))
+  bufinfo._isfbuf  = assert(cmem.new(qconsts.chunk_size * isfwidth,  
+  "I1", "isfbuf"))
+  bufinfo._num_threads = qc['q_omp_get_num_procs']()
+  return bufinfo 
+end
+
 function lAggregator.save()
-  -- returns 2 vectors, one for key and one for value 
-  -- we don't have a corresponding restore, the "new" suffices
-  -- TODO
+  -- Could do one od 2 things
+  -- (1) returns 2 vectors, one for key and one for value 
+  -- (2) dump the buckets as binary file and restore from file
+  -- TODO P2
+end
+
+function lAggregator.restore()
+  -- TODO P2
 end
 
 function lAggregator:put1(key, val, update_type)
@@ -140,7 +168,7 @@ function lAggregator:consume()
   local k = assert(self._vecinfo._keyvec)
   local chunk_idx = assert(self._vecinfo._chunk_idx)
   if ( v:is_eov() ) then 
-    clean(self)
+    clean(self, "eov for consume")
     return 0 -- number of items inserted
   end 
   assert( not k:is_eov() )
@@ -148,7 +176,7 @@ function lAggregator:consume()
   local vlen, vchunk = v:chunk(chunk_idx)
   assert(klen == vlen)
   if ( klen == 0 ) then 
-    clean(self)
+    clean(self, "klen == 0 for consume")
     return 0 -- number of items inserted
   end 
   assert(kchunk)
@@ -175,7 +203,7 @@ function lAggregator:delete()
 end
 
 function lAggregator:check()
-  -- TODO Can add a lot more tests here
+  -- TODO P3 Can add a lot more tests here
   if ( self._keyvec ) then 
     assert(good_key_types(k:fldtype()))
     assert(good_val_types(v:fldtype()))
@@ -203,7 +231,6 @@ function lAggregator:set_consume(keyvec, valvec, update_type)
   assert(type(valvec) == "lVector")
 
   local vecinfo = {}
-  local bufinfo = {}
 
   local ktype = keyvec:fldtype()
   assert(ktype == self._meta._keytype)
@@ -217,24 +244,9 @@ function lAggregator:set_consume(keyvec, valvec, update_type)
   vecinfo._keyvec = keyvec
   vecinfo._valvec = valvec
   vecinfo._chunk_idx = 0
-  -- Note currently hash is uint32_t
-  local hashwidth = ffi.sizeof("uint32_t")
-  -- Note currently number of elements is uint32_t
-  local locwidth  = ffi.sizeof("uint32_t")
-  local tidwidth  = ffi.sizeof("uint8_t")
-  local isfwidth  = ffi.sizeof("uint8_t")
   -- Allocate space for hash buffer and location buffer 
-  bufinfo._hashbuf = assert(cmem.new(qconsts.chunk_size * hashwidth, 
-  "I4", "hashbuf"))
-  bufinfo._locbuf  = assert(cmem.new(qconsts.chunk_size * locwidth,  
-  "I4", "locbuf"))
-  bufinfo._tidbuf  = assert(cmem.new(qconsts.chunk_size * tidwidth,  
-  "I1", "tidbuf"))
-  bufinfo._isfbuf  = assert(cmem.new(qconsts.chunk_size * isfwidth,  
-  "I1", "isfbuf"))
-  bufinfo._num_threads = qc['q_omp_get_num_procs']()
   self._vecinfo = vecinfo
-  self._bufinfo = bufinfo
+  self._bufinfo = mk_bufs()
   return true
 end
 
@@ -249,7 +261,7 @@ function lAggregator:get_in(key, update_type)
 end
 
 function lAggregator:unset_consume()
-  clean(self)
+  clean(self, "unset_consume")
   return true
 end
 
@@ -257,24 +269,59 @@ function lAggregator:set_produce(in_keyvec)
   if ( qconsts.debug ) then self:check() end
   assert(type(in_keyvec) == "lVector")
   local keytype = in_keyvec:fldtype()
-  assert( keytype == self._keytype )
-  local keyvec = in_keyvec
+  assert( keytype == self._meta._keytype )
+  local keyvec = in_keyvec -- TODO P4 Do we need this?
+  if ( not self._bufinfo ) then self._bufinfo = mk_bufs() end
 
-  local valtype = self._valtype
-  local valbuf 
+  --==============================================
+  local valtype = self._meta._valtype
+  local val_buf 
   local chunk_idx = 0
   local first_call = true
-  local valvec
+  --==============================================
+  local key_ctype = qconsts.qtypes[keytype].ctype
+  local val_ctype = qconsts.qtypes[valtype].ctype
+  local key_cast_as = key_ctype .. " * "
+  local val_cast_as = val_ctype .. " * "
+  --==============================================
 
   local function valgen (chunk_num)
     assert(chunk_num == chunk_idx)
     if ( first_call ) then
       first_call = false
       local bufsz = qconsts.chunk_size * qconsts.qtypes[valtype].width
-      valbuf = assert(cmem.new(bufsz, valtype))
+      val_buf = assert(cmem.new(bufsz, valtype))
     end
+    local key_len, key_chunk, nn_key_chunk
+    key_len, key_chunk, nn_key_chunk = keyvec:chunk(chunk_idx)
+    if key_len > 0 then
+      local chunk1 = ffi.cast(key_cast_as,  get_ptr(key_chunk))
+      local start_time = qc.RDTSC()
+        --[[
+  extern int 
+  q_rhashmap_getn(
+      q_rhashmap_t *hmap, 
+      KEYTYPE  *keys, // [nkeys] 
+      uint32_t *hashes, // [nkeys] 
+      uint32_t *locs, // [nkeys] 
+      VALTYPE  *vals, // [nkeys] 
+      uint32_t nkeys
+      );
+  --]]
+      Aggregator.getn(
+        self._agg,
+        key_chunk,
+        self._bufinfo._hashbuf,
+        self._bufinfo._locbuf,
+        val_buf,
+        key_len)
+    else
+      val_buf = nil
+    end
+    chunk_idx = chunk_idx + 1
+    return key_len, val_buf
   end
-  valvec = Vector( { qtype = vtype, gen = valgen, has_nulls = false} )
+  valvec = lVector( { qtype = valtype, gen = valgen, has_nulls = false} )
   return valvec
 end
 

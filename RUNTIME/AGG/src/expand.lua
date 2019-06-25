@@ -209,3 +209,30 @@ end
 tbl[#tbl+1] = "\n"
 plfile.write("_putn.c", table.concat(tbl, '\n'))
 --======================================
+instr = [[
+  else if ( ( strcmp(keys->field_type, "KEY") == 0 ) && 
+      ( strcmp(vals->field_type, "VAL") == 0 ) ) {
+    status = q_rhashmap_getn_KEY_VAL( 
+    (q_rhashmap_KEY_VAL_t *)ptr_agg->hmap,  
+    (KCTYPE *)keys->data, hashes, locs, (VCTYPE *)vals->data, nkeys);
+  }
+  ]]
+tbl = {}
+local first = true
+for _, key in pairs(keytypes) do 
+  for _, val in pairs(valtypes) do 
+    local str = instr
+    if ( first ) then
+      str = string.gsub(str, "else if", "if")
+      first = false
+    end
+    str = string.gsub(str, "KEY", key)
+    str = string.gsub(str, "VAL", val)
+    str = string.gsub(str, "VCTYPE", qconsts.qtypes[val].ctype)
+    str = string.gsub(str, "KCTYPE", qconsts.qtypes[key].ctype)
+    tbl[#tbl+1] = str
+  end
+end
+tbl[#tbl+1] = "\n"
+plfile.write("_getn.c", table.concat(tbl, '\n'))
+--======================================

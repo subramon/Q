@@ -515,3 +515,41 @@ BYE:
   free_if_non_null(is_new);
   return status;
 }
+int 
+q_rhashmap_getn___KV__(
+    q_rhashmap___KV___t *hmap, // INPUT
+    __KEYTYPE__ *keys, // INPUT: [nkeys] 
+    uint32_t *hashes, // INPUT [nkeys]
+    uint32_t *locs, // INPUT [nkeys] 
+    __VALTYPE__ *vals, // OUTPUT [nkeys] 
+    uint32_t nkeys // INPUT 
+    // TODO P4 we won't do is_found for the first implementation
+    )
+{
+  int status = 0;
+// UNDO  int chunk_size = 1024;
+// UNDO #pragma omp parallel for schedule(static, chunk_size)
+  for ( uint32_t j = 0; j < nkeys; j++ ) {
+    uint32_t n = 0; 
+    uint32_t i = locs[j];
+    uint32_t hash = hashes[j];
+    q_rh_bucket___KV___t *bucket = NULL;
+    vals[j]     = 0;
+
+    for ( ; ; ) { 
+      bucket = &hmap->buckets[i];
+      ASSERT(validate_psl_p(hmap, bucket, i));
+
+      if ( ( bucket->hash == hash ) && ( bucket->key == keys[j] ) ) {
+        vals[j] = bucket->val;
+        break; // found 
+      }
+      if (!bucket->key || n > bucket->psl) {
+        break; // not found
+      }
+      n++;
+      i = fast_rem32(i + 1, hmap->size, hmap->divinfo);
+    }
+  }
+  return status;
+}

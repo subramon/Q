@@ -210,6 +210,41 @@ BYE:
   lua_pushstring(L, __func__);
   return 1;
 }
+static int l_agg_getn( lua_State *L) {
+  int status = 0;
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata( L, 1, "Aggregator");
+  CMEM_REC_TYPE *keys   = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
+  CMEM_REC_TYPE *hashes = (CMEM_REC_TYPE *)luaL_checkudata(L, 3, "CMEM");
+  CMEM_REC_TYPE *locs   = (CMEM_REC_TYPE *)luaL_checkudata(L, 4, "CMEM");
+  CMEM_REC_TYPE *vals   = (CMEM_REC_TYPE *)luaL_checkudata(L, 5, "CMEM");
+  int nkeys             = luaL_checknumber(                L, 6);
+
+  q_rhashmap_I8_I8_t *hmap = ( q_rhashmap_I8_I8_t *)(ptr_agg->hmap);
+  /* TODO P3: Fix following. agg.c should be just a bridge from Lua to C
+   * No processing should be done here. Violated this principle */
+  if ( strcmp(keys->field_type, "I4") == 0 ) {
+    status = mk_hash_I4((int32_t *)keys->data, nkeys, 
+        hmap->hashkey, (uint32_t *)hashes->data);
+  }
+  else if ( strcmp(keys->field_type, "I8") == 0 ) {
+    status = mk_hash_I8((int64_t *)keys->data, nkeys, 
+        hmap->hashkey, (uint32_t *)hashes->data);
+  }
+  else {
+    go_BYE(-1);
+  }
+  cBYE(status);
+  status = mk_loc((uint32_t *)hashes->data, nkeys, hmap->size, 
+      (uint32_t *)locs->data); cBYE(status);
+  status = agg_getn(ptr_agg, keys, hashes, locs, vals, nkeys);
+  if ( status < 0 ) { WHEREAMI; goto BYE; }
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 1;
+}
 //----------------------------------------
 static int l_agg_put1( lua_State *L) {
   SCLR_REC_TYPE *ptr_old_val = NULL;
@@ -262,6 +297,7 @@ static const struct luaL_Reg aggregator_methods[] = {
     { "get_meta",   l_agg_get_meta },
     { "put1",         l_agg_put1 },
     { "putn",         l_agg_putn },
+    { "getn",         l_agg_getn },
     { "set_name",     l_agg_set_name },
     { NULL,          NULL               },
 };
@@ -276,6 +312,7 @@ static const struct luaL_Reg aggregator_functions[] = {
     { "set_name",     l_agg_set_name },
     { "put1",         l_agg_put1 },
     { "putn",         l_agg_putn },
+    { "getn",         l_agg_getn },
     { "get1",         l_agg_get1 },
     { "del1",         l_agg_del1 },
     { NULL,  NULL         }

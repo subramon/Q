@@ -177,6 +177,24 @@ BYE:
 }
 
 int 
+agg_getn(
+    AGG_REC_TYPE *ptr_agg,
+    CMEM_REC_TYPE *keys,
+    CMEM_REC_TYPE *cmem_hashes,
+    CMEM_REC_TYPE *cmem_locs,
+    CMEM_REC_TYPE *vals,
+    int nkeys
+    )
+{
+  int status = 0;
+  uint32_t *hashes = (uint32_t *)cmem_hashes->data;
+  uint32_t *locs   = (uint32_t *)cmem_locs->data;
+#include "_getn.c"
+BYE:
+  return status;
+}
+
+int 
 agg_new(
     const char * const keytype,
     const char * const valtype,
