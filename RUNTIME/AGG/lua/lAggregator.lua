@@ -34,19 +34,26 @@ end
 
 
 local function clean(x)
-  if ( x._vecinfo ) then 
-    if ( x._vecinfo._hashbuf ) then x._vecinfo._hashbuf:delete() end
-    if ( x._vecinfo._locbuf  ) then x._vecinfo._locbuf:delete() end
-    if ( x._vecinfo._tidbuf  ) then x._vecinfo._tidbuf:delete() end
-    if ( x._vecinfo._isfbuf  ) then x._vecinfo._isfbuf:delete() end
+  if ( x._bufinfo ) then 
+    if ( x._bufinfo._hashbuf ) then x._bufinfo._hashbuf:delete() end
+    if ( x._bufinfo._locbuf  ) then x._bufinfo._locbuf:delete() end
+    if ( x._bufinfo._tidbuf  ) then x._bufinfo._tidbuf:delete() end
+    if ( x._bufinfo._isfbuf  ) then x._bufinfo._isfbuf:delete() end
   end
+  x._bufinfo = nil
   x._vecinfo = nil
 end
 
 local function is_clean(x)
-  assert(x._vecinfo == nil)
+  if ( x._vecinfo ~= nil ) then return false end 
+  if ( x._bufinfo ~= nil ) then return false end 
   return true
 end
+
+function lAggregator:is_clean() -- for debugging
+  local rslt =  is_clean(self)
+  return rslt
+end 
 
 function lAggregator.new(params)
   local agg = setmetatable({}, lAggregator)
@@ -128,12 +135,12 @@ function lAggregator:is_input()
   if ( self._valvec ) then return true else return false end
 end 
 
-function lAggregator:step()
+function lAggregator:consume()
   local v = assert(self._vecinfo._valvec)
   local k = assert(self._vecinfo._keyvec)
   local chunk_idx = assert(self._vecinfo._chunk_idx)
   if ( v:is_eov() ) then 
-    self._vecinfo = nil
+    clean(self)
     return 0 -- number of items inserted
   end 
   assert( not k:is_eov() )
@@ -141,7 +148,7 @@ function lAggregator:step()
   local vlen, vchunk = v:chunk(chunk_idx)
   assert(klen == vlen)
   if ( klen == 0 ) then 
-    self._vecinfo = nil
+    clean(self)
     return 0 -- number of items inserted
   end 
   assert(kchunk)
@@ -152,13 +159,13 @@ function lAggregator:step()
   self._agg,
   kchunk, 
   self._update_type,
-  self._vecinfo._hashbuf,
-  self._vecinfo._locbuf,
-  self._vecinfo._tidbuf,
-  self._vecinfo._num_threads,
+  self._bufinfo._hashbuf,
+  self._bufinfo._locbuf,
+  self._bufinfo._tidbuf,
+  self._bufinfo._num_threads,
   vchunk, 
   klen,
-  self._vecinfo._isfbuf
+  self._bufinfo._isfbuf
   ))
   return klen -- number of items inserted
 end
@@ -187,19 +194,23 @@ function lAggregator:check()
   return true
 end 
 
-local function set_key_val_vec(agg, keyvec, valvec, update_type)
+
+function lAggregator:set_consume(keyvec, valvec, update_type)
   if ( qconsts.debug ) then self:check() end
-  local vecinfo = {}
-  assert(type(agg) == "lAggregator")
+  if ( not is_clean(self) ) then return false end 
+  self._update_type = set_update_type(update_type)
   assert(type(keyvec) == "lVector")
   assert(type(valvec) == "lVector")
+
+  local vecinfo = {}
+  local bufinfo = {}
+
   local ktype = keyvec:fldtype()
-  assert( ( ktype == "I1" ) or ( ktype == "I1" ) or 
-          ( ktype == "I4" ) or ( ktype == "I8" ) )
+  assert(ktype == self._meta._keytype)
+
   local vtype = valvec:fldtype()
-  assert( ( vtype == "I1" ) or ( vtype == "I1" ) or 
-          ( vtype == "I4" ) or ( vtype == "I8" ) or
-          ( vtype == "F4" ) or ( vtype == "F8" ) )
+  assert(vtype == self._meta._valtype)
+
   assert(not keyvec:has_nulls()) -- currently no support for nulls
   assert(not valvec:has_nulls()) -- currently no support for nulls
 
@@ -213,30 +224,17 @@ local function set_key_val_vec(agg, keyvec, valvec, update_type)
   local tidwidth  = ffi.sizeof("uint8_t")
   local isfwidth  = ffi.sizeof("uint8_t")
   -- Allocate space for hash buffer and location buffer 
-  vecinfo._hashbuf = assert(cmem.new(qconsts.chunk_size * hashwidth, 
+  bufinfo._hashbuf = assert(cmem.new(qconsts.chunk_size * hashwidth, 
   "I4", "hashbuf"))
-  vecinfo._locbuf  = assert(cmem.new(qconsts.chunk_size * locwidth,  
+  bufinfo._locbuf  = assert(cmem.new(qconsts.chunk_size * locwidth,  
   "I4", "locbuf"))
-  vecinfo._tidbuf  = assert(cmem.new(qconsts.chunk_size * tidwidth,  
+  bufinfo._tidbuf  = assert(cmem.new(qconsts.chunk_size * tidwidth,  
   "I1", "tidbuf"))
-  vecinfo._isfbuf  = assert(cmem.new(qconsts.chunk_size * isfwidth,  
+  bufinfo._isfbuf  = assert(cmem.new(qconsts.chunk_size * isfwidth,  
   "I1", "isfbuf"))
-  vecinfo._num_threads = qc['q_omp_get_num_procs']()
-  if ( qconsts.debug ) then agg:check() end
-  agg._vecinfo = vecinfo
-  return true
-end
-
-function lAggregator:set_key_val(key, val, update_type)
-  if ( qconsts.debug ) then self:check() end
-  status = pcall(is_clean, self)
-  if ( not status ) then return false end
-  self._update_type = set_update_type(update_type)
-  if ( (type(key) == "lVector") and (type(val) == "lVector") ) then 
-    return set_key_val_vec(self, key, val, update_type)
-  else
-    assert(nil, "Input to Aggregator must be key vector, val vector ")
-  end
+  bufinfo._num_threads = qc['q_omp_get_num_procs']()
+  self._vecinfo = vecinfo
+  self._bufinfo = bufinfo
   return true
 end
 
@@ -250,46 +248,31 @@ function lAggregator:get_in(key, update_type)
   return true
 end
 
-
-function lAggregator:consume()
-  if ( qconsts.debug ) then self:check() end
-  assert(self._keyvec) 
-  assert(self._valvec)
-  assert(self._hashbuf) 
-  assert(self._locbuf)
-  assert(self._tidbuf)
-  assert(self._isfbuf)
-  local v, vlen = self._valvec:get_chunk(chunk_idx)
-  local k, klen = self._keyvec:get_chunk(chunk_idx)
-  -- either both k and v are null or neither are
-  assert ( ( v and k ) or ( not v and not k ) )
-  assert(vlen == klen)
-  if ( vlen == 0 ) then -- nothing more to consume
-    clean(self)
-  else
-    -- TODO do something here
-  end
-  if ( qconsts.debug ) then self:check() end
-  return self
-end
-function lAggregator:unset_key_val()
+function lAggregator:unset_consume()
   clean(self)
   return true
 end
 
-function lAggregator:get_vals()
+function lAggregator:set_produce(in_keyvec)
   if ( qconsts.debug ) then self:check() end
-  assert(self._vecinfo)
-  local v = assert(self._vecinfo._valvec)
-  local k = assert(self._vecinfo._keyvec)
-  local vecinfo = {}
-  assert(type(keyvec) == "lVector")
-  local ktype = keyvec:fldtype()
-  assert( ktype == self._keytype )
-  local vtype = self._valtype
+  assert(type(in_keyvec) == "lVector")
+  local keytype = in_keyvec:fldtype()
+  assert( keytype == self._keytype )
+  local keyvec = in_keyvec
 
-  local valvec 
-  local function valgen ()
+  local valtype = self._valtype
+  local valbuf 
+  local chunk_idx = 0
+  local first_call = true
+  local valvec
+
+  local function valgen (chunk_num)
+    assert(chunk_num == chunk_idx)
+    if ( first_call ) then
+      first_call = false
+      local bufsz = qconsts.chunk_size * qconsts.qtypes[valtype].width
+      valbuf = assert(cmem.new(bufsz, valtype))
+    end
   end
   valvec = Vector( { qtype = vtype, gen = valgen, has_nulls = false} )
   return valvec
