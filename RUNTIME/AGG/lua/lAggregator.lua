@@ -168,7 +168,7 @@ function lAggregator:consume()
   local k = assert(self._vecinfo._keyvec)
   local chunk_idx = assert(self._vecinfo._chunk_idx)
   if ( v:is_eov() ) then 
-    clean(self, "eov for consume")
+    clean(self) -- , "eov for consume")
     return 0 -- number of items inserted
   end 
   assert( not k:is_eov() )
@@ -176,7 +176,7 @@ function lAggregator:consume()
   local vlen, vchunk = v:chunk(chunk_idx)
   assert(klen == vlen)
   if ( klen == 0 ) then 
-    clean(self, "klen == 0 for consume")
+    clean(self) -- , "klen == 0 for consume")
     return 0 -- number of items inserted
   end 
   assert(kchunk)

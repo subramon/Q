@@ -91,6 +91,22 @@ tests.t3 = function()
   assert(n1:to_num() == 0)
   assert(n2:to_num() == len2)
   --=========================
+  -- Now let's do a getn after all the keys in K have been consumed
+  repeat
+    local x = A:consume()
+  until x == 0 
+  local V3 = A:set_produce(K)
+  assert(type(V3) == "lVector")
+  local chunk_idx = 0
+  repeat 
+    local x, y = V3:chunk(chunk_idx)
+    chunk_idx = chunk_idx  + 1
+  until x == 0 
+  assert(V3:is_eov())
+  local n1, n2 = Q.sum(Q.vvneq(V, V3)):eval()
+  assert(n1:to_num() == 0)
+  assert(n2:to_num() == n)
+  --=========================
   print("Success on test t3")
 end
 -- TODO P2 Write more tests for getn
