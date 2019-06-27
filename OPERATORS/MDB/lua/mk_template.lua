@@ -91,7 +91,7 @@ end
 return mk_template
 --[[ unit test below 
 local nDR = {3, 4, 2}
-local tmpl, nR, nD = mk_template(nDR)
+local tmpl, nR, nD, nC = mk_template(nDR)
 for j = 1, nR do 
   for i = 1, #nDR do 
     print(j-1, tmpl[j-1][i-1])
