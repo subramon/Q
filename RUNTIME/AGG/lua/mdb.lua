@@ -11,7 +11,10 @@ local function mdb(Tk, val_vec)
   local qc          = require 'Q/UTILS/lua/q_core'
   local get_ptr     = require 'Q/UTILS/lua/get_ptr'
   local record_time = require 'Q/UTILS/lua/record_time'
+  local get_nDR     = require 'Q/RUNTIME/AGG/lua/get_nDR'
 
+  nDR, in_vecs = get_nDR(Tk)
+  assert(nil)
   -- START: Basic checks on input 
   assert(type(val_vec) == "lVector")
   local vtype = val_vec:fldtype()

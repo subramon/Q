@@ -86,7 +86,7 @@ F[3] =
     end
     -- print(str)
   end
-  return CT, nR, nD
+  return CT, nR, nD, #T
 end
 return mk_template
 --[[ unit test below 
