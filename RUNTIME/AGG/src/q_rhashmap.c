@@ -453,6 +453,9 @@ q_rhashmap_putn___KV__(
       register uint32_t hash = hashes[j];
       register q_rh_bucket___KV___t *buckets = hmap->buckets;
       register __KEYTYPE__ key = keys[j];
+      // Note the following difference between put and putn
+      // In put(), key == 0 would cause an error. 
+      if ( key == 0 ) { continue; }
       register __VALTYPE__ val = vals[j];
       uint32_t i = locs[j]; // fast_rem32(hash, hmap_size, hmap_divinfo);
       // Following so that 2 threads don't deal with same key
