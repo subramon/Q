@@ -12,13 +12,13 @@ local function mk_template(
   assert(nT > 1)
   local nR = 1
   for k, v in ipairs(T) do 
-    nR = nR * ( T[k] + 1 )
+    nR = nR * (T[k]+1)
   end
   
   --=============================
   local nD = 0
   for k, v in pairs(T) do 
-    nD = nD + (v+1)
+    nD = nD + v
   end
   --=============================
   -- START: Allocate space for C 
@@ -92,6 +92,7 @@ return mk_template
 --[[ unit test below 
 local nDR = {3, 4, 2}
 local tmpl, nR, nD, nC = mk_template(nDR)
+print("nR, nD, nC = ",  nR, nD, nC )
 for j = 1, nR do 
   for i = 1, #nDR do 
     print(j-1, tmpl[j-1][i-1])

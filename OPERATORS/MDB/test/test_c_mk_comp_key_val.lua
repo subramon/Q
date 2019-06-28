@@ -1,4 +1,4 @@
-local mk_template = require 'Q/RUNTIME/AGG/lua/mk_template'
+local mk_template = require 'Q/OPERATORS/MDB/lua/mk_template'
 local ffi = require 'ffi'
 -- START Define function prototype
 local proto = [[
@@ -20,7 +20,7 @@ ffi.cdef(proto)
 ffi.cdef("        void *malloc(size_t size);")
 -- START Make the .so file 
 local QC_FLAGS = os.getenv("QC_FLAGS")
-command = "gcc -g  ../src/mdb.c -I../inc/ -I../../../UTILS/inc/ -shared -o libmdb.so " .. QC_FLAGS
+command = "gcc -g  ../src/mk_comp_key_val.c -I../inc/ -I../../../UTILS/inc/ -shared -o libmdb.so " .. QC_FLAGS
 os.execute(command)
 local qc = ffi.load("./libmdb.so")
 local fn = assert(qc.mk_comp_key_val)

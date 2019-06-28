@@ -7,7 +7,7 @@ local function do_replacements(tmpl, subs)
   if ( file_exists(tmpl) ) then 
     T = assert(dofile(tmpl))
   else 
-    assert(nil)
+    assert(nil) -- TODO THIS IS CLUMSY. WHY NOT ASSERT BEFORE?
     --[[ TODO P1 Is it okay to comment this out?
     local filename = q_tmpl_dir .. tmpl
     assert(qc.isfile(filename), "File not found " .. filename)

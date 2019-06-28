@@ -1,6 +1,23 @@
-#include "q_incs.h"
-#include "mdb.h"
 
+return require 'Q/UTILS/lua/code_gen' {
+  declaration = [[
+#include "q_incs.h"
+int
+${fn}(
+    int **template, /* [nR][nC] */
+    int nR,
+    int nC,
+    /* 0 <= template[i][j] < nD */
+    uint8_t **in_dim_vals, /* [nD][nV] */
+    ${VALTYPE} *in_measure_val, /* [nV] */
+    uint64_t *out_key, /*  [nK] */ 
+    ${VALTYPE} *out_val, /*  [nK] */
+    int nV,
+    int nK
+    );
+]],
+definition = [[
+#include "_${fn}.h"
 
 /* As an example, if we have 3 raw attributes with the 
  * first  one having 2 derived attributes, 
@@ -14,15 +31,15 @@
  * It is responsiblity of caller to make sure that (nV * nR) <= nK
  * */
 int
-mk_comp_key_val___VALTYPE__(
+${fn}(
     int **template, /* [nR][nC] */
     int nR,
     int nC,
     /* 0 <= template[i][j] < nD */
     uint8_t **in_dim_vals, /* [nD][nV] */
-    __VALTYPE__ *in_measure_val, /* [nV] */
+    ${VALTYPE} *in_measure_val, /* [nV] */
     uint64_t *out_key, /*  [nK] */ 
-    __VALTYPE__ *out_val, /*  [nK] */
+    ${VALTYPE} *out_val, /*  [nK] */
     int nV,
     int nK
     )
@@ -41,7 +58,7 @@ mk_comp_key_val___VALTYPE__(
 // #pragma omp parallel for schedule(static, chunk_size)
   for ( int i = 0; i < nV; i++ ) { 
     int offset = i*nR; 
-    __VALTYPE__ val = in_measure_val[i];
+    ${VALTYPE} val = in_measure_val[i];
     for ( int ridx = 0; ridx < nR; ridx++ ) {
       uint64_t comp_key = 0;
       int shift_by = 0;
@@ -62,4 +79,6 @@ mk_comp_key_val___VALTYPE__(
   }
 BYE:
   return status;
+}
+]]
 }

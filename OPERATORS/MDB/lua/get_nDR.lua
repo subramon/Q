@@ -10,6 +10,8 @@ local function get_nDR(Tk)
       for k3, v3 in pairs(v2) do 
         -- print(k, k2, k3, type(v3))
         assert(type(v3) == "lVector")
+        assert(v3:fldtype() == "I1")
+        assert(not v3:has_nulls())
         vecs[#vecs+1] = v3
       end
     end
