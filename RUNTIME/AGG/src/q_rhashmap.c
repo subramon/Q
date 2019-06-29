@@ -556,3 +556,8 @@ q_rhashmap_getn___KV__(
   }
   return status;
 }
+/* TODO  P2
+  -- currently we do not differentiate between input value type and 
+  -- aggregate value type. For example, to avoid overflow, input value
+  -- type may be I1 but aggregated value type may be I8
+  */

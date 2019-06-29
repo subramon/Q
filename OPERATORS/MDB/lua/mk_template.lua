@@ -95,7 +95,7 @@ local tmpl, nR, nD, nC = mk_template(nDR)
 print("nR, nD, nC = ",  nR, nD, nC )
 for j = 1, nR do 
   for i = 1, #nDR do 
-    print(j-1, tmpl[j-1][i-1])
+    -- print(j-1, tmpl[j-1][i-1])
   end
 end
 --]]

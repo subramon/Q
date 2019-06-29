@@ -1,7 +1,7 @@
 local Q = require 'Q'
 local F = {}
 function F.f1(n)
-  local n = n or 32
+  local n = n or 200000
   
   local prod = {}
   prod[1] = { category = Q.rand({ lb = 0, ub = 127, qtype = "I1", len = n})}

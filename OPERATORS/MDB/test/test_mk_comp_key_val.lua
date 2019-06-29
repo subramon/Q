@@ -1,8 +1,9 @@
 local Q = require 'Q'
-local mk_kv = require 'Q/OPERATORS/MDB/lua/mk_comp_key_val'
-local get_nDR = require 'Q/OPERATORS/MDB/lua/get_nDR'
-local mk_in = require 'Q/OPERATORS/MDB/test/mk_mdb_input'
+local mk_kv       = require 'Q/OPERATORS/MDB/lua/mk_comp_key_val'
+local get_nDR     = require 'Q/OPERATORS/MDB/lua/get_nDR'
+local mk_in       = require 'Q/OPERATORS/MDB/test/mk_mdb_input'
 local mk_template = require 'Q/OPERATORS/MDB/lua/mk_template'
+local qconsts     = require 'Q/UTILS/lua/q_consts'
 
 local tests = {}
 tests.t1 = function()
@@ -17,14 +18,20 @@ tests.t1 = function()
   local key_vec, val_vec = mk_kv(Tk,  val_vec)
   assert(type(key_vec) == "lVector")
   assert(type(val_vec) == "lVector")
-  key_vec:chunk(0)
+  local chunk_idx = 0
+  repeat 
+    local n =   key_vec:chunk(chunk_idx)
+    chunk_idx = chunk_idx + 1 
+  until ( n == 0 )
   assert(key_vec:is_eov())
   assert(val_vec:is_eov())
   -- print(val_vec:length() ,n, nR)
   -- print(key_vec:length() ,n, nR)
   -- Q.print_csv({key_vec, val_vec})
-  assert(val_vec:length() == n * nR)
-  assert(key_vec:length() == n * nR)
+  if ( (n * nR ) < qconsts.chunk_size ) then 
+    assert(val_vec:length() == n * nR)
+  end
+  assert(key_vec:length() == val_vec:length())
   
   print("Success on test t1")
 end

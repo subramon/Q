@@ -21,12 +21,17 @@ local function mk_comp_key_val(Tk, in_val_vec)
   local cmem        = require 'libcmem'
 
   -- START: Basic checks on input 
+  -- nDR = number of derived attributes per raw attribute
   nDR, in_vecs = get_nDR(Tk)
   -- currently only one value can be aggregated
   assert(type(in_val_vec) == "lVector") 
   local val_type = in_val_vec:fldtype()
   assert ((val_type == "I1") or (val_type == "I2") or (val_type == "I4") or 
           (val_type == "I8") or (val_type == "F4") or (val_type == "F8") )
+  -- nR  = number of rows in template
+  -- nC = number of columns in template
+  -- nD = \sum_r nDR[r] = |in_vecs|
+  -- nD = number of derived attributes 
   local template, nR, nD, nC = mk_template(nDR)
   for i = 1, nD do 
     assert(type(in_vecs[i] == "lVector"))
@@ -35,11 +40,10 @@ local function mk_comp_key_val(Tk, in_val_vec)
   -- START: Specialization
   local spfn = require("Q/OPERATORS/MDB/lua/mk_comp_key_val_specialize" )
   local status, subs, tmpl = pcall(spfn, val_type)
-  assert(status, "error: mk_comp_key_val_specialize()")
-  assert(type(subs) == "table", "error: mk_comp_key_valsort_specialize()")
+  assert(status)
+  assert(type(subs) == "table")
   local func_name = assert(subs.fn)
 
-  local cast_in_val_vec_as = qconsts.qtypes[val_type].ctype .. " *"
   --===================================================================
   -- START: Get function pointer
   local fnptr
@@ -100,18 +104,19 @@ mk_comp_key_val_F4(
   --==============================================
   local chunk_idx = 0
   local in_chunk_idx = -1 -- because incremented before used
-  local M = { "key", "val" } -- names of 2 generators we will produce
   local num_vals_to_consume = 0 
   local num_keys_that_can_be_produced = nK
   local len   = {}
   local chunk = {}
   local lgens = {} -- we make a table of two generators 
   local c_in_val_vec
+  local cast_in_val_vec_as = qconsts.qtypes[val_type].ctype .. " *"
+  local in_val_vec_len, in_val_vec_chunk 
+  local M = { "key", "val" } -- names of 2 generators we will produce
   for _, vecname in pairs(M) do 
     local function kv_gen(chunk_num)
       assert(chunk_num == chunk_idx)
 ::get_more_input::
-      local in_val_vec_len, in_val_vec_chunk 
       if ( num_vals_to_consume == 0 ) then 
         -- read next chunk of all dimension vectors and value vector
         in_chunk_idx = in_chunk_idx + 1 
@@ -131,11 +136,8 @@ mk_comp_key_val_F4(
         -- If no more values, then signal end of vector
         if ( num_vals_to_consume == 0 ) then 
           if ( num_keys_produced == 0 ) then 
-            if ( vecname == "key" ) then 
-              val_vec:eov()
-            elseif ( vecname == "val" ) then 
-              key_vec:eov()
-            end
+            if ( vecname == "key" ) then val_vec:eov() end
+            if ( vecname == "val" ) then key_vec:eov() end
             return 0, nil
           else
             -- You need to flush out the key/val buffers
@@ -143,7 +145,8 @@ mk_comp_key_val_F4(
               val_vec:put_chunk(val_buf, nil, num_keys_produced) 
               val_vec:eov()
               return num_keys_produced, key_buf
-            elseif ( vecname == "val" ) then 
+            end
+            if ( vecname == "val" ) then 
               key_vec:put_chunk(key_buf, nil, num_keys_produced) 
               key_vec:eov()
               return num_keys_produced, val_buf
@@ -191,13 +194,17 @@ mk_comp_key_val_F4(
         -- here's a bit of trickery needed to handle the case that the 
         -- vectors are produced at the same time and are not independent
         chunk_idx = chunk_idx + 1 
-        local len = num_keys_produced
+        -- Note that len is not num_keys_produced as one might expect 
+        -- but qconsts.chunk_size. That's because chunk_size need not be a
+        -- multiple of nR. In that case, we pad with zero key/vals and 
+        -- flush the entire buffer
+        local len = qconsts.chunk_size
         num_keys_produced  = 0
         if ( vecname == "key" ) then 
-          val_vec:put_chunk(val, nil, len)
-          return len, key_buf
+          val_vec:put_chunk(val_buf, nil, len)
+          return qconsts.chunk_size, key_buf
         elseif ( vecname == "val" ) then 
-          key_vec:put_chunk(val, nil, len)
+          key_vec:put_chunk(key_buf, nil, len)
           return len, val_buf
         end
       else
@@ -211,5 +218,5 @@ mk_comp_key_val_F4(
   val_vec = lVector( {gen = lgens.val, has_nulls = false, qtype = val_type})
   return key_vec, val_vec
 end
--- return mdb -- FOR UNIT TESTING
+-- return mk_comp_key_val -- FOR UNIT TESTING
 return require('Q/q_export').export('mk_comp_key_val', mk_comp_key_val)
