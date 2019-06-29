@@ -27,7 +27,6 @@ local function mk_comp_key_val(Tk, in_val_vec)
   local val_type = in_val_vec:fldtype()
   assert ((val_type == "I1") or (val_type == "I2") or (val_type == "I4") or 
           (val_type == "I8") or (val_type == "F4") or (val_type == "F8") )
-  assert(type(Tk) == "table")
   local template, nR, nD, nC = mk_template(nDR)
   for i = 1, nD do 
     assert(type(in_vecs[i] == "lVector"))
@@ -40,7 +39,7 @@ local function mk_comp_key_val(Tk, in_val_vec)
   assert(type(subs) == "table", "error: mk_comp_key_valsort_specialize()")
   local func_name = assert(subs.fn)
 
-  local cast_in_vec_as = qconsts.qtypes[val_type].ctype .. " *"
+  local cast_in_val_vec_as = qconsts.qtypes[val_type].ctype .. " *"
   --===================================================================
   -- START: Get function pointer
   local fnptr
@@ -93,7 +92,6 @@ mk_comp_key_val_F4(
   local val_width = qconsts.qtypes[val_type].width
   local val_buf = cmem.new(nK * val_width, val_type)
   local cst_val_buf = assert(ffi.cast(val_cast_as, get_ptr(val_buf)))
-  local bak_val_buf = val_buf -- because val_buf is changeable
   local bak_cst_val_buf = cst_val_buf -- because val_buf is changeable
 
   --==============================================
@@ -107,44 +105,47 @@ mk_comp_key_val_F4(
   local num_keys_that_can_be_produced = nK
   local len   = {}
   local chunk = {}
-  lgens = {} -- we make a table of two generators 
-  local c_in_vec_val
+  local lgens = {} -- we make a table of two generators 
+  local c_in_val_vec
   for _, vecname in pairs(M) do 
     local function kv_gen(chunk_num)
       assert(chunk_num == chunk_idx)
 ::get_more_input::
-      local in_vec_len, in_vec_chunk 
+      local in_val_vec_len, in_val_vec_chunk 
       if ( num_vals_to_consume == 0 ) then 
+        -- read next chunk of all dimension vectors and value vector
         in_chunk_idx = in_chunk_idx + 1 
         for i = 1, nD do 
           len[i], chunk[i] = in_vecs[i]:chunk(in_chunk_idx)
         end
-        in_vec_len, in_vec_chunk = in_val_vec:chunk(in_chunk_idx)
+        in_val_vec_len, in_val_vec_chunk = in_val_vec:chunk(in_chunk_idx)
+        num_vals_to_consume = len[1]
         -- Check that all input vectors behave similarly
         for i = 2, nD do 
-          assert(len[i] == len[1] )
+          assert(len[i] == num_vals_to_consume)
           if ( chunk[1] == nil ) then assert(chunk[i] == nil) end 
           if ( chunk[1] ~= nil ) then assert(chunk[i] ~= nil) end 
         end
-        assert(len[1] == in_vec_len)
+        assert(in_val_vec_len == num_vals_to_consume)
         --==============================
         -- If no more values, then signal end of vector
-        num_vals_to_consume = len[1]
         if ( num_vals_to_consume == 0 ) then 
-          if ( vecname == "key" ) then 
-            val_vec:eov()
-          elseif ( vecname == "val" ) then 
-            key_vec:eov()
-          end
           if ( num_keys_produced == 0 ) then 
+            if ( vecname == "key" ) then 
+              val_vec:eov()
+            elseif ( vecname == "val" ) then 
+              key_vec:eov()
+            end
             return 0, nil
           else
-            -- Create a CMEM and set the pointer as foreign 
-            -- do not use key_buf, val_buf since they point to start
-            -- of buffers which may or may not be the right thing to do
+            -- You need to flush out the key/val buffers
             if ( vecname == "key" ) then 
+              val_vec:put_chunk(val_buf, nil, num_keys_produced) 
+              val_vec:eov()
               return num_keys_produced, key_buf
             elseif ( vecname == "val" ) then 
+              key_vec:put_chunk(key_buf, nil, num_keys_produced) 
+              key_vec:eov()
               return num_keys_produced, val_buf
             end
           end
@@ -155,14 +156,16 @@ mk_comp_key_val_F4(
       for i = 1, nD do 
         c_in_dim_vals[i-1] = ffi.cast("uint8_t *", get_ptr(chunk[i]))
       end
-      c_in_vec_val = ffi.cast(cast_in_vec_as, get_ptr(in_vec_chunk))
-      assert(c_in_vec_val)
+      c_in_val_vec = assert(ffi.cast(cast_in_val_vec_as, 
+        get_ptr(in_val_vec_chunk)))
       --==============
+      -- Technically, num_vals_consumed refers to the number of values that
+      -- *WILL* be consumed *AFTER* the call to fnptr(...)
       num_vals_consumed = min(
         num_vals_to_consume, math.floor(num_keys_that_can_be_produced/nR))
       num_keys_produced = num_vals_consumed * nR
       local start_time = qc.RDTSC()
-      local status = fnptr(template, nR, nC, c_in_dim_vals, c_in_vec_val, 
+      local status = fnptr(template, nR, nC, c_in_dim_vals, c_in_val_vec, 
          cst_key_buf, cst_val_buf, 
          num_vals_consumed, num_keys_that_can_be_produced)
       record_time(start_time, func_name)
@@ -175,8 +178,11 @@ mk_comp_key_val_F4(
       for i = 1, nD do 
         c_in_dim_vals[i-1] = c_in_dim_vals[i-1] + num_vals_consumed
       end
-      c_in_vec_val = c_in_vec_val + num_vals_consumed
+      c_in_val_vec = c_in_val_vec + num_vals_consumed
+      --==========================================
       if ( num_keys_that_can_be_produced < nR ) then 
+        -- every value we consume creates nR output key/vals. So, if we have
+        -- less space than that, we can't even consume 1 value 
         -- reset buffers because we are about to flush them
         num_keys_that_can_be_produced = nK
         cst_vec_buf = bak_cst_vec_buf

@@ -64,12 +64,15 @@ ${fn}(
       int shift_by = 0;
       for ( int cidx = 0; cidx < nC; cidx++ ) { 
         uint32_t t_ridx_cidx = template[ridx][cidx];
-        if ( t_ridx_cidx == 0 ) { 
-          continue;
+        uint32_t key;
+        if ( t_ridx_cidx == 0 ) {
+          key = 0;
         }
-        // Note the -1 because of Lua indexing versus C
-        uint32_t key = ( t_ridx_cidx  << BITS_FOR_VAL ) | 
+        else {
+          // Note the -1 because of Lua indexing versus C
+          key = ( t_ridx_cidx  << BITS_FOR_VAL ) | 
             in_dim_vals[t_ridx_cidx-1][i];
+        }
         comp_key = comp_key | ( key << shift_by);;
         out_key[offset + ridx] = comp_key;
         out_val[offset + ridx] = val;

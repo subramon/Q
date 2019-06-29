@@ -8,6 +8,11 @@ extern int cmem_dupe( // INTERNAL NOT VISIBLE TO LUA
     const char *field_type,
     const char *cell_name
     );
+extern int cmem_clone( // INTERNAL NOT VISIBLE TO LUA 
+    CMEM_REC_TYPE *ptr_cmem,
+    void *data,
+    int64_t offset
+    );
 extern int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA 
     CMEM_REC_TYPE *ptr_cmem,
     int64_t size,

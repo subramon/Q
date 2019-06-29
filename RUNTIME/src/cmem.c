@@ -66,6 +66,7 @@ void cmem_undef( // USED FOR DEBUGGING
   strcpy(ptr_cmem->field_type, "XXX");
   strcpy(ptr_cmem->cell_name, "Uninitialized");
 }
+
 int cmem_dupe( // INTERNAL NOT VISIBLE TO LUA 
     CMEM_REC_TYPE *ptr_cmem,
     void *data,
@@ -85,6 +86,23 @@ int cmem_dupe( // INTERNAL NOT VISIBLE TO LUA
   if ( ( cell_name != NULL ) && ( *cell_name != '\0' ) ) { 
     strncpy(ptr_cmem->cell_name, cell_name, 16-1); // TODO Undo hard code
   }
+  ptr_cmem->is_foreign = true;
+BYE:
+  return status;
+}
+
+int cmem_clone( // INTERNAL NOT VISIBLE TO LUA 
+    CMEM_REC_TYPE *ptr_cmem,
+    void *data,
+    int64_t offset
+    )
+{
+  int status = 0;
+  if ( data == NULL ) { go_BYE(-1); }
+  if ( offset < 0 ) { go_BYE(-1); }
+  char *cptr = (char *)data;
+  cptr += (offset);
+  ptr_cmem->data = cptr;
   ptr_cmem->is_foreign = true;
 BYE:
   return status;
@@ -130,6 +148,38 @@ BYE:
   return status;
 }
 
+static int l_cmem_clone( lua_State *L) 
+{
+  int status = 0;
+  CMEM_REC_TYPE *ptr_cmem = NULL;
+  void *data = NULL;
+
+  ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
+  return_if_malloc_failed(ptr_cmem);
+  memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
+
+  if ( lua_islightuserdata(L, 1) ) {
+    data = lua_touserdata(L, 1);
+  }
+  else {
+    go_BYE(-1);
+  }
+  int64_t offset =  luaL_checknumber(L, 2);
+  if ( offset <  0 ) { go_BYE(-1); }
+
+  status = cmem_clone(ptr_cmem, data, offset);
+  cBYE(status);
+
+  /* Add the metatable to the stack. */
+  luaL_getmetatable(L, "CMEM");
+  /* Set the metatable on the userdata. */
+  lua_setmetatable(L, -2);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, "ERROR: Could not dupe cmem\n");
+  return 2;
+}
 static int l_cmem_dupe( lua_State *L) 
 {
   int status = 0;
@@ -707,6 +757,7 @@ static const struct luaL_Reg cmem_methods[] = {
     { "is_foreign",     l_cmem_is_foreign },
     { "print_mem",     l_cmem_print_mem },
     { "dupe",     l_cmem_dupe },
+    { "clone",     l_cmem_clone },
     { "name",     l_cmem_name },
     { "set_default", l_cmem_set_default },
     { NULL,          NULL               },
@@ -725,6 +776,7 @@ static const struct luaL_Reg cmem_functions[] = {
     { "is_foreign",     l_cmem_is_foreign },
     { "print_mem",     l_cmem_print_mem },
     { "dupe",     l_cmem_dupe },
+    { "clone",     l_cmem_clone },
     { "name",     l_cmem_name },
     { "set",          l_cmem_set               },
     { "seq",          l_cmem_seq               },

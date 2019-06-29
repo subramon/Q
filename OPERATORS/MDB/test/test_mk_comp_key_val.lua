@@ -20,8 +20,11 @@ tests.t1 = function()
   key_vec:chunk(0)
   assert(key_vec:is_eov())
   assert(val_vec:is_eov())
-  print(val_vec:length() ,n, nR)
-  --assert(val_vec:length() == n * nR)
+  -- print(val_vec:length() ,n, nR)
+  -- print(key_vec:length() ,n, nR)
+  -- Q.print_csv({key_vec, val_vec})
+  assert(val_vec:length() == n * nR)
+  assert(key_vec:length() == n * nR)
   
   print("Success on test t1")
 end
