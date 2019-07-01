@@ -1,9 +1,7 @@
-#include "q_incs.h"
-#include "mk_loc.h"
-#include "fastdiv.h"
-//------------------------------------------------------
+#include "q_rhashmap_common.h"
+#include "q_rhashmap_mk_loc.h"
 int 
-mk_loc(
+q_rhashmap_mk_loc(
     uint32_t *hashes, // input  [nkeys] 
     uint32_t nkeys, // input 
     uint32_t hmap_size, // input 
@@ -19,4 +17,3 @@ mk_loc(
   }
   return status;
 }
-//------------------------------------------------------

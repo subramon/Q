@@ -6,9 +6,6 @@
 #include "cmem_struct.h"
 #include "core_agg.h"
 #include "_files_to_include.h"
-#include "_mk_hash_files_to_include.h"
-#include "_q_rhashmap_I8_I8.h"
-#include "_q_rhashmap_I4_F4.h" // TODO UNDO P1 
 
 static int 
 chk_name(
@@ -131,6 +128,7 @@ agg_put1(
     )
 {
   int status = 0;
+  int num_probes; // TODO P3 Not being used right now
   /* 
    * We need something like this for all key/val types. This is scripted
   */

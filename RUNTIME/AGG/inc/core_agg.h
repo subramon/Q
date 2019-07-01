@@ -80,4 +80,13 @@ agg_putn(
     int nkeys, /* TODO P4 Undo Assumption that nkeys <= 2^31 */
     CMEM_REC_TYPE *is_founds
     );
+extern int 
+agg_getn(
+    AGG_REC_TYPE *ptr_agg,
+    CMEM_REC_TYPE *keys,
+    CMEM_REC_TYPE *cmem_hashes,
+    CMEM_REC_TYPE *cmem_locs,
+    CMEM_REC_TYPE *vals,
+    int nkeys
+    );
 #endif

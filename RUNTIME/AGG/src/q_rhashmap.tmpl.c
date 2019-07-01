@@ -1,4 +1,15 @@
+// TODO: Any advantages to size being a prime number?
+
 /*
+ * Copyright (c) 2019 Ramesh Subramonian <subramonian@gmail.com>
+ * All rights reserved.
+ *
+ * Use is subject to license terms, as specified in the LICENSE file.
+
+ This code was initially forked from the following. Subsequent to that, 
+ significant modifications have been made and new functionality added,
+ bugs fixes, ....
+
  * Copyright (c) 2017 Mindaugas Rasiukevicius <rmind at noxt eu>
  * All rights reserved.
  *
@@ -19,17 +30,7 @@
  *	https://cs.uwaterloo.ca/research/tr/1986/CS-86-14.pdf
  */
 
-#include "_q_rhashmap_struct___KV__.h"
 #include "_q_rhashmap___KV__.h"
-#include "fastdiv.h"
-#include "utils.h"
-
-#define	HASH_INIT_SIZE		(16)
-#define	MAX_GROWTH_STEP		(1024U * 1024)
-
-#define	APPROX_85_PERCENT(x)	(((x) * 870) >> 10)
-#define	APPROX_40_PERCENT(x)	(((x) * 409) >> 10)
-
 
 static int __attribute__((__unused__))
 validate_psl_p(
@@ -43,10 +44,66 @@ validate_psl_p(
   return bucket->key == 0 || diff == bucket->psl;
 }
 
+/* Checks whether resize is needed. If so, calculates newsize */
+/* Resize needed when occupancy is too high or too low */
+static int
+calc_new_size(
+    uint32_t nitems, 
+    uint32_t minsize, 
+    uint32_t size, 
+    bool decreasing, 
+    /* true =>  just added an element and are concerned about sparsity
+     * false=> just added an element and are concerned about denseness
+    */
+    uint32_t *ptr_newsize,
+    bool *ptr_resize
+    )
+{
+  int status = 0;
+  *ptr_resize = false;
+  *ptr_newsize = 0;
+  uint32_t threshold;
+  if ( decreasing ) { 
+    /*
+     * If the load factor is less than threshold, then shrink by
+     * halving the size, but not more than the minimum size.
+     */
+    threshold = (uint32_t)(LOW_WATER_MARK * size);
+    if ( ( nitems > minsize ) && ( nitems < threshold ) ) {
+      *ptr_resize = true;
+      *ptr_newsize = MAX(size >> 1, minsize);
+    }
+  }
+  else {
+    /*
+     * If the load factor is more than the threshold, then resize.
+     */
+    threshold = (uint32_t)(0.85 * (float)size);
+    // TODO P4 Clean up the following code 
+    if ( nitems > threshold ) { 
+      *ptr_resize = true;
+      for ( ; nitems > threshold; ) { 
+        /*
+         * Grow the hash table by doubling its size, but with
+         * a limit of MAX_GROWTH_STEP.
+         */
+       // TODO: P4 Worry about overflow in addition below
+        const size_t grow_limit = size + MAX_GROWTH_STEP;
+        *ptr_newsize = MIN(size << 1, grow_limit);
+        threshold = (uint32_t)(0.85 * *ptr_newsize);
+      }
+    }
+  }
+  return status;
+}
+
 /*
- * rhashmap_get: lookup an value given the key.
+ * q_rhashmap_get: lookup an value given the key.
  *
- * => If key is present, return its associated value; otherwise NULL.
+ * => If key is present, *ptr_val is set to its associated value
+ * and is_found is set to true
+ * => If key is absent, *ptr_val is set to 0
+ * and is_found is set to false
  */
 int 
 q_rhashmap_get___KV__(
@@ -67,36 +124,75 @@ q_rhashmap_get___KV__(
   /*
    * Lookup is a linear probe.
    */
-probe:
-  bucket = &hmap->buckets[i];
-  ASSERT(validate_psl_p(hmap, bucket, i));
+  register uint64_t divinfo = hmap->divinfo;
+  register uint64_t size    = hmap->size;
+  for ( ; ; ) { 
+    bucket = &hmap->buckets[i];
+    ASSERT(validate_psl_p(hmap, bucket, i));
 
-  if ( ( bucket->hash == hash ) && ( bucket->key == key ) ) {
-    *ptr_val = bucket->val;
-    *ptr_is_found = true;
-    goto BYE;
+    if ( ( bucket->hash == hash ) && ( bucket->key == key ) ) {
+      *ptr_val = bucket->val;
+      *ptr_is_found = true;
+      break;
+    }
+
+    /*
+     * Stop probing if we hit an empty bucket; also, if we hit a
+     * bucket with PSL lower than the distance from the base location,
+     * then it means that we found the "rich" bucket which should
+     * have been captured, if the key was inserted -- see the central
+     * point of the algorithm in the insertion function.
+     */
+    if ( ( !bucket->key ) || ( n > bucket->psl ) ) {
+      *ptr_is_found = false;
+      break;
+    }
+    n++;
+    /* Continue to the next bucket. */
+    i = fast_rem32(i + 1, size, divinfo);
   }
-
-  /*
-   * Stop probing if we hit an empty bucket; also, if we hit a
-   * bucket with PSL lower than the distance from the base location,
-   * then it means that we found the "rich" bucket which should
-   * have been captured, if the key was inserted -- see the central
-   * point of the algorithm in the insertion function.
-   */
-  if (!bucket->key || n > bucket->psl) {
-    *ptr_is_found = false;
-    goto BYE;
-  }
-  n++;
-
-  /* Continue to the next bucket. */
-  i = fast_rem32(i + 1, hmap->size, hmap->divinfo);
-  goto probe;
-BYE:
   return status;
 }
 
+//------------------------------------------------------
+int 
+q_rhashmap_getn___KV__(
+    q_rhashmap___KV___t *hmap, // INPUT
+    __KEYTYPE__ *keys, // INPUT: [nkeys] 
+    uint32_t *hashes, // INPUT [nkeys]
+    uint32_t *locs, // INPUT [nkeys] 
+    __VALTYPE__ *vals, // OUTPUT [nkeys] 
+    uint32_t nkeys // INPUT 
+    // TODO P4 we won't do is_found for the first implementation
+    )
+{
+  int status = 0;
+// UNDO  int chunk_size = 1024;
+// UNDO #pragma omp parallel for schedule(static, chunk_size)
+  for ( uint32_t j = 0; j < nkeys; j++ ) {
+    uint32_t n = 0; 
+    uint32_t i = locs[j];
+    uint32_t hash = hashes[j];
+    q_rh_bucket___KV___t *bucket = NULL;
+    vals[j]     = 0;
+
+    for ( ; ; ) { 
+      bucket = &hmap->buckets[i];
+      ASSERT(validate_psl_p(hmap, bucket, i));
+
+      if ( ( bucket->hash == hash ) && ( bucket->key == keys[j] ) ) {
+        vals[j] = bucket->val;
+        break; // found 
+      }
+      if (!bucket->key || n > bucket->psl) {
+        break; // not found
+      }
+      n++;
+      i = fast_rem32(i + 1, hmap->size, hmap->divinfo);
+    }
+  }
+  return status;
+}
 /*
  * rhashmap_insert: internal rhashmap_put(), without the resize.
  */
@@ -106,13 +202,18 @@ q_rhashmap_insert(
     __KEYTYPE__ key,
     __VALTYPE__ val,
     int update_type,
-    __VALTYPE__ *ptr_oldval
+    __VALTYPE__ *ptr_oldval,
+    int *ptr_num_probes
     )
 {
   int status = 0;
   const uint32_t hash = murmurhash3(&key, sizeof(__KEYTYPE__), hmap->hashkey);
   q_rh_bucket___KV___t *bucket, entry;
   uint32_t i;
+  int num_probes = 0;
+  register uint32_t size = hmap->size;
+  register uint64_t divinfo = hmap->divinfo;
+  bool key_updated = false;
 
   // 0 is not a valid value for a key
   if ( key == 0 ) { go_BYE(-1); }
@@ -135,57 +236,58 @@ q_rhashmap_insert(
    * then swap them and continue.
    */
   i = fast_rem32(hash, hmap->size, hmap->divinfo);
-probe:
-  bucket = &hmap->buckets[i];
-  if (bucket->key) {
-    ASSERT(validate_psl_p(hmap, bucket, i));
+  for ( ; ; ) { 
+    bucket = &hmap->buckets[i];
+    // If there is a key in the bucket.
+    if ( bucket->key ) {
+      ASSERT(validate_psl_p(hmap, bucket, i));
 
-    /*
-     * There is a key in the bucket.
-     */
-    if ( (bucket->hash == hash) && (bucket->key == key) ) { 
-      *ptr_oldval = bucket->val;
-      if ( update_type == Q_RHM_SET ) { 
-        bucket->val = val;
+      // TODO P4 Why are we comparing the hash at all below?
+      // If there is a key in the bucket and its you
+      if ( (bucket->hash == hash) && (bucket->key == key) ) { 
+        key_updated = true;
+        // do the prescribed update 
+        *ptr_oldval = bucket->val;
+        if ( update_type == Q_RHM_SET ) { 
+          bucket->val = val;
+        }
+        else if ( update_type == Q_RHM_ADD ) { 
+          bucket->val += val;
+        }
+        else {
+          go_BYE(-1);
+        }
+        break;
       }
-      else if ( update_type == Q_RHM_ADD ) { 
-        bucket->val += val;
+      // We found a "rich" bucket.  Capture its location.
+      if (entry.psl > bucket->psl) {
+        q_rh_bucket___KV___t tmp;
+        /*
+         * Place our key-value pair by swapping the "rich"
+         * bucket with our entry.  Copy the structures.
+         */
+        tmp = entry;
+        entry = *bucket;
+        *bucket = tmp;
       }
-      else {
-        go_BYE(-1);
-      }
-      goto BYE;
+      entry.psl++;
+      /* Continue to the next bucket. */
+      ASSERT(validate_psl_p(hmap, bucket, i));
+      num_probes++;
+      i = fast_rem32(i + 1, size, divinfo);
     }
-
-    /*
-     * We found a "rich" bucket.  Capture its location.
-     */
-    if (entry.psl > bucket->psl) {
-      q_rh_bucket___KV___t tmp;
-
-      /*
-       * Place our key-value pair by swapping the "rich"
-       * bucket with our entry.  Copy the structures.
-       */
-      tmp = entry;
-      entry = *bucket;
-      *bucket = tmp;
+    else {
+      break;
     }
-    entry.psl++;
-
-    /* Continue to the next bucket. */
-    ASSERT(validate_psl_p(hmap, bucket, i));
-    i = fast_rem32(i + 1, hmap->size, hmap->divinfo);
-    goto probe;
+  }
+  if ( !key_updated ) {
+    // Found a free bucket: insert the entry.
+    *bucket = entry; // copy
+    hmap->nitems++;
   }
 
-  /*
-   * Found a free bucket: insert the entry.
-   */
-  *bucket = entry; // copy
-  hmap->nitems++;
-
   ASSERT(validate_psl_p(hmap, bucket, i));
+  *ptr_num_probes = num_probes;
 BYE:
   return status;
 }
@@ -201,13 +303,16 @@ q_rhashmap_resize(
   const size_t oldsize = hmap->size;
   q_rh_bucket___KV___t *newbuckets = NULL;
   const size_t len = newsize * sizeof(q_rh_bucket___KV___t);
+  int num_probes = 0;
 
+  fprintf(stderr, "Resizing to %u ... \n", (uint32_t)newsize);
+  // some obvious logical checks
   if ( ( oldbuckets == NULL ) && ( oldsize != 0 ) ) { go_BYE(-1); }
   if ( ( oldbuckets != NULL ) && ( oldsize == 0 ) ) { go_BYE(-1); }
   if ( ( newsize <= 0 ) || ( newsize >= UINT_MAX ) )  { go_BYE(-1); }
   if ( newsize < hmap->nitems ) { go_BYE(-1); }
 
-  // Check for an overflow and allocate buckets.  
+  // allocate buckets.  
   newbuckets = malloc(len);
   return_if_malloc_failed(newbuckets);
   memset(newbuckets, '\0', len);
@@ -227,7 +332,8 @@ q_rhashmap_resize(
     if ( !bucket->key ) { continue; }
 
     __VALTYPE__ oldval; // not needed except for signature
-    q_rhashmap_insert(hmap, bucket->key, bucket->val, Q_RHM_SET, &oldval);
+    q_rhashmap_insert(hmap, bucket->key, bucket->val, Q_RHM_SET, &oldval,
+        &num_probes);
   }
   free_if_non_null(oldbuckets);
 BYE:
@@ -246,25 +352,21 @@ q_rhashmap_put___KV__(
     __KEYTYPE__ key, 
     __VALTYPE__ val,
     int update_type,
-    __VALTYPE__ *ptr_oldval
+    __VALTYPE__ *ptr_oldval,
+    int *ptr_num_probes
     )
 {
   int status = 0;
-  const size_t threshold = APPROX_85_PERCENT(hmap->size);
+  uint32_t newsize; bool resize, decreasing = false;
 
-  /*
-   * If the load factor is more than the threshold, then resize.
-   */
-  if (__predict_false(hmap->nitems > threshold)) {
-    /*
-     * Grow the hash table by doubling its size, but with
-     * a limit of MAX_GROWTH_STEP.
-     */
-    const size_t grow_limit = hmap->size + MAX_GROWTH_STEP;
-    const size_t newsize = MIN(hmap->size << 1, grow_limit);
+  status = calc_new_size(hmap->nitems, hmap->minsize, hmap->size, 
+      decreasing, &newsize, &resize);
+  if ( resize ) { 
     status = q_rhashmap_resize(hmap, newsize); cBYE(status);
   }
-  status = q_rhashmap_insert(hmap, key, val, update_type, ptr_oldval);
+
+  status = q_rhashmap_insert(hmap, key, val, update_type, 
+      ptr_oldval, ptr_num_probes);
   cBYE(status);
 BYE:
   return status;
@@ -284,11 +386,11 @@ q_rhashmap_del___KV__(
     )
 {
   int status = 0;
-  const size_t threshold = APPROX_40_PERCENT(hmap->size);
   const uint32_t hash = murmurhash3(&key, sizeof(__KEYTYPE__), hmap->hashkey);
   uint32_t n = 0, i = fast_rem32(hash, hmap->size, hmap->divinfo);
   q_rh_bucket___KV___t *bucket;
   *ptr_oldval = 0;
+  bool decreasing = true, resize; uint32_t newsize;
 
 probe:
   /*
@@ -315,8 +417,8 @@ probe:
   *ptr_oldval  = bucket->val;
   *ptr_is_found = true;
   bucket->val  = 0; 
-  // TODO Should we do this? bucket->hash = 0; 
-  // TODO Should we do this? bucket->psl  = 0; 
+  bucket->hash = 0; 
+  bucket->psl  = 0; 
   hmap->nitems--;
 
   /*
@@ -327,6 +429,9 @@ probe:
     q_rh_bucket___KV___t *nbucket = NULL;
 
     bucket->key = 0;
+    bucket->val  = 0; 
+    bucket->hash = 0; 
+    bucket->psl  = 0; 
 
     i = fast_rem32(i + 1, hmap->size, hmap->divinfo);
     nbucket = &hmap->buckets[i];
@@ -344,14 +449,11 @@ probe:
     *bucket = *nbucket;
     bucket = nbucket;
   }
-
-  /*
-   * If the load factor is less than threshold, then shrink by
-   * halving the size, but not more than the minimum size.
-   */
-  if (hmap->nitems > hmap->minsize && hmap->nitems < threshold) {
-    size_t newsize = MAX(hmap->size >> 1, hmap->minsize);
-     status = q_rhashmap_resize(hmap, newsize); cBYE(status);
+  status = calc_new_size(hmap->nitems, hmap->minsize, hmap->size, 
+      decreasing, &newsize, &resize);
+  cBYE(status);
+  if ( resize ) {
+    status = q_rhashmap_resize(hmap, newsize); cBYE(status);
   }
 BYE:
   return status;
@@ -371,16 +473,15 @@ q_rhashmap_create___KV__(
   q_rhashmap___KV___t *hmap = NULL;
 
   hmap = calloc(1, sizeof(q_rhashmap___KV___t));
-  if (!hmap) {
-    return NULL;
-  }
+  if ( hmap == NULL ) { return NULL; }
+
   hmap->minsize = MAX(size, HASH_INIT_SIZE);
-  if (q_rhashmap_resize(hmap, hmap->minsize) != 0) {
+  if ( q_rhashmap_resize(hmap, hmap->minsize) != 0) {
     free(hmap);
     return NULL;
   }
-  ASSERT(hmap->buckets);
-  ASSERT(hmap->size);
+  if (hmap->buckets == NULL ) { WHEREAMI; return NULL; }
+  if (hmap->size    == 0    ) { WHEREAMI; return NULL; }
   return hmap;
 }
 
@@ -394,8 +495,7 @@ q_rhashmap_destroy___KV__(
     q_rhashmap___KV___t *ptr_hmap
     )
 {
-  if ( ptr_hmap == NULL ) { WHEREAMI; return ; }
-  free_if_non_null(ptr_hmap->buckets);
+  free(ptr_hmap->buckets);
   ptr_hmap->buckets = NULL;
   ptr_hmap->size = 0;
   ptr_hmap->nitems = 0;
@@ -403,10 +503,10 @@ q_rhashmap_destroy___KV__(
   ptr_hmap->buckets = 0;
   ptr_hmap->hashkey = 0;
   ptr_hmap->minsize = 0;
+
   free(ptr_hmap);
   ptr_hmap = NULL;
 }
-
 
 // Given 
 // (1) a set of keys 
@@ -453,9 +553,6 @@ q_rhashmap_putn___KV__(
       register uint32_t hash = hashes[j];
       register q_rh_bucket___KV___t *buckets = hmap->buckets;
       register __KEYTYPE__ key = keys[j];
-      // Note the following difference between put and putn
-      // In put(), key == 0 would cause an error. 
-      if ( key == 0 ) { continue; }
       register __VALTYPE__ val = vals[j];
       uint32_t i = locs[j]; // fast_rem32(hash, hmap_size, hmap_divinfo);
       // Following so that 2 threads don't deal with same key
@@ -501,8 +598,9 @@ q_rhashmap_putn___KV__(
     for ( unsigned int i = 0; i < nkeys; i++ ) {
       if ( is_founds[i] == 0 ) {
         __VALTYPE__ oldval;
+        int num_probes; // TODO P2 Should do this properly
         status = q_rhashmap_put___KV__(hmap, keys[i], vals[i], update_type,
-            &oldval);
+            &oldval, &num_probes);
         cBYE(status);
         /* Following has been commented out because it is a wrong check
           By definition, these keys don't exist and hence oldval == 0
@@ -518,46 +616,3 @@ BYE:
   free_if_non_null(is_new);
   return status;
 }
-int 
-q_rhashmap_getn___KV__(
-    q_rhashmap___KV___t *hmap, // INPUT
-    __KEYTYPE__ *keys, // INPUT: [nkeys] 
-    uint32_t *hashes, // INPUT [nkeys]
-    uint32_t *locs, // INPUT [nkeys] 
-    __VALTYPE__ *vals, // OUTPUT [nkeys] 
-    uint32_t nkeys // INPUT 
-    // TODO P4 we won't do is_found for the first implementation
-    )
-{
-  int status = 0;
-// UNDO  int chunk_size = 1024;
-// UNDO #pragma omp parallel for schedule(static, chunk_size)
-  for ( uint32_t j = 0; j < nkeys; j++ ) {
-    uint32_t n = 0; 
-    uint32_t i = locs[j];
-    uint32_t hash = hashes[j];
-    q_rh_bucket___KV___t *bucket = NULL;
-    vals[j]     = 0;
-
-    for ( ; ; ) { 
-      bucket = &hmap->buckets[i];
-      ASSERT(validate_psl_p(hmap, bucket, i));
-
-      if ( ( bucket->hash == hash ) && ( bucket->key == keys[j] ) ) {
-        vals[j] = bucket->val;
-        break; // found 
-      }
-      if (!bucket->key || n > bucket->psl) {
-        break; // not found
-      }
-      n++;
-      i = fast_rem32(i + 1, hmap->size, hmap->divinfo);
-    }
-  }
-  return status;
-}
-/* TODO  P2
-  -- currently we do not differentiate between input value type and 
-  -- aggregate value type. For example, to avoid overflow, input value
-  -- type may be I1 but aggregated value type may be I8
-  */

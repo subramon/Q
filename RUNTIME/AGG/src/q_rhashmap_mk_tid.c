@@ -1,9 +1,16 @@
-#include "q_incs.h"
-#include "mk_tid.h"
-#include "fastdiv.h"
+/*
+ * Copyright (c) 2019 Ramesh Subramonian <subramonian@gmail.com>
+ * All rights reserved.
+ *
+ * Use is subject to license terms, as specified in the LICENSE file.
+ */
+
 //------------------------------------------------------
+#include "q_rhashmap_common.h"
+#include "q_rhashmap_mk_tid.h"
+
 int 
-mk_tid(
+q_rhashmap_mk_tid(
     uint32_t *hashes, // input  [nkeys] 
     uint32_t nkeys, // input 
     uint32_t nT, // input , number of threads
@@ -19,4 +26,3 @@ mk_tid(
   }
   return status;
 }
-//------------------------------------------------------

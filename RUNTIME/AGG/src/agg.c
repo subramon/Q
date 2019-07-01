@@ -13,12 +13,12 @@
 #include "q_incs.h"
 #include "core_agg.h"
 #include "cmem_struct.h"
-#include "_q_rhashmap_I8_I8.h"
+#include "_files_to_include.h"
 
-#include "_mk_hash_I4.h"
-#include "_mk_hash_I8.h"
-#include "mk_loc.h"
-#include "mk_tid.h"
+#include "_q_rhashmap_mk_hash_I4.h"
+#include "_q_rhashmap_mk_hash_I8.h"
+#include "q_rhashmap_mk_loc.h"
+#include "q_rhashmap_mk_tid.h"
 
 int luaopen_libagg (lua_State *L);
 //----------------------------------------
@@ -184,20 +184,20 @@ static int l_agg_putn( lua_State *L) {
   /* TODO P3: Fix following. agg.c should be just a bridge from Lua to C
    * No processing should be done here. Violated this principle */
   if ( strcmp(keys->field_type, "I4") == 0 ) {
-    status = mk_hash_I4((int32_t *)keys->data, nkeys, 
+    status = q_rhashmap_mk_hash_I4((int32_t *)keys->data, nkeys, 
         hmap->hashkey, (uint32_t *)hashes->data);
   }
   else if ( strcmp(keys->field_type, "I8") == 0 ) {
-    status = mk_hash_I8((int64_t *)keys->data, nkeys, 
+    status = q_rhashmap_mk_hash_I8((int64_t *)keys->data, nkeys, 
         hmap->hashkey, (uint32_t *)hashes->data);
   }
   else {
     go_BYE(-1);
   }
   cBYE(status);
-  status = mk_loc((uint32_t *)hashes->data, nkeys, hmap->size, 
+  status = q_rhashmap_mk_loc((uint32_t *)hashes->data, nkeys, hmap->size, 
       (uint32_t *)locs->data); cBYE(status);
-  status = mk_tid((uint32_t *)hashes->data, nkeys, num_threads, 
+  status = q_rhashmap_mk_tid((uint32_t *)hashes->data, nkeys, num_threads, 
       (uint8_t *)tids->data); cBYE(status);
 
   status = agg_putn(ptr_agg, keys, update_type, 
@@ -223,18 +223,18 @@ static int l_agg_getn( lua_State *L) {
   /* TODO P3: Fix following. agg.c should be just a bridge from Lua to C
    * No processing should be done here. Violated this principle */
   if ( strcmp(keys->field_type, "I4") == 0 ) {
-    status = mk_hash_I4((int32_t *)keys->data, nkeys, 
+    status = q_rhashmap_mk_hash_I4((int32_t *)keys->data, nkeys, 
         hmap->hashkey, (uint32_t *)hashes->data);
   }
   else if ( strcmp(keys->field_type, "I8") == 0 ) {
-    status = mk_hash_I8((int64_t *)keys->data, nkeys, 
+    status = q_rhashmap_mk_hash_I8((int64_t *)keys->data, nkeys, 
         hmap->hashkey, (uint32_t *)hashes->data);
   }
   else {
     go_BYE(-1);
   }
   cBYE(status);
-  status = mk_loc((uint32_t *)hashes->data, nkeys, hmap->size, 
+  status = q_rhashmap_mk_loc((uint32_t *)hashes->data, nkeys, hmap->size, 
       (uint32_t *)locs->data); cBYE(status);
   status = agg_getn(ptr_agg, keys, hashes, locs, vals, nkeys);
   if ( status < 0 ) { WHEREAMI; goto BYE; }
@@ -258,7 +258,7 @@ static int l_agg_put1( lua_State *L) {
 
   strcpy(ptr_old_val->field_type, ptr_val->field_type);
   int status = agg_put1(ptr_key, ptr_val, update_type, 
-      &(ptr_old_val->cdata), ptr_agg); 
+      &(ptr_old_val->cdata), ptr_agg);
   if ( status < 0 ) { WHEREAMI; goto BYE; }
   luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */

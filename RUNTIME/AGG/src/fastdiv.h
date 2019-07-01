@@ -31,7 +31,6 @@
 #define	_FASTDIV_H_
 
 #include <inttypes.h>
-
 #include "utils.h"
 
 /*

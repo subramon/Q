@@ -14,10 +14,10 @@
 
 uint32_t
 murmurhash3(
-    const void *key, 
-    size_t len, 
-    uint32_t seed
-    )
+      const void *key, 
+      size_t len, 
+      uint32_t seed
+      )
 {
   const uint8_t *data = key;
   const size_t orig_len = len;
