@@ -49,7 +49,7 @@ for _, key in pairs(keytypes) do
     cstr = string.gsub(cstr, "__KV__", kv);
     local outc = "_q_rhashmap_" .. key .. "_" .. val .. ".c"
     plfile.write(src_dir .. outc, cstr)
-    cfiles[#cfiles+1] = outc
+    cfiles[#cfiles+1] = src_dir .. outc
     --================================================
   end
 end
@@ -60,10 +60,10 @@ for _, key in pairs(keytypes) do
     --================================================
     cstr = plfile.read("q_rhashmap_mk_hash.tmpl.c")
     cstr = string.gsub(cstr, "__KEYTYPE__", keyctype);
-    hstr = string.gsub(cstr, "__K__", key);
+    cstr = string.gsub(cstr, "__K__", key);
     local outc = "_q_rhashmap_mk_hash_" .. key .. ".c"
     plfile.write(src_dir .. outc, cstr)
-    cfiles[#cfiles+1] = outc
+    cfiles[#cfiles+1] = src_dir .. outc
     --================================================
     hstr = plfile.read("q_rhashmap_mk_hash.tmpl.h")
     hstr = string.gsub(hstr, "__KEYTYPE__", keyctype);
@@ -73,11 +73,12 @@ for _, key in pairs(keytypes) do
     hfiles[#hfiles+1] = '#include "' .. outh .. '"'
     --================================================
 end
-print(".c files produced = ")
 print(table.concat(cfiles, ' '))
 
 hfiles[#hfiles+1] = "\n"
 plfile.write("_files_to_include.h", table.concat(hfiles, '\n'))
+-- The following files are created with a .x suffix. They are not
+-- really stand-alone files but are included
 --======================================
 instr = [[
   else if ( ( strcmp(keytype, "KEY") == 0 ) &&  ( strcmp(valtype, "VAL") == 0 ) ) {
@@ -101,7 +102,7 @@ for _, key in pairs(keytypes) do
   end
 end
 tbl[#tbl+1] = "\n"
-plfile.write(src_dir .. "_creation.c", table.concat(tbl, '\n'))
+plfile.write(src_dir .. "_creation.x", table.concat(tbl, '\n'))
 --======================================
 instr = [[
   else if ( ( strcmp(ptr_key->field_type, "KEY") == 0 ) && 
@@ -132,7 +133,7 @@ for _, key in pairs(keytypes) do
   end
 end
 tbl[#tbl+1] = "\n"
-plfile.write(src_dir .. "_put1.c", table.concat(tbl, '\n'))
+plfile.write(src_dir .. "_put1.x", table.concat(tbl, '\n'))
 --======================================
 instr= [[
   else if ( ( strcmp(ptr_key->field_type, "KEY") == 0 ) && 
@@ -162,12 +163,12 @@ for _, key in pairs(keytypes) do
 end
 tbl[#tbl+1] = "\n"
 assert(#tbl > 10)
-plfile.write(src_dir .. "_get1.c", table.concat(tbl, '\n'))
+plfile.write(src_dir .. "_get1.x", table.concat(tbl, '\n'))
 --======================================
 -- Produce del1 - similar to get1
-instr = plfile.read(src_dir .. "_get1.c")
+instr = plfile.read(src_dir .. "_get1.x")
 instr = string.gsub(instr, "_get_", "_del_");
-plfile.write(src_dir .. "_del1.c", instr)
+plfile.write(src_dir .. "_del1.x", instr)
 --======================================
 -- Produce *destroy.c
 instr= [[
@@ -192,7 +193,7 @@ for _, key in pairs(keytypes) do
   end
 end
 tbl[#tbl+1] = "\n"
-plfile.write(src_dir .. "_destroy.c", table.concat(tbl, '\n'))
+plfile.write(src_dir .. "_destroy.x", table.concat(tbl, '\n'))
 --======================================
 instr = [[
   else if ( ( strcmp(keys->field_type, "KEY") == 0 ) && 
@@ -219,7 +220,7 @@ for _, key in pairs(keytypes) do
   end
 end
 tbl[#tbl+1] = "\n"
-plfile.write(src_dir .. "_putn.c", table.concat(tbl, '\n'))
+plfile.write(src_dir .. "_putn.x", table.concat(tbl, '\n'))
 --======================================
 instr = [[
   else if ( ( strcmp(keys->field_type, "KEY") == 0 ) && 
@@ -246,6 +247,5 @@ for _, key in pairs(keytypes) do
   end
 end
 tbl[#tbl+1] = "\n"
-plfile.write(src_dir .. "_getn.c", table.concat(tbl, '\n'))
+plfile.write(src_dir .. "_getn.x", table.concat(tbl, '\n'))
 --======================================
-print("ALL DONE")

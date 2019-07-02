@@ -45,6 +45,7 @@ tests.t2 = function()
 end
 tests.t3 = function(n)
   n = n or 32*1048576
+  -- TODO P4 This is a stress test. Move it to different suite of tests
   -- cretae large number of Aggregators. 
   -- Iteration 1: explicitly delete
   -- Iteration 2: have Lua do deletion 
@@ -52,7 +53,7 @@ tests.t3 = function(n)
   for j = 1, 2 do 
     for i = 1, n do
       local A = lAggregator(params)
-      -- if ( ( i % 1048576 ) == 0 ) then print("Iteration ", i) end
+      if ( ( i % 1048576 ) == 0 ) then print("Iteration ", i) end
       if ( j == 1 ) then 
         A:delete()
       end
@@ -62,6 +63,7 @@ tests.t3 = function(n)
   print("Success on test t3")
 end
 tests.t4 = function(n)
+  -- TODO P4 This is a stress test. Move it to different suite of tests
   -- create aggregator, put large number of values for same key
   -- every get should get back last value  put
   -- note that update_type = set is default
@@ -79,6 +81,7 @@ tests.t4 = function(n)
     oldval = newval
     local M = A:get_meta()
     assert(M.nitems == 1)
+      if ( ( i % 1048576 ) == 0 ) then print("Iteration ", i) end
   end
   --============================================
   print("Success on test t4")

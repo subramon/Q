@@ -20,7 +20,7 @@ dc :
 clean :
 	rm -r -f ../gen_src; 
 	rm -r -f ../gen_inc; 
-	rm -f _* *.so
+	rm -f _* *.so *.o
 #----------------------------------
 _gen_files : mk_comp_key_val.tmpl.lua
 	luajit generator.lua 

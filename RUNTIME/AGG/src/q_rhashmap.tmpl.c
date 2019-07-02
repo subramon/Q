@@ -305,7 +305,6 @@ q_rhashmap_resize(
   const size_t len = newsize * sizeof(q_rh_bucket___KV___t);
   int num_probes = 0;
 
-  fprintf(stderr, "Resizing to %u ... \n", (uint32_t)newsize);
   // some obvious logical checks
   if ( ( oldbuckets == NULL ) && ( oldsize != 0 ) ) { go_BYE(-1); }
   if ( ( oldbuckets != NULL ) && ( oldsize == 0 ) ) { go_BYE(-1); }

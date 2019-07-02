@@ -1,5 +1,5 @@
 #include "q_incs.h"
-#include "utils.h"
+#include "q_rhashmap_utils.h"
 #include "_mk_hash___KEY__.h"
 //------------------------------------------------------
 int 

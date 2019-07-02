@@ -46,7 +46,7 @@ agg_free(
 {
   int status = 0;
   if ( ptr_agg == NULL ) {  go_BYE(-1); }
-#include "_destroy.c"
+#include "_destroy.x"
   memset(ptr_agg, '\0', sizeof(AGG_REC_TYPE));
   // Don't do this in C. Lua will do it: free(ptr_agg);
 BYE:
@@ -78,7 +78,7 @@ agg_del1(
   /* 
    * We need something like this for all key/val types. This is scripted
   */
-#include "_del1.c"
+#include "_del1.x"
 BYE:
   return status;
 }
@@ -96,7 +96,7 @@ agg_get1(
   /* 
    * We need something like this for all key/val types. This is scripted
   */
-#include "_get1.c"
+#include "_get1.x"
 BYE:
   return status;
 }
@@ -132,7 +132,7 @@ agg_put1(
   /* 
    * We need something like this for all key/val types. This is scripted
   */
-#include "_put1.c"
+#include "_put1.x"
 BYE:
   return status;
 }
@@ -156,7 +156,7 @@ agg_putn(
   uint32_t *locs   = (uint32_t *)cmem_locs->data;
   uint8_t  *tids   = (uint8_t  *)cmem_tids->data;
   uint8_t  *isfs   = (uint8_t  *)cmem_isfs->data;
-#include "_putn.c"
+#include "_putn.x"
   /*
   if ( ( strcmp(keys->field_type, "I4") == 0 ) && 
       ( strcmp(vals->field_type, "F4") == 0 ) ) {
@@ -187,7 +187,7 @@ agg_getn(
   int status = 0;
   uint32_t *hashes = (uint32_t *)cmem_hashes->data;
   uint32_t *locs   = (uint32_t *)cmem_locs->data;
-#include "_getn.c"
+#include "_getn.x"
 BYE:
   return status;
 }
@@ -217,7 +217,7 @@ agg_new(
     x = q_rhashmap_create_I4_I1(initial_size);
   }
   */
-#include "_creation.c"
+#include "_creation.x"
   if ( x == NULL ) { go_BYE(-1); }
   ptr_agg->hmap = x;
 

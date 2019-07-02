@@ -31,7 +31,7 @@
 #define	_FASTDIV_H_
 
 #include <inttypes.h>
-#include "utils.h"
+#include "q_rhashmap_utils.h"
 
 /*
  * Fast 32bit division and remainder.

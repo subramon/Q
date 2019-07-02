@@ -64,6 +64,7 @@ clean:
 	make -C ${Q_SRC_ROOT}/OPERATORS/JOIN/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2_VAL/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/MDB/lua/ clean
 
 install: uninstall 
 	cd ../../;\
@@ -200,6 +201,10 @@ _idx_sort: _q_basic
 _mv_mul: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ ${BUILD_TYPE}
 	touch _mv_mul
+
+_mdb: _q_basic
+	make  -C ${Q_SRC_ROOT}/OPERATORS/MDB/lua/ ${BUILD_TYPE}
+	touch _mdb
 
 _s_to_f: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua ${BUILD_TYPE}
