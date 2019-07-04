@@ -19,7 +19,7 @@ local function malloc_buffers_for_data(M)
       databuf[v.name] = cmem.new(bufsz, qtype, v.name, 64)
       cdata[i-1]  = get_ptr(databuf[v.name] , qtype)
     else
-      cdata[i] = ffi.NULL
+      cdata[i-1] = ffi.NULL
     end
     --=======================================
     if ( v.has_nulls ) then

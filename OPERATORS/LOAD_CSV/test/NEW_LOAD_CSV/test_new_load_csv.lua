@@ -25,14 +25,15 @@ tests.t1 = function()
   until n == 0 
   --Q.print_csv(T)
   -- get length of input
+  local datafile = "in1.csv"
   local num_lines = 0
-  f = stringio.open(datafile)
-  for line in f:lines() do num_lines = num_lines + 1 end
+  for _ in io.lines(datafile) do -- 'filename.txt' do
+    num_lines = num_lines + 1
+  end
   num_lines = num_lines - 1 -- because of header
   -- check length of vectors
   for k, v in pairs(T) do
     assert(v:is_eov())
-    print(v:length())
     assert(v:length() == num_lines)
   end
 end

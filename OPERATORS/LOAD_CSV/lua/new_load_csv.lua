@@ -37,7 +37,7 @@ local function new_load_csv(
   -- This is tricky. We create generators for each vector
   local vectors = {} 
   local chunk_idx = -1
-  lgens = {}
+  local lgens = {}
   for midx, v in pairs(M) do 
     local vec_name = v.name
     if ( v.is_load ) then 
@@ -50,9 +50,7 @@ local function new_load_csv(
         assert(bridge_C(M, infile, fld_sep, is_hdr,
           file_offset, num_rows_read, cdata, nn_cdata))
         record_time(start_time, "load_csv_fast")
-        print("file offset = ", tonumber(file_offset[0]))
         local l_num_rows_read = tonumber(num_rows_read[0])
-        print("l_num_rows_read  = ", l_num_rows_read )
         --===================================
         if ( l_num_rows_read > 0 ) then 
           for k, v in pairs(M) do 

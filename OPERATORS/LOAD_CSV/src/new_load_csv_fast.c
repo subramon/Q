@@ -90,6 +90,10 @@ new_load_csv_fast(
   //----------------------------------------
 
   size_t xidx = *ptr_file_offset; // "seek" to proper point in file
+  if ( xidx >= file_size ) {// nothing more to read 
+    // fprintf(stderr, "Nothing more to read\n");
+    goto BYE; 
+  } 
   uint64_t row_ctr = 0;
   uint32_t col_ctr = 0;
   bool is_last_col;
@@ -117,17 +121,16 @@ new_load_csv_fast(
     // TODO xidx == 0 should not be an error
     // xidx == 0 => means the file is empty 
     if ( xidx == 0 ) { go_BYE(-1); } 
-    if ( xidx > file_size ) { break; } // check == or >= 
     // Deal with header line 
     //row_ctr == 0 means we are reading the first line which is the header
-    if ( is_hdr ) { 
+    if ( ( is_hdr )  && ( *ptr_file_offset == 0 ) ) { 
       if ( row_ctr != 0 ) { go_BYE(-1); }
       col_ctr++;
       if ( is_last_col ) {
         col_ctr = 0;
         is_hdr = false;
       }
-      if ( xidx == file_size ) { break; } // check == or >= 
+      if ( xidx >= file_size ) { break; } 
       continue; 
     }
     // If this column is not to be loaded then continue 
@@ -239,7 +242,7 @@ new_load_csv_fast(
       col_ctr = 0;
       row_ctr++;
       if ( row_ctr == chunk_size ) { 
-        fprintf(stderr, "222: Breaking early\n");
+        // fprintf(stderr, "222: Breaking early\n");
         break;
       }
     }
@@ -252,7 +255,7 @@ new_load_csv_fast(
      * or greater, but the value from that last get_cell still needs to be
      * written to file*/
     if ( xidx == file_size ) { 
-      fprintf(stderr, "333: Breaking because of EOF \n");
+      // fprintf(stderr, "333: Breaking because of EOF \n");
       break; 
     } // check == or >= 
   }
