@@ -1,7 +1,8 @@
 local Q = require 'Q'
+local qconsts = require 'Q/UTILS/lua/q_consts'
 local F = {}
 function F.f1(n)
-  local n = n or 200000
+  local n = n or 3 * qconsts.chunk_size  + 17
   
   local prod = {}
   prod[1] = { category = Q.rand({ lb = 0, ub = 127, qtype = "I1", len = n})}

@@ -10,9 +10,9 @@
 #include "_mmap.h"
 #include "_trim.h"
 #include "_set_bit_u64.h"
-#include "set_up_qtypes.h"
+#include "_set_up_qtypes.h"
 //STOP_INCLUDES
-#include "new_load_csv_fast.h"
+#include "_new_load_csv_fast.h"
 
 /*Given a CSV file, this function reads a cell at a time. It then 
  * places this into buffers provided by the caller.
@@ -50,10 +50,10 @@ new_load_csv_fast(
   uint64_t *word_B1 = NULL; // used for 64 bit integer buffer if col is B1
   char fld_sep;
 
-  if ( strcasecmp(fld_sep, "comma") == 0 ) { 
-    fld_sep = ';';
+  if ( strcasecmp(str_fld_sep, "comma") == 0 ) { 
+    fld_sep = ',';
   }
-  else if ( strcasecmp(fld_sep, "tab") == 0 ) { 
+  else if ( strcasecmp(str_fld_sep, "tab") == 0 ) { 
     fld_sep = '\t';
   }
   else {
@@ -73,10 +73,10 @@ new_load_csv_fast(
   // Check on input data structures
   for ( uint32_t i = 0; i < nC; i++ ) { 
     if ( has_nulls[i] ) {
-      if ( nn_data[i] == NULL ) { go_BYE(-1); }
+      if ( ( !nn_data ) || ( nn_data[i] == NULL ) ) { go_BYE(-1); }
     }
     else {
-      if ( nn_data[i] != NULL ) { go_BYE(-1); }
+      if ( ( nn_data ) && ( nn_data[i] != NULL ) ) { go_BYE(-1); }
     }
   }
   *ptr_nR = 0;
@@ -136,6 +136,10 @@ new_load_csv_fast(
       if ( col_ctr == nC ) { 
         col_ctr = 0;
         row_ctr++;
+        if ( row_ctr == chunk_size ) { 
+          fprintf(stderr, "111: Breaking early\n");
+          break;
+        }
       }
       if ( xidx == file_size ) { break; } // check == or >= 
       continue;
@@ -218,7 +222,7 @@ new_load_csv_fast(
         }
         break;
       case SC : 
-        // TODO 
+        // TODO P1
         break;
       default:
         go_BYE(-1); //should not come here
@@ -234,16 +238,27 @@ new_load_csv_fast(
     if ( col_ctr == nC ) { 
       col_ctr = 0;
       row_ctr++;
+      if ( row_ctr == chunk_size ) { 
+        fprintf(stderr, "222: Breaking early\n");
+        break;
+      }
     }
     /*this check needs to be done after the file has been written to because it
+        if ( row_ctr == chunk_size ) { 
+          fprintf(stderr, "Breaking early\n");
+          break;
+        }
      * is possible that on the last get_cell, xidx is incremented to file_size
      * or greater, but the value from that last get_cell still needs to be
      * written to file*/
-    if ( xidx == file_size ) { break; } // check == or >= 
+    if ( xidx == file_size ) { 
+      fprintf(stderr, "333: Breaking because of EOF \n");
+      break; 
+    } // check == or >= 
   }
   *ptr_nR = row_ctr;
   // Set file offset so that next call knows where to pick up from
-  // TODO *ptr_file_offset  = XXXXX;
+  *ptr_file_offset  = xidx; 
 BYE:
   free_if_non_null(qtypes);
   mcr_rs_munmap(mmap_file, file_size);

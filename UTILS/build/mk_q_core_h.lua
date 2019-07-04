@@ -5,17 +5,18 @@ local pldir                = require 'pl.dir'
 local plfile               = require 'pl.file'
 local function mk_q_core_h()
 -- final_h is where all the .h files that need to be cdef'd will be kept
-  local final_h, final_so, q_build_dir = chk_env_vars()
+  local final_h, _, q_build_dir = chk_env_vars()
   local tgt_h  = q_build_dir .. "/q_core.h"
   local hdir   = q_build_dir .. "/include/"
-  local q_struct_files = {}
-  local q_h = {}
-  local q_h_files = {}
-  local h_files = pldir.getfiles(hdir, "*.h")
+  local q_h = {} -- table of all .h files to be cocantenated
+
   -- We need to make sure that all structs get put in first
   -- hence the need to denote some files as struct files
+  local q_struct_files = {} -- table of all .h files with typedef struct
+  local q_h_files = {}      -- rest of the .h files
+
+  local h_files = pldir.getfiles(hdir, "*.h")
   for _, h_file in pairs(h_files) do 
-  
     if is_struct_file(h_file) then
       q_struct_files[#q_struct_files + 1] = h_file
     else
@@ -32,3 +33,4 @@ local function mk_q_core_h()
   return true
 end
 return mk_q_core_h
+-- mk_q_core_h()

@@ -282,23 +282,17 @@ BYE:
 int
 update_file_name(VEC_REC_TYPE *ptr_vec) {
   int status = 0;
-  char *temp_buf_path = NULL;
-  char *temp_buf_file = NULL;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
-  temp_buf_path = malloc(Q_MAX_LEN_FILE_NAME);
-  temp_buf_file = malloc(Q_MAX_LEN_BASE_FILE);
-  do {
-    memset(temp_buf_path, '\0', Q_MAX_LEN_FILE_NAME);
-    memset(temp_buf_file, '\0', Q_MAX_LEN_BASE_FILE);
-    strncpy(temp_buf_path, ptr_vec->file_name, Q_MAX_LEN_DIR);
-    status = rand_file_name(temp_buf_file, Q_MAX_LEN_BASE_FILE);
-    cBYE(status);
-    strncat(temp_buf_path, temp_buf_file, Q_MAX_LEN_BASE_FILE);
-  } while ( isfile(temp_buf_path) );
-  strncat(ptr_vec->file_name, temp_buf_file, Q_MAX_LEN_BASE_FILE);
+  char temp_buf_file[Q_MAX_LEN_BASE_FILE+1];
+
+  // TODO P2 We are gamblng on the fact that the file name is
+  // indeed unique. Should check that no such file already exists
+  memset(temp_buf_file, '\0', Q_MAX_LEN_BASE_FILE+1);
+  status = rand_file_name(temp_buf_file, Q_MAX_LEN_BASE_FILE);
+  cBYE(status);
+
+  strncat(ptr_vec->file_name, temp_buf_file, Q_MAX_LEN_FILE_NAME);
 BYE:
-  free_if_non_null(temp_buf_path);
-  free_if_non_null(temp_buf_file);
   return status;
 }
 

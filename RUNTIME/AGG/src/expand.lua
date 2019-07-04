@@ -1,8 +1,8 @@
 local plfile = require 'pl.file'
 local plpath = require 'pl.path'
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local src_dir = "../gen_src/"
-local inc_dir = "../gen_inc/"
+local src_dir = "../x_gen_src/"
+local inc_dir = "../x_gen_inc/"
 plpath.rmdir(src_dir)
 plpath.rmdir(inc_dir)
 plpath.mkdir(src_dir)

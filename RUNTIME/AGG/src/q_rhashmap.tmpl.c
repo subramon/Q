@@ -215,8 +215,9 @@ q_rhashmap_insert(
   register uint64_t divinfo = hmap->divinfo;
   bool key_updated = false;
 
-  // 0 is not a valid value for a key
-  if ( key == 0 ) { go_BYE(-1); }
+  // 0 is not a valid value for a key, TODO P3 Document this better
+  // Note that we do NOT throw an error
+  if ( key == 0 ) { return status; }
 
   // Setup the bucket entry.
   entry.key   = key;

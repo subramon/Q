@@ -44,7 +44,7 @@ tests.t2 = function()
   
 end
 tests.t3 = function(n)
-  n = n or 32*1048576
+  n = n or 1048576
   -- TODO P4 This is a stress test. Move it to different suite of tests
   -- cretae large number of Aggregators. 
   -- Iteration 1: explicitly delete

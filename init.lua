@@ -38,6 +38,7 @@ require 'Q/OPERATORS/INDEX/lua/indexing'
 require 'Q/OPERATORS/JOIN/lua/join'
 
 require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
+require "Q/OPERATORS/LOAD_CSV/lua/new_load_csv"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"

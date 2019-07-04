@@ -23,7 +23,7 @@ directory that matches dir_pattern
   assert(plpath.isdir(destdir))
   assert(currdir ~= destdir)
   if string.find(currdir, dir_pattern)  then 
-    -- print(currdir)
+    -- print("Searching in ", currdir)
     local files = pldir.getfiles(currdir, file_pattern)
     assert(#files > 0, 
       "No files like " .. file_pattern .. " in " .. currdir)
@@ -37,6 +37,7 @@ directory that matches dir_pattern
       end
       if ( not skip ) then 
         plfile.copy(file, destdir)
+        -- print("Copying " ..  file .. " to " ..  destdir)
         num_files_copied = num_files_copied + 1
       end
     end

@@ -2,7 +2,7 @@
 INCS=-I../inc/ -I../gen_inc/
 INCDIR=../gen_inc/
 
-all : libutils.so ${hdr_files} asc2bin
+all : libutils.so ${hdr_files} 
 
 ../gen_inc/_file_exists.h : 
 	lua ../lua/cli_extract_func_decl.lua file_exists.c ${INCDIR}
@@ -133,44 +133,41 @@ hdr_files = \
 
 #--------
 SRC_FILES=  \
-	mix_UI4.c \
-	mix_UI8.c \
-	rand_file_name.c \
-	file_exists.c \
-        isfile.c \
-        isdir.c \
-	delete_file.c \
-	make_dir.c \
-	trim.c \
+	bits_to_bytes.c \
+	bytes_to_bits.c \
 	c_copy.c \
 	c_free.c \
-	get_file_size.c \
-	mmap.c \
-	munmap.c \
-	get_time_usec.c \
-	rdtsc.c \
-	bytes_to_bits.c \
-	bits_to_bytes.c \
-	write_bits_to_file.c  \
+	delete_file.c \
+	file_exists.c \
+        generate_bin.c  \
         get_bit.c  \
         get_bit_u64.c  \
+	get_file_size.c \
+	get_time_usec.c \
+	is_valid_chars_for_num.c \
+        isfile.c \
+        isdir.c \
+	make_dir.c \
+	mix_UI4.c \
+	mix_UI8.c \
+	mmap.c \
+	munmap.c \
+        q_omp_get_num_procs.c  \
+	rand_file_name.c \
+	rdtsc.c \
         set_bit.c  \
         set_bit_u64.c  \
-        q_omp_get_num_procs.c  \
-        generate_bin.c  \
-	is_valid_chars_for_num.c \
-	spooky_hash.c
+	spooky_hash.c \
+	trim.c \
+	write_bits_to_file.c  \
+
 
 libutils.so : ${bin_search_files} ${hdr_files}
 	gcc ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} ${SRC_FILES} ../gen_src/*.c -o libutils.so
 	mkdir -p ${Q_BUILD_DIR}/include/
 	mkdir -p ${Q_BUILD_DIR}/src/
-	cp ${INCDIR}/*.h         ${Q_BUILD_DIR}/include/
-	echo "Done copying ${INCDIR} files"
 	cp ${SRC_FILES}      ${Q_BUILD_DIR}/src/
-	echo "Done copying src files"
 	cp ../inc/*          ${Q_BUILD_DIR}/include/
-	echo "Done copying ../inc/*  files"
 
 clean :
 	rm -f ../gen_src/*
@@ -179,10 +176,4 @@ clean :
 	rm -f *.so
 	rm -f *.o
 
-asc2bin : 
-	echo TODO
-	
-
-bin2asc :
-	echo TODO
-
+# TODO P4 Do stuff for asc2bin and bin2asc

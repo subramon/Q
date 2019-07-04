@@ -14,8 +14,9 @@ local malloc_buffers_for_data =
 local bridge_C  = require "Q/OPERATORS/LOAD_CSV/lua/bridge_C"
 local get_ptr	    = require 'Q/UTILS/lua/get_ptr'
 local cmem          = require 'libcmem'
+local record_time   = require 'Q/UTILS/lua/record_time'
  --======================================
-local function load_csv(
+local function new_load_csv(
   infile,   -- input file to read (string)
   M,  -- metadata (table)
   opt_args
@@ -31,56 +32,72 @@ local function load_csv(
   local num_rows_read = ffi.cast("uint64_t *", 
     get_ptr(cmem.new(1*ffi.sizeof("uint64_t"))))
 
-  local fld_sep = M.fld_sep
-  assert(malloc_buffers_for_data(M))
-  local vectors = {} 
+  local databuf, nn_databuf, cdata, nn_cdata = malloc_buffers_for_data(M)
   --=======================================
   -- This is tricky. We create generators for each vector
+  local vectors = {} 
+  local chunk_idx = -1
   lgens = {}
   for midx, v in pairs(M) do 
-    lgens[name] = nil
+    local vec_name = v.name
     if ( v.is_load ) then 
       local name = v.name
       local function lgen()
+        chunk_idx = chunk_idx + 1 
         num_rows_read[0] = 0
         --===================================
         local start_time = qc.RDTSC()
         assert(bridge_C(M, infile, fld_sep, is_hdr,
-          file_offset, num_rows_read, data, nn_data))
+          file_offset, num_rows_read, cdata, nn_cdata))
         record_time(start_time, "load_csv_fast")
+        print("file offset = ", tonumber(file_offset[0]))
+        local l_num_rows_read = tonumber(num_rows_read[0])
+        print("l_num_rows_read  = ", l_num_rows_read )
         --===================================
-        for i = 1, #M do
-          if ( i ~= midx ) then 
-            vectors[i]:put_chunk(data[i], nn_data[i], num_rows_read)
+        if ( l_num_rows_read > 0 ) then 
+          for k, v in pairs(M) do 
+            if ( ( v.name ~= vec_name )  and ( v.is_load ) ) then
+              vectors[v.name]:put_chunk(
+                databuf[v.name], nn_databuf[i], l_num_rows_read)
+            end
           end
         end
-        if ( num_rows_read < qconsts.chunk_size ) then 
+        if ( l_num_rows_read < qconsts.chunk_size ) then 
           -- Free buffers since you won't need them again
-          for i = 1, #M do 
-            if ( i ~= midx ) then 
+          for k, v in pairs(M) do 
+            if ( ( v.name ~= vec_name )  and ( v.is_load ) ) then
               -- Note subtlety of above if condition.  You can't delete 
               -- buffer for vector whose chunk you are returning
-              if (    data[i] ~= nil ) then    data[i]:delete() end
-              if ( nn_data[i] ~= nil ) then nn_data[i]:delete() end
+              if ( not    databuf[v.name] ) then    
+                databuf[v.name]:delete() 
+                if ( not nn_databuf[v.name] ) then 
+                  nn_databuf[v.namei]:delete() 
+                end
+              end
+              vectors[v.name]:eov()
             end
           end
         end 
-        return num_rows_read, data[midx], nn_data[midx]
+        if ( l_num_rows_read > 0 ) then 
+          return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
+        else
+          return 0, nil, nil
+        end
       end
-    lgens[name] = lgen
+      lgens[vec_name] = lgen
     end
   end
   -- Note that you may have a vector that does not have any null 
   -- vales but still has a nn_vec. This will happen if you marked it as
   -- has_nulls==true. Caller's responsibility to clean this up
   --==============================================
-  for midx, col in pairs(M) do
-    vectors[col.name] = lVector(
-      {gen = lgen, has_nulls = col.has_nulls, qtype = col.qtype})
-    if ( type(col.meaning) == "string" ) then 
-      vectors[col.name]:set_meta("__meaning", M[i].meaning)
+  for k, v in pairs(M) do 
+    vectors[v.name] = lVector(
+      {gen = lgens[v.name], has_nulls = v.has_nulls, qtype = v.qtype})
+    if ( type(v.meaning) == "string" ) then 
+      vectors[v.name]:set_meta("__meaning", M[i].meaning)
     end
-    vectors[col.name]:is_memo(col.is_memo)
+    vectors[v.name]:is_memo(v.is_memo)
   end
   return vectors
 end

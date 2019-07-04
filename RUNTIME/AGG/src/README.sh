@@ -21,4 +21,3 @@ cp $EXT_DIR/q_rhashmap_mk_tid.h .
 cp $EXT_DIR/q_rhashmap_struct.tmpl.h .
 cp $EXT_DIR/q_rhashmap_common.h .
 
-cp $EXT_DIR/macros.h                 .

@@ -50,7 +50,7 @@ local function validate_meta(
     --===========================================
     local width -- how many bytes to allocate per element
     if qtype == "SC" then 
-      width = assert(fld_M.width ~=nil , err.MAX_WIDTH_NULL_ERROR)
+      width = assert(fld_M.width, err.MAX_WIDTH_NULL_ERROR)
       -- remember 1 byte for nullc
       assert( ((width >= 2) and (width <= qconsts.max_width["SC"])), 
         col .. err.INVALID_WIDTH_SC )
@@ -59,6 +59,7 @@ local function validate_meta(
     else
       width = assert(qconsts.qtypes[qtype].width)
     end
+    fld_M.width = width
     --===========================================
   end
   assert(num_cols_to_load > 0, err.COLUMN_NOT_PRESENT)

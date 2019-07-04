@@ -64,12 +64,12 @@ GEN_FILES = \
 
 libprint_csv.so : ${SRC_FILES} ${GEN_FILES} 
 	gcc ${QC_FLAGS} ${Q_LINK_FLAGS} ${SRC_FILES} ${GEN_FILES} ${CFLAGS} ${INCS} -shared -o libprint_csv.so
-	test -d  ${Q_BUILD_DIR}/
-	cp ${SRC_FILES}      ${Q_BUILD_DIR}/src/
-	cp ../gen_inc/_SC_to_txt.h ${Q_BUILD_DIR}/include/
-	cp ../gen_inc/_B1_to_txt.h ${Q_BUILD_DIR}/include/
-	cp ../gen_src/*.c ${Q_BUILD_DIR}/src/
-	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
+	# test -d  ${Q_BUILD_DIR}/
+	# cp ${SRC_FILES}      ${Q_BUILD_DIR}/src/
+	# cp ../gen_inc/_SC_to_txt.h ${Q_BUILD_DIR}/include/
+	# cp ../gen_inc/_B1_to_txt.h ${Q_BUILD_DIR}/include/
+	# cp ../gen_src/*.c ${Q_BUILD_DIR}/src/
+	# cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
 
 test_q : libprint_csv.so
 	echo "TODO"

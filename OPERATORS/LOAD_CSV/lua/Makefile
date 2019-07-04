@@ -19,6 +19,14 @@ all : libload_csv.so
 ../../UTILS/gen_inc/_is_valid_chars_for_num.h :
 	make -C ../../../UTILS/src/ 
 
+../gen_inc/_load_csv_fast.h : 
+	mkdir -p ../gen_inc/
+	lua ${UDIR}/cli_extract_func_decl.lua ../src/load_csv_fast.c ${INCDIR}
+
+../gen_inc/_new_load_csv_fast.h : 
+	mkdir -p ../gen_inc/
+	lua ${UDIR}/cli_extract_func_decl.lua ../src/new_load_csv_fast.c ${INCDIR}
+
 ../gen_inc/_get_cell.h : 
 	mkdir -p ../gen_inc/
 	lua ${UDIR}/cli_extract_func_decl.lua ../src/get_cell.c ${INCDIR}
@@ -79,7 +87,9 @@ clean :
 
 ../src/txt_to_B1.c : ../gen_inc/_txt_to_B1.h
 
-#../src/load_csv_fast.c : ../gen_inc/_load_csv_fast.h
+../src/load_csv_fast.c : ../gen_inc/_load_csv_fast.h
+
+../src/new_load_csv_fast.c : ../gen_inc/_new_load_csv_fast.h
 
 SRC_FILES =  \
 	../src/SC_to_TM.c  \
@@ -91,6 +101,7 @@ SRC_FILES =  \
 	../src/txt_to_SC.c \
 	../src/txt_to_B1.c \
 	../src/load_csv_fast.c \
+	../src/new_load_csv_fast.c \
 
 AUX_FILES = \
 	../../../UTILS/src/is_valid_chars_for_num.c 
@@ -110,17 +121,16 @@ libload_csv.so : ${SRC_FILES} ${GEN_FILES} ${AUX_FILES}
 	gcc ${QC_FLAGS} ${Q_LINK_FLAGS} ${SRC_FILES} ${GEN_FILES} ${AUX_FILES} ${CFLAGS} ${INCS} -shared -o libload_csv.so
 	test -d  ${Q_BUILD_DIR}/src/
 	cp ${SRC_FILES}      ${Q_BUILD_DIR}/src/
-	cp ${GEN_FILES}      ${Q_BUILD_DIR}/src/
+#	cp ${GEN_FILES}      ${Q_BUILD_DIR}/src/
 	cp ../inc/SC_to_TM.h ${Q_BUILD_DIR}/include/
 	cp ../inc/TM_to_SC.h ${Q_BUILD_DIR}/include/
-	cp ${GEN_INC_FILES}        ${Q_BUILD_DIR}/include/
-	cp ../gen_inc/_TM_to_I8.h ${Q_BUILD_DIR}/include/
-	cp ../gen_inc/_get_cell.h  ${Q_BUILD_DIR}/include/
-	cp ../gen_inc/_new_get_cell.h  ${Q_BUILD_DIR}/include/
-	cp ../gen_inc/_set_up_qtypes.h  ${Q_BUILD_DIR}/include/
-	cp ../gen_inc/_txt_to_SC.h ${Q_BUILD_DIR}/include/
-	cp ../gen_inc/_txt_to_B1.h ${Q_BUILD_DIR}/include/
-	cp ../inc/load_csv_fast.h ${Q_BUILD_DIR}/include/
+#	cp ${GEN_INC_FILES}        ${Q_BUILD_DIR}/include/
+#	cp ../gen_inc/_TM_to_I8.h ${Q_BUILD_DIR}/include/
+#	cp ../gen_inc/_get_cell.h  ${Q_BUILD_DIR}/include/
+#	cp ../gen_inc/_new_get_cell.h  ${Q_BUILD_DIR}/include/
+#	cp ../gen_inc/_set_up_qtypes.h  ${Q_BUILD_DIR}/include/
+#	cp ../gen_inc/_txt_to_SC.h ${Q_BUILD_DIR}/include/
+#	cp ../gen_inc/_txt_to_B1.h ${Q_BUILD_DIR}/include/
 
 test_q : libload_csv.so
 	echo "TODO"

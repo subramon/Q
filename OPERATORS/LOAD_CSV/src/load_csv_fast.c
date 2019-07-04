@@ -13,7 +13,7 @@
 #include "_file_exists.h"
 #include "_trim.h"
 //STOP_INCLUDES
-#include "load_csv_fast.h"
+#include "_load_csv_fast.h"
 
 /*Given a csv file, this method will convert the file into nC binary files
  * where nC is the number of columns in the csv file and each file will
@@ -238,10 +238,10 @@ load_csv_fast(
     }
 
     if ( is_trim[col_ctr] ) {
-      xidx = get_cell(mmap_file, file_size, xidx, is_last_col, buf, lbuf, BUFSZ);
+      xidx = get_cell(mmap_file, file_size, xidx, is_last_col, ',', buf, lbuf, BUFSZ);
     }
     else {
-      xidx = get_cell(mmap_file, file_size, xidx, is_last_col, buf, NULL, BUFSZ);
+      xidx = get_cell(mmap_file, file_size, xidx, is_last_col, ',', buf, NULL, BUFSZ);
     }
 
     if ( xidx == 0 ) { 

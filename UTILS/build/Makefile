@@ -1,5 +1,6 @@
 DEFAULT_GOAL := all
-OUTPUTS = libq_core.so q.h q_core.h
+# TODO P2 : Replace /tmp/q/ with Q_BUILD_DIR
+OUTPUTS = /tmp/q/libq_core.so q.h q_core.h
 Q_SRC_ROOT=$(abspath ../../ )
 
 # Default build is static
@@ -11,12 +12,12 @@ static: BUILD_TYPE="all"
 
 dynamic: BUILD_TYPE="all_for_dc"
 
-static: _q_core
+static: /tmp/q/libq_core.so
 	cd ${Q_SRC_ROOT}
 	echo "Q statically compiled"
 
 # Why does dynamic depend on q_core and not on q_basic?
-dynamic: _q_core
+dynamic: /tmp/q/libq_core.so
 	cd ${Q_SRC_ROOT}
 	echo "Q dynamically compiled"
 
@@ -74,7 +75,7 @@ install: uninstall
 	cp -r ./RUNTIME /usr/local/share/lua/5.1/Q;\
 	cp -r  q_export.lua /usr/local/share/lua/5.1/Q;\
 	cp -r  init.lua /usr/local/share/lua/5.1/Q;\
-	# FIX THIS, pick library from build target
+	# TODO P3 FIX THIS, pick library from build target
 	cp ${Q_ROOT}/lib/libq_core.so /usr/lib;\
 	cp ${Q_ROOT}/include/q_core.h /usr/local/share/lua/5.1/Q
 
@@ -84,20 +85,28 @@ uninstall:
 	rm -f /usr/lib/libq_core.so;\
 	echo "Q uninstalled"
 
-_q_core: _q_basic _q_operators
+/tmp/q/libq_core.so: _q_basic _vec _dnn _q_operators _agg
 	cd ${Q_SRC_ROOT}/UTILS/lua/
 	luajit mk_so.lua
-	touch _q_core
+	cp /tmp/q/libq_core.so ${Q_ROOT}/lib/
 
-_q_basic: _utils _load_csv _print _runtime
+# OLD _q_basic: _utils _load_csv _print _runtime
+_q_basic: _utils  _vec _dnn
 	luajit mk_so.lua 
 	touch _q_basic
 
-_vec: _load_csv _print _utils 
+_vec: 
+	make  -C ${Q_SRC_ROOT}/UTILS/src/
+	make  -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/
+	make  -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/
 	make  -C ${Q_SRC_ROOT}/RUNTIME/src/
 	touch _vec
 
-_dnn: _load_csv _print _utils _vec 
+_dnn: 
+	make  -C ${Q_SRC_ROOT}/UTILS/src/
+	make  -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/
+	make  -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/
+	make  -C ${Q_SRC_ROOT}/RUNTIME/src/
 	make  -C ${Q_SRC_ROOT}/RUNTIME/DNN/src/
 	touch _dnn
 
@@ -105,8 +114,8 @@ _agg: _load_csv _print _utils _vec
 	make  -C ${Q_SRC_ROOT}/RUNTIME/AGG/src/
 	touch _agg
 
-_runtime: _load_csv _print _utils _vec _dnn _agg
-	touch _runtime
+# OLD _runtime: _load_csv _print _utils _vec _dnn # _agg
+# OLD 	touch _runtime
 
 
 _utils:
@@ -237,7 +246,7 @@ _q_operators: \
 	_approx_quantile \
 	_ax_equals_b \
 	_corrm \
-	_count \
+	_count  \
 	_drop_nulls \
 	_f_to_s \
 	_f1f2opf3 \
@@ -251,12 +260,14 @@ _q_operators: \
 	_ifxthenyelsez \
 	_index \
 	_join \
+	_mdb \
 	_mv_mul \
 	_s_to_f \
 	_sort \
 	_sort2 \
 	_sumby  \
 	_unique \
-	_where  
+	_where  \
+
 	touch _q_operators 
 	echo "all done for operators"

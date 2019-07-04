@@ -42,8 +42,9 @@ local qconsts = {}
   qconsts.Q_METADATA_FILE = os.getenv("Q_METADATA_FILE")
   qconsts.LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")
 
+  -- TODO Delete space_for_load_csv once new_load_csv stabilizes
   qconsts.space_for_load_csv = 64 * 1048576 -- 64M
-  qconsts.chunk_size = 128 * 1024
+  qconsts.chunk_size = 128 -- TODO  * 1024
   qconsts.debug = false -- set to TRUE only if you want debugging
   qconsts.is_memo = true -- Vector code will refer memo value from this place
   qconsts.qc_trace = false -- set to FALSE if performance logging of qc is to be turned off

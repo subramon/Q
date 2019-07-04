@@ -11,6 +11,7 @@ get_cell(
     char *X,
     size_t nX,
     size_t xidx,
+    char fld_sep,
     bool is_last_col,
     char *buf,
     char *lbuf,
@@ -19,7 +20,7 @@ get_cell(
 //STOP_FUNC_DECL
 {
   int status = 0;
-  char dquote = '"'; char comma = ','; 
+  char dquote = '"'; 
   char bslash = '\\'; char eoln = '\n';
   uint32_t bufidx = 0;
   bool is_trim = true;
@@ -47,7 +48,7 @@ get_cell(
       last_char = eoln;
     }
     else {
-      last_char = comma;
+      last_char = fld_sep;
     }
   }
   //----------------------------
@@ -67,7 +68,7 @@ get_cell(
           if ( X[xidx] != eoln ) { go_BYE(-1); }
         }
         else {
-          if ( X[xidx] != comma ) { go_BYE(-1); }
+          if ( X[xidx] != fld_sep ) { go_BYE(-1); }
         }
         xidx++;
       }

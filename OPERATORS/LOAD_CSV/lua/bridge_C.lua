@@ -40,7 +40,8 @@ local function bridge_C(
     has_nulls[i-1] = M[i].has_nulls
   end
 
-  local status = qc["load_csv_fast"](infile, nC, fld_sep, 
+  local status = qc["new_load_csv_fast"](infile, nC, 
+    ffi.cast("char *", fld_sep),
     qconsts.chunk_size, num_rows_read, file_offset, fldtypes, is_hdr, 
     is_load, has_nulls, data, nn_data)
   assert(status == 0, "load_csv_fast failed")

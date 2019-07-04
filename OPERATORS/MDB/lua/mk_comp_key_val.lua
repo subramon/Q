@@ -47,7 +47,7 @@ local function mk_comp_key_val(Tk, in_val_vec)
   --===================================================================
   -- START: Get function pointer
   local fnptr
-  local unit_testing = true
+  local unit_testing = false
   if ( unit_testing ) then 
     -- NOTE: Control does not come here in production usage
     local ffi = require 'ffi' -- NOTE: Following cdef hard coded 
@@ -99,8 +99,8 @@ mk_comp_key_val_F4(
   local bak_cst_val_buf = cst_val_buf -- because val_buf is changeable
 
   --==============================================
-  local c_in_dim_vals = ffi.cast("uint8_t **",
-    get_ptr(cmem.new(nD * ffi.sizeof("uint8_t *"))))
+  local buf_in_dim_vals = cmem.new(nD * ffi.sizeof("uint8_t *"))
+  local c_in_dim_vals = ffi.cast("uint8_t **", get_ptr(buf_in_dim_vals))
   --==============================================
   local chunk_idx = 0
   local in_chunk_idx = -1 -- because incremented before used
@@ -136,19 +136,23 @@ mk_comp_key_val_F4(
         -- If no more values, then signal end of vector
         if ( num_vals_to_consume == 0 ) then 
           if ( num_keys_produced == 0 ) then 
-            if ( vecname == "key" ) then val_vec:eov() end
-            if ( vecname == "val" ) then key_vec:eov() end
+            if ( vecname == "key" ) then val_vec:eov() val_buf:delete() end
+            if ( vecname == "val" ) then key_vec:eov() key_buf:delete() end
             return 0, nil
           else
             -- You need to flush out the key/val buffers
             if ( vecname == "key" ) then 
               val_vec:put_chunk(val_buf, nil, num_keys_produced) 
               val_vec:eov()
+              val_buf:delete()
+              buf_in_dim_vals:delete()
               return num_keys_produced, key_buf
             end
             if ( vecname == "val" ) then 
               key_vec:put_chunk(key_buf, nil, num_keys_produced) 
               key_vec:eov()
+              key_buf:delete()
+              buf_in_dim_vals:delete()
               return num_keys_produced, val_buf
             end
           end
