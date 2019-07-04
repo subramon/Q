@@ -36,6 +36,31 @@ tests.t1 = function()
     assert(v:is_eov())
     assert(v:length() == num_lines)
   end
+  print("Test t1 succeeded")
+end
+tests.t2 = function()
+  local M = {}
+  local O = { is_hdr = true }
+  M[1] = { name = "i1", qtype = "I4", has_nulls = false }
+  M[2] = { name = "s1", qtype = "SC", has_nulls = false, width = 6}
+  local datafile = "in2.csv"
+  local T = Q.new_load_csv(datafile, M, O)
+  local chunk_idx = 0
+  for k, v in pairs(T) do 
+    assert(type(v) == "lVector")
+    if ( k == "i1" ) then assert(v:fldtype() == "I4") end 
+    if ( k == "s1" ) then assert(v:fldtype() == "SC") end 
+  end
+  repeat 
+    local n 
+    for k, v in pairs(T) do 
+      n = v:chunk(chunk_idx)
+    end
+    chunk_idx = chunk_idx + 1
+  until n == 0 
+  Q.print_csv(T)
+  print("Test t2 succeeded")
 end
 --return tests
 tests.t1()
+tests.t2()

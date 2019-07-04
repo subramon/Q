@@ -29,6 +29,9 @@ local function bridge_C(
   local has_nulls = get_ptr(cmem.new(nC * ffi.sizeof("bool")))
   has_nulls = ffi.cast("bool *", has_nulls)  
   
+  local width = get_ptr(cmem.new(nC * ffi.sizeof("int")))
+  width = ffi.cast("int *", width)  
+  
   local fld_name_width = 8 -- TODO Undo this hard coiding
   local fldtypes = ffi.cast("char **", 
     get_ptr(cmem.new(nC * ffi.sizeof("char *"))))
@@ -38,12 +41,13 @@ local function bridge_C(
     ffi.copy(fldtypes[i-1], M[i].qtype)
     is_load[i-1]   = M[i].is_load
     has_nulls[i-1] = M[i].has_nulls
+    width[i-1] = M[i].width
   end
 
   local status = qc["new_load_csv_fast"](infile, nC, 
     ffi.cast("char *", fld_sep),
     qconsts.chunk_size, num_rows_read, file_offset, fldtypes, is_hdr, 
-    is_load, has_nulls, data, nn_data)
+    is_load, has_nulls, width, data, nn_data)
   assert(status == 0, "load_csv_fast failed")
   return true
 end

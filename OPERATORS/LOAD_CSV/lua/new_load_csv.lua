@@ -90,8 +90,12 @@ local function new_load_csv(
   -- has_nulls==true. Caller's responsibility to clean this up
   --==============================================
   for k, v in pairs(M) do 
-    vectors[v.name] = lVector(
-      {gen = lgens[v.name], has_nulls = v.has_nulls, qtype = v.qtype})
+    local tinfo = {}
+    tinfo.gen = lgens[v.name]
+    tinfo.has_nulls = v.has_nulls
+    tinfo.qtype = v.qtype
+    if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
+    vectors[v.name] = lVector(tinfo)
     if ( type(v.meaning) == "string" ) then 
       vectors[v.name]:set_meta("__meaning", M[i].meaning)
     end

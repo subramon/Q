@@ -23,11 +23,10 @@ local function malloc_buffers_for_data(M)
     end
     --=======================================
     if ( v.has_nulls ) then
-      assert(nil, "TO BE IMPLEMENTED TODO P1")
-      nn_cdata[i] = ffi.cast("uint64_t *", 
-        get_ptr(cmem.new(qconsts.chunk_size, "B1", v.name, 64)))
+      nn_databuf[v.name] = cmem.new(qconsts.chunk_size, "B1", v.name, 64)
+      nn_cdata[i-1] = ffi.cast("uint64_t *", get_ptr(nn_databuf[v.name]))
     else
-      nn_cdata[i] = ffi.NULL
+      nn_cdata[i-1] = ffi.NULL
     end
   end
   return databuf, nn_databuf, cdata, nn_cdata

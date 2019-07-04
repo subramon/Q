@@ -37,6 +37,7 @@ new_load_csv_fast(
     bool is_hdr, /* [nC] */
     bool * is_load, /* [nC] */
     bool * has_nulls, /* [nC] */
+    int *width, /* [nC] */
     void **data, /* [nC][chunk_size] */
     uint64_t **nn_data /* [nC][chunk_size] */
     )
@@ -225,7 +226,11 @@ new_load_csv_fast(
         }
         break;
       case SC : 
-        // TODO P1
+        {
+          char *data_ptr = (char *)data[col_ctr];
+          strncpy(data_ptr+(row_ctr*width[col_ctr]),
+              buf, width[col_ctr]);
+        }
         break;
       default:
         go_BYE(-1); //should not come here
