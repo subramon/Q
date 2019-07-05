@@ -56,10 +56,7 @@ new_load_csv_fast(
 //STOP_FUNC_DECL
 {
   int status = 0;
-  if ( ( *ptr_file_offset == 0 ) || ( *ptr_file_offset > 10000000 ) ) { 
-    printf("hello world\n");
-  }
-  fprintf(stderr, "Before C: file offset = %llu \n", *ptr_file_offset);
+  // fprintf(stderr, "Before C: file offset = %llu \n", *ptr_file_offset);
   char *mmap_file = NULL; //X
   uint64_t file_size = 0; //nX
   char fld_sep;
@@ -84,16 +81,16 @@ new_load_csv_fast(
   for ( uint32_t i = 0; i < nC; i++ ) {
     if ( !nn_data ) { go_BYE(-1); }
     if (  has_nulls[i] ) { if ( nn_data[i] == NULL ) { go_BYE(-1); } }
-    if ( !has_nulls[i] ) { if ( nn_data[i] != NULL ) { 
-      fprintf(stderr, "hello world\n");
-      go_BYE(-1); } 
+    if ( !has_nulls[i] ) { 
+      if ( nn_data[i] != NULL ) { 
+        WHEREAMI; // go_BYE(-1); 
+      }
     }
   }
   *ptr_nR = 0;
   // mmap the file
   status = rs_mmap(infile, &mmap_file, &file_size, false); cBYE(status);
   if ( ( mmap_file == NULL ) || ( file_size == 0 ) )  { go_BYE(-1); }
-  fprintf(stderr, "file offset = %llu \n", *ptr_file_offset);
   if ( *ptr_file_offset > file_size ) { go_BYE(-1); }
   //----------------------------------------
 
@@ -278,7 +275,7 @@ new_load_csv_fast(
   *ptr_nR = row_ctr;
   // Set file offset so that next call knows where to pick up from
   *ptr_file_offset  = xidx; 
-  fprintf(stderr, "After C: file offset = %llu \n", *ptr_file_offset);
+  // fprintf(stderr, "After C: file offset = %llu \n", *ptr_file_offset);
 BYE:
   mcr_rs_munmap(mmap_file, file_size);
   return status;

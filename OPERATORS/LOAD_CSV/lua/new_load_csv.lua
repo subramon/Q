@@ -40,19 +40,17 @@ local function new_load_csv(
       local name = v.name
       local function lgen(chunk_num)
         chunk_idx = chunk_idx + 1 
-        print("BEFORE: Calling bridge_C ", chunk_idx, tonumber(file_offset[0]))
         assert(chunk_num == chunk_idx)
         --===================================
         local start_time = qc.RDTSC()
-        --[[
+
         assert(bridge_C(M, infile, fld_sep, is_hdr,
           file_offset, num_rows_read, cdata, nn_cdata,
           is_load, has_nulls, is_trim, width, fldtypes))
-       --]]
+
         record_time(start_time, "load_csv_fast")
         local l_num_rows_read = tonumber(num_rows_read[0])
-        l_num_rows_read = qconsts.chunk_size
-        if ( chunk_num == 4096 ) then l_num_rows_read = 0 end 
+        print(chunk_idx, l_num_rows_read)
         --===================================
         if ( l_num_rows_read > 0 ) then 
           for k, v in pairs(M) do 
@@ -80,7 +78,6 @@ local function new_load_csv(
           end
           F.free_aux()
         end 
-        print("AFTER: Calling bridge_C ", chunk_idx, tonumber(file_offset[0]))
         if ( l_num_rows_read > 0 ) then 
           return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
         else
@@ -100,7 +97,7 @@ local function new_load_csv(
     tinfo.has_nulls = v.has_nulls
     tinfo.qtype = v.qtype
     if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
-    vectors[v.name] = lVector(tinfo)
+    vectors[v.name] = lVector(tinfo):set_name(v.name)
     if ( type(v.meaning) == "string" ) then 
       vectors[v.name]:set_meta("__meaning", M[i].meaning)
     end

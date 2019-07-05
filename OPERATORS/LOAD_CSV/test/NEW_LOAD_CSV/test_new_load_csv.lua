@@ -1,5 +1,7 @@
 local Q = require 'Q'
 local tests = {}
+local plfile = require 'pl.file'
+local plpath = require 'pl.path'
 --=======================================================
 tests.t1 = function()
   local M = {}
@@ -79,7 +81,10 @@ tests.t3 = function()
     end
     chunk_idx = chunk_idx + 1
   until n == 0 
-  Q.print_csv(T, { lb = 0, ub = 10, opfile = "_x.csv"})
+  local opfile = '_x.csv'
+  plfile.delete(opfile)
+  Q.print_csv(T, { lb = 0, ub = 10, opfile = opfile})
+  assert(plpath.isfile(opfile))
   print("Test t3 succeeded")
 end
 -- tests.t1()
