@@ -85,7 +85,8 @@ get_cell(
       lbuf[bufidx++] = X[xidx++];
       continue;
     }
-    if ( bufidx >= bufsz ) { go_BYE(-1); }
+    if ( bufidx >= bufsz ) { go_BYE(-1); 
+    }
     lbuf[bufidx++] = X[xidx++];
   }
 BYE:
