@@ -64,7 +64,7 @@ end
 tests.t3 = function()
   local M = {}
   local O = { is_hdr = true }
-  -- M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
+  M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
   M[#M+1] = { name = "store_id", qtype = "I4", has_nulls = false}
   M[#M+1] = { name = "customer_id", qtype = "I8", has_nulls = false}
   M[#M+1] = { name = "category_id", qtype = "I4", has_nulls = false}

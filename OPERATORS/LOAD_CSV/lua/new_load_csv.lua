@@ -11,7 +11,8 @@ local process_opt_args =
   require "Q/OPERATORS/LOAD_CSV/lua/new_process_opt_args"
 local malloc_buffers_for_data = 
   require "Q/OPERATORS/LOAD_CSV/lua/malloc_buffers_for_data"
-local bridge_C  = require "Q/OPERATORS/LOAD_CSV/lua/bridge_C"
+local F             = require "Q/OPERATORS/LOAD_CSV/lua/malloc_aux"
+local bridge_C      = require "Q/OPERATORS/LOAD_CSV/lua/bridge_C"
 local get_ptr	    = require 'Q/UTILS/lua/get_ptr'
 local cmem          = require 'libcmem'
 local record_time   = require 'Q/UTILS/lua/record_time'
@@ -26,29 +27,8 @@ local function new_load_csv(
   local is_hdr, fld_sep = process_opt_args(opt_args)
   --=======================================
   local databuf, nn_databuf, cdata, nn_cdata = malloc_buffers_for_data(M)
-  --=======================================
-  local file_offset = ffi.cast("uint64_t *", 
-    get_ptr(cmem.new(1*ffi.sizeof("uint64_t"))))
-  file_offset[0] = 0
-
-  local num_rows_read = ffi.cast("uint64_t *", 
-    get_ptr(cmem.new(1*ffi.sizeof("uint64_t"))))
-
-  local nC = #M
-  local is_load = get_ptr(cmem.new(nC * ffi.sizeof("bool")))
-  is_load = ffi.cast("bool *", is_load)
-
-  local has_nulls = get_ptr(cmem.new(nC * ffi.sizeof("bool")))
-  has_nulls = ffi.cast("bool *", has_nulls)  
-  
-  local is_trim = get_ptr(cmem.new(nC * ffi.sizeof("bool")))
-  is_trim = ffi.cast("bool *", is_trim)  
-  
-  local width = get_ptr(cmem.new(nC * ffi.sizeof("int")))
-  width = ffi.cast("int *", width)  
-  
-  local fldtypes = get_ptr(cmem.new(nC * ffi.sizeof("int")))
-  fldtypes = ffi.cast("int *", fldtypes)  
+  local file_offset, num_rows_read, is_load, has_nulls, is_trim, width, 
+    fldtypes = F.malloc_aux(#M)
   --=======================================
   local vectors = {} 
   local chunk_idx = -1
@@ -59,19 +39,20 @@ local function new_load_csv(
     if ( v.is_load ) then 
       local name = v.name
       local function lgen(chunk_num)
-        print("BEFORE: Calling bridge_C ", chunk_idx, tonumber(file_offset[0]))
         chunk_idx = chunk_idx + 1 
+        print("BEFORE: Calling bridge_C ", chunk_idx, tonumber(file_offset[0]))
         assert(chunk_num == chunk_idx)
-        -- TODO P1 Do we really need this? num_rows_read[0] = 0
         --===================================
         local start_time = qc.RDTSC()
+        --[[
         assert(bridge_C(M, infile, fld_sep, is_hdr,
           file_offset, num_rows_read, cdata, nn_cdata,
           is_load, has_nulls, is_trim, width, fldtypes))
-
+       --]]
         record_time(start_time, "load_csv_fast")
         local l_num_rows_read = tonumber(num_rows_read[0])
-        assert(l_num_rows_read > 0,  "TODO IUNDO THIS")
+        l_num_rows_read = qconsts.chunk_size
+        if ( chunk_num == 4096 ) then l_num_rows_read = 0 end 
         --===================================
         if ( l_num_rows_read > 0 ) then 
           for k, v in pairs(M) do 
@@ -97,6 +78,7 @@ local function new_load_csv(
               vectors[v.name]:eov()
             end
           end
+          F.free_aux()
         end 
         print("AFTER: Calling bridge_C ", chunk_idx, tonumber(file_offset[0]))
         if ( l_num_rows_read > 0 ) then 
