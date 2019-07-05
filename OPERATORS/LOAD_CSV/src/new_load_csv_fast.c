@@ -14,6 +14,17 @@
 //STOP_INCLUDES
 #include "_new_load_csv_fast.h"
 
+// I really don't like this hard coding below especially since
+// bridge_C.lua needs to kept in sync with this. But it helped
+// work around  some strange memory corruption
+#define B1 1 
+#define I1 2 
+#define I2 3 
+#define I4 4 
+#define I8 5 
+#define F4 6 
+#define F8 7 
+#define SC 8 
 /*Given a CSV file, this function reads a cell at a time. It then 
  * places this into buffers provided by the caller.
  */
@@ -33,22 +44,24 @@ new_load_csv_fast(
     uint32_t chunk_size,
     uint64_t *ptr_nR,
     uint64_t *ptr_file_offset,
-    char ** fldtypes, /* [nC] */
+    const int *const fldtypes, /* [nC] */
+    const bool * const is_trim, /* [nC] */
     bool is_hdr, /* [nC] */
-    bool * is_load, /* [nC] */
-    bool * has_nulls, /* [nC] */
-    int *width, /* [nC] */
+    const bool *  const is_load, /* [nC] */
+    const bool * const has_nulls, /* [nC] */
+    const int * const width, /* [nC] */
     void **data, /* [nC][chunk_size] */
     uint64_t **nn_data /* [nC][chunk_size] */
     )
 //STOP_FUNC_DECL
 {
   int status = 0;
+  if ( ( *ptr_file_offset == 0 ) || ( *ptr_file_offset > 10000000 ) ) { 
+    printf("hello world\n");
+  }
+  fprintf(stderr, "Before C: file offset = %llu \n", *ptr_file_offset);
   char *mmap_file = NULL; //X
-  size_t file_size = 0; //nX
-  qtype_type *qtypes = NULL;
-  bool *is_trim = NULL; // whether to trim or not */
-  uint64_t *word_B1 = NULL; // used for 64 bit integer buffer if col is B1
+  uint64_t file_size = 0; //nX
   char fld_sep;
 
   if ( strcasecmp(str_fld_sep, "comma") == 0 ) { 
@@ -67,30 +80,24 @@ new_load_csv_fast(
   if ( ptr_nR == NULL ) { go_BYE(-1); }
   if ( ptr_file_offset == NULL ) { go_BYE(-1); }
 
-  word_B1 = malloc(nC * sizeof(uint64_t));
-  for ( uint32_t i = 0; i < nC; i++ ) {
-    word_B1[i] = 0;
-  }
   // Check on input data structures
-  for ( uint32_t i = 0; i < nC; i++ ) { 
-    if ( has_nulls[i] ) {
-      if ( ( !nn_data ) || ( nn_data[i] == NULL ) ) { go_BYE(-1); }
-    }
-    else {
-      if ( ( nn_data ) && ( nn_data[i] != NULL ) ) { go_BYE(-1); }
+  for ( uint32_t i = 0; i < nC; i++ ) {
+    if ( !nn_data ) { go_BYE(-1); }
+    if (  has_nulls[i] ) { if ( nn_data[i] == NULL ) { go_BYE(-1); } }
+    if ( !has_nulls[i] ) { if ( nn_data[i] != NULL ) { 
+      fprintf(stderr, "hello world\n");
+      go_BYE(-1); } 
     }
   }
   *ptr_nR = 0;
-  // set up is_trim, qtypes  -- convert from strings to enum
-  status = set_up_qtypes(fldtypes, nC, is_load, &is_trim, &qtypes); 
-  cBYE(status);
   // mmap the file
   status = rs_mmap(infile, &mmap_file, &file_size, false); cBYE(status);
   if ( ( mmap_file == NULL ) || ( file_size == 0 ) )  { go_BYE(-1); }
+  fprintf(stderr, "file offset = %llu \n", *ptr_file_offset);
   if ( *ptr_file_offset > file_size ) { go_BYE(-1); }
   //----------------------------------------
 
-  size_t xidx = *ptr_file_offset; // "seek" to proper point in file
+  uint64_t xidx = *ptr_file_offset; // "seek" to proper point in file
   if ( xidx >= file_size ) {// nothing more to read 
     // fprintf(stderr, "Nothing more to read\n");
     goto BYE; 
@@ -148,7 +155,7 @@ new_load_csv_fast(
       if ( xidx == file_size ) { break; } // check == or >= 
       continue;
     }
-    
+
     // Deal with null value case
     if ( buf[0] == '\0' ) { // got back null value
       is_val_null = true;
@@ -168,7 +175,7 @@ new_load_csv_fast(
       cBYE(status);
     }
     // write data 
-    switch ( qtypes[col_ctr] ) {
+    switch ( fldtypes[col_ctr] ) {
       case B1:
         {
           int8_t tempI1 = 0;
@@ -228,12 +235,16 @@ new_load_csv_fast(
       case SC : 
         {
           char *data_ptr = (char *)data[col_ctr];
-          strncpy(data_ptr+(row_ctr*width[col_ctr]),
-              buf, width[col_ctr]);
+          memset(data_ptr+(row_ctr*width[col_ctr]), '\0', width[col_ctr]);
+          if ( (int)strlen(buf) >= width[col_ctr] ) { 
+            printf("hello world\n");
+            go_BYE(-1); }
+          strcpy(data_ptr+(row_ctr*width[col_ctr]), buf);
         }
         break;
       default:
-        go_BYE(-1); //should not come here
+        fprintf(stderr, "Control should not come here\n");
+        go_BYE(-1); 
         break;
     }
     //--------------------------
@@ -252,10 +263,10 @@ new_load_csv_fast(
       }
     }
     /*this check needs to be done after the file has been written to because it
-        if ( row_ctr == chunk_size ) { 
-          fprintf(stderr, "Breaking early\n");
-          break;
-        }
+      if ( row_ctr == chunk_size ) { 
+      fprintf(stderr, "Breaking early\n");
+      break;
+      }
      * is possible that on the last get_cell, xidx is incremented to file_size
      * or greater, but the value from that last get_cell still needs to be
      * written to file*/
@@ -267,10 +278,8 @@ new_load_csv_fast(
   *ptr_nR = row_ctr;
   // Set file offset so that next call knows where to pick up from
   *ptr_file_offset  = xidx; 
+  fprintf(stderr, "After C: file offset = %llu \n", *ptr_file_offset);
 BYE:
-  free_if_non_null(qtypes);
   mcr_rs_munmap(mmap_file, file_size);
-  free_if_non_null(is_trim);
-  free_if_non_null(word_B1);
   return status;
 }

@@ -11,22 +11,24 @@ local function malloc_buffers_for_data(M)
     get_ptr(cmem.new(ffi.sizeof("void *") * nC)))
   local nn_cdata = ffi.cast("uint64_t **", 
     get_ptr(cmem.new(ffi.sizeof("uint64_t *") * nC)))
+  for i = 1, nC do 
+    nn_cdata[i-1] = ffi.NULL
+    cdata[i-1] = ffi.NULL
+  end
   for i, v in pairs(M) do
     local qtype = v.qtype
     local ctype = qconsts.qtypes[qtype].ctype
     local bufsz = v.width * qconsts.chunk_size
     if ( v.is_load ) then 
       databuf[v.name] = cmem.new(bufsz, qtype, v.name, 64)
+      print("Allocating ", bufsz , " for ", v.name)
       cdata[i-1]  = get_ptr(databuf[v.name] , qtype)
-    else
-      cdata[i-1] = ffi.NULL
-    end
-    --=======================================
-    if ( v.has_nulls ) then
-      nn_databuf[v.name] = cmem.new(qconsts.chunk_size, "B1", v.name, 64)
-      nn_cdata[i-1] = ffi.cast("uint64_t *", get_ptr(nn_databuf[v.name]))
-    else
-      nn_cdata[i-1] = ffi.NULL
+      if ( v.has_nulls ) then
+        assert(nil, "UNDO THIS JUST FOR TESTING:")
+        -- TODO P4 You are over-allocating. Cut this down
+        nn_databuf[v.name] = cmem.new(qconsts.chunk_size, "I1", v.name, 64)
+        nn_cdata[i-1] = ffi.cast("uint64_t *", get_ptr(nn_databuf[v.name]))
+      end
     end
   end
   return databuf, nn_databuf, cdata, nn_cdata

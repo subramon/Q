@@ -25,6 +25,8 @@ local function new_load_csv(
   assert(validate_meta(M))
   local is_hdr, fld_sep = process_opt_args(opt_args)
   --=======================================
+  local databuf, nn_databuf, cdata, nn_cdata = malloc_buffers_for_data(M)
+  --=======================================
   local file_offset = ffi.cast("uint64_t *", 
     get_ptr(cmem.new(1*ffi.sizeof("uint64_t"))))
   file_offset[0] = 0
@@ -32,25 +34,44 @@ local function new_load_csv(
   local num_rows_read = ffi.cast("uint64_t *", 
     get_ptr(cmem.new(1*ffi.sizeof("uint64_t"))))
 
-  local databuf, nn_databuf, cdata, nn_cdata = malloc_buffers_for_data(M)
+  local nC = #M
+  local is_load = get_ptr(cmem.new(nC * ffi.sizeof("bool")))
+  is_load = ffi.cast("bool *", is_load)
+
+  local has_nulls = get_ptr(cmem.new(nC * ffi.sizeof("bool")))
+  has_nulls = ffi.cast("bool *", has_nulls)  
+  
+  local is_trim = get_ptr(cmem.new(nC * ffi.sizeof("bool")))
+  is_trim = ffi.cast("bool *", is_trim)  
+  
+  local width = get_ptr(cmem.new(nC * ffi.sizeof("int")))
+  width = ffi.cast("int *", width)  
+  
+  local fldtypes = get_ptr(cmem.new(nC * ffi.sizeof("int")))
+  fldtypes = ffi.cast("int *", fldtypes)  
   --=======================================
-  -- This is tricky. We create generators for each vector
   local vectors = {} 
   local chunk_idx = -1
+  -- This is tricky. We create generators for each vector
   local lgens = {}
   for midx, v in pairs(M) do 
     local vec_name = v.name
     if ( v.is_load ) then 
       local name = v.name
-      local function lgen()
+      local function lgen(chunk_num)
+        print("BEFORE: Calling bridge_C ", chunk_idx, tonumber(file_offset[0]))
         chunk_idx = chunk_idx + 1 
-        num_rows_read[0] = 0
+        assert(chunk_num == chunk_idx)
+        -- TODO P1 Do we really need this? num_rows_read[0] = 0
         --===================================
         local start_time = qc.RDTSC()
         assert(bridge_C(M, infile, fld_sep, is_hdr,
-          file_offset, num_rows_read, cdata, nn_cdata))
+          file_offset, num_rows_read, cdata, nn_cdata,
+          is_load, has_nulls, is_trim, width, fldtypes))
+
         record_time(start_time, "load_csv_fast")
         local l_num_rows_read = tonumber(num_rows_read[0])
+        assert(l_num_rows_read > 0,  "TODO IUNDO THIS")
         --===================================
         if ( l_num_rows_read > 0 ) then 
           for k, v in pairs(M) do 
@@ -61,6 +82,7 @@ local function new_load_csv(
           end
         end
         if ( l_num_rows_read < qconsts.chunk_size ) then 
+          print(" Free buffers since you won't need them again")
           -- Free buffers since you won't need them again
           for k, v in pairs(M) do 
             if ( ( v.name ~= vec_name )  and ( v.is_load ) ) then
@@ -76,6 +98,7 @@ local function new_load_csv(
             end
           end
         end 
+        print("AFTER: Calling bridge_C ", chunk_idx, tonumber(file_offset[0]))
         if ( l_num_rows_read > 0 ) then 
           return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
         else

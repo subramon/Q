@@ -110,4 +110,26 @@ tests.t3 = function()
   print("Success on test t3")
 end
 -- TODO P2 Write more tests for getn
+tests.t3 = function()
+  -- testing putn()
+  local status
+  local chunk_size = qconsts.chunk_size
+  local n = 3 * chunk_size* 17  
+  local params = { keytype = "I4", valtype = "F4"}
+  local A = lAggregator(params)
+  local lb = 1
+  local ub = 10
+  -- Note that lb is inclusive, ub is exclusive
+  local K = Q.rand({lb = lb, ub = ub, qtype = "I4", len = n})
+  local V = Q.rand({lb = -123, ub = 123, qtype = "F4", len = n})
+  status = A:set_consume(K, V)
+  repeat
+    local x = A:consume()
+  until x == 0 
+  local M = A:get_meta()
+  assert(M.nitems == (ub - lb))
+
+  --=========================
+  print("Success on test t3")
+end
 return tests
