@@ -65,7 +65,7 @@ end
 --=======================================================
 tests.t3 = function()
   local M = {}
-  local O = { is_hdr = true }
+  local O = { is_hdr = true, fld_sep = "tab" }
   M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
   M[#M+1] = { name = "store_id", qtype = "I4", has_nulls = false}
   M[#M+1] = { name = "customer_id", qtype = "I8", has_nulls = false}
@@ -147,10 +147,10 @@ tests.t5 = function()
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
-tests.t1()
-tests.t2()
+--tests.t1()
+--tests.t2()
 tests.t3()
-tests.t4()
-tests.t5()
+--tests.t4()
+--tests.t5()
 --return tests
 os.exit()
