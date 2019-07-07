@@ -19,11 +19,11 @@ TM_to_SC(
   if ( n_in == 0 ) { go_BYE(-1); }
   if ( width == 0 ) { go_BYE(-1); }
 
-// TODO #pragma omp parallel for schedule(static, 1024)
+#pragma omp parallel for schedule(static, 1024)
   for ( uint64_t i = 0; i < n_in; i++ ) { 
     memset(outv+(i*width), '\0', width);
     size_t rslt = strftime(outv+(i*width), width-1, format, inv + i);
-    if ( rslt == 0 ) { go_BYE(-1); }
+    if ( rslt == 0 ) { status = -1; continue; }
   }
   cBYE(status);
 BYE:

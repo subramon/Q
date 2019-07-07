@@ -19,14 +19,14 @@ SC_to_TM(
   if ( n_in == 0 ) { go_BYE(-1); }
   if ( offset == 0 ) { go_BYE(-1); }
 
-// TODO #pragma omp parallel for schedule(static, 1024)
+#pragma omp parallel for schedule(static, 1024)
   for ( uint64_t i = 0; i < n_in; i++ ) { 
     char *cptr = inv + (i*offset);
     memset(outv+i, '\0', sizeof(struct tm));
     char *rslt = strptime(cptr, format, outv+i);
     /*  If strptime() fails to match all of  the  format  string
        and therefore an error occurred, the function returns NULL. */
-    if ( rslt  == NULL ) { go_BYE(-1); }
+    if ( rslt  == NULL ) { status = -1; continue; }
     /* In case the whole  input string  is consumed, the return value 
        points to the null byte at the end of the string. */
     // TODO: P3 This seg faults if ( *rslt == '\0' ) { go_BYE(-1); }

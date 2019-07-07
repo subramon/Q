@@ -24,7 +24,6 @@
 #include "cmem_struct.h"
 #include "cmem.h"
 #include "scalar_struct.h"
-int luaopen_libvec (lua_State *L);
 
 extern int luaopen_libsclr (lua_State *L);
 
@@ -862,6 +861,5 @@ int luaopen_libsclr (lua_State *L) {
      fprintf(stderr, "q_export registration failed: %s\n", lua_tostring(L, -1));
      exit(1);
   }
-  return 1; // TODO: Why is return code not 0?  
+  return 1; // TODO P4: Why 1?
 }
-

@@ -101,7 +101,6 @@ local function chk_cols(vector_list)
   local vec_length = nil
   local is_first = true
   for i, v in pairs(vector_list) do
-
     -- Check the vector for eval(), if not then call eval()
     if not v:is_eov() then
       v:eval()

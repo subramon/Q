@@ -18,6 +18,8 @@
 
 #include "lauxlib.h"
 
+#define ALIGNMENT  256 // TODO P2 DOCUMENT AND PLACE CAREFULLY
+
 static uint64_t
 RDTSC(
     )
@@ -84,14 +86,20 @@ l_malloc(
     )
 {
   int status = 0;
+  void  *x = NULL;
   uint64_t delta = 0, t_start = RDTSC(); n_malloc++;
   uint64_t sz1, sz2;
-  // TODO P2 DOCUMENT THIS CHANGE void *x = malloc(n);
-  void *x = memalign(256, n);
+
+  status = posix_memalign(&x, ALIGNMENT, n); 
+  if ( status < 0 ) { WHEREAMI; return NULL; }
+  // printf("core_vec.c : Malloc'd %llu \n", n);
+  if ( x == NULL ) { WHEREAMI; return NULL; }
   bool is_incr = true, is_vec = true;
   status = mm(n, is_incr, is_vec, &sz1, &sz2); 
   if ( status < 0 ) { WHEREAMI; return NULL; }
-  ptr_vec->uqid = t_start; // set a unique ID for debugging
+  ptr_vec->uqid = t_start; 
+  // set a unique ID for debugging
+  // TODO P3 Above is good idea but not sure this is right place to set it
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_malloc += delta; }
 
   return x;
@@ -296,7 +304,7 @@ BYE:
   return status;
 }
 
-// TODO: P1 Combine flush_buffer and flush_buffer_B1 
+// TODO: P3 Combine flush_buffer and flush_buffer_B1 
 int 
 flush_buffer(
           VEC_REC_TYPE *ptr_vec
@@ -391,7 +399,7 @@ vec_meta(
     )
 {
   int status = 0;
-  // TODO P3 This is slow. Can be speeded up
+  // TODO P4 This is slow. Can be speeded up
   char  buf[1024];
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
   strcpy(opbuf, "return { ");

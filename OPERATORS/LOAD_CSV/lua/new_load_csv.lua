@@ -27,6 +27,10 @@ local function new_load_csv(
   local is_hdr, fld_sep = process_opt_args(opt_args)
   --=======================================
   local databuf, nn_databuf, cdata, nn_cdata = malloc_buffers_for_data(M)
+  local bak_cdata = {}
+  for i = 1, #M do 
+    bak_cdata[i] = cdata[i-1]
+  end
   local file_offset, num_rows_read, is_load, has_nulls, is_trim, width, 
     fldtypes = F.malloc_aux(#M)
   --=======================================
@@ -39,18 +43,23 @@ local function new_load_csv(
     if ( v.is_load ) then 
       local name = v.name
       local function lgen(chunk_num)
+        for i = 1, #M do 
+          cdata[i-1] = bak_cdata[i] -- TODO UNDO 
+        end
         chunk_idx = chunk_idx + 1 
         assert(chunk_num == chunk_idx)
         --===================================
         local start_time = qc.RDTSC()
+        -- print("BEFORE LUA", cdata, nn_cdata, cdata[0], nn_cdata[0])
 
         assert(bridge_C(M, infile, fld_sep, is_hdr,
           file_offset, num_rows_read, cdata, nn_cdata,
           is_load, has_nulls, is_trim, width, fldtypes))
 
+        -- print("AFTER  LUA", cdata, nn_cdata, cdata[0], nn_cdata[0])
+
         record_time(start_time, "load_csv_fast")
         local l_num_rows_read = tonumber(num_rows_read[0])
-        print(chunk_idx, l_num_rows_read)
         --===================================
         if ( l_num_rows_read > 0 ) then 
           for k, v in pairs(M) do 
@@ -61,8 +70,7 @@ local function new_load_csv(
           end
         end
         if ( l_num_rows_read < qconsts.chunk_size ) then 
-          print(" Free buffers since you won't need them again")
-          -- Free buffers since you won't need them again
+          -- print(" Free buffers since you won't need them again")
           for k, v in pairs(M) do 
             if ( ( v.name ~= vec_name )  and ( v.is_load ) ) then
               -- Note subtlety of above if condition.  You can't delete 
@@ -79,6 +87,14 @@ local function new_load_csv(
           F.free_aux()
         end 
         if ( l_num_rows_read > 0 ) then 
+          --[[
+          print("About to return to lVector for " .. v.name)
+          print("base", get_ptr(databuf[v.name]))
+          print("base", cdata[0])
+          print("nn  ", get_ptr(nn_databuf[v.name]))
+          print("nn", nn_cdata[0])
+          print("-----------")
+          --]]
           return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
         else
           return 0, nil, nil
@@ -92,16 +108,18 @@ local function new_load_csv(
   -- has_nulls==true. Caller's responsibility to clean this up
   --==============================================
   for k, v in pairs(M) do 
-    local tinfo = {}
-    tinfo.gen = lgens[v.name]
-    tinfo.has_nulls = v.has_nulls
-    tinfo.qtype = v.qtype
-    if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
-    vectors[v.name] = lVector(tinfo):set_name(v.name)
-    if ( type(v.meaning) == "string" ) then 
-      vectors[v.name]:set_meta("__meaning", M[i].meaning)
+    if ( v.is_load ) then 
+      local tinfo = {}
+      tinfo.gen = lgens[v.name]
+      tinfo.has_nulls = v.has_nulls
+      tinfo.qtype = v.qtype
+      if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
+      vectors[v.name] = lVector(tinfo):set_name(v.name)
+      if ( type(v.meaning) == "string" ) then 
+        vectors[v.name]:set_meta("__meaning", M[i].meaning)
+      end
+      vectors[v.name]:is_memo(v.is_memo)
     end
-    vectors[v.name]:is_memo(v.is_memo)
   end
   return vectors
 end

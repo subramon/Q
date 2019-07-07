@@ -22,7 +22,7 @@ local function bridge_C(
   )
   assert( M and type(M) == "table")
   assert(infile and type(infile) == "string")
-  assert(is_hdr and type(is_hdr) == "boolean")
+  assert(type(is_hdr) == "boolean")
   assert(fld_sep and type(fld_sep) == "string")
 
   local nC = #M

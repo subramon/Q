@@ -32,6 +32,7 @@
 
 int luaopen_libcmem (lua_State *L);
 
+// Prints amount of memory used (as allocated by CMEM, not vec)
 static int 
 l_cmem_print_mem( 
     lua_State *L
@@ -43,8 +44,8 @@ l_cmem_print_mem(
   if ( lua_isboolean(L, 2) ) { 
     is_quiet = lua_toboolean(L, 2);
   }
-  uint64_t sz1, cmem_sz;
-  status = mm(0, false, false, &sz1, &cmem_sz); cBYE(status);
+  uint64_t vec_sz, cmem_sz;
+  status = mm(0, false, false, &vec_sz, &cmem_sz); cBYE(status);
 
   if ( !is_quiet ) { 
     fprintf(stdout, "CMEM,sz_malloc,0,%" PRIu64 "\n", cmem_sz);
@@ -58,6 +59,7 @@ BYE:
   return 2;
 }
 
+// Sets the CMEM struct to undefined values
 void cmem_undef( // USED FOR DEBUGGING
     CMEM_REC_TYPE *ptr_cmem
     )
@@ -65,6 +67,7 @@ void cmem_undef( // USED FOR DEBUGGING
   ptr_cmem->size = -1;
   strcpy(ptr_cmem->field_type, "XXX");
   strcpy(ptr_cmem->cell_name, "Uninitialized");
+  ptr_cmem->is_foreign = false;
 }
 
 int cmem_dupe( // INTERNAL NOT VISIBLE TO LUA 
@@ -103,18 +106,23 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
   void *data = NULL;
   uint64_t sz1, sz2;
   if ( size <= 0 ) { go_BYE(-1); }
+  // Always allocate a multiple of 16 
   if ( ( ( size / 16 ) * 16 ) != size ) { 
-    size = ( size / 16 ) * 16 + 16;
+    size = ( ( size / 16 ) * 16 ) + 16;
   }
   // following is a precaution. change if necessary
   if ( alignment > 1024 ) { go_BYE(-1); }
   if ( alignment <    0 ) { go_BYE(-1); }
+ 
+  alignment = 0; // TODO P1 Document and check if memalign is culprit
   if ( alignment == 0 ) {
     data = malloc(size);
   }
   else {
-    data = memalign(alignment, size);
+    status = posix_memalign(&data, alignment, size);
+    cBYE(status);
   }
+  // TODO P4: make sure that posix_memalign is not causing any problems
   return_if_malloc_failed(data);
   ptr_cmem->data = data;
   ptr_cmem->size = size;
@@ -188,21 +196,21 @@ static int l_cmem_new( lua_State *L)
   ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
   return_if_malloc_failed(ptr_cmem);
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
-  // printf("cmem new  to %x \n", ptr_cmem);
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  if ( lua_gettop(L) > 2 ) {  
+  int num_on_stack = lua_gettop(L);
+  if ( num_on_stack > 2 ) { 
     if ( lua_isstring(L, 2) ) {
       field_type = (char *)luaL_checkstring(L, 2);
     }
   }
-  if ( lua_gettop(L) > 3 ) { 
+  if ( num_on_stack > 3 ) { 
     if ( lua_isstring(L, 3) ) {
       cell_name = (char *)luaL_checkstring(L, 3);
     }
   }
-  if ( lua_gettop(L) > 4 ) { 
+  if ( num_on_stack > 4 ) { 
     if ( lua_isnumber(L, 4) ) {
       alignment = luaL_checknumber(L, 4);
       if ( alignment < 0 ) { go_BYE(-1); }
@@ -223,6 +231,8 @@ static int l_cmem_name( lua_State *L) {
   return 1;
 }
 
+// set_default used only for debugging. 
+// TODO P4 Consider using it elsewhere as well
 static int set_default(
     CMEM_REC_TYPE *ptr_cmem,
     lua_Number val
@@ -286,12 +296,8 @@ static int l_cmem_set_default( lua_State *L)
   else { WHEREAMI; goto BYE; }
 
   int status = set_default(ptr_cmem, val);
-  if ( status < 0 ) {
-    goto BYE;
-  }
-  else {
-    lua_pushboolean(L, true);
-  }
+  if ( status < 0 ) { WHEREAMI; goto BYE; }
+  lua_pushboolean(L, true);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -448,7 +454,7 @@ static int l_cmem_free( lua_State *L)
       printf("not good\n");
       go_BYE(-1); 
     }
-  } 
+  }
   else {
     if ( ptr_cmem->is_foreign ) { 
       /* Foreign indicates somebody else responsible for free */
@@ -459,10 +465,12 @@ static int l_cmem_free( lua_State *L)
           ( strcmp(ptr_cmem->field_type, "XXX") == 0 ) && 
           ( strcmp(ptr_cmem->cell_name, "Uninitialized") == 0 ) ) {
         /* nothing to do */
+        printf("TODO P0 not good\n");
+        go_BYE(-1); 
       }
       else {
-        if ( ptr_cmem->data == NULL ) { go_BYE(-1); }
         free(ptr_cmem->data);
+        ptr_cmem->data = NULL;
         bool is_add = false, is_vec = false;
         uint64_t sz1, sz2;
         status = mm(ptr_cmem->size, is_add, is_vec, &sz1, &sz2); cBYE(status);
@@ -473,7 +481,8 @@ static int l_cmem_free( lua_State *L)
     }
   }
   // printf("Freeing %x \n", ptr_cmem);
-  // OLD lua_pushboolean(L, true);
+  lua_pushboolean(L, true); // TODO P0 Why had we commented this?
+  return 1; 
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, "ERROR: free failed. ");

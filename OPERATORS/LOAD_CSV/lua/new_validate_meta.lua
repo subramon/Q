@@ -10,12 +10,11 @@ local function validate_meta(
   local col_names = {}
   -- now look at fields of metadata
   local num_cols_to_load = 0
-  for midx, fld_M in pairs(M) do
-    local col = "Column " .. midx .. "-"
-    assert(type(fld_M) == "table", col .. err.COLUMN_DESC_ERROR)
-    assert(fld_M.name,  col .. err.METADATA_NAME_NULL)
-    local qtype = assert(fld_M.qtype, col .. err.METADATA_TYPE_NULL)
-    assert(qconsts.qtypes[qtype], col ..  err.INVALID_QTYPE)
+  for _, fld_M in pairs(M) do
+    assert(type(fld_M) == "table")
+    assert(type(fld_M.name) == "string")
+    local qtype = assert(fld_M.qtype)
+    assert(qconsts.qtypes[qtype])
     --===========================================
     if fld_M.is_memo ~= nil then 
       assert(type(fld_M.is_memo) == "boolean")
@@ -24,8 +23,7 @@ local function validate_meta(
     end
     --===========================================
     if fld_M.has_nulls ~= nil then 
-      assert(type(fld_M.has_nulls) == "boolean",
-        col .. err.INVALID_NN_BOOL_VALUE )
+      assert(type(fld_M.has_nulls) == "boolean")
     else
       fld_M.has_nulls = false
     end
@@ -35,25 +33,25 @@ local function validate_meta(
     end
     --===========================================
     if fld_M.is_load ~= nil then 
-      assert( type(fld_M.is_load) == "boolean",
-        col .. err.IS_LOAD_BOOL_ERROR )
+      assert(type(fld_M.is_load) == "boolean")
     else
       fld_M.is_load = true
     end
     --===========================================
     if ( fld_M.is_load ) then 
       -- Check uniqueness of field names: 
-      assert(not col_names[fld_M.name], col .. err.DUPLICATE_COL_NAME) 
+      assert(not col_names[fld_M.name], "field names not unique")
       col_names[fld_M.name] = true 
       num_cols_to_load = num_cols_to_load + 1
     end
     --===========================================
     local width -- how many bytes to allocate per element
     if qtype == "SC" then 
-      width = assert(fld_M.width, err.MAX_WIDTH_NULL_ERROR)
       -- remember 1 byte for nullc
-      assert( ((width >= 2) and (width <= qconsts.max_width["SC"])), 
-        col .. err.INVALID_WIDTH_SC )
+      width = assert(fld_M.width)
+      assert(type(width) ==  "number")
+      assert(width >= 2)
+      assert(width <= qconsts.max_width["SC"])
     elseif fld_M.qtype == "B1" then 
       width = 1
     else

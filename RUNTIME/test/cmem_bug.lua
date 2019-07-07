@@ -1,5 +1,5 @@
 local lVector = require 'Q/RUNTIME/lua/lVector'
--- local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local function t5()
   -- print("Creating nascent vector with generator")
@@ -8,7 +8,7 @@ local function t5()
 
   local x_num_chunks = 10
   local num_chunks = 0
-  local chunk_size = 65536 -- qconsts.chunk_size
+  local chunk_size = qconsts.chunk_size
   for chunk_num = 1, x_num_chunks do 
     local a, b, c = x:chunk(chunk_num-1)
     assert(a)
@@ -20,6 +20,7 @@ local function t5()
       break 
     end
     num_chunks = num_chunks + 1
+    print(a,  chunk_size)
     assert(a == chunk_size)
     x:check()
   end

@@ -106,13 +106,26 @@ SRC_FILES =  \
 AUX_FILES = \
 	../../../UTILS/src/is_valid_chars_for_num.c 
 
+../gen_src/_TM_to_hour.c :
+	luajit generator.lua
+
 GEN_FILES = \
 	../gen_src/_txt_to_I1.c \
 	../gen_src/_txt_to_I2.c  \
 	../gen_src/_txt_to_I4.c  \
 	../gen_src/_txt_to_I8.c  \
 	../gen_src/_txt_to_F4.c  \
-	../gen_src/_txt_to_F8.c  
+	../gen_src/_txt_to_F8.c   \
+	../gen_src/_TM_to_hour.c \
+	../gen_src/_TM_to_isdst.c \
+	../gen_src/_TM_to_mday.c \
+	../gen_src/_TM_to_min.c \
+	../gen_src/_TM_to_mon.c \
+	../gen_src/_TM_to_sec.c \
+	../gen_src/_TM_to_wday.c \
+	../gen_src/_TM_to_yday.c \
+	../gen_src/_TM_to_year.c \
+
 
 XXXX := $(GEN_FILES:.c=.h) # TODO: clean up XXX , do it in one step
 GEN_INC_FILES := $(subst gen_src,gen_inc, ${XXXX})

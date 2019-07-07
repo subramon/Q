@@ -1,0 +1,35 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+#include "q_incs.h"
+
+extern int 
+${fn}(
+      struct tm *inv,
+      uint64_t n_in,
+      int16_t *outv
+      );
+]],
+definition = [[
+#include "_${fn}.h"
+
+int ${fn}(
+      struct tm *inv,
+      uint64_t n_in,
+      int16_t *outv
+)
+{
+  int status = 0;
+  if ( inv  == NULL ) { go_BYE(-1); }
+  if ( outv == NULL ) { go_BYE(-1); }
+  if ( n_in == 0 ) { go_BYE(-1); }
+
+#pragma omp parallel for schedule(static, 1024)
+  for ( uint64_t i = 0; i < n_in; i++ ) { 
+    outv[i] = inv[i].${tm_fld};
+  }
+BYE:
+  return status;
+}
+]]
+}

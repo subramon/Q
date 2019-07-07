@@ -23,6 +23,7 @@ local function internal_save(
     file:write(name, " = ")
     file:write(basicSerialize(value), "\n")
   elseif type(value) == "table" then
+    --[[ TODO P0
     local tbl = value
     file:write(tbl, " = ")
     if saved[tbl] then    -- value already saved?
@@ -35,6 +36,7 @@ local function internal_save(
         internal_save(fieldname, v, saved, file)
       end
     end
+    --]]
   elseif ( type(value) == "lVector" ) then 
     -- TODO Indrajeet to check
     local persist_str = value:reincarnate()

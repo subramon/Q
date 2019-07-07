@@ -35,6 +35,8 @@
  *3) write results to buffer of vector
  */
 
+#define BUFSZ 2047 
+
 //START_FUNC_DECL
 int
 new_load_csv_fast(
@@ -50,17 +52,25 @@ new_load_csv_fast(
     const bool *  const is_load, /* [nC] */
     const bool * const has_nulls, /* [nC] */
     const int * const width, /* [nC] */
-    void **data, /* [nC][chunk_size] */
+    char **data, /* [nC][chunk_size] */
     uint64_t **nn_data /* [nC][chunk_size] */
     )
 //STOP_FUNC_DECL
 {
   int status = 0;
   // fprintf(stderr, "Before C: file offset = %llu \n", *ptr_file_offset);
+  // fprintf(stderr, "BEFORE: %llx, %llx \n", data, nn_data);
+  // fprintf(stderr, "BEFORE: %llx, %llx \n", data[0], nn_data[0]);
   char *mmap_file = NULL; //X
   uint64_t file_size = 0; //nX
   char fld_sep;
 
+/* just for testing
+  char *jnk = (char *)data[0];
+  for ( int i = 0; i < 131072; i++ ) { 
+    memcpy(jnk+(i*10), "Thursday", 10);
+  }
+*/
   if ( strcasecmp(str_fld_sep, "comma") == 0 ) { 
     fld_sep = ',';
   }
@@ -79,13 +89,25 @@ new_load_csv_fast(
 
   // Check on input data structures
   for ( uint32_t i = 0; i < nC; i++ ) {
-    if ( !nn_data ) { go_BYE(-1); }
-    if (  has_nulls[i] ) { if ( nn_data[i] == NULL ) { go_BYE(-1); } }
-    if ( !has_nulls[i] ) { 
+    if ( data     == NULL ) { go_BYE(-1); }
+    if ( nn_data  == NULL ) { go_BYE(-1); }
+    if (  is_load[i] ) { 
+      if ( data[i] == NULL ) { go_BYE(-1); } 
+    }
+    else {
+      if (    data[i] != NULL ) { go_BYE(-1); } 
+      if ( nn_data[i] != NULL ) { go_BYE(-1); } 
+    }
+    if (  has_nulls[i] ) { 
+      if ( nn_data[i] == NULL ) { go_BYE(-1); } 
+    }
+    else {
       if ( nn_data[i] != NULL ) { 
+        fprintf(stderr, "hello world\n"); 
         WHEREAMI; // go_BYE(-1); 
       }
     }
+    if ( width[i] > BUFSZ ) { go_BYE(-1); }
   }
   *ptr_nR = 0;
   // mmap the file
@@ -102,12 +124,12 @@ new_load_csv_fast(
   uint64_t row_ctr = 0;
   uint32_t col_ctr = 0;
   bool is_last_col;
-#define BUFSZ 2047 
   // TODO P3 BUFSZ should come from max of qconsts.qtypes[*].max_txt_width
   char lbuf[BUFSZ+1];
   char buf[BUFSZ+1];
   bool is_val_null;
 
+  memset(lbuf, '\0', BUFSZ+1); 
   while ( true ) {
     memset(buf, '\0', BUFSZ+1); // Clear buffer into which cell is read
     // Decide whether this is the last column on the row. Needed by get_cell
@@ -145,7 +167,7 @@ new_load_csv_fast(
         col_ctr = 0;
         row_ctr++;
         if ( row_ctr == chunk_size ) { 
-          fprintf(stderr, "111: Breaking early\n");
+          // fprintf(stderr, "111: Breaking early\n");
           break;
         }
       }
@@ -168,6 +190,7 @@ new_load_csv_fast(
     }
     // write nn_data if needed
     if ( has_nulls[col_ctr] ) {
+      fprintf(stderr, "DELETT HIS TODO ");
       status = set_bit_u64(nn_data[col_ctr], row_ctr, is_val_null); 
       cBYE(status);
     }
@@ -176,9 +199,10 @@ new_load_csv_fast(
       case B1:
         {
           int8_t tempI1 = 0;
+          uint64_t *data_ptr = (uint64_t *)data[col_ctr];
           status = txt_to_I1(buf, &tempI1);  cBYE(status);
           if ( ( tempI1 < 0 ) || ( tempI1 > 1 ) )  { go_BYE(-1); }
-          status = set_bit_u64(data[col_ctr], row_ctr, tempI1); cBYE(status);
+          status = set_bit_u64(data_ptr, row_ctr, tempI1); cBYE(status);
         }
         break;
       case I1:
@@ -233,10 +257,18 @@ new_load_csv_fast(
         {
           char *data_ptr = (char *)data[col_ctr];
           memset(data_ptr+(row_ctr*width[col_ctr]), '\0', width[col_ctr]);
+          // memcpy(data_ptr+(row_ctr*width[col_ctr]), buf,  width[col_ctr]);
+          
+          char *cptr = buf; int ii = row_ctr*width[col_ctr];;
+          for ( int jj = 0 ; 
+              ( ( *cptr != '\0' ) && ( jj < width[col_ctr] ) ) ; jj++ ) { 
+            data[col_ctr][ii++] = *cptr++;
+          }
+          // printf("%s\n", buf);
           if ( (int)strlen(buf) >= width[col_ctr] ) { 
             printf("hello world\n");
             go_BYE(-1); }
-          strcpy(data_ptr+(row_ctr*width[col_ctr]), buf);
+          // strcpy(data_ptr+(row_ctr*width[col_ctr]), buf);
         }
         break;
       default:
@@ -275,7 +307,8 @@ new_load_csv_fast(
   *ptr_nR = row_ctr;
   // Set file offset so that next call knows where to pick up from
   *ptr_file_offset  = xidx; 
-  // fprintf(stderr, "After C: file offset = %llu \n", *ptr_file_offset);
+  // fprintf(stderr, "AFTER, %llx, %llx \n", data, nn_data);
+  // fprintf(stderr, "AFTER, %llx, %llx \n", data[0], nn_data[0]);
 BYE:
   mcr_rs_munmap(mmap_file, file_size);
   return status;
