@@ -65,11 +65,11 @@ end
 --=======================================================
 tests.t3 = function()
   local M = {}
-  local O = { is_hdr = true, fld_sep = "tab" }
-  M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
-  M[#M+1] = { name = "store_id", qtype = "I4", has_nulls = false}
-  M[#M+1] = { name = "customer_id", qtype = "I8", has_nulls = false}
-  M[#M+1] = { name = "category_id", qtype = "I4", has_nulls = false}
+  local O = { is_hdr = true, fld_sep = "comma" }
+  M[#M+1] = { is_memo = false, name = "datetime", qtype = "SC", has_nulls = false, width=20}
+  M[#M+1] = { is_memo = false, name = "store_id", qtype = "I4", has_nulls = false}
+  M[#M+1] = { is_memo = false, name = "customer_id", qtype = "I8", has_nulls = false}
+  M[#M+1] = { is_memo = false, name = "category_id", qtype = "I4", has_nulls = false}
   M[#M+1] = { name = "price", qtype = "F4", has_nulls = false}
   local datafile = "in3.csv"
   local T = Q.new_load_csv(datafile, M, O)
@@ -83,7 +83,7 @@ tests.t3 = function()
   until n == 0 
   local opfile = '_x.csv'
   plfile.delete(opfile)
-  Q.print_csv(T, { lb = 0, ub = 10, opfile = opfile})
+  Q.print_csv(T.price, { lb = 0, ub = 10, opfile = opfile})
   assert(plpath.isfile(opfile))
   print("Test t3 succeeded")
 end

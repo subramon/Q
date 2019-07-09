@@ -19,14 +19,24 @@ trim(
   if ( outbuf == NULL ) { go_BYE(-1); }
   if ( n <= 1 ) { go_BYE(-1); }
   int start_idx, stop_idx;
-  // START: trim lbuf into buf
   if ( inbuf[n-1] != '\0' ) { go_BYE(-1); }
-  memset(outbuf, '\0', n);
+  //---------------------------------------
+  int len = strlen(inbuf); // simple case of empty string
+  if ( len == 0 ) {
+    memset(outbuf, '\0', n);
+    return status;
+  }
+  //---------------------------------------
+  if ( ( !isspace(inbuf[0]) ) && ( !isspace(inbuf[len-1]) ) ) {
+    // simple case of no trimming needed
+    strcpy(out_buf, in_buf); 
+    return status;
+  }
+  //---------------------------------------
   for ( start_idx = 0; start_idx < n; start_idx++ ) { 
     if ( !isspace(inbuf[start_idx]) ) { break; }
   }
-  // TODO Do not start at max and work downwards
-  // Start from where you left off and keep going 
+  // TODO: P4 Following could be made more efficient 
   for ( stop_idx = n-1; stop_idx >= 0; stop_idx-- ) { 
     if ( !( ( inbuf[stop_idx] == '\0' ) || ( isspace(inbuf[stop_idx]) ) ) ) {
       break;

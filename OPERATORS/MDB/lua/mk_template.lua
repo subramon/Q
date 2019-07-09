@@ -88,14 +88,14 @@ F[3] =
   end
   return CT, nR, nD, #T
 end
-return mk_template
---[[ unit test below 
+-- jreturn mk_template
+-- unit test below 
 local nDR = {3, 4, 2}
 local tmpl, nR, nD, nC = mk_template(nDR)
 print("nR, nD, nC = ",  nR, nD, nC )
 for j = 1, nR do 
   for i = 1, #nDR do 
-    -- print(j-1, tmpl[j-1][i-1])
+    print(j-1, tmpl[j-1][i-1])
   end
 end
---]]
+

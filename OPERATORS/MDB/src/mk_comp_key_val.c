@@ -40,7 +40,7 @@ mk_comp_key_val(
 //   int chunk_size = 64;
 // #pragma omp parallel for schedule(static, chunk_size)
   for ( int i = 0; i < nV; i++ ) { 
-    int offset = i*nR; 
+    int offset = i*nR;  // every input produces nR outputs
     __VALTYPE__ val = in_measure_val[i];
     for ( int ridx = 0; ridx < nR; ridx++ ) {
       uint64_t comp_key = 0;

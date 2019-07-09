@@ -118,7 +118,7 @@ local function new_load_csv(
       if ( type(v.meaning) == "string" ) then 
         vectors[v.name]:set_meta("__meaning", M[i].meaning)
       end
-      vectors[v.name]:is_memo(v.is_memo)
+      vectors[v.name]:memo(v.is_memo)
     end
   end
   return vectors

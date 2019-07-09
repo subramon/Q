@@ -111,7 +111,8 @@ tests.t3 = function()
 end
 -- TODO P2 Write more tests for getn
 tests.t3 = function()
-  -- testing putn()
+  -- If you put a lot of k/v pairs but with the number of unique keys 
+  -- being n, then the size of the Aggregator should be n
   local status
   local chunk_size = qconsts.chunk_size
   local n = 3 * chunk_size* 17  

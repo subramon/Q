@@ -58,19 +58,10 @@ new_load_csv_fast(
 //STOP_FUNC_DECL
 {
   int status = 0;
-  // fprintf(stderr, "Before C: file offset = %llu \n", *ptr_file_offset);
-  // fprintf(stderr, "BEFORE: %llx, %llx \n", data, nn_data);
-  // fprintf(stderr, "BEFORE: %llx, %llx \n", data[0], nn_data[0]);
   char *mmap_file = NULL; //X
   uint64_t file_size = 0; //nX
   char fld_sep;
 
-/* just for testing
-  char *jnk = (char *)data[0];
-  for ( int i = 0; i < 131072; i++ ) { 
-    memcpy(jnk+(i*10), "Thursday", 10);
-  }
-*/
   if ( strcasecmp(str_fld_sep, "comma") == 0 ) { 
     fld_sep = ',';
   }
@@ -145,8 +136,8 @@ new_load_csv_fast(
     xidx = get_cell(mmap_file, file_size, xidx, fld_sep, is_last_col, buf, 
         tmp_buf, BUFSZ);
 
-    // TODO xidx == 0 should not be an error
-    // xidx == 0 => means the file is empty 
+    // xidx == 0 => means the file is empty. 
+    // This should be checked for before we come here
     if ( xidx == 0 ) { go_BYE(-1); } 
     // Deal with header line 
     //row_ctr == 0 means we are reading the first line which is the header
@@ -257,7 +248,8 @@ new_load_csv_fast(
         {
           char *data_ptr = (char *)data[col_ctr];
           memset(data_ptr+(row_ctr*width[col_ctr]), '\0', width[col_ctr]);
-          // memcpy(data_ptr+(row_ctr*width[col_ctr]), buf,  width[col_ctr]);
+          memcpy(data_ptr+(row_ctr*width[col_ctr]), buf,  width[col_ctr]);
+          /*
           
           char *cptr = buf; int ii = row_ctr*width[col_ctr];;
           for ( int jj = 0 ; 
@@ -269,6 +261,7 @@ new_load_csv_fast(
             printf("hello world\n");
             go_BYE(-1); }
           // strcpy(data_ptr+(row_ctr*width[col_ctr]), buf);
+          */
         }
         break;
       default:
@@ -291,24 +284,13 @@ new_load_csv_fast(
         break;
       }
     }
-    /*this check needs to be done after the file has been written to because it
-      if ( row_ctr == chunk_size ) { 
-      fprintf(stderr, "Breaking early\n");
-      break;
-      }
-     * is possible that on the last get_cell, xidx is incremented to file_size
-     * or greater, but the value from that last get_cell still needs to be
-     * written to file*/
-    if ( xidx == file_size ) { 
-      // fprintf(stderr, "333: Breaking because of EOF \n");
+    if ( xidx >= file_size ) { // TODO P4 check == or >= 
       break; 
-    } // check == or >= 
+    } 
   }
   *ptr_nR = row_ctr;
   // Set file offset so that next call knows where to pick up from
   *ptr_file_offset  = xidx; 
-  // fprintf(stderr, "AFTER, %llx, %llx \n", data, nn_data);
-  // fprintf(stderr, "AFTER, %llx, %llx \n", data[0], nn_data[0]);
 BYE:
   mcr_rs_munmap(mmap_file, file_size);
   return status;
