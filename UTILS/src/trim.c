@@ -29,7 +29,7 @@ trim(
   //---------------------------------------
   if ( ( !isspace(inbuf[0]) ) && ( !isspace(inbuf[len-1]) ) ) {
     // simple case of no trimming needed
-    strcpy(out_buf, in_buf); 
+    strcpy(outbuf, inbuf); 
     return status;
   }
   //---------------------------------------

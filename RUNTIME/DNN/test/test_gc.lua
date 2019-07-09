@@ -1,5 +1,5 @@
 local Q = require 'Q'
-local ldnn = require 'Q/RUNTIME/DNN/lua/ldnn'
+local lDNN = require 'Q/RUNTIME/DNN/lua/lDNN'
 require 'Q/UTILS/lua/strict'
 
 local tests = {}
@@ -14,8 +14,8 @@ tests.t1 = function(n)
   for i = 1, nl do dpl[i] = 1.0 / ( 1.0 + 1 + i) end
 
   for i = 1, n do 
-    local x = ldnn.new({ npl = npl})
-    assert(type(x) == "ldnn")
+    local x = lDNN.new({ npl = npl})
+    assert(type(x) == "lDNN")
     if ( ( i % 1000 ) == 0 )  then
       print("Iterations " .. i)
     end
@@ -44,7 +44,7 @@ tests.t2 = function(n)
   afns[1] = ""
   afns[2] = "sigmoid"
   afns[3] = "sigmoid"
-  local x = ldnn.new({ npl = npl, dpl = dpl, activation_functions = afns} )
+  local x = lDNN.new({ npl = npl, dpl = dpl, activation_functions = afns} )
   assert(x:check())
   for i = 1, n do 
     x:set_io(Xin, Xout)

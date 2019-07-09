@@ -199,8 +199,9 @@ function lVector.new(arg)
     assert(type(field_width) == "number", "field width must be a number")
     assert(field_width >= 2)
   else
-    assert(arg.width == nil, "do not provide width except for SC")
-    field_width = qconsts.qtypes[qtype].width
+    if (arg.width ) then 
+      assert(arg.width == qconsts.qtypes[qtype].width) 
+    end
   end
    --=============================
 
@@ -779,10 +780,14 @@ function lVector:reincarnate()
     T[#T+1] = "\", "
   end
 
-  if ( self:fldtype() == "B1" ) then
-    T[#T+1] = "num_elements = "
-    T[#T+1] = self:num_elements()
-  end
+  T[#T+1] = "num_elements = "
+  T[#T+1] = self:num_elements()
+  T[#T+1] = ", "
+
+  T[#T+1] = "width = "
+  T[#T+1] = self:field_size()
+  T[#T+1] = ", "
+
   T[#T+1] = " } ) "
   if ( qconsts.debug ) then self:check() end
   return table.concat(T, '')

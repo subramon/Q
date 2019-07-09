@@ -1,5 +1,5 @@
 local Q = require 'Q'
-local ldnn = require 'Q/RUNTIME/DNN/lua/ldnn'
+local lDNN = require 'Q/RUNTIME/DNN/lua/lDNN'
 require 'Q/UTILS/lua/strict'
 
 local tests = {}
@@ -27,7 +27,7 @@ tests.t1 = function()
   afns[#afns+1] = "relu"
   afns[#afns+1] = "sigmoid"
 --]]
-  local x = ldnn.new({ npl = npl, dpl = dpl, activation_functions = afns} )
+  local x = lDNN.new({ npl = npl, dpl = dpl, activation_functions = afns} )
   assert(x:check())
   x:set_io(Xin, Xout)
   x:set_batch_size(Xout[1]:length()) -- TODO UNDO HARD CODE 
