@@ -321,7 +321,6 @@ end
 
 -- TODO P4: mono code is same as memo code. But we have duplicated it :-(
 function lVector:mono(is_mono)
-  print("Setting mono for ", self:get_name())
   local base_status, nn_status = true, true
   if ( is_mono == nil ) then 
     is_mono = true
@@ -600,13 +599,11 @@ function lVector:eval()
       base_len, base_addr, nn_addr = self:chunk(chunk_num)
       chunk_num = chunk_num + 1 
     until ( base_len ~= qconsts.chunk_size )
-    -- Changed above to following
-    -- cannot have Vector with 0 elements
-    -- Need to do eov *before* we ask for length
     assert(self:is_eov())
+    -- cannot have Vector with 0 elements
     if ( self:length() == 0 ) then  return nil  end
     -- 07/2019
-    -- This deletion is an important change from previous implemenation.
+    -- This delete() is an important change from previous implemenation.
     -- The generator that gave us the data would have allocated a CMEM
     -- Now that the Vector has been fully created, that is not needed
     -- Hence ,its okay to go ahead and delete the memory within the CMEM

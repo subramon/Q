@@ -307,7 +307,6 @@ BYE:
   return status;
 }
 
-// TODO: P3 Combine flush_buffer and flush_buffer_B1 
 int 
 flush_buffer(
           VEC_REC_TYPE *ptr_vec
@@ -317,46 +316,20 @@ flush_buffer(
   uint64_t delta = 0, t_start = RDTSC(); n_flush_buffer++;
   if ( ptr_vec->is_memo ) {
     if ( !isfile(ptr_vec->file_name) ) {
-      // create randomly generated file name and append to ptr_vec->file_name field
+      // append randomly generated file name to ptr_vec->file_name 
       status = update_file_name(ptr_vec); cBYE(status);
     }
     status = buf_to_file(ptr_vec->chunk, ptr_vec->field_size, 
         ptr_vec->num_in_chunk, ptr_vec->file_name);
     cBYE(status);
   }
+  // TODO P0 ptr_vec->num_elements = ptr_vec->num_elements + ptr_vec->num_in_chunk;
   ptr_vec->num_in_chunk = 0;
   ptr_vec->chunk_num++;
-  // TODO P4: memset is not really needed
-  // memset(ptr_vec->chunk, '\0', (ptr_vec->field_size * ptr_vec->chunk_size));
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_flush_buffer += delta; }
   return status;
 }
-
-int flush_buffer_B1(
-    VEC_REC_TYPE *ptr_vec
-    )
-{
-  int status = 0;
-  if ( ptr_vec->num_in_chunk == ptr_vec->chunk_size ) {
-    if ( ptr_vec->is_memo ) {
-      if ( !isfile(ptr_vec->file_name) ) {
-        // create randomly generated file name and append to ptr_vec->file_name field
-        status = update_file_name(ptr_vec); cBYE(status);
-      }
-      status = buf_to_file(ptr_vec->chunk, ptr_vec->field_size, 
-          ptr_vec->num_in_chunk, ptr_vec->file_name);
-      cBYE(status);
-    }
-    ptr_vec->num_in_chunk = 0;
-    ptr_vec->chunk_num++;
-    l_memset(ptr_vec->chunk, '\0', ptr_vec->chunk_size/8);
-    // Note that ptr_vec->field_size  == 0 for B1 
-  }
-BYE:
-  return status;
-}
-
 int
 vec_materialized(
     VEC_REC_TYPE *ptr_vec,
@@ -928,6 +901,10 @@ vec_memo(
       go_BYE(-1);
     }
     ptr_vec->is_memo = is_memo;
+    // if memo is set on then mono must be set off
+    if ( is_memo ) {
+      ptr_vec->is_mono = false;
+    }
   }
   else {
     go_BYE(-1);
@@ -1173,7 +1150,7 @@ vec_add_B1(
   if ( ( ( ptr_vec->num_in_chunk % 8 ) ==  0 ) && ( ( len % 8 ) == 0 ) ) {
     // we are nicely byte aligned
     for ( ; len > 0 ; ) { 
-      flush_buffer_B1(ptr_vec);
+      flush_buffer(ptr_vec);
       uint32_t space_in_chunk = ptr_vec->chunk_size - ptr_vec->num_in_chunk;
       uint32_t num_bits_to_copy;
       uint32_t num_byts_to_copy;
@@ -1206,7 +1183,7 @@ vec_add_B1(
       chunk_word_idx = 0;
     }
     for ( uint32_t i = 0; i < len; i++ ) { 
-      flush_buffer_B1(ptr_vec);
+      flush_buffer(ptr_vec);
       uint8_t bit_val = (((uint8_t *)addr)[word_idx] >> bit_idx) & 0x1;
       if ( bit_val == 1 ) {
         uint8_t mask = 1 << chunk_bit_idx;

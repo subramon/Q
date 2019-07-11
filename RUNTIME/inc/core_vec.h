@@ -121,9 +121,6 @@ vec_add_B1(
     char * addr, 
     uint32_t len
     );
-extern int flush_buffer_B1(
-    VEC_REC_TYPE *ptr_vec
-    );
 extern int 
 flush_buffer(
           VEC_REC_TYPE *ptr_vec
