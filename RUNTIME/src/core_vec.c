@@ -43,6 +43,7 @@ uint64_t t_l_vec_eov;         static uint32_t n_l_vec_eov;
 uint64_t t_l_vec_free;         static uint32_t n_l_vec_free;
 uint64_t t_l_vec_get;         static uint32_t n_l_vec_get;
 uint64_t t_l_vec_memo;        static uint32_t n_l_vec_memo;
+uint64_t t_l_vec_mono;        static uint32_t n_l_vec_mono;
 uint64_t t_l_vec_new;         static uint32_t n_l_vec_new;
 uint64_t t_l_vec_persist;     static uint32_t n_l_vec_persist;
 uint64_t t_l_vec_set;         static uint32_t n_l_vec_set;
@@ -119,6 +120,7 @@ vec_reset_timers(
   t_l_vec_free = 0;         n_l_vec_free = 0;
   t_l_vec_get = 0;          n_l_vec_get = 0;
   t_l_vec_memo = 0;         n_l_vec_memo = 0;
+  t_l_vec_mono = 0;         n_l_vec_mono = 0;
   t_l_vec_new = 0;          n_l_vec_new = 0;
   t_l_vec_persist = 0;      n_l_vec_persist = 0;
   t_l_vec_set = 0;          n_l_vec_set = 0;
@@ -143,6 +145,7 @@ vec_print_timers(
   fprintf(stdout, "0,free,%u,%" PRIu64 "\n",n_l_vec_free, t_l_vec_free);
   fprintf(stdout, "0,get,%u,%" PRIu64 "\n",n_l_vec_get, t_l_vec_get);
   fprintf(stdout, "0,memo,%u,%" PRIu64 "\n",n_l_vec_memo, t_l_vec_memo);
+  fprintf(stdout, "0,mono,%u,%" PRIu64 "\n",n_l_vec_mono, t_l_vec_mono);
   fprintf(stdout, "0,new,%u,%" PRIu64 "\n",n_l_vec_new, t_l_vec_new);
   fprintf(stdout, "0,persist,%u,%" PRIu64 "\n",n_l_vec_persist, t_l_vec_persist);
   fprintf(stdout, "0,set,%u,%" PRIu64 "\n", n_l_vec_set, t_l_vec_set);
@@ -403,6 +406,23 @@ vec_meta(
   char  buf[1024];
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
   strcpy(opbuf, "return { ");
+  //------------------------------------------------
+  sprintf(buf, "field_type = \"%s\", ", ptr_vec->field_type);
+  strcat(opbuf, buf);
+  sprintf(buf, "field_size = %d, ", ptr_vec->field_size);
+  strcat(opbuf, buf);
+  sprintf(buf, "chunk_size = %" PRIu32 ", ", ptr_vec->chunk_size);
+  strcat(opbuf, buf);
+  //-------------------------------------
+  sprintf(buf, "num_elements = %" PRIu64 ", ", ptr_vec->num_elements);
+  strcat(opbuf, buf);
+  sprintf(buf, "num_in_chunk = %" PRIu32 ", ", ptr_vec->num_in_chunk);
+  strcat(opbuf, buf);
+  sprintf(buf, "chunk_num = %" PRIu32 ", ", ptr_vec->chunk_num);
+  strcat(opbuf, buf);
+  //-------------------------------------
+  sprintf(buf, "name = \"%s\", ", ptr_vec->name);
+  strcat(opbuf, buf);
   if ( isfile(ptr_vec->file_name) ) {
     sprintf(buf, "file_name = \"%s\", ", ptr_vec->file_name);
     strcat(opbuf, buf);
@@ -411,19 +431,18 @@ vec_meta(
     sprintf(buf, "file_size = %lld, ", (unsigned long long)file_size);
     strcat(opbuf, buf);
   }
-  sprintf(buf, "field_type = \"%s\", ", ptr_vec->field_type);
-  strcat(opbuf, buf);
-  sprintf(buf, "field_size = %d, ", ptr_vec->field_size);
+  //-------------------------------------
+  sprintf(buf, "is_persist = %s, ", ptr_vec->is_persist ? "true" : "false");
   strcat(opbuf, buf);
   sprintf(buf, "is_nascent = %s, ", ptr_vec->is_nascent ? "true" : "false");
   strcat(opbuf, buf);
-  sprintf(buf, "is_persist = %s, ", ptr_vec->is_persist ? "true" : "false");
+  sprintf(buf, "is_memo = %s, ", ptr_vec->is_memo ? "true" : "false");
+  strcat(opbuf, buf);
+  sprintf(buf, "is_mono = %s, ", ptr_vec->is_mono ? "true" : "false");
   strcat(opbuf, buf);
   sprintf(buf, "is_eov = %s, ", ptr_vec->is_eov ? "true" : "false");
   strcat(opbuf, buf);
-  sprintf(buf, "is_memo = %s, ", ptr_vec->is_memo ? "true" : "false");
-  strcat(opbuf, buf);
-  sprintf(buf, "name = \"%s\", ", ptr_vec->name);
+  sprintf(buf, "is_no_memcpy = %s, ", ptr_vec->is_no_memcpy ? "true" : "false");
   strcat(opbuf, buf);
   switch ( ptr_vec->open_mode ) {
     case 0 : strcpy(buf, "open_mode = \"NOT_OPEN\", "); break;
@@ -431,15 +450,6 @@ vec_meta(
     case 2 : strcpy(buf, "open_mode = \"WRITE\", "); break;
     default : go_BYE(-1); break;
   }
-  strcat(opbuf, buf);
-  sprintf(buf, "num_elements = %" PRIu64 ", ", ptr_vec->num_elements);
-  strcat(opbuf, buf);
-  sprintf(buf, "chunk_num = %" PRIu32 ", ", ptr_vec->chunk_num);
-  strcat(opbuf, buf);
-  sprintf(buf, "chunk_size = %" PRIu32 ", ", ptr_vec->chunk_size);
-  strcat(opbuf, buf);
-  sprintf(buf, "num_in_chunk = %" PRIu32 ", ", ptr_vec->num_in_chunk);
-  strcat(opbuf, buf);
   strcat(opbuf, "} ");
 BYE:
   return status;
@@ -462,7 +472,8 @@ vec_free(
     free(ptr_vec->chunk);
     uint64_t sz1, sz2;
     bool is_incr = false, is_vec = true;
-    status = mm(ptr_vec->chunk_sz, is_incr, is_vec, &sz1, &sz2); cBYE(status);
+    status = mm(ptr_vec->chunk_sz, is_incr, is_vec, &sz1, &sz2); 
+    if ( status != 0 ) { WHEREAMI; }
     ptr_vec->chunk = NULL;
     ptr_vec->chunk_sz = 0;
   }
@@ -470,9 +481,7 @@ vec_free(
     if ( isfile(ptr_vec->file_name) ) {
       // printf("Deleting %s \n", ptr_vec->file_name); 
       status = remove(ptr_vec->file_name); 
-      if ( status != 0 ) { 
-        printf("Unable to delete %s \n", ptr_vec->file_name); WHEREAMI;
-      }
+      if ( status != 0 ) { WHEREAMI; }
     }
     /* NOTE Remove can fail because (1) file does not exist 
        (2) permission to delete not there */
@@ -484,9 +493,6 @@ vec_free(
       // printf("NOT Deleting %s \n", ptr_vec->file_name); 
     }
   }
-  memset(ptr_vec->field_type, '\0', 3+1);
-  memset(ptr_vec->name, '\0', 31+1); //TODO: Discuss with Ramesh
-
   // Don't do this in C. Lua will do it: free(ptr_vec);
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_free += delta; }
@@ -500,16 +506,12 @@ vec_delete(
 {
   int status = 0;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
-  status = vec_free(ptr_vec); cBYE(status);
-  // Set vector fields to it's default
-  ptr_vec->field_size = 0;
-  ptr_vec->chunk_size = 0;
-  ptr_vec->num_elements = 0;
-  ptr_vec->num_in_chunk = 0;
-  ptr_vec->chunk_num = 0;
-  ptr_vec->file_size = 0;
-  ptr_vec->chunk_sz = 0;
-  ptr_vec->is_eov = true; //TODO: do we need this? Discuss with Ramesh
+  vec_free(ptr_vec); 
+  if ( isfile(ptr_vec->file_name) ) {
+    remove(ptr_vec->file_name); 
+  }
+  memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
+  ptr_vec->is_dead = true; 
 BYE:
   return status;
 }
@@ -753,7 +755,9 @@ vec_check(
     VEC_REC_TYPE *ptr_vec
     )
 {
+  int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_check++;
+  if ( !ptr_vec->is_memo ) { if ( ptr_vec->is_mono ) { go_BYE(-1); } }
   /*
 is_nascent = true, is_eov = false (nascent vector without eov())
 is_nascent = true, is_eov = true (nascent vector, after eov() call)
@@ -767,7 +771,6 @@ is_nascent = false, is_eov = true (file_mode or start_write call or materialized
    * is_nascent = false, is_eov = true
    * is_nascent = false, is_eov = false // ILLEGAL
    * */
-  int status = 0;
   // Field type, field size must be defined and legit 
   status = chk_field_type(ptr_vec->field_type, ptr_vec->field_size);
   cBYE(status);
@@ -889,6 +892,22 @@ is_nascent = false, is_eov = true (file_mode or start_write call or materialized
 
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_check += delta; }
+  return status;
+}
+
+int
+vec_mono(
+    VEC_REC_TYPE *ptr_vec,
+    bool is_mono
+    )
+{
+  int status = 0;
+  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_mono++;
+  // Note that all error handling is done at the time memo was set to true
+  if ( !ptr_vec->is_memo ) { go_BYE(-1); }
+  ptr_vec->is_mono = is_mono;
+BYE:
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_mono += delta; }
   return status;
 }
 
@@ -1444,11 +1463,13 @@ vec_no_memcpy(
     )
 {
   int status = 0;
-  if ( ptr_vec->chunk != NULL ) { go_BYE(-1); }
-  if ( ptr_vec->is_eov ) { go_BYE(-1); }
-  if ( ptr_vec->file_size != 0 ) { go_BYE(-1); }
-  // TODO P1 What other checks?
-  // TODO Check cmem number of elements
+  if (  ptr_vec->chunk != NULL  ) { go_BYE(-1); }
+  if (  ptr_vec->is_eov         ) { go_BYE(-1); }
+  if (  ptr_vec->file_size != 0 ) { go_BYE(-1); }
+  if ( ptr_cmem->is_foreign     ) { go_BYE(-1); }
+  if ( ptr_cmem->data == NULL   ) { go_BYE(-1); }
+  if ( ptr_cmem->size <= 0      ) { go_BYE(-1); }
+  // TODO P1 What other checks to add to above list?
   ptr_vec->uqid  = RDTSC();
   ptr_vec->chunk = ptr_cmem->data;
   ptr_vec->chunk_sz = ptr_cmem->size;
@@ -1474,7 +1495,9 @@ vec_eov(
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_eov++;
-  if ( ptr_vec->is_eov       == true  ) { return status; } // Nothing to do 
+  if ( ptr_vec->is_eov       == true  ) { 
+    fprintf(stderr, "Already eov, nothing to do\n"); return status; 
+  } 
   if ( ptr_vec->is_nascent   == false ) { go_BYE(-1); }
   if ( ptr_vec->num_elements == 0     ) { 
     // unlikely but one has to account for this corner case 

@@ -100,6 +100,11 @@ is_eq_I4(
     int val
     );
 extern int
+vec_mono(
+    VEC_REC_TYPE *ptr_vec,
+    bool is_mono
+    );
+extern int
 vec_memo(
     VEC_REC_TYPE *ptr_vec,
     bool is_memo

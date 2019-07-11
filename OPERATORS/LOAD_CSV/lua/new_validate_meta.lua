@@ -22,6 +22,7 @@ local function validate_meta(
       fld_M.is_memo = true
     end
     --===========================================
+    -- Default assumption is that fields do NOT have null values
     if fld_M.has_nulls ~= nil then 
       assert(type(fld_M.has_nulls) == "boolean")
     else

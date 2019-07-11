@@ -109,9 +109,10 @@ local function chk_cols(vector_list)
     -- eval'ed the vector before calling lenght()
     -- as elements will populate only after eval()
     if is_first then
-      vec_length = v:length()
+      vec_length = assert(v:length())
       is_first = false
     end
+    assert(type(vec_length) == "number")
 
     -- Added below assert after discussion with Ramesh
     -- We are not supporting vectors with different length as this is a rare case
@@ -200,19 +201,14 @@ local doc_string = [[ Signature: Q.print_csv({T}, opt_args)
   -- TODO remove hardcoding of 1024
   local num_cols = get_num_cols(vector_list)
   local fp = nil -- file pointer
-  local tbl_rslt = nil
   
-  -- When output requires as string, we will accumulate partials in tbl_rslt
-  if not opfile then
+  -- Output ALWAYS go to a file, to stdout if no filename given 
+  if ( not opfile ) then
     io.output(io.stdout)
   else
-    if ( opfile ~= "" ) then
-      fp = io.open(opfile, "w+")
-      assert(fp ~= nil, err.INVALID_FILE_PATH)
+    assert(type(opfile) == "string")
+     fp = assert(io.open(opfile, "w+"), err.INVALID_FILE_PATH)
       io.output(fp)
-    else
-      tbl_rslt = {}
-    end
   end
   
   lb = lb + 1 -- for Lua style indexing
@@ -235,20 +231,11 @@ local doc_string = [[ Signature: Q.print_csv({T}, opt_args)
         if not result then
           if col:qtype() == "B1" then result = 0 else result = "" end
         end                              
-        if tbl_rslt then
-          table.insert(tbl_rslt, result) 
-          if ( col_idx ~= num_cols ) then 
-            table.insert(tbl_rslt, ",") 
-          else
-            table.insert(tbl_rslt,"\n") 
-          end
+        assert(io.write(result), "Write failed")
+        if ( col_idx ~= num_cols ) then 
+          assert(io.write(","), "Write failed")
         else
-          assert(io.write(result), "Write failed")
-          if ( col_idx ~= num_cols ) then 
-            assert(io.write(","), "Write failed")
-          else
-            assert(io.write("\n"), "Write failed")
-          end
+          assert(io.write("\n"), "Write failed")
         end
         col_idx = col_idx + 1
       end
@@ -256,26 +243,6 @@ local doc_string = [[ Signature: Q.print_csv({T}, opt_args)
       -- Filter says to skip this row 
     end
   end
-  if ( tbl_rslt ) then 
-    return table.concat(tbl_rslt)
-  else
-    if fp then io.close(fp) end
-    -- return true
-  end
+  if fp then io.close(fp) return true end 
 end
-
 return require('Q/q_export').export('print_csv', print_csv)
---[[
-However, there is a caveat to be aware of. Since strings in Lua are immutable, each concatenation creates a new string object and copies the data from the source strings to it. That makes successive concatenations to a single string have very poor performance.
-
-The Lua idiom for this case is something like this:
-
-function listvalues(s)
-    local t = { }
-    for k,v in ipairs(s) do
-        t[#t+1] = tostring(v)
-    end
-    return table.concat(t,"\n")
-end
-By collecting the strings to be concatenated in an array t, the standard library routine table.concat can be used to concatenate them all up (along with a separator string between each pair) without unnecessary string copying.
---]]

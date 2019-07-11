@@ -36,4 +36,5 @@ tests.t1 = function()
   --assert(pl_endswith == qc_endswith)
 end
 
+-- tests.t1()
 return tests

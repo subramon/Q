@@ -66,11 +66,11 @@ end
 tests.t3 = function()
   local M = {}
   local O = { is_hdr = true, fld_sep = "comma" }
-  M[#M+1] = { is_memo = false, name = "datetime", qtype = "SC", has_nulls = false, width=20}
-  M[#M+1] = { is_memo = false, name = "store_id", qtype = "I4", has_nulls = false}
-  M[#M+1] = { is_memo = false, name = "customer_id", qtype = "I8", has_nulls = false}
-  M[#M+1] = { is_memo = false, name = "category_id", qtype = "I4", has_nulls = false}
-  M[#M+1] = { name = "price", qtype = "F4", has_nulls = false}
+  M[#M+1] = { is_memo = false, name = "datetime", qtype = "SC", width=20}
+  M[#M+1] = { is_memo = false, name = "store_id", qtype = "I4", }
+  M[#M+1] = { is_memo = false, name = "customer_id", qtype = "I8", }
+  M[#M+1] = { is_memo = false, name = "category_id", qtype = "I4", }
+  M[#M+1] = { is_memo = false, name = "price", qtype = "F4", has_nulls = false}
   local datafile = "in3.csv"
   local T = Q.new_load_csv(datafile, M, O)
   local chunk_idx = 0

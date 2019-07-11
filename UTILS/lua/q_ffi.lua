@@ -48,6 +48,7 @@ typedef struct tm
 --]]
 
 -- TODO: Put this back later ffi.new = nil
+-- That's because we want malloc to ONLY go through C API
 local t_ffi = {}
 t_ffi.malloc = function(n, free_func)
    assert(nil, "Not supported, please use libcmem")

@@ -7,5 +7,6 @@ typedef struct _cmem_rec_type {
   char field_type[4]; // MAX_LEN_FIELD_TYPE TODO Fix hard coding
   char cell_name[16]; // 15 chaarcters + 1 for nullc, mainly for debugging
   bool is_foreign; // true => do not delete 
+  int  ref_count; // Feature in progress
 } CMEM_REC_TYPE;
 #endif

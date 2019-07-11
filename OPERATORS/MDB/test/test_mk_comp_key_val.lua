@@ -43,14 +43,16 @@ tests.t1 = function()
 end
 
 tests.t2 = function()
-  local m = 32 * 1048576
+  local m = 1024 * 1048576
   local Tk, n = mk_in.f1(m); assert(n)
   local nDR, vecs = get_nDR(Tk)
   local template, nR, nD, nC = mk_template(nDR)
   --=============================================
   local vtype = "F4"
-  local val_vec = Q.seq({ start = 2, incr = 4, qtype = vtype, len = n})
+  local val_vec = Q.seq({ start = 2, incr = 4, qtype = vtype, len = n}):memo(false)
   local key_vec, val_vec = Q.mk_comp_key_val(Tk,  val_vec)
+  key_vec:memo(false)
+  val_vec:memo(false)
   local update_type = "ADD"
   local params = { initial_size = 65536, keytype = "I8", valtype = vtype}
   local A = lAggregator(params)

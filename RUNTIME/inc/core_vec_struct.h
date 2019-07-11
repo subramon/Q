@@ -22,13 +22,15 @@ typedef struct _vec_rec_type {
   bool is_persist;
   bool is_nascent;
   bool is_memo;
+  bool is_mono;
   bool is_eov;
+  bool is_no_memcpy; // true=> we are trying to reduce memcpy
+  bool is_dead; // true=> all C resources freed. Waiting for Lua to GC
+
   int open_mode; // 0 = unopened, 1 = read, 2 = write
   uint64_t uqid; // used for matching chunk free with malloc
   char *chunk;
   uint32_t chunk_sz; // number of bytes allocated for chunk
-  bool is_no_memcpy; // true=> we are trying to reduce memcpy
-  bool is_virtual; // TO BE DEPRECATED
 } VEC_REC_TYPE;
 
 #endif

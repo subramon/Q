@@ -20,6 +20,9 @@
 #include "mm.h"
 #include "_txt_to_I4.h"
 
+// TODO P3: I don't like this static. What's the best way to 
+// store stuff on the C side of the fence to avoid Lua having to 
+// send it each time
 static int32_t chunk_size = 0; 
 
 
@@ -235,10 +238,34 @@ BYE:
   return 2;
 }
 //----------------------------------------
+static int l_vec_is_mono( lua_State *L) {
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  lua_pushboolean(L, ptr_vec->is_mono);
+  return 1;
+}
+//----------------------------------------
 static int l_vec_is_memo( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   lua_pushboolean(L, ptr_vec->is_memo);
   return 1;
+}
+//----------------------------------------
+static int l_vec_mono( lua_State *L) {
+  int status = 0;
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  //------------------------------
+  bool is_mono = true;
+  if ( lua_isboolean(L, 2) ) { 
+    is_mono = lua_toboolean(L, 2);
+  }
+  //------------------------------
+  status = vec_mono(ptr_vec, is_mono); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, "ERROR: vec_mono. ");
+  return 2;
 }
 //----------------------------------------
 static int l_vec_memo( lua_State *L) {
@@ -615,9 +642,29 @@ static int l_vec_check( lua_State *L) {
 //----------------------------------------
 static int l_vec_free( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_free(ptr_vec);
-  if ( status != 0) { luaL_error(L, "could not free vector\n"); }
+  int status = vec_free(ptr_vec); cBYE(status);
+  lua_pushboolean(L, true);
   return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, "ERROR: vec_free. ");
+  return 2;
+}
+//-----------------------
+// Difference between delete and free is that in delete we destroy
+// an underlying file if it exists
+// free just 
+// (1) frees   stuff that has been malloc'd and 
+// (2) munmaps stuff that has been mmapped
+static int l_vec_delete( lua_State *L) {
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  int status = vec_delete(ptr_vec); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, "ERROR: vec_delete. ");
+  return 2;
 }
 //----------------------------------------
 static int l_vec_new( lua_State *L) 
@@ -693,18 +740,6 @@ BYE:
   return 2;
 }
 //-----------------------
-static int l_vec_delete( lua_State *L) {
-  int status = 0;
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vec_delete(ptr_vec); cBYE(status);
-  lua_pushboolean(L, true);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, "ERROR: vec_end_write. ");
-  return 2;
-}
-//-----------------------
 static const struct luaL_Reg vector_methods[] = {
     { "__gc",    l_vec_free   },
     { "eov", l_vec_eov },
@@ -713,13 +748,15 @@ static const struct luaL_Reg vector_methods[] = {
     { "put1", l_vec_put1 },
     { "persist", l_vec_persist },
     { "memo", l_vec_memo },
+    { "mono", l_vec_mono },
+    { "is_memo", l_vec_is_memo },
+    { "is_mono", l_vec_is_mono },
     { "num_elements", l_vec_num_elements },
     { "num_in_chunk", l_vec_num_in_chunk },
     { "chunk_size", l_vec_chunk_size },
     { "get_chunk", l_vec_get_chunk },
     { "set_chunk_size", l_set_chunk_size },
     { "put_chunk", l_vec_put_chunk },
-    { "is_memo", l_vec_is_memo },
     { "is_eov", l_vec_is_eov },
     { "cast", l_vec_cast },
     { "set", l_vec_set },
@@ -748,6 +785,9 @@ static const struct luaL_Reg vector_functions[] = {
     { "put1", l_vec_put1 },
     { "persist", l_vec_persist },
     { "memo", l_vec_memo },
+    { "mono", l_vec_mono },
+    { "is_memo", l_vec_is_memo },
+    { "is_mono", l_vec_is_mono },
     { "set", l_vec_set },
     { "get", l_vec_get },
     { "set_name", l_vec_set_name },
@@ -760,7 +800,6 @@ static const struct luaL_Reg vector_functions[] = {
     { "file_size", l_vec_file_size },
     { "file_name", l_vec_file_name },
     { "is_nascent", l_vec_is_nascent },
-    { "is_memo", l_vec_is_memo },
     { "is_eov", l_vec_is_eov },
     { "cast", l_vec_cast },
     { "get_chunk", l_vec_get_chunk },

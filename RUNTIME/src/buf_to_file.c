@@ -23,6 +23,7 @@ buf_to_file(
   if ( addr == NULL ) { go_BYE(-1); }
 
   // fprintf(stderr, "addr = %llu, size = %d, nmemb = %d, %s \n", addr, size, nmemb, file_name);
+  // TODO P2 Consider using seek to end of file instead of using "ab"
   fp = fopen(file_name, "ab");
   return_if_fopen_failed(fp, file_name, "ab");
   size_t nw = fwrite(addr, size, nmemb, fp);

@@ -30,5 +30,4 @@ extern int
 cmem_get_sz_malloc( 
     void
 );
-
 #endif

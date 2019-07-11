@@ -13,7 +13,8 @@ tests.t1 = function()
   local c3 = c1
   c1 = 10
   local c2 = Q.mk_col( {80,70,60,50,40,30,20,10}, "I8")
-  local z = Q.vvadd(c3, c2)
+  local z = Q.vvadd(c3, c2):set_name("z")
+  assert(z:get_name() == "z")
   local opt_args = { opfile = path_to_here .. "_out1.txt", filter = { lb = 1, ub = 4} }
   Q.print_csv(z, opt_args)
   local diff_status = diff(path_to_here .. "_out1.txt", path_to_here .. "out1.txt")

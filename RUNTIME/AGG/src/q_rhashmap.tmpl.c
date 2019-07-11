@@ -167,8 +167,8 @@ q_rhashmap_getn___KV__(
     )
 {
   int status = 0;
-// UNDO  int chunk_size = 1024;
-// UNDO #pragma omp parallel for schedule(static, chunk_size)
+  int chunk_size = 1024;
+#pragma omp parallel for schedule(static, chunk_size)
   for ( uint32_t j = 0; j < nkeys; j++ ) {
     uint32_t n = 0; 
     uint32_t i = locs[j];

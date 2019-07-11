@@ -231,6 +231,7 @@ static int l_cmem_name( lua_State *L) {
   return 1;
 }
 
+
 // set_default used only for debugging. 
 // TODO P4 Consider using it elsewhere as well
 static int set_default(

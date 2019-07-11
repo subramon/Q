@@ -72,8 +72,19 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
       qc[func_name](chunk1, chunk2, f1_len, chunk3)
       record_time(start_time, func_name)
     else
+      -- TODO P1 Not sure about the following
+      -- Its important to return nil. This is indicator to lVector.lua
+      -- that put_chunk does not need to be done because we have written
+      -- directly into the Vector's chunk
       f3_buf = nil
       nn_f3_buf = nil
+      if ( f2:is_mono() ) then f2:delete() end 
+    end
+    if ( f1_len ~= qconsts.chunk_size ) then 
+      -- TODO P2 Following is experimental code. Basic idea is to 
+      -- free up resources of a Vector as soon we know its not needed 
+      if ( f1:is_mono() ) then f1:delete() end 
+      if ( f2:is_mono() ) then f2:delete() end 
     end
     chunk_idx = chunk_idx + 1
     return f1_len, f3_buf, nn_f3_buf
