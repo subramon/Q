@@ -675,21 +675,20 @@ function lVector:chunk(chunk_num)
           ( self:is_memo() == true ) ) )
   if ( cond1 or cond2 ) then 
     base_addr, base_len = Vector.get_chunk(self._base_vec, l_chunk_num)
+    --=========================================
     if ( not base_addr ) then
+      assert(base_len == 0)
       if ( qconsts.debug ) then self:check() end
       return 0
     end
+    --=========================================
     if ( self._nn_vec ) then 
       nn_addr,   nn_len   = Vector.get_chunk(self._nn_vec, l_chunk_num)
       assert(nn_addr)
       assert(base_len == nn_len)
     end
-    if ( qconsts.debug ) then self:check() end
-    if base_len < 1 then
-      -- TODO P4 why would control ever come here?
-      base_addr = nil
-      nn_addr = nil
-    end
+    --=========================================
+    assert(base_len > 0)
     assert(chk_chunk_return(base_len, base_addr, nn_addr))
     return base_len, base_addr, nn_addr
   else
