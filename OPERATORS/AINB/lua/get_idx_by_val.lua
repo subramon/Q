@@ -70,10 +70,7 @@ local function get_idx_by_val(x, y, optargs)
       first_call = false
       f3_buf = assert(cmem.new(buf_sz, f3_qtype))
       myvec:no_memcpy(f3_buf) -- hand control of this f3_buf to the vector 
-    else
-      myvec:flush_buffer() -- tell the vector to flush its buffer
     end
-    assert(f3_buf)
     local f3_cast_as = subs.idx_ctype .. "*"
 
     local f1_len, f1_chunk, nn_f1_chunk
