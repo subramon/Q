@@ -27,6 +27,6 @@ tests.t1 = function()
   -- Q.print_csv({ T.day, d}, { opfile = "_x.csv" } )
   print("Test t1 succeeded")
 end
-tests.t1()
-os.exit()
---return tests
+-- tests.t1()
+-- os.exit()
+return tests

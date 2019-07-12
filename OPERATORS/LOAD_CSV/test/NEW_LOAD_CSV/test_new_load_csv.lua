@@ -70,7 +70,7 @@ tests.t3 = function()
   M[#M+1] = { is_memo = false, name = "store_id", qtype = "I4", }
   M[#M+1] = { is_memo = false, name = "customer_id", qtype = "I8", }
   M[#M+1] = { is_memo = false, name = "category_id", qtype = "I4", }
-  M[#M+1] = { is_memo = false, name = "price", qtype = "F4", has_nulls = false}
+  M[#M+1] = { is_memo = true, name = "price", qtype = "F4", has_nulls = false}
   local datafile = "in3.csv"
   local T = Q.new_load_csv(datafile, M, O)
   local chunk_idx = 0
@@ -147,10 +147,9 @@ tests.t5 = function()
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
---tests.t1()
---tests.t2()
-tests.t3()
---tests.t4()
---tests.t5()
---return tests
-os.exit()
+-- tests.t1()
+-- tests.t2()
+-- tests.t3()
+-- tests.t4()
+-- tests.t5()
+return tests
