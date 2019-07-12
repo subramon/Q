@@ -18,7 +18,7 @@
 
 #include "lauxlib.h"
 
-#define ALIGNMENT  256 // TODO P2 DOCUMENT AND PLACE CAREFULLY
+#define ALIGNMENT  256 // TODO P3 DOCUMENT AND PLACE CAREFULLY
 
 static uint64_t
 RDTSC(
@@ -83,7 +83,7 @@ l_memset(
 static inline void *
 l_malloc(
     size_t n,
-    VEC_REC_TYPE *ptr_vec // TODO DELETE later just for debugging
+    VEC_REC_TYPE *ptr_vec // TODO P3 DELETE later just for debugging
     )
 {
   int status = 0;
@@ -163,7 +163,7 @@ is_file_size_okay(
     )
 {
   if ( ptr_vec->is_memo == false ) {
-    return true; // TODO: what should be appropriate return value
+    return true; // TODO P4: what should be appropriate return value
   }
   int64_t actual_fsz = get_file_size(ptr_vec->file_name);
   int64_t expected_fsz;
@@ -227,8 +227,7 @@ chk_field_type(
        ( strcmp(field_type, "F4") == 0 ) || 
        ( strcmp(field_type, "F8") == 0 ) || 
        ( strcmp(field_type, "SC") == 0 ) || 
-       ( strcmp(field_type, "TM") == 0 ) || 
-       ( strcmp(field_type, "SV") == 0 ) ) {
+       ( strcmp(field_type, "TM") == 0 ) ) {
     /* all is well */
   }
   else {
@@ -236,7 +235,7 @@ chk_field_type(
     go_BYE(-1);
   }
   if ( strcmp(field_type, "B1") == 0 )  {
-    if ( field_size != 0 ) { go_BYE(-1); }
+    if ( field_size != 1 ) { go_BYE(-1); }
   }
   else {
     if ( field_size == 0 ) { go_BYE(-1); }
@@ -314,6 +313,7 @@ flush_buffer(
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_flush_buffer++;
+  if ( ptr_vec->num_in_chunk == 0 ) { go_BYE(-1); }
   if ( ptr_vec->is_memo ) {
     if ( !isfile(ptr_vec->file_name) ) {
       // append randomly generated file name to ptr_vec->file_name 
@@ -323,7 +323,7 @@ flush_buffer(
         ptr_vec->num_in_chunk, ptr_vec->file_name);
     cBYE(status);
   }
-  // TODO P0 ptr_vec->num_elements = ptr_vec->num_elements + ptr_vec->num_in_chunk;
+  // flushing buffer does not change number of elements in Vector
   ptr_vec->num_in_chunk = 0;
   ptr_vec->chunk_num++;
 BYE:
@@ -625,9 +625,6 @@ get_qtype_and_field_size(
     if ( field_size < 2 ) { go_BYE(-1); }
     strcpy(qtype, "SC");
   }
-  else if ( strcmp(field_type, "SV") == 0 ) {
-    strcpy(qtype, field_type); field_size = 4; // SV is stored as I4
-  }
   else {
     go_BYE(-1);
   }
@@ -659,8 +656,7 @@ vec_new(
   char qtype[4]; int field_size = 0;
   memset(qtype, '\0', 4);
   if ( strcmp(field_type, "B1") == 0 ) {
-    // What should be the field_size for B1?
-    strcpy(qtype, field_type); field_size = 0; // SPECIAL CASE
+    strcpy(qtype, field_type); field_size = 1; // SPECIAL CASE
   }
   else if ( strcmp(field_type, "I1") == 0 ) {
     strcpy(qtype, field_type); field_size = 1;
@@ -686,11 +682,8 @@ vec_new(
     if ( field_size < 2 ) { go_BYE(-1); }
     strcpy(qtype, "SC");
   }
-  else if ( strcmp(field_type, "SV") == 0 ) {
-    strcpy(qtype, field_type); field_size = 4; // SV is stored as I4
-  }
   else if ( strcmp(field_type, "TM") == 0 ) {
-    strcpy(qtype, field_type); field_size = sizeof(struct tm); // SV is stored as I4
+    strcpy(qtype, field_type); field_size = sizeof(struct tm); 
   }
   else {
     fprintf(stderr, "Unknown field_type = ]%s] \n", field_type);
@@ -731,6 +724,7 @@ vec_check(
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_check++;
   if ( !ptr_vec->is_memo ) { if ( ptr_vec->is_mono ) { go_BYE(-1); } }
+  if ( ptr_vec->is_no_memcpy ) { if ( ptr_vec->chunk == NULL ) { go_BYE(-1); } }
   /*
 is_nascent = true, is_eov = false (nascent vector without eov())
 is_nascent = true, is_eov = true (nascent vector, after eov() call)
@@ -783,13 +777,12 @@ is_nascent = false, is_eov = true (file_mode or start_write call or materialized
       go_BYE(-1);
       break;
   }
-#ifdef TODO
-  Curently this is commented out need to think more
-  // Cannot have vector with 0 elements. 
+  /* Cannot have vector with 0 elements. 
+   * Should this be handled by Lua or C? TODO P3
   if ( ptr_vec->is_eov == true ) {
     if ( ptr_vec->num_elements == 0    ) { go_BYE(-1); }
   }
-#endif
+  */
   if ( ptr_vec->is_eov == true ) {
     return status;
   }
@@ -970,7 +963,7 @@ vec_get(
     goto BYE;
   }
 
-  // START RAMESH TODO P0 DISCUSS WITH KRUSHNAKANT
+  // START RAMESH TODO P1 Is following okay?
   if ( ( idx == 0 ) && ( len > ptr_vec->num_elements ) ) {
     len = ptr_vec->num_elements;
   }
@@ -1133,28 +1126,41 @@ int
 vec_add_B1(
     VEC_REC_TYPE *ptr_vec,
     char * addr, 
-    uint32_t len
+    int32_t len
     )
 {
   int status = 0;
+  uint32_t space_in_chunk;
+  if ( ptr_vec == NULL ) { go_BYE(-1); }
+  if ( addr == NULL ) { go_BYE(-1); }
+  if ( len <  0 ) { go_BYE(-1); }
+  if ( len == 0 ) { /* not an error, nothing to do */ goto BYE; }
+  if ( !ptr_vec->is_nascent ) { go_BYE(-1); }
+  if ( ptr_vec->is_eov ) { go_BYE(-1); }
+  //---------------------------------------
+  if ( ptr_vec->is_no_memcpy ) {
+    if ( ptr_vec->chunk != addr ) { go_BYE(-1); }
+    if ( (uint32_t)len > ptr_vec->chunk_size ) { go_BYE(-1); }
+    if ( ptr_vec->num_in_chunk != 0 ) { go_BYE(-1); }
+  }
+  //---------------------------------------
   if ( ptr_vec->chunk == NULL ) { 
     ptr_vec->chunk = l_malloc(ptr_vec->chunk_sz, ptr_vec);
     return_if_malloc_failed(ptr_vec->chunk);
     l_memset( ptr_vec->chunk, '\0', ptr_vec->chunk_sz);
   }
 
-  /* TODO: Ideally if ( len % 8 != 0 ) then the write operation should work in combination of byte and bit fashion
-  i.e if len = 66 then first 64 bits should go in byte writing fashion 
-  and remaining 2 bits should be written in bit fashion.
-  Above comment is valid only if ( ptr_vec->num_in_chunk % 8 ) ==  0 */
-  if ( ( ( ptr_vec->num_in_chunk % 8 ) ==  0 ) && ( ( len % 8 ) == 0 ) ) {
+  if ( ( ptr_vec->num_in_chunk % 8 ) ==  0 ) {
     // we are nicely byte aligned
     for ( ; len > 0 ; ) { 
-      flush_buffer(ptr_vec);
-      uint32_t space_in_chunk = ptr_vec->chunk_size - ptr_vec->num_in_chunk;
+      space_in_chunk = ptr_vec->chunk_size - ptr_vec->num_in_chunk;
+      if ( space_in_chunk == 0 ) { 
+        status = flush_buffer(ptr_vec); cBYE(status);
+        continue;
+      }
       uint32_t num_bits_to_copy;
       uint32_t num_byts_to_copy;
-      if ( len < space_in_chunk ) { 
+      if ( (uint32_t)len < space_in_chunk ) { 
         num_bits_to_copy = len;
         num_byts_to_copy = ceil(num_bits_to_copy / 8.0);
       }
@@ -1167,7 +1173,10 @@ vec_add_B1(
         num_byts_to_copy = num_bits_to_copy / 8;
       }
       char *dst = ptr_vec->chunk + (ptr_vec->num_in_chunk / 8);
-      l_memcpy(dst, addr, num_byts_to_copy);
+      // Don't copy if generator already wrote into your internal buffer
+      if ( !ptr_vec->is_no_memcpy ) { 
+        l_memcpy(dst, addr, num_byts_to_copy);
+      }
       ptr_vec->num_in_chunk += num_bits_to_copy;
       len  -= num_bits_to_copy;
       addr += num_byts_to_copy;
@@ -1175,37 +1184,33 @@ vec_add_B1(
     }
   }
   else {
-    uint32_t bit_idx  = 0;
-    uint32_t word_idx = 0;
-    uint32_t chunk_bit_idx = ( ptr_vec->num_in_chunk % 8 );
-    uint32_t chunk_word_idx = ( ptr_vec->num_in_chunk / 8 );
-    if ( ptr_vec->num_in_chunk == ptr_vec->chunk_size ) {
-      chunk_word_idx = 0;
-    }
-    for ( uint32_t i = 0; i < len; i++ ) { 
-      flush_buffer(ptr_vec);
-      uint8_t bit_val = (((uint8_t *)addr)[word_idx] >> bit_idx) & 0x1;
-      if ( bit_val == 1 ) {
-        uint8_t mask = 1 << chunk_bit_idx;
-        ((uint8_t *)ptr_vec->chunk)[chunk_word_idx] |= mask;
+    // TODO P1: This needs some serious attention
+    uint32_t src_bit_idx = 0;
+    uint32_t src_wrd_idx = 0;
+    for ( int32_t i = 0; i < len; i++ ) { // put 1 bit at a time 
+      if ( ptr_vec->num_in_chunk == ptr_vec->chunk_size ) {
+        // no space in buffer => flush it 
+        status = flush_buffer(ptr_vec); cBYE(status);
+      }
+      uint32_t dst_bit_idx = ( ptr_vec->num_in_chunk % 8 );
+      uint32_t dst_wrd_idx = ( ptr_vec->num_in_chunk / 8 );
+
+      uint8_t src_bit = (((uint8_t *)addr)[src_wrd_idx] >> src_bit_idx) & 0x1;
+      if ( src_bit == 1 ) {
+        uint8_t mask = 1 << dst_bit_idx;
+        ((uint8_t *)ptr_vec->chunk)[dst_wrd_idx] |= mask;
       }
       else {
-        uint8_t mask = ~(1 << chunk_bit_idx);
-        ((uint8_t *)ptr_vec->chunk)[chunk_word_idx] &= mask;
+        uint8_t mask = ~(1 << dst_bit_idx);
+        ((uint8_t *)ptr_vec->chunk)[dst_wrd_idx] &= mask;
       }
+      //----------------------------
       ptr_vec->num_in_chunk++;
       ptr_vec->num_elements++;
-      bit_idx++; 
-      chunk_bit_idx++;
-      if ( bit_idx == 8 ) { 
-        word_idx++; bit_idx = 0; 
-      }
-      if ( chunk_bit_idx == 8 ) {
-        chunk_word_idx++; chunk_bit_idx = 0;
-        if ( chunk_word_idx == ( ptr_vec->chunk_size / 8 ) ) {
-          chunk_word_idx = 0;
-        }
-      }      
+      src_bit_idx++; 
+      dst_bit_idx++;
+      if ( src_bit_idx == 8 ) { src_wrd_idx++; src_bit_idx = 0; }
+      if ( dst_bit_idx == 8 ) { dst_wrd_idx++; dst_bit_idx = 0; }      
     }
   }
 
@@ -1217,31 +1222,33 @@ int
 vec_add(
     VEC_REC_TYPE *ptr_vec,
     char * const addr, 
-    uint32_t len
+    int32_t len
     )
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_add++;
+  // START: Do some basic checks
+  if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( addr == NULL ) { go_BYE(-1); }
-  if ( len == 0 ) { go_BYE(-1); }
+  if ( len <  0 ) { go_BYE(-1); }
+  if ( len == 0 ) { /* not an error, nothing to do */ goto BYE; }
   if ( !ptr_vec->is_nascent ) { go_BYE(-1); }
   if ( ptr_vec->is_eov ) { go_BYE(-1); }
+  //---------------------------------------
+  if ( ptr_vec->is_no_memcpy ) {
+    if ( ptr_vec->chunk != addr ) { go_BYE(-1); }
+    if ( (uint32_t)len > ptr_vec->chunk_size ) { go_BYE(-1); }
+    // if ( ptr_vec->num_in_chunk != 0 ) { printf("hello world\n"); go_BYE(-1); }
+  }
+  //---------------------------------------
   if ( strcmp(ptr_vec->field_type, "B1") == 0 ) {
     status = vec_add_B1(ptr_vec, addr, len); cBYE(status);
     goto BYE; 
   }
   //---------------------------------------
-  if ( ptr_vec->is_no_memcpy ) {
-    ptr_vec->num_in_chunk = len;
-    ptr_vec->num_elements += len;
-    goto BYE;
-  }
-  //---------------------------------------
-
   if ( ptr_vec->chunk == NULL ) { 
     ptr_vec->chunk = l_malloc(ptr_vec->chunk_sz, ptr_vec);
     return_if_malloc_failed(ptr_vec->chunk);
-    l_memset( ptr_vec->chunk, '\0', ptr_vec->chunk_sz);
   }
 
   uint64_t initial_num_elements = ptr_vec->num_elements;
@@ -1257,14 +1264,17 @@ vec_add(
       char *dst = ptr_vec->chunk + 
         (ptr_vec->num_in_chunk * ptr_vec->field_size);
       char *src = addr + (num_copied * ptr_vec->field_size);
-      l_memcpy(dst, src, (num_to_copy * ptr_vec->field_size));
+      // Don't copy if generator already wrote into your internal buffer
+      if ( !ptr_vec->is_no_memcpy ) { 
+        l_memcpy(dst, src, (num_to_copy * ptr_vec->field_size));
+      }
       ptr_vec->num_in_chunk += num_to_copy;
       ptr_vec->num_elements += num_to_copy;
       num_left_to_copy      -= num_to_copy;
       num_copied            += num_to_copy;
     }
   }
-  if ( num_copied != len ) { go_BYE(-1); }
+  if ( num_copied != (uint32_t)len ) { go_BYE(-1); }
   if ( ptr_vec->num_elements != initial_num_elements + len) {
     go_BYE(-1);
   }
@@ -1287,9 +1297,8 @@ vec_start_write(
   else {
     go_BYE(-1);
   }
-  // TODO DISCUSS WITH KRUSHNAKANT
-  // I am going to allow open in write even if opened in read
-  // but this needs more thought 
+  // TODO P2: I am going to allow open in write even if opened 
+  // in read mode but this needs more thought 
   if ( ptr_vec->open_mode == 0 ) {
     /* this situation is fine */
   }
@@ -1367,7 +1376,7 @@ vec_set(
         int64_t word_idx = idx / 64;
         int64_t bit_idx = idx % 64;
         uint64_t *X  =(uint64_t *)ptr_vec->map_addr;
-        // TODO CHECK: Indrajeet and Krushnakant please review
+        // TODO P2: To review following and test carefully
         bool bit_val = (((uint8_t *)addr)[0]) & 0x1; 
         if ( bit_val ) { 
           X[word_idx] = X[word_idx] | (1 << bit_idx);
@@ -1377,7 +1386,7 @@ vec_set(
         }
       }
       else {
-        // TODO: Needs to be finished. To discuss with Indrajeet
+        // TODO P2: Needs to be finished. 
       }
     }
     else {
@@ -1440,23 +1449,34 @@ vec_no_memcpy(
     )
 {
   int status = 0;
+  if (  ptr_vec  == NULL        ) { go_BYE(-1); }
   if (  ptr_vec->chunk != NULL  ) { go_BYE(-1); }
   if (  ptr_vec->is_eov         ) { go_BYE(-1); }
   if (  ptr_vec->file_size != 0 ) { go_BYE(-1); }
+
+  if (  ptr_cmem == NULL        ) { go_BYE(-1); }
   if ( ptr_cmem->is_foreign     ) { go_BYE(-1); }
   if ( ptr_cmem->data == NULL   ) { go_BYE(-1); }
   if ( ptr_cmem->size <= 0      ) { go_BYE(-1); }
-  // TODO P1 What other checks to add to above list?
+
+  ptr_vec->chunk_sz = (ptr_vec->field_size * ptr_vec->chunk_size);
+  // The CMEM must be the same size as the buffer that the Vector
+  // would have allocated had it allocated it on its own
+  if ( ptr_cmem->size != ptr_vec->chunk_sz ) { 
+    printf("hello world\n");
+    go_BYE(-1); 
+  }
+  //------------------------------------
   ptr_vec->uqid  = RDTSC();
   ptr_vec->chunk = ptr_cmem->data;
-  ptr_vec->chunk_sz = ptr_cmem->size;
-  ptr_vec->chunk_size = chunk_size; 
+  // ptr_vec->chunk_sz = ptr_cmem->size;
+  // This is a necessary pre-condition ptr_vec->chunk_size = chunk_size; 
   ptr_vec->is_no_memcpy = true;
-  ptr_cmem->is_foreign = true;
+  ptr_cmem->is_foreign = true; // de-allocation is for Vector not CMEM
 
-  uint64_t sz = ptr_cmem->size;
-
-  uint64_t sz1, sz2;
+  // Adjust the memory counters 
+  uint64_t sz, sz1, sz2;
+  sz = ptr_vec->chunk_sz;
   bool is_incr = true, is_vec = true;
   status = mm(sz, is_incr, is_vec, &sz1, &sz2); cBYE(status);
   is_incr = false; is_vec = false;

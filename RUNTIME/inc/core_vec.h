@@ -113,13 +113,13 @@ extern int
 vec_add(
     VEC_REC_TYPE *ptr_vec,
     char * const addr, 
-    uint32_t len
+    int32_t len
     );
 extern int
 vec_add_B1(
     VEC_REC_TYPE *ptr_vec,
     char * addr, 
-    uint32_t len
+    int32_t len
     );
 extern int 
 flush_buffer(

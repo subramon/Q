@@ -50,7 +50,6 @@ local qconsts = {}
   qconsts.qc_trace = false -- set to FALSE if performance logging of qc is to be turned off
   local max_width = {}
   max_width["SC"] = 1024 -- 1 char reserved for nullc
-  max_width["SV"] = 1024 -- 1 char reserved for nullc
 
   -- Commenting 'max_len_file_name' field as it is not required on lua side
   -- On C side, it is present in q_constants.h
@@ -160,18 +159,8 @@ local qconsts = {}
     ctype_to_txt = "F8_to_txt",
     max_length="65" 
   }
-  qtypes.SV = { 
-    min = 0, -- 0 is undefined, 1 onwards are actual values
-    max = 1048576, -- cannot have more than 1M unique strings in column
-    max_txt_width = 8,
-    width = 4, -- SV is treated as I4
-    ctype = "int32_t", -- SV is treated as I4
-    txt_to_ctype = "txt_to_I4",
-    ctype_to_txt = "I4_to_txt",
-    max_length="13"
-  }
   qtypes.SC = { 
-    width = 8,
+    -- I don't think we need this TODO P4 width = 8,
     ctype = "char",
     txt_to_ctype = "txt_to_SC",
     ctype_to_txt = "SC_to_txt" 

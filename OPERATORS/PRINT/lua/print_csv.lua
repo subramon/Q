@@ -203,7 +203,7 @@ local doc_string = [[ Signature: Q.print_csv({T}, opt_args)
   local fp = nil -- file pointer
   
   -- Output ALWAYS go to a file, to stdout if no filename given 
-  if ( not opfile ) then
+  if ( ( not opfile )  or ( opfile == "" ) ) then
     io.output(io.stdout)
   else
     assert(type(opfile) == "string")

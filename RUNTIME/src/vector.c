@@ -428,7 +428,10 @@ static int l_vec_get_chunk( lua_State *L)
   lua_pushinteger(L, ret_len);
   return 2;
 BYE:
-  lua_pushnil(L); lua_pushstring(L, "ERROR: vec_get. "); return 2;
+  lua_pushnil(L); 
+  lua_pushinteger(L, 0);
+  lua_pushstring(L, "ERROR: vec_get. "); 
+  return 3;
 }
 //----------------------------------------------------
 static int l_vec_put1( lua_State *L) {
@@ -558,20 +561,14 @@ static int l_vec_put_chunk( lua_State *L) {
   int status = 0;
   void *addr = NULL;
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  if ( luaL_testudata (L, 2, "CMEM") ) { 
-    CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 2, "CMEM");
-    if ( ptr_cmem == NULL ) { go_BYE(-1); }
-    addr = ptr_cmem->data;
-  } 
-  else {
-    fprintf(stderr, "NOT  CMEM\n");
-    go_BYE(-1);
-  }
   int32_t len = luaL_checknumber(L, 3);
-  if ( len < 0 ) { go_BYE(-1); }
+  if ( !luaL_testudata (L, 2, "CMEM") ) { go_BYE(-1); }
+  CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 2, "CMEM");
+  if ( ptr_cmem == NULL ) { go_BYE(-1); }
+  addr = ptr_cmem->data;
   //---------------------------------------
   status = vec_add(ptr_vec, addr, len); cBYE(status);
-  lua_pushboolean(L, 1);
+  lua_pushboolean(L, true);
   return 1;
 BYE:
   lua_pushnil(L);

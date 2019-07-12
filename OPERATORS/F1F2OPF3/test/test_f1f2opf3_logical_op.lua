@@ -1,5 +1,7 @@
 --FUNCTIONAL TEST
+require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
+local plfile = require 'pl.file'
 
 local tests = {}
 
@@ -11,10 +13,11 @@ tests.vvand = function()
   local col2 = Q.mk_col (col2, "B1")
   local result_col = Q.vvand(col1, col2, { junk = "junk" } )
   result_col:eval()
-  local opt_args = { opfile = "" }
-  local actual = Q.print_csv(result_col, opt_args)
-  print("Actual vvand output\n"..actual)
+  local opt_args = { opfile = "_xx" }
+  Q.print_csv(result_col, opt_args)
+  local actual = plfile.read("_xx")
   assert(actual == expected, "vvand: input and output not matched")
+  print("Test vvand succeeded")
 end
 
 tests.vvor = function()
@@ -25,10 +28,11 @@ tests.vvor = function()
   local col2 = Q.mk_col (col2, "B1")
   local result_col = Q.vvor(col1, col2, { junk = "junk" } )
   result_col:eval()
-  local opt_args = { opfile = "" }
-  local actual = Q.print_csv(result_col, opt_args)
-  print("Actual vvor output\n"..actual)
+  local opt_args = { opfile = "_xx" }
+  Q.print_csv(result_col, opt_args)
+  local actual = plfile.read("_xx")
   assert(actual == expected, "vvor: input and output not matched")
+  print("Test vvor succeeded")
 end
 
 tests.vvandnot = function()
@@ -39,10 +43,11 @@ tests.vvandnot = function()
   local col2 = Q.mk_col (col2, "B1")
   local result_col = Q.vvandnot(col1, col2, { junk = "junk" } )
   result_col:eval()
-  local opt_args = { opfile = "" }
-  local actual = Q.print_csv(result_col, opt_args)
-  print("Actual vvandnot output\n"..actual)
-  assert(actual == expected, "vvandnot: input and output not matched")
+  local opt_args = { opfile = "_xx" }
+  Q.print_csv(result_col, opt_args)
+  local actual = plfile.read("_xx")
+  assert(actual == expected, "vvand: input and output not matched")
+  print("Test vvandnot succeeded")
 end
 
 return tests

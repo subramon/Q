@@ -34,10 +34,6 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
   local f3_buf = nil
   local nn_f3_buf = nil -- Will be created if nulls in input
 
-  local f1_chunk_size = f1:chunk_size()
-  local f2_chunk_size = f2:chunk_size()
-  assert(f1_chunk_size == f2_chunk_size)
-
   local first_call = true
   local chunk_idx = 0
   local myvec  -- see note expander_f1f2opf3.txt
@@ -47,15 +43,12 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
     assert(chunk_num == chunk_idx)
     if ( first_call ) then 
       first_call = false
-      f3_buf = assert(cmem.new(buf_sz, f3_qtype))
+      f3_buf = assert(cmem.new(buf_sz, f3_qtype, func_name))
       -- Commenting out below assert as test_safe_convert is failing
       --assert( ((f1:has_nulls() == false) and (f2:has_nulls() == false)),
       --"not ready for nulls as yet")
       myvec:no_memcpy(f3_buf) -- hand control of this f3_buf to the vector 
-    else
-      myvec:flush_buffer() -- tell the vector to flush its buffer
     end
-    assert(f3_buf)
     local f1_len, f1_chunk, nn_f1_chunk
     local f2_len, f2_chunk, nn_f2_chunk
     f1_len, f1_chunk, nn_f1_chunk = f1:chunk(chunk_idx)

@@ -677,6 +677,7 @@ function lVector:chunk(chunk_num)
     base_addr, base_len = Vector.get_chunk(self._base_vec, l_chunk_num)
     --=========================================
     if ( not base_addr ) then
+      print(base_len, self:get_name())
       assert(base_len == 0)
       if ( qconsts.debug ) then self:check() end
       return 0
@@ -692,36 +693,19 @@ function lVector:chunk(chunk_num)
     assert(chk_chunk_return(base_len, base_addr, nn_addr))
     return base_len, base_addr, nn_addr
   else
-    assert(self._gen)
     assert(type(self._gen) == "function")
     local buf_size, base_data, nn_data = self._gen(chunk_num, self)
     assert(type(buf_size) == "number")
-    -- TODO DISCUSS following if with KRUSHNAKANT
-    if ( buf_size < qconsts.chunk_size ) then
-      if ( buf_size > 0 ) then -- there is something to put
-        if base_data then -- its not been put into lVector's buffer
-          self:put_chunk(base_data, nn_data, buf_size)
-        end
-      end
-      self:eov()
-      --return buf_size, base_data, nn_data -- See TODO P4 ZZ below
-    else
-      if ( base_data ) then 
-        -- this is the simpler case where generator malloc's
-        self:put_chunk(base_data, nn_data, buf_size)
-      else
-        -- this is the advanced case of using the Vector's buffer.
-        -- local chk =  self:chunk_num()
-        -- assert(chk == l_chunk_num)
-      end
-    end
-    if ( qconsts.debug ) then self:check() end
+    if ( base_data ) then assert(type(base_data) == "CMEM") end
+    self:put_chunk(base_data, nn_data, buf_size)
+    if ( buf_size < qconsts.chunk_size ) then self:eov() end
     -- for conjoined vectors
     if self.siblings then
       for k, v in pairs(self.siblings) do
         v:chunk(l_chunk_num)
       end
     end
+    if ( qconsts.debug ) then self:check() end
     return self:chunk(l_chunk_num)
     -- TODO P4 ZZ: Could do return chunk_size, base_data, nn_data
     -- That would avoid another function call.
