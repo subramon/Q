@@ -98,6 +98,7 @@ mk_comp_key_val_F4(
   local cst_val_buf = assert(ffi.cast(val_cast_as, get_ptr(val_buf)))
   local bak_cst_val_buf = cst_val_buf -- because val_buf is changeable
 
+  local first_call = false
   --==============================================
   local buf_in_dim_vals = cmem.new(nD * ffi.sizeof("uint8_t *"))
   local c_in_dim_vals = ffi.cast("uint8_t **", get_ptr(buf_in_dim_vals))
@@ -113,9 +114,15 @@ mk_comp_key_val_F4(
   local cast_in_val_vec_as = qconsts.qtypes[val_type].ctype .. " *"
   local in_val_vec_len, in_val_vec_chunk 
   local M = { "key", "val" } -- names of 2 generators we will produce
+  local key_vec, val_vec -- will be set at end of function definition
   for _, vecname in pairs(M) do 
     local function kv_gen(chunk_num)
       assert(chunk_num == chunk_idx)
+      if ( first_call ) then 
+        key_vec:no_memcpy(key_buf) -- hand control of buf to the vector 
+        val_vec:no_memcpy(key_buf) -- hand control of buf to the vector 
+        first_call = false
+      end
 ::get_more_input::
       if ( num_vals_to_consume == 0 ) then 
         -- read next chunk of all dimension vectors and value vector
@@ -136,9 +143,16 @@ mk_comp_key_val_F4(
         -- If no more values, then signal end of vector
         if ( num_vals_to_consume == 0 ) then 
           if ( num_keys_produced == 0 ) then 
-            if ( vecname == "key" ) then val_vec:eov() val_buf:delete() end
-            if ( vecname == "val" ) then key_vec:eov() key_buf:delete() end
-            return 0, nil
+            if ( vecname == "key" ) then 
+              val_vec:eov() 
+              val_buf:delete() 
+              return 0, key_buf
+            end
+            if ( vecname == "val" ) then 
+              key_vec:eov() 
+              key_buf:delete() 
+              return 0, val_buf
+            end
           else
             -- You need to flush out the key/val buffers
             if ( vecname == "key" ) then 
@@ -203,14 +217,14 @@ mk_comp_key_val_F4(
         -- multiple of nR. In that case, we pad with zero key/vals and 
         -- flush the entire buffer
         local len = qconsts.chunk_size
-        num_keys_produced  = 0
         if ( vecname == "key" ) then 
           val_vec:put_chunk(val_buf, nil, len)
-          return qconsts.chunk_size, key_buf
+          return len, key_buf
         elseif ( vecname == "val" ) then 
           key_vec:put_chunk(key_buf, nil, len)
           return len, val_buf
         end
+        num_keys_produced  = 0
       else
         goto get_more_input -- TODO P4 This is ugly. 
       end

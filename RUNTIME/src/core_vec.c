@@ -1015,7 +1015,7 @@ vec_get(
         // TODO P2: Delete folllowing check
         // Should not be setting file_name when no file created
         if ( isdir(ptr_vec->file_name) ) { 
-          printf("XXXXX directory not file\n");
+          fprintf(stderr, "XXXXX directory not file\n");
           go_BYE(-1); 
         }
         if ( ptr_vec->file_size == 0 ) { go_BYE(-1); }
@@ -1493,7 +1493,8 @@ vec_eov(
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_eov++;
   if ( ptr_vec->is_eov       == true  ) { 
-    fprintf(stderr, "Already eov, nothing to do\n"); return status; 
+    // fprintf(stderr, "Already eov, nothing to do\n"); 
+    return status; 
   } 
   if ( ptr_vec->is_nascent   == false ) { go_BYE(-1); }
   if ( ptr_vec->num_elements == 0     ) { 
