@@ -537,7 +537,6 @@ function lVector:put_chunk(base_addr, nn_addr, len)
 end
 
 function lVector:delete()
-  print("Deleting for ", self:get_name())
   -- This method free up all vector resources
   assert(self._base_vec)
   local has_nulls = self:has_nulls()
@@ -677,7 +676,6 @@ function lVector:chunk(chunk_num)
     base_addr, base_len = Vector.get_chunk(self._base_vec, l_chunk_num)
     --=========================================
     if ( not base_addr ) then
-      print(base_len, self:get_name())
       assert(base_len == 0)
       if ( qconsts.debug ) then self:check() end
       return 0

@@ -24,9 +24,10 @@ function F.f1(n)
   Tk[1] = time
   Tk[2] = geo
   Tk[3] = prod
-  for _, v0 in pairs(T) do 
-    for k, v1 in pairs(prod) do 
+  for k0, v0 in pairs(Tk) do 
+    for k1, v1 in pairs(v0) do 
       for k2, v2 in pairs(v1) do 
+        v2:set_name(k2) 
         v2:memo(false) 
       end
     end

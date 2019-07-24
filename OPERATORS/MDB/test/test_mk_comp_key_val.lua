@@ -50,15 +50,18 @@ tests.t2 = function()
   local template, nR, nD, nC = mk_template(nDR)
   --=============================================
   local vtype = "F4"
-  local val_vec = Q.seq({ start = 2, incr = 4, qtype = vtype, len = n}):memo(false)
+  local val_vec = Q.seq({ start = 2, incr = 4, qtype = vtype, len = n}):memo(false):set_name("valvec")
   local key_vec, val_vec = Q.mk_comp_key_val(Tk,  val_vec)
+  key_vec:set_name("ckeyvec")
   key_vec:memo(false)
+  val_vec:set_name("cvalvec")
   val_vec:memo(false)
   local update_type = "ADD"
   local params = { initial_size = 65536, keytype = "I8", valtype = vtype}
   local A = lAggregator(params)
   assert(A:set_consume(key_vec, val_vec))
   t_start = qc.RDTSC()
+  local iter = 0
   repeat 
     local x = A:consume()
   until x == 0 
@@ -68,28 +71,6 @@ tests.t2 = function()
   for k, v in pairs(M) do print(k, v) end 
   print("nK = ", key_vec:length())
   --=============================
-  -- Do it one more time 
-  Tk, n = mk_in.f1(m); assert(n)
-  nDR, vecs = get_nDR(Tk)
-  template, nR, nD, nC = mk_template(nDR)
-  
-  vtype = "F4"
-  val_vec = Q.seq({ start = 2, incr = 4, qtype = vtype, len = n}):memo(false)
-  key_vec, val_vec = Q.mk_comp_key_val(Tk,  val_vec)
-  key_vec:memo(false)
-  val_vec:memo(false)
-  assert(A:set_consume(key_vec, val_vec))
-  t_start = qc.RDTSC()
-  repeat 
-    local x = A:consume()
-  until x == 0 
-  t_stop = qc.RDTSC()
-  print("Time = ", t_stop - t_start)
-  M = A:get_meta()
-  for k, v in pairs(M) do print(k, v) end 
-  print("nK = ", key_vec:length())
-  --=============================
-
   print("Success on test t2")
 end
 return tests
