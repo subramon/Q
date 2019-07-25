@@ -19,25 +19,13 @@ all : libload_csv.so
 ../../UTILS/gen_inc/_is_valid_chars_for_num.h :
 	make -C ../../../UTILS/src/ 
 
-../gen_inc/_load_csv_fast.h : 
-	mkdir -p ../gen_inc/
-	lua ${UDIR}/cli_extract_func_decl.lua ../src/load_csv_fast.c ${INCDIR}
-
-../gen_inc/_new_load_csv_fast.h : 
-	mkdir -p ../gen_inc/
-	lua ${UDIR}/cli_extract_func_decl.lua ../src/new_load_csv_fast.c ${INCDIR}
-
 ../gen_inc/_get_cell.h : 
 	mkdir -p ../gen_inc/
 	lua ${UDIR}/cli_extract_func_decl.lua ../src/get_cell.c ${INCDIR}
 
-../gen_inc/_set_up_qtypes.h : 
+../gen_inc/_new_load_csv_fast.h : 
 	mkdir -p ../gen_inc/
-	lua ${UDIR}/cli_extract_func_decl.lua ../src/set_up_qtypes.c ${INCDIR}
-
-../gen_inc/_new_get_cell.h : 
-	mkdir -p ../gen_inc/
-	lua ${UDIR}/cli_extract_func_decl.lua ../src/new_get_cell.c ${INCDIR}
+	lua ${UDIR}/cli_extract_func_decl.lua ../src/new_load_csv_fast.c ${INCDIR}
 
 ../gen_inc/_txt_to_B1.h : 
 	mkdir -p ../gen_inc/
@@ -79,15 +67,9 @@ clean :
 
 ../src/get_cell.c : ../gen_inc/_get_cell.h
 
-../src/new_get_cell.c : ../gen_inc/_new_get_cell.h
-
-../src/set_up_qtypes.c : ../gen_inc/_set_up_qtypes.h
-
 ../src/txt_to_SC.c : ../gen_inc/_txt_to_SC.h
 
 ../src/txt_to_B1.c : ../gen_inc/_txt_to_B1.h
-
-../src/load_csv_fast.c : ../gen_inc/_load_csv_fast.h
 
 ../src/new_load_csv_fast.c : ../gen_inc/_new_load_csv_fast.h
 
@@ -96,11 +78,8 @@ SRC_FILES =  \
 	../src/TM_to_SC.c  \
 	../src/TM_to_I8.c  \
 	../src/get_cell.c  \
-	../src/new_get_cell.c  \
-	../src/set_up_qtypes.c  \
 	../src/txt_to_SC.c \
 	../src/txt_to_B1.c \
-	../src/load_csv_fast.c \
 	../src/new_load_csv_fast.c \
 
 AUX_FILES = \
@@ -139,9 +118,6 @@ libload_csv.so : ${SRC_FILES} ${GEN_FILES} ${AUX_FILES}
 	cp ../inc/TM_to_SC.h ${Q_BUILD_DIR}/include/
 #	cp ${GEN_INC_FILES}        ${Q_BUILD_DIR}/include/
 #	cp ../gen_inc/_TM_to_I8.h ${Q_BUILD_DIR}/include/
-#	cp ../gen_inc/_get_cell.h  ${Q_BUILD_DIR}/include/
-#	cp ../gen_inc/_new_get_cell.h  ${Q_BUILD_DIR}/include/
-#	cp ../gen_inc/_set_up_qtypes.h  ${Q_BUILD_DIR}/include/
 #	cp ../gen_inc/_txt_to_SC.h ${Q_BUILD_DIR}/include/
 #	cp ../gen_inc/_txt_to_B1.h ${Q_BUILD_DIR}/include/
 

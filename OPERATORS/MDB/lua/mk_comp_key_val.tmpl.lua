@@ -4,14 +4,14 @@ return require 'Q/UTILS/lua/code_gen' {
 #include "q_incs.h"
 int
 ${fn}(
-    int **template, /* [nR][nC] */
+    int ** template, /* [nR][nC] */
     int nR,
     int nC,
     /* 0 <= template[i][j] < nD */
-    uint8_t **in_dim_vals, /* [nD][nV] */
-    ${VALTYPE} *in_measure_val, /* [nV] */
-    uint64_t *out_key, /*  [nK] */ 
-    ${VALTYPE} *out_val, /*  [nK] */
+    uint8_t ** in_dim_vals, /* [nD][nV] */
+    ${VALTYPE} * in_measure_val, /* [nV] */
+    uint64_t * restrict out_key, /*  [nK] */ 
+    ${VALTYPE} * restrict out_val, /*  [nK] */
     int nV,
     int nK
     );
@@ -36,10 +36,10 @@ ${fn}(
     int nR,
     int nC,
     /* 0 <= template[i][j] < nD */
-    uint8_t **in_dim_vals, /* [nD][nV] */
-    ${VALTYPE} *in_measure_val, /* [nV] */
-    uint64_t *out_key, /*  [nK] */ 
-    ${VALTYPE} *out_val, /*  [nK] */
+    uint8_t ** in_dim_vals, /* [nD][nV] */
+    ${VALTYPE} * in_measure_val, /* [nV] */
+    uint64_t * restrict out_key, /*  [nK] */ 
+    ${VALTYPE} * restrict out_val, /*  [nK] */
     int nV,
     int nK
     )
@@ -57,14 +57,14 @@ ${fn}(
   int chunk_size = 64;
 #pragma omp parallel for schedule(static, chunk_size)
   for ( int i = 0; i < nV; i++ ) { 
-    int offset = i*nR; 
-    ${VALTYPE} val = in_measure_val[i];
+    register int offset = i*nR; 
+    register ${VALTYPE} val = in_measure_val[i];
     for ( int ridx = 0; ridx < nR; ridx++ ) {
-      uint64_t comp_key = 0;
-      int shift_by = 0;
+      register uint64_t comp_key = 0;
+      register int shift_by = 0;
       for ( int cidx = 0; cidx < nC; cidx++ ) { 
-        uint32_t t_ridx_cidx = template[ridx][cidx];
-        uint32_t key;
+        register uint32_t t_ridx_cidx = template[ridx][cidx];
+        register uint32_t key;
         if ( t_ridx_cidx == 0 ) {
           key = 0;
         }

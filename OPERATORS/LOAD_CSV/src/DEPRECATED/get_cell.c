@@ -1,11 +1,13 @@
 //START_INCLUDES
+#include <stdio.h>
+#include <string.h>
 #include "q_incs.h"
 #include "_trim.h"
 //STOP_INCLUDES
-#include "_new_get_cell.h"
+#include "_get_cell.h"
 //START_FUNC_DECL
 size_t
-new_get_cell(
+get_cell(
     char *X,
     size_t nX,
     size_t xidx,
@@ -83,7 +85,8 @@ new_get_cell(
       lbuf[bufidx++] = X[xidx++];
       continue;
     }
-    if ( bufidx >= bufsz ) { go_BYE(-1); }
+    if ( bufidx >= bufsz ) { go_BYE(-1); 
+    }
     lbuf[bufidx++] = X[xidx++];
   }
 BYE:

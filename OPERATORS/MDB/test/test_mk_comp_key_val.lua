@@ -44,7 +44,7 @@ tests.t1 = function()
 end
 
 tests.t2 = function()
-  local m = 1024 * 1048576
+  local m = 256 * 1048576
   local Tk, n = mk_in.f1(m); assert(n)
   local nDR, vecs = get_nDR(Tk)
   local template, nR, nD, nC = mk_template(nDR)

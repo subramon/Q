@@ -1,6 +1,4 @@
 //START_INCLUDES
-#include <stdio.h>
-#include <string.h>
 #include "q_incs.h"
 #include "_trim.h"
 //STOP_INCLUDES
@@ -85,8 +83,7 @@ get_cell(
       lbuf[bufidx++] = X[xidx++];
       continue;
     }
-    if ( bufidx >= bufsz ) { go_BYE(-1); 
-    }
+    if ( bufidx >= bufsz ) { go_BYE(-1); }
     lbuf[bufidx++] = X[xidx++];
   }
 BYE:

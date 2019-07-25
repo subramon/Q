@@ -79,9 +79,6 @@ all : libutils.so ${hdr_files}
 ../gen_inc/_is_valid_chars_for_num.h : 
 	lua ../lua/cli_extract_func_decl.lua is_valid_chars_for_num.c ${INCDIR}
 
-../gen_inc/_generate_bin.h :
-	lua ../lua/cli_extract_func_decl.lua generate_bin.c ${INCDIR}
-
 ../gen_src/_bin_search_I1.c : bin_search.tmpl bin_search_generator.lua
 	luajit bin_search_generator.lua I1
 ../gen_src/_bin_search_I2.c : bin_search.tmpl bin_search_generator.lua
@@ -126,7 +123,6 @@ hdr_files = \
         ../gen_inc/_set_bit.h \
         ../gen_inc/_set_bit_u64.h \
         ../gen_inc/_q_omp_get_num_procs.h \
-        ../gen_inc/_generate_bin.h \
 	../gen_inc/_is_valid_chars_for_num.h  \
 	../gen_inc/_bytes_to_bits.h   \
 	../gen_inc/_bits_to_bytes.h   \
@@ -139,7 +135,6 @@ SRC_FILES=  \
 	c_free.c \
 	delete_file.c \
 	file_exists.c \
-        generate_bin.c  \
         get_bit.c  \
         get_bit_u64.c  \
 	get_file_size.c \
@@ -176,4 +171,3 @@ clean :
 	rm -f *.so
 	rm -f *.o
 
-# TODO P4 Do stuff for asc2bin and bin2asc

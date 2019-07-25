@@ -100,14 +100,18 @@ local function mk_bufs(p)
   local tidwidth  = ffi.sizeof("uint8_t")
   local isfwidth  = ffi.sizeof("uint8_t")
   local bufinfo = {}
+  -- hasbuf for hash of key
   bufinfo._hashbuf = assert(cmem.new(qconsts.chunk_size * hashwidth, 
-  "I4", "hashbuf"))
+    "I4", "hashbuf"))
+  -- locbuf for initial probe point
   bufinfo._locbuf  = assert(cmem.new(qconsts.chunk_size * locwidth,  
-  "I4", "locbuf"))
+    "I4", "locbuf"))
+  -- tidbuf for thread ID assigned to it
   bufinfo._tidbuf  = assert(cmem.new(qconsts.chunk_size * tidwidth,  
-  "I1", "tidbuf"))
+    "I1", "tidbuf"))
+  -- isfbuf for "is found"
   bufinfo._isfbuf  = assert(cmem.new(qconsts.chunk_size * isfwidth,  
-  "I1", "isfbuf"))
+    "I1", "isfbuf"))
   bufinfo._num_threads = qc['q_omp_get_num_procs']()
   return bufinfo 
 end
@@ -183,6 +187,7 @@ function lAggregator:consume()
   assert(vchunk)
 
   self._vecinfo._chunk_idx = self._vecinfo._chunk_idx + 1
+
   assert(Aggregator.putn(
   self._agg,
   kchunk, 
@@ -195,6 +200,7 @@ function lAggregator:consume()
   klen,
   self._bufinfo._isfbuf
   ))
+
   return klen -- number of items inserted
 end
 

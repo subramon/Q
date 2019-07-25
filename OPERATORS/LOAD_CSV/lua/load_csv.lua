@@ -1,179 +1,127 @@
-local data_dir      = require('Q/q_export').Q_DATA_DIR
+-- This version supports chunking in load_csv
 local Dictionary    = require 'Q/UTILS/lua/dictionary'
 local err           = require 'Q/UTILS/lua/error_code'
 local ffi           = require 'Q/UTILS/lua/q_ffi'
-local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 local lVector       = require 'Q/RUNTIME/lua/lVector'
 local qc            = require 'Q/UTILS/lua/q_core'
 local qconsts       = require 'Q/UTILS/lua/q_consts'
-local validate_meta = require "Q/OPERATORS/LOAD_CSV/lua/validate_meta"
-local is_accelerate = require "Q/OPERATORS/LOAD_CSV/lua/is_accelerate"
-local process_opt_args = require "Q/OPERATORS/LOAD_CSV/lua/process_opt_args"
-local init_buffers  = require "Q/OPERATORS/LOAD_CSV/lua/init_buffers"
-local load_csv_fast_C  = require "Q/OPERATORS/LOAD_CSV/lua/load_csv_fast_C"
-local update_out_buf   = require "Q/OPERATORS/LOAD_CSV/lua/update_out_buf"
-local flush_bufs    = require "Q/OPERATORS/LOAD_CSV/lua/flush_bufs"
+local validate_meta = require "Q/OPERATORS/LOAD_CSV/lua/new_validate_meta"
+local chk_file      = require "Q/OPERATORS/LOAD_CSV/lua/chk_file"
+local process_opt_args = 
+  require "Q/OPERATORS/LOAD_CSV/lua/new_process_opt_args"
+local malloc_buffers_for_data = 
+  require "Q/OPERATORS/LOAD_CSV/lua/malloc_buffers_for_data"
+local F             = require "Q/OPERATORS/LOAD_CSV/lua/malloc_aux"
+local bridge_C      = require "Q/OPERATORS/LOAD_CSV/lua/bridge_C"
 local get_ptr	    = require 'Q/UTILS/lua/get_ptr'
 local cmem          = require 'libcmem'
-local hash          = require 'Q/OPERATORS/HASH/lua/hash'
+local record_time   = require 'Q/UTILS/lua/record_time'
  --======================================
 local function load_csv(
   infile,   -- input file to read (string)
   M,  -- metadata (table)
   opt_args
   )
-  assert( infile ~= nil and qc["file_exists"](infile),err.INPUT_FILE_NOT_FOUND)
-  assert(tonumber(qc["get_file_size"](infile)) > 0, err.INPUT_FILE_EMPTY)
-
-  validate_meta(M) -- Validate Metadata
-  local use_accelerator, is_hdr = process_opt_args(opt_args)
-  
-  local cols_to_return -- this is what we return 
-
-  -- use optimized C code if okay to do so 
-  local l_is_accelerate = is_accelerate(M) 
-  if ( l_is_accelerate and use_accelerator )then
-    local tt  = load_csv_fast_C(M, infile, is_hdr)
-    -- START: Change indexes from 1, 2, 3 to names of columns
-    local ttidx = 1
-    local cols_to_return = {}
-    for i = 1, #M do 
-      if ( M[i].is_load ) then 
-        cols_to_return[M[i].name] = tt[ttidx]
-        ttidx = ttidx + 1
-      end
-      if ( M[i].meaning ~= nil ) then 
-        assert(type(M[i].meaning) == "string", "type of meaning field is not string")
-        cols_to_return[M[i].name]:set_meta("meaning", M[i].meaning)
-      end
-    end
-    return cols_to_return
+  assert(chk_file(infile))
+  assert(validate_meta(M))
+  local is_hdr, fld_sep = process_opt_args(opt_args)
+  --=======================================
+  local databuf, nn_databuf, cdata, nn_cdata = malloc_buffers_for_data(M)
+  local bak_cdata = {}
+  for i = 1, #M do 
+    bak_cdata[i] = cdata[i-1]
   end
-  -- Initialize Buffers
-  local cols, dicts, out_bufs, nn_out_bufs, n_buf = init_buffers(M)
+  local file_offset, num_rows_read, is_load, has_nulls, is_trim, width, 
+    fldtypes = F.malloc_aux(#M)
+  --=======================================
+  local vectors = {} 
+  local chunk_idx = -1
+  -- This is tricky. We create generators for each vector
+  local lgens = {}
+  for midx, v in pairs(M) do 
+    local vec_name = v.name
+    if ( v.is_load ) then 
+      local name = v.name
+      local function lgen(chunk_num)
+        for i = 1, #M do 
+          cdata[i-1] = bak_cdata[i] -- TODO UNDO 
+        end
+        chunk_idx = chunk_idx + 1 
+        assert(chunk_num == chunk_idx)
+        --===================================
+        local start_time = qc.RDTSC()
+        -- print("BEFORE LUA", cdata, nn_cdata, cdata[0], nn_cdata[0])
 
-  -- Memory map the input file
-  -- TODO: review below code with Ramesh
-  local mmaped_file = ffi.gc(ffi.C.malloc(ffi.sizeof("char *")), ffi.C.free)
-  --local mmaped_file = cmem.new(ffi.sizeof("char *"), "F4", "file")
-  mmaped_file = ffi.cast("char **", mmaped_file)
-  local file_size = ffi.gc(ffi.C.malloc(ffi.sizeof("size_t")), ffi.C.free)
-  --local file_size = cmem.new(ffi.sizeof("size_t"), "F4", "size")
-  file_size = ffi.cast("size_t *", file_size)
+        assert(bridge_C(M, infile, fld_sep, is_hdr,
+          file_offset, num_rows_read, cdata, nn_cdata,
+          is_load, has_nulls, is_trim, width, fldtypes))
 
-  local status = qc.rs_mmap(infile, mmaped_file, file_size, false)
-  assert(status == 0, err.MMAP_FAILED)
+        -- print("AFTER  LUA", cdata, nn_cdata, cdata[0], nn_cdata[0])
 
-  local X = mmaped_file[0]
-  local nX = tonumber(file_size[0])
-  assert(nX > 0, err.FILE_EMPTY)
-  --===================================================
-  
-  local x_idx = 0
-  local sz_in_buf = 2048 -- TODO Undo hard coding 
-  local in_buf  = assert(cmem.new(sz_in_buf))
-  local in_buf_ptr  = ffi.cast("char *", get_ptr(in_buf))
-  -- in_lbuf is required for get_cell to perform the trim operation
-  local in_lbuf = assert(cmem.new(sz_in_buf))
-  local in_lbuf_ptr  = ffi.cast("char *", get_ptr(in_lbuf))
-  local row_idx = 1
-  local col_idx = 1
-  local num_in_out_buf = 0
-  local num_cols = #M
-  local consumed_hdr = false
-  local num_cells_consumed = 0
-
-  while true do
-    local is_last_col = false
-    if ( col_idx == num_cols ) then
-      is_last_col = true;
-    end
-    if M[col_idx].qtype == "SV" or M[col_idx].qtype == "SC" then
-      -- Here, we don't want to perform trim operation in get_cell
-      x_idx = qc.get_cell(X, nX, x_idx, is_last_col, in_buf_ptr, nil, sz_in_buf)
-    else
-      x_idx = qc.get_cell(X, nX, x_idx, is_last_col, in_buf_ptr, in_lbuf_ptr, sz_in_buf)
-    end
-    x_idx = tonumber(x_idx)
-    assert(x_idx > 0 , err.INVALID_INDEX_ERROR)
-    if ( ( not is_hdr ) or ( is_hdr and consumed_hdr ) ) then 
-      assert(x_idx > 0 , err.INVALID_INDEX_ERROR)
-      if ( M[col_idx].is_load ) then
-        local str = ffi.string(in_buf_ptr)
-        local is_null = (str == "")
-        -- Process null value case
-        if is_null then
-          assert(M[col_idx].has_nulls, err.NULL_IN_NOT_NULL_FIELD)
-          M[col_idx].num_nulls = M[col_idx].num_nulls + 1
-        else
-          if M[col_idx].has_nulls then
-            -- Update nn_out_buf
-            local temp_nn_out_buf = ffi.cast(qconsts.qtypes.B1.ctype .. " *", get_ptr(nn_out_bufs[col_idx]))
-            qc.set_bit_u64(temp_nn_out_buf, num_in_out_buf, 1)
+        record_time(start_time, "load_csv_fast")
+        local l_num_rows_read = tonumber(num_rows_read[0])
+        --===================================
+        if ( l_num_rows_read > 0 ) then 
+          for k, v in pairs(M) do 
+            if ( ( v.name ~= vec_name )  and ( v.is_load ) ) then
+              vectors[v.name]:put_chunk(
+                databuf[v.name], nn_databuf[i], l_num_rows_read)
+            end
           end
-          update_out_buf(in_buf_ptr, M[col_idx], dicts[col_idx],
-          get_ptr(out_bufs[col_idx]), num_in_out_buf, n_buf)
+        end
+        if ( l_num_rows_read < qconsts.chunk_size ) then 
+          -- print(" Free buffers since you won't need them again")
+          for k, v in pairs(M) do 
+            if ( ( v.name ~= vec_name )  and ( v.is_load ) ) then
+              -- Note subtlety of above if condition.  You can't delete 
+              -- buffer for vector whose chunk you are returning
+              if ( not    databuf[v.name] ) then    
+                databuf[v.name]:delete() 
+                if ( not nn_databuf[v.name] ) then 
+                  nn_databuf[v.namei]:delete() 
+                end
+              end
+              vectors[v.name]:eov()
+            end
+          end
+          F.free_aux()
+        end 
+        if ( l_num_rows_read > 0 ) then 
+          --[[
+          print("About to return to lVector for " .. v.name)
+          print("base", get_ptr(databuf[v.name]))
+          print("base", cdata[0])
+          print("nn  ", get_ptr(nn_databuf[v.name]))
+          print("nn", nn_cdata[0])
+          print("-----------")
+          --]]
+          return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
+        else
+          return 0, nil, nil
         end
       end
-      --=======================================
-    else
-      -- print("Ignore this line since its header line")
-    end
-    col_idx = col_idx + 1
-    if ( is_last_col ) then
-      col_idx = 1;
-      if ( ( not is_hdr) or ( is_hdr and consumed_hdr ) ) then 
-        row_idx = row_idx + 1
-        num_in_out_buf = num_in_out_buf + 1
-        if ( num_in_out_buf == n_buf ) then
-          flush_bufs(cols, M, out_bufs, nn_out_bufs, num_in_out_buf)
-          num_in_out_buf = 0
-        end
-      end
-      if ( is_hdr and ( not consumed_hdr ) ) then 
-        consumed_hdr = true
-      end
-    end
-    assert(x_idx <= nX)
-     if  (x_idx >= nX) then break end
-    num_cells_consumed = num_cells_consumed + 1
-  end
-  assert(x_idx == nX, err.DID_NOT_END_PROPERLY)
-  assert(col_idx == 1, err.BAD_NUMBER_COLUMNS)
-
-  if ( num_in_out_buf > 0 ) then
-    flush_bufs(cols, M, out_bufs, nn_out_bufs, num_in_out_buf)
-  end
-  --======================================
-  --print("Preparing return columns")
-  cols_to_return = {}
-  for i = 1, #M do
-    if ( M[i].is_load ) then
-      cols[i]:eov()
-      if ( ( M[i].has_nulls ) and ( M[i].num_nulls == 0 ) ) then
-        -- Drop the null column, get the nn_file_name from metadata
-        local null_file = cols[i]:meta().nn.file_name
-        cols[i]:drop_nulls()
-        -- assert(qc["delete_file"](null_file),err.INPUT_FILE_NOT_FOUND)
-      end
-      cols[i]:set_meta("num_nulls", M[i].num_nulls)
-      cols_to_return[M[i].name] = cols[i]
-      if M[i].qtype == "SC" and M[i].convert_sc and M[i].convert_sc == true then
-        local hash_col_for_sc = hash(cols[i])
-        hash_col_for_sc:eov()
-        hash_col_for_sc:set_meta("has_nulls", cols[i]:get_meta('has_nulls'))
-        hash_col_for_sc:set_meta("num_nulls", cols[i]:get_meta('num_nulls'))
-        cols_to_return[M[i].name .. "_I8"] = hash_col_for_sc
-      else
-        -- convert_sc field is set to false, not converting 'SC' to 'hash'
-      end
+      lgens[vec_name] = lgen
     end
   end
-
-  X = ffi.cast("char *", X)
-  status = qc.rs_munmap(X, nX)
-  assert(status == 0, "Unmap failed")
-  return cols_to_return
+  -- Note that you may have a vector that does not have any null 
+  -- vales but still has a nn_vec. This will happen if you marked it as
+  -- has_nulls==true. Caller's responsibility to clean this up
+  --==============================================
+  for k, v in pairs(M) do 
+    if ( v.is_load ) then 
+      local tinfo = {}
+      tinfo.gen = lgens[v.name]
+      tinfo.has_nulls = v.has_nulls
+      tinfo.qtype = v.qtype
+      if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
+      vectors[v.name] = lVector(tinfo):set_name(v.name)
+      if ( type(v.meaning) == "string" ) then 
+        vectors[v.name]:set_meta("__meaning", M[i].meaning)
+      end
+      vectors[v.name]:memo(v.is_memo)
+    end
+  end
+  return vectors
 end
 
 return require('Q/q_export').export('load_csv', load_csv)
