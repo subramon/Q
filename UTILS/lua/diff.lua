@@ -1,7 +1,4 @@
--- assert(#arg == 2, "Usage is lua ", arg[0], " <file1> <file2> ")
--- file1 = arg[1]
--- file2 = arg[2]
-return function (
+local function diff (
   file1, 
   file2
   )
@@ -14,5 +11,6 @@ return function (
 
   if ( s1 == s2 ) then return true else return false end 
 end
+return diff
 -- x = diff("dbl_out1.csv", "_dbl_out1.csv")
 -- print(x)

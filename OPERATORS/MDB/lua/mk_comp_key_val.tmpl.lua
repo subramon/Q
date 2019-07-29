@@ -4,9 +4,11 @@ return require 'Q/UTILS/lua/code_gen' {
 #include "q_incs.h"
 int
 ${fn}(
+double junk,
     int ** template, /* [nR][nC] */
     int nR,
     int nC,
+    int nD,
     /* 0 <= template[i][j] < nD */
     uint8_t ** in_dim_vals, /* [nD][nV] */
     ${VALTYPE} * in_measure_val, /* [nV] */
@@ -32,15 +34,17 @@ definition = [[
  * */
 int
 ${fn}(
+double junk,
     int **template, /* [nR][nC] */
-    int nR,
-    int nC,
+    int nR, // number of output rows produced for each input row 
+    int nC, // number of raw attributes 
+    int nD, // number of derived attributes 
     /* 0 <= template[i][j] < nD */
     uint8_t ** in_dim_vals, /* [nD][nV] */
     ${VALTYPE} * in_measure_val, /* [nV] */
     uint64_t * restrict out_key, /*  [nK] */ 
     ${VALTYPE} * restrict out_val, /*  [nK] */
-    int nV,
+    int nV, // note that nV * nR <= nK
     int nK
     )
 {
@@ -64,6 +68,9 @@ ${fn}(
       register int shift_by = 0;
       for ( int cidx = 0; cidx < nC; cidx++ ) { 
         register uint32_t t_ridx_cidx = template[ridx][cidx];
+#ifdef DEBUG
+        if  ( t_ridx_cidx >= nD ) { status = -1; continue; }
+#endif
         register uint32_t key;
         if ( t_ridx_cidx == 0 ) {
           key = 0;
@@ -80,6 +87,7 @@ ${fn}(
       }
     }
   }
+  cBYE(status);
 BYE:
   return status;
 }

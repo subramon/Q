@@ -186,9 +186,10 @@ mk_comp_key_val_F4(
         num_vals_to_consume, math.floor(num_keys_that_can_be_produced/nR))
       num_keys_produced = num_vals_consumed * nR
       local start_time = qc.RDTSC()
-      local status = fnptr(template, nR, nC, c_in_dim_vals, c_in_val_vec, 
-         cst_key_buf, cst_val_buf, 
-         num_vals_consumed, num_keys_that_can_be_produced)
+      local status = fnptr(template, nR, nC, nD, 
+        c_in_dim_vals, c_in_val_vec, 
+        cst_key_buf, cst_val_buf, 
+        num_vals_consumed, num_keys_that_can_be_produced)
       record_time(start_time, func_name)
       assert(status == 0)
 

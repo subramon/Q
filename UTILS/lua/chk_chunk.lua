@@ -11,9 +11,6 @@ local function chk_chunk_return(
       assert(x_len >= 0)
       if ( x_len > 0 ) then 
         assert(x_chunk)
-        -- 07/2019: I don't think we should get userdata
-        -- TODO P4: Delete this commented line once you are sure
-        -- assert((type(x_chunk) == "CMEM")or(type(x_chunk) == "userdata") )
         assert(type(x_chunk) == "CMEM")
       else
         assert(not x_chunk) 
