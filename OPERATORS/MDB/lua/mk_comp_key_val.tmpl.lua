@@ -5,13 +5,13 @@ return require 'Q/UTILS/lua/code_gen' {
 int
 ${fn}(
 double junk,
-    int ** template, /* [nR][nC] */
+    const int ** const template, /* [nR][nC] */
     int nR,
     int nC,
     int nD,
     /* 0 <= template[i][j] < nD */
-    uint8_t ** in_dim_vals, /* [nD][nV] */
-    ${VALTYPE} * in_measure_val, /* [nV] */
+    const uint8_t ** const in_dim_vals, /* [nD][nV] */
+    const ${VALTYPE} * const in_measure_val, /* [nV] */
     uint64_t * restrict out_key, /*  [nK] */ 
     ${VALTYPE} * restrict out_val, /*  [nK] */
     int nV,
@@ -35,13 +35,13 @@ definition = [[
 int
 ${fn}(
 double junk,
-    int **template, /* [nR][nC] */
+    const int **const template, /* [nR][nC] */
     int nR, // number of output rows produced for each input row 
     int nC, // number of raw attributes 
     int nD, // number of derived attributes 
     /* 0 <= template[i][j] < nD */
-    uint8_t ** in_dim_vals, /* [nD][nV] */
-    ${VALTYPE} * in_measure_val, /* [nV] */
+    const uint8_t ** const in_dim_vals, /* [nD][nV] */
+    const ${VALTYPE} * const in_measure_val, /* [nV] */
     uint64_t * restrict out_key, /*  [nK] */ 
     ${VALTYPE} * restrict out_val, /*  [nK] */
     int nV, // note that nV * nR <= nK

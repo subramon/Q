@@ -86,7 +86,7 @@ F[3] =
     end
     -- print(str)
   end
-  print("XXX: nR, nD, nC = ",  nR, nD, #T )
+  -- print("XXX: nR, nD, nC = ",  nR, nD, #T )
   return CT, nR, nD, #T
 end
 return mk_template
