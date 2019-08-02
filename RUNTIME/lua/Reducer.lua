@@ -65,10 +65,11 @@ function Reducer:next()
   -- assert(self._gen ~= nil,  'Reducer: The reducer is materialized')
   local val = self._gen(self._index)
   self._index = self._index + 1
-  if val ~= nil then
-    -- TODO P1 IS IT OKAY TO COMMENT HIS OUT?? self._value = val
+  if val then
+    self._value = val
     return true
   else
+    self._is_eov = true
     self._gen = nil -- destroy the generator once generation done
     return false
   end

@@ -24,7 +24,7 @@ echo "Q_ROOT: $Q_ROOT"
 mkdir -p $HOME/local/
 mkdir -p $Q_ROOT/include
 mkdir -p $Q_ROOT/lib 
-C_FLAGS=' -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wno-unused-parameter -pedantic -fopenmp'
+C_FLAGS=' -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wno-unused-parameter -pedantic -fopenmp -mavx2 -mfma '
 
 export QC_FLAGS="${QC_FLAGS:=$C_FLAGS}"
 lscpu | grep "Architecture" | grep "arm"

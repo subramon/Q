@@ -42,9 +42,10 @@ typedef struct tm
 
   long int __tm_gmtoff;		/* Seconds east of UTC.  */
   const char *__tm_zone;	/* Timezone abbreviation.  */
-} ;
+} TM ; 
    ]])
    --[[
+   --NOTE: I gave a name TM to the struct tm because LuaFFI complained
 --]]
 
 -- TODO: Put this back later ffi.new = nil

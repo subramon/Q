@@ -114,7 +114,6 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
   if ( alignment > 1024 ) { go_BYE(-1); }
   if ( alignment <    0 ) { go_BYE(-1); }
  
-  alignment = 0; // TODO P1 Document and check if memalign is culprit
   if ( alignment == 0 ) {
     data = malloc(size);
   }
