@@ -1,8 +1,5 @@
--- following hard coded here for now 
-local get_hdr = require 'Q/UTILS/lua/get_hdr'
 local cmem = require 'libcmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-
 
 local function gc_foo(n)
   local x = assert(cmem.new(1048576, "I4", "remainder"))

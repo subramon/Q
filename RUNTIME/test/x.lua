@@ -1,2 +1,2 @@
-T = require 'test_cmem'
-T.t2()
+T = require 'test_gc'
+T.t1()
