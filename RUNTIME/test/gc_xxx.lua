@@ -4,7 +4,8 @@ local function gc_xxx(n)
   local width = ffi.sizeof("int")
   local sz = n * width
   local x = ffi.gc(ffi.C.malloc(sz), ffi.C.free)
-  local y = ffi.cast("int *", x)
+--   local y = ffi.cast("int *", x)
+  local y = ffi.gc(ffi.cast("int *", ffi.gc(x, nil)), ffi.C.free)
 
   local out = {}
   local iter = iter or n
