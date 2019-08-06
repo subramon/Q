@@ -24,10 +24,6 @@ typedef struct {
   };
 void * malloc(size_t size);
 void free(void *ptr);
-FILE *fopen(const char *path, const char *mode);
-int fclose(FILE *stream);
-int fwrite(void *Buffer,int Size,int Count,FILE *ptr);
-int fflush(FILE *stream);
 typedef struct tm
 {
   int tm_sec;			/* Seconds.	[0-60] (1 leap second) */

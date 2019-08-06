@@ -1,9 +1,9 @@
+-- local dbg = require 'Q/UTILS/lua/debugger'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
-local Q_ROOT = qconsts.Q_ROOT 
+local Q_ROOT      = qconsts.Q_ROOT 
 local Q_TRACE_DIR = qconsts.Q_TRACE_DIR
 
--- local dbg = require 'Q/UTILS/lua/debugger'
 local assertx  = require 'Q/UTILS/lua/assertx'
 local compile  = require 'Q/UTILS/lua/compiler'
 local ffi      = require 'Q/UTILS/lua/q_ffi'
@@ -17,9 +17,22 @@ local fileops  = require 'Q/UTILS/lua/fileops'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 
 local trace_logger = Logger.new({outfile = Q_TRACE_DIR .. "/qcore.log"})
--- cdef the basic   XXX
+-- The first thing we do is to make sure that we can access functionality
+-- provided by C from Lua. This assumes that 2 files have been created
+-- incfile, typically $HOME/local/Q/include/q_core.h
+-- sofile,  typically $HOME/local/Q/lib/libq_core.so
+-- The incfile contains
+-- 1) all typedef statements
+-- 2) all function prototypes
+-- The incfile is created by concatenating all the .h files for Q
+-- with the condition that the typedef struct statements should precede
+-- their usage
+-- The sofile is the .so file created by aggregating the .o files 
+-- which are in turn created by compiling all the .c files for Q
+
 assertx(fileops.isfile(incfile), "File not found ", incfile)
 ffi.cdef(fileops.read(incfile))
+
 local qc = ffi.load('libq_core.so')
 local function_lookup = {}
 local qt = {}

@@ -1,7 +1,8 @@
 --[[
   q_consts will be a place where all constants are defined
   it also includes all environment variables as well
-  whoever require access to these constants he should require q_consts.lua
+  Functions that require access to these constants should have
+  require 'Q/UTILS/lua/q_consts'
 ]]
 
 --[==[
@@ -42,8 +43,6 @@ local qconsts = {}
   qconsts.Q_METADATA_FILE = os.getenv("Q_METADATA_FILE")
   qconsts.LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")
 
-  -- TODO Delete space_for_load_csv once new_load_csv stabilizes
-  qconsts.space_for_load_csv = 64 * 1048576 -- 64M
   qconsts.chunk_size = 128 * 1024 -- make this power of 2 and >= 1024
   qconsts.debug = false -- set to TRUE only if you want debugging
   qconsts.is_memo = true -- Vector code will refer memo value from this place
@@ -57,7 +56,6 @@ local qconsts = {}
   qconsts.max_width = max_width
  --===========================
   qconsts.sz_str_for_lua = 1048576 -- TODO Should be much bigger
- --===================================
   --===========================
   local base_types = {}
   base_types["I1"] = true;
