@@ -216,10 +216,10 @@ _mdb: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/MDB/lua/ ${BUILD_TYPE}
 	touch _mdb
 
-_stp: _q_basic
-	make  -C ${Q_SRC_ROOT}/SIZE_OF_PRIZE/analysis/lua/ clean
-	make  -C ${Q_SRC_ROOT}/SIZE_OF_PRIZE/analysis/lua/ ${BUILD_TYPE}
-	touch _stp
+# _stp: _q_basic
+# 	make  -C ${Q_SRC_ROOT}/SIZE_OF_PRIZE/analysis/lua/ clean
+# 	make  -C ${Q_SRC_ROOT}/SIZE_OF_PRIZE/analysis/lua/ ${BUILD_TYPE}
+# 	touch _stp
 
 _s_to_f: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua ${BUILD_TYPE}
@@ -267,7 +267,6 @@ _q_operators: \
 	_index \
 	_join \
 	_mdb \
-	_stp \
 	_mv_mul \
 	_s_to_f \
 	_sort \
