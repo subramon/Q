@@ -1,6 +1,6 @@
 local ffi = require 'ffi'
 
-local function gc_xxx(n)
+local function gc_bar(n)
   local width = ffi.sizeof("int")
   local sz = n * width
   local x = ffi.gc(ffi.C.malloc(sz), ffi.C.free)
@@ -21,4 +21,4 @@ local function gc_xxx(n)
   out.getter = getter
   return out
 end
-return gc_xxx
+return gc_bar

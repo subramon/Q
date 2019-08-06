@@ -1,7 +1,7 @@
 local is_in    = require 'Q/UTILS/lua/is_in'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 local cmem    = require 'libcmem'
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 
 
 -- TODO: Need to confirm that input does not have nulls

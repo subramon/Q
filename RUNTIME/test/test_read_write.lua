@@ -3,7 +3,7 @@ local plpath = require 'pl.path'
 local Vector = require 'libvec' 
 local Scalar = require 'libsclr' 
 local cmem   = require 'libcmem' 
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 

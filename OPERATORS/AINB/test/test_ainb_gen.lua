@@ -1,6 +1,6 @@
 require 'Q/UTILS/lua/strict'
 local qc = require 'Q/UTILS/lua/q_core'
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local fns_name = "simple_ainb_I4_I4"

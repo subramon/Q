@@ -1,7 +1,7 @@
 -- FUNCTIONAL 
 local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 
 local tests = {}
 tests.t1 = function()

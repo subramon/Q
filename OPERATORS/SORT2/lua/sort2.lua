@@ -2,7 +2,7 @@ local function sort2(x, y, ordr)
   local Q       = require 'Q/q_export'
   local qc = require 'Q/UTILS/lua/q_core'
   local get_ptr = require 'Q/UTILS/lua/get_ptr'
-  local ffi = require 'Q/UTILS/lua/q_ffi'
+  local ffi = require 'ffi'
   local qconsts = require 'Q/UTILS/lua/q_consts'
 
   assert(type(x) == "lVector", "error")

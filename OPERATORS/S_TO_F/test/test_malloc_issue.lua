@@ -2,7 +2,7 @@
 -- TODO WHAT THE HECK IS THIS TEST TRYING TO DO?
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local plpath = require 'pl.path'
 local c_to_txt = require 'Q/UTILS/lua/C_to_txt'
 local qconsts = require 'Q/UTILS/lua/q_consts'

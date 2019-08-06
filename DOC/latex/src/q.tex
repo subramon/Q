@@ -80,7 +80,7 @@ to require e.g.,
 \item There are a few ``requires'' that I would like to highlight.
 \begin{verbatim}
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local ffi     = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local qc      = require 'Q/UTILS/lua/q_core'
 \end{verbatim}
 \be
@@ -282,7 +282,7 @@ In many functions, we have something like
 
 \begin{verbatim}
 local function foo (...)
-local ffi     = require ‘Q/UTILS/lua/q_ffi.lua
+local ffi = require 'ffi'
 local qconsts = require ‘Q/UTILS/lua/q_consts.lua
 .....
 end

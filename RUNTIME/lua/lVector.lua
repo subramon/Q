@@ -1,7 +1,7 @@
 -- TODO Document properly. Key of set_meta is always a string
 -- If it is something that has special meaning to Q, starts with __
 -- If not, any other string will work but do not use __ as a prefix
-local ffi		= require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local qconsts		= require 'Q/UTILS/lua/q_consts'
 local log		= require 'Q/UTILS/lua/log'
 local cmem		= require 'libcmem'

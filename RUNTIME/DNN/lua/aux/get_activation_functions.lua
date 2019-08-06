@@ -1,4 +1,4 @@
-local ffi		= require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 
 local function get_activation_functions(params, nl)
   assert(type(params) == "table", "dnn constructor requires table as arg")
@@ -23,4 +23,4 @@ local function get_activation_functions(params, nl)
   afns = table.concat(afns, ":")
   return afns
 end
-return get_activation_functions
+return get_activation_function

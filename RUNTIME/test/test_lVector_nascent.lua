@@ -5,7 +5,7 @@ local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'  
 local lVector = require 'Q/RUNTIME/lua/lVector'
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local ffi     = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local path_to_here = os.getenv("Q_SRC_ROOT") .. "/RUNTIME/test/"
 assert(plpath.isdir(path_to_here))

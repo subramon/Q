@@ -1,5 +1,5 @@
 local lVector = require 'Q/RUNTIME/lua/lVector'
-local ffi     = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local qc     = require 'Q/UTILS/lua/q_core'
 require 'Q/UTILS/lua/strict'
 

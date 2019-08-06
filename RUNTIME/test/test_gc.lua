@@ -9,7 +9,7 @@ tests.t1 = function()
   local n = 16*1048576
   x = gc_foo(n)
   x = gc_bar(n)
-  x = gc_xxx(n)
+  -- x = gc_xxx(n)
   assert(type(x) == "table")
   local setter = x.setter
   local getter = x.getter

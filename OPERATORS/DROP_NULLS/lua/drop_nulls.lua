@@ -2,7 +2,7 @@ local T = {}
 local function drop_nulls(x, sval)
   local Q   = require 'Q/q_export'
   local qc  = require 'Q/UTILS/lua/q_core'
-  local ffi = require 'Q/UTILS/lua/q_ffi'
+ local ffi = require 'ffi' 
   local get_ptr = require 'Q/UTILS/lua/get_ptr'
   local qconsts = require 'Q/UTILS/lua/q_consts'
   local to_scalar = require 'Q/UTILS/lua/to_scalar'

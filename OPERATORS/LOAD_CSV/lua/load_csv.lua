@@ -1,7 +1,7 @@
 -- This version supports chunking in load_csv
 local Dictionary    = require 'Q/UTILS/lua/dictionary'
 local err           = require 'Q/UTILS/lua/error_code'
-local ffi           = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local lVector       = require 'Q/RUNTIME/lua/lVector'
 local qc            = require 'Q/UTILS/lua/q_core'
 local qconsts       = require 'Q/UTILS/lua/q_consts'

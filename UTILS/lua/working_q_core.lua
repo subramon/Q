@@ -6,10 +6,9 @@ local Q_TRACE_DIR = qconsts.Q_TRACE_DIR
 
 local assertx  = require 'Q/UTILS/lua/assertx'
 local compile  = require 'Q/UTILS/lua/compiler'
-local ffi = require 'ffi'
+local ffi      = require 'Q/UTILS/lua/q_ffi'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 
-local sofile   = Q_ROOT .. "/lib/libq_core.so"
 local incfile  = Q_ROOT .. "/include/q_core.h"
 local inc_dir  = Q_ROOT .. "/include/"
 local Logger   = require 'Q/UTILS/lua/logger'
@@ -34,34 +33,21 @@ local trace_logger = Logger.new({outfile = Q_TRACE_DIR .. "/qcore.log"})
 assertx(fileops.isfile(incfile), "File not found ", incfile)
 ffi.cdef(fileops.read(incfile))
 
-assertx(fileops.isfile(sofile), "File not found ", sofile)
-local qc = ffi.load(sofile) -- statically compiled library
---=========================================================
-
+local qc = ffi.load('libq_core.so')
 local function_lookup = {}
-local qt = {}  -- for all dynamically compiled stuff
+local qt = {}
 local libs = {}
 
-local function load_lib(
-  hfile
-  )
-  -- If hfile is "/foo/bar/x.h", then file is "x.h"
-  local file = hfile:match('[^/]*$')
-  assert(#file >= 3, "filename must be valid")
-  -- If file = "x.h", function_name = "x" and num_subs == 1 
-  local function_name, num_subs = file:gsub("%.h$", "")
-  -- make sure that this function_name is not in qc
-  if ( not over_write_qc ) then 
-    assert( not qc[func_name])
-  end
-
+local function load_lib(hfile)
+  local file = hfile
+  file = file:match('[^/]*$')
+  assert(#file > 0, "filename must be valid")
+  local function_name, subs = file:gsub("%.h$", "")
   assertx(function_lookup[function_name] == nil,
-    "Library name is already declared: ", function_name)
-  assert(num_subs == 1, "Should have a .h extension")
-
+  "Library name is already declared: ", function_name)
+  assert(subs == 1, "Should have a .h extension")
   local so_name = "lib" .. function_name .. ".so"
-  assert(so_name ~= "libq_core.so", 
-    "Specical case. Qcore should not be loaded with load_lib()")
+  assert(so_name ~= "libq_core.so", "Qcore should not be loaded with load libs")
 
   local status, msg = pcall(ffi.cdef, fileops.read(hfile))
   if status then
@@ -69,18 +55,17 @@ local function load_lib(
     if status then
       libs[function_name] = q_tmp
       function_lookup[function_name] = libs[function_name][function_name]
-      qt[function_name] = libs[function_name][function_name]
     else
-      print("Unable to load .so file " .. so_name, q_tmp)
+      print("Unable to load lib " .. so_name, q_tmp)
     end
   else
-    print("Unable to cdef the .h file " .. hfile, msg)
+    print("Unable to load lib " .. so_name, msg)
   end
 end
 
 ----- Init Lookup ----
 local function add_libs()
-  local h_files = fileops.list_files_in_dir(inc_dir, "*.h")
+  local h_files = fileops.list_files_in_dir(Q_ROOT .. "/include", "*.h")
   local libs = {}
   local found_qcore = 0
   for file_id=1,#h_files do
@@ -129,33 +114,6 @@ local function q_add(doth, dotc, function_name)
   -- lib_table[#lib_table + 1] = q_tmp
 end
 
-local qc_mt = {
-  __newindex = function(self, key, value)
-    assert(nil) --- You cannot define a function this way. Use q_add()
-  end,
-  __index = function(self, key)
-    -- the very fact that you came here means that this "key" was 
-    -- not a dynamically generated function
-    -- for a statically generated function, you come here only once
-    if key == "q_add" then return q_add end
-    -- get it from qc (all statically compiled stuff)
-    local status, func = pcall(get_qc_val, key)
-    if status == true then
-      qt[key] = func 
-      return func
-    else
-      return nil
-    end
-  end
-}
-setmetatable(qt, qc_mt)
-add_libs() 
-return qt
-
-local qc = require 'q_core'
-local fnptr = qc[func_name] -- hits Line 158 index meta method
-
---[[
 local function wrap(func, name)
   if qconsts.qc_trace == false then
     return func
@@ -176,4 +134,32 @@ local function wrap(func, name)
     end
   end
 end
---]]
+
+local qc_mt = {
+  __newindex = function(self, key, value)
+    if qconsts.debug == true then
+      rawset(self,key, wrap(value , key))
+    end
+  end,
+  __index = function(self, key)
+    -- dbg()
+    if key == "q_add" then return q_add end
+    local func = function_lookup[key]
+    -- dbg()
+    if func ~= nil then
+      return wrap(func, key) -- two layers of lookup as we are caching the whole c lib
+    else
+      local status, fun = pcall(get_qc_val, key)
+      if status == true then
+        return wrap(fun, key)
+      else
+        return nil
+      end
+    end
+  end
+}
+setmetatable(qt, qc_mt)
+add_libs()
+return qt
+
+-- bogus comment

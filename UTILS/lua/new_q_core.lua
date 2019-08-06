@@ -4,7 +4,7 @@ local qconsts = require 'Q/UTILS/lua/q_consts'
 -- local dbg = require 'Q/UTILS/lua/debugger'
 local assertx  = require 'Q/UTILS/lua/assertx'
 local compile  = require 'Q/UTILS/lua/compiler'
-local ffi      = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 
 local Logger   = require 'Q/UTILS/lua/logger'

@@ -1,7 +1,7 @@
 local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local c_to_txt = require 'Q/UTILS/lua/C_to_txt'
 
 -- COLUMN TEST

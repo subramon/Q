@@ -7,7 +7,7 @@ local lVector = require 'Q/RUNTIME/lua/lVector'
 require 'Q/UTILS/lua/strict'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local qc      = require 'Q/UTILS/lua/q_core'
-local ffi     = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local gen_bin = require 'Q/RUNTIME/test/generate_bin'
 local expander_gen3 = require 'Q/RUNTIME/test/expander_gen3'
 

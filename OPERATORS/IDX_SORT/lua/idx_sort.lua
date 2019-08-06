@@ -3,7 +3,7 @@ local function idx_sort(idx, val, ordr)
   local qc = require 'Q/UTILS/lua/q_core'
   local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
   local get_ptr = require 'Q/UTILS/lua/get_ptr'
-  local ffi     = require 'Q/UTILS/lua/q_ffi'
+ local ffi = require 'ffi' 
   local qconsts = require 'Q/UTILS/lua/q_consts'
 
   assert(type(idx) == "lVector", "error")

@@ -1,5 +1,5 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local ffi     = require "Q/UTILS/lua/q_ffi"
+local ffi = require 'ffi'
 local qc      = require 'Q/UTILS/lua/q_core'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 

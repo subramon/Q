@@ -2,7 +2,7 @@ local qconsts	= require 'Q/UTILS/lua/q_consts'
 local cmem	= require 'libcmem'
 local get_ptr	= require 'Q/UTILS/lua/get_ptr'
 local lVector	= require 'Q/RUNTIME/lua/lVector'
-local ffi	= require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 
 local function logit(v)
   local qtype = v:fldtype()

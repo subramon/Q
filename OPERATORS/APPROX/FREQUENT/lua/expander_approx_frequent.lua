@@ -1,5 +1,5 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local ffi     = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local lVector = require 'Q/RUNTIME/lua/lVector'
 local Reducer = require 'Q/RUNTIME/lua/Reducer'
 local qc      = require 'Q/UTILS/lua/q_core'

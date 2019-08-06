@@ -2,7 +2,7 @@ local function set_sclr_val_by_idx(x, y, optargs)
   local lVector     = require 'Q/RUNTIME/lua/lVector'
   local base_qtype  = require 'Q/UTILS/lua/is_base_qtype'
   local qconsts     = require 'Q/UTILS/lua/q_consts'
-  local ffi         = require 'Q/UTILS/lua/q_ffi'
+  local ffi = require 'ffi' 
   local get_ptr     = require 'Q/UTILS/lua/get_ptr'
   local cmem        = require 'libcmem'
   local Scalar      = require 'libsclr'

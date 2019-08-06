@@ -1,7 +1,7 @@
 local Q         = require 'Q'
 local c_to_txt  = require 'Q/UTILS/lua/C_to_txt'
 local lVector	= require 'Q/RUNTIME/lua/lVector'
-local ffi	= require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local qconsts	= require 'Q/UTILS/lua/q_consts'
 local cmem	= require 'libcmem'
 local get_ptr	= require 'Q/UTILS/lua/get_ptr'
