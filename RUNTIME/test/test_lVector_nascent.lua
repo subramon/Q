@@ -103,12 +103,11 @@ tests.t4 = function()
   print("Testing nascent vector with scalars and nulls")
   x = lVector( { qtype = "I4", gen = true})
   local num_elements = 1024
-  local field_size = 4
-  local base_data = cmem.new(num_elements * field_size, "I4", "t4 base")
-  -- TO DELETE local iptr = ffi.cast("int32_t *", base_data)
+  local qtype = "I4"
+  local width = qconsts.qtypes[qtype].width
   for i = 1, num_elements do
-    local s1 = Scalar.new(i*11, "I4")
-    local s2
+    local s1 = Scalar.new(i*11, "I4") -- put base data element
+    local s2 -- put nn data element 
     if ( ( i % 2 ) == 0 ) then
       s2 = Scalar.new(true, "B1")
     else
@@ -120,7 +119,8 @@ tests.t4 = function()
   x:eov()
   assert(x:check())
   md = pr_meta(x, "_meta_data")
-  assert(plpath.getsize(md.base.file_name) == num_elements * field_size)
+  x:check()
+  assert(plpath.getsize(md.base.file_name) == num_elements * width)
   assert(plpath.getsize(md.nn.file_name) == num_elements / 8)
   -- Check that nn_file_name exists
   local s = plfile.read("_meta_data")

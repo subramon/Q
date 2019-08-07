@@ -1,2 +1,2 @@
-T = require 'test_gc'
+T = require 'test_get_chunk_one'
 T.t1()

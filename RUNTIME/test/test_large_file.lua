@@ -36,9 +36,9 @@ tests.t1 = function()
   y:flush_buffer()
   file_size = qc.get_file_size(file_name)
   assert(file_size == (n * chunk_size * width))
-  print(" od -i " .. file_name .. " # to verify all is good")
   plfile.delete(file_name)
   assert(not plpath.isfile(file_name))
+  print("Test t1 succeeded")
 end
 return tests
 -- tests.t1()

@@ -1,7 +1,6 @@
 local cmem = require 'libcmem' ; 
 local ffi = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local release_ptr = require 'Q/UTILS/lua/release_ptr'
 local tests = {}
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
@@ -58,7 +57,6 @@ tests.t2 = function()
     assert(iptr[i-1] == start + (i-1) * incr)
   end
   --=======================
-  release_ptr(buf)
   print("test 2 passed")
 end
 

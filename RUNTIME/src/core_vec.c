@@ -320,7 +320,7 @@ flush_buffer(
       status = update_file_name(ptr_vec); cBYE(status);
     }
     status = buf_to_file(ptr_vec->chunk, ptr_vec->field_size, 
-        ptr_vec->num_in_chunk, ptr_vec->file_name);
+        ptr_vec->field_type, ptr_vec->num_in_chunk, ptr_vec->file_name);
     cBYE(status);
   }
   // flushing buffer does not change number of elements in Vector
@@ -423,6 +423,7 @@ vec_meta(
     case 2 : strcpy(buf, "open_mode = \"WRITE\", "); break;
     default : go_BYE(-1); break;
   }
+  strcat(opbuf, buf);
   strcat(opbuf, "} ");
 BYE:
   return status;
@@ -1519,7 +1520,7 @@ vec_eov(
   }
   else {
     status = buf_to_file(ptr_vec->chunk, ptr_vec->field_size, 
-        ptr_vec->num_in_chunk, ptr_vec->file_name);
+        ptr_vec->field_type, ptr_vec->num_in_chunk, ptr_vec->file_name);
     cBYE(status);
   }
   ptr_vec->file_size = get_file_size(ptr_vec->file_name);

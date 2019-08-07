@@ -66,7 +66,6 @@ clean:
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2_VAL/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/MDB/lua/ clean
-	make -C ${Q_SRC_ROOT}/SIZE_OF_PRIZE/analysis/lua/ clean
 
 install: uninstall 
 	cd ../../;\

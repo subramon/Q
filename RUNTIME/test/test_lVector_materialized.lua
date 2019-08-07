@@ -99,7 +99,6 @@ tests.t2 = function()
   x = lVector( { qtype = "I4", file_name = path_to_here .. "_in2_I4.bin"})
   assert(x:check())
   local n = x:num_elements()
-  print(x:meta().base.file_name)
   assert(n == 10)
   --=========
   local len, base_data, nn_data = x:chunk(0)
@@ -134,8 +133,6 @@ tests.t3 = function()
   x = lVector( { qtype = "SC", width = 8, file_name = full_file})
   T = x:meta()
   -- local k, v
-  for k, v in pairs(T.base)  do print(k,v) end 
-  for k, v in pairs(T.aux)  do print(k,v) end 
   local num_aux = 0
   for k, v in pairs(T.aux)  do num_aux = num_aux + 1 end 
   assert(not T.nn) 
@@ -161,7 +158,7 @@ tests.t4 = function()
   assert(v == "some other rand val")
   --plfile.delete("./_meta_data.csv")
   pr_meta(x, path_to_here .. "_t4_meta_data.csv")
-  compare(path_to_here .. "_t4_meta_data.csv", path_to_here .. "in2_meta_data.csv")
+  compare(path_to_here .. "_t4_meta_data.csv", path_to_here .. "in4_meta_data.csv")
 
   print("Successfully completed test t4")
   --plfile.delete(path_to_here .. "/in3_I4.csv")

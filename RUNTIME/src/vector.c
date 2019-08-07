@@ -120,8 +120,6 @@ BYE:
 //-----------------------------------
 static int l_vec_flush_buffer( lua_State *L) {
   int status = 0;
-  // TODO P3 Delete this function once you are sure it is not needed
-  go_BYE(-1); 
   VEC_REC_TYPE  *ptr_vec  = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   status = flush_buffer(ptr_vec); cBYE(status);
   lua_pushboolean(L, true);

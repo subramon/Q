@@ -725,7 +725,7 @@ end
 function lVector:reincarnate()
   if ( qconsts.debug ) then self:check() end
   -- Not saving lVector because dead
-  if ( not self:is_dead()) then return nil end
+  if ( self:is_dead()) then return nil end
   -- Not saving lVector because not eov
   if ( not self:is_eov()) then return nil end
   -- JIRA: QQ-160
@@ -769,18 +769,15 @@ end
 function lVector:set_meta(k, v)
   if ( qconsts.debug ) then self:check() end
   assert(k)
-  -- assert(v): do not do this since it is used to set meta of key to nil
-  -- NOT VALID CHECK assert(type(k) == "string") 
-  -- TODO P3 WHY IS ABOVE THE CASE?
-  -- value can be number or boolean or string or table 
+  -- to destroy a value associated with a key
+  if ( not v ) then self._meta[k] = nil; return end
+  -- TODO P3 What are valid types for v ?
   if ( not self._meta ) then self._meta = {} end 
-  if ( string.sub(s, 1, 2) ~= "__" ) then 
+  if ( string.sub(k, 1, 2) ~= "__" ) then 
     -- this is NOT a reserved word
     self._meta[k] = v
     return true
   end
-  -- to destroy a value associated with a key
-  if ( not v ) then self._meta[k] = nil; return end
   -- now deal with reserved keywords
   if ( ( k == "__max" ) or ( k == "__min" ) or ( k == "__sum" ) ) then
     -- TODO P3: Put more asserts on types of elements in table

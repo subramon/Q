@@ -1,14 +1,8 @@
-\startreport{The Janus Project}
+\startreport{The MDB Project}
 \reportauthor{Ramesh Subramonian}
 
 \section{Introduction}
 
-This document is meant to capture my understanding of what Janus is
-intended to do and a proposal of how it could do it. It does seem
-presumptuous to write this with barely a week of study. Therefore,
-this document should be read as a strawman to be debated and not a
-product of deep thought. Several assumptions will be made as the paper proceeds,
-some of which are limitations of the current approach.
 Relevant prior work can be found in \cite{sarawagi99}
 and \cite{Fagin05}
 
@@ -115,9 +109,8 @@ Section~\ref{Refinement}
 We have not yet discovered any efficiencies in the case where one derived
 attribute dovetails into another, such as what happens when Month 
 dovetails into Quarter.
-\item We assume that discretization is a pre-processing step and not the
-responsibility of Janus.
-\item If discretization is to be performed by Janus, we will have to evaluate
+\item We assume that discretization is a pre-processing step 
+\item If discretization is to be performed, we will have to evaluate
 the time space tradeoff of whether it is performed once at the start or
 repeatedly on the fly.
 \ee
@@ -354,7 +347,7 @@ value store that supports large binary objects as keys
 \subsection{Refinement}
 \label{Refinement}
 
-Refinement in the context of Janus is drill-down in the context of OLAP. 
+Refinement in the context of this work is the same as drill-down in the context of OLAP. 
 Let us say that we find a significant difference between A and B in terms of
 Gender. This could then prompt a further refinement of how Females in A differ
 from Females in B. If \(a, b\) were the boolean vectors identifying A and B,
@@ -547,7 +540,7 @@ D_{KL}(P | Q ) = - \sum_{x \in X} P(x) \log ( \frac{Q(x)}{P(x)})
 \subsection{What's New}
 \label{WhatsNew}
 
-If Janus is successful at finding meaningful differences, our problem will very
+If this effort is successful at finding meaningful differences, our problem will very
 soon morph from discovery to relevance. Like the apocryphal correlation between
 beer and diapers purchase on Friday evenings, an insight is insightful the first
 time it is offered up, obvious the second time and downright annoying the third.
