@@ -26,10 +26,23 @@
 // slower than MD5.
 //
 
+#include <stdint.h>
+#include <stddef.h>
 #ifndef __SPOOKY_HASH
 #define __SPOOKY_HASH
 
-#include "spooky_hash_struct.h"
+#define SC_NUMVARS 12
+#define SC_BLOCKSIZE (8 * SC_NUMVARS)
+#define SC_BUFSIZE (2 * SC_BLOCKSIZE)
+
+typedef struct spooky_state {
+  uint64_t m_data[2 * SC_NUMVARS];
+  uint64_t m_state[SC_NUMVARS];
+  size_t m_length;
+  unsigned char m_remainder;
+  uint64_t q_seed;  // only for Q
+  int q_stride;  //  only for Q
+} SPOOKY_STATE;
 
 extern void 
 spooky_shorthash (

@@ -49,8 +49,6 @@ libvec.so: libcmem.so
 		-shared -o libvec.so
 	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
 
-# do we need this?	cp ../inc/core_vec.h ${Q_BUILD_DIR}/include/
-
 libmm.so :
 	gcc ${QC_FLAGS} ${INCS} -shared mm.c -o libmm.so 
 
@@ -69,8 +67,6 @@ libcmem.so:  libmm.so
 		libmm.so \
 		-shared -o libcmem.so
 	cp ../inc/cmem_struct.h ${Q_BUILD_DIR}/include/
-
-# do we need this?	cp ../inc/cmem.h ${Q_BUILD_DIR}/include/
 
 libsclr.so: gen_cmp gen_arith libcmem.so libmm.so
 	rm -f _*.c

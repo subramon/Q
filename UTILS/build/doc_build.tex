@@ -79,10 +79,14 @@ called \verb+q_core.h+
 \subsubsection{struct files}
 \label{struct_files}
 
+Following is deprecated. I thought it was needed. it is not.
+
+{\em 
 This is an important file. If you have {\tt typedef struct} in your .h file, it
 needs to be listed here. This is because we put together a bunch of .h files
 into a single {\tt q\_core.h} file and then cdef that. The order in which the individual {\tt .h} files are concatenated is important.
 
+}
 \subsection{o from c}
 \label{o_from_c}
 
