@@ -92,10 +92,10 @@ uninstall:
 # OLD _q_basic: _utils _load_csv _runtime
 _q_basic: _utils  _vec _dnn _agg
 	luajit mk_so.lua 
-	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua _s_to_f.lua
-	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua _f_to_s.lua
-	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua _f1f2opf3.lua
-	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua _f1s1opf2.lua
+	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua all_for_dc
+	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua all_for_dc
+	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua all_for_dc
+	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua all_for_dc
 	touch _q_basic
 
 

@@ -97,19 +97,21 @@ local function load_lib(
   local file = hfile:match('[^/]*$')
   assert(#file >= 3, "At least one character other than .h ")
 
-  -- If file = "x.h", function_name = "x" and num_subs == 1 
-  local function_name, num_subs = file:gsub("%.h$", "")
-  assert(#function_name > 0)
+  -- If file = "x.h", func_name = "x" and num_subs == 1 
+  local func_name, num_subs = file:gsub("%.h$", "")
+  assert(#func_name > 0)
   assert(num_subs == 1, "Should have a .h extension")
 
-  -- verify that function_name is not in qc
+  -- verify that func_name is not in qc
+  print("XX", func_name)
   assert( not qc[func_name])
 
-  -- verify that function name not seen before
-  assertx(function_lookup[function_name] == nil,
-    "Library name is already declared: ", function_name)
 
-  local so_name = "lib" .. function_name .. ".so"
+  -- verify that function name not seen before
+  assertx(function_lookup[func_name] == nil,
+    "Library name is already declared: ", func_name)
+
+  local so_name = "lib" .. func_name .. ".so"
   assert(so_name ~= "libq_core.so", 
     "Specical case. Qcore should not be loaded with load_lib()")
 
@@ -119,9 +121,9 @@ local function load_lib(
   local status, L = pcall(ffi.load, so_name)
   assert(status, " Unable to load .so file " .. so_name)
   -- Now that cdef and load have worked, keep track of it
-  libs[function_name] = L
-  function_lookup[function_name] = libs[function_name][function_name]
-  qt[function_name] = libs[function_name][function_name]
+  libs[func_name] = L
+  function_lookup[func_name] = libs[func_name][func_name]
+  qt[func_name] = libs[func_name][func_name]
 end
 
 -- Pseudo code:

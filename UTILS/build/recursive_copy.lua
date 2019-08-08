@@ -25,8 +25,9 @@ directory that matches dir_pattern
   if string.find(currdir, dir_pattern)  then 
     -- print("Searching in ", currdir)
     local files = pldir.getfiles(currdir, file_pattern)
-    assert(#files > 0, 
-      "No files like " .. file_pattern .. " in " .. currdir)
+    if  ( #files == 0 ) then
+      print( "No files like " .. file_pattern .. " in " .. currdir)
+    end
     for k, file in pairs(files) do
       local skip = false -- skip if old file == new file
       local oldfile = destdir .. string.gsub(file, "^.*/", "")

@@ -3,10 +3,10 @@
 -- TODO assert(qc["chk_env_var"]())
 -- require 'libsclr' -- Took this out. Hope its okay ;-)
 
-require "Q/OPERATORS/AINB/lua/ainb"
-require "Q/OPERATORS/AINB/lua/get_idx_by_val"
-require "Q/OPERATORS/APPROX/FREQUENT/lua/approx_frequent"
-require "Q/OPERATORS/APPROX/QUANTILE/lua/approx_quantile"
+-- REWRITE require "Q/OPERATORS/AINB/lua/ainb"
+-- REWRITE require "Q/OPERATORS/AINB/lua/get_idx_by_val"
+-- require "Q/OPERATORS/APPROX/FREQUENT/lua/approx_frequent"
+-- require "Q/OPERATORS/APPROX/QUANTILE/lua/approx_quantile"
 require "Q/OPERATORS/AX_EQUALS_B/lua/linear_solver"
 
 require "Q/OPERATORS/CAST/lua/cast"

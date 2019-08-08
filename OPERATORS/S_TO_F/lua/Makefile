@@ -20,9 +20,6 @@ so : libs_to_f.so
 
 all_for_dc : \
 	_s_to_f.lua
-	test -d ${Q_BUILD_DIR}
-	cp ../src/*.c ${Q_BUILD_DIR}/src/
-	cp ../inc/*.h ${Q_BUILD_DIR}/include/
 
 #----------------------------------
 clean :
@@ -50,6 +47,7 @@ libs_to_f.so : ${GEN_FILES} ${SRC_FILES} ${INC_FILES} ${TMPL_FILES}
 	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
 	cp ${SRC_FILES} ${Q_BUILD_DIR}/src/
 	cp ${INC_FILES} ${Q_BUILD_DIR}/include/
+	test -d ${Q_BUILD_DIR}
 
 _s_to_f.lua : $(TMPL_FILES) $(SRC_FILES) $(INCL_FILES)
 	luajit generator.lua operators.lua
