@@ -1,3 +1,5 @@
+-- TODO P2 Replace these with C functions
+--
 local assertx = require 'Q/UTILS/lua/assertx'
 local fileops = {}
 
