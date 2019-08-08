@@ -10,16 +10,12 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} -Werror
 
-all : all_for_dc
+all : all_for_dc _concat_files _arith_files _bop_files _cmp_files 
 
 so : libf1f2opf3.so 
 
 all_for_dc : \
-	_concat_files \
-	_arith_files \
-	_bop_files \
-	_cmp_files \
-  	_f1f2opf3.lua \
+	_f1f2opf3.lua \
 	arith_specializers  \
 	cmp_specializers  \
 	bop_specializers  \
@@ -110,3 +106,4 @@ _cmp_files : cmp_specializers
 
 _f1f2opf3.lua : 
 	lua pkg_f1f2opf3.lua
+

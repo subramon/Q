@@ -90,6 +90,11 @@ local function_lookup = {}
 local qt              = {}  -- for all dynamically compiled stuff
 local libs            = {}
 
+
+local function get_qc_val(val)
+  return qc[val]
+end
+
 local function load_lib(
   hfile
   )
@@ -103,9 +108,8 @@ local function load_lib(
   assert(num_subs == 1, "Should have a .h extension")
 
   -- verify that func_name is not in qc
-  print("XX", func_name)
-  assert( not qc[func_name])
-
+  local status, _ = pcall(get_qc_val, func_name)
+  assert( not status)
 
   -- verify that function name not seen before
   assertx(function_lookup[func_name] == nil,
@@ -117,7 +121,7 @@ local function load_lib(
 
   -- INDRA: Why do we pcall? Why not fail?
   local status, err_msg = pcall(ffi.cdef, fileops.read(hfile))
-  assert(status, err_msg .. " Unable to cdef the .h file " .. hfile)
+  assert(status, " Unable to cdef the .h file " .. hfile)
   local status, L = pcall(ffi.load, so_name)
   assert(status, " Unable to load .so file " .. so_name)
   -- Now that cdef and load have worked, keep track of it
@@ -141,10 +145,6 @@ local function add_libs()
     end
   end
   assert(found_qcore, "q_core.h must exist in the search path")
-end
-
-local function get_qc_val(val)
-  return qc[val]
 end
 
 -- q_add is used by Q opertors to dynamically add a symbol that is missing

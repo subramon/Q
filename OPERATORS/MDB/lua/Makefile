@@ -14,7 +14,7 @@ all : _gen_files
 	
 so : libmdb.so
 
-dc :
+all_for_dc :
 	echo "nothing to do"
 
 clean :

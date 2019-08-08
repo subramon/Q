@@ -122,13 +122,13 @@ logit2_specialize.lua  : f1opf2_specialize.tmpl
 	lua gen_specializers.lua f1opf2
 
 libf1s1opf2.so : _arith_files  \
+	_cum_cnt_files  \
+	_is_prev_files \
 	_cmp_files \
 	_shift_files \
 	_f1opf2_files \
 	_convert_files \
-	_vnot_files \
-	_cum_cnt_files \
-	_is_prev_files
+	_vnot_files 
 	gcc ../gen_src/*.c ${CFLAGS} ${INCS} -shared -o libf1s1opf2.so
 	test -d ${Q_BUILD_DIR}
 	cp ../gen_src/*.c ${Q_BUILD_DIR}/src/
