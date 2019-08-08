@@ -12,7 +12,7 @@
   end
   local num_produced = 0
   --==================================================
-  local sp_fn = require 'specialize'
+  local sp_fn = require 'print_specialize'
   for i, qtype in ipairs(qtypes) do
     local status, subs, tmpl = pcall(sp_fn, qtype)
     assert(status, subs)

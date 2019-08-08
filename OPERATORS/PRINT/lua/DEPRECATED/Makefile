@@ -16,43 +16,11 @@ CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS}
 
 all : libprint_csv.so 
 	
-../../UTILS/gen_inc/_is_valid_chars_for_num.h :
-	make -C ../../../UTILS/src/ 
-
-../gen_inc/_B1_to_txt.h : 
-	mkdir -p ../gen_inc/
-	lua ${UDIR}/cli_extract_func_decl.lua ../src/B1_to_txt.c ${INCDIR}
-
-../gen_inc/_SC_to_txt.h : 
-	mkdir -p ../gen_inc/
-	lua ${UDIR}/cli_extract_func_decl.lua ../src/SC_to_txt.c ${INCDIR}
-#----------------------------------
-../gen_src/_I1_to_txt.c :
-	luajit generator.lua I1
-../gen_src/_I2_to_txt.c :
-	luajit generator.lua I2
-../gen_src/_I4_to_txt.c :
-	luajit generator.lua I4
-../gen_src/_I8_to_txt.c :
-	luajit generator.lua I8
-../gen_src/_F4_to_txt.c :
-	luajit generator.lua F4
-../gen_src/_F8_to_txt.c :
-	luajit generator.lua F8
-#----------------------------------
 clean :
 	rm -r -f ../gen_src; 
 	rm -r -f ../gen_inc; 
 	rm -f _*
 	rm -f *.so
-
-../src/B1_to_txt.c : ../gen_inc/_B1_to_txt.h
-
-../src/SC_to_txt.c : ../gen_inc/_SC_to_txt.h
-
-SRC_FILES =  \
-	../src/SC_to_txt.c \
-	../src/B1_to_txt.c \
 
 GEN_FILES = \
 	../gen_src/_I1_to_txt.c \

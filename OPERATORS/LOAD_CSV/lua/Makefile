@@ -27,31 +27,10 @@ all : libload_csv.so
 	mkdir -p ../gen_inc/
 	lua ${UDIR}/cli_extract_func_decl.lua ../src/new_load_csv_fast.c ${INCDIR}
 
-../gen_inc/_txt_to_B1.h : 
-	mkdir -p ../gen_inc/
-	lua ${UDIR}/cli_extract_func_decl.lua ../src/txt_to_B1.c ${INCDIR}
-
-../gen_inc/_txt_to_SC.h : 
-	mkdir -p ../gen_inc/
-	lua ${UDIR}/cli_extract_func_decl.lua ../src/txt_to_SC.c ${INCDIR}
-  
 ../gen_inc/_TM_to_I8.h : 
 	mkdir -p ../gen_inc/
 	lua ${UDIR}/cli_extract_func_decl.lua ../src/TM_to_I8.c ${INCDIR}
   
-#----------------------------------
-../gen_src/_txt_to_I1.c :
-	lua gen_code_I.lua 
-../gen_src/_txt_to_I2.c :
-	lua gen_code_I.lua 
-../gen_src/_txt_to_I4.c :
-	lua gen_code_I.lua 
-../gen_src/_txt_to_I8.c :
-	lua gen_code_I.lua 
-../gen_src/_txt_to_F4.c :
-	lua gen_code_F.lua 
-../gen_src/_txt_to_F8.c :
-	lua gen_code_F.lua 
 #----------------------------------
 clean :
 	rm -r -f ../gen_src; 
@@ -67,10 +46,6 @@ clean :
 
 ../src/get_cell.c : ../gen_inc/_get_cell.h
 
-../src/txt_to_SC.c : ../gen_inc/_txt_to_SC.h
-
-../src/txt_to_B1.c : ../gen_inc/_txt_to_B1.h
-
 ../src/new_load_csv_fast.c : ../gen_inc/_new_load_csv_fast.h
 
 SRC_FILES =  \
@@ -78,8 +53,6 @@ SRC_FILES =  \
 	../src/TM_to_SC.c  \
 	../src/TM_to_I8.c  \
 	../src/get_cell.c  \
-	../src/txt_to_SC.c \
-	../src/txt_to_B1.c \
 	../src/new_load_csv_fast.c \
 
 AUX_FILES = \
@@ -89,12 +62,6 @@ AUX_FILES = \
 	luajit generator.lua
 
 GEN_FILES = \
-	../gen_src/_txt_to_I1.c \
-	../gen_src/_txt_to_I2.c  \
-	../gen_src/_txt_to_I4.c  \
-	../gen_src/_txt_to_I8.c  \
-	../gen_src/_txt_to_F4.c  \
-	../gen_src/_txt_to_F8.c   \
 	../gen_src/_TM_to_hour.c \
 	../gen_src/_TM_to_isdst.c \
 	../gen_src/_TM_to_mday.c \
@@ -118,8 +85,6 @@ libload_csv.so : ${SRC_FILES} ${GEN_FILES} ${AUX_FILES}
 	cp ../inc/TM_to_SC.h ${Q_BUILD_DIR}/include/
 #	cp ${GEN_INC_FILES}        ${Q_BUILD_DIR}/include/
 #	cp ../gen_inc/_TM_to_I8.h ${Q_BUILD_DIR}/include/
-#	cp ../gen_inc/_txt_to_SC.h ${Q_BUILD_DIR}/include/
-#	cp ../gen_inc/_txt_to_B1.h ${Q_BUILD_DIR}/include/
 
 test_q : libload_csv.so
 	echo "TODO"

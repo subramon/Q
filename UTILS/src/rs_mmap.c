@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include "q_macros.h"
 //STOP_INCLUDES
-#include "_mmap.h"
+#include "_rs_mmap.h"
 //START_FUNC_DECL
 int
 rs_mmap(

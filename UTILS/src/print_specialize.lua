@@ -7,7 +7,7 @@ return function (
     local file_exists = require 'Q/UTILS/lua/file_exists'
     local fmt = ""
     assert(is_base_qtype(qtype))
-    assert(file_exists("to_txt.tmpl"))
+    assert(file_exists("print.tmpl"))
     if ( optargs ) then
       assert(type(optargs) == "table")
       if (  optargs.format ) then 
@@ -17,7 +17,7 @@ return function (
     end
     local default_fmt = "PR" .. qtype
 
-    local tmpl = 'to_txt.tmpl'
+    local tmpl = 'print.tmpl'
     local subs = {}
     subs.fn = qtype .. "_to_txt"
     subs.ctype = assert(qconsts.qtypes[qtype].ctype)

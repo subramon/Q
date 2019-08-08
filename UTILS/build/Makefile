@@ -37,7 +37,6 @@ clean:
 	#---
 	make -C ${Q_SRC_ROOT}/UTILS/src/  clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/ clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/ clean
 	#---
 	make -C ${Q_SRC_ROOT}/OPERATORS/HASH/lua/ clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/AINB/lua/ clean
@@ -90,31 +89,35 @@ uninstall:
 	luajit mk_so.lua
 	cp /tmp/q/libq_core.so ${Q_ROOT}/lib/
 
-# OLD _q_basic: _utils _load_csv _print _runtime
-_q_basic: _utils  _vec _dnn
+# OLD _q_basic: _utils _load_csv _runtime
+_q_basic: _utils  _vec _dnn _agg
 	luajit mk_so.lua 
+	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua _s_to_f.lua
+	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua _f_to_s.lua
+	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua _f1f2opf3.lua
+	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua _f1s1opf2.lua
 	touch _q_basic
 
+
 _vec: 
+	make  -C ${Q_SRC_ROOT}/RUNTIME/src/ clean
 	make  -C ${Q_SRC_ROOT}/UTILS/src/
 	make  -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/
-	make  -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/
 	make  -C ${Q_SRC_ROOT}/RUNTIME/src/
 	touch _vec
 
 _dnn: 
+	make  -C ${Q_SRC_ROOT}/RUNTIME/DNN/src/ clean
 	make  -C ${Q_SRC_ROOT}/UTILS/src/
-	make  -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/
-	make  -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/
 	make  -C ${Q_SRC_ROOT}/RUNTIME/src/
 	make  -C ${Q_SRC_ROOT}/RUNTIME/DNN/src/
 	touch _dnn
 
-_agg: _load_csv _print _utils _vec 
+_agg: _load_csv _utils _vec 
 	make  -C ${Q_SRC_ROOT}/RUNTIME/AGG/src/
 	touch _agg
 
-# OLD _runtime: _load_csv _print _utils _vec _dnn # _agg
+# OLD _runtime: _load_csv _utils _vec _dnn # _agg
 # OLD 	touch _runtime
 
 
@@ -125,10 +128,6 @@ _utils:
 _load_csv: _utils
 	make  -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/
 	touch _load_csv
-
-_print: _utils
-	make  -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/
-	touch _print
 
 #-----------------------------------
 _approx_quantile: _q_basic

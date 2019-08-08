@@ -185,10 +185,8 @@ end
 
 local qc_mt = {
   __newindex = function(self, key, value)
-    print("key = ", key)
-    local func = assert(qc[key])
-    qt[func] = key
-    return func
+    -- INDRA DISCUSS 
+    rawset(self, key, value)
     -- assert(nil) --- You cannot define a function this way. Use q_add()
   end,
   __index = function(self, key)

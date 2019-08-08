@@ -7,11 +7,9 @@ INCS= -I. \
 	-I../x_gen_inc/ \
 	-I../x_gen_src/ \
 	-I../../inc/ \
-	-I../../../UTILS/gen_inc/ \
 	-I../../../UTILS/inc/ \
 	-I/usr/include/lua5.1/
 
-CC=clang
 CC=gcc
 
 all: libagg.so 

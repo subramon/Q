@@ -5,7 +5,7 @@
 #include "core_vec.h"
 #include "cmem.h"
 #include "mm.h"
-#include "_mmap.h"
+#include "_rs_mmap.h"
 #include "_rand_file_name.h"
 #include "_get_file_size.h"
 #include "buf_to_file.h"
