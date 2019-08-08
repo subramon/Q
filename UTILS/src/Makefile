@@ -2,15 +2,16 @@
 INCS=-I../inc/ -I../gen_inc/
 INCDIR=../gen_inc/
 
+
 all : libutils.so ${hdr_files} 
 
-#--- START FOR LOAD 
-../gen_inc/_txt_to_B1.h : 
+$(INCDIR) :
 	mkdir -p ../gen_inc/
+#--- START FOR LOAD 
+../gen_inc/_txt_to_B1.h : $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua txt_to_B1.c ${INCDIR}
 
-../gen_inc/_txt_to_SC.h : 
-	mkdir -p ../gen_inc/
+../gen_inc/_txt_to_SC.h : $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua txt_to_SC.c ${INCDIR}
 
 txt_to_B1.c : ../gen_inc/_txt_to_B1.h
@@ -18,93 +19,91 @@ txt_to_B1.c : ../gen_inc/_txt_to_B1.h
 txt_to_SC.c : ../gen_inc/_txt_to_SC.h
 #----------------------------------
 #----------------------------------
-../gen_src/_txt_to_I1.c :
+../gen_src/_txt_to_I1.c : $(INCDIR)
 	lua gen_code_I.lua 
-../gen_src/_txt_to_I2.c :
+../gen_src/_txt_to_I2.c : $(INCDIR)
 	lua gen_code_I.lua 
-../gen_src/_txt_to_I4.c :
+../gen_src/_txt_to_I4.c : $(INCDIR)
 	lua gen_code_I.lua 
-../gen_src/_txt_to_I8.c :
+../gen_src/_txt_to_I8.c : $(INCDIR)
 	lua gen_code_I.lua 
-../gen_src/_txt_to_F4.c :
+../gen_src/_txt_to_F4.c : $(INCDIR)
 	lua gen_code_F.lua 
-../gen_src/_txt_to_F8.c :
+../gen_src/_txt_to_F8.c : $(INCDIR)
 	lua gen_code_F.lua 
 #----------------------------------
 #----------------------------------
 #--======= START FOR PRINT 0
-../gen_inc/_B1_to_txt.h : 
-	mkdir -p ../gen_inc/
+../gen_inc/_B1_to_txt.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua B1_to_txt.c ${INCDIR}
 
-../gen_inc/_SC_to_txt.h : 
-	mkdir -p ../gen_inc/
+../gen_inc/_SC_to_txt.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua SC_to_txt.c ${INCDIR}
 
 B1_to_txt.c : ../gen_inc/_B1_to_txt.h
 
 SC_to_txt.c : ../gen_inc/_SC_to_txt.h
 #----------------------------------
-../gen_src/_I1_to_txt.c :
+../gen_src/_I1_to_txt.c : $(INCDIR)
 	luajit print_generator.lua I1
-../gen_src/_I2_to_txt.c :
+../gen_src/_I2_to_txt.c : $(INCDIR)
 	luajit print_generator.lua I2
-../gen_src/_I4_to_txt.c :
+../gen_src/_I4_to_txt.c : $(INCDIR)
 	luajit print_generator.lua I4
-../gen_src/_I8_to_txt.c :
+../gen_src/_I8_to_txt.c : $(INCDIR)
 	luajit print_generator.lua I8
-../gen_src/_F4_to_txt.c :
+../gen_src/_F4_to_txt.c : $(INCDIR)
 	luajit print_generator.lua F4
-../gen_src/_F8_to_txt.c :
+../gen_src/_F8_to_txt.c : $(INCDIR)
 	luajit print_generator.lua F8
 #--======= STOP FOR PRINT 0
 
-../gen_inc/_file_exists.h : 
+../gen_inc/_file_exists.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua file_exists.c ${INCDIR}
 
-../gen_inc/_generate_bin.h : 
+../gen_inc/_generate_bin.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua generate_bin.c ${INCDIR}
 
-../gen_inc/_isfile.h :
+../gen_inc/_isfile.h : $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua isfile.c ${INCDIR}
 
-../gen_inc/_isdir.h :
+../gen_inc/_isdir.h : $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua isdir.c ${INCDIR}
 
-../gen_inc/_trim.h : 
+../gen_inc/_trim.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua trim.c ${INCDIR}
 
-../gen_inc/_rand_file_name.h : 
+../gen_inc/_rand_file_name.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua rand_file_name.c ${INCDIR}
 
-../gen_inc/_get_file_size.h : 
+../gen_inc/_get_file_size.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua get_file_size.c ${INCDIR}
 
-../gen_inc/_get_time_usec.h : 
+../gen_inc/_get_time_usec.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua get_time_usec.c ${INCDIR}
   
-../gen_inc/_bits_to_bytes.h : 
+../gen_inc/_bits_to_bytes.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua bits_to_bytes.c ${INCDIR}
 
-../gen_inc/_bytes_to_bits.h : 
+../gen_inc/_bytes_to_bits.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua bytes_to_bits.c ${INCDIR}
 
-../gen_inc/_get_bit_u64.h :
+../gen_inc/_get_bit_u64.h : $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua get_bit_u64.c ${INCDIR}
 
-../gen_inc/_is_valid_chars_for_num.h : 
+../gen_inc/_is_valid_chars_for_num.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua is_valid_chars_for_num.c ${INCDIR}
 
-../gen_inc/_q_omp_get_num_procs.h :
+../gen_inc/_q_omp_get_num_procs.h : $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua q_omp_get_num_procs.c ${INCDIR}
 
-../gen_inc/_rdtsc.h : 
+../gen_inc/_rdtsc.h :  $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua rdtsc.c ${INCDIR}
 
-../gen_inc/_rs_mmap.h :
+../gen_inc/_rs_mmap.h : $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua rs_mmap.c ${INCDIR}
 
-../gen_inc/_set_bit_u64.h :
+../gen_inc/_set_bit_u64.h : $(INCDIR)
 	lua ../lua/cli_extract_func_decl.lua set_bit_u64.c ${INCDIR}
 
 hdr_files = \

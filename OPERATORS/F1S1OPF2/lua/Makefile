@@ -102,23 +102,25 @@ vsgt_specialize.lua  : cmp_specialize.tmpl
 vslt_specialize.lua  : cmp_specialize.tmpl
 	lua gen_specializers.lua cmp
 #---------------------
-incr_specialize.lua  : f1opf2_specialize.tmpl
+abs_specialize.lua  : f1opf2_specialize.tmpl
 	lua gen_specializers.lua f1opf2
 decr_specialize.lua  : f1opf2_specialize.tmpl
 	lua gen_specializers.lua f1opf2
-log_specialize.lua  : f1opf2_specialize.tmpl
-	lua gen_specializers.lua f1opf2
-sqrt_specialize.lua  : f1opf2_specialize.tmpl
-	lua gen_specializers.lua f1opf2
-sqr_specialize.lua  : f1opf2_specialize.tmpl
-	lua gen_specializers.lua f1opf2
-pow_specialize.lua  : arith_specialize.tmpl
-	lua gen_specializers.lua arith
 exp_specialize.lua  : f1opf2_specialize.tmpl
+	lua gen_specializers.lua f1opf2
+incr_specialize.lua  : f1opf2_specialize.tmpl
+	lua gen_specializers.lua f1opf2
+log_specialize.lua  : f1opf2_specialize.tmpl
 	lua gen_specializers.lua f1opf2
 logit_specialize.lua  : f1opf2_specialize.tmpl
 	lua gen_specializers.lua f1opf2
 logit2_specialize.lua  : f1opf2_specialize.tmpl
+	lua gen_specializers.lua f1opf2
+pow_specialize.lua  : arith_specialize.tmpl
+	lua gen_specializers.lua arith
+sqr_specialize.lua  : f1opf2_specialize.tmpl
+	lua gen_specializers.lua f1opf2
+sqrt_specialize.lua  : f1opf2_specialize.tmpl
 	lua gen_specializers.lua f1opf2
 
 libf1s1opf2.so : _arith_files  \
