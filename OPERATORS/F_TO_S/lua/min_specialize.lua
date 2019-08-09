@@ -16,6 +16,7 @@ return function (qtype)
     subs.reduce_ctype = subs.ctype
     subs.reduce_qtype = qtype
     subs.reducer_struct_type = "REDUCE_min_" .. qtype .. "_ARGS"
+    subs.comparator = " <= "
 
     if ( qtype == "I1" ) then subs.initial_val = "INT8_MAX" end
     if ( qtype == "I2" ) then subs.initial_val = "INT16_MAX" end

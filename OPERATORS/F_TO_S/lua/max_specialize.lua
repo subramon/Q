@@ -15,6 +15,7 @@ return function (qtype)
     subs.qtype = qtype
     subs.reduce_ctype = subs.ctype
     subs.reduce_qtype = qtype
+    subs.comparator = " >= "
     if ( qtype == "I1" ) then subs.initial_val = "INT8_MIN" end
     if ( qtype == "I2" ) then subs.initial_val = "INT16_MIN" end
     if ( qtype == "I4" ) then subs.initial_val = "INT32_MIN" end

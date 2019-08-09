@@ -44,6 +44,8 @@ return function (a, args)
       first_call = false
       buff = assert(cmem.new(bufsz, out_qtype))
       myvec:no_memcpy(buff) -- hand control of this buff to the vector
+    else
+      myvec:flush_buffer()
     end
     local lb = chunk_size * chunk_idx
     local ub = lb + chunk_size
