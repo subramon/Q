@@ -23,21 +23,19 @@
           -- NOTE: Provide legit scalar_val for each scalar_type
           -- For 6 basic types, 1 is fine but will need to do better
           -- for B1, SC, ...
-          local status, subs, tmpl
+          local status, subs
           if ( operator == "cum_cnt" ) then 
             local optargs = {}; optargs.in_nR = 1000000
-            status, subs, tmpl = pcall(sp_fn, fldtype, optargs)
-            print(operator, status, subs, tmpl)
+            status, subs = pcall(sp_fn, fldtype, optargs)
+            print(operator, status, subs)
           else 
             local s = Scalar.new(1, scalar_type)
-            status, subs, tmpl = pcall(sp_fn, fldtype, s)
+            status, subs = pcall(sp_fn, fldtype, s)
           end
           if ( status ) then 
             assert(type(subs) == "table")
-            assert(type(tmpl) == "string")
-            gen_code.doth(subs,tmpl, incdir)
-            gen_code.dotc(subs, tmpl, srcdir)
-            print("Produced ", subs.fn)
+            gen_code.doth(subs, incdir)
+            gen_code.dotc(subs, srcdir)
             num_produced = num_produced + 1
           else
             print(subs)

@@ -13,11 +13,11 @@
   local sp_fn = assert(require("is_prev_specialize"))
   for i, qtype in ipairs(qtypes) do 
     for j, comparison in ipairs(comparisons) do 
-    local status, subs, tmpl = pcall(sp_fn, qtype, comparison, optargs)
+    local status, subs = pcall(sp_fn, qtype, comparison, optargs)
       if ( status ) then 
         assert(type(subs) == "table")
-        gen_code.doth(subs, tmpl, incdir)
-        gen_code.dotc(subs, tmpl, srcdir)
+        gen_code.doth(subs, incdir)
+        gen_code.dotc(subs, srcdir)
         print("Produced ", subs.fn)
         num_produced = num_produced + 1
       else

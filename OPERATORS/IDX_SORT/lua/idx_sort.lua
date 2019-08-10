@@ -27,15 +27,14 @@ local function idx_sort(idx, val, ordr)
   if ( ordr == "ascending"  ) then ordr = "asc" end 
   if ( ordr == "descending" ) then ordr = "dsc" end 
   local spfn = require("Q/OPERATORS/IDX_SORT/lua/idx_sort_specialize" )
-  local status, subs, tmpl = pcall(spfn, idx_qtype, val_qtype, ordr)
+  local status, subs = pcall(spfn, idx_qtype, val_qtype, ordr)
   assert(status, "error in call to idx_sort_specialize")
   assert(type(subs) == "table", "error in call to idx_sort_specialize")
   local func_name = assert(subs.fn)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Symbol not defined " .. func_name)

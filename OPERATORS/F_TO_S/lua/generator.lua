@@ -17,40 +17,34 @@
     local num_produced = 0
     local sp_fn = assert(require(operator .. "_specialize"))
     for i, intype in ipairs(types) do 
-     local status, subs, tmpl
+     local status, subs
       if ( operator == "is_next" ) then 
         for _, comparison in ipairs(comparisons) do 
           for j = 1, 2 do 
             local optargs = {}
             if ( j == 2 ) then optargs.mode = "fast" end 
-            status, subs, tmpl = pcall(sp_fn, intype, 
+            status, subs = pcall(sp_fn, intype, 
               comparison, optargs)
             if ( status ) then 
               assert(type(subs) == "table")
-              if ( type(tmpl) == "string") then 
-                gen_code.doth(subs, tmpl, incdir)
-                gen_code.dotc(subs, tmpl, srcdir)
-                print("Generated ", subs.fn)
-                num_produced = num_produced + 1
-              end
+              gen_code.doth(subs, incdir)
+              gen_code.dotc(subs, srcdir)
+              print("Generated ", subs.fn)
+              num_produced = num_produced + 1
             else
               print("Failed ", intype, subs)
             end
           end
         end
       else
+        status, subs = pcall(sp_fn, intype)
         print(operator, intype)
-        status, subs, tmpl = pcall(sp_fn, intype)
         if ( status ) then 
           assert(type(subs) == "table")
-          if ( type(tmpl) == "string") then 
-            gen_code.doth(subs, tmpl, incdir)
-            gen_code.dotc(subs, tmpl, srcdir)
-            print("Generated ", subs.fn)
-            num_produced = num_produced + 1
-          end
-        else
-          print("Failed ", intype, subs)
+          gen_code.doth(subs, incdir)
+          gen_code.dotc(subs, srcdir)
+          print("Generated ", subs.fn)
+          num_produced = num_produced + 1
         end
       end
     end

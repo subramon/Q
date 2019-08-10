@@ -2,6 +2,7 @@ local is_in    = require 'Q/UTILS/lua/is_in'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 local cmem    = require 'libcmem'
 local ffi = require 'ffi'
+tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/HASH/lua/hash.tmpl"
 
 
 -- TODO: Need to confirm that input does not have nulls
@@ -50,6 +51,6 @@ return function (
     subs.stride = ffi.sizeof(in_ctype)
   end
 
-  tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/HASH/lua/hash.tmpl"
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end

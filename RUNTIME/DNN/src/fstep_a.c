@@ -41,7 +41,7 @@ int fstep_a(
     }
   }
   // START: decide on which loop to parallelize
-  int num_procs = omp_get_num_procs();
+  int num_procs = 1; // omp_get_num_procs();
   bool outer_par = false, inner_par = false;
   if ( ( n_out == 1 ) && ( nI == 1 ) )  {
     outer_par = inner_par = false;

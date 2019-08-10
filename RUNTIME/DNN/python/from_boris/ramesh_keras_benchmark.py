@@ -17,7 +17,7 @@ def clock_keras_model():
     y = np.random.randint(0, 2, 1024 ** 2)
     y = y.reshape((1024 ** 2, 1))
 
-    for batch_size in [2 ** x for x in range(14, 17)]:
+    for batch_size in [2 ** i for i in range(14, 17)]:
         model = Sequential()
         model.add(Dense(64, input_dim=x.shape[1], activation='relu'))
         model.add(Dense(32, activation='relu'))

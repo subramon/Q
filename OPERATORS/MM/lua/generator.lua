@@ -20,15 +20,13 @@
         local y = lVector( {qtype = y_qtype, has_nulls = false, gen = true})
         for k, z_qtype in ipairs(types) do 
           local optargs = { z_qtype = z_qtype, mode = mode } 
-          local status, subs, tmpl = pcall(
+          local status, subs = pcall(
           sp_fn, X, y, optargs)
           if ( status ) then 
             assert(type(subs) == "table")
-            assert(type(tmpl) == "string")
             -- for k, v in pairs(subs) do print(k, v) end
-            -- print(tmpl)
-            gen_code.doth(subs, tmpl, incdir)
-            gen_code.dotc(subs, tmpl, srcdir)
+            gen_code.doth(subs, incdir)
+            gen_code.dotc(subs, srcdir)
             print("Produced ", subs.fn)
             num_produced = num_produced + 1
           else

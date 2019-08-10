@@ -15,14 +15,13 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
   assert(f2)
   assert(type(f2) == "lVector", "f2 must be a lVector")
   if ( optargs ) then assert(type(optargs) == "table") end
-  local status, subs, tmpl = pcall(spfn, f1:fldtype(), f2:fldtype(), optargs)
+  local status, subs = pcall(spfn, f1:fldtype(), f2:fldtype(), optargs)
   if not status then print(subs) end
   assert(status, "Error in specializer " .. sp_fn_name)
   local func_name = assert(subs.fn)
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then 
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name) 
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end 
   -- STOP : Dynamic compilation
   assert(qc[func_name], "Symbol not available" .. func_name)
@@ -48,6 +47,8 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
       --assert( ((f1:has_nulls() == false) and (f2:has_nulls() == false)),
       --"not ready for nulls as yet")
       myvec:no_memcpy(f3_buf) -- hand control of this f3_buf to the vector 
+    else
+      myvec:flush_buffer()
     end
     local f1_len, f1_chunk, nn_f1_chunk
     local f2_len, f2_chunk, nn_f2_chunk

@@ -65,6 +65,7 @@ return function (
   subs.x_qtype = x_qtype
   subs.y_qtype = y_qtype
   subs.z_qtype = z_qtype
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end
 -- test

@@ -11,15 +11,14 @@ local record_time = require 'Q/UTILS/lua/record_time'
 local mv_mul = function(X, y, optargs)
   local sp_fn_name = "Q/OPERATORS/MM/lua/mv_mul_specialize"
   local spfn = assert(require(sp_fn_name))
-  local status, subs, tmpl = pcall(spfn, X, y, optargs)
+  local status, subs = pcall(spfn, X, y, optargs)
   if not status then print(subs) end
   assert(status, "Error in specializer " .. sp_fn_name)
   local func_name = assert(subs.fn)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
 

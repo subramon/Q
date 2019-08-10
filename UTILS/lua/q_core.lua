@@ -157,23 +157,30 @@ end
 -- q_add is used by Q opertors to dynamically add a symbol that is missing
 -- Differs from all other symbols in qc/qt in this important regard.
 local function q_add(
-  doth, -- full path of .h file OR a table of substitutions
-  dotc, -- full path of .c file OR a template file 
-  function_name -- name of symbol to be added
+  subs 
   )
   -- the fact that we come here means that qc does not have this symbol
   -- we neeed to do the following
-  -- 1) If the dotc/doth files are not provided, generate them
-  -- INDRA:  Why look in 2 places below?
-  assert(doth)
-  assert(dotc)
+
+  local tmpl, doth, dotc
+  assert(type(subs) == "table")
+  if ( subs.tmpl ) then 
+    assert(not subs.doth) assert(not subs.dotc)
+    tmpl = subs.tmpl
+    assert( (type(tmpl) == "string") and  ( #tmpl > 0 ) )
+  else
+    doth = subs.doth
+    assert( (type(doth) == "string") and  ( #doth > 0 ) )
+    dotc = subs.dotc
+    assert( (type(dotc) == "string") and  ( #dotc > 0 ) )
+  end
+  function_name = assert(subs.fn)
   assert( (type(function_name) == "string") and  ( #function_name > 0 ) )
 
   assert(not function_lookup[function_name], "Function already registered")
   assert(not qt[function_name], "Function already registered")
   --==================================
-  if type(doth) == "table" then -- means this is subs and tmpl
-    local subs, tmpl = doth, dotc
+  if tmpl then 
     assert(type(tmpl) == "string")
     doth = gen_code.doth(subs, tmpl) -- this is string containing .h file
     dotc = gen_code.dotc(subs, tmpl) -- this is string containing .c file

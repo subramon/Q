@@ -4,7 +4,7 @@ local function chk_shift_args(qtype, scalar)
           ( qtype == "I4" ) or ( qtype == "I8" ) )
   local stype = scalar:fldtype()
   assert( ( stype == "I1" ) or ( stype == "I2" ) or 
-          ( stype == "I4" ) or ( stype == "I8" ) )
+          ( stype == "I4" ) or ( stype == "I8" ), stype)
   local sval = scalar:to_num()
   assert(sval >= 0)
   if ( qtype == "I1" ) then assert(sval <= 8 ) end 

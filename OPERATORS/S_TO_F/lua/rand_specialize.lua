@@ -1,13 +1,13 @@
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local is_base_qtype = assert(require 'Q/UTILS/lua/is_base_qtype')
+local qconsts = require 'Q/UTILS/lua/q_consts'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/rand.tmpl"
 
 return function (
   args
   )
-  local qconsts = require 'Q/UTILS/lua/q_consts'
   --=================================
 
-  local tmpl
   local subs = {}
   local status
   assert(type(args) == "table")
@@ -57,10 +57,10 @@ return function (
     assert(nil, "Unknown type " .. qtype)
   end
   --=========================
-  tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/rand.tmpl"
   subs.fn = "rand_" .. qtype
   subs.out_ctype = qconsts.qtypes[qtype].ctype
   subs.len = len
   subs.out_qtype = qtype
-  return subs, tmpl
+  subs.tmpl      = tmpl
+  return subs
 end

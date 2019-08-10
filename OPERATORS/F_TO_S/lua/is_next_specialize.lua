@@ -11,7 +11,9 @@ return function(qtype, comparison, optargs)
       fast = true
     end
   end
-  if ( not tmpl ) then tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/lua/is_next.tmpl" end
+  if ( not tmpl ) then 
+    tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/lua/is_next.tmpl" 
+  end
   local subs = {}
   assert(is_base_qtype(qtype))
   if ( comparison == "gt" ) then
@@ -43,5 +45,6 @@ return function(qtype, comparison, optargs)
     subs.fn = "is_next_" .. comparison .. "_" .. qtype
   end
   --==============================
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end

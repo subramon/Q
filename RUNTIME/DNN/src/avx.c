@@ -47,7 +47,6 @@ int va_times_sb_plus_vc(
     num_f_flops += 2;
 #endif
   }
-
 #else
 
 #pragma omp simd
@@ -113,9 +112,7 @@ int va_dot_vb(
     num_b_flops += 2;
 #endif
   }
-
 #else
-
 #pragma omp simd reduction(+:sum)
   for ( int i = 0; i < nI; i++ ) {
     sum += A[i] * B[i];

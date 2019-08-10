@@ -1,10 +1,10 @@
+local qconsts = require 'Q/UTILS/lua/q_consts'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1F2OPF3/lua/f1f2opf3_cmp.tmpl"
 return function (
   f1type, 
   f2type
   )
   local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
-  local qconsts = require 'Q/UTILS/lua/q_consts'
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1F2OPF3/lua/f1f2opf3_cmp.tmpl"
   local subs = {}
   assert(is_base_qtype(f1type), "f1type must be base type")
   assert(is_base_qtype(f2type), "f2type must be base type")
@@ -15,5 +15,6 @@ return function (
   subs.out_ctype = "uint64_t"
   subs.out_qtype = "B1"
   subs.comparator = " <<comparator>> "
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end

@@ -1,3 +1,4 @@
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/IDX_SORT/lua/idx_qsort.tmpl"
 return function(idx_qtype, val_qtype, ordr)
   local qconsts = require 'Q/UTILS/lua/q_consts'
   assert(type(ordr) == "string", "Sort order should be a string")
@@ -10,7 +11,6 @@ return function(idx_qtype, val_qtype, ordr)
   assert(qconsts.base_types[val_qtype])
 
   local subs = {}
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/IDX_SORT/lua/idx_qsort.tmpl"
   subs.srt_ordr = ordr
   subs.val_qtype = val_qtype
   subs.idx_qtype = idx_qtype
@@ -22,5 +22,6 @@ return function(idx_qtype, val_qtype, ordr)
   if ordr == "asc" then c = "<" end
   if ordr == "dsc" then c = ">" end
   subs.comparator = c
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end

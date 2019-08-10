@@ -16,10 +16,10 @@ for _, op in ipairs(operators) do
   local sp_fn = assert(require('Q/OPERATORS/F1S1OPF2_VAL/lua/' .. op .. "_specialize"))
   for _, a_qtype in ipairs(a_qtypes) do
     for _, s_qtype in ipairs(s_qtypes) do
-      local status, subs, tmpl = pcall(sp_fn, a_qtype, s_qtype)
+      local status, subs = pcall(sp_fn, a_qtype, s_qtype)
       if ( status ) then
-        gen_code.doth(subs, tmpl, incdir)
-        gen_code.dotc(subs, tmpl, srcdir)
+        gen_code.doth(subs, incdir)
+        gen_code.dotc(subs, srcdir)
         print("Generated ", subs.fn)
         num_produced = num_produced + 1
       else

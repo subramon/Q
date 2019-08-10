@@ -1,11 +1,12 @@
 local Scalar   = require 'libsclr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
+local is_base_qtype = assert(require 'Q/UTILS/lua/is_base_qtype')
+local qconsts = require 'Q/UTILS/lua/q_consts'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/const.tmpl"
 
 return function (
   args
   )
-  local qconsts = require 'Q/UTILS/lua/q_consts'
-  local is_base_qtype = assert(require 'Q/UTILS/lua/is_base_qtype')
 
   assert(type(args) == "table")
   local val   = args.val
@@ -19,7 +20,6 @@ return function (
   --=======================
   local subs = {};
   subs.fn = "const_" .. qtype
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/const.tmpl"
 
   subs.out_ctype = out_ctype
   subs.len = len
@@ -36,10 +36,12 @@ return function (
     if ( val == true )  then subs.val = Scalar.new(1, "I4") end
     if ( val == false ) then subs.val = Scalar.new(0, "I4") end
     subs.out_ctype = "int32_t" 
-
+    subs.dotc = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/src/const_B1.c"
+    subs.doth = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/inc/const_B1.h"
   else
     subs.val = assert(to_scalar(val, qtype))
   end
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end
 

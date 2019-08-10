@@ -20,10 +20,10 @@ local tm_flds = {
 local num_produced = 0
 local sp_fn = assert(require("Q/OPERATORS/LOAD_CSV/lua/TM_to_I2_specialize"))
 for _, tm_fld in ipairs(tm_flds) do
-  local status, subs, tmpl = pcall(sp_fn, tm_fld)
+  local status, subs = pcall(sp_fn, tm_fld)
   assert(status, subs)
-  gen_code.doth(subs, tmpl, incdir)
-  gen_code.dotc(subs, tmpl, srcdir)
+  gen_code.doth(subs, incdir)
+  gen_code.dotc(subs, srcdir)
   print(tm_fld, subs.fn, subs.tm_fld)
 end
 assert(num_produced >= 0)

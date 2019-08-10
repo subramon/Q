@@ -17,12 +17,11 @@ for i, operator in ipairs(operators) do
     for j, cnt_qtype in ipairs(cnt_qtypes) do
       local optargs = {}; 
       optargs.cnt_qtype = cnt_qtype
-      status, subs, tmpl = pcall(sp_fn, val_qtype, nil, optargs)
+      status, subs = pcall(sp_fn, val_qtype, nil, optargs)
       if ( status ) then 
         assert(type(subs) == "table")
-        assert(type(tmpl) == "string")
-        gen_code.doth(subs,tmpl, incdir)
-        gen_code.dotc(subs, tmpl, srcdir)
+        gen_code.doth(subs, incdir)
+        gen_code.dotc(subs, srcdir)
         print("Produced ", subs.fn)
         num_produced = num_produced + 1
       else

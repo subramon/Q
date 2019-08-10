@@ -3,6 +3,7 @@ local ffi = require 'ffi'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local cmem    = require 'libcmem'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/cum_cnt.tmpl"
 --[[
 The input Vector * be sorted but I am deliberately not going to enforce 
 that as a check. This is one of those "caveat emptor" kind of situations 
@@ -28,7 +29,6 @@ typedef struct _cum_cnt_<<val_qtype>>_<<cnt_qtype>>_args {
   assert(is_base_qtype(val_qtype))
 
   --preamble
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/cum_cnt.tmpl"
   local subs = {}; 
   subs.val_qtype = val_qtype
   subs.val_ctype = qconsts.qtypes[val_qtype].ctype
@@ -82,5 +82,6 @@ typedef struct _cum_cnt_<<val_qtype>>_<<cnt_qtype>>_args {
   subs.in_qtype  = val_qtype -- to be consistent with expander
   subs.out_qtype = cnt_qtype -- to be consistent with expander
   subs.cnt_ctype = qconsts.qtypes[subs.cnt_qtype].ctype
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end

@@ -17,13 +17,12 @@ local function TM_to_I2(
   local in_qtype = assert(invec:fldtype())
   assert(in_qtype == "TM")
   local spfn = require 'Q/OPERATORS/LOAD_CSV/lua/TM_to_I2_specialize'
-  local status, subs, tmpl = pcall(spfn, tm_fld)
+  local status, subs = pcall(spfn, tm_fld)
   assert(status)
   local func_name = assert(subs.fn)
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Function not found " .. func_name)

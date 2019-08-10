@@ -37,10 +37,10 @@ for i, operator in ipairs(operators) do
     else
       assert(nil, "Control should not come here")
     end
-    local status, subs, tmpl = pcall(sp_fn, args)
+    local status, subs = pcall(sp_fn, args)
     assert(status, subs)
-    gen_code.doth(subs, tmpl, incdir)
-    gen_code.dotc(subs, tmpl, srcdir)
+    gen_code.doth(subs, incdir)
+    gen_code.dotc(subs, srcdir)
   end
   assert(num_produced >= 0)
 end

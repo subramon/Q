@@ -13,7 +13,7 @@ return function (a, args)
   local mem_init_name = "Q/OPERATORS/S_TO_F/lua/" .. a .. "_mem_initialize"
   local mem_initialize = assert(require(mem_init_name), "mem_initializer not found")
   local spfn = assert(require(sp_fn_name), "Specializer not found")
-  local status, subs, tmpl = pcall(spfn, args)
+  local status, subs = pcall(spfn, args)
   if ( not status ) then print(subs) end 
   assert(status, "Specializer failed " .. sp_fn_name)
   local func_name = assert(subs.fn)
@@ -21,8 +21,7 @@ return function (a, args)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Function not found " .. func_name)

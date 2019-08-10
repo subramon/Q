@@ -16,15 +16,14 @@ local function expander_hash(f1, optargs)
   -- TODO: replace f1:meta().base with f1:lite_meta()
   -- lite_meta() will have vec basic info including vec_nn info
   -- without complex table structure
-  local status, subs, tmpl = pcall(spfn, f1:meta().base, optargs)
+  local status, subs = pcall(spfn, f1:meta().base, optargs)
   if not status then print(subs) end
   assert(status, "Specializer " .. spfn_name .. " failed")
   local func_name = assert(subs.fn)
   -- START: Dynamic compilation
   -- RS: remove the if as per our earlier discussion
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   assert(qc[func_name], "Missing symbol " .. func_name)
 

@@ -15,7 +15,8 @@ return function (a, x, y, optargs )
   assert(type(x) == "lVector", "input should be a lVector")
   assert(x:has_nulls() == false, "Not set up for null values as yet")
   local x_qtype = assert(x:fldtype())
-  local status, subs, tmpl = pcall(spfn, x_qtype, y, optargs)
+  local status, subs = pcall(spfn, x_qtype, y, optargs)
+  assert(type(subs) == "table")
   assert(status, "Failure of specializer " .. sp_fn_name)
   local func_name = assert(subs.fn)
   if ( x:is_eov() ) then 
@@ -29,8 +30,7 @@ return function (a, x, y, optargs )
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Function does not exist " .. func_name)

@@ -11,11 +11,11 @@
   local sp_fn = assert(require("convert_specialize"))
 
   local function generate_files(in_qtype, out_qtype, args)
-    local status, subs, tmpl = pcall(sp_fn, in_qtype, out_qtype, args)
+    local status, subs = pcall(sp_fn, in_qtype, out_qtype, args)
     if ( status ) then
       assert(type(subs) == "table")
-      gen_code.doth(subs,tmpl, incdir)
-      gen_code.dotc(subs, tmpl, srcdir)
+      gen_code.doth(subs, incdir)
+      gen_code.dotc(subs, srcdir)
       print("Produced ", subs.fn)
       num_produced = num_produced + 1
     else
@@ -29,7 +29,7 @@
       if ( out_qtype ~= in_qtype ) then
         status = pcall(generate_files, in_qtype, out_qtype, { is_safe = true })
         assert(status, 
-         "Failed to generate files for safe mode" .. in_qtype .. out_qtype)
+         "Failed to generate files for safe mode " .. in_qtype .. " to " .. out_qtype)
         status = pcall(generate_files, in_qtype, out_qtype, {is_safe = false})
         assert(status, 
          "Failed to generate files for unsafe mode" .. in_qtype .. out_qtype)

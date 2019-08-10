@@ -14,15 +14,14 @@ local function is_prev(f1, cmp, optargs )
   assert(f1 and (type(f1) == "lVector"))
   assert(cmp and (type(cmp) == "string"))
   assert(is_in(cmp, cmps))
-  local status, subs, tmpl = pcall(spfn, f1:fldtype(), cmp, optargs)
+  local status, subs = pcall(spfn, f1:fldtype(), cmp, optargs)
   if not status then print(subs) end
   local default_val = assert(subs.default_val)
   assert(status, "Specializer " .. sp_fn_name .. " failed")
   local func_name = assert(subs.fn)
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs, func_name) print("Dynamic compilation ... ")
   end
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Missing symbol " .. func_name)

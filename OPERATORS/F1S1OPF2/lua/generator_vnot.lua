@@ -11,11 +11,11 @@
   local sp_fn = assert(require("vnot_specialize"))
 
   local function generate_files(in_qtype, args)
-    local status, subs, tmpl = pcall(sp_fn, in_qtype, args)
+    local status, subs = pcall(sp_fn, in_qtype, args)
     if ( status ) then
       assert(type(subs) == "table")
-      gen_code.doth(subs,tmpl, incdir)
-      gen_code.dotc(subs, tmpl, srcdir)
+      gen_code.doth(subs, incdir)
+      gen_code.dotc(subs, srcdir)
       print("Produced ", subs.fn)
       num_produced = num_produced + 1
     else

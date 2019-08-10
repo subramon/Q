@@ -1,8 +1,8 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/lua/reduce.tmpl"
 
 return function (qtype)
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/lua/reduce.tmpl"
   local subs = {}
   if ( qtype == "B1" ) then
     assert(nil, "TODO")
@@ -30,5 +30,6 @@ return function (qtype)
     subs.t_reducer = subs.reducer
     --==============================
   end
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end

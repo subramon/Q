@@ -14,12 +14,11 @@
 
     for i, in1type in ipairs(types) do 
       for j, in2type in ipairs(types) do 
-        local status, subs, tmpl = pcall(sp_fn, in1type, in2type)
+        local status, subs = pcall(sp_fn, in1type, in2type)
         if ( status ) then 
           assert(type(subs) == "table")
-          assert(type(tmpl) == "string")
-          gen_code.doth(subs, tmpl, incdir)
-          gen_code.dotc(subs, tmpl, srcdir)
+          gen_code.doth(subs, incdir)
+          gen_code.dotc(subs, srcdir)
           print("Produced ", subs.fn)
           num_produced = num_produced + 1
         end

@@ -1,3 +1,4 @@
+local qconsts = require 'Q/UTILS/lua/q_consts'
 local incdir = "../gen_inc/"
 local srcdir = "../gen_src/"
 local plpath = require 'pl.path'
@@ -6,7 +7,7 @@ if ( not plpath.isdir(incdir) ) then plpath.mkdir(incdir) end
 local gen_code = require 'Q/UTILS/lua/gen_code'
 
   local qconsts = require 'Q/UTILS/lua/q_consts'
-  local tmpl = 'idx_qsort.tmpl'
+  local tmpl = qconsts.Q_SRC_ROOT .. '/OPERATORS/IDX_SORT/lua/idx_qsort.tmpl'
 
   ordrs = { 'asc', 'dsc' }
   val_qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
@@ -28,9 +29,10 @@ local gen_code = require 'Q/UTILS/lua/gen_code'
         if ordr == "asc" then c = "<" end
         if ordr == "dsc" then c = ">" end
         subs.comparator = c
+        subs.tmpl = tmpl
         --======================
-        gen_code.doth(subs, tmpl, incdir)
-        gen_code.dotc(subs, tmpl, srcdir)
+        gen_code.doth(subs, incdir)
+        gen_code.dotc(subs, srcdir)
       end
     end
   end

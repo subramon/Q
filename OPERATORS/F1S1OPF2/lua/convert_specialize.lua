@@ -82,5 +82,6 @@ return function (
   else
     tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/convert.tmpl"
   end    
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end

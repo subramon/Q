@@ -1,8 +1,8 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/lua/sum.tmpl"
 
 return function (qtype)
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/lua/sum.tmpl"
   local subs = {}
   assert(is_base_qtype(qtype), "qtype must be base type, not" .. qtype) 
   subs.op = "sum_sqr" 
@@ -23,6 +23,7 @@ return function (qtype)
   end
   subs.reducer = "mcr_sqr"
   subs.t_reducer = "mcr_sum"
+  subs.tmpl = tmpl
   --==============================
-  return subs, tmpl
+  return subs
 end

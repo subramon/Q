@@ -1,10 +1,11 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
+local is_base_qtype = assert(require 'Q/UTILS/lua/is_base_qtype')
+local qconsts = require 'Q/UTILS/lua/q_consts'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/period.tmpl"
 
 return function (
   args
   )
-  local is_base_qtype = assert(require 'Q/UTILS/lua/is_base_qtype')
   --============================
   assert(type(args) == "table")
   local start = assert(args.start)
@@ -23,7 +24,6 @@ return function (
   period  = assert(to_scalar(period, qtype))
   assert(period:to_num() > 1, "length of period must be > 1")
 
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/period.tmpl"
   local subs = {};
   subs.fn          = "period_" .. qtype
   subs.out_ctype   = out_ctype
@@ -32,6 +32,7 @@ return function (
   subs.start       = start
   subs.by          = by
   subs.period      = period
+  subs.tmpl        = tmpl
 
-  return subs, tmpl
+  return subs
 end

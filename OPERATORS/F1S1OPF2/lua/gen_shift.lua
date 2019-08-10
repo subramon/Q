@@ -14,12 +14,11 @@ for _, operator in pairs(operators) do
     local sp_fn = assert(require(operator .. "_specialize"))
     for _, qtype in pairs(qtypes) do
       local s = Scalar.new(1, qtype)
-      status, subs, tmpl = pcall(sp_fn, qtype, s)
+      status, subs = pcall(sp_fn, qtype, s)
       if ( status ) then 
         assert(type(subs) == "table")
-        assert(type(tmpl) == "string")
-        gen_code.doth(subs,tmpl, incdir)
-        gen_code.dotc(subs, tmpl, srcdir)
+        gen_code.doth(subs, incdir)
+        gen_code.dotc(subs, srcdir)
         print("Produced ", subs.fn)
         num_produced = num_produced + 1
       else

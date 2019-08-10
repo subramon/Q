@@ -1,6 +1,6 @@
-gc_foo = require 'Q/RUNTIME/test/gc_foo'
-gc_bar = require 'Q/RUNTIME/test/gc_bar'
-gc_xxx = require 'Q/RUNTIME/test/gc_xxx'
+gc_foo = require 'Q/RUNTIME/test/GC_ISSUE/gc_foo'
+gc_bar = require 'Q/RUNTIME/test/GC_ISSUE/gc_bar'
+gc_xxx = require 'Q/RUNTIME/test/GC_ISSUE/gc_xxx'
 local tests = {}
 tests.t1 = function()
   local gc_foo = require 'gc_foo'
@@ -25,5 +25,5 @@ tests.t1 = function()
   end
   print("Test t1 succeeded")
 end
-return tests
--- tests.t1()
+-- return tests
+tests.t1()

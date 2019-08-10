@@ -1,4 +1,5 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1F2OPF3/lua/f1f2opf3.tmpl"
 
 return function (
   f1type, 
@@ -16,7 +17,6 @@ return function (
     else
          out_qtype = f2type
     end
-    local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1F2OPF3/lua/f1f2opf3.tmpl"
     local subs = {}
     subs.fn = "vvrem_" .. f1type .. "_" .. f2type .. "_" .. out_qtype
     subs.in1_ctype = assert(qconsts.qtypes[f1type].ctype)
@@ -24,5 +24,6 @@ return function (
     subs.out_qtype = out_qtype
     subs.out_ctype = assert(qconsts.qtypes[out_qtype].ctype)
     subs.c_code_for_operator = " c = a % b ;"
-    return subs, tmpl
+    subs.tmpl = tmpl
+    return subs
 end

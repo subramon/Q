@@ -1,8 +1,8 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/lua/sum.tmpl"
 
 return function (qtype)
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/lua/sum.tmpl"
   local subs = {}
   subs.macro = "mcr_nop"
   if ( qtype == "B1" ) then
@@ -10,7 +10,8 @@ return function (qtype)
     subs.reduce_ctype = "uint64_t"
     subs.reduce_qtype = "I8"
     subs.qtype = qtype
-    tmpl = nil
+    subs.doth = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/inc/sum_B1.h"
+    subs.dotc = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/inc/sum_B1.c"
   else
     assert(is_base_qtype(qtype), "qtype must be base type")
     subs.op = "sum"
@@ -30,6 +31,7 @@ return function (qtype)
     end
     subs.reducer = "mcr_nop"
     subs.t_reducer = "mcr_sum"
+    subs.tmpl = tmpl
   end
-  return subs, tmpl
+  return subs
 end

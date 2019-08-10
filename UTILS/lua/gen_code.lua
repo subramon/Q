@@ -2,27 +2,24 @@ local file_exists = require 'Q/UTILS/lua/file_exists'
 
 local section = { c = 'definition', h = 'declaration' }
 
-local function do_replacements(tmpl, subs)
+local function do_replacements(subs)
+  local tmpl = subs.tmpl
   local T
+  assert(file_exists(tmpl), "File not found " .. tmpl)
   if ( file_exists(tmpl) ) then 
     T = assert(dofile(tmpl))
-  else 
-    assert(nil) -- TODO THIS IS CLUMSY. WHY NOT ASSERT BEFORE?
-    --[[ TODO P1 Is it okay to comment this out?
-    local filename = q_tmpl_dir .. tmpl
-    assert(qc.isfile(filename), "File not found " .. filename)
-    T = dofile(filename)
-    --]]
   end
-   for k,v in pairs(subs) do
-      T[k] = v
-   end
-   return T
+  for k,v in pairs(subs) do
+     T[k] = v
+  end
+  return T
 end
 
 
-local _dotfile = function(subs, tmpl, opdir, ext)
-  local T = do_replacements(tmpl, subs)
+local _dotfile = function(subs, opdir, ext)
+  if ( ( ext == "c" ) and ( subs.dotc ) ) then return subs.dotc end
+  if ( ( ext == "h" ) and ( subs.doth ) ) then return subs.doth end
+  local T = do_replacements(subs)
   local dotfile = T(section[ext])
 
   if ( ( not opdir ) or ( opdir == "" ) ) then
@@ -40,12 +37,12 @@ end
 
 local fns = {}
 
-fns.dotc = function (subs, tmpl, opdir)
-  return _dotfile(subs, tmpl, opdir, 'c')
+fns.dotc = function (subs, opdir)
+  return _dotfile(subs, opdir, 'c')
 end
 
-fns.doth = function (subs, tmpl, opdir)
-  return _dotfile(subs, tmpl, opdir, 'h')
+fns.doth = function (subs, opdir)
+  return _dotfile(subs, opdir, 'h')
 end
 
 return fns

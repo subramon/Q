@@ -1,19 +1,19 @@
 local Scalar = require 'libsclr'
+local qconsts = require 'Q/UTILS/lua/q_consts'
+local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/f1s1opf2_cmp.tmpl"
 
 return function (
   in_qtype,
   scalar
   )
-    local qconsts = require 'Q/UTILS/lua/q_consts'
-    local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 
     assert(scalar)
     scalar = assert(to_scalar(scalar, in_qtype))
     assert(type(scalar) == "Scalar") 
     assert(is_base_qtype(in_qtype))
 
-    local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/f1s1opf2_cmp.tmpl"
     local subs = {}; 
     subs.fn = "<<operator>>_" .. in_qtype 
     subs.in_ctype = qconsts.qtypes[in_qtype].ctype
@@ -22,5 +22,6 @@ return function (
     subs.comparison = ' <<comparison>>  '
     subs.args = scalar:to_cmem()
     subs.args_ctype = subs.in_ctype
-    return subs, tmpl
+    subs.tmpl = tmpl
+    return subs
 end

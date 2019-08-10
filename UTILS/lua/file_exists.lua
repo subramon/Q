@@ -1,5 +1,4 @@
 local function file_exists(name)
-  assert(name)
   assert(type(name) == "string")
   local f = io.open(name, "r")
   if f ~= nil then 

@@ -4,11 +4,11 @@ local Scalar  = require 'libsclr'
 local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local cmem    = require 'libcmem'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/COUNT/lua/counts.tmpl"
 
 return function (
   qtype
   )
-    local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/COUNT/lua/counts.tmpl"
     local subs = {}
     if ( qtype == "B1" ) then
       assert(nil, "TODO")
@@ -38,5 +38,6 @@ return function (
       end
     --==============================
     end
-    return subs, tmpl
+    subs.tmpl = tmpl
+    return subs
 end

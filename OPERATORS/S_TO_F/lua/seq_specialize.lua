@@ -1,11 +1,12 @@
 local Scalar = require 'libsclr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
+local is_base_qtype = assert(require 'Q/UTILS/lua/is_base_qtype')
+local qconsts = require "Q/UTILS/lua/q_consts"
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/seq.tmpl"
 
 return function (
   args
   )
-  local qconsts = require "Q/UTILS/lua/q_consts"
-  local is_base_qtype = assert(require 'Q/UTILS/lua/is_base_qtype')
   --====================================
   assert(type(args) == "table")
   local start = assert(args.start)
@@ -30,6 +31,6 @@ return function (
   subs.out_qtype    = qtype
   subs.out_ctype    = qconsts.qtypes[qtype].ctype
   subs.fn	    = "seq_" .. qtype
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/seq.tmpl"
-  return subs, tmpl
+  subs.tmpl         = tmpl
+  return subs
 end

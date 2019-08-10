@@ -1,4 +1,5 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1F2OPF3/lua/f1f2opf3.tmpl"
 return function (
   in1_qtype, 
   in2_qtype, 
@@ -52,7 +53,6 @@ return function (
       "specfiied outputtype not big enough")
       l_out_qtype = out_qtype
     end
-    local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1F2OPF3/lua/f1f2opf3.tmpl"
     local subs = {}
     -- This includes is just as a demo. Not really needed
     subs.includes = "#include <math.h>\n"
@@ -65,5 +65,6 @@ return function (
     -- Note that we are movint int8_t to uint8_t below
     subs.c_code_for_operator = " c = ((" .. subs.out_ctype .. ")a << " .. shift .. " ) | b; "
 
-    return subs, tmpl
+    subs.tmpl = tmpl
+    return subs
 end

@@ -1,14 +1,14 @@
+local qconsts       = require "Q/UTILS/lua/q_consts"
+local qc            = require "Q/UTILS/lua/q_core"
+local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/arith.tmpl"
+
 return function (
   qtype,
   scalar
   )
-  local qconsts       = require "Q/UTILS/lua/q_consts"
-  local qc            = require "Q/UTILS/lua/q_core"
-  local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-  local Scalar        = require 'libsclr'
 
   assert(is_base_qtype(qtype))
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/arith.tmpl"
   local subs = {}; 
   local ctype = assert(qconsts.qtypes[qtype].ctype)
   subs.fn = "<<operator>>_" .. qtype 
@@ -22,5 +22,6 @@ return function (
   subs.c_code_for_operator = "<<c_code>>;"
   subs.args        = scalar:to_cmem()
   subs.args_ctype  = ctype
-  return subs, tmpl
+  subs.tmpl        = tmpl
+  return subs
 end

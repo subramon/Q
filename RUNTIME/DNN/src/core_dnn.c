@@ -19,7 +19,7 @@ get_time_usec(
   struct timeval Tps; 
   struct timezone Tpf;
   gettimeofday (&Tps, &Tpf);
-  return ((uint64_t )Tps.tv_usec + 1000000* (uint64_t )Tps.tv_sec);
+  return ((uint64_t )Tps.tv_usec + 10000000* (uint64_t )Tps.tv_sec);
 }
 #endif
 static uint64_t
@@ -551,14 +551,6 @@ dnn_train(
     }
     delta = RDTSC() - t_start; if ( delta > 0 ) { t_bstep += delta; }
     //========= STOP - backward propagation =========
-/*
-#ifdef TEST_VS_PYTHON
-    status = check_z_a(nl, npl, batch_size, dz, dzprime); cBYE(status);
-    status = check_z_a(nl, npl, batch_size, da, daprime); cBYE(status);
-    printf("SUCCESS for forward pass\n");
-#endif
-*/
-
     //========= START - update 'W' and 'b' =========
     t_start = RDTSC();
     status = update_W_b(W, dW, b, db, nl, npl, d, ALPHA); cBYE(status);
