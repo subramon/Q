@@ -23,4 +23,4 @@ local function get_activation_functions(params, nl)
   afns = table.concat(afns, ":")
   return afns
 end
-return get_activation_function
+return get_activation_functions
