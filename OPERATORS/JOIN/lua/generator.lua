@@ -14,11 +14,11 @@ local status, reason
 local sp_fn = assert(require("Q/OPERATORS/JOIN/lua/join_specialize"))
 
 local function generate_files(src_lnk_qtype, src_fld_qtype, join_type, args)
-  local status, subs, tmpl = pcall(sp_fn, src_lnk_qtype, src_fld_qtype, join_type, args)
+  local status, subs = pcall(sp_fn, src_lnk_qtype, src_fld_qtype, join_type, args)
   if ( status ) then
     assert(type(subs) == "table")
-    gen_code.doth(subs,tmpl, incdir)
-    gen_code.dotc(subs, tmpl, srcdir)
+    gen_code.doth(subs, incdir)
+    gen_code.dotc(subs, srcdir)
     print("Produced ", subs.fn)
     num_produced = num_produced + 1
   else

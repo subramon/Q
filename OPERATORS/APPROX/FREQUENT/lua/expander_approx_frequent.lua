@@ -8,13 +8,12 @@ local qtypes  = require 'Q/OPERATORS/APPROX/FREQUENT/lua/qtypes'
 local spfn    = require 'Q/OPERATORS/APPROX/FREQUENT/lua/specializer_approx_frequent'
 
 local function expander_approx_frequent(x, min_freq, err)
-  local status, subs, tmpl = pcall(spfn, x:fldtype())
+  local status, subs = pcall(spfn, x:fldtype())
   local func_name = subs.fn
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   --STOP: Dynamic compilation
 

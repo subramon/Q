@@ -36,8 +36,8 @@ clean:
 	#---
 	make -C ${Q_SRC_ROOT}/UTILS/src/  clean
 	#---
-	# -- make -C ${Q_SRC_ROOT}/OPERATORS/AINB/lua/ clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/APPROX/QUANTILE/lua  clean
+	#-- make -C ${Q_SRC_ROOT}/OPERATORS/AINB/lua/ clean
+	#-- make -C ${Q_SRC_ROOT}/OPERATORS/APPROX/QUANTILE/lua  clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/APPROX/FREQUENT  clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/AX_EQUALS_B/ clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/COUNT/lua clean
@@ -222,12 +222,13 @@ _where:
 
 # need to rewrite using Aggregator
 	# _ainb 
+# need to rewrite
+#	_approx_quantile \
 # need to do mem_initialize
 	# _count  
 # maintain following list in alphabetical order
 _q_operators: \
 	_approx_frequent \
-	_approx_quantile \
 	_ax_equals_b \
 	_corrm \
 	_drop_nulls \

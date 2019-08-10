@@ -17,7 +17,7 @@ local function set_sclr_val_by_idx(x, y, optargs)
 
   local sp_fn_name = "Q/OPERATORS/GET/lua/set_sclr_val_by_idx_specialize"
   local spfn = assert(require(sp_fn_name))
-  local status, subs, tmpl = pcall(spfn, x:fldtype(), y:fldtype(), 
+  local status, subs = pcall(spfn, x:fldtype(), y:fldtype(), 
     optargs)
   if not status then print(subs) end
   assert(status, "Error in specializer " .. sp_fn_name)
@@ -25,8 +25,7 @@ local function set_sclr_val_by_idx(x, y, optargs)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   --STOP: Dynamic compilation
 

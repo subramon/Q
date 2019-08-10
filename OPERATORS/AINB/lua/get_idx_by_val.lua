@@ -31,7 +31,7 @@ local function get_idx_by_val(x, y, optargs)
   end
   optargs.nR2 = nR2
   optargs.sort_order = sort_order
-  local status, subs, tmpl = pcall(spfn, x:fldtype(), y:fldtype(), 
+  local status, subs = pcall(spfn, x:fldtype(), y:fldtype(), 
     optargs)
   if not status then print(subs) end
   assert(status, "Error in specializer " .. sp_fn_name)
@@ -39,8 +39,7 @@ local function get_idx_by_val(x, y, optargs)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic Compilation
   assert(qc[func_name], "Symbol not available" .. func_name)

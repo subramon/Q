@@ -16,15 +16,14 @@ local function expander_f1opf2f3(op, x, optargs)
   local sp_fn_name = "Q/OPERATORS/F1OPF2F3/lua/split_specialize"
   local spfn = assert(require(sp_fn_name))
 
-  local status, subs, tmpl = pcall(spfn, x:fldtype())
+  local status, subs = pcall(spfn, x:fldtype())
   if not status then print(subs) end
   assert(status, "Specializer failed " .. sp_fn_name)
   local func_name = assert(subs.fn)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Symbol not defined " .. func_name)

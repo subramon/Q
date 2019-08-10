@@ -50,7 +50,6 @@ ${fn}(
   int64_t curr_index       = ptr_args->${op}_index;
   uint32_t num_threads     = sysconf(_SC_NPROCESSORS_ONLN);
 
-  ${reduce_ctype} ${op}_val = ${initial_val};
   uint64_t block_size = nR / num_threads;
 #pragma omp parallel for schedule(static)
   for ( uint32_t t = 0; t < num_threads; t++ ) { 

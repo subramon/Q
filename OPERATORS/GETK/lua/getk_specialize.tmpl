@@ -1,4 +1,5 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/GETK/lua/merge1.tmpl"
 
 local function <<operator>>_specialize(fldtype)
   local subs = {}
@@ -11,11 +12,11 @@ local function <<operator>>_specialize(fldtype)
   subs.ctype = ctype
   subs.width = width
 
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/GETK/lua/merge1.tmpl"
   subs.fn = "merge_<<operation>>_" .. qtype
   subs.min_or_max = "<<operation>>"
   subs.comparator = "<<comparator>>"
   subs.sort_fn = "qsort_<<sort_ordr>>_" .. subs.qtype
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end
 return <<operator>>_specialize

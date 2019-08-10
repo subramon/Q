@@ -13,10 +13,10 @@ local num_produced = 0
 
 for _, idx_qtype in ipairs(idx_qtypes) do 
   for _, val_qtype in ipairs(val_qtypes) do 
-    local status, subs, tmpl = pcall(sp_fn, idx_qtype, val_qtype)
+    local status, subs = pcall(sp_fn, idx_qtype, val_qtype)
     if ( status ) then 
-      gen_code.doth(subs, tmpl, incdir)
-      gen_code.dotc(subs, tmpl, srcdir)
+      gen_code.doth(subs, incdir)
+      gen_code.dotc(subs, srcdir)
       -- print("Generated ", subs.fn)
       num_produced = num_produced + 1
     else

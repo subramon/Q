@@ -8,6 +8,7 @@ if ( not plpath.isdir(incdir) ) then plpath.mkdir(incdir) end
 
 local qtypes = { "I1", "I2", "I4", "I8" } -- TODO make aq work with F4 and F8
 
+-- TODO P3 WHAT THE HECK IS GOING ON HERE????
 local num_produced = 0
 local sp_fn = assert(require("aq_specialize"))
 for _, intype in ipairs(qtypes) do

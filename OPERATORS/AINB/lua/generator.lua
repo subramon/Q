@@ -29,11 +29,11 @@
     for _, atype in ipairs(a_qtypes) do 
       for _, btype in ipairs(b_qtypes) do 
         -- print(atype, btype, b_sort_order)
-        local status, subs, tmpl = pcall(sp_fn, atype, btype, 
+        local status, subs = pcall(sp_fn, atype, btype, 
           b_len, b_sort_order)
         if ( status ) then 
-          gen_code.doth(subs, tmpl, incdir)
-          gen_code.dotc(subs, tmpl, srcdir)
+          gen_code.doth(subs, incdir)
+          gen_code.dotc(subs, srcdir)
           -- print("Generated ", subs.fn)
           num_produced = num_produced + 1
         else

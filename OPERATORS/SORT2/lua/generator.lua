@@ -15,12 +15,12 @@ local spfn = require 'sort2_specialize'
 for _, o in ipairs(order) do
   for _, f1 in ipairs(f1_qtypes) do
     for _, f2 in ipairs(f2_qtypes) do
-      local status, subs, tmpl = pcall(spfn, f1, f2, o)
+      local status, subs = pcall(spfn, f1, f2, o)
       if ( not status ) then print(subs) end
       assert(status)
       assert(type(subs) == "table")
-      gen_code.doth(subs, tmpl, incdir)
-      gen_code.dotc(subs, tmpl, srcdir)
+      gen_code.doth(subs, incdir)
+      gen_code.dotc(subs, srcdir)
       print("Produced ", subs.fn)
       num_produced = num_produced + 1
     end

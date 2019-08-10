@@ -27,13 +27,12 @@ local expander_ainb = function(op, a, b)
 
   local b_sort_order = b:get_meta("sort_order")
 
-  local status, subs, tmpl = pcall(spfn, a:fldtype(), b:fldtype(), blen, b_sort_order)
+  local status, subs = pcall(spfn, a:fldtype(), b:fldtype(), blen, b_sort_order)
   assert(status, "Specializer failed " .. sp_fn_name)
   local func_name = assert(subs.fn)
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Symbol not defined " .. func_name)

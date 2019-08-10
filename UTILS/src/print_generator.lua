@@ -14,10 +14,10 @@
   --==================================================
   local sp_fn = require 'print_specialize'
   for i, qtype in ipairs(qtypes) do
-    local status, subs, tmpl = pcall(sp_fn, qtype)
+    local status, subs = pcall(sp_fn, qtype)
     assert(status, subs)
-    gen_code.doth(subs, tmpl, incdir)
-    gen_code.dotc(subs, tmpl, srcdir)
+    gen_code.doth(subs, incdir)
+    gen_code.dotc(subs, srcdir)
     print("Produced ", subs.fn)
     num_produced = num_produced + 1
   end

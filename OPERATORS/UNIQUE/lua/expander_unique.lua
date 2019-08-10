@@ -19,7 +19,7 @@ local function expander_unique(op, a, b)
   local sp_fn_name = "Q/OPERATORS/UNIQUE/lua/unique_specialize"
   local spfn = assert(require(sp_fn_name))
 
-  local status, subs, tmpl = pcall(spfn, a:fldtype())
+  local status, subs = pcall(spfn, a:fldtype())
   if not status then print(subs) end
   assert(status, "Specializer failed " .. sp_fn_name)
   local func_name = assert(subs.fn)
@@ -27,7 +27,7 @@ local function expander_unique(op, a, b)
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
     print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs, func_name)
   end
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Symbol not defined " .. func_name)

@@ -51,7 +51,7 @@ local function expander_join(op, src_lnk, src_fld, dst_lnk, join_type, optargs)
   local sp_fn_name = "Q/OPERATORS/JOIN/lua/join_specialize"
   local spfn = assert(require(sp_fn_name))
   -- calling specializer
-  local status, subs, tmpl = pcall(spfn, src_lnk:fldtype(), src_fld:fldtype(), src_lnk:fldtype(), join_type)
+  local status, subs = pcall(spfn, src_lnk:fldtype(), src_fld:fldtype(), src_lnk:fldtype(), join_type)
   if not status then print(subs) end
   assert(status, "Specializer failed " .. sp_fn_name)
   assert(type(subs) == "table")
@@ -59,8 +59,7 @@ local function expander_join(op, src_lnk, src_fld, dst_lnk, join_type, optargs)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
 

@@ -26,7 +26,7 @@ local function expander_numby(a, nb, optargs)
     end
   end
 
-  local status, subs, tmpl = pcall(spfn, a:fldtype(), is_safe)
+  local status, subs = pcall(spfn, a:fldtype(), is_safe)
   if not status then print(subs) end
   assert(status, "Specializer failed " .. sp_fn_name)
   local func_name = assert(subs.fn)
@@ -34,8 +34,7 @@ local function expander_numby(a, nb, optargs)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
 

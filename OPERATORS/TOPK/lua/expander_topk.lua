@@ -5,6 +5,7 @@ local lVector = require 'Q/RUNTIME/lua/lVector'
 local cmem    = require 'libcmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
+-- TODO P3 Fix this. Specializer is missing!
 local function expander_topk(fin, k, fdrag, optargs )
   local sp_fn_name = "Q/OPERATORS/F1F2OPF3/lua/topk_specialize"
   local spfn = assert(require(sp_fn_name))
@@ -35,15 +36,14 @@ local function expander_topk(fin, k, fdrag, optargs )
     if ( optargs.is_ephemeral == true ) then 
       is_ephemeral = true
   end
-  local status, subs, tmpl = pcall(spfn, f1in_qytpe, fdrag_qtype)
+  local status, subs = pcall(spfn, f1in_qytpe, fdrag_qtype)
   if not status then print(subs) end
   assert(status, "Error in specializer " .. sp_fn_name)
   local func_name = assert(subs.fn)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic Compilation
   assert(qc[func_name], "Symbol not available" .. func_name)

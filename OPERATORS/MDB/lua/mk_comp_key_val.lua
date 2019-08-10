@@ -39,7 +39,7 @@ local function mk_comp_key_val(Tk, in_val_vec)
   --===================================================================
   -- START: Specialization
   local spfn = require("Q/OPERATORS/MDB/lua/mk_comp_key_val_specialize" )
-  local status, subs, tmpl = pcall(spfn, val_type)
+  local status, subs = pcall(spfn, val_type)
   assert(status)
   assert(type(subs) == "table")
   local func_name = assert(subs.fn)
@@ -71,8 +71,7 @@ mk_comp_key_val_F4(
   else
     -- START: Dynamic compilation
     if ( not qc[func_name] ) then
-      print("Dynamic compilation kicking in... ")
-      qc.q_add(subs, tmpl, func_name)
+      qc.q_add(subs); print("Dynamic compilation kicking in... ")
     end
     -- STOP: Dynamic compilation
     fnptr = assert(qc[func_name], "Missing symbol " .. func_name)

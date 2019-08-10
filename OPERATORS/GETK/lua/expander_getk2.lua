@@ -40,14 +40,13 @@ local function expander_getk(a, fval, k, optargs, fopt )
       is_ephemeral = true
     end
   end
-  local status, subs, tmpl = pcall(spfn, f1in_qytpe, fopt_qtype, optargs)
+  local status, subs = pcall(spfn, f1in_qytpe, fopt_qtype, optargs)
   if not status then print(subs) end
   assert(status, "Error in specializer " .. sp_fn_name)
   local func_name = assert(subs.fn)
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
 

@@ -16,15 +16,13 @@ for k, operator in pairs(operators) do
     local sp_fn = assert(require((operator .. "_specialize")))
     for i, val_qtype in ipairs(val_qtypes) do 
       for j, grpby_qtype in ipairs(grpby_qtypes) do 
-       local status, subs, tmpl = pcall(
+       local status, subs = pcall(
          sp_fn, val_qtype, grpby_qtype, cfld)
         if ( status ) then 
           assert(type(subs) == "table")
-          assert(type(tmpl) == "string")
           -- for k, v in pairs(subs) do print(k, v) end
-          -- print(tmpl)
-          gen_code.doth(subs, tmpl, incdir)
-          gen_code.dotc(subs, tmpl, srcdir)
+          gen_code.doth(subs, incdir)
+          gen_code.dotc(subs, srcdir)
           print("Produced ", subs.fn)
           num_produced = num_produced + 1
         else

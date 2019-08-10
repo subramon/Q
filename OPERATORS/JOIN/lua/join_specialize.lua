@@ -1,16 +1,15 @@
+local qconsts = require 'Q/UTILS/lua/q_consts'
+local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/JOIN/lua/join.tmpl"
 return function (
   src_lnk_type,
   src_fld_type,
   dst_lnk_type,
   op
 )
-  local qconsts = require 'Q/UTILS/lua/q_consts'
-  local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
-  local plfile = require 'pl.file'
-  local subs = {}; local tmpl
+  local subs = {}; 
   --assert(is_base_qtype(src_lnk_type), "type of in must be base type")
   assert(is_base_qtype(src_fld_type), "type of in must be base type")
-  tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/JOIN/lua/join.tmpl"
 
   local dst_fld_type
   if op == "sum" or op == "and" or op == "or" then
@@ -49,5 +48,6 @@ return function (
   if ( dst_fld_type == "F4" ) then subs.initial_val = "-FLT_MAX-1" end
   if ( dst_fld_type == "F8" ) then subs.initial_val = "-DBL_MAX-1" end
   assert(subs.initial_val)
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end

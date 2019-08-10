@@ -38,7 +38,7 @@ local function expander_getk(a, fval, k, optargs)
   local sp_fn_name = "Q/OPERATORS/GETK/lua/" .. a .. "_specialize"
   local spfn = assert(require(sp_fn_name))
 
-  local status, subs, tmpl = pcall(spfn, fval:qtype())
+  local status, subs = pcall(spfn, fval:qtype())
   if not status then print(subs) end
   assert(status, "Error in specializer " .. sp_fn_name)
   local sort_fn = assert(subs.sort_fn)
@@ -46,8 +46,7 @@ local function expander_getk(a, fval, k, optargs)
   local func_name = assert(subs.fn)
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Symbol not defined " .. func_name)

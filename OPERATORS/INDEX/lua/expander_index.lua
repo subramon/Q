@@ -20,15 +20,14 @@ local function expander_index(op, a, b)
   local sp_fn_name = "Q/OPERATORS/INDEX/lua/index_specialize"
   local spfn = assert(require(sp_fn_name))
 
-  local status, subs, tmpl = pcall(spfn, a:fldtype())
+  local status, subs = pcall(spfn, a:fldtype())
   if not status then print(subs) end
   assert(status, "Specializer failed " .. sp_fn_name)
   local func_name = assert(subs.fn)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic Compilation
   assert(qc[func_name], "Symbol not defined " .. func_name)

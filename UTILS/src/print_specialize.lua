@@ -1,13 +1,13 @@
+local qconsts = require 'Q/UTILS/lua/q_consts'
+local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
+local file_exists = require 'Q/UTILS/lua/file_exists'
+local tmpl = qconsts.Q_SRC_ROOT .. '/UTILS/src/print.tmpl'
 return function (
   qtype, 
   optargs
   )
-    local qconsts = require 'Q/UTILS/lua/q_consts'
-    local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-    local file_exists = require 'Q/UTILS/lua/file_exists'
     local fmt = ""
     assert(is_base_qtype(qtype))
-    assert(file_exists("print.tmpl"))
     if ( optargs ) then
       assert(type(optargs) == "table")
       if (  optargs.format ) then 
@@ -17,12 +17,12 @@ return function (
     end
     local default_fmt = "PR" .. qtype
 
-    local tmpl = 'print.tmpl'
     local subs = {}
     subs.fn = qtype .. "_to_txt"
     subs.ctype = assert(qconsts.qtypes[qtype].ctype)
     subs.qtype = qtype
     subs.fmt   = fmt
     subs.default_fmt   = default_fmt
-    return subs, tmpl
+    subs.tmpl = tmpl
+    return subs
 end

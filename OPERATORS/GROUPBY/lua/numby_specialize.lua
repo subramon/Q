@@ -1,13 +1,13 @@
+local qconsts = require 'Q/UTILS/lua/q_consts'
+local utils = require 'Q/UTILS/lua/utils'
+local in_qtypes = { 'I1', 'I2', 'I4', 'I8' }
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/GROUPBY/lua/numby.tmpl"
 
 return function (
   in_qtype, 
   is_safe
   )
-  local qconsts = require 'Q/UTILS/lua/q_consts'
-  local utils = require 'Q/UTILS/lua/utils'
-  local in_qtypes = { 'I1', 'I2', 'I4', 'I8' }
   assert(utils.table_find(in_qtypes, in_qtype))
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/GROUPBY/lua/numby.tmpl"
   local subs = {};
 
   subs.in_qtype = in_qtype
@@ -24,5 +24,6 @@ return function (
     subs.checking_code = ' if ( ( x < 0 ) || ( (uint32_t)x >= nZ ) ) { \n printf("hello world"); \n go_BYE(-1); }  '
     subs.bye = "BYE: "
   end
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end

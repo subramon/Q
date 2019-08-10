@@ -18,15 +18,14 @@ local function sort2(x, y, ordr)
   if ( ordr == "ascending" ) then ordr = "asc" end 
   if ( ordr == "descending" ) then ordr = "dsc" end
   local spfn = require("Q/OPERATORS/SORT2/lua/sort2_specialize" )
-  local status, subs, tmpl = pcall(spfn, x:fldtype(), y:fldtype(), ordr)
+  local status, subs = pcall(spfn, x:fldtype(), y:fldtype(), ordr)
   assert(status, "error in call to sort2_asc_specialize")
   assert(type(subs) == "table", "error in call to sort2_asc_specialize")
   local func_name = assert(subs.fn)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
 

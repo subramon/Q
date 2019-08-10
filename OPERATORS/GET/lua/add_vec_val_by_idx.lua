@@ -21,7 +21,7 @@ local function add_vec_val_by_idx(idx, src, dst, optargs)
   assert(src:fldtype() == dst:fldtype(), 
     "for now, src:fldtype() == dst:fldtype(). These are " ..
     src:fldtype()  .. " => " ..  dst:fldtype())
-  local status, subs, tmpl = pcall(spfn, idx:fldtype(), dst:fldtype(), 
+  local status, subs = pcall(spfn, idx:fldtype(), dst:fldtype(), 
     optargs)
   if not status then print(subs) end
   assert(status, "Error in specializer " .. sp_fn_name)
@@ -29,8 +29,7 @@ local function add_vec_val_by_idx(idx, src, dst, optargs)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
 

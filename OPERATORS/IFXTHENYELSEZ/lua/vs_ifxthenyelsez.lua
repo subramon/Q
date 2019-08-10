@@ -15,7 +15,7 @@ local function vs_ifxthenyelsez(x, y, z)
   assert(type(spfn) == "function")
   assert(x:fldtype() == "B1")
   assert(y:fldtype() == z:fldtype())
-  local status, subs, tmpl = pcall(spfn, "vs", y:fldtype())
+  local status, subs = pcall(spfn, "vs", y:fldtype())
   if ( not status ) then print(subs) end
   assert(status, "error in call to ifxthenyelsez_specialize")
   assert(type(subs) == "table", "error in call to ifxthenyelsez_specialize")
@@ -23,8 +23,7 @@ local function vs_ifxthenyelsez(x, y, z)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Symbol not defined " .. func_name)

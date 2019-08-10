@@ -17,15 +17,13 @@
     local sp_fn = assert(require(sp_fn_name),
       "specializer not found " .. sp_fn_name)
     for i, in1_qtype in ipairs(in1_qtypes) do 
-      local status, subs, tmpl = pcall(
+      local status, subs = pcall(
         sp_fn, in1_qtype, optargs)
       if ( status ) then 
         assert(type(subs) == "table")
-        assert(type(tmpl) == "string")
           -- for k, v in pairs(subs) do print(k, v) end
-          -- print(tmpl)
-        gen_code.doth(subs, tmpl, incdir)
-        gen_code.dotc(subs, tmpl, srcdir)
+        gen_code.doth(subs, incdir)
+        gen_code.dotc(subs, srcdir)
         print("Produced ", subs.fn)
         num_produced = num_produced + 1
       else

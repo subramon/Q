@@ -15,10 +15,10 @@
     local sp_fn_name = 'Q/OPERATORS/GETK/lua/' .. op .. '_specialize'
     sp_fn = assert(require(sp_fn_name))
     for _, qtype in ipairs(qtypes) do
-      local status, subs, tmpl = pcall(sp_fn, qtype)
+      local status, subs = pcall(sp_fn, qtype)
       if ( status ) then
-        gen_code.doth(subs, tmpl, incdir)
-        gen_code.dotc(subs, tmpl, srcdir)
+        gen_code.doth(subs, incdir)
+        gen_code.dotc(subs, srcdir)
         print("Generated ", subs.fn)
         num_produced = num_produced + 1
       else
@@ -32,10 +32,10 @@
     sp_fn = assert(require(sp_fn_name))
     for _, v_qtype in ipairs(qtypes) do
       for _, d_qtype in ipairs(qtypes) do
-        local status, subs, tmpl = pcall(sp_fn, v_qtype, d_qtype)
+        local status, subs = pcall(sp_fn, v_qtype, d_qtype)
         if ( status ) then
-          gen_code.doth(subs, tmpl, incdir)
-          gen_code.dotc(subs, tmpl, srcdir)
+          gen_code.doth(subs, incdir)
+          gen_code.dotc(subs, srcdir)
           print("Generated ", subs.fn)
           num_produced = num_produced + 1
         else

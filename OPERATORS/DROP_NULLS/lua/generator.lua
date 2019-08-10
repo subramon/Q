@@ -17,10 +17,10 @@
     for _, qtype in ipairs(qtypes) do 
       local sp_fn_name = 'drop_nulls_specialize'
       local sp_fn = require(sp_fn_name)
-      local status, subs, tmpl = pcall(sp_fn, qtype)
+      local status, subs = pcall(sp_fn, qtype)
       if ( status ) then 
-        gen_code.doth(subs, tmpl, incdir)
-        gen_code.dotc(subs, tmpl, srcdir)
+        gen_code.doth(subs, incdir)
+        gen_code.dotc(subs, srcdir)
         print("Generated ", subs.fn)
         num_produced = num_produced + 1
       else

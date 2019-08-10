@@ -44,15 +44,14 @@ local function expander_getk_reducer(a, val, drag, k, optargs)
   local spfn = assert(require(sp_fn_name))
   local mem_initialize = assert(require(mem_init_name), "mem_initializer not found")
 
-  local status, subs, tmpl = pcall(spfn, val:qtype(), drag:qtype())
+  local status, subs = pcall(spfn, val:qtype(), drag:qtype())
   if not status then print(subs) end
   assert(status, "Error in specializer " .. sp_fn_name)
   local func = assert(subs.fn)
 
   -- START: Dynamic compilation
   if ( not qc[func] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
   assert(qc[func], "Symbol not available" .. func)

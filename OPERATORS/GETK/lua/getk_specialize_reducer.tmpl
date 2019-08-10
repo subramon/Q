@@ -1,4 +1,5 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
+local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/GETK/lua/getk.tmpl"
 
 local function <<operator>>_specialize(val_fldtype, drag_fldtype)
   if ( val_fldtype == "B1" ) then
@@ -29,11 +30,11 @@ local function <<operator>>_specialize(val_fldtype, drag_fldtype)
   subs.reduce_d_ctype = d_ctype
   subs.reduce_d_qtype = d_qtype
 
-  local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/GETK/lua/getk.tmpl"
   subs.fn = "<<operator>>_" .. v_qtype .. "_" .. d_qtype
   subs.comparator = "<<comparator>>"
   subs.op = "<<operator>>"
 
-  return subs, tmpl
+  subs.tmpl = tmpl
+  return subs
 end
 return <<operator>>_specialize

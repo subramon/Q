@@ -41,15 +41,14 @@ local function expander_sumby(a, b, nb, optargs)
     end
   end
 
-  local status, subs, tmpl = pcall(spfn, a:fldtype(), b:fldtype(), c)
+  local status, subs = pcall(spfn, a:fldtype(), b:fldtype(), c)
   if not status then print(subs) end
   assert(status, "Specializer failed " .. sp_fn_name)
   local func_name = assert(subs.fn)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
   end
   -- STOP: Dynamic compilation
 

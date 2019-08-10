@@ -11,7 +11,7 @@ local approx_quantile = function(x, args)
 
   local sp_fn = assert(require("Q/OPERATORS/APPROX/QUANTILE/lua/aq_specialize"))
 
-  local status, subs, tmpl = pcall(sp_fn, x:fldtype())
+  local status, subs = pcall(sp_fn, x:fldtype())
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
