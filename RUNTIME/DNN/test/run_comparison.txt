@@ -26,6 +26,8 @@ Run python Vs C comparison_test.lua
 > copy the generated files from pytyon directory to test directory
     $ cp Q/RUNTIME/DNN/python/_* Q/RUNTIME/DNN/test/
 
+> Do not use the openmp flag while trying out this test, so remove the flag from QC_FLAGS
+
 > Build the DNN
     $ cd Q/RUNTIME/DNN/src/ 
     $ make clean
