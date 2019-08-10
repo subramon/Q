@@ -39,7 +39,6 @@ tests.t1 = function()
 
   len, base_data, nn_data = x:chunk(x:chunk_num())
   assert(base_data)
-  print(len)
   assert(len == 10)
 
   T = x:meta()
@@ -50,7 +49,6 @@ tests.t1 = function()
 
   -- for k, v in pairs(T.aux)  do print(k,v) end
   -- for k, v in pairs(T.base)  do print(k,v) end
-  print("=========================================")
 
   print("Call previous chunk");
   len, base_data, nn_data = x:chunk(0)
@@ -58,7 +56,6 @@ tests.t1 = function()
   assert(len == qconsts.chunk_size)
 
   T = x:meta()
-  for k, v in pairs(T.base)  do print(k,v) end
   assert(T.base.is_nascent == true)
   assert(T.base.open_mode == "READ")
   assert(T.base.num_in_chunk == 10)
@@ -67,7 +64,6 @@ tests.t1 = function()
   -- for k, v in pairs(T.base)  do print(k,v) end
   -- for k, v in pairs(T.aux)  do print(k,v) end
 
-  -- print("=========================================")
   print("Successfully completed test t1")
 end
 

@@ -1,7 +1,7 @@
 
 local qc = require 'Q/UTILS/lua/q_core'
 local cmem = require 'libcmem'
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 
 local tests = {}
 

@@ -12,13 +12,12 @@ static: BUILD_TYPE="all"
 
 dynamic: BUILD_TYPE="all_for_dc"
 
-static: /tmp/q/libq_core.so
-	cd ${Q_SRC_ROOT}
+static: _q_basic _q_operators
+	luajit mk_so.lua
 	echo "Q statically compiled"
 
-# Why does dynamic depend on q_core and not on q_basic?
-dynamic: /tmp/q/libq_core.so
-	cd ${Q_SRC_ROOT}
+dynamic: _q_basic
+	luajit mk_so.lua 
 	echo "Q dynamically compiled"
 
 clean:
@@ -36,37 +35,35 @@ clean:
 	make -C ${Q_SRC_ROOT}/RUNTIME/AGG/src/  clean
 	#---
 	make -C ${Q_SRC_ROOT}/UTILS/src/  clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/ clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/ clean
 	#---
-	make -C ${Q_SRC_ROOT}/OPERATORS/HASH/lua/ clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/AINB/lua/ clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/IFXTHENYELSEZ/lua/ clean
+	# -- make -C ${Q_SRC_ROOT}/OPERATORS/AINB/lua/ clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/APPROX/QUANTILE/lua  clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/APPROX/FREQUENT  clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/AX_EQUALS_B/ clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/COUNT/lua clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/DROP_NULLS/lua clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1OPF2F3/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2_VAL/lua clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/GET/lua clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/GETK/lua clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/GROUPBY/lua clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/HASH/lua/ clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/IDX_SORT/lua clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/IFXTHENYELSEZ/lua/ clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/INDEX/lua clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/JOIN/lua clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/ clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/MDB/lua/ clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/PCA/src clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/SORT/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/SORT2/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/GET/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/IDX_SORT/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/AX_EQUALS_B/ clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/APPROX/QUANTILE/lua  clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/APPROX/FREQUENT  clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/PCA/src clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/DROP_NULLS/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/WHERE/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/GROUPBY/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/GETK/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/INDEX/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/UNIQUE/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/COUNT/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/JOIN/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2_VAL/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/MDB/lua/ clean
-	make -C ${Q_SRC_ROOT}/SIZE_OF_PRIZE/analysis/lua/ clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/WHERE/lua clean
 
 install: uninstall 
 	cd ../../;\
@@ -86,50 +83,29 @@ uninstall:
 	rm -f /usr/lib/libq_core.so;\
 	echo "Q uninstalled"
 
-/tmp/q/libq_core.so: _q_basic _vec _dnn _q_operators _agg
-	cd ${Q_SRC_ROOT}/UTILS/lua/
+_q_basic: _utils  _vec _dnn _agg
+	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua all_for_dc
+	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua all_for_dc
+	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua all_for_dc
+	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua all_for_dc
 	luajit mk_so.lua
-	cp /tmp/q/libq_core.so ${Q_ROOT}/lib/
-
-# OLD _q_basic: _utils _load_csv _print _runtime
-_q_basic: _utils  _vec _dnn
-	luajit mk_so.lua 
 	touch _q_basic
 
-_vec: 
-	make  -C ${Q_SRC_ROOT}/UTILS/src/
-	make  -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/
-	make  -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/
+_vec: _utils
 	make  -C ${Q_SRC_ROOT}/RUNTIME/src/
 	touch _vec
 
-_dnn: 
-	make  -C ${Q_SRC_ROOT}/UTILS/src/
-	make  -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/
-	make  -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/
-	make  -C ${Q_SRC_ROOT}/RUNTIME/src/
+_dnn: _utils _vec
 	make  -C ${Q_SRC_ROOT}/RUNTIME/DNN/src/
 	touch _dnn
 
-_agg: _load_csv _print _utils _vec 
+_agg: _utils _vec 
 	make  -C ${Q_SRC_ROOT}/RUNTIME/AGG/src/
 	touch _agg
-
-# OLD _runtime: _load_csv _print _utils _vec _dnn # _agg
-# OLD 	touch _runtime
-
 
 _utils:
 	make  -C ${Q_SRC_ROOT}/UTILS/src/ 
 	touch _utils
-
-_load_csv: _utils
-	make  -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/
-	touch _load_csv
-
-_print: _utils
-	make  -C ${Q_SRC_ROOT}/OPERATORS/PRINT/lua/
-	touch _print
 
 #-----------------------------------
 _approx_quantile: _q_basic
@@ -208,6 +184,10 @@ _idx_sort: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/IDX_SORT/lua ${BUILD_TYPE}
 	touch _idx_sort
 
+_load_csv: _utils
+	make  -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/
+	touch _load_csv
+
 _mv_mul: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ ${BUILD_TYPE}
 	touch _mv_mul
@@ -215,11 +195,6 @@ _mv_mul: _q_basic
 _mdb: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/MDB/lua/ ${BUILD_TYPE}
 	touch _mdb
-
-_stp: _q_basic
-	make  -C ${Q_SRC_ROOT}/SIZE_OF_PRIZE/analysis/lua/ clean
-	make  -C ${Q_SRC_ROOT}/SIZE_OF_PRIZE/analysis/lua/ ${BUILD_TYPE}
-	touch _stp
 
 _s_to_f: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua ${BUILD_TYPE}
@@ -245,14 +220,16 @@ _where:
 	make  -C ${Q_SRC_ROOT}/OPERATORS/WHERE/lua/ ${BUILD_TYPE}
 	touch _where
 
+# need to rewrite using Aggregator
+	# _ainb 
+# need to do mem_initialize
+	# _count  
 # maintain following list in alphabetical order
 _q_operators: \
-	_ainb \
 	_approx_frequent \
 	_approx_quantile \
 	_ax_equals_b \
 	_corrm \
-	_count  \
 	_drop_nulls \
 	_f_to_s \
 	_f1f2opf3 \
@@ -265,9 +242,9 @@ _q_operators: \
 	_idx_sort \
 	_ifxthenyelsez \
 	_index \
+	_load_csv \
 	_join \
 	_mdb \
-	_stp \
 	_mv_mul \
 	_s_to_f \
 	_sort \

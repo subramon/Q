@@ -14,5 +14,7 @@ base_is_eov = "true",
 base_is_nascent = "false",
 base_name = "",
 base_is_memo = "true",
+base_is_mono = "false",
+base_is_no_memcpy = "false",
 aux_rand_key = "some other rand val",
  } 

@@ -1,5 +1,5 @@
 local cmem    = require 'libcmem'
-local ffi     = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local lVector = require 'Q/RUNTIME/lua/lVector'
 local qc      = require 'Q/UTILS/lua/q_core'

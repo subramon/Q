@@ -1,6 +1,6 @@
 local Q           = require 'Q/q_export'
 local qc          = require 'Q/UTILS/lua/q_core'
-local ffi         = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local cmem        = require 'libcmem'
 local qconsts     = require 'Q/UTILS/lua/q_consts'
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'

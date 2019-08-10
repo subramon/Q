@@ -1,7 +1,7 @@
 -- FUNCTIONAL 
 local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local linear_solver = require 'Q/OPERATORS/AX_EQUALS_B/lua/linear_solver'
 

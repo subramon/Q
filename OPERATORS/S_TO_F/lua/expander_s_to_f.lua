@@ -1,4 +1,4 @@
-local ffi     = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local qc      = require 'Q/UTILS/lua/q_core'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local lVector = require 'Q/RUNTIME/lua/lVector'
@@ -44,6 +44,8 @@ return function (a, args)
       first_call = false
       buff = assert(cmem.new(bufsz, out_qtype))
       myvec:no_memcpy(buff) -- hand control of this buff to the vector
+    else
+      myvec:flush_buffer()
     end
     local lb = chunk_size * chunk_idx
     local ub = lb + chunk_size

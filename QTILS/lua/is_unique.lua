@@ -3,7 +3,7 @@ local sort = (require "Q/OPERATORS/SORT/lua/sort").vvsub
 
 local Scalar = require 'libsclr'
 local qc  = require 'Q/UTILS/lua/q_core'
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 
 local T = {} 

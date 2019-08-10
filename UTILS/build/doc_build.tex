@@ -29,7 +29,7 @@ Section~\ref{copy_generated_files}
 \subsection{An important subtlety}
 
 The script \verb+mk_so.lua+ gets called twice, 
-once to build q\_basic and once to build q\_core.
+once to build q\_basic and once to build q\_operators.
 In both cases, it needs to create 2 things, both of which are needed so that we
 can invoke C functionality from LuaJIT.
 \be
@@ -79,10 +79,14 @@ called \verb+q_core.h+
 \subsubsection{struct files}
 \label{struct_files}
 
+Following is deprecated. I thought it was needed. it is not.
+
+{\em 
 This is an important file. If you have {\tt typedef struct} in your .h file, it
 needs to be listed here. This is because we put together a bunch of .h files
 into a single {\tt q\_core.h} file and then cdef that. The order in which the individual {\tt .h} files are concatenated is important.
 
+}
 \subsection{o from c}
 \label{o_from_c}
 
@@ -109,10 +113,11 @@ The master Makefile calls individual Makefiles to do their work. For example,
 take \verb+UTILS/src/Makefile+. It is the responsibility of this Makefile to
 \be
 \item generate all necessary {\tt .lua, .c, .h} files
-\item copy all relevant \verb+.h+ files, whether auto-generated or otherwise
-into HDIR  {\bf QUESTION: TODO } Is this necessary?
-\item copy all relevant \verb+.c+ files, whether auto-generated or otherwise
-into CDIR  {\bf QUESTION: TODO } Is this necessary?
+\item auto-generated {\tt .c} files are copied into the local \verb+gen_src/+ 
+\item auto-generated {\tt .h} files are copied into the local \verb+gen_inc/+ 
+
+\item static {\tt .c} files are copied from {\tt src/} into CDIR
+\item static {\tt .h} files are copied from {\tt inc/} into HDIR
 \item Anything else? \TBC
 \ee
 
@@ -125,16 +130,14 @@ sanity check.
 \item have a target called {\tt all}. This will cause all files needed for
 static compilation to be gernated but will not actually compile them. Hence, an
 error could be discovered later on if the generated files are incorrect.
-\item have a target called {\tt dc}. This will cause only the files needed for
+\item have a target called {\tt all\_for\_dc}. This will cause only the files needed for
 dynamic compilation, {\bf if any}, to be generated.
 
 \item have a target called {\tt clean}. This will cause delete all generated
 files
 \ee
-Currently, we also require the Makefile to copy {\tt .h} and {\tt .c} files to
-HDIR and CDIR. I think this is not needed \TBC
 
-\section{Quick Compiles}
+\section{Quick Compiles for Static Build}
 
 We don't have a very good way of doing just the work that needs to be done. That
 is going to take more time and effort. That said, we have a couple of useful

@@ -1,3 +1,5 @@
+-- TODO P3 Not being used right now
+-- Consider for inclusion later on
 local Logger= {}
 Logger.__index = Logger
 setmetatable(Logger, {

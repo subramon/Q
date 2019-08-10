@@ -102,33 +102,35 @@ vsgt_specialize.lua  : cmp_specialize.tmpl
 vslt_specialize.lua  : cmp_specialize.tmpl
 	lua gen_specializers.lua cmp
 #---------------------
-incr_specialize.lua  : f1opf2_specialize.tmpl
+abs_specialize.lua  : f1opf2_specialize.tmpl
 	lua gen_specializers.lua f1opf2
 decr_specialize.lua  : f1opf2_specialize.tmpl
 	lua gen_specializers.lua f1opf2
-log_specialize.lua  : f1opf2_specialize.tmpl
-	lua gen_specializers.lua f1opf2
-sqrt_specialize.lua  : f1opf2_specialize.tmpl
-	lua gen_specializers.lua f1opf2
-sqr_specialize.lua  : f1opf2_specialize.tmpl
-	lua gen_specializers.lua f1opf2
-pow_specialize.lua  : arith_specialize.tmpl
-	lua gen_specializers.lua arith
 exp_specialize.lua  : f1opf2_specialize.tmpl
+	lua gen_specializers.lua f1opf2
+incr_specialize.lua  : f1opf2_specialize.tmpl
+	lua gen_specializers.lua f1opf2
+log_specialize.lua  : f1opf2_specialize.tmpl
 	lua gen_specializers.lua f1opf2
 logit_specialize.lua  : f1opf2_specialize.tmpl
 	lua gen_specializers.lua f1opf2
 logit2_specialize.lua  : f1opf2_specialize.tmpl
 	lua gen_specializers.lua f1opf2
+pow_specialize.lua  : arith_specialize.tmpl
+	lua gen_specializers.lua arith
+sqr_specialize.lua  : f1opf2_specialize.tmpl
+	lua gen_specializers.lua f1opf2
+sqrt_specialize.lua  : f1opf2_specialize.tmpl
+	lua gen_specializers.lua f1opf2
 
 libf1s1opf2.so : _arith_files  \
+	_cum_cnt_files  \
+	_is_prev_files \
 	_cmp_files \
 	_shift_files \
 	_f1opf2_files \
 	_convert_files \
-	_vnot_files \
-	_cum_cnt_files \
-	_is_prev_files
+	_vnot_files 
 	gcc ../gen_src/*.c ${CFLAGS} ${INCS} -shared -o libf1s1opf2.so
 	test -d ${Q_BUILD_DIR}
 	cp ../gen_src/*.c ${Q_BUILD_DIR}/src/

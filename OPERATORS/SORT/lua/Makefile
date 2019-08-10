@@ -14,7 +14,7 @@ all : _gen_files
 	
 so : libsort.so
 
-dc :
+all_for_dc :
 	echo "nothing to do"
 
 clean :

@@ -1,0 +1,170 @@
+% \usepackage{hyperref}
+\startreport{Creating Input to Aggregator}
+\reportauthor{Ramesh Subramonian}
+
+\section{Introduction}
+
+\subsection{Related Work}
+Relevant prior work can be found in \cite{sarawagi99}
+and \cite{Fagin05}
+\section{Raw Input}
+Following \cite{Fagin05}, we assume that the input is a 
+single relational table where columns are either dimensions or measures. 
+
+Dimensions are
+attributes along which aggregations will be performed e.g., time, age,
+gender, product category. These may be numeric, like time or
+categorical, like gender.
+Example of dimension columns: time of sale, store ID, product category \ldots
+
+Measures are numerical and are the target of aggregations. Examples are sale
+price, number of items, \ldots We might want to know how average sale price
+differs based on Gender. Here, Price and Number are the measures and Gender is
+the dimension.
+
+In our context, Each row refers to customer transaction. It could alternatively
+refer to a document. 
+
+We distinguish between raw columns and derived columns. As an example, see
+Table~\ref{derived_columns}. In this case, 
+\be
+\item the raw attribute TimeOfSale
+has 4 derived attributes, DayOfWeek, Month, Quarter, IsWeekend
+\item the raw attribute StoreId
+has 3 derived attributes, District, State, RegionalDistributionCenter
+\item the raw attribute Age
+2as 3 derived attributes, Generation and AgeBand
+\item 
+\ee
+
+\begin{table}[hbtp]
+\centering
+\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|} \hline \hline
+Raw Column & Derived 1 & Derived 1 & Derived 3 & Column 4 \\ \hline
+\hline
+TimeOfSale & DayOfWeek & Month & Quarter & IsWeekend \\ \hline
+StoreId     & District & State & RegionalDistributionCenter & --- \\ \hline
+Age          & Generation & AgeBand & --- & --- \\ \hline
+\end{tabular}
+\caption{Examples of derived columns}
+\label{derived_columns}
+\end{table}
+%-------------------------------------------------------
+
+Discuss how raw input is converted to input to aggregator. \TBC
+
+\section{Input to Aggregator}
+
+We assume that the input is provided as follows. Let there be 3 raw attributes, \(a,
+b, c\). Assume that 
+\be
+\item \(a\) has 2 derived attributes \(a_1, a_2\)
+\item \(b\) has 3 derived attributes \(b_1, b_2, b_3\)
+\item \(c\) has 4 derived attributes \(c_1, c_2, c_3, c_4\)
+\ee
+We will introduce a dummy derived attribute, \(a_0, b_0, c_0\), for each raw
+attribute. The value of this attribute is always 0.
+The input looks like Table~\ref{example_input_to_agg}.
+
+\begin{table}[hbtp]
+\centering
+\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|} \hline \hline
+{\bf Derived Column} & {\bf Value} \\ \hline \hline
+\(a_0\) & 0 \\ \hline
+\(a_1\) & \(v_{a, 1}\) \\ \hline
+\(a_2\) & \(v_{a, 2}\) \\ \hline
+%
+\(b_0\) & 0 \\ \hline
+\(b_1\) & \(v_{b, 1}\) \\ \hline
+\(b_2\) & \(v_{b, 2}\) \\ \hline
+\(b_3\) & \(v_{b, 3}\) \\ \hline
+%
+\(c_0\) & 0 \\ \hline
+\(c_1\) & \(v_{c, 1}\) \\ \hline
+\(c_2\) & \(v_{c, 2}\) \\ \hline
+\(c_3\) & \(v_{c, 3}\) \\ \hline
+\(c_4\) & \(v_{c, 4}\) \\ \hline
+%
+\end{tabular}
+\caption{Result of processing one row of original input}
+\label{example_input_to_agg}
+\end{table}
+%-------------------------------------------------------
+
+Let \(N(x) \) be the number of derived attributes for \(x\).
+Hence, in our example, \(N(a) = 2+1 = 3\), \(N(b) = 3+1 = 4\), \(N(c) = 4+1 = 5\). 
+This means that consuming one row of the input will cause \(\prod_x N(x)\) writes to the
+aggregator. In our example, this means \((3 \times 4 \times 5) -1 = 59\). 
+Using our current example, the keys generated 
+are shown in Table~\ref{example_keys_to_aggregator}. We haven't shown all rows
+but we hope the reader gets the picture. 
+
+\newpage
+{\small 
+\begin{table}[hbtp]
+\centering
+\begin{tabular}{|c|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|} \hline \hline
+{\bf ID} & {\bf Key} & \(a_0\) & \(a_1\) & \(a_2\) & 
+\(b_0\) & \(b_1\) & \(b_2\) & \(b_3\) &
+\(c_0\) & \(c_1\) & \(c_2\) & \(c_3\) & \(c_4\) \\ \hline \hline
+\input{keys_for_agg}
+\end{tabular}
+\caption{Keys presented to aggregator}
+\label{example_keys_to_aggregator}
+\end{table}
+}
+
+We now explain the \(-1\) in the earlier formula. This is because 
+the first key is a ``match-all'' and hence will be disregarded. 
+Let's take a look at the second key 
+ \((a_0 = \bot, b_0 = \bot, c_1 = v_{c, 1})\). Let ``price'' be a measure
+ attribute. Then, passing this to the aggregator is equivalent to wanting the
+ answer to the SQL statement
+ \begin{verbatim}
+SELECT SUM(price) FROM in_tbl WHERE C = V_C_1
+ \end{verbatim}
+One more example to drive home the point. Consider Row 40 with key 
+\((a_1 = v_{a, 1}, b_3 = v_{b, 3}, c_4 = v_{c, 4})\). The equivalent SQL would be 
+
+ \begin{verbatim}
+SELECT SUM(price) FROM in_tbl WHERE A = V_A_1 AND B = V_B_3 AND C = V_C_4
+ \end{verbatim}
+
+\section{Implementation Details}
+
+We now discuss how to create a simple and efficient implementation in C.
+
+\begin{table}[hbtp]
+\centering
+\begin{tabular}{|l|l|l|} \hline \hline
+{\bf Logical } & {\bf C} \\ \hline 
+Number of raw attributes & {\tt int nR;} \\ \hline
+Number of derived attributes per raw attribute & \verb+ int *nDR; /* [n] */+ \\ \hline
+Number of inputs & {\tt int nX;} \\ \hline
+Table~\ref{example_input_to_agg} & \verb+uint8_t *X; /*[nX] */+ \\ \hline
+Key for aggregator & {\tt int key; } \\ \hline
+\end{tabular}
+\caption{Data Structures for C}
+\label{data_structures_for_C}
+\end{table}
+
+Things to note
+\bi
+\item \(nX = \sum_i \mathrm{nDR}[i]\)
+\item We assume that \(nX \leq 16\). This allows us to encode a derived
+attribute in 4 bits. 
+\item We assume that the maximum number of values that any derived attribute can
+take on is 16. This allows ut to encode the value in 4 bits.
+\item Hence, every row of Table~\ref{example_input_to_agg} can be encoded using
+an 8 bit unsigned integer.
+\item It is relatively simple to relax these constraints. However, one must
+recognize that allowing unconstrained relaxation is meaningless since it really
+doesn't make sense to do a group by when the number of values of the attribute
+is very high e.g., one would never say ``group by time since epoch in seconds''
+\item We assume that \(nR \leq 4\). Once again, this is easy to relax but the
+assumption serves us well for now.
+\ei
+
+
+\bibliographystyle{alpha}
+\bibliography{../../Q_PAPER/ref} 

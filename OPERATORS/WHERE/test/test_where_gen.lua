@@ -1,6 +1,6 @@
 require 'Q/UTILS/lua/strict'
 local qc        = require 'Q/UTILS/lua/q_core'
-local ffi       = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local qconsts   = require 'Q/UTILS/lua/q_consts'
 
 -- Set CHUNK_SIZE to 64

@@ -1,6 +1,6 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local cmem    = require 'libcmem' 
-local ffi     = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local lVector = require 'Q/RUNTIME/lua/lVector'
 local Scalar  = require 'libsclr'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'

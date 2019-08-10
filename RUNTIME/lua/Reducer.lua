@@ -6,7 +6,7 @@ local log = require 'Q/UTILS/lua/log'
 local register_type = require 'Q/UTILS/lua/q_types'
 local Reducer = {}
 Reducer.__index = Reducer
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 
 setmetatable(Reducer, {
   __call = function (cls, ...)

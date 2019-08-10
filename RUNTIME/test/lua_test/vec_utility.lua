@@ -1,4 +1,4 @@
-local ffi     = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local Scalar  = require 'libsclr'

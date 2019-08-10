@@ -10,7 +10,7 @@ local vvmax = (require "Q/QTILS/lua/vvmax").vvmax
 local Scalar = require 'libsclr'
 
 local qc  = require 'Q/UTILS/lua/q_core'
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 
 local T = {} 

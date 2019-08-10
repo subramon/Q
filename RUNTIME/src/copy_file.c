@@ -17,13 +17,13 @@ copy_file(
   return_if_fopen_failed(src_fp, src_file, "rb");
 
   int64_t read_size = 0;
-  int64_t buf_size = 1024; // TODO: Remove this hard-coding, size of intermediate buffer
+  int64_t buf_size = 65536; // TODO P4: Remove this hard-coding, size of intermediate buffer
   buffer = malloc(buf_size); return_if_malloc_failed(buffer);
 
   while ( !feof(src_fp) ) {
     read_size = fread(buffer, 1, buf_size, src_fp);
     if ( read_size > 0 ) {
-      status = buf_to_file(buffer, 1, read_size, dst_file);
+      status = buf_to_file(buffer, 1, "", read_size, dst_file);
       cBYE(status);
     }
   }

@@ -1,3 +1,8 @@
+-- NOT BEING USED
+-- This is a very interesting way of altering the behavior of a library
+-- In this case, we are altering ffi.malloc and ffi.memset 
+-- Useful to have as a reference if we plan on doing things like that in
+-- the future
 local ffi = require "ffi"
 local cmem = require'libcmem'
 ffi.cdef([[

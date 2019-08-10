@@ -1,7 +1,7 @@
 local cmem = require 'libcmem'
 local Scalar = require 'libsclr'
 local lVector = require 'Q/RUNTIME/lua/lVector'
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
 

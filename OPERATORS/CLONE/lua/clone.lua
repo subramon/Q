@@ -2,7 +2,7 @@ local T = {}
 local function clone(x, optargs)
   local Q   = require 'Q/q_export'
   local qc  = require 'Q/UTILS/lua/q_core'
-  local ffi = require 'Q/UTILS/lua/q_ffi'
+  local ffi = require 'ffi'
   assert(x)
   assert(type(x) == "lVector")
   -- We are supporting Q.clone() for non_eov vectors as well. In this case it would be similar like VM cloning

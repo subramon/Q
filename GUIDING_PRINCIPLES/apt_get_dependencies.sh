@@ -13,6 +13,7 @@ sudo apt-get install libssl-dev -y # for QLI
 sudo apt-get install luarocks -y
 sudo apt-get install m4 -y         # for QLI
 sudo apt-get install make -y
+sudo apt-get install valgrind -y # for debugging
 sudo apt-get install unzip -y # for luarocks
 #installing LAPACK stuff
 sudo apt-get install liblapacke-dev liblapack-dev -y

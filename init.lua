@@ -3,16 +3,16 @@
 -- TODO assert(qc["chk_env_var"]())
 -- require 'libsclr' -- Took this out. Hope its okay ;-)
 
-require "Q/OPERATORS/AINB/lua/ainb"
-require "Q/OPERATORS/AINB/lua/get_idx_by_val"
-require "Q/OPERATORS/APPROX/FREQUENT/lua/approx_frequent"
-require "Q/OPERATORS/APPROX/QUANTILE/lua/approx_quantile"
+-- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
+-- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/get_idx_by_val"
+-- TODO P3 require "Q/OPERATORS/APPROX/FREQUENT/lua/approx_frequent"
+-- TODO P3 require "Q/OPERATORS/APPROX/QUANTILE/lua/approx_quantile"
 require "Q/OPERATORS/AX_EQUALS_B/lua/linear_solver"
 
 require "Q/OPERATORS/CAST/lua/cast"
 require "Q/OPERATORS/CAT/lua/cat"
 require "Q/OPERATORS/CLONE/lua/clone"
-require "Q/OPERATORS/COUNT/lua/counts"
+-- TODO P1 NEED TO DO MEM_INITIALIZE require "Q/OPERATORS/COUNT/lua/counts"
 
 require "Q/OPERATORS/DROP_NULLS/lua/drop_nulls"
 

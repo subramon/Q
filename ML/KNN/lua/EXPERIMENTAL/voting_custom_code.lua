@@ -1,7 +1,7 @@
 local Q          = require 'Q'
 local Scalar     = require 'libsclr'
 local cmem       = require 'libcmem'
-local ffi        = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local qconsts    = require 'Q/UTILS/lua/q_consts'
 local chk_params = require 'Q/ML/KNN/lua/chk_params'
 local plfile     = require 'pl.file' -- TEMPORARY

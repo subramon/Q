@@ -1,5 +1,5 @@
 local Q = require 'Q'
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local plfile = require 'pl.file'
 local plpath = require 'pl.path'

@@ -24,6 +24,7 @@ tests.t2 = function()
   local vname = "01234567890123456789012345678901"
   local status = pcall(x.set_name, vname)
   assert(not status)
+  print("Completed test t2")
 end
 --=========================
 tests.t3 = function()
@@ -32,6 +33,7 @@ tests.t3 = function()
   local vname = "abc,def"
   local status = pcall(x.set_name, vname)
   assert(not status)
+  print("Completed test t3")
 end
 --=========================
 tests.t4 = function()
@@ -41,6 +43,7 @@ tests.t4 = function()
   x = lVector( { qtype = "I4", gen = true})
   x:set_name(vname)
   assert(x:get_name() == vname)
+  print("Completed test t4")
 end
 --=========================
 tests.t5 = function()
@@ -50,6 +53,7 @@ tests.t5 = function()
   x = lVector( { qtype = "I4", gen = true, name = vname} )
   print(x:get_name())
   assert(x:get_name() == vname)
+  print("Completed test t5")
 end
 --=========================
 return tests

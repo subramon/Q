@@ -1,4 +1,4 @@
-local ffi = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local g_err = require 'Q/UTILS/lua/error_code'
 local qc = require 'Q/UTILS/lua/q_core'
 local qconsts = require 'Q/UTILS/lua/q_consts'

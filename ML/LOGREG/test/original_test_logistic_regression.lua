@@ -1,7 +1,7 @@
 local Q       = require 'Q'
 local save    = require 'Q/UTILS/lua/save'
 local log_reg = require 'Q/ML/LOGISTIC_REGRESSION/lua/logistic_regression'
-local ffi     = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 
 return function(
   file_name, 

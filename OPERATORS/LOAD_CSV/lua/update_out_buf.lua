@@ -1,7 +1,7 @@
 local err           = require 'Q/UTILS/lua/error_code'
 local qc            = require 'Q/UTILS/lua/q_core'
 local qconsts       = require 'Q/UTILS/lua/q_consts'
-local ffi           = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 
 local function update_out_buf(

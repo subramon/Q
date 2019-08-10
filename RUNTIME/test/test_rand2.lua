@@ -3,7 +3,7 @@ local Vector = require 'libvec' ;
 local Scalar = require 'libsclr' ; 
 local cmem = require 'libcmem' ; 
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local ffi     = require 'Q/UTILS/lua/q_ffi'
+local ffi = require 'ffi'
 local rand_qtype = require 'Q/RUNTIME/test/rand_qtype'
 local rand_boolean = require 'Q/RUNTIME/test/rand_boolean'
 require 'Q/UTILS/lua/strict'

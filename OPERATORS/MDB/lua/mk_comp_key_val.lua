@@ -17,7 +17,7 @@ local function mk_comp_key_val(Tk, in_val_vec)
   local get_nDR     = require 'Q/OPERATORS/MDB/lua/get_nDR'
   local mk_template = require 'Q/OPERATORS/MDB/lua/mk_template'
   local qconsts     = require 'Q/UTILS/lua/q_consts'
-  local ffi         = require 'Q/UTILS/lua/q_ffi'
+ local ffi = require 'ffi' 
   local cmem        = require 'libcmem'
 
   -- START: Basic checks on input 
