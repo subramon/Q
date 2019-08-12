@@ -6,11 +6,12 @@ from keras.models import Sequential
 
 from sklearn.preprocessing import MinMaxScaler
 
+neurons_in_input_layer = 128
 
 def clock_keras_model():
     np.random.seed(42)
 
-    x = np.random.randn(128 * 1024**2).reshape((1024**2, 128))
+    x = np.random.randn(neurons_in_input_layer * 1024**2).reshape((1024**2, neurons_in_input_layer))
     print(x.shape)
     scaler = MinMaxScaler()
     x = scaler.fit_transform(x)
