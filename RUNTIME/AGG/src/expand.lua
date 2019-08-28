@@ -10,6 +10,29 @@ plpath.mkdir(inc_dir)
 assert(plpath.isdir(src_dir))
 assert(plpath.isdir(inc_dir))
 
+local function substitute(
+  subs,
+  infile,
+  outfile,
+  genfiles
+  )
+  assert(type(subs) == "table")
+  assert(plpath.isfile(infile))
+  assert(type(outfile) == "string")
+  if ( genfiles ) then assert(type(genfiles) == "table") end 
+  --=======================================
+  local str = plfile.read(infile)
+  for k, v in pairs(subs) do 
+    str = string.gsub(str, k, v)
+  end
+  --=======================================
+  plfile.write(outfile, str)
+  if ( genfiles ) then
+    genfiles[#genfiles+1] = outfile
+  end 
+  return true
+end
+
 
 --======================================
 local keytypes = { "I4", "I8" }
@@ -24,59 +47,58 @@ for _, key in pairs(keytypes) do
     local keyctype = qconsts.qtypes[key].ctype
     local valctype = qconsts.qtypes[val].ctype
     local kv = key .. "_" .. val
-    local hstr, cstr
+    local subs  = {}
+    local infile 
+    local outfile
     --================================================
-    hstr = plfile.read("q_rhashmap.tmpl.h")
-    hstr = string.gsub(hstr, "__KEYTYPE__", keyctype);
-    hstr = string.gsub(hstr, "__VALTYPE__", valctype);
-    hstr = string.gsub(hstr, "__K__", key);
-    hstr = string.gsub(hstr, "__KV__", kv);
-    local outh = "_q_rhashmap_" .. key .. "_" .. val .. ".h"
-    plfile.write(inc_dir .. outh, hstr)
-    hfiles[#hfiles+1] = '#include "' .. outh .. '"'
+    subs.__KEYTYPE__ = keyctype
+    subs.__VALTYPE__ = valctype
+    subs.__K__       = key
+    subs.__KV__      = kv
+    outfile = inc_dir ..  "_q_rhashmap_" .. key .. "_" .. val .. ".h"
+    infile = "q_rhashmap.tmpl.h"
+    substitute(subs, infile, outfile, hfiles)
     --================================================
-    hstr = plfile.read("q_rhashmap_struct.tmpl.h")
-    hstr = string.gsub(hstr, "__KEYTYPE__", keyctype);
-    hstr = string.gsub(hstr, "__VALTYPE__", valctype);
-    hstr = string.gsub(hstr, "__KV__", kv);
-    local outh = "_q_rhashmap_struct_" .. key .. "_" .. val .. ".h"
-    plfile.write(inc_dir .. outh, hstr)
+    infile = "q_rhashmap_struct.tmpl.h"
+    outfile = "_q_rhashmap_struct_" .. key .. "_" .. val .. ".h"
+    substitute(subs, infile, outfile, hfiles)
     --================================================
-    cstr = plfile.read("q_rhashmap.tmpl.c")
-    cstr = string.gsub(cstr, "__KEYTYPE__", keyctype);
-    cstr = string.gsub(cstr, "__VALTYPE__", valctype);
-    hstr = string.gsub(hstr, "__K__", key);
-    cstr = string.gsub(cstr, "__KV__", kv);
-    local outc = "_q_rhashmap_" .. key .. "_" .. val .. ".c"
-    plfile.write(src_dir .. outc, cstr)
-    cfiles[#cfiles+1] = src_dir .. outc
+    infile  = "q_rhashmap_struct.tmpl.h"
+    outfile = "_q_rhashmap_struct_" .. key .. "_" .. val .. ".h"
+    substitute(subs, infile, outfile, hfiles)
+    --================================================
+    infile = "q_rhashmap.tmpl.c"
+    outfile = "_q_rhashmap_" .. key .. "_" .. val .. ".c"
+    substitute(subs, infile, outfile, cfiles)
     --================================================
   end
 end
 for _, key in pairs(keytypes) do 
     --================================================
     local keyctype = qconsts.qtypes[key].ctype
-    local hstr, cstr
+    local subs  = {}
+    local infile 
+    local outfile
+    subs.__KEYTYPE__ = keyctype
+    subs.__K__       = key
     --================================================
-    cstr = plfile.read("q_rhashmap_mk_hash.tmpl.c")
-    cstr = string.gsub(cstr, "__KEYTYPE__", keyctype);
-    cstr = string.gsub(cstr, "__K__", key);
-    local outc = "_q_rhashmap_mk_hash_" .. key .. ".c"
-    plfile.write(src_dir .. outc, cstr)
-    cfiles[#cfiles+1] = src_dir .. outc
+    infile = "q_rhashmap_mk_hash.tmpl.c"
+    outfile = "_q_rhashmap_mk_hash_" .. key .. ".c"
+    substitute(subs, infile, outfile, cfiles)
     --================================================
-    hstr = plfile.read("q_rhashmap_mk_hash.tmpl.h")
-    hstr = string.gsub(hstr, "__KEYTYPE__", keyctype);
-    hstr = string.gsub(hstr, "__K__", key);
-    local outh = "_q_rhashmap_mk_hash_" .. key .. ".h"
-    plfile.write(inc_dir .. outh, hstr)
-    hfiles[#hfiles+1] = '#include "' .. outh .. '"'
+    infile = "q_rhashmap_mk_hash.tmpl.h"
+    outfile = "_q_rhashmap_mk_hash_" .. key .. ".h"
+    substitute(subs, infile, outfile, hfiles)
     --================================================
 end
 print(table.concat(cfiles, ' '))
-
-hfiles[#hfiles+1] = "\n"
-plfile.write("_files_to_include.h", table.concat(hfiles, '\n'))
+-- print out the .h files into file _files_to_include.h
+local prtbl = {}
+for _, v in ipairs(hfiles) do 
+  prtbl[#prtbl+1] = "#include \"" .. v .. "\""
+end
+prtbl[#prtbl+1] = "\n"
+plfile.write("_files_to_include.h", table.concat(prtbl, '\n'))
 -- The following files are created with a .x suffix. They are not
 -- really stand-alone files but are included
 --======================================

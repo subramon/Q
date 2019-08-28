@@ -27,6 +27,9 @@ local function load_csv(
   local is_hdr, fld_sep = process_opt_args(opt_args)
   --=======================================
   local databuf, nn_databuf, cdata, nn_cdata = malloc_buffers_for_data(M)
+  -- This bak_cdata was a hack around the unexpected GC "bug"
+  -- Now that you know the correct way to handle it, do it
+  -- TODO P1
   local bak_cdata = {}
   for i = 1, #M do 
     bak_cdata[i] = cdata[i-1]
