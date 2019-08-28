@@ -4,11 +4,11 @@ WARN=  -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-proto
 INCS= -I. \
 	-I../..
 
-DBGFLAGS= -g -DDEBUG
 DBGFLAGS= 
+DBGFLAGS= -g -DDEBUG
 
-OPTFLAGS= 
 OPTFLAGS= -O4
+OPTFLAGS= 
 
 LFLAGS= $(DBGFLAGS) $(OPTFLAGS)  $(WARN) 
 CFLAGS= $(LFLAGS)  -fopenmp
@@ -18,18 +18,23 @@ CC=gcc
 CSRCS := $(wildcard *.c)
 COBJS = $(CSRCS:.c=.o)
 
-all : test_rand 
+all : driver1  driver2
 
 
 .c.o : 
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS) $(DBGFLAGS)
 
-test_rand : $(COBJS)  
-	$(CC) $(CFLAGS) $(COBJS) \
-	  -o test_rand  \
+driver1 : driver1.o poisson.o urand.o rdtsc.o
+	$(CC) $(CFLAGS) driver1.o poisson.o urand.o rdtsc.o \
+	  -o driver1  \
+	-lm  -lpthread -ldl  -lgsl -lgslcblas
+
+driver2 : driver2.o poisson.o urand.o rdtsc.o
+	$(CC) $(CFLAGS) driver2.o poisson.o urand.o rdtsc.o \
+	  -o driver2  \
 	-lm  -lpthread -ldl  -lgsl -lgslcblas
 
 clean:
-	rm -r -f test_rand *.o
+	rm -r -f driver1 driver2 *.o
 	echo "ALL CLEAN"
 

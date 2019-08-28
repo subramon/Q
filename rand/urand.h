@@ -1,12 +1,10 @@
 extern int
-urand(
+urand_1(
     int n,
     float **ptr_X
     );
 extern int
-urand2(
+urand_2(
     int n,
-    int lambda,
-    float **ptr_X,
-    int **ptr_Y
+    float **ptr_X
     );
