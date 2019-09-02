@@ -1,0 +1,49 @@
+
+Boris Roussev
+Attachments
+Sat, Aug 31, 3:09 PM (1 day ago)
+to me
+
+Hi Ramesh,
+
+Post summarizing how to implement convolutions.
+
+The attached model is as complicated as they come. The first file defines the structure in json format whereas the second one contains the weights.
+
+I am afraid that you might have to implement not just conv and dense layers, but also other layers such as embeddings and lstms. Also, they might be using a lot of different activation functions. Do they use conv layers such as "squeeze and excite" and "dilation"?
+
+This is how I read the structure in Python:
+
+m = json.loads(open(fn).read())
+m.keys()  # to see the top level keys
+m['config'] . # this is the important one
+m['config']['layers']  # get list of layers
+
+m['config']['layers'][0]  # check the first layer
+# => {u'class_name': u'InputLayer',
+ u'config': {u'batch_input_shape': [None, 140],
+  u'dtype': u'int64',
+  u'name': u'input',
+  u'sparse': False},
+ u'inbound_nodes': [],
+ u'name': u'input'}
+
+Next to get the weights for a layer:
+
+[x['class_name'] for x in model.get_config()['layers']]
+# => ['InputLayer', 'Embedding', 'Conv1D', 'Activation', 'MaxPooling1D', 'Conv1D', 'Activation', 'MaxPooling1D', 'Conv1D', 'Activation', 'Conv1D', 'Activation', 'Conv1D', 'Activation', 'Conv1D', 'Activation', 'MaxPooling1D', 'Flatten', 'Dense', 'Dropout', 'Dense', 'Dropout', 'Dense', 'Dropout', 'Dense']
+
+To get the weights for the first conv layer:
+
+weights = model.layers[2].get_weights()
+len(weights)  # => 2
+weights[0].shape  # => (7, 217, 128)
+weights[1].shape   # => (128, 0)
+
+You have to figure out how to read the model's hdf5 (h5) file in C
+
+Best,
+
+Boris
+
+

@@ -3,8 +3,8 @@ return function(infile, opdir)
 local plpath = require 'pl.path'
 local plstr  = require 'pl.stringx'
 local opdir = plstr.strip(opdir)
-assert(plpath.isfile(infile), "Input file not found")
-assert(plpath.isdir(opdir), "Output directory not found")
+assert(plpath.isfile(infile), "Input file not found" .. infile)
+assert(plpath.isdir(opdir), "Output directory not found" .. opdir)
 io.input(infile)
 code = io.read("*all")
 --=========================================
@@ -20,10 +20,9 @@ z = string.gsub(z, "//START_FUNC_DECL", "")
 z = string.gsub(z, "//STOP_FUNC_DECL", "")
 z = plstr.strip(z)
 --=========================================
-fn = string.gsub(infile, "^.*/", "")
+local fn = string.gsub(infile, "^.*/", "")
 fn = string.gsub(fn, ".c$", "")
 if ( opdir ~= "" ) then 
-  local basefile = string.gsub(infile, "^.*/", "") 
   opfile = opdir .. "/_" .. fn .. ".h"
   io.open(opfile, "w+")
   io.output(opfile)
@@ -31,11 +30,10 @@ end
 if ( incs ) then 
   io.write(incs)
 end
--- io.write("#ifndef __" .. fn .. "\n")
--- io.write("#define __" .. fn .. "\n")
-
+io.write("#ifndef __" .. fn .. "_H\n")
+io.write("#define __" .. fn .. "_H\n")
 io.write('extern ' .. z .. ';\n') 
--- io.write("#endif\n")
+io.write("#endif\n")
 return true
 end
 

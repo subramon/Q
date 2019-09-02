@@ -6,10 +6,8 @@ local function do_replacements(subs)
   local tmpl = subs.tmpl
   local T
   assert(file_exists(tmpl), "File not found " .. tmpl)
-  if ( file_exists(tmpl) ) then 
-    T = assert(dofile(tmpl))
-  end
-  for k,v in pairs(subs) do
+  T = assert(dofile(tmpl))
+  for k, v in pairs(subs) do
      T[k] = v
   end
   return T

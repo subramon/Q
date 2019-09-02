@@ -1,7 +1,0 @@
-int
-urand2(
-    int n,
-    int lambda,
-    float **ptr_X
-    float **ptr_Y
-    )
