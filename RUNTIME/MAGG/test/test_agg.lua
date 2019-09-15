@@ -1,6 +1,4 @@
-lAggregator = require 'Q/RUNTIME/AGG/lua/lAggregator'
-Scalar = require 'libsclr'
-lVector = require 'libvec'
+lAggregator = require 'Q/RUNTIME/MAGG/lua/lAggregator'
 
 local tests = {}
 tests.t1 = function()

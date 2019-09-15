@@ -13,5 +13,5 @@ hmap_destroy(
   if ( ptr_hmap == NULL ) { return; }
   free_if_non_null(ptr_hmap->bkts);
   memset(ptr_hmap, '\0', sizeof(hmap_t));
-  free_if_non_null(ptr_hmap);
+  // free_if_non_null(ptr_hmap);
 }

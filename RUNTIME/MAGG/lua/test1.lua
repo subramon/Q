@@ -1,4 +1,3 @@
-local libgen = require 'libgen'
 local T = {}
 T.keytype = "I8"
 T.cnttype = "I4" -- range needed to count keys
@@ -15,4 +14,5 @@ T.vals = vals
 T.so = "libtest1.so"
 T.lbl = "test1"
 return T
+-- local libgen = require 'libgen'
 -- libgen(T)

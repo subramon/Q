@@ -56,10 +56,18 @@ end
 
 function lAggregator.new(params)
   local agg = setmetatable({}, lAggregator)
-  -- TODO local Aggregator      = require 'libagg'
+  -- We could delay generating .so file and creating aggregator
+  -- until it is actually used but going to do it now.
+  --
+  -- make sure that separate libagg is created for each aggregator
+  -- more specificaally for each unique params
+  -- TODO assert(libgen(params))
+  local Aggregator      = require 'libagg'
   --==========================================
   agg._params = params -- to record how it was created
-  agg._agg = assert(Aggregator.new(keytype, valtype, initial_size))
+  local initial_size = params.initial_size
+  if ( not initial_size ) then initial_size = 0 end
+  agg._agg = assert(Aggregator.new(initial_size))
   local M = {}
   M._num_puts = 0
   M._num_gets = 0
@@ -70,18 +78,6 @@ function lAggregator.new(params)
   --==========================================
   return agg
 end
-
-function lAggregator.instantiate()
-  --==========================================
-  local params = assert(agg._params)
-  assert(libgen(params))
-  local initial_size = params.initial_size
-  -- agg._agg = assert(Aggregator.new(keytype, valtype, initial_size))
-  --==========================================
-  return agg
-end
-
-
 
 local function mk_bufs(p)
   if ( p ) then print("mk_bufs: " .. p) end -- for debugging

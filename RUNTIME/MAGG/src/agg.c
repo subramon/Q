@@ -24,9 +24,12 @@ static int l_agg_new( lua_State *L)
   int status = 0;
   hmap_t *ptr_hmap = NULL;
 
+  int minsize       = luaL_checknumber(L, 1);
+
   ptr_hmap = (hmap_t *)lua_newuserdata(L, sizeof(hmap_t));
   return_if_malloc_failed(ptr_hmap);
   memset(ptr_hmap, '\0', sizeof(AGG_REC_TYPE));
+  status = hmap_instantiate(ptr_hmap, minsize); cBYE(status);
   luaL_getmetatable(L, "Aggregator"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
@@ -40,7 +43,7 @@ BYE:
 static int l_agg_free( lua_State *L) {
   int status = 0;
   hmap_t *ptr_hmap = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
-  status = hmap_delete(ptr_hmap); cBYE(status);
+  hmap_destroy(ptr_hmap); 
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -52,8 +55,6 @@ BYE:
 static int l_agg_instantiate( lua_State *L) {
   int status = 0;
   hmap_t *ptr_hmap = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
-  int minsize       = luaL_checknumber(L, 2);
-  status = hmap_instantiate(ptr_hmap, minsize); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:

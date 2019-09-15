@@ -139,6 +139,7 @@ local function libgen(
   S[#S+1] = "../src/hmap_chk.c"
   S[#S+1] = "../src/hmap_create.c"
   S[#S+1] = "../src/hmap_destroy.c" 
+  S[#S+1] = "../src/hmap_instantiate.c"
   S[#S+1] = "../src/hmap_mk_loc.c"
   S[#S+1] = "../src/hmap_mk_tid.c"
   S[#S+1] = "../src/murmurhash.c"
