@@ -1,12 +1,11 @@
 local ffi = require 'ffi'
 local qconsts         = require 'Q/UTILS/lua/q_consts'
 local cmem            = require 'libcmem'
-local Aggregator      = require 'libagg'
 local register_type   = require 'Q/UTILS/lua/q_types'
 local qc              = require 'Q/UTILS/lua/q_core'
 local get_ptr         = require 'Q/UTILS/lua/get_ptr'
-local parse_params    = require 'Q/RUNTIME/AGG/lua/parse_params'
 local lVector         = require 'Q/RUNTIME/lua/lVector'
+local libgen          = require 'Q/RUNTIME/MAGG/lua/libgen'
 --====================================
 local lAggregator = {}
 lAggregator.__index = lAggregator
@@ -34,6 +33,7 @@ end
 local function clean(x, str)
   if ( str ) then print(str) end 
   if ( x._bufinfo ) then 
+    if ( x._bufinfo._valbuf ) then x._bufinfo._valbuf:delete() end
     if ( x._bufinfo._hshbuf ) then x._bufinfo._hshbuf:delete() end
     if ( x._bufinfo._locbuf  ) then x._bufinfo._locbuf:delete() end
     if ( x._bufinfo._tidbuf  ) then x._bufinfo._tidbuf:delete() end
@@ -56,7 +56,7 @@ end
 
 function lAggregator.new(params)
   local agg = setmetatable({}, lAggregator)
-  local initial_size, keytype, valtype = parse_params(params)
+  -- TODO local Aggregator      = require 'libagg'
   --==========================================
   agg._params = params -- to record how it was created
   agg._agg = assert(Aggregator.new(keytype, valtype, initial_size))
@@ -71,18 +71,33 @@ function lAggregator.new(params)
   return agg
 end
 
+function lAggregator.instantiate()
+  --==========================================
+  local params = assert(agg._params)
+  assert(libgen(params))
+  local initial_size = params.initial_size
+  -- agg._agg = assert(Aggregator.new(keytype, valtype, initial_size))
+  --==========================================
+  return agg
+end
+
+
 
 local function mk_bufs(p)
   if ( p ) then print("mk_bufs: " .. p) end -- for debugging
-  -- Note currently hash is uint32_t
-  local hashwidth = ffi.sizeof("uint32_t")
+  local valwidth = ffi.sizeof("val_t") -- TODO prefix label
+  -- Note currently hsh is uint32_t
+  local hshwidth = ffi.sizeof("uint32_t")
   -- Note currently number of elements is uint32_t
   local locwidth  = ffi.sizeof("uint32_t")
   local tidwidth  = ffi.sizeof("uint8_t")
   local isfwidth  = ffi.sizeof("uint8_t")
   local bufinfo = {}
-  -- hasbuf for hash of key
-  bufinfo._hshbuf = assert(cmem.new(qconsts.chunk_size * hashwidth, 
+  -- valbuf for composite values
+  bufinfo._valbuf = assert(cmem.new(qconsts.chunk_size * valwidth,
+    "", "valbuf"))
+  -- hasbuf for hsh of key
+  bufinfo._hshbuf = assert(cmem.new(qconsts.chunk_size * hshwidth, 
     "I4", "hshbuf"))
   -- locbuf for initial probe point
   bufinfo._locbuf  = assert(cmem.new(qconsts.chunk_size * locwidth,  
@@ -174,6 +189,7 @@ function lAggregator:consume()
   kchunk, 
   self._update_type,
   self._bufinfo._hshbuf,
+  self._bufinfo._valbuf,
   self._bufinfo._locbuf,
   self._bufinfo._tidbuf,
   self._bufinfo._num_threads,
@@ -210,12 +226,28 @@ function lAggregator:check()
 end 
 
 
-function lAggregator:set_consume(keyvec, valvec, update_type)
+function lAggregator:set_consume(keyvec, valvecs, update_type)
   if ( qconsts.debug ) then self:check() end
   if ( not is_clean(self) ) then return false end 
   self._update_type = set_update_type(update_type)
   assert(type(keyvec) == "lVector")
-  assert(type(valvec) == "lVector")
+  
+  if ( type(valvecs) == "lVector") then
+    valvecs = { valvecs }
+  end
+  if ( type(valvecs) == "table") then
+    local cnt = 0
+    -- compare type of v against how Aggregator was created
+    for k, v in ipairs(valvecs) do 
+      assert(type(v) == "lVector")
+      local x = assert(self._params[k])
+      assert(x.valtype == v:fldtype())
+      cnt = cnt + 1 
+    end
+    assert(cnt == #self._params)
+  else
+    assert(nil, "invalid values")
+  end
 
   local vecinfo = {}
 
@@ -231,7 +263,7 @@ function lAggregator:set_consume(keyvec, valvec, update_type)
   vecinfo._keyvec = keyvec
   vecinfo._valvec = valvec
   vecinfo._chunk_idx = 0
-  -- Allocate space for hash buffer and location buffer 
+  -- Allocate space for buffers
   self._vecinfo = vecinfo
   self._bufinfo = mk_bufs()
   return true
@@ -284,24 +316,7 @@ function lAggregator:set_produce(in_keyvec)
     if key_len > 0 then
       local chunk1 = ffi.cast(key_cast_as,  get_ptr(key_chunk))
       local start_time = qc.RDTSC()
-        --[[
-  extern int 
-  q_rhashmap_getn(
-      q_rhashmap_t *hmap, 
-      KEYTYPE  *keys, // [nkeys] 
-      uint32_t *hashes, // [nkeys] 
-      uint32_t *locs, // [nkeys] 
-      VALTYPE  *vals, // [nkeys] 
-      uint32_t nkeys
-      );
-  --]]
-      Aggregator.getn(
-        self._agg,
-        key_chunk,
-        self._bufinfo._hshbuf,
-        self._bufinfo._locbuf,
-        val_buf,
-        key_len)
+      -- TODO Here is the call 
     else
       val_buf = nil
     end

@@ -33,9 +33,7 @@ end
 
 
 local function libgen(
-  T,
-  libname, -- name of .so file that will be generated
-  lbl -- to distinguish between different hmap_xxx calls for different T
+  T
   )
   local subs = {}
   if ( not plpath.isdir(srcdir) ) then plpath.mkdir(srcdir) end
@@ -45,6 +43,13 @@ local function libgen(
   local keytype = assert(T.keytype)
   assert( ( keytype == "I4" ) or ( keytype == "I8" ) ) 
   subs.ckeytype = "u" .. assert(qconsts.qtypes[keytype].ctype)
+  --=====================================
+  -- libname, -- name of .so file that will be generated
+  local libname = assert(T.so) 
+  assert(type(libname) == "string")
+  -- lbl -- to distinguish between different hmap_xxx calls for different T
+  local lbl = assert(T.lbl) 
+  assert(type(lbl) == "string")
   --=====================================
   local vals = assert(T.vals)
   assert(type(vals) == "table")
@@ -60,7 +65,8 @@ local function libgen(
   --=====================================
   local aggstype  = {}
   local valstype = {}
-  for i, v in pairs(vals) do
+  local cnt = 0
+  for i, v in ipairs(vals) do
     local valtype  = assert(v.valtype)
     assert( ( valtype == "I1" ) or ( valtype == "I2" )  or
             ( valtype == "I4" ) or ( valtype == "I8" )  or
@@ -70,7 +76,9 @@ local function libgen(
     valstype[i]   = valtype
     aggstype[i]   = aggtype
     --====================
+    cnt = cnt + 1
   end
+  assert(cnt > 0)
   subs.code_for_update  = "XXXXXX" 
   subs.code_for_promote = "YYYYYY" 
   -- START generating code
@@ -115,7 +123,6 @@ local function libgen(
   subs.val_cmp_spec = table.concat(X, "\n");
   --=============================
   gen_src(subs, "hmap_chk_no_holes")
-  gen_src(subs, "hmap_create")
   gen_src(subs, "hmap_del")
   gen_src(subs, "hmap_eq")
   gen_src(subs, "hmap_get")
@@ -130,6 +137,7 @@ local function libgen(
   local S = {}
   S[#S+1] = "../src/calc_new_size.c"
   S[#S+1] = "../src/hmap_chk.c"
+  S[#S+1] = "../src/hmap_create.c"
   S[#S+1] = "../src/hmap_destroy.c" 
   S[#S+1] = "../src/hmap_mk_loc.c"
   S[#S+1] = "../src/hmap_mk_tid.c"
@@ -145,7 +153,6 @@ local function libgen(
     X[#X+1] = S[k]
   end
   X[#X+1] = srcdir .. "_hmap_chk_no_holes.c" 
-  X[#X+1] = srcdir .. "_hmap_create.c" 
   X[#X+1] = srcdir .. "_hmap_del.c" 
   X[#X+1] = srcdir .. "_hmap_eq.c" 
   X[#X+1] = srcdir .. "_hmap_get.c" 

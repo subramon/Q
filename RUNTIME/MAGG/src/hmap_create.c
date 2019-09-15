@@ -1,24 +1,15 @@
-return require 'Q/UTILS/lua/code_gen' { 
-declaration = [[
+//START_INCLUDES
 #include "hmap_utils.h"
 #include "hmap_common.h"
 #include "_hmap_types.h"
+//STOP_INCLUDES
 
-extern hmap_t *
-${fn}(
-      size_t minsize
-        );
-
-]],
-definition = [[
-
-#include "_${fn}.h"
-/*
- * hmap_create: construct a new hash table.
- * Number of buckets is larger of input value and pre-defined value
- */
+#include "_hmap_create.h"
+// hmap_create: construct a new hash table.
+// Number of buckets is larger of input value and pre-defined value
+//START_FUNC_DECL
 hmap_t *
-${fn}(
+hmap_create(
       size_t minsize
         )
 {
@@ -29,7 +20,6 @@ ${fn}(
   return_if_malloc_failed(ptr_hmap);
 
   ptr_hmap->size = ptr_hmap->minsize = MAX(minsize, HASH_INIT_SIZE);
-
 
   ptr_hmap->bkts = calloc(ptr_hmap->size, sizeof(bkt_t)); 
   return_if_malloc_failed(ptr_hmap->bkts);
@@ -48,6 +38,3 @@ BYE:
     return ptr_hmap;
   }
 }
-]]
-}
-
