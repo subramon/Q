@@ -15,8 +15,9 @@
 
 #include "hmap_common.h"
 #include "_hmap_types.h"
-#include "_hmap_put.h"
+#include "_hmap_del.h"
 #include "_hmap_instantiate.h"
+#include "_hmap_put.h"
 
 int luaopen_libagg (lua_State *L);
 //----------------------------------------
@@ -168,6 +169,116 @@ BYE:
   return 2;
 }
 //-----------------------
+static int l_agg_get1( lua_State *L) 
+{
+  int status = 0;
+  bool is_found; 
+  val_t oldval;
+  keytype key;
+  cnttype cnt;
+  uint64_t num_probes = 0;
+
+  memset(&oldval, '\0', sizeof(val_t));
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  hmap_t *ptr_hmap = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
+  SCLR_REC_TYPE *ptr_key = luaL_checkudata(L, 2, "Scalar"); 
+  key = ptr_key->cdata.valI8; // AUTO GENERATE TODO 
+
+  status = hmap_get(ptr_hmap, key, &oldval, &cnt, &is_found, &num_probes);
+
+  lua_pushboolean(L, is_found);
+  if ( !is_found ) { return 1; }
+  // return oldval as table of scalars
+  lua_pushnumber(L, cnt);
+  lua_newtable(L);
+  for ( int i = 1; i <= HMAP_NUM_VALS; i++ ) { 
+    lua_pushnumber(L, i);
+    SCLR_REC_TYPE *ptr_val_sclr = lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
+    switch ( i )  {
+      // START AUTO GENERATE TODO 
+      case 1 : 
+        ptr_val_sclr->cdata.valF4 = oldval.val_1; 
+        strcpy(ptr_val_sclr->field_type, "F4");
+        break;
+      case 2 : 
+        ptr_val_sclr->cdata.valI1 = oldval.val_2; 
+        strcpy(ptr_val_sclr->field_type, "I1");
+        break;
+      case 3 : 
+        ptr_val_sclr->cdata.valI2 = oldval.val_3; 
+        strcpy(ptr_val_sclr->field_type, "I2");
+        break;
+      case 4 : 
+        ptr_val_sclr->cdata.valI4 = oldval.val_4; 
+        strcpy(ptr_val_sclr->field_type, "I4");
+        break;
+      // STOP AUTO GENERATE TODO 
+    }
+    luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
+    lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+    lua_settable(L, -3);
+  }
+  return 3;  
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------
+static int l_agg_del1( lua_State *L) 
+{
+  int status = 0;
+  bool is_found; 
+  val_t oldval;
+  keytype key;
+  uint64_t num_probes = 0;
+
+  memset(&oldval, '\0', sizeof(val_t));
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  hmap_t *ptr_hmap = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
+  SCLR_REC_TYPE *ptr_key = luaL_checkudata(L, 2, "Scalar"); 
+  key = ptr_key->cdata.valI8; // AUTO GENERATE TODO 
+
+  status = hmap_del(ptr_hmap, key, &is_found, &oldval, &num_probes);
+
+  lua_pushboolean(L, is_found);
+  if ( !is_found ) { return 1; }
+  // return oldval as table of scalars
+  lua_newtable(L);
+  for ( int i = 1; i <= HMAP_NUM_VALS; i++ ) { 
+    lua_pushnumber(L, i);
+    SCLR_REC_TYPE *ptr_val_sclr = lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
+    switch ( i )  {
+      // START AUTO GENERATE TODO 
+      case 1 : 
+        ptr_val_sclr->cdata.valF4 = oldval.val_1; 
+        strcpy(ptr_val_sclr->field_type, "F4");
+        break;
+      case 2 : 
+        ptr_val_sclr->cdata.valI1 = oldval.val_2; 
+        strcpy(ptr_val_sclr->field_type, "I1");
+        break;
+      case 3 : 
+        ptr_val_sclr->cdata.valI2 = oldval.val_3; 
+        strcpy(ptr_val_sclr->field_type, "I2");
+        break;
+      case 4 : 
+        ptr_val_sclr->cdata.valI4 = oldval.val_4; 
+        strcpy(ptr_val_sclr->field_type, "I4");
+        break;
+      // STOP AUTO GENERATE TODO 
+    }
+    luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
+    lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+    lua_settable(L, -3);
+  }
+  return 2;  
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------
 static int l_agg_free( lua_State *L) {
   int status = 0;
   hmap_t *ptr_hmap = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
@@ -208,7 +319,9 @@ BYE:
 static const struct luaL_Reg aggregator_methods[] = {
     { "__gc",         l_agg_free   },
     { "check",        l_agg_check },
+    { "del1",         l_agg_del1 },
     { "delete",       l_agg_free   },
+    { "get1",         l_agg_get1 },
     { "instantiate",  l_agg_instantiate },
     { "meta",         l_agg_meta },
     { "put1",         l_agg_put1 },
@@ -218,7 +331,9 @@ static const struct luaL_Reg aggregator_methods[] = {
 static const struct luaL_Reg aggregator_functions[] = {
     { "new",          l_agg_new },
     { "check",        l_agg_check },
+    { "del1",         l_agg_del1 },
     { "delete",       l_agg_free   },
+    { "get1",         l_agg_get1 },
     { "instantiate",  l_agg_instantiate },
     { "meta",         l_agg_meta },
     { "put1",         l_agg_put1 },

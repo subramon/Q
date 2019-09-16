@@ -196,11 +196,48 @@ function lAggregator:get1(key)
   if ( is_found ) then return val else return nil end 
 end
 
-function lAggregator:del1(key)
-  assert(type(key) == "Scalar")
-  local val, is_found = Aggregator.del1(self._agg, key, self._meta._valtype)
+function lAggregator:get1(key)
+  assert(key)
+  if ( type(key) == "number" ) then 
+    key = to_scalar(key, self._params.keytype)
+  end
+  local is_found, cnt, val = Aggregator.get1(self._agg, key)
+  if ( qconsts.debug ) then 
+    assert(type(is_found) == "boolean")
+    if ( is_found ) then 
+      assert(type(cnt) == "number")
+      assert(type(val) == "table")
+      for i, v in pairs(val) do 
+        assert(v:fldtype() == self._params.vals[i].valtype)
+      end
+    else
+      assert(type(val) == "nil")
+      assert(type(cnt) == "nil")
+    end
+  end
   self._meta._num_dels = self._meta._num_dels + 1
-return val, is_found
+return is_found, cnt, val
+end
+
+function lAggregator:del1(key)
+  assert(key)
+  if ( type(key) == "number" ) then 
+    key = to_scalar(key, self._params.keytype)
+  end
+  local is_found, val = Aggregator.del1(self._agg, key)
+  if ( qconsts.debug ) then 
+    assert(type(is_found) == "boolean")
+    if ( is_found ) then 
+      assert(type(val) == "table")
+      for i, v in pairs(val) do 
+        assert(v:fldtype() == self._params.vals[i].valtype)
+      end
+    else
+      assert(type(val) == "nil")
+    end
+  end
+  self._meta._num_dels = self._meta._num_dels + 1
+return is_found, val
 end
 
 
