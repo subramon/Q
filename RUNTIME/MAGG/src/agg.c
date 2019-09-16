@@ -24,7 +24,24 @@ static int l_agg_new( lua_State *L)
   int status = 0;
   hmap_t *ptr_hmap = NULL;
 
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   int minsize       = luaL_checknumber(L, 1);
+  // undefined symbol : luaL_checktable(L, 2); 
+  // The table is here just to improve my understanding
+  if ( !lua_istable(L, 2) ) { go_BYE(-1); }
+  luaL_checktype(L, 2, LUA_TTABLE ); // another way of checking
+
+  int tbl_sz = luaL_getn(L, 2);  /* get size of table */
+  if ( tbl_sz != 2 ) { go_BYE(-1); }
+
+  for ( int i = 1; i <= tbl_sz; i++ ) { 
+    lua_rawgeti(L, 2, i); 
+    int n = lua_gettop(L); if ( n != (num_args+1) ) { go_BYE(-1); }
+    const char *x = luaL_checkstring(L, 2+1);
+    if ( ( x == NULL ) || ( *x == '\0' ) ) { go_BYE(-1); }
+    lua_pop(L, 1);
+    n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
+  }
 
   ptr_hmap = (hmap_t *)lua_newuserdata(L, sizeof(hmap_t));
   return_if_malloc_failed(ptr_hmap);

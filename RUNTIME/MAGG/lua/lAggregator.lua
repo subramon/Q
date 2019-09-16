@@ -67,7 +67,9 @@ function lAggregator.new(params)
   agg._params = params -- to record how it was created
   local initial_size = params.initial_size
   if ( not initial_size ) then initial_size = 0 end
-  agg._agg = assert(Aggregator.new(initial_size))
+  local tbl = { "abc", "def" }
+  for k, v in ipairs(tbl) do print(k, v) end 
+  agg._agg = assert(Aggregator.new(initial_size, tbl))
   local M = {}
   M._num_puts = 0
   M._num_gets = 0

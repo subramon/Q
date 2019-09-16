@@ -14,8 +14,9 @@ all: libagg.so
 
 clean:
 	rm -f *.so *.o _*
+	rm -f ${Q_ROOT}/lib/libagg.so
 		
-libagg.so:  
+libagg.so: ./*.c ../xgen_src/*.c 
 	gcc ${QC_FLAGS} ${INCS} \
 	../xgen_src/*.c \
 	./*.c \
