@@ -3,9 +3,11 @@ local qconsts         = require 'Q/UTILS/lua/q_consts'
 local cmem            = require 'libcmem'
 local register_type   = require 'Q/UTILS/lua/q_types'
 local qc              = require 'Q/UTILS/lua/q_core'
+local to_scalar       = require 'Q/UTILS/lua/to_scalar'
 local get_ptr         = require 'Q/UTILS/lua/get_ptr'
 local lVector         = require 'Q/RUNTIME/lua/lVector'
 local libgen          = require 'Q/RUNTIME/MAGG/lua/libgen'
+  local Aggregator      = require 'libagg' -- TODO THIS IS A HACK
 --====================================
 local lAggregator = {}
 lAggregator.__index = lAggregator
@@ -54,6 +56,16 @@ function lAggregator:is_clean() -- for debugging
   return rslt
 end 
 
+function lAggregator:instantiate()
+  assert ( self._is_instantiated == false)
+  local initial_size = self._params.initial_size
+  if ( not initial_size ) then initial_size = 0 end
+  assert(Aggregator.instantiate(self._agg, initial_size))
+  -- TODO assert(libgen(params))
+
+  self._is_instantiated = true
+  return 
+end
 function lAggregator.new(params)
   local agg = setmetatable({}, lAggregator)
   -- We could delay generating .so file and creating aggregator
@@ -65,14 +77,12 @@ function lAggregator.new(params)
   local Aggregator      = require 'libagg'
   --==========================================
   agg._params = params -- to record how it was created
-  local initial_size = params.initial_size
-  if ( not initial_size ) then initial_size = 0 end
   -- added tbl as a sample code to verify my understanding
   local tbl = { }
   local test_tbl = {}
   local num_vals = assert(#params.vals)
   for i = 1, num_vals do tbl[#tbl+1] = "string_" .. i end 
-  agg._agg, test_tbl = assert(Aggregator.new(initial_size, tbl))
+  agg._agg, test_tbl = assert(Aggregator.new(tbl))
   for i = 1, num_vals do assert(test_tbl[i] == tbl[i]) end 
   local M = {}
   M._num_puts = 0
@@ -80,6 +90,8 @@ function lAggregator.new(params)
   M._num_dels = 0
   M._chunk_idx = 0
   agg._meta = M
+  agg._is_instantiated = false
+  agg._is_dead = false
   if ( qconsts.debug ) then agg:check() end
   --==========================================
   return agg
@@ -125,24 +137,55 @@ function lAggregator.restore()
   -- TODO P2
 end
 
-function lAggregator:put1(key, val, update_type)
-  assert(type(key) == "Scalar")
-  assert(type(val) == "Scalar")
-  self._update_type = set_update_type(update_type)
-  local oldval = Aggregator.put1(self._agg, key, val, self._update_type)
+function lAggregator:put1(key, vals)
+  -- TODO if ( self._instantiated == false ) then self:instantiate() end
+  --==============
+  local invaltype 
+  assert(key)
+  assert(vals)
+  if ( type(key) == "number" ) then 
+    key = to_scalar(key, self._params.keytype)
+  end
+  if ( type(vals) == "number" ) then 
+    vals = to_scalar(vals, self._params.keytype)
+  end
+  if ( type(vals) == "Scalar" ) then 
+    vals = { vals }
+    invaltype = "Scalar"
+  else
+    invaltype = "table"
+  end
+  assert(type(vals) == "table")
+  local cnt = 0
+  for i, v in ipairs(vals) do 
+    if ( type(v) == "number" ) then 
+      vals[i] = assert(to_scalar(v, self._params.vals[i].valtype))
+    end
+    assert(type(vals[i]) == "Scalar" )
+  end
+  --==============
+  local oldvals, updated = assert(Aggregator.put1(self._agg, key, vals))
+  if ( qconsts.debug ) then 
+    assert(type(updated) == "boolean" )
+    assert(type(oldvals) == "table" )
+    for  i, v in ipairs(oldvals) do 
+      assert(type(v) == "Scalar" ) -- TODO THIS MUST BE A SCALAR
+      -- print(v)
+    end
+  end
+  if ( invaltype == "Scalar" ) then 
+    oldvals = oldvals[1]
+  end 
   self._meta._num_puts = self._meta._num_puts + 1
-  return oldval
+  return oldvals, updated
 end
 
-function lAggregator:get_meta()
-  local nitems, size =  Aggregator.get_meta(self._agg)
-  local T = {}
-  T.nitems = nitems
-  T.size   = size
-  T.num_puts   = self._num_puts
-  T.num_gets   = self._num_gets
-  T.num_dels   = self._num_dels
-  return T, self._meta
+function lAggregator:meta()
+  local M = Aggregator.meta(self._agg)
+  for k, v in pairs(self._meta) do 
+    M[k] = v
+  end
+  return M
 end
 
 function lAggregator:get1(key)
@@ -189,7 +232,6 @@ function lAggregator:consume()
   assert(Aggregator.putn(
   self._agg,
   kchunk, 
-  self._update_type,
   self._bufinfo._hshbuf,
   self._bufinfo._valbuf,
   self._bufinfo._locbuf,
@@ -228,10 +270,9 @@ function lAggregator:check()
 end 
 
 
-function lAggregator:set_consume(keyvec, valvecs, update_type)
+function lAggregator:set_consume(keyvec, valvecs)
   if ( qconsts.debug ) then self:check() end
   if ( not is_clean(self) ) then return false end 
-  self._update_type = set_update_type(update_type)
   assert(type(keyvec) == "lVector")
   
   if ( type(valvecs) == "lVector") then
@@ -271,7 +312,7 @@ function lAggregator:set_consume(keyvec, valvecs, update_type)
   return true
 end
 
-function lAggregator:get_in(key, update_type)
+function lAggregator:get_in(key)
   if ( qconsts.debug ) then self:check() end
   if (type(key) == "lVector") then 
     return get_in_vec(self, val)

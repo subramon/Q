@@ -22,7 +22,7 @@ local qconsts = {}
   qconsts.LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")
 
   qconsts.chunk_size = 128 * 1024 -- make this power of 2 and >= 1024
-  qconsts.debug = false -- set to TRUE only if you want debugging
+  qconsts.debug = true -- set to TRUE only if you want debugging
   qconsts.is_memo = true -- Vector code will refer memo value from this place
   qconsts.qc_trace = false -- set to FALSE if performance logging of qc is to be turned off
   local max_width = {}
