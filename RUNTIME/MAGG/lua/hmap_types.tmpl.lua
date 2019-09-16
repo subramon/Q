@@ -6,6 +6,8 @@ return  require 'Q/UTILS/lua/code_gen' {
 typedef ${ckeytype} keytype;
 typedef ${ccnttype} cnttype;
 
+#define HMAP_NUM_VALS ${num_vals}
+
 typedef struct _val_t { 
   ${spec_for_vals}
 } val_t;

@@ -32,13 +32,15 @@ static int l_agg_new( lua_State *L)
   luaL_checktype(L, 2, LUA_TTABLE ); // another way of checking
 
   int tbl_sz = luaL_getn(L, 2);  /* get size of table */
-  if ( tbl_sz != 2 ) { go_BYE(-1); }
+  if ( tbl_sz != HMAP_NUM_VALS ) { go_BYE(-1); }
 
   for ( int i = 1; i <= tbl_sz; i++ ) { 
+    char buf[16];
     lua_rawgeti(L, 2, i); 
     int n = lua_gettop(L); if ( n != (num_args+1) ) { go_BYE(-1); }
     const char *x = luaL_checkstring(L, 2+1);
-    if ( ( x == NULL ) || ( *x == '\0' ) ) { go_BYE(-1); }
+    sprintf(buf, "string_%d", i);
+    if ( ( x == NULL ) || ( strcmp(x, buf) != 0 ) ) { go_BYE(-1); }
     lua_pop(L, 1);
     n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
   }
@@ -50,7 +52,16 @@ static int l_agg_new( lua_State *L)
   luaL_getmetatable(L, "Aggregator"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  return 1; 
+  // Now return table of strings 
+  lua_newtable(L);
+  for ( int i = 1; i <= tbl_sz; i++ ) { 
+    char buf[16];
+    sprintf(buf, "string_%d", i);
+    lua_pushnumber(L, i);
+    lua_pushstring(L, buf);
+    lua_settable(L, -3);
+  }
+  return 1+1;  // 1 for Aggregator, 1 for table of strings
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);

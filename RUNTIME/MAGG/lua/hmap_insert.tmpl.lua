@@ -87,7 +87,7 @@ ${fn}(
     }
     else {
       bkts[probe_loc] = entry;
-      ptr_hmap->bkts[probe_loc].cnt = 0;
+      ptr_hmap->bkts[probe_loc].cnt = 1; // first occurrence
       ptr_hmap->nitems++;
       break;
     }

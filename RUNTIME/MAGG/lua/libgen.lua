@@ -25,6 +25,7 @@ local function create_dot_o(
   assert(type(X) == "table")
   for k, v in pairs(X) do 
     local command = "gcc -c "  .. qconsts.QC_FLAGS .. incs .. v
+    print(command)
     status = os.execute(command)
     if ( status ~= 0 ) then print(command) end 
     assert(status == 0)
@@ -47,15 +48,13 @@ local function libgen(
   -- libname, -- name of .so file that will be generated
   local libname = assert(T.so) 
   assert(type(libname) == "string")
-  -- lbl -- to distinguish between different hmap_xxx calls for different T
-  local lbl = assert(T.lbl) 
-  assert(type(lbl) == "string")
   --=====================================
   local vals = assert(T.vals)
   assert(type(vals) == "table")
   local num_vals = #vals
   -- 4 is just an arbitrary but hopefully reasonable limit
   assert( ( num_vals >= 1 ) and ( num_vals <= 4 ) ) 
+  subs.num_vals = num_vals
   --=====================================
   local cnttype = "I4"
   if ( T.cnttype ) then 

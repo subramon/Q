@@ -12,6 +12,7 @@ hmap_instantiate(
     hmap_t *ptr_hmap,
     size_t minsize
     )
+//STOP_FUNC_DECL
 {
   int status = 0;
 
