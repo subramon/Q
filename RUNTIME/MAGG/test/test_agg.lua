@@ -40,11 +40,27 @@ tests.t1 = function(n, niters)
     A:unbufferize()
   end
   --== testing setting/unsetting produce
-  local x = lVector( { qtype = "I8", gen = true, has_nulls = false})
+  local k = lVector( { qtype = "I8", gen = true, has_nulls = false})
   for i = 1, niters do  -- set to large number for stress testing
-    A:set_produce(x)
+    A:set_produce(k)
     A:unset_produce()
   end
+  --== testing setting consume
+  local v1 = lVector( { qtype = "F4", gen = true, has_nulls = false})
+  local v2 = lVector( { qtype = "I1", gen = true, has_nulls = false})
+  local v3 = lVector( { qtype = "I2", gen = true, has_nulls = false})
+  local v4 = lVector( { qtype = "I4", gen = true, has_nulls = false})
+  local y
+  A:set_consume(k, { v1, v2, v3, v4})
+  y = A:is_dead()
+  assert(y == false)
+  y = A:is_instantiated()
+  assert(y == true)
+  y = A:is_bufferized()
+  assert(y == false)
+  status, msg = pcall(A.set_consume, A, k, { v1, v2, v3, v4})
+  assert( not status)
+  print(msg)
   --======================
   print("Success on test t1")
 end

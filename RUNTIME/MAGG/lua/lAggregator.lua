@@ -198,6 +198,18 @@ function lAggregator:put1(key, vals)
   return oldvals, updated
 end
 
+function lAggregator:is_bufferized()
+  return self._is_bufferized
+end
+
+function lAggregator:is_instantiated()
+  return self._is_instantiated
+end
+
+function lAggregator:is_dead()
+  return self._is_dead
+end
+
 function lAggregator:meta()
   local M = Aggregator.meta(self._agg) -- stuff stored by C
   for k, v in pairs(self._meta) do M[k] = v end
@@ -298,34 +310,24 @@ function lAggregator:delete()
 end
 
 function lAggregator:check()
-  -- TODO P3 Can add a lot more tests here
-  if ( self._keyvec ) then 
-    assert(good_key_types(k:fldtype()))
-    assert(good_val_types(v:fldtype()))
-    assert(self._valvec)
-    assert(self._chunk_idx)
-
-    assert(type(self._keyvec) == "lVector")
-    assert(type(self._valvec) == "lVector")
-    assert(type(self._chunk_idx) == "number")
-
-    assert(self._chunk_idx > 0)
-  else
-    assert(not self._valvec)
-    assert(not self._chunk_idx)
-  end
+  -- TODO 
   return true
 end 
 
 function lAggregator:set_consume(keyvec, valvecs)
-  assert ( self._is_dead == false ) 
+  assert ( self._is_dead == false, "aggregator is dead")
   if ( self._is_instantiated == false ) then self:instantiate() end
   if ( qconsts.debug ) then self:check() end
 
-  assert ( not self._keyvec ) -- no key vector set
+  -- check the key vector 
+  assert ( not self._keyvec )  -- no key vector set
+  assert ( not self._valvecs ) -- no val vectors set
   assert(type(keyvec) == "lVector")
   self._keyvec = keyvec
+  assert(keyvec:has_nulls() == false) -- currently no support for nulls
+  assert(keyvec:fldtype() == self._params.keytype)
   
+  -- check the value vectors
   if ( type(valvecs) == "lVector") then
     valvecs = { valvecs }
   end
@@ -334,8 +336,8 @@ function lAggregator:set_consume(keyvec, valvecs)
     -- compare type of v against how Aggregator was created
     for k, v in ipairs(valvecs) do 
       assert(type(v) == "lVector")
-      local x = assert(self._params[k])
-      assert(x.valtype == v:fldtype())
+      assert(v:has_nulls() == false) -- currently no support for nulls
+      assert(self._params.vals[k].valtype == v:fldtype())
       cnt = cnt + 1 
     end
     assert(cnt == #self._params.vals)
@@ -343,23 +345,7 @@ function lAggregator:set_consume(keyvec, valvecs)
     assert(nil, "invalid values")
   end
 
-  local vecinfo = {}
-
-  local ktype = keyvec:fldtype()
-  assert(ktype == self._meta._keytype)
-
-  local vtype = valvec:fldtype()
-  assert(vtype == self._meta._valtype)
-
-  assert(not keyvec:has_nulls()) -- currently no support for nulls
-  assert(not valvec:has_nulls()) -- currently no support for nulls
-
-  vecinfo._keyvec = keyvec
-  vecinfo._valvec = valvec
-  vecinfo._chunk_idx = 0
-  -- Allocate space for buffers
-  self._vecinfo = vecinfo
-  self._bufinfo = mk_bufs()
+  self._valvecs = valvecs
   return true
 end
 
@@ -370,11 +356,6 @@ function lAggregator:get_in(key)
   else
     assert(nil, "Input to Aggregator must be vector ")
   end
-  return true
-end
-
-function lAggregator:unset_consume()
-  clean(self, "unset_consume")
   return true
 end
 
