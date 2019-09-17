@@ -51,9 +51,6 @@ static int l_agg_new( lua_State *L)
   ptr_agg->ptr_hmap = calloc(1, sizeof(hmap_t));
   return_if_malloc_failed(ptr_agg->ptr_hmap);
 
-  ptr_agg->ptr_bufs = calloc(1, sizeof(BUF_REC_TYPE));
-  return_if_malloc_failed(ptr_agg->ptr_bufs);
-
   ptr_agg->ptr_metrics = calloc(1, sizeof(MET_REC_TYPE));
   return_if_malloc_failed(ptr_agg->ptr_metrics);
 
@@ -296,6 +293,25 @@ BYE:
   return 2;
 }
 //----------------------------
+static int l_agg_unbufferize( lua_State *L) {
+  int status = 0;
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
+  if ( ptr_agg == NULL ) { go_BYE(-1); }
+  BUF_REC_TYPE *ptr_bufs = ptr_agg->ptr_bufs;
+  if ( ptr_bufs == NULL ) { go_BYE(-1); }
+  free_if_non_null(ptr_bufs->tids);
+  free_if_non_null(ptr_bufs->locs);
+  free_if_non_null(ptr_bufs->hshs);
+  free_if_non_null(ptr_bufs->mvals);
+  ptr_agg->ptr_bufs = NULL;
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_agg_free( lua_State *L) {
   int status = 0;
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
@@ -311,6 +327,37 @@ static int l_agg_free( lua_State *L) {
     free_if_non_null(ptr_bufs);
   }
   free_if_non_null(ptr_agg->ptr_metrics);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
+static int l_agg_bufferize( lua_State *L) {
+  int status = 0;
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
+  ptr_agg->ptr_bufs = calloc(1, sizeof(BUF_REC_TYPE));
+  return_if_malloc_failed(ptr_agg->ptr_bufs);
+  BUF_REC_TYPE *ptr_bufs = ptr_agg->ptr_bufs;
+
+  uint32_t chunk_size = luaL_checknumber(L, 2);
+  if ( chunk_size == 0 ) { go_BYE(-1); }
+  if ( ptr_bufs->hshs  != NULL ) { go_BYE(-1); }
+  if ( ptr_bufs->locs  != NULL ) { go_BYE(-1); }
+  if ( ptr_bufs->tids  != NULL ) { go_BYE(-1); }
+  if ( ptr_bufs->mvals != NULL ) { go_BYE(-1); }
+
+  ptr_bufs->hshs = calloc(chunk_size, sizeof(uint32_t));
+  return_if_malloc_failed(ptr_bufs->hshs);
+  ptr_bufs->locs = calloc(chunk_size, sizeof(uint32_t));
+  return_if_malloc_failed(ptr_bufs->locs);
+  ptr_bufs->tids = calloc(chunk_size, sizeof(uint8_t));
+  return_if_malloc_failed(ptr_bufs->tids);
+  ptr_bufs->mvals = calloc(chunk_size, sizeof(val_t));
+  return_if_malloc_failed(ptr_bufs->mvals);
+  
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -348,6 +395,7 @@ BYE:
 //----------------------------------------
 static const struct luaL_Reg aggregator_methods[] = {
     { "__gc",         l_agg_free   },
+    { "bufferize",    l_agg_bufferize },
     { "check",        l_agg_check },
     { "del1",         l_agg_del1 },
     { "delete",       l_agg_free   },
@@ -355,11 +403,13 @@ static const struct luaL_Reg aggregator_methods[] = {
     { "instantiate",  l_agg_instantiate },
     { "meta",         l_agg_meta },
     { "put1",         l_agg_put1 },
+    { "unbufferize",  l_agg_unbufferize },
     { NULL,          NULL               },
 };
  
 static const struct luaL_Reg aggregator_functions[] = {
     { "new",          l_agg_new },
+    { "bufferize",    l_agg_bufferize },
     { "check",        l_agg_check },
     { "del1",         l_agg_del1 },
     { "delete",       l_agg_free   },
@@ -367,6 +417,7 @@ static const struct luaL_Reg aggregator_functions[] = {
     { "instantiate",  l_agg_instantiate },
     { "meta",         l_agg_meta },
     { "put1",         l_agg_put1 },
+    { "unbufferize",  l_agg_unbufferize },
     { NULL,  NULL         }
   };
 

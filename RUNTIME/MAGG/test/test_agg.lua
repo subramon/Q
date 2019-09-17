@@ -1,8 +1,10 @@
-lAggregator = require 'Q/RUNTIME/MAGG/lua/lAggregator'
+local lVector = require 'Q/RUNTIME/lua/lVector'
+local lAggregator = require 'Q/RUNTIME/MAGG/lua/lAggregator'
 
 local tests = {}
-tests.t1 = function(n)
+tests.t1 = function(n, niters)
   local n = n or 1000
+  local niters = niters or 10000
   -- create an aggregator, should work
   local T1 = require 'Q/RUNTIME/MAGG/lua/test1'
   local A = lAggregator(T1, "libtest1.so", "test1")
@@ -32,6 +34,18 @@ tests.t1 = function(n)
   end
   local M = A:meta()
   assert(M.nitems == 0)
+  --== testing bufferizing
+  for i = 1, niters do  -- set to large number for stress testing
+    A:bufferize()
+    A:unbufferize()
+  end
+  --== testing setting/unsetting produce
+  local x = lVector( { qtype = "I8", gen = true, has_nulls = false})
+  for i = 1, niters do  -- set to large number for stress testing
+    A:set_produce(x)
+    A:unset_produce()
+  end
+  --======================
   print("Success on test t1")
 end
 -- return tests
