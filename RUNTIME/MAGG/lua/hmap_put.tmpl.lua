@@ -35,7 +35,6 @@ hmap_put(
 {
   int status = 0;
   uint32_t newsize; bool resize = false, decreasing = false;
-  ${cvaltype} val;
   uint64_t num_probes = 0;
 
   if ( ptr_hmap->nitems > (double)ptr_hmap->size * HIGH_WATER_MARK ) {

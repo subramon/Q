@@ -1,30 +1,28 @@
-#define LUA_LIB
-
-#include <stdlib.h>
-#include <math.h>
-
+#include "q_incs.h"
+// for lua
 #include "luaconf.h"
 #include "lua.h"
-
 #include "lauxlib.h"
 #include "lualib.h"
+// for other run time stuff
 #include "scalar_struct.h"
-
-#include "q_incs.h"
 #include "cmem_struct.h"
-
+// for hmap/aggregator stuff
 #include "hmap_common.h"
 #include "_hmap_types.h"
 #include "_hmap_del.h"
+#include "_hmap_destroy.h"
+#include "_hmap_get.h"
 #include "_hmap_instantiate.h"
 #include "_hmap_put.h"
+#include "agg_struct.h" // depends on hmap_types
 
 int luaopen_libagg (lua_State *L);
 //----------------------------------------
 static int l_agg_new( lua_State *L) 
 {
   int status = 0;
-  hmap_t *ptr_hmap = NULL;
+  AGG_REC_TYPE *ptr_agg = NULL;
 
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   // undefined symbol : luaL_checktable(L, 1); 
@@ -46,9 +44,19 @@ static int l_agg_new( lua_State *L)
     n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
   }
 
-  ptr_hmap = (hmap_t *)lua_newuserdata(L, sizeof(hmap_t));
-  return_if_malloc_failed(ptr_hmap);
-  memset(ptr_hmap, '\0', sizeof(hmap_t));
+  ptr_agg = (AGG_REC_TYPE *)lua_newuserdata(L, sizeof(AGG_REC_TYPE));
+  return_if_malloc_failed(ptr_agg);
+  memset(ptr_agg, '\0', sizeof(AGG_REC_TYPE));
+
+  ptr_agg->ptr_hmap = calloc(1, sizeof(hmap_t));
+  return_if_malloc_failed(ptr_agg->ptr_hmap);
+
+  ptr_agg->ptr_bufs = calloc(1, sizeof(BUF_REC_TYPE));
+  return_if_malloc_failed(ptr_agg->ptr_bufs);
+
+  ptr_agg->ptr_metrics = calloc(1, sizeof(MET_REC_TYPE));
+  return_if_malloc_failed(ptr_agg->ptr_metrics);
+
   luaL_getmetatable(L, "Aggregator"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
@@ -72,7 +80,9 @@ static int l_agg_meta( lua_State *L)
   int status = 0;
 
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
-  hmap_t *ptr_hmap = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
+  hmap_t *ptr_hmap = ptr_agg->ptr_hmap;
+  MET_REC_TYPE *ptr_metrics = ptr_agg->ptr_metrics;
   // Now return table of meta data  
   lua_newtable(L);
 
@@ -87,6 +97,10 @@ static int l_agg_meta( lua_State *L)
   //--------------------------
   lua_pushstring(L, "minsize");
   lua_pushnumber(L, ptr_hmap->minsize);
+  lua_settable(L, -3);
+  //--------------------------
+  lua_pushstring(L, "num_probes");
+  lua_pushnumber(L, ptr_metrics->num_probes);
   lua_settable(L, -3);
 
   return 1;  
@@ -107,7 +121,8 @@ static int l_agg_put1( lua_State *L)
   memset(&newval, '\0', sizeof(val_t));
   memset(&oldval, '\0', sizeof(val_t));
   int num_args = lua_gettop(L); if ( num_args != 3 ) { go_BYE(-1); }
-  hmap_t *ptr_hmap = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
+  hmap_t *ptr_hmap = ptr_agg->ptr_hmap;
   SCLR_REC_TYPE *ptr_key = luaL_checkudata(L, 2, "Scalar"); 
   key = ptr_key->cdata.valI8; // AUTO GENERATE TODO 
 
@@ -180,7 +195,8 @@ static int l_agg_get1( lua_State *L)
 
   memset(&oldval, '\0', sizeof(val_t));
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
-  hmap_t *ptr_hmap = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
+  hmap_t *ptr_hmap = ptr_agg->ptr_hmap;
   SCLR_REC_TYPE *ptr_key = luaL_checkudata(L, 2, "Scalar"); 
   key = ptr_key->cdata.valI8; // AUTO GENERATE TODO 
 
@@ -235,7 +251,8 @@ static int l_agg_del1( lua_State *L)
 
   memset(&oldval, '\0', sizeof(val_t));
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
-  hmap_t *ptr_hmap = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
+  hmap_t *ptr_hmap = ptr_agg->ptr_hmap;
   SCLR_REC_TYPE *ptr_key = luaL_checkudata(L, 2, "Scalar"); 
   key = ptr_key->cdata.valI8; // AUTO GENERATE TODO 
 
@@ -281,8 +298,19 @@ BYE:
 //----------------------------
 static int l_agg_free( lua_State *L) {
   int status = 0;
-  hmap_t *ptr_hmap = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
+  if ( ptr_agg == NULL ) { go_BYE(-1); }
+  hmap_t *ptr_hmap = ptr_agg->ptr_hmap;
+  BUF_REC_TYPE *ptr_bufs = ptr_agg->ptr_bufs;
   hmap_destroy(ptr_hmap); 
+  if ( ptr_bufs != NULL ) { 
+    free_if_non_null(ptr_bufs->tids);
+    free_if_non_null(ptr_bufs->locs);
+    free_if_non_null(ptr_bufs->hshs);
+    free_if_non_null(ptr_bufs->mvals);
+    free_if_non_null(ptr_bufs);
+  }
+  free_if_non_null(ptr_agg->ptr_metrics);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -293,10 +321,12 @@ BYE:
 //----------------------------------------
 static int l_agg_instantiate( lua_State *L) {
   int status = 0;
-  hmap_t *ptr_hmap = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
+  hmap_t *ptr_hmap = ptr_agg->ptr_hmap;
   uint32_t minsize = luaL_checknumber(L, 2);
   status = hmap_instantiate(ptr_hmap, minsize); cBYE(status);
   lua_pushboolean(L, true);
+  // TODO: P1 When to allocate bufs?
   return 1;
 BYE:
   lua_pushnil(L);
@@ -306,7 +336,7 @@ BYE:
 //----------------------------------------
 static int l_agg_check( lua_State *L) {
   int status = 0;
-  hmap_t *ptr_agg = (hmap_t *)luaL_checkudata(L, 1, "Aggregator");
+  // TODO AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
   // TODO status = agg_check(ptr_agg); cBYE(status);
   lua_pushboolean(L, true);
   return 1;

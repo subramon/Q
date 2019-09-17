@@ -92,6 +92,7 @@ function lAggregator.new(params)
   agg._meta = M
   agg._is_instantiated = false
   agg._is_dead = false
+  agg._is_eov = false
   if ( qconsts.debug ) then agg:check() end
   --==========================================
   return agg
@@ -127,9 +128,6 @@ local function mk_bufs(p)
 end
 
 function lAggregator.save()
-  -- Could do one od 2 things
-  -- (1) returns 2 vectors, one for key and one for value 
-  -- (2) dump the buckets as binary file and restore from file
   -- TODO P2
 end
 
@@ -138,7 +136,8 @@ function lAggregator.restore()
 end
 
 function lAggregator:put1(key, vals)
-  -- TODO if ( self._instantiated == false ) then self:instantiate() end
+  assert ( self._is_dead == false ) 
+  if ( self._is_instantiated == false ) then self:instantiate() end
   --==============
   local invaltype 
   assert(key)
@@ -169,34 +168,27 @@ function lAggregator:put1(key, vals)
     assert(type(updated) == "boolean" )
     assert(type(oldvals) == "table" )
     for  i, v in ipairs(oldvals) do 
-      assert(type(v) == "Scalar" ) -- TODO THIS MUST BE A SCALAR
-      -- print(v)
+      assert(type(v) == "Scalar" ) 
     end
   end
   if ( invaltype == "Scalar" ) then 
     oldvals = oldvals[1]
+    assert(type(oldvals) == "Scalar" ) 
   end 
   self._meta._num_puts = self._meta._num_puts + 1
+  if ( qconsts.debug ) then self:check() end
   return oldvals, updated
 end
 
 function lAggregator:meta()
-  local M = Aggregator.meta(self._agg)
-  for k, v in pairs(self._meta) do 
-    M[k] = v
-  end
+  local M = Aggregator.meta(self._agg) -- stuff stored by C
+  for k, v in pairs(self._meta) do M[k] = v end
   return M
 end
 
 function lAggregator:get1(key)
-  assert(type(key) == "Scalar")
-  local val, is_found = Aggregator.get1(self._agg, key, self._meta._valtype)
-  assert(type(val) == "Scalar")
-  self._meta._num_gets = self._meta._num_gets + 1
-  if ( is_found ) then return val else return nil end 
-end
-
-function lAggregator:get1(key)
+  assert ( self._is_dead == false ) 
+  if ( self._is_instantiated == false ) then return nil end
   assert(key)
   if ( type(key) == "number" ) then 
     key = to_scalar(key, self._params.keytype)
@@ -215,11 +207,14 @@ function lAggregator:get1(key)
       assert(type(cnt) == "nil")
     end
   end
-  self._meta._num_dels = self._meta._num_dels + 1
-return is_found, cnt, val
+  self._meta._num_gets = self._meta._num_gets + 1
+  if ( qconsts.debug ) then self:check() end
+  return is_found, cnt, val
 end
 
 function lAggregator:del1(key)
+  assert ( self._is_dead == false ) 
+  if ( self._is_instantiated == false ) then return false, nil end
   assert(key)
   if ( type(key) == "number" ) then 
     key = to_scalar(key, self._params.keytype)
@@ -237,7 +232,8 @@ function lAggregator:del1(key)
     end
   end
   self._meta._num_dels = self._meta._num_dels + 1
-return is_found, val
+  if ( qconsts.debug ) then self:check() end
+  return is_found, val
 end
 
 
@@ -308,6 +304,8 @@ end
 
 
 function lAggregator:set_consume(keyvec, valvecs)
+  assert ( self._is_dead == false ) 
+  if ( self._is_instantiated == false ) then self:instantiate() end
   if ( qconsts.debug ) then self:check() end
   if ( not is_clean(self) ) then return false end 
   assert(type(keyvec) == "lVector")

@@ -37,7 +37,6 @@ ${fn}(
     if ( tid == 0 ) { lb = 0; }
     if ( tid == nT-1 ) { ub = nkeys; }
     register bkt_t *bkts = ptr_hmap->bkts;
-    printf("%d: %lu: %lu \n", tid, lb, ub);
     for ( uint32_t j = lb; j < ub; j++ ) {
       register uint32_t num_probes = 0; 
       register uint32_t probe_loc = locs[j];
