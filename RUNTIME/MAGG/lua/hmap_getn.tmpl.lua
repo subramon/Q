@@ -30,7 +30,7 @@ ${fn}(
   register uint32_t size = ptr_hmap->size;
   int block_size = nkeys / nT;
 
-#pragma omp parallel for schedule(static, 1)
+// #pragma omp parallel for schedule(static, 1)
   for ( int tid = 0; tid < nT; tid++ ) {
     uint32_t lb = block_size * tid; 
     uint32_t ub = lb + block_size;

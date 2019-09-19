@@ -213,7 +213,7 @@ function lAggregator:consume()
 
   local chunk_idx = assert(self._chunk_idx)
   assert(chunk_idx >= 0)
-  num_threads     = assert(self._num_threads)
+  local num_threads     = assert(self._num_threads)
   assert(num_threads >= 1)
 
   local k = assert(self._inkeyvec)
@@ -316,28 +316,45 @@ function lAggregator:set_produce(keyvec)
   local val_bufs = {}
   local val_vecs = {}
 
-  for k, v in pairs(self._params.vals) do
+  for k, v in ipairs(self._params.vals) do
     local valtype = v.valtype
+    local myk = k
     local function valgen (chunk_num)
       assert(chunk_num == chunk_idx)
       if ( first_call ) then
         first_call = false
-        for k, v in pairs(self._params.vals) do
+        for k, v in ipairs(self._params.vals) do
           local valtype = v.valtype
           local bufsz = qconsts.chunk_size * qconsts.qtypes[valtype].width
           val_bufs[k] = assert(cmem.new(bufsz, valtype))
         end
       end
-      local key_len, key_chunk, nn_key_chunk = keyvec:chunk(chunk_idx)
-      if ( key_len == 0 ) then 
-        -- delete all val_bufs except mine 
+      local num_keys, key_chunk, nn_key_chunk = keyvec:chunk(chunk_idx)
+      --============================
+      if ( num_keys == 0 ) then 
+        for k = 1, #self._params.vals do
+          val_bufs[k]:delete()
+        end
         return 0 
       end 
-      -- TODO local status = Aggregator.getn(key_chunk, val_bufs)
-  
+      --============================
+      local num_threads     = assert(self._num_threads)
+      assert(Aggregator.getn(self._agg, key_chunk, num_keys, 
+        num_threads, val_bufs))
+      --============================
+      for k = 1, #self._params.vals do
+        if ( k ~= myk ) then 
+          -- put the chunk for other vectors and delete their buffers
+          val_vecs[k]:put_chunk(val_bufs[k], nil, num_keys) 
+          if ( num_keys < qconsts.chunk_size ) then 
+            val_vecs[k]:eov()
+            val_bufs[k]:delete()
+          end
+        end
+      end
       chunk_idx = chunk_idx + 1
-      return key_len, val_buf
-    end
+      return num_keys, val_bufs[myk]
+    end 
     val_vecs[k] = lVector( { qtype = valtype, gen = valgen, has_nulls = false} )
   end
   return val_vecs

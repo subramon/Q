@@ -15,6 +15,7 @@ return require 'Q/UTILS/lua/code_gen' {
 #include "_hmap_del.h"
 #include "_hmap_destroy.h"
 #include "_hmap_get.h"
+#include "_hmap_getn.h"
 #include "_hmap_instantiate.h"
 #include "_hmap_put.h"
 #include "_hmap_putn.h"
@@ -110,6 +111,51 @@ BYE:
   return 2;
 }
 //-----------------------
+static int l_agg_getn( lua_State *L) 
+{
+  int status = 0;
+  uint64_t num_probes = 0;
+  uint32_t num_new    = 0;
+
+  int num_args = lua_gettop(L); if ( num_args != 5 ) { go_BYE(-1); }
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
+  CMEM_REC_TYPE *ptr_key   = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
+  int num_keys  = luaL_checknumber(L, 3);
+  int num_threads = luaL_checknumber(L, 4);
+  
+  if ( !lua_istable(L, 5) ) { go_BYE(-1); }
+  luaL_checktype(L, 5, LUA_TTABLE ); // another way of checking
+  int num_vals = luaL_getn(L, 5);  /* get size of table */
+  if ( num_vals != HMAP_NUM_VALS ) { go_BYE(-1); }
+
+  keytype *keys =  (keytype *)ptr_key->data;
+  uint32_t *hshs =  (uint32_t *)ptr_agg->ptr_bufs->hshs;
+  uint32_t *locs =  (uint32_t *)ptr_agg->ptr_bufs->locs;
+  status = hmap_mk_hsh(keys, num_keys, ptr_agg->ptr_hmap->hashkey, hshs);
+  status = hmap_mk_loc(hshs, num_keys, ptr_agg->ptr_hmap->size, locs);
+  status = hmap_getn (ptr_agg->ptr_hmap, num_threads, 
+    (keytype *)ptr_key->data, ptr_agg->ptr_bufs->locs, 
+    ptr_agg->ptr_bufs->mvals, num_keys, ptr_agg->ptr_bufs->fnds);
+  cBYE(status);
+  for ( int i = 1; i <= num_vals; i++ ) { 
+    lua_rawgeti(L, 5, i); 
+    CMEM_REC_TYPE *ptr_val = luaL_checkudata(L, 5+1, "CMEM"); 
+    switch ( i )  {
+      ${mk_getn}
+    }
+    lua_pop(L, 1);
+    int n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
+  }
+    
+
+  lua_pushboolean(L, true);
+  return 1;  
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------
 static int l_agg_putn( lua_State *L) 
 {
   int status = 0;
@@ -119,7 +165,7 @@ static int l_agg_putn( lua_State *L)
   int num_args = lua_gettop(L); if ( num_args != 5 ) { go_BYE(-1); }
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
   CMEM_REC_TYPE *ptr_key   = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
-  int chunk_size  = luaL_checknumber(L, 3);
+  int num_keys  = luaL_checknumber(L, 3);
   int num_threads = luaL_checknumber(L, 4);
   
   if ( !lua_istable(L, 5) ) { go_BYE(-1); }
@@ -136,10 +182,16 @@ static int l_agg_putn( lua_State *L)
     lua_pop(L, 1);
     int n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
   }
-  status = hmap_putn(ptr_agg->ptr_hmap, (keytype *)ptr_key->data,
-    ptr_agg->ptr_bufs->hshs, ptr_agg->ptr_bufs->locs, 
-    ptr_agg->ptr_bufs->tids, num_threads, ptr_agg->ptr_bufs->mvals, 
-    chunk_size, ptr_agg->ptr_bufs->fnds, &num_new, &num_probes);
+  keytype *keys =  (keytype *)ptr_key->data;
+  uint32_t *hshs =  (uint32_t *)ptr_agg->ptr_bufs->hshs;
+  uint32_t *locs =  (uint32_t *)ptr_agg->ptr_bufs->locs;
+  uint8_t  *tids =  (uint8_t  *)ptr_agg->ptr_bufs->tids;
+  status = hmap_mk_hsh(keys, num_keys, ptr_agg->ptr_hmap->hashkey, hshs);
+  status = hmap_mk_loc(hshs, num_keys, ptr_agg->ptr_hmap->size, locs);
+  status = hmap_mk_tid(hshs, num_keys, num_threads, tids);
+  status = hmap_putn(ptr_agg->ptr_hmap, keys,  hshs, locs, tids, 
+    num_threads, ptr_agg->ptr_bufs->mvals, 
+    num_keys, ptr_agg->ptr_bufs->fnds, &num_new, &num_probes);
 
   lua_pushboolean(L, true);
   return 1;  
@@ -449,6 +501,7 @@ static const struct luaL_Reg aggregator_methods[] = {
     { "del1",         l_agg_del1 },
     { "delete",       l_agg_free   },
     { "get1",         l_agg_get1 },
+    { "getn",         l_agg_getn },
     { "instantiate",  l_agg_instantiate },
     { "meta",         l_agg_meta },
     { "put1",         l_agg_put1 },
@@ -464,6 +517,7 @@ static const struct luaL_Reg aggregator_functions[] = {
     { "del1",         l_agg_del1 },
     { "delete",       l_agg_free   },
     { "get1",         l_agg_get1 },
+    { "getn",         l_agg_getn },
     { "instantiate",  l_agg_instantiate },
     { "meta",         l_agg_meta },
     { "put1",         l_agg_put1 },

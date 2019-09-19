@@ -154,7 +154,7 @@ local function libgen(
   for i, v in ipairs(T.vals) do 
     local cvaltype = qconsts.qtypes[v.valtype].ctype
     W[#W+1] = "case " .. i .. " :\n" ..
-    "  for ( int j = 0; j < chunk_size; j++ ) { \n" ..
+    "  for ( int j = 0; j < num_keys; j++ ) { \n" ..
     "   ptr_agg->ptr_bufs->mvals[j].val_" .. i .. " = ((" ..
     cvaltype .. " *)ptr_val->data)[j];\n" ..
     "  }\n" .. 
@@ -162,6 +162,18 @@ local function libgen(
   end
   W[#W+1] = ""
   subs.mk_putn = table.concat(W, "\n");
+
+  local V = {}
+  for i, v in ipairs(T.vals) do 
+    local cvaltype = qconsts.qtypes[v.valtype].ctype
+    V[#V+1] = "case " .. i .. " :\n" ..
+    "  for ( int j = 0; j < num_keys; j++ ) { \n" ..
+    "    ((" ..  cvaltype .. " *)ptr_val->data)[j] = ptr_agg->ptr_bufs->mvals[j].val_" .. i .. ";\n" .. 
+    "  }\n" .. 
+    "break;\n"
+  end
+  V[#V+1] = ""
+  subs.mk_getn = table.concat(V, "\n");
 
   gen_code.dotc(subs, srcdir)
   --=============================

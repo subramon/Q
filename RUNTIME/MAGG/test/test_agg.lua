@@ -72,8 +72,9 @@ tests.t2 = function(n)
   local T1 = require 'Q/RUNTIME/MAGG/lua/test1'
   local A = lAggregator(T1, "libaggtest1")
   --======================
-  local num_vals = 4
   local  k = Q.seq({ qtype = "I8", start = 1, by = 1, len = n})
+  local vtypes = { "F4", "I1", "I2", "I4" }
+  local num_vals = #vtypes
   local v1 = Q.seq({ qtype = "F4", start = 1, by = 1, len = n})
   local v2 = Q.seq({ qtype = "I1", start = 1, by = 1, len = n})
   local v3 = Q.seq({ qtype = "I2", start = 1, by = 1, len = n})
@@ -93,10 +94,16 @@ tests.t2 = function(n)
   Vs = A:set_produce(k)
   assert(type(Vs) == "table")
   assert(#Vs == num_vals) 
-  assert(Vs[1]:fldtype() == "F4")
-  assert(Vs[2]:fldtype() == "I1")
-  assert(Vs[3]:fldtype() == "I2")
-  assert(Vs[4]:fldtype() == "I4")
+  for k = 1, #vtypes do 
+    assert(Vs[k]:fldtype() == vtypes[k])
+  end
+  for k = 1, #vtypes do 
+    assert(Vs[k]:eval())
+  end
+  for k = 1, num_vals do 
+    assert(Vs[1]:is_eov())
+  end
+  -- Q.print_csv(Vs)
   print("Success on test t2")
 end
 -- return tests
