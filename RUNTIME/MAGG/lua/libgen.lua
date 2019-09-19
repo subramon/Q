@@ -11,7 +11,8 @@ local function gen_src(
   only_h
   )
   subs.fn = fn
-  subs.tmpl = fn .. ".tmpl.lua"
+  local dir = qconsts.Q_SRC_ROOT .. "/RUNTIME/MAGG/lua/" 
+  subs.tmpl = dir .. fn .. ".tmpl.lua"
   gen_code.doth(subs, incdir); 
   if ( not only_h ) then 
     gen_code.dotc(subs, srcdir)
@@ -21,11 +22,10 @@ end
 local function create_dot_o(
   X
   )
-  local incs = " -I../inc/ -I../xgen_inc/ "
+  local incs = " -I../inc/ -I../../inc/ -I../xgen_inc/ -I../../../UTILS/inc/ "
   assert(type(X) == "table")
   for k, v in pairs(X) do 
     local command = "gcc -c "  .. qconsts.QC_FLAGS .. incs .. v
-    print(command)
     status = os.execute(command)
     if ( status ~= 0 ) then print(command) end 
     assert(status == 0)
@@ -45,9 +45,13 @@ local function libgen(
   assert( ( keytype == "I4" ) or ( keytype == "I8" ) ) 
   subs.ckeytype = "u" .. assert(qconsts.qtypes[keytype].ctype)
   --=====================================
-  -- libname, -- name of .so file that will be generated
-  local libname = assert(T.so) 
-  assert(type(libname) == "string")
+  -- lbl is a unique label for each .so file we gernate
+  -- if lbl = foobar, then we generate libaggfoobar.so
+  local lbl = assert(T.lbl) 
+  assert(type(lbl) == "string")
+  assert(#lbl >= 1 )
+  local libname = qconsts.Q_ROOT .. "/lib/libagg" .. lbl .. ".so"
+  T.so = "libagg" .. lbl 
   --=====================================
   local vals = assert(T.vals)
   assert(type(vals) == "table")
@@ -121,6 +125,32 @@ local function libgen(
   end
   subs.val_cmp_spec = table.concat(X, "\n");
   --=============================
+  -- Following for agg.tmpl.lua
+  local dir = qconsts.Q_SRC_ROOT .. "/RUNTIME/MAGG/lua/" 
+  subs.tmpl = dir .. 'agg.tmpl.lua'
+  subs.lbl = lbl
+  subs.fn = "agg"
+  subs.qkeytype = keytype
+  local Z = {}
+  for i, v in ipairs(T.vals) do 
+    Z[#Z+1] = "case " .. i .. " : oldval.val_" .. i .. 
+      " = ptr_val->cdata.val" .. v.valtype .. "; break; "
+  end
+  Z[#Z+1] = ""
+  subs.mk_scalar_put1 = table.concat(Z, "\n");
+
+  local Z = {}
+  for i, v in ipairs(T.vals) do 
+    Z[#Z+1] = "case " .. i .. " :\n" ..
+    " ptr_val_sclr->cdata.val" .. 
+    v.valtype .. " =  oldval.val_" .. i .. ";\n" 
+    .. " strcpy(ptr_val_sclr->field_type, \"" .. v.valtype .. "\");\n"
+    .. "break;"
+  end
+  Z[#Z+1] = ""
+  subs.mk_scalar_get1 = table.concat(Z, "\n");
+  gen_code.dotc(subs, srcdir)
+  --=============================
   gen_src(subs, "hmap_chk_no_holes")
   gen_src(subs, "hmap_del")
   gen_src(subs, "hmap_eq")
@@ -162,11 +192,15 @@ local function libgen(
   X[#X+1] = srcdir .. "_hmap_put.c" 
   X[#X+1] = srcdir .. "_hmap_putn.c" 
   X[#X+1] = srcdir .. "_hmap_resize.c" 
+  X[#X+1] = srcdir .. "_agg.c"
   create_dot_o(X)
   X[#X+1] = " "
-  local command = "gcc -shared *.o  -o " .. libname 
-  os.execute(command)
+  local command = "gcc -shared *.o  " .. qconsts.Q_LINK_FLAGS .. 
+    " -o " .. libname
+  local status = os.execute(command)
+  if ( status ~= 0 ) then print(command) end 
   assert(status == 0)
 
+  return true
 end
 return libgen

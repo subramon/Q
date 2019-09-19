@@ -7,8 +7,8 @@ typedef struct _met_rec_type {
 
 typedef struct _buf_rec_type {
   uint8_t *tids;
-  uint8_t *locs;
-  uint8_t *hshs;
+  uint32_t *locs;
+  uint32_t *hshs;
   val_t *mvals;
 } BUF_REC_TYPE;
 

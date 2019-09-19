@@ -7,7 +7,7 @@ tests.t1 = function(n, niters)
   local niters = niters or 10000
   -- create an aggregator, should work
   local T1 = require 'Q/RUNTIME/MAGG/lua/test1'
-  local A = lAggregator(T1, "libtest1.so", "test1")
+  local A = lAggregator(T1, "libaggtest1")
   A:instantiate()
   for i = 1, n do
     A:put1(100+i, { 10, 20, 30, 40 })
@@ -51,7 +51,7 @@ tests.t1 = function(n, niters)
   local v3 = lVector( { qtype = "I2", gen = true, has_nulls = false})
   local v4 = lVector( { qtype = "I4", gen = true, has_nulls = false})
   local y
-  A:set_consume(k, { v1, v2, v3, v4})
+  assert(A:set_consume(k, { v1, v2, v3, v4}))
   y = A:is_dead()
   assert(y == false)
   y = A:is_instantiated()

@@ -1,13 +1,13 @@
-local ffi = require 'ffi'
+local ffi             = require 'ffi'
 local qconsts         = require 'Q/UTILS/lua/q_consts'
 local cmem            = require 'libcmem'
 local register_type   = require 'Q/UTILS/lua/q_types'
 local qc              = require 'Q/UTILS/lua/q_core'
 local to_scalar       = require 'Q/UTILS/lua/to_scalar'
-local get_ptr         = require 'Q/UTILS/lua/get_ptr'
+local get_ptr         = require 'Q/UTILS/lua/get_ptr' -- TODO need this?
 local lVector         = require 'Q/RUNTIME/lua/lVector'
 local libgen          = require 'Q/RUNTIME/MAGG/lua/libgen'
-  local Aggregator      = require 'libagg' -- TODO THIS IS A HACK
+local Aggregator      -- will be set in instantiate()
 --====================================
 local lAggregator = {}
 lAggregator.__index = lAggregator
@@ -20,48 +20,18 @@ setmetatable(lAggregator, {
 
 register_type(lAggregator, "lAggregator")
 
-local function good_key_types(ktype)
-  assert( ( ktype == "I4" ) or ( ktype == "I8" ) )
-  return true
+local function  mk_so(params)
+  assert(libgen(params))
+  return require(params.so)
+  -- make sure that separate libagg is created for each aggregator
+  -- more specifically for each unique params
 end
-
-local function good_val_types(vtype)
-  assert( ( vtype == "I1" ) or ( ktype == "I2" ) or
-          ( vtype == "I4" ) or ( ktype == "I8" ) or
-          ( vtype == "F4" ) or ( ktype == "F8" ) )
-  return true
-end
-
-local function clean(x, str)
-  if ( str ) then print(str) end 
-  if ( x._bufinfo ) then 
-    if ( x._bufinfo._valbuf ) then x._bufinfo._valbuf:delete() end
-    if ( x._bufinfo._hshbuf ) then x._bufinfo._hshbuf:delete() end
-    if ( x._bufinfo._locbuf  ) then x._bufinfo._locbuf:delete() end
-    if ( x._bufinfo._tidbuf  ) then x._bufinfo._tidbuf:delete() end
-    if ( x._bufinfo._fndbuf  ) then x._bufinfo._fndbuf:delete() end
-  end
-  x._bufinfo = nil
-  x._vecinfo = nil
-end
-
-local function is_clean(x)
-  if ( x._vecinfo ~= nil ) then return false end 
-  if ( x._bufinfo ~= nil ) then return false end 
-  return true
-end
-
-function lAggregator:is_clean() -- for debugging
-  local rslt =  is_clean(self)
-  return rslt
-end 
 
 function lAggregator:instantiate()
   assert ( self._is_instantiated == false)
   local initial_size = self._params.initial_size
   if ( not initial_size ) then initial_size = 0 end
   assert(Aggregator.instantiate(self._agg, initial_size))
-  -- TODO assert(libgen(params))
 
   self._is_instantiated = true
   return true
@@ -85,66 +55,32 @@ end
 
 function lAggregator.new(params)
   local agg = setmetatable({}, lAggregator)
-  -- We could delay generating .so file and creating aggregator
-  -- until it is actually used but going to do it now.
-  --
-  -- make sure that separate libagg is created for each aggregator
-  -- more specificaally for each unique params
-  -- TODO assert(libgen(params))
-  local Aggregator      = require 'libagg'
   --==========================================
   agg._params = params -- to record how it was created
-  -- added tbl as a sample code to verify my understanding
-  local tbl = { }
-  local test_tbl = {}
+  -- We use intbl and outtbl just to verify my understanding
+  -- They have no real use beyond that
+  local intbl = { }
+  local outtbl
   local num_vals = assert(#params.vals)
-  for i = 1, num_vals do tbl[#tbl+1] = "string_" .. i end 
-  agg._agg, test_tbl = assert(Aggregator.new(tbl))
-  for i = 1, num_vals do assert(test_tbl[i] == tbl[i]) end 
+  for i = 1, num_vals do intbl[#intbl+1] = "string_" .. i end 
+  Aggregator = assert(mk_so(params))
+  agg._agg, outtbl = assert(Aggregator.new(intbl))
+  for i = 1, num_vals do assert(outtbl[i] == intbl[i]) end 
   local M = {}
   M._num_puts = 0
   M._num_gets = 0
   M._num_dels = 0
-  M._chunk_idx = 0
   agg._meta = M
   agg._is_instantiated = false
-  agg._is_bufferized = false
-  agg._is_dead = false
-  agg._is_eov = false
+  agg._is_bufferized   = false
+  agg._is_dead         = false
+  agg._is_eov          = false
+  agg._chunk_idx       = 0
+  agg._num_threads     = qc['q_omp_get_num_procs']()
   if ( qconsts.debug ) then agg:check() end
   --==========================================
   return agg
 end
-
-local function mk_bufs(p)
-  if ( p ) then print("mk_bufs: " .. p) end -- for debugging
-  local valwidth = ffi.sizeof("val_t") -- TODO prefix label
-  -- Note currently hsh is uint32_t
-  local hshwidth = ffi.sizeof("uint32_t")
-  -- Note currently number of elements is uint32_t
-  local locwidth  = ffi.sizeof("uint32_t")
-  local tidwidth  = ffi.sizeof("uint8_t")
-  local isfwidth  = ffi.sizeof("uint8_t")
-  local bufinfo = {}
-  -- valbuf for composite values
-  bufinfo._valbuf = assert(cmem.new(qconsts.chunk_size * valwidth,
-    "", "valbuf"))
-  -- hasbuf for hsh of key
-  bufinfo._hshbuf = assert(cmem.new(qconsts.chunk_size * hshwidth, 
-    "I4", "hshbuf"))
-  -- locbuf for initial probe point
-  bufinfo._locbuf  = assert(cmem.new(qconsts.chunk_size * locwidth,  
-    "I4", "locbuf"))
-  -- tidbuf for thread ID assigned to it
-  bufinfo._tidbuf  = assert(cmem.new(qconsts.chunk_size * tidwidth,  
-    "I1", "tidbuf"))
-  -- fndbuf for "is found"
-  bufinfo._fndbuf  = assert(cmem.new(qconsts.chunk_size * isfwidth,  
-    "I1", "fndbuf"))
-  bufinfo._num_threads = qc['q_omp_get_num_procs']()
-  return bufinfo 
-end
-
 function lAggregator.save()
   -- TODO P2
 end
@@ -157,12 +93,14 @@ function lAggregator:put1(key, vals)
   assert ( self._is_dead == false ) 
   if ( self._is_instantiated == false ) then self:instantiate() end
   --==============
-  local invaltype 
+  local invaltype  -- to remember whether val was given to us as a
+  -- Scalar or a table to make sure that we return it in same way
   assert(key)
   assert(vals)
   if ( type(key) == "number" ) then 
     key = to_scalar(key, self._params.keytype)
   end
+
   if ( type(vals) == "number" ) then 
     vals = to_scalar(vals, self._params.keytype)
   end
@@ -173,6 +111,7 @@ function lAggregator:put1(key, vals)
     invaltype = "table"
   end
   assert(type(vals) == "table")
+
   local cnt = 0
   for i, v in ipairs(vals) do 
     if ( type(v) == "number" ) then 
@@ -218,8 +157,8 @@ end
 
 function lAggregator:get1(key)
   assert ( self._is_dead == false ) 
-  if ( self._is_instantiated == false ) then return nil end
   assert(key)
+  if ( self._is_instantiated == false ) then return false end
   if ( type(key) == "number" ) then 
     key = to_scalar(key, self._params.keytype)
   end
@@ -229,6 +168,7 @@ function lAggregator:get1(key)
     assert(type(is_found) == "boolean")
     if ( is_found ) then 
       assert(type(cnt) == "number")
+      assert(cnt >= 1 )
       assert(type(val) == "table")
       for i, v in pairs(val) do 
         assert(v:fldtype() == self._params.vals[i].valtype)
@@ -266,33 +206,34 @@ function lAggregator:del1(key)
   return is_found, val
 end
 
-
-function lAggregator:is_input()
-  if ( self._valvec ) then return true else return false end
-end 
-
 function lAggregator:consume()
   assert ( self._is_dead == false ) 
   if ( self._is_instantiated == false ) then self:instantiate() end
   if ( self._is_bufferized   == false ) then self:bufferize() end
+  if ( self._is_eov   == true ) then return 0 end 
 
+  local chunk_idx = assert(self._chunk_idx)
 
-  local v = assert(self._vecinfo._valvec)
-  local k = assert(self._vecinfo._keyvec)
-  local chunk_idx = assert(self._vecinfo._chunk_idx)
-  if ( v:is_eov() ) then 
-    assert(Aggregator.unubufferize(self._agg))
-    self._is_bufferized = false
-    return 0 -- number of items inserted
-  end 
+  local k = assert(self._inkeyvec)
   assert( not k:is_eov() )
   local klen, kchunk = k:chunk(chunk_idx)
-  local vlen, vchunk = v:chunk(chunk_idx)
-  assert(klen == vlen)
+  assert(klen > 0)
   assert(kchunk)
-  assert(vchunk)
+  
 
-  -- TODO call to putn
+  local vs = assert(self._valvecs)
+  local vlens = {}
+  local vchunks = {}
+  for k, v in ipairs(vs) do 
+    assert( not v:is_eov() )
+    local vlen, vchunk = v:chunk(chunk_idx)
+    vlens[k]   = vlen
+    vchunks[k] = vchunk
+    assert(klen == vlen)
+    assert(vchunk)
+  end
+
+  local status = Aggregator.putn(self._agg, kchunk, klen, vchunks)
   self._vecinfo._chunk_idx = self._vecinfo._chunk_idx + 1
   if ( klen < qconsts.chunk_size ) then 
     self._is_eov = true
@@ -323,7 +264,7 @@ function lAggregator:set_consume(keyvec, valvecs)
   assert ( not self._keyvec )  -- no key vector set
   assert ( not self._valvecs ) -- no val vectors set
   assert(type(keyvec) == "lVector")
-  self._keyvec = keyvec
+  self._inkeyvec = keyvec
   assert(keyvec:has_nulls() == false) -- currently no support for nulls
   assert(keyvec:fldtype() == self._params.keytype)
   
@@ -345,33 +286,24 @@ function lAggregator:set_consume(keyvec, valvecs)
     assert(nil, "invalid values")
   end
 
-  self._valvecs = valvecs
-  return true
-end
-
-function lAggregator:get_in(key)
-  if ( qconsts.debug ) then self:check() end
-  if (type(key) == "lVector") then 
-    return get_in_vec(self, val)
-  else
-    assert(nil, "Input to Aggregator must be vector ")
-  end
+  self._valvecs  = valvecs
   return true
 end
 
 function lAggregator:unset_produce()
-  assert ( self._keyvec ) -- key vector set
-  self._keyvec = nil
+  assert ( self._outkeyvec ) -- key vector set
+  self._outkeyvec = nil
   return self
 end
 
-function lAggregator:set_produce(in_keyvec)
-  assert ( self._is_instantiated == true )
+function lAggregator:set_produce(keyvec)
+  -- not an errro: assert ( self._is_instantiated == true )
+  assert ( type(self._outkeyvec) == "nil" ) -- key vector not set
   if ( qconsts.debug ) then self:check() end
-  assert(type(in_keyvec) == "lVector")
-  local keytype = in_keyvec:fldtype()
+  assert(type(keyvec) == "lVector")
+  local keytype = keyvec:fldtype()
   assert( keytype == self._params.keytype )
-  self._keyvec = in_keyvec
+  self._outkeyvec = keyvec
 
   --[[ TODO 
   --==============================================

@@ -67,25 +67,26 @@ ${fn}( // hmap_putn
       register ${ckeytype} key = keys[j];
       register bkt_t *bkts = ptr_hmap->bkts;
       uint32_t probe_loc = locs[j]; // fast_rem32(hash, size, divinfo);
-      fnds[j] = 0;
+      bool is_found = false;
 
       for ( ; ; ) { // search until found 
         if ( bkts[probe_loc].key == key ) {
           // start code for update
           // stop  code for update
-          fnds[j] = 1;
+          is_found = true;
           break; 
         }
         if ( ( bkts[probe_loc].key == 0 ) || 
             ( num_probes > bkts[probe_loc].psl ) ) { 
           // not found
-          fnds[j] = 0; 
+          is_found = false;
           break; 
         }
         num_probes++;
         probe_loc++; if ( probe_loc == size ) { probe_loc = 0; }
       }
-      if ( fnds[j] == 0 ) { 
+      if ( fnds != NULL ) { fnds[j] = is_found; }
+      if ( is_found == false ) { 
         if ( is_new[mytid] == 0 ) {
           is_new[mytid] = 1;
         }

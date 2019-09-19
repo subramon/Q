@@ -1,3 +1,5 @@
+return require 'Q/UTILS/lua/code_gen' { 
+  definition = [[
 #include "q_incs.h"
 // for lua
 #include "luaconf.h"
@@ -15,9 +17,10 @@
 #include "_hmap_get.h"
 #include "_hmap_instantiate.h"
 #include "_hmap_put.h"
+#include "_hmap_putn.h"
 #include "agg_struct.h" // depends on hmap_types
 
-int luaopen_libagg (lua_State *L);
+int luaopen_libagg${lbl} (lua_State *L);
 //----------------------------------------
 static int l_agg_new( lua_State *L) 
 {
@@ -107,6 +110,50 @@ BYE:
   return 2;
 }
 //-----------------------
+static int l_agg_putn( lua_State *L) 
+{
+  int status = 0;
+  uint64_t num_probes = 0;
+  uint32_t num_new    = 0;
+
+  int num_args = lua_gettop(L); if ( num_args != 4 ) { go_BYE(-1); }
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
+  CMEM_REC_TYPE *ptr_key   = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
+  int chunk_size  = luaL_checknumber(L, 4);
+  int num_threads = luaL_checknumber(L, 5);
+  
+  if ( !lua_istable(L, 3) ) { go_BYE(-1); }
+  luaL_checktype(L, 3, LUA_TTABLE ); // another way of checking
+  int num_vals = luaL_getn(L, 3);  /* get size of table */
+  if ( num_vals != HMAP_NUM_VALS ) { go_BYE(-1); }
+
+  for ( int i = 1; i <= num_vals; i++ ) { 
+    lua_rawgeti(L, 3+1, i); 
+    CMEM_REC_TYPE *ptr_val = luaL_checkudata(L, 3+1, "CMEM"); 
+    switch ( i )  {
+      /*
+      case 1 : oldval.val_1 = ptr_val->cdata.valF4; break;
+      case 2 : oldval.val_2 = ptr_val->cdata.valI1; break;
+      case 3 : oldval.val_3 = ptr_val->cdata.valI2; break;
+      case 4 : oldval.val_4 = ptr_val->cdata.valI4; break;
+      */
+    }
+    lua_pop(L, 1);
+    int n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
+  }
+   status = hmap_putn(ptr_agg->ptr_hmap, (keytype *)ptr_key->data,
+    ptr_agg->ptr_bufs->hshs, ptr_agg->ptr_bufs->locs, 
+    ptr_agg->ptr_bufs->tids, num_threads, ptr_agg->ptr_bufs->mvals, 
+    chunk_size, NULL, &num_new, &num_probes);
+
+  lua_pushboolean(L, true);
+  return 1;  
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------
 static int l_agg_put1( lua_State *L) 
 {
   int status = 0;
@@ -121,7 +168,7 @@ static int l_agg_put1( lua_State *L)
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
   hmap_t *ptr_hmap = ptr_agg->ptr_hmap;
   SCLR_REC_TYPE *ptr_key = luaL_checkudata(L, 2, "Scalar"); 
-  key = ptr_key->cdata.valI8; // AUTO GENERATE TODO 
+  key = ptr_key->cdata.val${qkeytype}; 
 
   if ( !lua_istable(L, 3) ) { go_BYE(-1); }
   luaL_checktype(L, 3, LUA_TTABLE ); // another way of checking
@@ -132,12 +179,13 @@ static int l_agg_put1( lua_State *L)
     lua_rawgeti(L, 2+1, i); 
     SCLR_REC_TYPE *ptr_val = luaL_checkudata(L, 3+1, "Scalar"); 
     switch ( i )  {
-      // START AUTO GENERATE TODO 
+      ${mk_scalar_put1}
+      /* START SAMPLE AUTO GENERATED CODE
       case 1 : oldval.val_1 = ptr_val->cdata.valF4; break;
       case 2 : oldval.val_2 = ptr_val->cdata.valI1; break;
       case 3 : oldval.val_3 = ptr_val->cdata.valI2; break;
       case 4 : oldval.val_4 = ptr_val->cdata.valI4; break;
-               // STOP AUTO GENERATE TODO 
+      STOP SAMPLE AUTO GENERATED CODE */
     }
     lua_pop(L, 1);
     int n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
@@ -150,7 +198,8 @@ static int l_agg_put1( lua_State *L)
     lua_pushnumber(L, i);
     SCLR_REC_TYPE *ptr_val_sclr = lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
     switch ( i )  {
-      // START AUTO GENERATE TODO 
+      ${create_scalars_for_return}
+      /* SAMPLE AUTO GENERATE CODE START
       case 1 : 
         ptr_val_sclr->cdata.valF4 = oldval.val_1; 
         strcpy(ptr_val_sclr->field_type, "F4");
@@ -167,7 +216,7 @@ static int l_agg_put1( lua_State *L)
         ptr_val_sclr->cdata.valI4 = oldval.val_4; 
         strcpy(ptr_val_sclr->field_type, "I4");
         break;
-      // STOP AUTO GENERATE TODO 
+      SAMPLE AUTO GENERATE CODE END */
     }
     luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
     lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
@@ -195,7 +244,7 @@ static int l_agg_get1( lua_State *L)
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
   hmap_t *ptr_hmap = ptr_agg->ptr_hmap;
   SCLR_REC_TYPE *ptr_key = luaL_checkudata(L, 2, "Scalar"); 
-  key = ptr_key->cdata.valI8; // AUTO GENERATE TODO 
+  key = ptr_key->cdata.val${qkeytype}; 
 
   status = hmap_get(ptr_hmap, key, &oldval, &cnt, &is_found, &num_probes);
 
@@ -208,7 +257,8 @@ static int l_agg_get1( lua_State *L)
     lua_pushnumber(L, i);
     SCLR_REC_TYPE *ptr_val_sclr = lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
     switch ( i )  {
-      // START AUTO GENERATE TODO 
+      ${mk_scalar_get1}
+      /* START AUTO GENERATE SAMPLE
       case 1 : 
         ptr_val_sclr->cdata.valF4 = oldval.val_1; 
         strcpy(ptr_val_sclr->field_type, "F4");
@@ -225,7 +275,7 @@ static int l_agg_get1( lua_State *L)
         ptr_val_sclr->cdata.valI4 = oldval.val_4; 
         strcpy(ptr_val_sclr->field_type, "I4");
         break;
-      // STOP AUTO GENERATE TODO 
+      STOP AUTO GENERATE CODE SAMPLE */
     }
     luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
     lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
@@ -251,7 +301,7 @@ static int l_agg_del1( lua_State *L)
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
   hmap_t *ptr_hmap = ptr_agg->ptr_hmap;
   SCLR_REC_TYPE *ptr_key = luaL_checkudata(L, 2, "Scalar"); 
-  key = ptr_key->cdata.valI8; // AUTO GENERATE TODO 
+  key = ptr_key->cdata.val${qkeytype}; 
 
   status = hmap_del(ptr_hmap, key, &is_found, &oldval, &num_probes);
 
@@ -263,7 +313,8 @@ static int l_agg_del1( lua_State *L)
     lua_pushnumber(L, i);
     SCLR_REC_TYPE *ptr_val_sclr = lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
     switch ( i )  {
-      // START AUTO GENERATE TODO 
+      ${mk_scalar_get1}
+      /* START SAMPLE AUTO GENERATE 
       case 1 : 
         ptr_val_sclr->cdata.valF4 = oldval.val_1; 
         strcpy(ptr_val_sclr->field_type, "F4");
@@ -280,7 +331,7 @@ static int l_agg_del1( lua_State *L)
         ptr_val_sclr->cdata.valI4 = oldval.val_4; 
         strcpy(ptr_val_sclr->field_type, "I4");
         break;
-      // STOP AUTO GENERATE TODO 
+      STOP SAMPLE AUTO GENERATE  */
     }
     luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
     lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
@@ -373,7 +424,6 @@ static int l_agg_instantiate( lua_State *L) {
   uint32_t minsize = luaL_checknumber(L, 2);
   status = hmap_instantiate(ptr_hmap, minsize); cBYE(status);
   lua_pushboolean(L, true);
-  // TODO: P1 When to allocate bufs?
   return 1;
 BYE:
   lua_pushnil(L);
@@ -383,8 +433,7 @@ BYE:
 //----------------------------------------
 static int l_agg_check( lua_State *L) {
   int status = 0;
-  // TODO AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
-  // TODO status = agg_check(ptr_agg); cBYE(status);
+  AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -403,6 +452,7 @@ static const struct luaL_Reg aggregator_methods[] = {
     { "instantiate",  l_agg_instantiate },
     { "meta",         l_agg_meta },
     { "put1",         l_agg_put1 },
+    { "putn",         l_agg_putn },
     { "unbufferize",  l_agg_unbufferize },
     { NULL,          NULL               },
 };
@@ -417,6 +467,7 @@ static const struct luaL_Reg aggregator_functions[] = {
     { "instantiate",  l_agg_instantiate },
     { "meta",         l_agg_meta },
     { "put1",         l_agg_put1 },
+    { "putn",         l_agg_putn },
     { "unbufferize",  l_agg_unbufferize },
     { NULL,  NULL         }
   };
@@ -424,7 +475,7 @@ static const struct luaL_Reg aggregator_functions[] = {
   /*
   ** Open aggregator library
   */
-  int luaopen_libagg (lua_State *L) {
+  int luaopen_libagg${lbl} (lua_State *L) { 
     /* Create the metatable and put it on the stack. */
     luaL_newmetatable(L, "Aggregator");
     /* Duplicate the metatable on the stack (We know have 2). */
@@ -465,4 +516,6 @@ static const struct luaL_Reg aggregator_functions[] = {
     luaL_register(L, NULL, aggregator_functions);
     // Why is return code not 0
     return 1;
+}
+]],
 }

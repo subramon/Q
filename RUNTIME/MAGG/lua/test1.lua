@@ -11,7 +11,7 @@ vals[#vals+1] = y
 vals[#vals+1] = z
 vals[#vals+1] = w
 T.vals = vals
-T.so = "libtest1.so"
+T.lbl = "ABC"
 return T
 -- local libgen = require 'libgen'
 -- libgen(T)
