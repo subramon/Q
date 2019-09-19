@@ -91,19 +91,41 @@ tests.t2 = function(n)
   assert(M.nitems == num_consumed)
   local num_consumed = A:consume()
   assert(num_consumed == 0 )
-  Vs = A:set_produce(k)
-  assert(type(Vs) == "table")
-  assert(#Vs == num_vals) 
-  for k = 1, #vtypes do 
-    assert(Vs[k]:fldtype() == vtypes[k])
+  local inVs = { v1, v2, v3, v4 }
+  local outVs = A:set_produce(k)
+  assert(type(outVs) == "table")
+  assert(#outVs == num_vals) 
+  for j = 1, #vtypes do 
+    assert(outVs[j]:fldtype() == vtypes[j])
   end
-  for k = 1, #vtypes do 
-    assert(Vs[k]:eval())
+  for j = 1, #vtypes do 
+    assert(outVs[j]:eval())
   end
-  for k = 1, num_vals do 
-    assert(Vs[1]:is_eov())
+  for j = 1, num_vals do 
+    assert(outVs[j]:is_eov())
   end
-  -- Q.print_csv(Vs)
+  -- Q.print_csv(outVs)
+  for j = 1, num_vals do 
+    local n1, n2 = Q.sum(Q.vveq(inVs[j], outVs[j])):eval()
+    assert(n1 == n2)
+  end
+  for j = 1, k:length() do
+    local key = k:get_one(j-1)
+    local is_found, oldval = A:del1(key)
+    assert(is_found == true)
+  end
+  local M = A:meta()
+  assert(M.nitems == 0)
+  A:unset_produce()
+  local outVs = A:set_produce(k)
+  for j = 1, #vtypes do 
+    local n1, n2 = Q.sum(Q.vveq(
+      outVs[j], 
+      Q.const({val = 0, len = k:length(), qtype = vtypes[j]}))):eval()
+    assert(n1 == n2)
+    
+  end
+
   print("Success on test t2")
 end
 -- return tests

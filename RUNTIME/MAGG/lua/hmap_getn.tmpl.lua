@@ -51,7 +51,6 @@ ${fn}(
         }
         if ( ( bkts[probe_loc].key == 0 ) || 
           ( num_probes > bkts[probe_loc].psl ) ) { 
-            printf("not found \n");
             break; // not found
           }
           num_probes++;
