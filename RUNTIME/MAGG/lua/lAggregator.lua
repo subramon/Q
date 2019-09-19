@@ -300,6 +300,10 @@ end
 
 function lAggregator:set_produce(keyvec)
   -- not an errro: assert ( self._is_instantiated == true )
+  -- set_produce can be called only after set_consume
+  assert(self._inkeyvec)
+  assert(self._valvecs)
+
   assert ( type(self._outkeyvec) == "nil" ) -- key vector not set
   if ( qconsts.debug ) then self:check() end
   assert(type(keyvec) == "lVector")
@@ -307,42 +311,36 @@ function lAggregator:set_produce(keyvec)
   assert( keytype == self._params.keytype )
   self._outkeyvec = keyvec
 
-  --[[ TODO 
-  --==============================================
-  local valtype = self._meta._valtype
-  local val_buf 
   local chunk_idx = 0
   local first_call = true
-  --==============================================
-  local key_ctype = qconsts.qtypes[keytype].ctype
-  local val_ctype = qconsts.qtypes[valtype].ctype
-  local key_cast_as = key_ctype .. " * "
-  local val_cast_as = val_ctype .. " * "
-  --==============================================
+  local val_bufs = {}
+  local val_vecs = {}
 
-  local function valgen (chunk_num)
-    assert(chunk_num == chunk_idx)
-    if ( first_call ) then
-      first_call = false
-      local bufsz = qconsts.chunk_size * qconsts.qtypes[valtype].width
-      val_buf = assert(cmem.new(bufsz, valtype))
+  for k, v in pairs(self._params.vals) do
+    local valtype = v.valtype
+    local function valgen (chunk_num)
+      assert(chunk_num == chunk_idx)
+      if ( first_call ) then
+        first_call = false
+        for k, v in pairs(self._params.vals) do
+          local valtype = v.valtype
+          local bufsz = qconsts.chunk_size * qconsts.qtypes[valtype].width
+          val_bufs[k] = assert(cmem.new(bufsz, valtype))
+        end
+      end
+      local key_len, key_chunk, nn_key_chunk = keyvec:chunk(chunk_idx)
+      if ( key_len == 0 ) then 
+        -- delete all val_bufs except mine 
+        return 0 
+      end 
+      -- TODO local status = Aggregator.getn(key_chunk, val_bufs)
+  
+      chunk_idx = chunk_idx + 1
+      return key_len, val_buf
     end
-    local key_len, key_chunk, nn_key_chunk
-    key_len, key_chunk, nn_key_chunk = keyvec:chunk(chunk_idx)
-    if key_len > 0 then
-      local chunk1 = ffi.cast(key_cast_as,  get_ptr(key_chunk))
-      local start_time = qc.RDTSC()
-      -- TODO Here is the call 
-    else
-      val_buf = nil
-    end
-    chunk_idx = chunk_idx + 1
-    return key_len, val_buf
+    val_vecs[k] = lVector( { qtype = valtype, gen = valgen, has_nulls = false} )
   end
-  valvec = lVector( { qtype = valtype, gen = valgen, has_nulls = false} )
-  return valvec
-  --]]
-  return true
+  return val_vecs
 end
 
 return lAggregator

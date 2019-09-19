@@ -72,11 +72,12 @@ tests.t2 = function(n)
   local T1 = require 'Q/RUNTIME/MAGG/lua/test1'
   local A = lAggregator(T1, "libaggtest1")
   --======================
-   k = Q.seq({ qtype = "I8", start = 1, by = 1, len = n})
-  v1 = Q.seq({ qtype = "F4", start = 1, by = 1, len = n})
-  v2 = Q.seq({ qtype = "I1", start = 1, by = 1, len = n})
-  v3 = Q.seq({ qtype = "I2", start = 1, by = 1, len = n})
-  v4 = Q.seq({ qtype = "I4", start = 1, by = 1, len = n})
+  local num_vals = 4
+  local  k = Q.seq({ qtype = "I8", start = 1, by = 1, len = n})
+  local v1 = Q.seq({ qtype = "F4", start = 1, by = 1, len = n})
+  local v2 = Q.seq({ qtype = "I1", start = 1, by = 1, len = n})
+  local v3 = Q.seq({ qtype = "I2", start = 1, by = 1, len = n})
+  local v4 = Q.seq({ qtype = "I4", start = 1, by = 1, len = n})
   -- Q.print_csv({k, v1, v2, v3, v4})
   assert(A:set_consume(k, { v1, v2, v3, v4}))
   local num_consumed = A:consume()
@@ -85,6 +86,17 @@ tests.t2 = function(n)
   else
     assert(num_consumed == qconsts.chunk_size)
   end
+  local M = A:meta()
+  assert(M.nitems == num_consumed)
+  local num_consumed = A:consume()
+  assert(num_consumed == 0 )
+  Vs = A:set_produce(k)
+  assert(type(Vs) == "table")
+  assert(#Vs == num_vals) 
+  assert(Vs[1]:fldtype() == "F4")
+  assert(Vs[2]:fldtype() == "I1")
+  assert(Vs[3]:fldtype() == "I2")
+  assert(Vs[4]:fldtype() == "I4")
   print("Success on test t2")
 end
 -- return tests
