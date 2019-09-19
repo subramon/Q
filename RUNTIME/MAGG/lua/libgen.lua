@@ -149,6 +149,20 @@ local function libgen(
   end
   Z[#Z+1] = ""
   subs.mk_scalar_get1 = table.concat(Z, "\n");
+
+  local W = {}
+  for i, v in ipairs(T.vals) do 
+    local cvaltype = qconsts.qtypes[v.valtype].ctype
+    W[#W+1] = "case " .. i .. " :\n" ..
+    "  for ( int j = 0; j < chunk_size; j++ ) { \n" ..
+    "   ptr_agg->ptr_bufs->mvals[j].val_" .. i .. " = ((" ..
+    cvaltype .. " *)ptr_val->data)[j];\n" ..
+    "  }\n" .. 
+    "break;\n"
+  end
+  W[#W+1] = ""
+  subs.mk_putn = table.concat(W, "\n");
+
   gen_code.dotc(subs, srcdir)
   --=============================
   gen_src(subs, "hmap_chk_no_holes")

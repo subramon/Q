@@ -14,7 +14,7 @@ ${fn}( // hmap_putn
     int nT,
     val_t *vals, // INPUT [nkeys] 
     uint32_t nkeys, // INPUT
-    uint8_t *fnds, // OUTPUT [nkeys] Whether found or not. TODO: Change to bits
+    uint8_t *fnds, // OUTPUT [nkeys] Whether found or not. 
     uint32_t *ptr_num_new, // OUTPUT for diagnostics
     uint64_t *ptr_num_probes // OUTPUT for diagnostics
     );
@@ -39,7 +39,7 @@ ${fn}( // hmap_putn
     int nT, // number of threads
     val_t *vals, // INPUT [nkeys] 
     uint32_t nkeys, // INPUT
-    uint8_t *fnds, // OUTPUT [nkeys bits] TODO: Change to bits
+    uint8_t *fnds, // OUTPUT [nkeys bits] 
     uint32_t *ptr_num_new, // OUTPUT for diagnostics
     uint64_t *ptr_num_probes // OUTPUT for diagnostics
     )
@@ -67,26 +67,25 @@ ${fn}( // hmap_putn
       register ${ckeytype} key = keys[j];
       register bkt_t *bkts = ptr_hmap->bkts;
       uint32_t probe_loc = locs[j]; // fast_rem32(hash, size, divinfo);
-      bool is_found = false;
+      fnds[j] = false;
 
       for ( ; ; ) { // search until found 
         if ( bkts[probe_loc].key == key ) {
           // start code for update
           // stop  code for update
-          is_found = true;
+          fnds[j] = true;
           break; 
         }
         if ( ( bkts[probe_loc].key == 0 ) || 
             ( num_probes > bkts[probe_loc].psl ) ) { 
           // not found
-          is_found = false;
+          fnds[j] = false;
           break; 
         }
         num_probes++;
         probe_loc++; if ( probe_loc == size ) { probe_loc = 0; }
       }
-      if ( fnds != NULL ) { fnds[j] = is_found; }
-      if ( is_found == false ) { 
+      if ( fnds[j] == false ) { 
         if ( is_new[mytid] == 0 ) {
           is_new[mytid] = 1;
         }

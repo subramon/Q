@@ -116,35 +116,30 @@ static int l_agg_putn( lua_State *L)
   uint64_t num_probes = 0;
   uint32_t num_new    = 0;
 
-  int num_args = lua_gettop(L); if ( num_args != 4 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 5 ) { go_BYE(-1); }
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L,1,"Aggregator");
   CMEM_REC_TYPE *ptr_key   = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
-  int chunk_size  = luaL_checknumber(L, 4);
-  int num_threads = luaL_checknumber(L, 5);
+  int chunk_size  = luaL_checknumber(L, 3);
+  int num_threads = luaL_checknumber(L, 4);
   
-  if ( !lua_istable(L, 3) ) { go_BYE(-1); }
-  luaL_checktype(L, 3, LUA_TTABLE ); // another way of checking
-  int num_vals = luaL_getn(L, 3);  /* get size of table */
+  if ( !lua_istable(L, 5) ) { go_BYE(-1); }
+  luaL_checktype(L, 5, LUA_TTABLE ); // another way of checking
+  int num_vals = luaL_getn(L, 5);  /* get size of table */
   if ( num_vals != HMAP_NUM_VALS ) { go_BYE(-1); }
 
   for ( int i = 1; i <= num_vals; i++ ) { 
-    lua_rawgeti(L, 3+1, i); 
-    CMEM_REC_TYPE *ptr_val = luaL_checkudata(L, 3+1, "CMEM"); 
+    lua_rawgeti(L, 5, i); 
+    CMEM_REC_TYPE *ptr_val = luaL_checkudata(L, 5+1, "CMEM"); 
     switch ( i )  {
-      /*
-      case 1 : oldval.val_1 = ptr_val->cdata.valF4; break;
-      case 2 : oldval.val_2 = ptr_val->cdata.valI1; break;
-      case 3 : oldval.val_3 = ptr_val->cdata.valI2; break;
-      case 4 : oldval.val_4 = ptr_val->cdata.valI4; break;
-      */
+      ${mk_putn}
     }
     lua_pop(L, 1);
     int n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
   }
-   status = hmap_putn(ptr_agg->ptr_hmap, (keytype *)ptr_key->data,
+  status = hmap_putn(ptr_agg->ptr_hmap, (keytype *)ptr_key->data,
     ptr_agg->ptr_bufs->hshs, ptr_agg->ptr_bufs->locs, 
     ptr_agg->ptr_bufs->tids, num_threads, ptr_agg->ptr_bufs->mvals, 
-    chunk_size, NULL, &num_new, &num_probes);
+    chunk_size, ptr_agg->ptr_bufs->fnds, &num_new, &num_probes);
 
   lua_pushboolean(L, true);
   return 1;  
@@ -179,7 +174,7 @@ static int l_agg_put1( lua_State *L)
     lua_rawgeti(L, 2+1, i); 
     SCLR_REC_TYPE *ptr_val = luaL_checkudata(L, 3+1, "Scalar"); 
     switch ( i )  {
-      ${mk_scalar_put1}
+    ${mk_scalar_put1}
       /* START SAMPLE AUTO GENERATED CODE
       case 1 : oldval.val_1 = ptr_val->cdata.valF4; break;
       case 2 : oldval.val_2 = ptr_val->cdata.valI1; break;
@@ -351,6 +346,7 @@ static int l_agg_unbufferize( lua_State *L) {
   BUF_REC_TYPE *ptr_bufs = ptr_agg->ptr_bufs;
   if ( ptr_bufs == NULL ) { go_BYE(-1); }
   free_if_non_null(ptr_bufs->tids);
+  free_if_non_null(ptr_bufs->fnds);
   free_if_non_null(ptr_bufs->locs);
   free_if_non_null(ptr_bufs->hshs);
   free_if_non_null(ptr_bufs->mvals);
@@ -372,6 +368,7 @@ static int l_agg_free( lua_State *L) {
   hmap_destroy(ptr_hmap); 
   if ( ptr_bufs != NULL ) { 
     free_if_non_null(ptr_bufs->tids);
+    free_if_non_null(ptr_bufs->fnds);
     free_if_non_null(ptr_bufs->locs);
     free_if_non_null(ptr_bufs->hshs);
     free_if_non_null(ptr_bufs->mvals);
@@ -398,6 +395,7 @@ static int l_agg_bufferize( lua_State *L) {
   if ( ptr_bufs->hshs  != NULL ) { go_BYE(-1); }
   if ( ptr_bufs->locs  != NULL ) { go_BYE(-1); }
   if ( ptr_bufs->tids  != NULL ) { go_BYE(-1); }
+  if ( ptr_bufs->fnds  != NULL ) { go_BYE(-1); }
   if ( ptr_bufs->mvals != NULL ) { go_BYE(-1); }
 
   ptr_bufs->hshs = calloc(chunk_size, sizeof(uint32_t));
@@ -406,6 +404,8 @@ static int l_agg_bufferize( lua_State *L) {
   return_if_malloc_failed(ptr_bufs->locs);
   ptr_bufs->tids = calloc(chunk_size, sizeof(uint8_t));
   return_if_malloc_failed(ptr_bufs->tids);
+  ptr_bufs->fnds = calloc(chunk_size, sizeof(uint8_t));
+  return_if_malloc_failed(ptr_bufs->fnds);
   ptr_bufs->mvals = calloc(chunk_size, sizeof(val_t));
   return_if_malloc_failed(ptr_bufs->mvals);
   

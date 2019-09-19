@@ -37,7 +37,7 @@ ${fn}(
   *ptr_updated = false;
   memset(ptr_old_val, '\0', sizeof(val_t));
 
-  // 0 is not a valid value for a key, TODO P3 Document this better
+  // 0 is not a valid value for a key, 
   // Note that we do NOT throw an error
   if ( key == 0 ) { return status; }
  
@@ -66,7 +66,7 @@ ${fn}(
     if ( this_key != 0 ) { // If there is a key in the bucket.
       if ( this_key == key ) { 
         *ptr_old_val = bkts[probe_loc].val;
-        ${code_for_update} // TODO 
+        ${code_for_update} 
         ptr_hmap->bkts[probe_loc].cnt += 1;
         *ptr_updated = true;
         break;

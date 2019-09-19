@@ -10,7 +10,7 @@ ${fn} ( // $hmap_getn
     uint32_t *locs, // INPUT [nkeys] 
     val_t *vals, // OUTPUT [nkeys] 
     uint32_t nkeys, // INPUT 
-    uint8_t *fnds // OUTPUT: whether key found or not. TODO Move to bit
+    uint8_t *fnds // OUTPUT: whether key found or not. 
     );
     ]],
 definition = [[
@@ -23,7 +23,7 @@ ${fn}(
     uint32_t *locs, // INPUT [nkeys] 
     val_t *vals, // OUTPUT [nkeys] 
     uint32_t nkeys, // INPUT 
-    uint8_t *fnds // OUTPUT: whether key found or not. TODO Move to bit
+    uint8_t *fnds // OUTPUT: whether key found or not. 
     )
     {
   int status = 0;

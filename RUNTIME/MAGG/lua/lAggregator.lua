@@ -4,7 +4,6 @@ local cmem            = require 'libcmem'
 local register_type   = require 'Q/UTILS/lua/q_types'
 local qc              = require 'Q/UTILS/lua/q_core'
 local to_scalar       = require 'Q/UTILS/lua/to_scalar'
-local get_ptr         = require 'Q/UTILS/lua/get_ptr' -- TODO need this?
 local lVector         = require 'Q/RUNTIME/lua/lVector'
 local libgen          = require 'Q/RUNTIME/MAGG/lua/libgen'
 local Aggregator      -- will be set in instantiate()
@@ -213,6 +212,9 @@ function lAggregator:consume()
   if ( self._is_eov   == true ) then return 0 end 
 
   local chunk_idx = assert(self._chunk_idx)
+  assert(chunk_idx >= 0)
+  num_threads     = assert(self._num_threads)
+  assert(num_threads >= 1)
 
   local k = assert(self._inkeyvec)
   assert( not k:is_eov() )
@@ -233,11 +235,11 @@ function lAggregator:consume()
     assert(vchunk)
   end
 
-  local status = Aggregator.putn(self._agg, kchunk, klen, vchunks)
-  self._vecinfo._chunk_idx = self._vecinfo._chunk_idx + 1
+  local status = Aggregator.putn(self._agg, kchunk, klen, num_threads, vchunks)
+  self._chunk_idx = self._chunk_idx + 1
   if ( klen < qconsts.chunk_size ) then 
     self._is_eov = true
-    assert(Aggregator.unubufferize(self._agg))
+    assert(Aggregator.unbufferize(self._agg))
     self._is_bufferized = false
   end 
 

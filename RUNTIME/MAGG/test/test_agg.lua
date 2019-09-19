@@ -1,4 +1,6 @@
-local lVector = require 'Q/RUNTIME/lua/lVector'
+local Q           = require 'Q'
+local qconsts     = require 'Q/UTILS/lua/q_consts'
+local lVector     = require 'Q/RUNTIME/lua/lVector'
 local lAggregator = require 'Q/RUNTIME/MAGG/lua/lAggregator'
 
 local tests = {}
@@ -61,8 +63,30 @@ tests.t1 = function(n, niters)
   status, msg = pcall(A.set_consume, A, k, { v1, v2, v3, v4})
   assert( not status)
   print(msg)
-  --======================
   print("Success on test t1")
 end
+tests.t2 = function(n)
+  local n = n or 1000
+  --======================
+  -- create an aggregator, should work
+  local T1 = require 'Q/RUNTIME/MAGG/lua/test1'
+  local A = lAggregator(T1, "libaggtest1")
+  --======================
+   k = Q.seq({ qtype = "I8", start = 1, by = 1, len = n})
+  v1 = Q.seq({ qtype = "F4", start = 1, by = 1, len = n})
+  v2 = Q.seq({ qtype = "I1", start = 1, by = 1, len = n})
+  v3 = Q.seq({ qtype = "I2", start = 1, by = 1, len = n})
+  v4 = Q.seq({ qtype = "I4", start = 1, by = 1, len = n})
+  -- Q.print_csv({k, v1, v2, v3, v4})
+  assert(A:set_consume(k, { v1, v2, v3, v4}))
+  local num_consumed = A:consume()
+  if ( qconsts.chunk_size >= num_consumed ) then 
+    assert(num_consumed == n)
+  else
+    assert(num_consumed == qconsts.chunk_size)
+  end
+  print("Success on test t2")
+end
 -- return tests
-tests.t1()
+tests.t2()
+  os.exit()
