@@ -181,6 +181,8 @@ is_file_size_okay(
     expected_fsz = num_elements * ptr_vec->field_size;
   }
   if ( expected_fsz != actual_fsz ) {
+    fprintf(stderr, "Expected %" PRI64 " elements, got %" PRI64 "\n",
+        expected_fsz,  actual_fsz);
     WHEREAMI; return false;
   }
   else {
