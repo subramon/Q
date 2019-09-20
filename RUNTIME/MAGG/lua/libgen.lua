@@ -48,6 +48,10 @@ local function libgen(
   -- lbl is a unique label for each .so file we gernate
   -- if lbl = foobar, then we generate libaggfoobar.so
   local lbl = assert(T.lbl) 
+  -- TODO lbl should be generated if not provided
+  -- TODO make sure that separate libagg is created for each aggregator
+  -- TODO more specifically for each unique params
+  local rawlibname = "libagg" .. lbl
   assert(type(lbl) == "string")
   assert(#lbl >= 1 )
   local libname = qconsts.Q_ROOT .. "/lib/libagg" .. lbl .. ".so"
@@ -227,6 +231,6 @@ local function libgen(
   if ( status ~= 0 ) then print(command) end 
   assert(status == 0)
 
-  return true
+  return rawlibname 
 end
 return libgen

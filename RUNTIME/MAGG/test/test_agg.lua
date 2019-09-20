@@ -161,5 +161,5 @@ end
 -- return tests
 -- tests.t1()
 -- tests.t2()
--- tests.t3()
+tests.t3(1000)
 os.exit()

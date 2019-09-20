@@ -20,10 +20,8 @@ setmetatable(lAggregator, {
 register_type(lAggregator, "lAggregator")
 
 local function  mk_so(params)
-  assert(libgen(params))
-  return require(params.so)
-  -- make sure that separate libagg is created for each aggregator
-  -- more specifically for each unique params
+  local rawlibname = assert(libgen(params))
+  return rawlibname
 end
 
 function lAggregator:instantiate()
@@ -62,7 +60,7 @@ function lAggregator.new(params)
   local outtbl
   local num_vals = assert(#params.vals)
   for i = 1, num_vals do intbl[#intbl+1] = "string_" .. i end 
-  Aggregator = assert(mk_so(params))
+  Aggregator = assert(require(mk_so(params)))
   agg._agg, outtbl = assert(Aggregator.new(intbl))
   for i = 1, num_vals do assert(outtbl[i] == intbl[i]) end 
   local M = {}
@@ -300,9 +298,9 @@ end
 
 function lAggregator:set_produce(keyvec)
   -- not an errro: assert ( self._is_instantiated == true )
-  -- set_produce can be called only after set_consume
-  assert(self._inkeyvec)
-  assert(self._valvecs)
+  -- This is okay assert(self._inkeyvec)
+  -- This is okay   assert(self._valvecs)
+  -- Above okay because set_produce can be called before set_consume
 
   assert ( type(self._outkeyvec) == "nil" ) -- key vector not set
   if ( qconsts.debug ) then self:check() end
