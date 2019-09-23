@@ -1,11 +1,11 @@
 local Q = require 'Q'
 -- stand alone testing local mk_kv       = require 'Q/OPERATORS/MDB/lua/mk_comp_key_val'
-local get_nDR     = require 'Q/OPERATORS/MDB/lua/get_nDR'
-local mk_in       = require 'Q/OPERATORS/MDB/test/mk_mdb_input'
-local mk_template = require 'Q/OPERATORS/MDB/lua/mk_template'
-local qconsts     = require 'Q/UTILS/lua/q_consts'
-local qc          = require 'Q/UTILS/lua/q_core'
-local lAggregator = require 'Q/RUNTIME/AGG/lua/lAggregator'
+local get_nDR      = require 'Q/OPERATORS/MDB/lua/get_nDR'
+local mk_mdb_input = require 'Q/OPERATORS/MDB/test/mk_mdb_input'
+local mk_template  = require 'Q/OPERATORS/MDB/lua/mk_template'
+local qconsts      = require 'Q/UTILS/lua/q_consts'
+local qc           = require 'Q/UTILS/lua/q_core'
+local lAggregator  = require 'Q/RUNTIME/AGG/lua/lAggregator'
 
 local tests = {}
 tests.t1 = function()
@@ -15,13 +15,16 @@ tests.t1 = function()
     ns[i] = ns[i-1] * 2 
   end
   for _, n in pairs(ns) do 
-    local Tk, n = mk_in.f1(n); assert(n)
+    local Tk, n = mk_mdb_input.f1(n); assert(n)
     local nDR, vecs = get_nDR(Tk)
     local template, nR, nD, nC = mk_template(nDR)
     --=============================================
-    local val_vec = Q.seq({ start = 2, incr = 4, qtype = "F4", len = n})
+    local val_vec = Q.seq({ start = 2, incr = 4, qtype = "F4", len = n}):
+      memo(false)
   -- stand alone  local key_vec, val_vec = mk_kv(Tk,  val_vec)
     local key_vec, val_vec = Q.mk_comp_key_val(Tk,  val_vec)
+    key_vec:memo(false)
+    val_vec:memo(false)
     assert(type(key_vec) == "lVector")
     assert(type(val_vec) == "lVector")
     local chunk_idx = 0
@@ -45,7 +48,7 @@ end
 
 tests.t2 = function()
   local m = 256 * 1048576
-  local Tk, n = mk_in.f1(m); assert(n)
+  local Tk, n = mk_mdb_input.f1(m); assert(n)
   local nDR, vecs = get_nDR(Tk)
   local template, nR, nD, nC = mk_template(nDR)
   --=============================================
@@ -73,4 +76,7 @@ tests.t2 = function()
   --=============================
   print("Success on test t2")
 end
-return tests
+-- return tests
+-- tests.t1()
+tests.t2()
+os.exit()

@@ -2,6 +2,7 @@
 #define __Q_CONSTANTS_H
 // Commnting Q_CHUNK_SIZE as it is referenced from q_consts.lua
 //#define Q_CHUNK_SIZE 65536
+#define Q_MAX_LEN_VEC_NAME 63
 #define Q_MIN_CHUNK_SIZE_OPENMP 64
 #define Q_MAX_LEN_INTERNAL_NAME  31
 #define Q_MAX_LEN_QTYPE_NAME    3
