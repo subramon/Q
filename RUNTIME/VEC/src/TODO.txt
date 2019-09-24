@@ -1,0 +1,1 @@
+Make it Okay for a vector to have 0 elements
