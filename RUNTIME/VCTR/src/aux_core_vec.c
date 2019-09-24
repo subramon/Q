@@ -245,3 +245,20 @@ allocate_chunk(
 {
   return 1;
 }
+
+int64_t 
+get_exp_file_size(
+    uint64_t num_elements,
+    uint32_t field_size,
+    const char * const fldtype
+    )
+{
+  int64_t expected_file_size = num_elements * ptr_vec->field_size;
+  if ( strcmp(fldtype, "B1") == 0 ) {
+    uint64_t num_words = num_elements / 64;
+    if ( ( num_words * 64 ) != num_elements ) { num_words++; }
+    expected_file_size = num_words * 8;
+  }
+  return expected_file_size;
+}
+

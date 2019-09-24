@@ -2,7 +2,6 @@
 #include "core_vec.h"
 #include "aux_core_vec.h"
 #include "cmem.h"
-#include "mm.h"
 #include "vec_globals.h"
 #include "_rs_mmap.h"
 #include "_rand_file_name.h"
@@ -32,24 +31,6 @@ RDTSC(
   return ((uint64_t)hi << 32) | lo;
 #endif
 }
-
-
-uint64_t t_l_vec_check;       static uint32_t n_l_vec_check;
-uint64_t t_l_vec_clone;       static uint32_t n_l_vec_clone;
-uint64_t t_l_vec_free;        static uint32_t n_l_vec_free;
-uint64_t t_l_vec_get1;        static uint32_t n_l_vec_get1;
-uint64_t t_l_vec_get_all;     static uint32_t n_l_vec_get_all;
-uint64_t t_l_vec_get_chunk;   static uint32_t n_l_vec_get_chunk;
-uint64_t t_l_vec_new;         static uint32_t n_l_vec_new;
-uint64_t t_l_vec_put1;         static uint32_t n_l_vec_put1;
-uint64_t t_l_vec_start_write; static uint32_t n_l_vec_start_write;
-
-uint64_t t_l_vec_flush;             static uint32_t n_l_vec_flush;
-uint64_t t_memcpy;            static uint32_t n_memcpy;
-uint64_t t_memset;            static uint32_t n_memset;
-
-//-- for memory allocation
-uint64_t t_malloc;            static uint32_t n_malloc;
 
 static inline void 
 l_memcpy(
@@ -83,14 +64,10 @@ l_malloc(
   int status = 0;
   void  *x = NULL;
   uint64_t delta = 0, t_start = RDTSC(); n_malloc++;
-  uint64_t sz1, sz2;
 
   status = posix_memalign(&x, ALIGNMENT, n); 
   if ( status < 0 ) { WHEREAMI; return NULL; }
-  // printf("core_vec.c : Malloc'd %llu \n", n);
   if ( x == NULL ) { WHEREAMI; return NULL; }
-  bool is_incr = true, is_vec = true;
-  status = mm(n, is_incr, is_vec, &sz1, &sz2); 
   if ( status < 0 ) { WHEREAMI; return NULL; }
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_malloc += delta; }
 
@@ -103,17 +80,18 @@ vec_reset_timers(
     )
 {
   printf("reset timers\n");
-  t_l_vec_put1 = 0;         n_l_vec_put1 = 0;
   t_l_vec_check = 0;        n_l_vec_check = 0;
   t_l_vec_clone = 0;        n_l_vec_clone = 0;
+  t_l_vec_flush = 0;        n_l_vec_flush = 0;
   t_l_vec_free = 0;         n_l_vec_free = 0;
   t_l_vec_get1 = 0;         n_l_vec_get1 = 0;
   t_l_vec_get_all = 0;      n_l_vec_get_all = 0;
   t_l_vec_get_chunk = 0;    n_l_vec_get_chunk = 0;
   t_l_vec_new = 0;          n_l_vec_new = 0;
+  t_l_vec_put1 = 0;         n_l_vec_put1 = 0;
   t_l_vec_start_write = 0;  n_l_vec_start_write = 0;
 
-  t_l_vec_flush= 0;               n_l_vec_flush= 0;
+  t_malloc = 0;             n_malloc = 0;
   t_memcpy = 0;             n_memcpy = 0;
   t_memset = 0;             n_memset = 0;
 }
@@ -154,7 +132,7 @@ vec_meta(
   //------------------------------------------------
   sprintf(buf, "fldtype   = \"%s\", ", ptr_vec->fldtype);
   strcat(opbuf, buf);
-  sprintf(buf, "field_size   = %d, ", ptr_vec->field_size);
+  sprintf(buf, "field_width   = %d, ", ptr_vec->field_width);
   strcat(opbuf, buf);
   sprintf(buf, "chunk_size_in_bytes   = %" PRIu32 ", ", ptr_vec->chunk_size_in_bytes);
   strcat(opbuf, buf);
@@ -164,7 +142,7 @@ vec_meta(
   strcat(opbuf, buf);
   sprintf(buf, "name         = \"%s\", ", ptr_vec->name);
   strcat(opbuf, buf);
-  sprintf(buf, "num_chunks   = %u, ", ptr_vec->num_chunks);
+  sprintf(buf, "uqid         = %" PRIu64 ", ", ptr_vec->uqid);
   strcat(opbuf, buf);
   sprintf(buf, "file_name    = \"%s\", ", ptr_vec->file_name);
   strcat(opbuf, buf);
@@ -201,6 +179,7 @@ vec_free(
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_free++;
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
+  // If file has been opened, close it and delete it 
   if ( ( ptr_vec->mmap_addr  != NULL ) && ( ptr_vec->mmap_len > 0 ) )  {
     munmap(ptr_vec->mmap_addr, ptr_vec->mmap_len);
     ptr_vec->mmap_addr = NULL;
@@ -213,10 +192,11 @@ vec_free(
       if ( status != 0 ) { WHEREAMI; }
     }
   }
-  //------------
+  //-- Free all chunks that you own
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
     free_chunk(ptr_vec->chunk_dir_idxs[i], ptr_vec->is_persist); 
   }
+  memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
   // Don't do this in C. Lua will do it: free(ptr_vec);
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_free += delta; }
@@ -259,23 +239,18 @@ vec_from_file(
     )
 {
   int status = 0;
+  // Note that we just accept the file name (after some checking)
+  // we do not "load" it into memory. We delay that until needed
   if ( !isfile(file_name) ) { go_BYE(-1); }
-
-  // check file size
-  uint64_t num_elements = ptr_vec->num_elements;
-  int64_t expected_file_size = num_elements * ptr_vec->field_size;
-
-  if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) {
-    uint64_t num_words = num_elements / 64;
-    if ( ( num_words * 64 ) != num_elements ) { num_words++; }
-    expected_file_size = num_words * 8;
-  }
+  expected_file_size = get_exp_file_size(ptr_vec->num_elements,
+      ptr_vec->field_width, ptr_vec->fldtype);
   int64_t actual_file_size = get_file_size(file_name);
   if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
   //------------
   strcpy(ptr_vec->file_name, file_name);
   ptr_vec->file_size = actual_file_size;
   ptr_vec->is_eov    = true;
+  ptr_vec->is_memo   = true;
   //------------
 BYE:
   return status;
@@ -286,6 +261,32 @@ vec_new(
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
     bool is_memo,
+    uint32_t field_width
+    )
+{
+  int status = 0;
+  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_new++;
+
+  if ( ptr_vec == NULL ) { go_BYE(-1); }
+  memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
+  strcpy(ptr_vec->field_type, field_type); 
+  ptr_vec->field_width = field_width;
+  ptr_vec->is_memo     = is_memo;
+  status = chk_field_type(qtype, field_width); cBYE(status);
+  ptr_vec->chunk_size_in_bytes = g_chunk_size * field_width;
+  if ( strcmp(qtype, "B1") == 0 ) {  // SPECIAL CASE
+    ptr_vec->chunk_size_in_bytes = g_chunk_size / 8;
+    if ( ( ( g_chunk_size / 64 ) * 64 ) != g_chunk_size ) { go_BYE(-1); }
+  }
+BYE:
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_new += delta; }
+  return status;
+}
+
+int 
+vec_from_file(
+    VEC_REC_TYPE *ptr_vec,
+    const char * const field_type,
     const char *const file_name,
     int64_t num_elements
     )
@@ -295,47 +296,27 @@ vec_new(
 
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
+  strcpy(ptr_vec->field_type, field_type); 
+  ptr_vec->field_width = field_width;
 
-  char qtype[4]; int field_size = 0;
-  memset(qtype, '\0', 4);
-  if ( strcmp(field_type, "B1") == 0 ) {
-    strcpy(qtype, field_type); field_size = 1; // SPECIAL CASE
-  }
-  else if ( strcmp(field_type, "I1") == 0 ) {
-    strcpy(qtype, field_type); field_size = 1;
-  }
-  else if ( strcmp(field_type, "I2") == 0 ) {
-    strcpy(qtype, field_type); field_size = 2;
-  }
-  else if ( strcmp(field_type, "I4") == 0 ) {
-    strcpy(qtype, field_type); field_size = 4;
-  }
-  else if ( strcmp(field_type, "I8") == 0 ) {
-    strcpy(qtype, field_type); field_size = 8;
-  }
-  else if ( strcmp(field_type, "F4") == 0 ) {
-    strcpy(qtype, field_type); field_size = 4;
-  }
-  else if ( strcmp(field_type, "F8") == 0 ) {
-    strcpy(qtype, field_type); field_size = 8;
-  }
-  else if ( strncmp(field_type, "SC:", 3) == 0 ) {
-    char *xptr = (char *)field_type + 3;
-    status = txt_to_I4(xptr, &field_size); cBYE(status);
-    if ( field_size < 2 ) { go_BYE(-1); }
-    strcpy(qtype, "SC");
+  if ( num_elements <= 0 ) { go_BYE(-1); }
+  int64_t expected_file_size = get_exp_file_size(num_elements,
+    field_width, fldtype);
+  int64_t actual_file_size = get_file_size(file_name);
+  if ( expected_file_size != actual_file_size ) { go_BYE(-1); }
+
   }
   else if ( strcmp(field_type, "TM") == 0 ) {
-    strcpy(qtype, field_type); field_size = sizeof(struct tm); 
+    strcpy(qtype, field_type); field_width = sizeof(struct tm); 
   }
   else {
     fprintf(stderr, "Unknown field_type = ]%s] \n", field_type);
     go_BYE(-1);
   }
 
-  status = chk_field_type(qtype, field_size); cBYE(status);
-  ptr_vec->field_size = field_size;
-  ptr_vec->chunk_size_in_bytes = g_chunk_size * field_size;
+  status = chk_field_type(qtype, field_width); cBYE(status);
+  ptr_vec->field_width = field_width;
+  ptr_vec->chunk_size_in_bytes = g_chunk_size * field_width;
   if ( strcmp(qtype, "B1") == 0 ) {  // SPECIAL CASE
     ptr_vec->chunk_size_in_bytes = g_chunk_size / 8;
     if ( ( ( g_chunk_size / 64 ) * 64 ) != g_chunk_size ) { go_BYE(-1); }
@@ -363,6 +344,7 @@ vec_check(
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_check++;
+  if ( !isdir(g_q_data_dir) ) { go_BYE(-1); }
   // cast as int64_t to avoid overflow
   /*
   int64_t chunk_num    = ptr_vec->chunk_num;
@@ -627,7 +609,7 @@ vec_no_memcpy(
   if ( ptr_cmem->data == NULL   ) { go_BYE(-1); }
   if ( ptr_cmem->size <= 0      ) { go_BYE(-1); }
 
-  ptr_vec->chunk_sz = (ptr_vec->field_size * ptr_vec->chunk_size);
+  ptr_vec->chunk_sz = (ptr_vec->field_width * ptr_vec->chunk_size);
   // The CMEM must be the same size as the buffer that the Vector
   // would have allocated had it allocated it on its own
   if ( ptr_cmem->size != ptr_vec->chunk_sz ) { 
@@ -642,13 +624,6 @@ vec_no_memcpy(
   ptr_vec->is_no_memcpy = true;
   ptr_cmem->is_foreign = true; // de-allocation is for Vector not CMEM
 
-  // Adjust the memory counters 
-  uint64_t sz, sz1, sz2;
-  sz = ptr_vec->chunk_sz;
-  bool is_incr = true, is_vec = true;
-  status = mm(sz, is_incr, is_vec, &sz1, &sz2); cBYE(status);
-  is_incr = false; is_vec = false;
-  status = mm(sz, is_incr, is_vec, &sz1, &sz2); cBYE(status);
 BYE:
   return status;
 }
@@ -728,7 +703,7 @@ vec_put1(
     // TODO 
   }
   else {
-    uint32_t sz = ptr_vec->field_size;
+    uint32_t sz = ptr_vec->field_width;
     memcpy(ptr_chunk + (sz*num_in_chunk), data, sz);
   }
 BYE:

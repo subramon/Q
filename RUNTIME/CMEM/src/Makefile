@@ -18,7 +18,7 @@ clean:
 ../../OPERATORS/PRINT/gen_src/_I1_to_txt.c :
 	make -C ../../../OPERATORS/PRINT/lua/
 
-libcmem.so:  
+libcmem.so:   cmem.c 
 	gcc ${QC_FLAGS} ${INCS} \
 		cmem.c \
 		../../../UTILS/src/B1_to_txt.c \

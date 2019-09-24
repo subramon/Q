@@ -42,3 +42,9 @@ extern int32_t
 allocate_chunk(
     void
     );
+extern int64_t 
+get_exp_file_size(
+    uint64_t num_elements,
+    uint32_t field_size,
+    const char * const fldtype
+    );

@@ -1,10 +1,6 @@
 #define LUA_LIB
 
-#define ALIGNMENT  256 // TODO P2 DOCUMENT AND PLACE CAREFULLY
-
-#include <stdlib.h>
-#include <malloc.h>
-#include <math.h>
+#define ALIGNMENT  256 // TODO P4 DOCUMENT AND PLACE CAREFULLY
 
 #include "luaconf.h"
 #include "lua.h"
@@ -27,37 +23,9 @@
 
 #define MIN_VAL 1
 #define MAX_VAL 2
-#define BUFLEN 2047 // TODO: Should not be hard coded. See max txt length
+#define BUFLEN 2047 // TODO P4: Should not be hard coded. See max txt length
 
 int luaopen_libcmem (lua_State *L);
-
-// Prints amount of memory used (as allocated by CMEM, not vec)
-// TODO: P1 Deal with memory
-static int 
-l_cmem_print_mem( 
-    lua_State *L
-    ) 
-{
-  int status = 0;
-  char buf[128];
-  bool is_quiet = true;
-  if ( lua_isboolean(L, 2) ) { 
-    is_quiet = lua_toboolean(L, 2);
-  }
-  uint64_t vec_sz, cmem_sz;
-  status = mm(0, false, false, &vec_sz, &cmem_sz); cBYE(status);
-
-  if ( !is_quiet ) { 
-    fprintf(stdout, "CMEM,sz_malloc,0,%" PRIu64 "\n", cmem_sz);
-  }
-  lua_pushnumber(L, cmem_sz);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  sprintf(buf, "ERROR: Failure in %s \n", __func__);
-  lua_pushstring(L, buf);
-  return 2;
-}
 
 // Sets the CMEM struct to undefined values
 void cmem_undef( // USED FOR DEBUGGING
@@ -84,10 +52,10 @@ int cmem_dupe( // INTERNAL NOT VISIBLE TO LUA
   ptr_cmem->data = data;
   ptr_cmem->size = size;
   if ( ( fldtype != NULL ) && ( *fldtype != '\0' ) ) { 
-    strncpy(ptr_cmem->fldtype, fldtype, 4-1); // TODO Undo hard code
+    strncpy(ptr_cmem->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1); 
   }
   if ( ( cell_name != NULL ) && ( *cell_name != '\0' ) ) { 
-    strncpy(ptr_cmem->cell_name, cell_name, 16-1); // TODO Undo hard code
+    strncpy(ptr_cmem->cell_name, cell_name, Q_MAX_LEN_INTERNAL_NAME-1);
   }
   ptr_cmem->is_foreign = true;
 BYE:
@@ -104,7 +72,6 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
 {
   int status = 0;
   void *data = NULL;
-  uint64_t sz1, sz2;
   if ( size <= 0 ) { go_BYE(-1); }
   // Always allocate a multiple of 16 
   if ( ( ( size / 16 ) * 16 ) != size ) { 
@@ -125,13 +92,11 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
   return_if_malloc_failed(data);
   ptr_cmem->data = data;
   ptr_cmem->size = size;
-  bool is_incr = true, is_vec = false;
-  status = mm(ptr_cmem->size, is_incr, is_vec, &sz1, &sz2); cBYE(status);
   if ( fldtype != NULL ) { 
-    strncpy(ptr_cmem->fldtype, fldtype, 4-1); // TODO Undo hard code
+    strncpy(ptr_cmem->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   }
   if ( cell_name != NULL ) { 
-    strncpy(ptr_cmem->cell_name, cell_name, 16-1); // TODO Undo hard code
+    strncpy(ptr_cmem->cell_name, cell_name, Q_MAX_LEN_INTERNAL_NAME-1);
   }
   ptr_cmem->is_foreign = false;
 BYE:
@@ -178,7 +143,7 @@ static int l_cmem_dupe( lua_State *L)  // ONLY FOR TESTING
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: Could not dupe cmem\n");
+  lua_pushstring(L, __func__);
   return 2;
 }
 static int l_cmem_new( lua_State *L) 
@@ -220,7 +185,7 @@ static int l_cmem_new( lua_State *L)
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: Could not create cmem\n");
+  lua_pushstring(L, __func__);
   return 2;
 }
 
@@ -301,7 +266,7 @@ static int l_cmem_set_default( lua_State *L)
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: cmem:set_default. ");
+  lua_pushstring(L, __func__);
   return 2;
 }
 
@@ -441,7 +406,6 @@ static int l_cmem_is_foreign( lua_State *L) {
 }
 static int l_cmem_free( lua_State *L) 
 {
-  int status = 0;
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
   if ( ptr_cmem->data == NULL ) { 
     // explicit free will cause control to come here
@@ -451,8 +415,7 @@ static int l_cmem_free( lua_State *L)
       /* all is well */
     }
     else {
-      printf("not good\n");
-      go_BYE(-1); 
+      printf("not good\n"); WHEREAMI; goto BYE;
     }
   }
   else {
@@ -465,15 +428,11 @@ static int l_cmem_free( lua_State *L)
           ( strcmp(ptr_cmem->fldtype, "XXX") == 0 ) && 
           ( strcmp(ptr_cmem->cell_name, "Uninitialized") == 0 ) ) {
         /* nothing to do */
-        printf("TODO P0 not good\n");
-        go_BYE(-1); 
+        printf("TODO P0 not good\n"); WHEREAMI; goto BYE;
       }
       else {
         free(ptr_cmem->data);
         ptr_cmem->data = NULL;
-        bool is_add = false, is_vec = false;
-        uint64_t sz1, sz2;
-        status = mm(ptr_cmem->size, is_add, is_vec, &sz1, &sz2); cBYE(status);
         strcpy(ptr_cmem->fldtype, "XXX");
         strcpy(ptr_cmem->cell_name, "Uninitialized");
         ptr_cmem->size = -1;
@@ -481,11 +440,11 @@ static int l_cmem_free( lua_State *L)
     }
   }
   // printf("Freeing %x \n", ptr_cmem);
-  lua_pushboolean(L, true); // TODO P0 Why had we commented this?
+  lua_pushboolean(L, true); 
   return 1; 
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: free failed. ");
+  lua_pushstring(L, __func__);
   return 2;
 }
 
@@ -530,7 +489,7 @@ static int l_cmem_seq( lua_State *L) {
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: tostring. ");
+  lua_pushstring(L, __func__);
   return 2;
 }
 // Following only for debugging and hence has limited usage 
@@ -599,7 +558,7 @@ static int l_cmem_set( lua_State *L) {
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: cmem:set. ");
+  lua_pushstring(L, __func__);
   return 2;
 }
 // Following only for debugging 
@@ -645,7 +604,7 @@ static int l_cmem_to_str( lua_State *L) {
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: tostring. ");
+  lua_pushstring(L, __func__);
   return 2;
 }
 // Following only for debugging 
@@ -714,7 +673,6 @@ static const struct luaL_Reg cmem_methods[] = {
     { "data",     l_cmem_data },
     { "size",     l_cmem_size },
     { "is_foreign",     l_cmem_is_foreign },
-    { "print_mem",     l_cmem_print_mem },
     { "dupe",     l_cmem_dupe }, // only for testing
     { "name",     l_cmem_name },
     { "set_default", l_cmem_set_default },
@@ -732,7 +690,6 @@ static const struct luaL_Reg cmem_functions[] = {
     { "data",     l_cmem_data },
     { "size",     l_cmem_size },
     { "is_foreign",     l_cmem_is_foreign },
-    { "print_mem",     l_cmem_print_mem },
     { "dupe",     l_cmem_dupe }, // only for testing
     { "name",     l_cmem_name },
     { "set",          l_cmem_set               },

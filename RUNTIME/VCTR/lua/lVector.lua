@@ -147,40 +147,36 @@ function lVector.new(arg)
   vector._meta = {}
 
   local num_elements
-  local qtype
+  local field_type
   local field_width
   local file_name
   local nn_file_name
   local has_nulls
-  local is_nascent
   local is_memo = qconsts.is_memo -- referring value from qconsts, default to true
-  local q_data_dir = qconsts.Q_DATA_DIR
 
-  assert(qc.isdir(q_data_dir), "Q_DATA_DIR not present")
+  local is_resurrect = false -- true if file provided in constructor
   assert(type(arg) == "table", "Vector constructor requires table as arg")
 
   if ( arg.is_memo ~= nil ) then 
     assert(type(arg.is_memo) == "boolean")
     is_memo = arg.is_memo
   end
-  -- Validity of qtype will be checked for by vector
-  qtype = assert(arg.qtype, "lVector needs qtype to be specified")
+  field_type = assert(arg.qtype, "lVector needs qtype to be specified")
    --=============================
   field_width = nil
-  assert(qconsts.qtypes[qtype], "Invalid qtype provided")
-  if qtype == "SC" then
+  assert(qconsts.qtypes[field_type], "Invalid qtype provided")
+  if field_type == "SC" then
     field_width = assert(arg.width, "Constant length strings need a length to be specified")
     assert(type(field_width) == "number", "field width must be a number")
     assert(field_width >= 2)
   else
-    if (arg.width ) then 
-      assert(arg.width == qconsts.qtypes[qtype].width) 
+    if ( arg.width ) then 
+      assert(arg.width == qconsts.qtypes[field_type].width) 
     end
   end
    --=============================
-
   if arg.gen then 
-    is_nascent = true
+    is_resurrect = false
     if ( arg.has_nulls == nil ) then
       has_nulls = true
     else
@@ -191,6 +187,7 @@ function lVector.new(arg)
     "supplied generator must be a function or boolean as placeholder ")
     vector._gen = arg.gen
   else -- materialized vector
+    is_resurrect = true
      file_name = assert(arg.file_name, 
      "lVector needs a file_name to read from")
      assert(type(file_name) == "string", 
@@ -206,26 +203,22 @@ function lVector.new(arg)
       has_nulls  = false
       if ( arg.has_nulls ) then assert(arg.has_nulls == false) end
     end
-    is_nascent = false
   end
-
-  if ( qtype == "SC" ) then 
-    qtype = qtype .. ":" .. tostring(field_width)
-  end
-  if ( arg.num_elements ) then  -- TODO P4: Move to Lua style
-    num_elements = arg.num_elements
-  end
-  vector._base_vec = Vector.new(qtype, q_data_dir, file_name, is_memo, 
-    num_elements)
-  assert(vector._base_vec)
-  -- added tonumber() because returned num_elements was of type cdata
-  local num_elements = tonumber(ffi.cast("VEC_REC_TYPE *", vector._base_vec).num_elements)
-  if ( has_nulls ) then 
-    if ( not is_nascent ) then 
-      assert(num_elements > 0)
+  --=============================================
+  if ( is_resurrect ) then 
+    num_elements = assert(arg.num_elements)
+    assert(type(num_elements) == "number")
+    vector._base_vec = Vector.vec_from_file(field_type, file_name,
+      num_elements)
+    if ( has_nulls ) then 
+      vector._nn_vec = Vector.vec_from_file("B1", nn_file_name,
+        num_elements)
     end
-    vector._nn_vec = Vector.new("B1", q_data_dir, nn_file_name, is_memo, num_elements)
-    assert(vector._nn_vec)
+  else
+    vector._base_vec = Vector.new(field_type, is_memo, field_width)
+    if ( has_nulls ) then 
+      vector._nn_vec   = Vector.new("B1", is_memo, field_width)
+    end
   end
   if ( ( arg.name ) and ( type(arg.name) == "string" ) )  then
     Vector.set_name(vector._base_vec, arg.name)
@@ -233,6 +226,7 @@ function lVector.new(arg)
       Vector.set_name(vector._nn_vec, "nn_" .. arg.name)
     end
   end
+  --=============================================
   vector.siblings = {} -- no conjoined vectors
   return vector
 end
