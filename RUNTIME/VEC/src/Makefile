@@ -1,7 +1,8 @@
 # Why are we depending on print and load csv?
 INCS=-I. -I../inc/ \
 	-I../../../UTILS/gen_inc/ \
-	-I../../../UTILS/inc \
+	-I../../../UTILS/inc/ \
+	-I../../CMEM/inc/ \
 	-I/usr/include/lua5.1/ \
 
 
@@ -24,17 +25,16 @@ libvec.so:
 		vector.c \
 		core_vec.c \
 		buf_to_file.c \
-		cmem.c \
-                copy_file.c \
+		copy_file.c \
 		../../../UTILS/src/rs_mmap.c \
 		../../../UTILS/gen_src/_txt_to_I4.c \
 		../../../UTILS/src/is_valid_chars_for_num.c \
 		../../../UTILS/src/rand_file_name.c \
 		../../../UTILS/src/get_file_size.c \
 		../../../UTILS/src/file_exists.c \
-                ../../../UTILS/src/isfile.c \
-                ../../../UTILS/src/isdir.c \
-                ../../../UTILS/src/get_time_usec.c \
+		../../../UTILS/src/isfile.c \
+		../../../UTILS/src/isdir.c \
+		../../../UTILS/src/get_time_usec.c \
 		../../../UTILS/src/B1_to_txt.c \
 		../../../UTILS/gen_src/_I1_to_txt.c \
 		../../../UTILS/gen_src/_I2_to_txt.c \

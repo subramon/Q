@@ -24,7 +24,6 @@
 
 #include "cmem_struct.h"
 #include "cmem.h"
-#include "mm.h"
 
 #define MIN_VAL 1
 #define MAX_VAL 2
@@ -33,6 +32,7 @@
 int luaopen_libcmem (lua_State *L);
 
 // Prints amount of memory used (as allocated by CMEM, not vec)
+// TODO: P1 Deal with memory
 static int 
 l_cmem_print_mem( 
     lua_State *L
