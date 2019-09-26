@@ -18,7 +18,7 @@ vec_print_mem(
 extern int
 chk_field_type(
     const char * const field_type,
-    uint32_t field_size
+    uint32_t field_width
     );
 extern int
 vec_meta(
@@ -34,18 +34,32 @@ update_file_name(
     VEC_REC_TYPE *ptr_vec
     );
 extern int
-get_qtype_and_field_size(
+get_qtype_and_field_width(
     const char * const field_type,
     char * res_qtype,
-    int * res_field_size
+    int * res_field_width
     );
-extern int
+extern int 
+vec_rehydrate(
+    VEC_REC_TYPE *ptr_vec,
+    const char * const field_type,
+    uint32_t field_width,
+    int64_t num_elements,
+    const char *const file_name
+    );
+extern int 
+vec_mrehydrate(
+    VEC_REC_TYPE *ptr_vec,
+    const char * const field_type,
+    uint32_t field_width,
+    int64_t num_elements,
+    const char *const file_name
+    );
+extern int 
 vec_new(
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
-    bool is_memo,
-    const char *const file_name,
-    int64_t num_elements
+    uint32_t field_width
     );
 extern int
 vec_new_virtual(
@@ -183,11 +197,6 @@ vec_delete(
     VEC_REC_TYPE *ptr_vec
     );
 extern int
-vec_from_file(
-    VEC_REC_TYPE *ptr_vec,
-    const char * const file_name
-    );
-extern int
 vec_flush_to_disk(
     VEC_REC_TYPE *ptr_vec
     );
@@ -202,5 +211,11 @@ extern int
 vec_put1(
     VEC_REC_TYPE *ptr_vec,
     const char * const data
+    );
+extern int
+vec_file_name(
+    VEC_REC_TYPE *ptr_vec,
+    int32_t chunk_num,
+    char *file_name
     );
 #endif

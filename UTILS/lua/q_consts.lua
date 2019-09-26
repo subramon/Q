@@ -41,7 +41,8 @@ local qconsts = {}
 
   qconsts.chunk_size = 128 * 1024 -- make this power of 2 and >= 1024
   qconsts.debug = true -- set to TRUE only if you want debugging
-  qconsts.is_memo = true -- Vector code will refer memo value from this place
+  qconsts.is_memo = true -- Vector code uses this default value
+  qconsts.has_nulls = false -- Vector code uses this default value
   qconsts.qc_trace = false -- set to FALSE if performance logging of qc is to be turned off
   local max_width = {}
   max_width["SC"] = 1024 -- 1 char reserved for nullc

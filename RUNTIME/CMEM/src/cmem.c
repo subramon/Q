@@ -1,7 +1,5 @@
 #define LUA_LIB
 
-#define ALIGNMENT  256 // TODO P4 DOCUMENT AND PLACE CAREFULLY
-
 #include "luaconf.h"
 #include "lua.h"
 

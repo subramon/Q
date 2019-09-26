@@ -16,15 +16,20 @@ clean:
 ../../../UTILS/src/is_valid_chars_for_num.c :
 	make -C ../../../UTILS/src/
 
+../../CMEM/src/libcmem.so :
+	make -C ../../CMEM/src/
+
 ../../../OPERATORS/PRINT/gen_src/_I1_to_txt.c :
 	make -C ../../../OPERATORS/PRINT/lua/
 
-libsclr.so: gen_cmp.lua gen_arith.lua _gen_cmp _gen_arith
+libsclr.so: gen_cmp.lua gen_arith.lua _gen_cmp _gen_arith \
+	../../CMEM/src/libcmem.so
 	rm -f _*.c
 	lua gen_cmp.lua
 	lua gen_arith.lua
 	gcc ${QC_FLAGS} ${INCS} \
 		scalar.c \
+		../../CMEM/src/cmem.c \
 		../../../UTILS/src/txt_to_B1.c \
 		../../../UTILS/gen_src/_txt_to_I1.c \
 		../../../UTILS/gen_src/_txt_to_I2.c \

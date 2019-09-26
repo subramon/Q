@@ -1,7 +1,5 @@
 #define LUA_LIB
 
-#define ALIGNMENT 0 // TODO P2 Document and place carefully
-
 #include <stdlib.h>
 #include <math.h>
 #include <inttypes.h>
@@ -59,19 +57,19 @@ static int l_sclr_to_cmem( lua_State *L)
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
   int status = 0;
   if ( ! is_foreign ) {
-    status = cmem_malloc(ptr_cmem,  ptr_sclr->field_size, 
+    status = cmem_malloc(ptr_cmem,  ptr_sclr->field_width, 
         ptr_sclr->field_type, "", ALIGNMENT);
-    memcpy(ptr_cmem->data, &(ptr_sclr->cdata), ptr_sclr->field_size);
+    memcpy(ptr_cmem->data, &(ptr_sclr->cdata), ptr_sclr->field_width);
   }
   else { 
     // Control should not come here, not just yet
     WHEREAMI; goto BYE;
-    status = cmem_dupe(ptr_cmem,  &(ptr_sclr->cdata), ptr_sclr->field_size,
+    status = cmem_dupe(ptr_cmem,  &(ptr_sclr->cdata), ptr_sclr->field_width,
         ptr_sclr->field_type, "");
   }
   if ( status < 0 ) { WHEREAMI; goto BYE; }
   strncpy(ptr_cmem->fldtype, ptr_sclr->field_type, 4-1);
-  ptr_cmem->size = ptr_sclr->field_size;
+  ptr_cmem->size = ptr_sclr->field_width;
 
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
@@ -530,7 +528,7 @@ static int l_sclr_new( lua_State *L) {
       ptr_sclr->cdata.valB1 = tempB1;
     }
     strcpy(ptr_sclr->field_type, "B1"); 
-    ptr_sclr->field_size = sizeof(bool);
+    ptr_sclr->field_width = sizeof(bool);
   }
   else if ( strcmp(qtype, "I1" ) == 0 ) { 
     if ( src != NULL ) { 
@@ -541,7 +539,7 @@ static int l_sclr_new( lua_State *L) {
       memcpy(dst, &tempI1, 1); 
     }
     strcpy(ptr_sclr->field_type, "I1"); 
-    ptr_sclr->field_size = 1;
+    ptr_sclr->field_width = 1;
   }
   else if ( strcmp(qtype, "I2" ) == 0 ) { 
     if ( src != NULL ) { 
@@ -553,7 +551,7 @@ static int l_sclr_new( lua_State *L) {
       memcpy(dst, &tempI2, 2); 
     }
     strcpy(ptr_sclr->field_type, "I2"); 
-    ptr_sclr->field_size = 2;
+    ptr_sclr->field_width = 2;
   }
   else if ( strcmp(qtype, "I4" ) == 0 ) { 
     if ( src != NULL ) { 
@@ -565,7 +563,7 @@ static int l_sclr_new( lua_State *L) {
       memcpy(dst, &tempI4, 4); 
     }
     strcpy(ptr_sclr->field_type, "I4"); 
-    ptr_sclr->field_size = 4;
+    ptr_sclr->field_width = 4;
   }
   else if ( strcmp(qtype, "I8" ) == 0 ) { 
     if ( src != NULL ) { 
@@ -577,7 +575,7 @@ static int l_sclr_new( lua_State *L) {
       memcpy(dst, &tempI8, 8); 
     }
     strcpy(ptr_sclr->field_type, "I8"); 
-    ptr_sclr->field_size = 8;
+    ptr_sclr->field_width = 8;
   }
   else if ( strcmp(qtype, "F4" ) == 0 ) { 
     if ( src != NULL ) { 
@@ -589,7 +587,7 @@ static int l_sclr_new( lua_State *L) {
       memcpy(dst, &tempF4, 4); 
     }
     strcpy(ptr_sclr->field_type, "F4"); 
-    ptr_sclr->field_size = 4;
+    ptr_sclr->field_width = 4;
   }
   else if ( strcmp(qtype, "F8" ) == 0 ) { 
     if ( src != NULL ) { 
@@ -601,7 +599,7 @@ static int l_sclr_new( lua_State *L) {
       memcpy(dst, &tempF8, 8); 
     }
     strcpy(ptr_sclr->field_type, "F8"); 
-    ptr_sclr->field_size = 8;
+    ptr_sclr->field_width = 8;
   }
   else {
     fprintf(stderr, "Unknown qtype [%s] \n", qtype);

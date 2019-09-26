@@ -150,8 +150,10 @@ function lVector.new(arg)
   local field_type
   local field_width
   local file_name
+  local file_names
   local nn_file_name
-  local has_nulls
+  local nn_file_names
+  local has_nulls = qconsts.has_nulls
   local is_memo = qconsts.is_memo -- referring value from qconsts, default to true
 
   local is_resurrect = false -- true if file provided in constructor
@@ -174,45 +176,65 @@ function lVector.new(arg)
       assert(arg.width == qconsts.qtypes[field_type].width) 
     end
   end
+ --=============================
+  if ( arg.has_nulls) then 
+    assert(type(arg.has_nulls) == "boolean")
+    has_nulls = arg.has_nulls
+  end
    --=============================
   if arg.gen then 
     is_resurrect = false
-    if ( arg.has_nulls == nil ) then
-      has_nulls = true
-    else
-      assert(type(arg.has_nulls) == "boolean")
-      has_nulls = arg.has_nulls
-    end
     assert(type(arg.gen) == "function" or type(arg.gen) == "boolean" , 
     "supplied generator must be a function or boolean as placeholder ")
     vector._gen = arg.gen
   else -- materialized vector
     is_resurrect = true
-     file_name = assert(arg.file_name, 
-     "lVector needs a file_name to read from")
-     assert(type(file_name) == "string", 
-     "lVector's file_name must be a string")
+    file_name  = arg.file_name
+    file_names = arg.file_names
+    assert(file_name or file_names)
+    if ( file_name  ) then assert( not file_names) end 
+    if ( file_names ) then assert( not file_name) end 
+    if ( file_name  ) then assert(type(file_name)  == "string") end
+    if ( file_names ) then 
+      assert(type(file_names) == "table") 
+      for k, v in pairs(file_names) do 
+        assert(type(v) == "string") 
+      end
+    end
 
-    if arg.nn_file_name then
-      nn_file_name = arg.nn_file_name
-      assert(type(nn_file_name) == "string", 
-      "Null vector's file_name must be a string")
-      has_nulls = true
-      if ( arg.has_nulls ) then assert(arg.has_nulls == true) end
-    else
-      has_nulls  = false
-      if ( arg.has_nulls ) then assert(arg.has_nulls == false) end
+    if ( has_nulls ) then 
+      nn_file_name  = arg.nn_file_name
+      nn_file_names = arg.nn_file_names
+      assert(nn_file_name or nn_file_names)
+    if ( nn_file_name  ) then assert( not nn_file_names) end 
+    if ( nn_file_names ) then assert( not nn_file_name) end 
+    if ( nn_file_name  ) then assert(type(nn_file_name)  == "string") end
+    if ( nn_file_names ) then 
+      assert(type(nn_file_names) == "table") 
+      for k, v in pairs(nn_file_names) do 
+        assert(type(v) == "string") 
+      end
+    end
     end
   end
   --=============================================
   if ( is_resurrect ) then 
     num_elements = assert(arg.num_elements)
     assert(type(num_elements) == "number")
-    vector._base_vec = Vector.vec_from_file(field_type, file_name,
-      num_elements)
-    if ( has_nulls ) then 
-      vector._nn_vec = Vector.vec_from_file("B1", nn_file_name,
-        num_elements)
+    if ( file_name ) then -- load from single file 
+      vector._base_vec = Vector.rehydrate(field_type, field_width, 
+        num_elements, file_name)
+      if ( has_nulls ) then 
+        vector._nn_vec = Vector.rehydrate("B1", field_width, 
+          num_elements, nn_file_name)
+      end
+    else
+      vector._base_vec = Vector.mrehydrate(field_type, field_width, 
+        num_elements, file_names)
+      if ( has_nulls ) then 
+        vector._nn_vec = Vector.mrehydrate("B1", field_width, 
+          num_elements, nn_file_names)
+      end
     end
   else
     vector._base_vec = Vector.new(field_type, is_memo, field_width)
@@ -226,6 +248,9 @@ function lVector.new(arg)
       Vector.set_name(vector._nn_vec, "nn_" .. arg.name)
     end
   end
+  --=============================================
+  Vector.memo(vector._base_vec, is_memo)
+  if ( vector._nn_vec ) then Vector.memo(vector._nn_vec, is_memo) end
   --=============================================
   vector.siblings = {} -- no conjoined vectors
   return vector

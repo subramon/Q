@@ -15,7 +15,7 @@ typedef union _cdata_type {
 
 typedef struct _sclr_rec_type {
   char field_type[4]; // MAX_LEN_FIELD_TYPE TODO Fix hard coding
-  uint32_t field_size;
+  uint32_t field_width;
   CDATA_TYPE cdata;
 } SCLR_REC_TYPE;
 #endif

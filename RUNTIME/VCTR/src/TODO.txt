@@ -1,1 +1,23 @@
 Make it Okay for a vector to have 0 elements
+
+Categorize and deal with meta data of Vector properly.
+
+Special ones start with double underscore and are
+__has_nulls
+__name
+__min
+__max
+__sum
+__meaning
+
+
+
+When vector is created with rehydrate, then you need to rename
+files to be consistent with uqid and Q_DATA_DIR format
+
+Does one always need to do the above? Think about it a bit
+
+Fix clean_defs and delete local version of clean_defs
+
+Deal with chunk_dir expansion and contraction
+Deal with chunk_dir_idxs expansion and contraction

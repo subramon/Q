@@ -5,11 +5,12 @@
 typedef struct _chunk_rec_type {
   uint32_t num_in_chunk; // 0 < num_in_chunk <= num_elements_in_chunk 
   uint64_t uqid; // unique identifier across all chunks
-  // (vec_uqid, chunk_num) are pointer back to parent
   uint32_t chunk_num;   // 0 <= chunk_num <  num_chunks
+  // (vec_uqid, chunk_num) are pointer back to parent
+  bool is_file;  // has chunk been backed up to a file?
+  // name of file is Q_DATA_DIR .. "/_" .. as_hex(uqid) .. as_hex_chunk_num)".bin"
   uint64_t vec_uqid; // pointer to parent 
-  char file_name[Q_MAX_LEN_FILE_NAME+1];
-  void *data; 
+  char *data; 
 } CHUNK_REC_TYPE;
 
 typedef struct _vec_rec_type {
@@ -20,8 +21,12 @@ typedef struct _vec_rec_type {
 
   uint64_t num_elements;
   char name[Q_MAX_LEN_VEC_NAME+1]; 
+  // system does not enforce any constraints on name other than it be
+  // alphanumeric and no more than specified length. Useful for debugging
 
   uint64_t uqid; // unique identifier across all vectors
+  bool is_file;  // has Vector been backed up to a file?
+  // name of file is Q_DATA_DIR .. "/_" .. as_hex(uqid) .. ".bin"
   char file_name[Q_MAX_LEN_FILE_NAME+1]; // if entire vector access needed
   size_t file_size; // if entire vector access needed
   char *mmap_addr; // if opened for mmap
@@ -36,6 +41,8 @@ typedef struct _vec_rec_type {
 
   int access_mode; // 0 = unopened, 1 = read, 2 = write
   int sz_chunk_dir_idx; // num_chunks <= sz_chunks
+  // if is_memo == false, we use chunk_dir_idx; else, chunk_dir_idxs
+  uint32_t  chunk_dir_idx;  // (0 .. sz_chunk_dir_idx) 
   uint32_t *chunk_dir_idxs;  // [sz_chunk_dir_idx] 0 indicates empty
 } VEC_REC_TYPE;
 
