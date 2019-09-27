@@ -23,6 +23,7 @@ my_extern uint64_t t_l_vec_get_all;     my_extern uint32_t n_l_vec_get_all;
 my_extern uint64_t t_l_vec_get_chunk;   my_extern uint32_t n_l_vec_get_chunk;
 my_extern uint64_t t_l_vec_new;         my_extern uint32_t n_l_vec_new;
 my_extern uint64_t t_l_vec_put1;        my_extern uint32_t n_l_vec_put1;
+my_extern uint64_t t_l_vec_put_chunk;   my_extern uint32_t n_l_vec_put_chunk;
 my_extern uint64_t t_l_vec_start_write; my_extern uint32_t n_l_vec_start_write;
 //
 //-- memory associated functions

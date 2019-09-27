@@ -35,6 +35,7 @@ vec_reset_timers(
   t_l_vec_get_chunk = 0;    n_l_vec_get_chunk = 0;
   t_l_vec_new = 0;          n_l_vec_new = 0;
   t_l_vec_put1 = 0;         n_l_vec_put1 = 0;
+  t_l_vec_put_chunk = 0;    n_l_vec_put_chunk = 0;
   t_l_vec_start_write = 0;  n_l_vec_start_write = 0;
 
   t_malloc = 0;             n_malloc = 0;
@@ -48,7 +49,6 @@ vec_print_timers(
     )
 {
   printf("print timers\n");
-  fprintf(stdout, "0,add,%u,%" PRIu64 "\n",n_l_vec_put1, t_l_vec_put1);
   fprintf(stdout, "0,check,%u,%" PRIu64 "\n",n_l_vec_check, t_l_vec_check);
   fprintf(stdout, "0,clone,%u,%" PRIu64 "\n",n_l_vec_clone, t_l_vec_clone);
   fprintf(stdout, "0,free,%u,%" PRIu64 "\n",n_l_vec_free, t_l_vec_free);
@@ -56,6 +56,8 @@ vec_print_timers(
   fprintf(stdout, "0,get,%u,%" PRIu64 "\n",n_l_vec_get_all, t_l_vec_get_all);
   fprintf(stdout, "0,get,%u,%" PRIu64 "\n",n_l_vec_get_chunk, t_l_vec_get_chunk);
   fprintf(stdout, "0,new,%u,%" PRIu64 "\n",n_l_vec_new, t_l_vec_new);
+  fprintf(stdout, "0,put1,%u,%" PRIu64 "\n",n_l_vec_put1, t_l_vec_put1);
+  fprintf(stdout, "0,put_chunk,%u,%" PRIu64 "\n",n_l_vec_put_chunk, t_l_vec_put_chunk);
   fprintf(stdout, "0,start_write,%u,%" PRIu64 "\n", n_l_vec_start_write, t_l_vec_start_write);
 
   fprintf(stdout, "1,flush,%u,%" PRIu64 "\n", n_l_vec_flush, t_l_vec_flush);
@@ -196,6 +198,7 @@ vec_new(
   ptr_vec->field_width = field_width;
   status = chk_field_type(field_type, field_width); cBYE(status);
   ptr_vec->chunk_size_in_bytes = get_chunk_size(field_width, field_type);
+  ptr_vec->uqid = RDTSC();
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_new += delta; }
   return status;
@@ -321,14 +324,16 @@ vec_get1(
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_get1++;
-  if ( idx > ptr_vec->num_elements ) { go_BYE(-1); }
-  uint32_t chunk_num = idx / g_chunk_size;
-  if ( chunk_num > ptr_vec->num_chunks ) { go_BYE(-1); }
-  uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_num];
+  if ( ptr_vec->num_elements == 0 ) { go_BYE(-1); }
+  if ( idx >= ptr_vec->num_elements ) { go_BYE(-1); }
+  uint32_t chunk_idx = idx / g_chunk_size;
+  if ( chunk_idx >= ptr_vec->num_chunks ) { go_BYE(-1); }
+  uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_idx];
   chk_chunk_dir_idx(chunk_dir_idx);
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
-  status = load_chunk(ptr_chunk, chunk_num, ptr_vec); cBYE(status);
-  *ptr_data = ptr_chunk->data; 
+  status = load_chunk(ptr_chunk, ptr_vec); cBYE(status);
+  uint32_t in_chunk_idx = idx % g_chunk_size;
+  *ptr_data =  ptr_chunk->data + (in_chunk_idx * ptr_vec->field_width);
 
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_get1 += delta; }
@@ -400,7 +405,7 @@ vec_get_chunk(
   uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_num];
   if ( chunk_dir_idx == 0 ) { go_BYE(-1); }
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
-  status = load_chunk(ptr_chunk, chunk_num, ptr_vec); cBYE(status);
+  status = load_chunk(ptr_chunk, ptr_vec); cBYE(status);
 
   ptr_cmem->data = ptr_chunk->data;
   ptr_cmem->size = ptr_chunk->num_in_chunk;
@@ -429,7 +434,7 @@ vec_start_write(
     uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_num];
     if ( chunk_dir_idx == 0 ) { go_BYE(-1); }
     CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
-    status = load_chunk(ptr_chunk, chunk_num, ptr_vec);  cBYE(status);
+    status = load_chunk(ptr_chunk, ptr_vec);  cBYE(status);
     X  = ptr_chunk->data;
     nX = ptr_chunk->num_in_chunk;
   }
@@ -531,7 +536,6 @@ vec_no_memcpy(
   // The CMEM must be the same size as the buffer that the Vector
   // would have allocated had it allocated it on its own
   if ( ptr_cmem->size != ptr_vec->chunk_sz ) { 
-    printf("hello world\n");
     go_BYE(-1); 
   }
   //------------------------------------
@@ -565,14 +569,19 @@ int
 vec_put_chunk(
     VEC_REC_TYPE *ptr_vec,
     const char * const data,
-    uint32_t chunk_num,
-    uint32_t num_elements
+    uint32_t num_elements,
+    int64_t size // for debugging only
     )
 {
   int status = 0;
+  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_put_chunk++;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( data  == NULL ) { go_BYE(-1); }
+  if ( num_elements == 0 ) { go_BYE(-1); }
+  if ( num_elements > g_chunk_size ) { go_BYE(-1); }
+  if ( size != ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); } // aggressive
 BYE:
+  delta = RDTSC()-t_start; if ( delta > 0 ) { t_l_vec_put_chunk += delta; }
   return status;
 }
 
@@ -588,19 +597,18 @@ vec_put1(
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( data == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov ) { go_BYE(-1); }
-  uint32_t vsz = ptr_vec->chunk_size_in_bytes;
-  uint32_t chunk_dir_idx;
-  uint32_t chunk_idx;
+  uint32_t chunk_dir_idx = 0;
   //---------------------------------------
   status = init_chunk_dir(ptr_vec); cBYE(status);
-  uint32_t chunk_idx = get_chunk_idx();
-  uint32_t chunk_dir_idx = get_chunk_dir_idx(ptr_vec, chunk_idx);
-  status = get_where_to_write(ptr_vec, &chunk_idx, &in_chunk_idx);
-  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+  uint32_t chunk_idx = get_chunk_idx(ptr_vec);
+  status = get_chunk_dir_idx(ptr_vec, chunk_idx, &chunk_dir_idx); cBYE(status);
+  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+  uint32_t in_chunk_idx = ptr_vec->num_elements % g_chunk_size;
   char *data_ptr = ptr_chunk->data + (in_chunk_idx * ptr_vec->field_width);
   memcpy(data_ptr, data, ptr_vec->field_width);
   ptr_chunk->num_in_chunk++;
   ptr_vec->num_elements++;
+  ptr_vec->chunk_dir_idxs[chunk_idx] = chunk_dir_idx;
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_put1 += delta; }
   return status;

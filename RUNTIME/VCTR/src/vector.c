@@ -429,14 +429,19 @@ BYE:
 static int l_vec_put_chunk( lua_State *L) {
   int status = 0;
   void *addr = NULL;
+  int num_args = lua_gettop(L);
+  if ( ( num_args != 2 ) && ( num_args != 3 ) ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   if ( !luaL_testudata (L, 2, "CMEM") ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 2, "CMEM");
-  int32_t len = luaL_checknumber(L, 3);
   if ( ptr_cmem == NULL ) { go_BYE(-1); }
   addr = ptr_cmem->data;
-  //---------------------------------------
-  // TODO status = vec_add(ptr_vec, addr, len); cBYE(status);
+  uint32_t num_in_chunk = 0;
+  if ( num_args == 3 ) {
+    num_in_chunk = luaL_checknumber(L, 3);
+  }
+  status = vec_put_chunk(ptr_vec, addr, num_in_chunk, ptr_cmem->size);
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:

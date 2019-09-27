@@ -20,7 +20,6 @@ free_chunk(
 extern int
 load_chunk(
       CHUNK_REC_TYPE *ptr_chunk, 
-      uint32_t chunk_num,
       VEC_REC_TYPE *ptr_vec
       );
 extern int
@@ -30,7 +29,9 @@ chk_chunk(
 extern int
 allocate_chunk(
     size_t sz,
-    uint32_t *ptr_idx
+    uint32_t chunk_idx,
+    uint64_t vec_uqid,
+    uint32_t *ptr_chunk_dir_idx
     );
 extern int64_t 
 get_exp_file_size(
@@ -76,4 +77,14 @@ initial_case(
 extern uint32_t 
 get_chunk_idx(
     VEC_REC_TYPE *ptr_vec
+    );
+extern int
+init_chunk_dir(
+    VEC_REC_TYPE *ptr_vec
+    );
+extern int 
+get_chunk_dir_idx(
+    VEC_REC_TYPE *ptr_vec,
+    uint32_t chunk_idx,
+    uint32_t *ptr_chunk_dir_idx
     );

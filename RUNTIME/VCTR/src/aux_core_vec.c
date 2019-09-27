@@ -154,7 +154,6 @@ BYE:
 int
 load_chunk(
     CHUNK_REC_TYPE *ptr_chunk, 
-    uint32_t chunk_num,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -185,8 +184,8 @@ load_chunk(
     if ( nX != ptr_vec->file_size ) { go_BYE(-1); }
     ptr_chunk->data = l_malloc(ptr_vec->chunk_size_in_bytes);
     return_if_malloc_failed( ptr_chunk->data);
-    size_t offset = ptr_vec->chunk_size_in_bytes*chunk_num;
-    memcpy( ptr_chunk->data, X+offset, nX);
+    size_t offset = ptr_vec->chunk_size_in_bytes*ptr_chunk->chunk_num;
+    memcpy( ptr_chunk->data, X+offset, ptr_vec->chunk_size_in_bytes);
     munmap(X, nX);
   }
 BYE:
@@ -260,26 +259,33 @@ BYE:
   return status;
 }
 
-uint32_t
+int
 allocate_chunk(
- size_t sz
+    size_t sz,
+    uint32_t chunk_idx,
+    uint64_t vec_uqid,
+    uint32_t *ptr_chunk_dir_idx
     )
 {
   int status = 0;
-  if ( sz == 0 ) { WHEREAMI; return 0; }
-  status = chk_space_in_chunk_dir(); 
-  if ( status != 0 ) { WHEREAMI; return 0; }
+  if ( sz == 0 ) { go_BYE(-1); }
+  status = chk_space_in_chunk_dir();  cBYE(status); 
   // NOTE: we do not allocate 0th entry
   for ( unsigned int i = 1 ; i < g_sz_chunk_dir; i++ ) { 
     if ( g_chunk_dir[i].uqid == 0 ) {
+      g_chunk_dir[i].num_in_chunk = 0;
       g_chunk_dir[i].uqid = RDTSC(); 
+      g_chunk_dir[i].chunk_num = chunk_idx;
+      g_chunk_dir[i].is_file = false;
+      g_chunk_dir[i].vec_uqid = vec_uqid;
       g_chunk_dir[i].data = malloc(sz);
       return_if_malloc_failed(g_chunk_dir[i].data);
-      return i;
+      *ptr_chunk_dir_idx = i; return status;
     }
   }
-  fprintf(stderr, "No space in chunk directory\n"); 
-  return 0; // error 
+  fprintf(stderr, "No space in chunk directory\n"); go_BYE(-1); 
+BYE:
+  return status;
 }
 
 int64_t 
@@ -369,10 +375,9 @@ init_chunk_dir(
     )
 {
   int status = 0;
-  uint32_t chunk_dir_idx;
   if ( ptr_vec->num_elements != 0 ) { return status; }
   if ( ptr_vec->chunk_dir_idxs    != NULL ) { go_BYE(-1); }
-  if ( ptr_vec->sz_chunk_dir_idxs != 0 )    { go_BYE(-1); }
+  if ( ptr_vec->sz_chunk_dir_idx  != 0 )    { go_BYE(-1); }
   if ( ptr_vec->num_chunks        != 0 )    { go_BYE(-1); }
   int nc;
   if ( ptr_vec->is_memo ) { 
@@ -383,6 +388,7 @@ init_chunk_dir(
   }
   ptr_vec->chunk_dir_idxs = calloc(nc, sizeof(int32_t));
   return_if_malloc_failed(ptr_vec->chunk_dir_idxs);
+  ptr_vec->sz_chunk_dir_idx = nc;
 BYE:
   return status;
 }
@@ -393,26 +399,30 @@ get_chunk_idx(
     VEC_REC_TYPE *ptr_vec
     )
 {
-  int status = 0;
-  if ( ptr_vec->num_elements == 0 )  { return 0; }
-  if ( ptr_vec->is_memo ) { return 0; }
-  return (ptr_vec->num_elements+1) / g_q_chunk_size;
+  if ( ptr_vec->is_memo )            { return 0; }
+  return (ptr_vec->num_elements / g_chunk_size);
 }
 
-
-uint32_t 
+int 
 get_chunk_dir_idx(
     VEC_REC_TYPE *ptr_vec,
-    uint32_t chunk_idx
+    uint32_t chunk_idx,
+    uint32_t *ptr_chunk_dir_idx
     )
 {
   int status = 0;
-  if ( chunk_idx >= ptr_vec->sz_chunk_dir_idx )  { WHEREAMI; return 0; } 
-  uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chun_idx];
+  if ( chunk_idx >= ptr_vec->sz_chunk_dir_idx )  { go_BYE(-1); }
+  uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_idx];
   if ( chunk_dir_idx == 0 ) { // we need to set it 
-    chunk_dir_idx == allocate_chunk(ptr_vec->chunk_size_in_bytes); 
+    status = allocate_chunk(ptr_vec->chunk_size_in_bytes, chunk_idx, 
+        ptr_vec->uqid, &chunk_dir_idx); 
+    cBYE(status);
+    ptr_vec->num_chunks++;
   }
-  return chunk_dir_idx;
+  if ( ( chunk_dir_idx <= 0 ) || ( chunk_dir_idx >= g_sz_chunk_dir ) ) { 
+    go_BYE(-1);
+  }
+  *ptr_chunk_dir_idx = chunk_dir_idx;
+BYE:
+  return status;
 }
-
-
