@@ -9,7 +9,12 @@
 #include "vec_globals.h"
 
 #define NUM_CHUNKS_TO_ALLOCATE 65536
+#define INITIAL_NUM_CHUNKS_PER_VECTOR 32
 
+// TODO P4 Following macro duplicated. Eliminate that.
+#define chk_chunk_dir_idx(x) { \
+  if ( ( x <= 0 ) || ( (uint32_t)x >= g_sz_chunk_dir ) ) { go_BYE(-1); } \
+}
 void 
 l_memcpy(
     void *dest,
@@ -255,33 +260,26 @@ BYE:
   return status;
 }
 
-int
+uint32_t
 allocate_chunk(
- size_t sz,
- uint32_t *ptr_idx
+ size_t sz
     )
 {
   int status = 0;
-  *ptr_idx = 0;
-  if ( sz == 0 ) { 
-    printf("hello world\n"); 
-    go_BYE(-1); }
-  status = chk_space_in_chunk_dir(); cBYE(status);
-  // we do not allocate 0th entry
+  if ( sz == 0 ) { WHEREAMI; return 0; }
+  status = chk_space_in_chunk_dir(); 
+  if ( status != 0 ) { WHEREAMI; return 0; }
+  // NOTE: we do not allocate 0th entry
   for ( unsigned int i = 1 ; i < g_sz_chunk_dir; i++ ) { 
     if ( g_chunk_dir[i].uqid == 0 ) {
       g_chunk_dir[i].uqid = RDTSC(); 
       g_chunk_dir[i].data = malloc(sz);
       return_if_malloc_failed(g_chunk_dir[i].data);
-      *ptr_idx = i;
-      break;
+      return i;
     }
   }
-  if ( *ptr_idx == 0 ) { 
-    fprintf(stderr, "No space in chunk directory\n"); go_BYE(-1); 
-  }
-BYE:
-  return status; 
+  fprintf(stderr, "No space in chunk directory\n"); 
+  return 0; // error 
 }
 
 int64_t 
@@ -364,3 +362,57 @@ mk_file_name(
 BYE:
   return status;
 }
+
+int
+init_chunk_dir(
+    VEC_REC_TYPE *ptr_vec
+    )
+{
+  int status = 0;
+  uint32_t chunk_dir_idx;
+  if ( ptr_vec->num_elements != 0 ) { return status; }
+  if ( ptr_vec->chunk_dir_idxs    != NULL ) { go_BYE(-1); }
+  if ( ptr_vec->sz_chunk_dir_idxs != 0 )    { go_BYE(-1); }
+  if ( ptr_vec->num_chunks        != 0 )    { go_BYE(-1); }
+  int nc;
+  if ( ptr_vec->is_memo ) { 
+    nc = 1;
+  }
+  else {
+    nc = INITIAL_NUM_CHUNKS_PER_VECTOR;
+  }
+  ptr_vec->chunk_dir_idxs = calloc(nc, sizeof(int32_t));
+  return_if_malloc_failed(ptr_vec->chunk_dir_idxs);
+BYE:
+  return status;
+}
+
+// tells us which chunk to write this element into
+uint32_t 
+get_chunk_idx(
+    VEC_REC_TYPE *ptr_vec
+    )
+{
+  int status = 0;
+  if ( ptr_vec->num_elements == 0 )  { return 0; }
+  if ( ptr_vec->is_memo ) { return 0; }
+  return (ptr_vec->num_elements+1) / g_q_chunk_size;
+}
+
+
+uint32_t 
+get_chunk_dir_idx(
+    VEC_REC_TYPE *ptr_vec,
+    uint32_t chunk_idx
+    )
+{
+  int status = 0;
+  if ( chunk_idx >= ptr_vec->sz_chunk_dir_idx )  { WHEREAMI; return 0; } 
+  uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chun_idx];
+  if ( chunk_dir_idx == 0 ) { // we need to set it 
+    chunk_dir_idx == allocate_chunk(ptr_vec->chunk_size_in_bytes); 
+  }
+  return chunk_dir_idx;
+}
+
+

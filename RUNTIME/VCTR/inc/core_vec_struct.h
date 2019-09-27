@@ -41,8 +41,8 @@ typedef struct _vec_rec_type {
 
   int access_mode; // 0 = unopened, 1 = read, 2 = write
   int sz_chunk_dir_idx; // num_chunks <= sz_chunks
-  // if is_memo == false, we use chunk_dir_idx; else, chunk_dir_idxs
-  uint32_t  chunk_dir_idx;  // (0 .. sz_chunk_dir_idx) 
+  void *data; // if is_memo == false, use this, not indirection to chunks
+  
   uint32_t *chunk_dir_idxs;  // [sz_chunk_dir_idx] 0 indicates empty
 } VEC_REC_TYPE;
 

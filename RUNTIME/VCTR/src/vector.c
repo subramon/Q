@@ -284,15 +284,12 @@ BYE:
 //----------------------------------------
 static int l_vec_get1( lua_State *L) {
   int status = 0;
-  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
   char *data = NULL;
   SCLR_REC_TYPE *ptr_sclr = NULL;
 
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int64_t idx = luaL_checknumber(L, 2);
-
-  luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
-  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
   status = vec_get1(ptr_vec, idx, &data); cBYE(status);
 
@@ -433,9 +430,9 @@ static int l_vec_put_chunk( lua_State *L) {
   int status = 0;
   void *addr = NULL;
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int32_t len = luaL_checknumber(L, 3);
   if ( !luaL_testudata (L, 2, "CMEM") ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 2, "CMEM");
+  int32_t len = luaL_checknumber(L, 3);
   if ( ptr_cmem == NULL ) { go_BYE(-1); }
   addr = ptr_cmem->data;
   //---------------------------------------

@@ -69,3 +69,11 @@ mk_file_name(
     uint64_t uqid, 
     char *file_name
     );
+extern int
+initial_case(
+    VEC_REC_TYPE *ptr_vec
+    );
+extern uint32_t 
+get_chunk_idx(
+    VEC_REC_TYPE *ptr_vec
+    );

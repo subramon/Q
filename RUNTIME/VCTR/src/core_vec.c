@@ -17,7 +17,6 @@
 
 #include "lauxlib.h"
 
-#define INITIAL_NUM_CHUNKS_PER_VECTOR 32
 #define chk_chunk_dir_idx(x) { \
   if ( ( x <= 0 ) || ( (uint32_t)x >= g_sz_chunk_dir ) ) { go_BYE(-1); } \
 }
@@ -297,7 +296,8 @@ vec_memo(
 {
   int status = 0;
   if ( ptr_vec->is_eov == true ) { go_BYE(-1); }
-  if ( ptr_vec->num_chunks > 1 ) { go_BYE(-1); }
+  // No changes about is_memo can be made once creation starts
+  if ( ptr_vec->num_elements > 0 ) { go_BYE(-1); }
   //----------------------------------------
   if ( ( is_memo == false ) && ( ptr_vec->is_persist == true )) {
     // If Vector is to be persisted, it must be memoized 
@@ -322,7 +322,7 @@ vec_get1(
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_get1++;
   if ( idx > ptr_vec->num_elements ) { go_BYE(-1); }
-  uint32_t chunk_num = idx % g_chunk_size;
+  uint32_t chunk_num = idx / g_chunk_size;
   if ( chunk_num > ptr_vec->num_chunks ) { go_BYE(-1); }
   uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_num];
   chk_chunk_dir_idx(chunk_dir_idx);
@@ -590,55 +590,15 @@ vec_put1(
   if ( ptr_vec->is_eov ) { go_BYE(-1); }
   uint32_t vsz = ptr_vec->chunk_size_in_bytes;
   uint32_t chunk_dir_idx;
-  uint32_t chunk_num;
+  uint32_t chunk_idx;
   //---------------------------------------
-  // If no memcpy set, it is ignored by put1, only put_chunk cares
-  if ( ptr_vec->num_chunks == 0 ) { 
-    ptr_vec->chunk_dir_idxs = calloc(INITIAL_NUM_CHUNKS_PER_VECTOR, 
-        sizeof(int32_t));
-    return_if_malloc_failed(ptr_vec->chunk_dir_idxs);
-    status =  allocate_chunk(vsz, &chunk_dir_idx);  cBYE(status);
-    chk_chunk_dir_idx(chunk_dir_idx);
-    ptr_vec->chunk_dir_idxs[ptr_vec->num_chunks] = chunk_dir_idx;
-    ptr_vec->num_chunks++;
-  }
-  if ( ptr_vec->num_chunks == 0 ) { go_BYE(-1); }
-  //------------------------------------------
-  chunk_num = ptr_vec->num_chunks - 1 ;
-  //-- Is current chunk allocated? If not, allocate a chunk
-  //-- This may in turn cause a resizing of g_chunk_dir
-  chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_num];
-  if ( chunk_dir_idx == 0 ) {
-    status =  allocate_chunk(vsz, &chunk_dir_idx);  cBYE(status);
-    chk_chunk_dir_idx(chunk_dir_idx);
-    ptr_vec->chunk_dir_idxs[chunk_num] = chunk_dir_idx;
-  }
-  chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_num];
-  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
-  uint32_t num_in_chunk = ptr_chunk->num_in_chunk;
-  // Is there space in current chunk; if not, allocate
-  if ( num_in_chunk == g_chunk_size ) { 
-    status =  allocate_chunk(vsz, &chunk_dir_idx);  cBYE(status);
-    if ( chunk_dir_idx == 0 ) { go_BYE(-1); }
-    ptr_vec->num_chunks++;
-    chunk_num = ptr_vec->num_chunks - 1;
-    ptr_vec->chunk_dir_idxs[chunk_num] = chunk_dir_idx;
-  }
-  chunk_num = ptr_vec->num_chunks - 1;
-  chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_num];
-  chk_chunk_dir_idx(chunk_dir_idx);
-  ptr_chunk = g_chunk_dir + chunk_dir_idx;
-  num_in_chunk = ptr_chunk->num_in_chunk;
-  if ( num_in_chunk == g_chunk_size ) { go_BYE(-1); }
-  //---------------------------------------
-  if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { // special case
-    go_BYE(-1); 
-    // TODO 
-  }
-  else {
-    uint32_t sz = ptr_vec->field_width;
-    memcpy(ptr_chunk->data + (sz*num_in_chunk), data, sz);
-  }
+  status = init_chunk_dir(ptr_vec); cBYE(status);
+  uint32_t chunk_idx = get_chunk_idx();
+  uint32_t chunk_dir_idx = get_chunk_dir_idx(ptr_vec, chunk_idx);
+  status = get_where_to_write(ptr_vec, &chunk_idx, &in_chunk_idx);
+  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+  char *data_ptr = ptr_chunk->data + (in_chunk_idx * ptr_vec->field_width);
+  memcpy(data_ptr, data, ptr_vec->field_width);
   ptr_chunk->num_in_chunk++;
   ptr_vec->num_elements++;
 BYE:

@@ -16,13 +16,23 @@ assert( not  v:get1(1))
 local M = assert(v:me())
 M = ffi.cast("VEC_REC_TYPE *", M)
 assert(M[0].num_elements == 0)
+assert(v:memo(true))
+assert(v:memo(false))
 
 for i = 1, 1000000 do 
   local s = Scalar.new(i, "F4")
   v:put1(s)
+  if ( i == 1 ) then assert( not v:memo(true)) end
   local M = assert(v:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
   assert(M[0].num_elements == i, "failed at " .. i)
+end
+for i = 1, 1000000 do 
+  local s = v:get1(i-1)
+  print(type(s))
+  assert(type(s) == "Scalar")
+  assert(s:fldtype() == "F4")
+  assert(s:to_num() == i)
 end
 -- lVector:print_timers()
 lVector:reset_timers()

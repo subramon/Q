@@ -21,3 +21,5 @@ Fix clean_defs and delete local version of clean_defs
 
 Deal with chunk_dir expansion and contraction
 Deal with chunk_dir_idxs expansion and contraction
+
+put_chunk has to deal with no_memcpy
