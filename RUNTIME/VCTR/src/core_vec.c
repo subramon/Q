@@ -577,9 +577,27 @@ vec_put_chunk(
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_put_chunk++;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( data  == NULL ) { go_BYE(-1); }
-  if ( num_elements == 0 ) { go_BYE(-1); }
   if ( num_elements > g_chunk_size ) { go_BYE(-1); }
   if ( size != ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); } // aggressive
+  if ( num_elements == 0 ) { num_elements = g_chunk_size; }
+  //-----------------------------------------
+  status = init_chunk_dir(ptr_vec); cBYE(status);
+  if ( ( ( ptr_vec->num_elements / g_chunk_size ) * g_chunk_size ) !=
+           ptr_vec->num_elements ) {
+    go_BYE(-1);
+  }
+  uint32_t chunk_idx;
+  status = get_chunk_idx(ptr_vec, &chunk_idx); cBYE(status);
+  uint32_t chunk_dir_idx = 0;
+  status = get_chunk_dir_idx(ptr_vec, chunk_idx, &chunk_dir_idx); cBYE(status);
+  chk_chunk_dir_idx(chunk_dir_idx);
+  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+  if ( ptr_chunk->num_in_chunk != 0 ) { go_BYE(-1); }
+
+  ptr_chunk->num_in_chunk = num_elements;
+  ptr_vec->num_elements += num_elements;
+  ptr_vec->chunk_dir_idxs[chunk_idx] = chunk_dir_idx;
+
 BYE:
   delta = RDTSC()-t_start; if ( delta > 0 ) { t_l_vec_put_chunk += delta; }
   return status;
@@ -600,7 +618,8 @@ vec_put1(
   uint32_t chunk_dir_idx = 0;
   //---------------------------------------
   status = init_chunk_dir(ptr_vec); cBYE(status);
-  uint32_t chunk_idx = get_chunk_idx(ptr_vec);
+  uint32_t chunk_idx;
+  status = get_chunk_idx(ptr_vec, &chunk_idx); cBYE(status);
   status = get_chunk_dir_idx(ptr_vec, chunk_idx, &chunk_dir_idx); cBYE(status);
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
   uint32_t in_chunk_idx = ptr_vec->num_elements % g_chunk_size;

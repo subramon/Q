@@ -74,9 +74,10 @@ extern int
 initial_case(
     VEC_REC_TYPE *ptr_vec
     );
-extern uint32_t 
+extern int
 get_chunk_idx(
-    VEC_REC_TYPE *ptr_vec
+    VEC_REC_TYPE *ptr_vec,
+    uint32_t *ptr_chunk_idx
     );
 extern int
 init_chunk_dir(

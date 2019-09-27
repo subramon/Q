@@ -394,13 +394,29 @@ BYE:
 }
 
 // tells us which chunk to write this element into
-uint32_t 
+int 
 get_chunk_idx(
-    VEC_REC_TYPE *ptr_vec
+    VEC_REC_TYPE *ptr_vec,
+    uint32_t *ptr_chunk_idx
     )
 {
+  int status = 0;
+  uint32_t *new = NULL;
   if ( ptr_vec->is_memo )            { return 0; }
-  return (ptr_vec->num_elements / g_chunk_size);
+  uint32_t chunk_idx =  (ptr_vec->num_elements / g_chunk_size);
+  uint32_t sz = ptr_vec->sz_chunk_dir_idx;
+  if ( chunk_idx >= sz ) { // need to reallocate space
+    new = calloc(2*sz, sizeof(uint32_t));
+    for ( uint32_t i = 0; i < sz; i++ ) {
+      new[i] = ptr_vec->chunk_dir_idxs[i];
+    }
+    free(ptr_vec->chunk_dir_idxs);
+    ptr_vec->chunk_dir_idxs  = new;
+    ptr_vec->sz_chunk_dir_idx  = 2*sz;
+  }
+  *ptr_chunk_idx = chunk_idx;
+BYE:
+  return status;
 }
 
 int 

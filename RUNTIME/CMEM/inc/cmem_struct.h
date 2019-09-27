@@ -1,5 +1,6 @@
 #ifndef __CMEM_STRUCT_H
 #define __CMEM_STRUCT_H
+#include "q_constants.h"
 
 typedef struct _cmem_rec_type {
   void *data;

@@ -6,9 +6,8 @@ local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local clean_defs = require 'Q/RUNTIME/VCTR/test/clean_defs'
 
-hdrs = clean_defs("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
+local hdrs = clean_defs("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
 ffi.cdef(hdrs)
-
 local tests = {}
 tests.t1 = function()
   local qtype = "F4"
@@ -30,6 +29,7 @@ tests.t1 = function()
     v:put1(s)
     if ( i == 1 ) then 
       print(">>> start deliberate error")
+      print( v:memo(true)) 
       assert( not v:memo(true)) 
       print(">>>  stop deliberate error")
     end
@@ -45,6 +45,7 @@ tests.t1 = function()
   end
   -- lVector:print_timers()
   lVector:reset_timers()
+  print("Successfully completed test t1")
 end
 tests.t2 = function()
   local qtype = "I4"
@@ -65,6 +66,11 @@ tests.t2 = function()
     M = ffi.cast("VEC_REC_TYPE *", M)
     assert(M[0].num_elements == i*chunk_size, "failed at " .. i)
   end
+  local M = assert(v:me())
+  M = ffi.cast("VEC_REC_TYPE *", M)
+  -- print("num_elements = ", M[0].num_elements)
+  -- print("num_chunks = ",   M[0].num_chunks)
+  assert(M[0].num_chunks == num_chunks)
   --[[
   for i = 1, num_chunks do 
     local s = v:get_chunk(i-1)
@@ -72,6 +78,7 @@ tests.t2 = function()
     assert(s:fldtype() == "F4")
   end
   --]]
+  print("Successfully completed test t2")
 end
 -- return tests
 -- tests.t1()
