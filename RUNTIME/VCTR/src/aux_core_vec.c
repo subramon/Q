@@ -323,10 +323,12 @@ get_chunk_size(
 int
 as_hex(
     uint64_t n,
-    char *buf
+    char *buf,
+    size_t buflen
     )
 {
   int status = 0;
+  if ( buflen < 16+1 ) { go_BYE(-1); }
   for ( int i = 0; i < 16; i++ ) { 
     char c;
     switch ( n & 0xF )  {
@@ -362,8 +364,9 @@ mk_file_name(
     )
 {
   int status = 0;
-  char buf[32];
-  status = as_hex(uqid, buf); cBYE(status);
+  int buflen = 32;
+  char buf[buflen];
+  status = as_hex(uqid, buf, buflen); cBYE(status);
   snprintf(buf, Q_MAX_LEN_FILE_NAME, "%s/_%s.bin", g_q_data_dir, buf);
 BYE:
   return status;
@@ -402,11 +405,12 @@ get_chunk_idx(
 {
   int status = 0;
   uint32_t *new = NULL;
-  if ( ptr_vec->is_memo )            { return 0; }
+  if ( ptr_vec->is_memo ) { *ptr_chunk_idx = 0; return status; }
   uint32_t chunk_idx =  (ptr_vec->num_elements / g_chunk_size);
   uint32_t sz = ptr_vec->sz_chunk_dir_idx;
   if ( chunk_idx >= sz ) { // need to reallocate space
     new = calloc(2*sz, sizeof(uint32_t));
+    return_if_malloc_failed(new);
     for ( uint32_t i = 0; i < sz; i++ ) {
       new[i] = ptr_vec->chunk_dir_idxs[i];
     }
@@ -439,6 +443,7 @@ get_chunk_dir_idx(
     go_BYE(-1);
   }
   *ptr_chunk_dir_idx = chunk_dir_idx;
+  ptr_vec->chunk_dir_idxs[chunk_idx] = chunk_dir_idx;
 BYE:
   return status;
 }

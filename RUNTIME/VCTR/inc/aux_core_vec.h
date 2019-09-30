@@ -63,7 +63,8 @@ l_malloc(
 extern int
 as_hex(
     uint64_t n,
-    char *buf
+    char *buf,
+    size_t buflen
     );
 extern int
 mk_file_name(

@@ -332,8 +332,15 @@ vec_get1(
   chk_chunk_dir_idx(chunk_dir_idx);
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
   status = load_chunk(ptr_chunk, ptr_vec); cBYE(status);
-  uint32_t in_chunk_idx = idx % g_chunk_size;
-  *ptr_data =  ptr_chunk->data + (in_chunk_idx * ptr_vec->field_width);
+  if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { 
+    uint32_t words_in_chunk = g_chunk_size / (8 * sizeof(uint64_t));
+    uint32_t word_idx = (idx / words_in_chunk) % words_in_chunk;
+    *ptr_data =  ptr_chunk->data + word_idx;
+  }
+  else {
+    uint32_t in_chunk_idx = idx % g_chunk_size;
+    *ptr_data =  ptr_chunk->data + (in_chunk_idx * ptr_vec->field_width);
+  }
 
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_get1 += delta; }
@@ -408,9 +415,13 @@ vec_get_chunk(
   status = load_chunk(ptr_chunk, ptr_vec); cBYE(status);
 
   ptr_cmem->data = ptr_chunk->data;
-  ptr_cmem->size = ptr_chunk->num_in_chunk;
+  ptr_cmem->size = ptr_chunk->num_in_chunk * ptr_vec->field_width;
+  memset(ptr_cmem->fldtype, '\0', Q_MAX_LEN_QTYPE_NAME);
   strncpy(ptr_cmem->fldtype, ptr_vec->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_cmem->is_foreign = true;
+  status = as_hex(ptr_chunk->uqid, ptr_cmem->cell_name, 
+      Q_MAX_LEN_INTERNAL_NAME); 
+  cBYE(status);
 
   *ptr_num_in_chunk =  ptr_chunk->num_in_chunk;
 BYE:
@@ -597,6 +608,7 @@ vec_put_chunk(
   ptr_chunk->num_in_chunk = num_elements;
   ptr_vec->num_elements += num_elements;
   ptr_vec->chunk_dir_idxs[chunk_idx] = chunk_dir_idx;
+  memcpy(ptr_chunk->data, data, size);
 
 BYE:
   delta = RDTSC()-t_start; if ( delta > 0 ) { t_l_vec_put_chunk += delta; }
@@ -622,12 +634,39 @@ vec_put1(
   status = get_chunk_idx(ptr_vec, &chunk_idx); cBYE(status);
   status = get_chunk_dir_idx(ptr_vec, chunk_idx, &chunk_dir_idx); cBYE(status);
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
-  uint32_t in_chunk_idx = ptr_vec->num_elements % g_chunk_size;
-  char *data_ptr = ptr_chunk->data + (in_chunk_idx * ptr_vec->field_width);
-  memcpy(data_ptr, data, ptr_vec->field_width);
+  if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { 
+    // Unfortunately, need to handle B1 as a special case
+    uint64_t *in_bdata = (uint64_t *)data;
+    uint64_t *out_bdata = (uint64_t *)ptr_chunk->data;
+    uint64_t word_idx = ptr_chunk->num_in_chunk / 64;
+    uint64_t  bit_idx = ptr_chunk->num_in_chunk % 64;
+    uint64_t one = 1 ;
+    uint64_t mask = one << bit_idx;
+    /*
+      int buflen = 32;
+      char buf[buflen];
+      memset(buf, '\0', buflen);
+      as_hex(mask, buf, buflen);
+      printf("%llu, %llu, %s \n", n_l_vec_put1, *in_bdata, buf);
+    */
+    if ( *in_bdata == 0 ) { 
+      mask = ~mask;
+      out_bdata[word_idx] &= mask;
+    }
+    else if ( *in_bdata == 1 ) { 
+      out_bdata[word_idx] |= mask;
+    }
+    else {
+      go_BYE(-1);
+    }
+  }
+  else {
+    uint32_t in_chunk_idx = ptr_vec->num_elements % g_chunk_size;
+    char *data_ptr = ptr_chunk->data + (in_chunk_idx * ptr_vec->field_width);
+    memcpy(data_ptr, data, ptr_vec->field_width);
+  }
   ptr_chunk->num_in_chunk++;
   ptr_vec->num_elements++;
-  ptr_vec->chunk_dir_idxs[chunk_idx] = chunk_dir_idx;
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_put1 += delta; }
   return status;

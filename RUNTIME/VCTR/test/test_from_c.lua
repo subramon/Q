@@ -9,6 +9,7 @@ local clean_defs = require 'Q/RUNTIME/VCTR/test/clean_defs'
 local hdrs = clean_defs("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
 ffi.cdef(hdrs)
 local tests = {}
+-- testing put1 and get1 
 tests.t1 = function()
   local qtype = "F4"
   local width = qconsts.qtypes[qtype].width
@@ -47,17 +48,19 @@ tests.t1 = function()
   lVector:reset_timers()
   print("Successfully completed test t1")
 end
+-- testing put_chunk and get_chunk
 tests.t2 = function()
   local qtype = "I4"
   local width = qconsts.qtypes[qtype].width
   local v = lVector.new(qtype, width);
   
-  local chunk_size = 65536 -- NOTE: this has to be in sync with C
+  local chunk_size = qconsts.chunk_size
+
   local num_chunks = 1024
-  local D = cmem.new(chunk_size * width, "I4")
+  local D = cmem.new(chunk_size * width, qtype)
   for i = 1, num_chunks do 
-    local Dptr = get_ptr(D, "F4")
-    local offset = num_chunks * chunk_size
+    local Dptr = ffi.cast("int32_t *", get_ptr(D, qtype))
+    local offset = (i-1) * chunk_size
     for i = 1, chunk_size do
       Dptr[i-1] = offset + i
     end
@@ -68,19 +71,49 @@ tests.t2 = function()
   end
   local M = assert(v:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
+  local num_elements = tonumber(M[0].num_elements)
   -- print("num_elements = ", M[0].num_elements)
   -- print("num_chunks = ",   M[0].num_chunks)
   assert(M[0].num_chunks == num_chunks)
-  --[[
+  
   for i = 1, num_chunks do 
     local s = v:get_chunk(i-1)
     assert(type(s) == "CMEM")
-    assert(s:fldtype() == "F4")
+    assert(s:size() == chunk_size * width)
   end
-  --]]
+  for i = 1, num_elements do 
+    local s = v:get1(i-1)
+    assert(s:to_num() == i)
+  end
   print("Successfully completed test t2")
+end
+-- testing put1 and get1 for B1
+tests.t3 = function()
+  local qtype = "B1"
+  local width = qconsts.qtypes[qtype].width
+  local v = lVector.new(qtype, width);
+  
+  for i = 1, 1000000 do 
+    local bval
+    if ( ( i % 2 ) == 0 ) then bval = 1 else bval = 0 end 
+    local s = Scalar.new(bval, "B1")
+    v:put1(s)
+    local M = assert(v:me())
+    M = ffi.cast("VEC_REC_TYPE *", M)
+    assert(M[0].num_elements == i, "failed at " .. i)
+  end
+  for i = 1, 1000000 do 
+    local bval
+    if ( ( i % 2 ) == 0 ) then bval = 1 else bval = 0 end 
+    local s = v:get1(i-1)
+    assert(type(s) == "Scalar")
+    assert(s:fldtype() == "B1")
+    assert(s:to_num() == bval, "Entry " .. i .. " expected " .. bval .. " got " .. s:to_num())
+  end
+  print("Successfully completed test t3")
 end
 -- return tests
 -- tests.t1()
-tests.t2()
+-- tests.t2()
+tests.t3()
 

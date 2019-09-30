@@ -305,7 +305,7 @@ static int l_vec_get1( lua_State *L) {
   if ( strcmp(ptr_sclr->field_type, "B1") == 0 ) { 
     uint64_t word = ((uint64_t *)data)[0];
     uint32_t bit_idx = idx % 64;
-    ptr_sclr->cdata.valB1 = word >> bit_idx & 0x1;
+    ptr_sclr->cdata.valB1 = (word >> bit_idx) & 0x1;
   }
   else {
     memcpy(&(ptr_sclr->cdata), data, ptr_vec->field_width);
@@ -351,6 +351,7 @@ static int l_vec_get_chunk( lua_State *L)
   int64_t chunk_num = -1;
   uint32_t num_in_chunk;
 
+  if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   chunk_num = luaL_checknumber(L, 2);
 

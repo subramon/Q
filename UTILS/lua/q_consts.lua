@@ -39,7 +39,7 @@ local qconsts = {}
   qconsts.Q_METADATA_FILE = os.getenv("Q_METADATA_FILE")
   qconsts.LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")
 
-  qconsts.chunk_size = 128 * 1024 -- make this power of 2 and >= 1024
+  qconsts.chunk_size = 64 * 1024 -- make this power of 2 and >= 1024
   qconsts.debug = true -- set to TRUE only if you want debugging
   qconsts.is_memo = true -- Vector code uses this default value
   qconsts.has_nulls = false -- Vector code uses this default value
