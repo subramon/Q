@@ -145,10 +145,6 @@ vec_add_B1(
     char * addr, 
     int32_t len
     );
-extern int 
-flush_to_disk(
-          VEC_REC_TYPE *ptr_vec
-          );
 extern int
 vec_start_write(
     VEC_REC_TYPE *ptr_vec,
@@ -198,7 +194,9 @@ vec_delete(
     );
 extern int
 vec_flush_to_disk(
-    VEC_REC_TYPE *ptr_vec
+    VEC_REC_TYPE *ptr_vec,
+    bool is_flush_all,
+    int chunk_idx
     );
 extern int
 vec_put_chunk(

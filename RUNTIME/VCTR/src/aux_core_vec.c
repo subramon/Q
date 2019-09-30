@@ -4,6 +4,7 @@
 #include "aux_core_vec.h"
 #include "_get_file_size.h"
 #include "_isfile.h"
+#include "_isdir.h"
 #include "_rdtsc.h"
 #include "_rs_mmap.h"
 #include "vec_globals.h"
@@ -140,6 +141,7 @@ free_chunk(
   free_if_non_null(ptr_chunk->data);
   if ( !is_persist ) { 
     char file_name[Q_MAX_LEN_FILE_NAME+1];
+    memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
     status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
     if ( isfile(file_name) ) {
       remove(file_name);
@@ -162,6 +164,7 @@ load_chunk(
   //-- Get the chunk from its backup file if it exists
   if ( ptr_chunk->is_file ) {
     char file_name[Q_MAX_LEN_FILE_NAME+1];
+    memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
     status = mk_file_name(ptr_chunk->chunk_num, file_name); cBYE(status);
     char *X = NULL; size_t nX = 0;
     status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
@@ -177,6 +180,7 @@ load_chunk(
     //-- Get the chunk from vector's backup file if it exists
     if ( !ptr_vec->is_file ) { go_BYE(-1); }
     char file_name[Q_MAX_LEN_FILE_NAME+1];
+    memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
     status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
     char *X = NULL; size_t nX = 0;
     status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
@@ -201,6 +205,7 @@ chk_chunk(
   if ( chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
   char file_name[Q_MAX_LEN_FILE_NAME+1];
+  memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
   status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
   if ( ptr_chunk->uqid == 0 ) { // we expect this to be free 
     if ( ptr_chunk->num_in_chunk != 0 ) { go_BYE(-1); }
@@ -218,7 +223,9 @@ chk_chunk(
       if ( ptr_chunk->is_file ) { go_BYE(-1); }
     }
     if ( ptr_chunk->is_file ) { 
-      if ( !isfile(file_name) ) { go_BYE(-1); }
+      if ( !isfile(file_name) ) { 
+        printf("hello world\n");
+        go_BYE(-1); }
     }
     else {
       if ( isfile(file_name) ) { go_BYE(-1); }
@@ -364,10 +371,14 @@ mk_file_name(
     )
 {
   int status = 0;
-  int buflen = 32;
-  char buf[buflen];
+  int buflen = 31;
+  char buf[buflen+1];
+  memset(buf, '\0', buflen+1);
   status = as_hex(uqid, buf, buflen); cBYE(status);
-  snprintf(buf, Q_MAX_LEN_FILE_NAME, "%s/_%s.bin", g_q_data_dir, buf);
+  // TODO P3 Need to avoid repeated initialization
+  strcpy(g_q_data_dir, getenv("Q_DATA_DIR"));
+  if ( isdir(g_q_data_dir) == false ) { go_BYE(-1); }
+  snprintf(file_name, Q_MAX_LEN_FILE_NAME, "%s/_%s.bin", g_q_data_dir, buf);
 BYE:
   return status;
 }

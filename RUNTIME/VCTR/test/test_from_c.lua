@@ -112,8 +112,45 @@ tests.t3 = function()
   end
   print("Successfully completed test t3")
 end
+-- not put after eov
+-- no flush to disk before eov
+tests.t4 = function()
+  local qtype = "F4"
+  local width = qconsts.qtypes[qtype].width
+  local v = lVector.new(qtype, width);
+  local n = 1000000
+  for i = 1, n do 
+    local s = Scalar.new(i, "F4")
+    v:put1(s)
+  end
+  print(">>> start deliberate error")
+  local status = v:flush_to_disk()
+  print(status)
+  print(">>>  stop deliberate error")
+  v:eov()
+  local status =  v:flush_to_disk(false); -- each chunk individually
+  -- TODO local status =  v:flush_to_disk(true); -- all data as one file 
+  local s = Scalar.new(0, "F4")
+  print(">>> start deliberate error")
+  local status = v:put1(s)
+  assert(not status)
+  print(">>>  stop deliberate error")
+  local num_chunks = n / qconsts.chunk_size ;
+  if ( ( num_chunks % n ) ~= 0 ) then num_chunks = num_chunks + 1 end 
+  for i = 1, num_chunks do 
+    local status = v:flush_to_disk(false, i-1)
+    assert(status, i)
+    print("Flushed chunk ", i)
+  end
+  print(">>> start deliberate error")
+  local status = v:flush_to_disk(false, num_chunks)
+  assert(not status)
+  print(">>>  stop deliberate error")
+  print("Successfully completed test t4")
+end
 -- return tests
 -- tests.t1()
 -- tests.t2()
-tests.t3()
+-- tests.t3()
+tests.t4()
 

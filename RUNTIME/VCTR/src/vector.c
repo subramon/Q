@@ -586,10 +586,29 @@ BYE:
 static int l_vec_flush_to_disk( lua_State *L) 
 {
   int status = 0;
+  int num_args = lua_gettop(L);
+  bool is_flush_all = true;
+  int chunk_idx  = -1;
+  if ( num_args < 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vec_flush_to_disk(ptr_vec); cBYE(status);
+  if ( num_args == 1 ){
+    // nothing to do 
+  }
+  else if ( num_args >= 2 ) {
+    is_flush_all = lua_toboolean(L, 2); 
+    if ( is_flush_all ) { if ( num_args > 2 ) { go_BYE(-1); } }
+    if ( num_args == 3 ) {
+      chunk_idx = lua_tonumber(L, 3); 
+    }
+    if ( num_args > 3 ) { go_BYE(-1); }
+  }
+  status = vec_flush_to_disk(ptr_vec, is_flush_all, chunk_idx); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1; 
 BYE:
-  return status;
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
 }
 
 static int l_vec_clone( lua_State *L) 
