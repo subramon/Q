@@ -680,10 +680,36 @@ vec_flush_to_disk(
     )
 {
   int status = 0;
+  FILE *fp = NULL;
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_flush++;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
   if ( is_flush_all ) { // flush entire vector 
+    char file_name[Q_MAX_LEN_FILE_NAME+1];
+    memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
+    status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
+    fp = fopen(file_name, "wb");
+    return_if_fopen_failed(fp, file_name, "wb");
+    for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
+      char chnk_file_name[Q_MAX_LEN_FILE_NAME+1];
+      uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[i];
+      chk_chunk_dir_idx(chunk_dir_idx);
+      CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+      if ( ptr_chunk->data == NULL ) {
+        char *X = NULL; size_t nX = 0;
+        memset(chnk_file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
+        status = mk_file_name(ptr_chunk->uqid, chnk_file_name); cBYE(status);
+        status = rs_mmap(chnk_file_name, &X, &nX, 0); cBYE(status);
+        fwrite(X, nX, 1, fp);
+        munmap(X, nX);
+        
+      }
+      else {
+        fwrite(ptr_chunk->data, ptr_vec->chunk_size_in_bytes, 1, fp);
+        fflush(fp);
+      }
+    }
+    fclose_if_non_null(fp);
   }
   else {
     uint32_t lb, ub;
@@ -710,6 +736,7 @@ vec_flush_to_disk(
     }
   }
 BYE:
+  fclose_if_non_null(fp);
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_flush += delta; }
   return status;
 }

@@ -129,7 +129,8 @@ tests.t4 = function()
   print(">>>  stop deliberate error")
   v:eov()
   local status =  v:flush_to_disk(false); -- each chunk individually
-  -- TODO local status =  v:flush_to_disk(true); -- all data as one file 
+  local status =  v:flush_to_disk(true); -- all data as one file 
+  assert(status)
   local s = Scalar.new(0, "F4")
   print(">>> start deliberate error")
   local status = v:put1(s)
