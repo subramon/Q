@@ -160,7 +160,16 @@ static int l_vec_me( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   lua_pushlightuserdata(L, ptr_vec);
-  return 1;
+  // Now return table of CHUNK_REC_TYPE
+  lua_newtable(L);
+  for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
+    int chunk_dir_idx = ptr_vec->chunk_dir_idxs[i];
+    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+    lua_pushnumber(L, i+1);
+    lua_pushlightuserdata(L, ptr_chunk);
+    lua_settable(L, -3);
+  }
+  return 2;
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);

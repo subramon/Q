@@ -26,7 +26,10 @@ tests.t1 = function()
   assert(v:memo(true))
   assert(v:memo(false))
   
-  for i = 1, 1000000 do 
+  -- test is currently a bit brittle
+  -- some asserts rely on n=1000000 and chunk_size=65536
+  local n = 1000000
+  for i = 1, n do 
     local s = Scalar.new(i, "F4")
     v:put1(s)
     if ( i == 1 ) then 
@@ -39,11 +42,23 @@ tests.t1 = function()
     M = ffi.cast("VEC_REC_TYPE *", M)
     assert(M[0].num_elements == i, "failed at " .. i)
   end
-  for i = 1, 1000000 do 
+  for i = 1, n do 
     local s = v:get1(i-1)
     assert(type(s) == "Scalar")
     assert(s:fldtype() == "F4")
     assert(s:to_num() == i)
+  end
+  local M, C = assert(v:me())
+  M = ffi.cast("VEC_REC_TYPE *", M)
+  assert(type(C) == "table")
+  for i = 1, #C do
+    local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
+    -- dependent on n = 1000000 and chunk_size = 65536
+    if ( i == 16 ) then
+      assert(chunk[0].num_in_chunk == 16960)
+    else 
+      assert(chunk[0].num_in_chunk == 65536)
+    end
   end
   -- lVector:print_timers()
   lVector:reset_timers()
@@ -165,8 +180,8 @@ tests.t4 = function()
   print("Successfully completed test t4")
 end
 -- return tests
--- tests.t1()
+tests.t1()
 -- tests.t2()
 -- tests.t3()
-tests.t4()
+-- tests.t4()
 
