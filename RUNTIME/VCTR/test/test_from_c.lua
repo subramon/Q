@@ -1,3 +1,4 @@
+local plpath = require 'pl.path'
 local ffi     = require 'ffi'
 local lVector = require 'libvctr'
 local Scalar  = require 'libsclr'
@@ -131,6 +132,7 @@ tests.t4 = function()
   local status =  v:flush_to_disk(false); -- each chunk individually
   local status =  v:flush_to_disk(true); -- all data as one file 
   assert(status)
+  assert(plpath.isfile(v:file_name()))
   local s = Scalar.new(0, "F4")
   print(">>> start deliberate error")
   local status = v:put1(s)
@@ -141,12 +143,25 @@ tests.t4 = function()
   for i = 1, num_chunks do 
     local status = v:flush_to_disk(false, i-1)
     assert(status, i)
-    print("Flushed chunk ", i)
+    local filesz = plpath.getsize(v:file_name(i-1))
+    assert(filesz == qconsts.chunk_size * width)
   end
   print(">>> start deliberate error")
   local status = v:flush_to_disk(false, num_chunks)
   assert(not status)
   print(">>>  stop deliberate error")
+  -- Now delete all the buffers
+  for i = 1, num_chunks do 
+    local status = v:flush_mem(i-1)
+    assert(status)
+  end
+
+  -- Now get all the stuff you put in 
+  for i = 1, n do 
+    local sin = Scalar.new(i, "F4")
+    local sout = v:get1(i-1)
+    assert(sin == sout)
+  end
   print("Successfully completed test t4")
 end
 -- return tests

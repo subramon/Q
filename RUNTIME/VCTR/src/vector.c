@@ -138,7 +138,7 @@ static int l_vec_file_name( lua_State *L) {
   memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int32_t chunk_number = -1;
-  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); 
   if ( num_args == 1 ) { // we want name of file for vector
   } 
   else if ( num_args == 2 ) { // we want name of file for chunk
@@ -583,6 +583,24 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
+static int l_vec_flush_mem( lua_State *L) 
+{
+  int status = 0;
+  int num_args = lua_gettop(L);
+  if ( ( num_args != 1 ) && ( num_args != 2 ) ) { go_BYE(-1); }
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  int chunk_idx  = -1;
+  if ( num_args == 2 ) {
+    chunk_idx = lua_tonumber(L, 2); 
+  }
+  status = vec_flush_mem(ptr_vec, chunk_idx); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
 static int l_vec_flush_to_disk( lua_State *L) 
 {
   int status = 0;
@@ -645,6 +663,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "file_name", l_vec_file_name },
     { "file_size", l_vec_file_size },
     { "fldtype", l_vec_fldtype },
+    { "flush_mem", l_vec_flush_mem },
     { "flush_to_disk", l_vec_flush_to_disk },
     { "get1", l_vec_get1 },
     { "get_all", l_vec_get_all },
@@ -683,6 +702,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "file_name", l_vec_file_name },
     { "file_size", l_vec_file_size },
     { "fldtype", l_vec_fldtype },
+    { "flush_mem", l_vec_flush_mem },
     { "flush_to_disk", l_vec_flush_to_disk },
     { "get1", l_vec_get1 },
     { "get_all", l_vec_get_all },

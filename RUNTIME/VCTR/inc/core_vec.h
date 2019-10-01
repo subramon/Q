@@ -193,6 +193,11 @@ vec_delete(
     VEC_REC_TYPE *ptr_vec
     );
 extern int
+vec_flush_mem(
+    VEC_REC_TYPE *ptr_vec,
+    int chunk_idx
+    );
+extern int
 vec_flush_to_disk(
     VEC_REC_TYPE *ptr_vec,
     bool is_flush_all,

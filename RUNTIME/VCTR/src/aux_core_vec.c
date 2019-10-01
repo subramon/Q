@@ -165,7 +165,7 @@ load_chunk(
   if ( ptr_chunk->is_file ) {
     char file_name[Q_MAX_LEN_FILE_NAME+1];
     memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-    status = mk_file_name(ptr_chunk->chunk_num, file_name); cBYE(status);
+    status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
     char *X = NULL; size_t nX = 0;
     status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
     if ( X == NULL ) { go_BYE(-1); }

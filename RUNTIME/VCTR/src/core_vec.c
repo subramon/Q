@@ -673,6 +673,44 @@ BYE:
 }
 
 int
+vec_flush_mem(
+    VEC_REC_TYPE *ptr_vec,
+    int chunk_idx
+    )
+{
+  int status = 0;
+  FILE *fp = NULL;
+  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_flush++;
+  if ( ptr_vec == NULL ) { go_BYE(-1); }
+  if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
+  uint32_t lb, ub;
+  if ( chunk_idx < 0 ) { 
+    lb = 0;
+    ub = ptr_vec->num_chunks; 
+  }
+  else {
+    if ( (uint32_t)chunk_idx >= ptr_vec->num_chunks ) { go_BYE(-1); }
+    lb = chunk_idx;
+    ub = lb + 1; 
+  }
+  for ( unsigned int i = lb; i < ub; i++ ) { 
+    char file_name[Q_MAX_LEN_FILE_NAME+1];
+    uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[i];
+    chk_chunk_dir_idx(chunk_dir_idx);
+    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+    memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
+    status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
+    // flush buffer only if backup exists
+    if ( !ptr_chunk->is_file ) { go_BYE(-1); }
+    free_if_non_null(ptr_chunk->data);
+    cBYE(status);
+  }
+BYE:
+  fclose_if_non_null(fp);
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_flush += delta; }
+  return status;
+}
+int
 vec_flush_to_disk(
     VEC_REC_TYPE *ptr_vec,
     bool is_flush_all,
@@ -729,6 +767,7 @@ vec_flush_to_disk(
       CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
       memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
       status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
+      remove(file_name);
       status = buf_to_file(ptr_chunk->data, ptr_vec->chunk_size_in_bytes,
           file_name);
       ptr_chunk->is_file = true;
