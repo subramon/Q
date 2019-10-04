@@ -127,6 +127,7 @@ vec_free(
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_l_vec_free++;
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
+  if ( ptr_vec->is_dead ) {  go_BYE(-1); }
   // If file has been opened, close it and delete it 
   if ( ( ptr_vec->mmap_addr  != NULL ) && ( ptr_vec->mmap_len > 0 ) )  {
     munmap(ptr_vec->mmap_addr, ptr_vec->mmap_len);
@@ -135,17 +136,20 @@ vec_free(
   }
   // delete file created for entire access
   if ( ptr_vec->is_file ) { 
-    char file_name[Q_MAX_LEN_FILE_NAME+1];
-    status = mk_file_name(ptr_vec->uqid, file_name);
-    if ( !isfile(file_name) ) { WHEREAMI; /* should not happen */ }
-    status = remove(ptr_vec->file_name);
-    if ( status != 0 ) { /* should not happen */ WHEREAMI; }
+    if ( ptr_vec->is_persist == false ) { 
+      if ( !isfile(ptr_vec->file_name) ) { WHEREAMI; /* error */ }
+      status = remove(ptr_vec->file_name);
+      if ( status != 0 ) { /* should not happen */ WHEREAMI; }
+    }
   }
   //-- Free all chunks that you own
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
     free_chunk(ptr_vec->chunk_dir_idxs[i], ptr_vec->is_persist); 
   }
+  memset(ptr_vec->fldtype, '\0', sizeof(Q_MAX_LEN_QTYPE_NAME+1));
+  memset(ptr_vec->file_name, '\0', sizeof(Q_MAX_LEN_FILE_NAME+1));
   memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
+  ptr_vec->is_dead = true;
   // Don't do this in C. Lua will do it: free(ptr_vec);
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_free += delta; }
@@ -494,7 +498,7 @@ vec_persist(
     )
 {
   int status = 0;
-  if ( ptr_vec->is_memo == false ) { go_BYE(-1); }
+  if ( ptr_vec->is_memo == true ) { go_BYE(-1); }
   ptr_vec->is_persist = is_persist;
 BYE:
   return status;
@@ -728,6 +732,8 @@ vec_flush_to_disk(
     status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
     fp = fopen(file_name, "wb");
     return_if_fopen_failed(fp, file_name, "wb");
+    strcpy(ptr_vec->file_name, file_name);
+    ptr_vec->is_file = true;
     for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
       char chnk_file_name[Q_MAX_LEN_FILE_NAME+1];
       uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[i];

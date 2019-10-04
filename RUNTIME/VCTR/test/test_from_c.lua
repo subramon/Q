@@ -179,9 +179,53 @@ tests.t4 = function()
   end
   print("Successfully completed test t4")
 end
+-- test for reincarnate 
+tests.t5 = function()
+  local qtype = "F4"
+  local width = qconsts.qtypes[qtype].width
+  local v = lVector.new(qtype, width);
+  local n = 1000000
+  for i = 1, n do 
+    local s = Scalar.new(i, "F4")
+    v:put1(s)
+  end
+  assert(v:eov())
+  assert(v:persist())
+  assert(v:flush_to_disk(true))
+  local M, C = assert(v:me())
+  M = ffi.cast("VEC_REC_TYPE *", M)
+  local S = {}
+  S[#S+1] = "lVector("
+  S[#S+1] = "{ "
+  S[#S+1] = "has_nulls = false, "
+  S[#S+1] = "qtype = \"" .. qtype .. "\"," 
+  local sn = string.gsub(tostring(M[0].num_elements), "ULL", "")
+  S[#S+1] = "num_elements = " .. sn .. ","
+
+  local file_name = ffi.string(ffi.cast("char *", M[0].file_name))
+  assert(plpath.isfile(file_name), "file not found " .. file_name)
+  S[#S+1] = "file_name = " .. file_name .. ","
+
+  S[#S+1] = "}"
+  S[#S+1] = ") "
+  local s = table.concat(S, " ")
+  print(s)
+  for i = 1, #C do
+    local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
+  end
+  status = v:__gc()
+  assert(status)
+  assert(plpath.isfile(file_name))
+  print(">>> start deliberate error")
+  status = v:delete()
+  print("<<<< stop deliberate error")
+  assert(not status)
+  print("Successfully completed test t5")
+  print("garbage collection starts")
+end
 -- return tests
-tests.t1()
+-- tests.t1()
 -- tests.t2()
 -- tests.t3()
 -- tests.t4()
-
+tests.t5()
