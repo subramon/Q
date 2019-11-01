@@ -5,7 +5,7 @@ local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local clean_defs = require 'Q/RUNTIME/VCTR/test/clean_defs'
+local clean_defs = require 'Q/UTILS/build/clean_defs'
 
 local hdrs = clean_defs("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
 ffi.cdef(hdrs)
@@ -224,8 +224,9 @@ tests.t5 = function()
   print("garbage collection starts")
 end
 -- return tests
--- tests.t1()
--- tests.t2()
--- tests.t3()
--- tests.t4()
+tests.t1()
+tests.t2()
+os.exit()
+tests.t3()
+tests.t4()
 tests.t5()
