@@ -1,0 +1,3 @@
+sudo luarocks install lpeg
+sudo luarocks install inspect
+sudo luarocks install middleclass

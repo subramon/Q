@@ -5,6 +5,11 @@ local plpath   = require "pl.path"
 local srcdir   = "../xgen_src/"
 local incdir   = "../xgen_inc/"
 
+local make_get1 = require 'Q/RUNTIME/MAGG/lua/make_get1'
+local make_put1 = require 'Q/RUNTIME/MAGG/lua/make_put1'
+local make_getn = require 'Q/RUNTIME/MAGG/lua/make_getn'
+local make_putn = require 'Q/RUNTIME/MAGG/lua/make_putn'
+
 local function gen_src(
   subs,
   fn,
@@ -135,49 +140,11 @@ local function libgen(
   subs.lbl = lbl
   subs.fn = "agg"
   subs.qkeytype = keytype
-  local Z = {}
-  for i, v in ipairs(T.vals) do 
-    Z[#Z+1] = "case " .. i .. " : oldval.val_" .. i .. 
-      " = ptr_val->cdata.val" .. v.valtype .. "; break; "
-  end
-  Z[#Z+1] = ""
-  subs.mk_scalar_put1 = table.concat(Z, "\n");
 
-  local Z = {}
-  for i, v in ipairs(T.vals) do 
-    Z[#Z+1] = "case " .. i .. " :\n" ..
-    " ptr_val_sclr->cdata.val" .. 
-    v.valtype .. " =  oldval.val_" .. i .. ";\n" 
-    .. " strcpy(ptr_val_sclr->field_type, \"" .. v.valtype .. "\");\n"
-    .. "break;"
-  end
-  Z[#Z+1] = ""
-  subs.mk_scalar_get1 = table.concat(Z, "\n");
-
-  local W = {}
-  for i, v in ipairs(T.vals) do 
-    local cvaltype = qconsts.qtypes[v.valtype].ctype
-    W[#W+1] = "case " .. i .. " :\n" ..
-    "  for ( int j = 0; j < num_keys; j++ ) { \n" ..
-    "   ptr_agg->ptr_bufs->mvals[j].val_" .. i .. " = ((" ..
-    cvaltype .. " *)ptr_val->data)[j];\n" ..
-    "  }\n" .. 
-    "break;\n"
-  end
-  W[#W+1] = ""
-  subs.mk_putn = table.concat(W, "\n");
-
-  local V = {}
-  for i, v in ipairs(T.vals) do 
-    local cvaltype = qconsts.qtypes[v.valtype].ctype
-    V[#V+1] = "case " .. i .. " :\n" ..
-    "  for ( int j = 0; j < num_keys; j++ ) { \n" ..
-    "    ((" ..  cvaltype .. " *)ptr_val->data)[j] = ptr_agg->ptr_bufs->mvals[j].val_" .. i .. ";\n" .. 
-    "  }\n" .. 
-    "break;\n"
-  end
-  V[#V+1] = ""
-  subs.mk_getn = table.concat(V, "\n");
+  subs.mk_get1 = make_get1(T)
+  subs.mk_put1 = make_put1(T)
+  subs.mk_putn = make_putn(T)
+  subs.mk_getn = make_getn(T)
 
   gen_code.dotc(subs, srcdir)
   --=============================

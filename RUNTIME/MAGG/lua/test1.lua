@@ -1,3 +1,4 @@
+-- this file contains a sample input for creating a custom agg .so
 local T = {}
 T.keytype = "I8"
 T.cnttype = "I4" -- range needed to count keys

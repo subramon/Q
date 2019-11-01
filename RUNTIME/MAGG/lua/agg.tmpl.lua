@@ -141,7 +141,9 @@ static int l_agg_getn( lua_State *L)
     lua_rawgeti(L, 5, i); 
     CMEM_REC_TYPE *ptr_val = luaL_checkudata(L, 5+1, "CMEM"); 
     switch ( i )  {
+      // START GENERATED CODE make_getn
       ${mk_getn}
+      // STOP  GENERATED CODE make_getn
     }
     lua_pop(L, 1);
     int n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
@@ -176,8 +178,11 @@ static int l_agg_putn( lua_State *L)
   for ( int i = 1; i <= num_vals; i++ ) { 
     lua_rawgeti(L, 5, i); 
     CMEM_REC_TYPE *ptr_val = luaL_checkudata(L, 5+1, "CMEM"); 
+    // TODO Need to parallelize across num_keysnum_keys
     switch ( i )  {
+      // START AUTO GENERATED CODE make_putn
       ${mk_putn}
+      // STOP AUTO GENERATED CODE make_putn
     }
     lua_pop(L, 1);
     int n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
@@ -226,13 +231,9 @@ static int l_agg_put1( lua_State *L)
     lua_rawgeti(L, 2+1, i); 
     SCLR_REC_TYPE *ptr_val = luaL_checkudata(L, 3+1, "Scalar"); 
     switch ( i )  {
-    ${mk_scalar_put1}
-      /* START SAMPLE AUTO GENERATED CODE
-      case 1 : oldval.val_1 = ptr_val->cdata.valF4; break;
-      case 2 : oldval.val_2 = ptr_val->cdata.valI1; break;
-      case 3 : oldval.val_3 = ptr_val->cdata.valI2; break;
-      case 4 : oldval.val_4 = ptr_val->cdata.valI4; break;
-      STOP SAMPLE AUTO GENERATED CODE */
+      // START GENERATED CODE make_put1
+    ${mk_put1}
+      // STOP  GENERATED CODE make_put1
     }
     lua_pop(L, 1);
     int n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
@@ -245,25 +246,9 @@ static int l_agg_put1( lua_State *L)
     lua_pushnumber(L, i);
     SCLR_REC_TYPE *ptr_val_sclr = lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
     switch ( i )  {
+      // START GENERATED CODE 
       ${create_scalars_for_return}
-      /* SAMPLE AUTO GENERATE CODE START
-      case 1 : 
-        ptr_val_sclr->cdata.valF4 = oldval.val_1; 
-        strcpy(ptr_val_sclr->field_type, "F4");
-        break;
-      case 2 : 
-        ptr_val_sclr->cdata.valI1 = oldval.val_2; 
-        strcpy(ptr_val_sclr->field_type, "I1");
-        break;
-      case 3 : 
-        ptr_val_sclr->cdata.valI2 = oldval.val_3; 
-        strcpy(ptr_val_sclr->field_type, "I2");
-        break;
-      case 4 : 
-        ptr_val_sclr->cdata.valI4 = oldval.val_4; 
-        strcpy(ptr_val_sclr->field_type, "I4");
-        break;
-      SAMPLE AUTO GENERATE CODE END */
+      // STOP  GENERATED CODE 
     }
     luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
     lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
@@ -304,25 +289,9 @@ static int l_agg_get1( lua_State *L)
     lua_pushnumber(L, i);
     SCLR_REC_TYPE *ptr_val_sclr = lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
     switch ( i )  {
-      ${mk_scalar_get1}
-      /* START AUTO GENERATE SAMPLE
-      case 1 : 
-        ptr_val_sclr->cdata.valF4 = oldval.val_1; 
-        strcpy(ptr_val_sclr->field_type, "F4");
-        break;
-      case 2 : 
-        ptr_val_sclr->cdata.valI1 = oldval.val_2; 
-        strcpy(ptr_val_sclr->field_type, "I1");
-        break;
-      case 3 : 
-        ptr_val_sclr->cdata.valI2 = oldval.val_3; 
-        strcpy(ptr_val_sclr->field_type, "I2");
-        break;
-      case 4 : 
-        ptr_val_sclr->cdata.valI4 = oldval.val_4; 
-        strcpy(ptr_val_sclr->field_type, "I4");
-        break;
-      STOP AUTO GENERATE CODE SAMPLE */
+      // START AUTO GENERATED CODE make_get1
+      ${mk_get1}
+      // STOP  AUTO GENERATED CODE make_get1
     }
     luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
     lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
@@ -360,25 +329,9 @@ static int l_agg_del1( lua_State *L)
     lua_pushnumber(L, i);
     SCLR_REC_TYPE *ptr_val_sclr = lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
     switch ( i )  {
-      ${mk_scalar_get1}
-      /* START SAMPLE AUTO GENERATE 
-      case 1 : 
-        ptr_val_sclr->cdata.valF4 = oldval.val_1; 
-        strcpy(ptr_val_sclr->field_type, "F4");
-        break;
-      case 2 : 
-        ptr_val_sclr->cdata.valI1 = oldval.val_2; 
-        strcpy(ptr_val_sclr->field_type, "I1");
-        break;
-      case 3 : 
-        ptr_val_sclr->cdata.valI2 = oldval.val_3; 
-        strcpy(ptr_val_sclr->field_type, "I2");
-        break;
-      case 4 : 
-        ptr_val_sclr->cdata.valI4 = oldval.val_4; 
-        strcpy(ptr_val_sclr->field_type, "I4");
-        break;
-      STOP SAMPLE AUTO GENERATE  */
+      // START GENERATED CODE make_get1
+      ${mk_get1}
+      // START GENERATED CODE make_get1
     }
     luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
     lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
@@ -485,6 +438,7 @@ BYE:
 //----------------------------------------
 static int l_agg_check( lua_State *L) {
   int status = 0;
+  // TODO 
   AGG_REC_TYPE *ptr_agg = (AGG_REC_TYPE *)luaL_checkudata(L, 1, "Aggregator");
   lua_pushboolean(L, true);
   return 1;

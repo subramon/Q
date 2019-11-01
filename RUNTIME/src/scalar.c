@@ -162,6 +162,7 @@ static int l_sclr_to_num( lua_State *L) {
     lua_pushnumber(L, ptr_sclr->cdata.valF8);
   }
   else {
+    fprintf(stderr, "Unknown field_type [%s]\n", field_type);
     WHEREAMI; goto BYE;
   }
   return 1;

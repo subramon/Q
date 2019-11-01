@@ -1,3 +1,4 @@
+-- this file contains a sample input for creating a custom agg .so
 local libgen = require 'libgen'
 local T = {}
 T.keytype = "I8"
@@ -8,5 +9,5 @@ vals[#vals+1] = x
 T.vals = vals
 T.so = "libtest2.so"
 T.lbl = "test2"
--- return T
-libgen(T)
+return T
+-- libgen(T)

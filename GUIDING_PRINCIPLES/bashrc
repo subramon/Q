@@ -130,15 +130,18 @@ PS1='\W:$(__git_ps1 "(%s)")\$ '
 alias clean='find . -name "_*" -print -exec rm -f {} \;'
 alias cleano='find . -name "*.o" -print -exec rm -f {} \;'
 alias cleanso='find . -name "*.so" -print -exec rm -f {} \;'
-# export PATH=$PATH:$HOME/TERRA_STUFF/terra-Linux-x86_64-332a506/bin/
+#---------------
 export LUA_PATH="/home/subramon/WORK/?.lua;;"
 # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$Q_ROOT/lib
 # export LUA_INIT="@$HOME/WORK/Q/init.lua"
+# Lua init
+export LUA_INIT="@$HOME/.lua/init.lua"
+#---------------
 alias ghub='cat /home/subramon/GitHubtoken.txt'
 alias netstart='sudo ifdown --exclude=lo -a && sudo ifup --exclude=lo -a '
 source $HOME/WORK/Q/setup.sh
-alias LJT=‘luajit  $Q_SRC_ROOT/TEST_RUNNER/q_testrunner.lua’
+alias LJT='luajit  $Q_SRC_ROOT/TEST_RUNNER/q_testrunner.lua'
 alias LJ="luajit -l Q/TEST_RUNNER/q_testrunner_auxsummary $Q_SRC_ROOT/TEST_RUNNER/q_testrunner.lua"
 
 alias pbcopy="xclip -sel clip"
-
+alias dbg_luajit="$HOME/DBG_LUAJIT/LuaJIT-2.1.0-beta3/src/luajit "
