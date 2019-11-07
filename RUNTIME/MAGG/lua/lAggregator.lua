@@ -89,6 +89,16 @@ function lAggregator.restore()
   -- TODO P2
 end
 
+function lAggregator:freeze()
+  self._is_frozen = true
+  return self
+end
+
+function lAggregator:unfreeze()
+  self._is_frozen = false
+  return self
+end
+
 function lAggregator:put1(key, vals)
   assert ( self._is_dead == false ) 
   assert ( self._is_frozen == false ) 
