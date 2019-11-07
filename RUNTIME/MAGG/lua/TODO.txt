@@ -1,0 +1,1 @@
+Check that is_frozen used everywhere it should be

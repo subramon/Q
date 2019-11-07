@@ -6,11 +6,11 @@ typedef struct _met_rec_type {
 } MET_REC_TYPE;
 
 typedef struct _buf_rec_type {
-  uint8_t *fnds;
-  uint8_t *tids;
-  uint32_t *locs;
-  uint32_t *hshs;
-  val_t *mvals;
+  uint8_t *fnds; // boolean saying whether value found or not
+  uint8_t *tids; // thread ID indicating who will process it 
+  uint32_t *locs; // initial location to start search 
+  uint32_t *hshs; // hash of key 
+  val_t *mvals; // values to be maintained forthis key
 } BUF_REC_TYPE;
 
 typedef struct _agg_rec_type {

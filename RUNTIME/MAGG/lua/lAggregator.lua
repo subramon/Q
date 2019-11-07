@@ -61,6 +61,8 @@ function lAggregator.new(params)
   local num_vals = assert(#params.vals)
   for i = 1, num_vals do intbl[#intbl+1] = "string_" .. i end 
   Aggregator = assert(require(mk_so(params)))
+  -- Note intbl and outtbl in the following are used just to improve 
+  -- my understanding of how to pass tables to and from C 
   agg._agg, outtbl = assert(Aggregator.new(intbl))
   for i = 1, num_vals do assert(outtbl[i] == intbl[i]) end 
   local M = {}
@@ -71,6 +73,7 @@ function lAggregator.new(params)
   agg._is_instantiated = false
   agg._is_bufferized   = false
   agg._is_dead         = false
+  agg._is_frozen       = false -- no puts, only gets
   agg._is_eov          = false
   agg._chunk_idx       = 0
   agg._num_threads     = qc['q_omp_get_num_procs']()
@@ -88,16 +91,21 @@ end
 
 function lAggregator:put1(key, vals)
   assert ( self._is_dead == false ) 
+  assert ( self._is_frozen == false ) 
   if ( self._is_instantiated == false ) then self:instantiate() end
   --==============
-  local invaltype  -- to remember whether val was given to us as a
-  -- Scalar or a table to make sure that we return it in same way
+  -- get key and convert to Scalar if not already so 
   assert(key)
-  assert(vals)
   if ( type(key) == "number" ) then 
     key = to_scalar(key, self._params.keytype)
   end
-
+  assert(type(key) == "Scalar") 
+  --==========
+  local invaltype  -- to remember whether val was given to us as a
+  -- Scalar or a table to make sure that we return it in same way
+  -- Note that we convert vals to table of Scalars before calling C
+  --==========
+  assert(vals)
   if ( type(vals) == "number" ) then 
     vals = to_scalar(vals, self._params.keytype)
   end
@@ -108,6 +116,7 @@ function lAggregator:put1(key, vals)
     invaltype = "table"
   end
   assert(type(vals) == "table")
+  --==========
 
   local cnt = 0
   for i, v in ipairs(vals) do 
