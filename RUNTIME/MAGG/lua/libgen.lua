@@ -10,6 +10,8 @@ local make_put1 = require 'Q/RUNTIME/MAGG/lua/make_put1'
 local make_getn = require 'Q/RUNTIME/MAGG/lua/make_getn'
 local make_putn = require 'Q/RUNTIME/MAGG/lua/make_putn'
 
+local make_put1_return = require 'Q/RUNTIME/MAGG/lua/make_put1_return'
+
 local function gen_src(
   subs,
   fn,
@@ -145,6 +147,8 @@ local function libgen(
   subs.mk_put1 = make_put1(T)
   subs.mk_putn = make_putn(T)
   subs.mk_getn = make_getn(T)
+
+  subs.mk_put1_return = make_put1_return(T)
 
   gen_code.dotc(subs, srcdir)
   --=============================

@@ -3,7 +3,7 @@ local function make_put1(T)
   local Z = {}
   local ccode = [[
   case __I__ : 
-    oldval.val___I__ = ptr_val->cdata.val__VALTYPE__;
+    newval.val___I__ = ptr_val->cdata.val__VALTYPE__;
   break;
   ]]
   for i, v in ipairs(T.vals) do 

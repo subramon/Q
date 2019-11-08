@@ -238,17 +238,17 @@ static int l_agg_put1( lua_State *L)
     lua_pop(L, 1);
     int n = lua_gettop(L); if ( n != (num_args  ) ) { go_BYE(-1); }
   }
-  status = hmap_put(ptr_hmap, key, oldval, &newval, &is_updated, &num_probes);
+  status = hmap_put(ptr_hmap, key, newval, &oldval, &is_updated, &num_probes);
 
-  // Now return table of strings 
+  // Now return old values as table of Scalars, 
   lua_newtable(L);
   for ( int i = 1; i <= num_vals; i++ ) { 
     lua_pushnumber(L, i);
     SCLR_REC_TYPE *ptr_val_sclr = lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
     switch ( i )  {
-      // START GENERATED CODE 
-      ${create_scalars_for_return}
-      // STOP  GENERATED CODE 
+      // START GENERATED CODE  make_put1 return 
+      ${mk_put1_return}
+      // STOP  GENERATED CODE  make_put1 return 
     }
     luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
     lua_setmetatable(L, -2); /* Set the metatable on the userdata. */

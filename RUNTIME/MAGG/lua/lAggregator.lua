@@ -99,6 +99,10 @@ function lAggregator:unfreeze()
   return self
 end
 
+function lAggregator:is_frozen()
+  return self._is_frozen 
+end
+
 function lAggregator:put1(key, vals)
   assert ( self._is_dead == false ) 
   assert ( self._is_frozen == false ) 
@@ -136,13 +140,14 @@ function lAggregator:put1(key, vals)
     assert(type(vals[i]) == "Scalar" )
   end
   --==============
-  local oldvals, updated = assert(Aggregator.put1(self._agg, key, vals))
+  local oldvals, is_updated = assert(Aggregator.put1(self._agg, key, vals))
   self._meta._num_puts = self._meta._num_puts + 1
   if ( qconsts.debug ) then 
-    assert(type(updated) == "boolean" )
+    assert(type(is_updated) == "boolean" )
     assert(type(oldvals) == "table" )
     for  i, v in ipairs(oldvals) do 
       assert(type(v) == "Scalar" ) 
+      assert(v:fldtype() == self._params.vals[i].valtype)
     end
     self:check() 
   end 
@@ -150,7 +155,7 @@ function lAggregator:put1(key, vals)
     oldvals = oldvals[1]
     assert(type(oldvals) == "Scalar" ) 
   end
-  return oldvals, updated
+  return oldvals, is_updated
 end
 
 function lAggregator:is_bufferized()

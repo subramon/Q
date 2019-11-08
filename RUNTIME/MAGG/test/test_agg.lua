@@ -12,9 +12,17 @@ tests.t1 = function(n, niters)
   local A = lAggregator(T1, "libaggtest1")
   A:instantiate()
   for i = 1, n do
-    A:put1(100+i, { 10, 20, 30, 40 })
+    oldvals, is_updated = A:put1(100+i, { 10, 20, 30, 40 })
+    assert(type(is_updated) == "boolean")
+    assert(type(oldvals) == "table")
+    assert(#oldvals == #{ 10, 20, 30, 40 })
+    assert(is_updated == false) -- key being put for first time 
+    for k, v in ipairs(oldvals) do 
+      assert(v:to_num() == 0) -- oldval = 0 because key did not exist prior
+    end
   end
   local M = A:meta()
+
   -- for i, v in pairs(M) do print(i, v) end 
   assert(M.nitems == n)
   for i = 1, n do
@@ -32,15 +40,38 @@ tests.t1 = function(n, niters)
     assert(oldval[2]:to_num() == 20)
     assert(oldval[3]:to_num() == 30)
     assert(oldval[4]:to_num() == 40)
-    
   end
   local M = A:meta()
   assert(M.nitems == 0)
+  -- ==============================================
+  -- look for keys that are not there. Should get back false
+  for i = 1, n do
+    local is_found, cnt, oldval = A:get1(100+n+i)
+    assert(is_found == false)
+  end
+  -- ==============================================
+  -- if we put the same thing again, the cnt should become 2 on get
+  for i = 1, n do 
+    A:put1(100+i, { 10, 20, 30, 40 })
+    A:put1(100+i, { 10, 20, 30, 40 })
+    local is_found, cnt, oldval = A:get1(100+i)
+    assert(cnt == 2, cnt)
+  end
+  --==============================================
   --== testing bufferizing
   for i = 1, niters do  -- set to large number for stress testing
     A:bufferize()
     A:unbufferize()
   end
+  -- START testing freezing
+  local M = A:meta()
+  A:freeze()
+  local status, msg = pcall(A.put1, A, 102, { 10, 20, 30, 40})
+  assert(not status)
+  A:unfreeze()
+  local status, msg = pcall(A.put1, A, 102, { 10, 20, 30, 40})
+  assert(status)
+  -- STOP testing freezing
   --== testing setting/unsetting produce
   local k = lVector( { qtype = "I8", gen = true, has_nulls = false})
   for i = 1, niters do  -- set to large number for stress testing
@@ -158,8 +189,8 @@ tests.t3 = function(m, n)
   print("num_chunks, n = ", num_chunks, n)
   print("Success on test t3")
 end
-return tests
--- tests.t1()
+-- return tests
+tests.t1()
 -- tests.t2()
 -- tests.t3(1000)
--- print("All done"); os.exit()
+print("All done"); os.exit()
