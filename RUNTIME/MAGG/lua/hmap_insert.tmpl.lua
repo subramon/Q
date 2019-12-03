@@ -56,6 +56,7 @@ ${fn}(
   memset(&entry, '\0', sizeof(bkt_t));
   entry.val = val;
   entry.key = key;
+  entry.cnt = 1; // TODO EXPERIMENTAL P1 
   //-----------
   register bkt_t *bkts  = ptr_hmap->bkts;
   probe_loc = fast_rem32(hash, size, divinfo);
@@ -68,6 +69,7 @@ ${fn}(
         *ptr_old_val = bkts[probe_loc].val;
         ${code_for_update} 
         ptr_hmap->bkts[probe_loc].cnt += 1;
+        // NOTE assumption: cnt has been initialized to 0
         *ptr_updated = true;
         break;
       }
@@ -87,8 +89,6 @@ ${fn}(
     }
     else {
       bkts[probe_loc] = entry;
-      ptr_hmap->bkts[probe_loc].cnt += 1; 
-      // NOTE assumption: cnt has been initialized to 0
       ptr_hmap->nitems++;
       break;
     }

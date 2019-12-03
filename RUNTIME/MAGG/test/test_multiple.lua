@@ -133,4 +133,8 @@ tests.t3 = function()
   --=========================
   print("Success on test t3")
 end
-return tests
+-- return tests
+tests.t1()
+tests.t2()
+tests.t3()
+os.exit()

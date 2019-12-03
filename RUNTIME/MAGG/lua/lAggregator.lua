@@ -20,7 +20,7 @@ setmetatable(lAggregator, {
 register_type(lAggregator, "lAggregator")
 
 local function  mk_so(params)
-  local rawlibname = assert(libgen(params))
+  local rawlibname = assert(libgen(params, true))
   return rawlibname
 end
 
@@ -380,6 +380,61 @@ function lAggregator:set_produce(keyvec)
     val_vecs[k] = lVector( { qtype = valtype, gen = valgen, has_nulls = false} )
   end
   return val_vecs
+end
+
+function lAggregator:put_cmem(key, vals)
+  assert ( self._is_dead == false ) 
+  assert ( self._is_frozen == false ) 
+  if ( self._is_instantiated == false ) then self:instantiate() end
+  --==============
+  -- get key and convert to Scalar if not already so 
+  assert(key)
+  if ( type(key) == "number" ) then 
+    key = to_scalar(key, self._params.keytype)
+  end
+  assert(type(key) == "Scalar") 
+  --==========
+  local invaltype  -- to remember whether val was given to us as a
+  -- Scalar or a table to make sure that we return it in same way
+  -- Note that we convert vals to table of Scalars before calling C
+  --==========
+  assert(vals)
+  if ( type(vals) == "number" ) then 
+    vals = to_scalar(vals, self._params.keytype)
+  end
+  if ( type(vals) == "Scalar" ) then 
+    vals = { vals }
+    invaltype = "Scalar"
+  else
+    invaltype = "table"
+  end
+  assert(type(vals) == "table")
+  --==========
+
+  local cnt = 0
+  for i, v in ipairs(vals) do 
+    if ( type(v) == "number" ) then 
+      vals[i] = assert(to_scalar(v, self._params.vals[i].valtype))
+    end
+    assert(type(vals[i]) == "Scalar" )
+  end
+  --==============
+  local oldvals, is_updated = assert(Aggregator.put1(self._agg, key, vals))
+  self._meta._num_puts = self._meta._num_puts + 1
+  if ( qconsts.debug ) then 
+    assert(type(is_updated) == "boolean" )
+    assert(type(oldvals) == "table" )
+    for  i, v in ipairs(oldvals) do 
+      assert(type(v) == "Scalar" ) 
+      assert(v:fldtype() == self._params.vals[i].valtype)
+    end
+    self:check() 
+  end 
+  if ( invaltype == "Scalar" ) then 
+    oldvals = oldvals[1]
+    assert(type(oldvals) == "Scalar" ) 
+  end
+  return oldvals, is_updated
 end
 
 return lAggregator

@@ -12,7 +12,5 @@ vals[#vals+1] = y
 vals[#vals+1] = z
 vals[#vals+1] = w
 T.vals = vals
-T.lbl = "ABC"
+T.lbl = "test1"
 return T
--- local libgen = require 'libgen'
--- libgen(T)

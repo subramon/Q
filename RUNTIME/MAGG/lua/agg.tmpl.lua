@@ -11,6 +11,9 @@ return require 'Q/UTILS/lua/code_gen' {
 #include "cmem_struct.h"
 // for hmap/aggregator stuff
 #include "hmap_common.h"
+#include "_hmap_mk_loc.h"
+#include "_hmap_mk_hsh.h"
+#include "_hmap_mk_tid.h"
 #include "_hmap_types.h"
 #include "_hmap_del.h"
 #include "_hmap_destroy.h"

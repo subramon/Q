@@ -10,4 +10,3 @@ T.vals = vals
 T.so = "libtest2.so"
 T.lbl = "test2"
 return T
--- libgen(T)

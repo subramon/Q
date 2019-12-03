@@ -41,7 +41,8 @@ end
 
 
 local function libgen(
-  T
+  T,
+  use_lua
   )
   local subs = {}
   if ( not plpath.isdir(srcdir) ) then plpath.mkdir(srcdir) end
@@ -193,7 +194,9 @@ local function libgen(
   X[#X+1] = srcdir .. "_hmap_put.c" 
   X[#X+1] = srcdir .. "_hmap_putn.c" 
   X[#X+1] = srcdir .. "_hmap_resize.c" 
-  X[#X+1] = srcdir .. "_agg.c"
+  if ( use_lua ) then 
+    X[#X+1] = srcdir .. "_agg.c"
+  end
   create_dot_o(X)
   X[#X+1] = " "
   local command = "gcc -shared *.o  " .. qconsts.Q_LINK_FLAGS .. 
