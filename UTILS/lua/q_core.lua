@@ -15,7 +15,6 @@ local cmem = require 'libcmem'
 local Scalar = require 'libsclr'
 local Vector = require 'libvec'
 local Dnn = require 'libdnn'
-local Aggregator = require 'libagg'
 --==================
 local sofile   = Q_ROOT .. "/lib/libq_core.so"
 local incfile  = Q_ROOT .. "/include/q_core.h"

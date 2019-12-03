@@ -1,4 +1,3 @@
-local ffi             = require 'ffi'
 local qconsts         = require 'Q/UTILS/lua/q_consts'
 local cmem            = require 'libcmem'
 local register_type   = require 'Q/UTILS/lua/q_types'
@@ -31,7 +30,7 @@ function lAggregator:instantiate()
   assert(Aggregator.instantiate(self._agg, initial_size))
 
   self._is_instantiated = true
-  return true
+  return self
 end
 
 function lAggregator:bufferize()
@@ -39,7 +38,7 @@ function lAggregator:bufferize()
   assert ( self._is_bufferized == false)
   assert(Aggregator.bufferize(self._agg, qconsts.chunk_size))
   self._is_bufferized = true
-  return true
+  return self
 end
 
 function lAggregator:unbufferize()
@@ -47,7 +46,7 @@ function lAggregator:unbufferize()
   assert ( self._is_bufferized == true)
   assert(Aggregator.unbufferize(self._agg))
   self._is_bufferized = false
-  return true
+  return self
 end
 
 function lAggregator.new(params)
@@ -56,7 +55,7 @@ function lAggregator.new(params)
   agg._params = params -- to record how it was created
   -- We use intbl and outtbl just to verify my understanding
   -- They have no real use beyond that
-  local intbl = { }
+  local intbl = {}
   local outtbl
   local num_vals = assert(#params.vals)
   for i = 1, num_vals do intbl[#intbl+1] = "string_" .. i end 
@@ -272,6 +271,7 @@ function lAggregator:delete()
   assert(Aggregator.delete(self._agg))
   self._is_dead = true
   -- TODO Delete any buffers created on Lua side 
+  return self
 end
 
 function lAggregator:check()
@@ -311,7 +311,7 @@ function lAggregator:set_consume(keyvec, valvecs)
   end
 
   self._valvecs  = valvecs
-  return true
+  return self
 end
 
 function lAggregator:unset_produce()

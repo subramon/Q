@@ -189,8 +189,8 @@ tests.t3 = function(m, n)
   print("num_chunks, n = ", num_chunks, n)
   print("Success on test t3")
 end
-return tests
--- tests.t1()
--- tests.t2()
--- tests.t3(1000)
--- print("All done"); os.exit()
+-- return tests
+tests.t1()
+tests.t2()
+tests.t3(1000)
+print("All done"); os.exit()
