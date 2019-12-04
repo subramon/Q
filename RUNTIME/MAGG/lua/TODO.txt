@@ -1,1 +1,4 @@
 Check that is_frozen used everywhere it should be
+
+Make sure that bug in put1() about count beint set to 1 when first inserted does
+not occur in putn()
