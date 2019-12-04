@@ -463,6 +463,7 @@ static const struct luaL_Reg aggregator_methods[] = {
     { "meta",         l_agg_meta },
     { "put1",         l_agg_put1 },
     { "putn",         l_agg_putn },
+    { "sizeof_val",         l_agg_putn },
     { "unbufferize",  l_agg_unbufferize },
     { NULL,          NULL               },
 };
