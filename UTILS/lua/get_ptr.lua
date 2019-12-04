@@ -1,11 +1,23 @@
 local ffi = require 'ffi'
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local qc      = require 'Q/UTILS/lua/q_core'
+local clean_defs = require 'Q/UTILS/build/clean_defs'
+
+
+local is_cdef = false
 local function get_ptr(
   x, 
   qtype -- optional 
 )
+
   if not x then return nil end
+  if ( not is_cdef ) then 
+    local incs = "-I" .. qconsts.Q_SRC_ROOT .. "/UTILS/inc/"
+    local doth = qconsts.Q_SRC_ROOT .. "/RUNTIME/CMEM/inc/cmem_struct.h"
+    local hdrs = clean_defs(doth, incs)
+    ffi.cdef(hdrs)
+    is_cdef = true
+  end
+
   local ret_ptr 
   assert(type(x) == "CMEM")
   local y = ffi.cast("CMEM_REC_TYPE *", x)

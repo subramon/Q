@@ -1,0 +1,47 @@
+if ( ( chunk == current chunk ) and ( current chunk not NULL ) ) then
+  serve from current chunk
+else if ( nascent == false ) and ( eov == true ) and (chunk < current chunk)
+   to do so something
+   serve from file 
+   XXXX error occurring here
+else 
+  if ( chunk < current chunk ) then 
+    if ( is_memo ) then 
+      open file and copy relevant stuff and close file
+    else
+      return error = -2
+    end
+  else
+    asking for a block too far out 
+    return error = -2
+  endif
+  return addr
+endif
+
+==============================================================================================
+
+supported vector state
+1. is_nascent = true	is_eov = false
+2. is_nascent = true	is_eov = true
+3. is_nascent = false	is_eov = true
+
+In 1st state - (no modifications to open_mode, is_nascent)
+	if current chunk
+		serve it from in-memory buffer
+	else if previous chunk and is_memo is true
+		open file, fread content and close it
+	else
+		error
+
+In 2nd state
+	if current chunk
+		serve it from in-memory buffer (no modifications to open_mode, is_nascent)
+	else if previous chunk and is_memo is true
+		mmap the file, return mmap pointer
+		set is_nascent to false
+		set open_mode = 1
+		
+In 3rd state
+	set open_mode = 1
+	return mmap pointer, irrespective of chunk number
+

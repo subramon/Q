@@ -6,7 +6,6 @@ INCS= -I. \
 	-I../libevent-2.1.8-stable/include/ \
 	-I../LuaJIT-2.1.0-beta3/src/ \
 	-I../dt_interpreter/src/  \
-	-I../c_engine/ \
 
 
 DBGFLAGS= 
@@ -92,7 +91,6 @@ q_httpd : $(COBJS)  \
 
 clean:
 	rm -r -f q_httpd $(COBJS) 
-	make -i -C ../c_engine/ clean
 #	make -i -C ../LuaJIT-2.1.0-beta3/src/ clean 
 #	make -i -C ../libevent-2.1.8-stable/ distclean 
 	rm -r -f ../libevent-2.1.8-stable/ 

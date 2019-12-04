@@ -5,6 +5,24 @@
   require 'Q/UTILS/lua/q_consts'
 ]]
 
+local ffi = require 'ffi'
+ffi.cdef([[
+typedef struct tm
+{
+  int tm_sec;			/* Seconds.	[0-60] (1 leap second) */
+  int tm_min;			/* Minutes.	[0-59] */
+  int tm_hour;			/* Hours.	[0-23] */
+  int tm_mday;			/* Day.		[1-31] */
+  int tm_mon;			/* Month.	[0-11] */
+  int tm_year;			/* Year	- 1900.  */
+  int tm_wday;			/* Day of week.	[0-6] */
+  int tm_yday;			/* Days in year.[0-365]	*/
+  int tm_isdst;			/* DST.		[-1/0/1]*/
+
+  long int __tm_gmtoff;		/* Seconds east of UTC.  */
+  const char *__tm_zone;	/* Timezone abbreviation.  */
+} TM ; 
+   ]])
 local qconsts = {}
 --===========================
   -- Initialize environment variable constants
@@ -21,9 +39,10 @@ local qconsts = {}
   qconsts.Q_METADATA_FILE = os.getenv("Q_METADATA_FILE")
   qconsts.LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")
 
-  qconsts.chunk_size = 128 * 1024 -- make this power of 2 and >= 1024
+  qconsts.chunk_size = 64 * 1024 -- make this power of 2 and >= 1024
   qconsts.debug = true -- set to TRUE only if you want debugging
-  qconsts.is_memo = true -- Vector code will refer memo value from this place
+  qconsts.is_memo = true -- Vector code uses this default value
+  qconsts.has_nulls = false -- Vector code uses this default value
   qconsts.qc_trace = false -- set to FALSE if performance logging of qc is to be turned off
   local max_width = {}
   max_width["SC"] = 1024 -- 1 char reserved for nullc
@@ -145,7 +164,7 @@ local qconsts = {}
     -- no min
     -- no max
     max_txt_width = 64,
-    width = 64, -- TODO P2 Need to replace with ffi.sizeof("tm")
+    width = ffi.sizeof("TM"),
     ctype = "struct tm",
     -- txt_to_ctype = "txt_to_TM",
     -- ctype_to_txt = "TBD" 
