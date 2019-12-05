@@ -1,0 +1,1 @@
+Might be prodcing libcmem and libsclr twice, once in old way and once in new

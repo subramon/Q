@@ -1,7 +1,5 @@
 #ifndef __SCALAR_H
 #define __SCALAR_H
-#include <stdbool.h>
-#include <stdint.h>
 
 typedef union _cdata_type {
   bool    valB1;

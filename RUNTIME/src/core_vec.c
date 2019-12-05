@@ -18,7 +18,7 @@
 
 #include "lauxlib.h"
 
-#define ALIGNMENT  256 // TODO P3 DOCUMENT AND PLACE CAREFULLY
+#define CORE_VEC_ALIGNMENT  256 // TODO P3 DOCUMENT AND PLACE CAREFULLY
 
 static uint64_t
 RDTSC(
@@ -91,7 +91,7 @@ l_malloc(
   uint64_t delta = 0, t_start = RDTSC(); n_malloc++;
   uint64_t sz1, sz2;
 
-  status = posix_memalign(&x, ALIGNMENT, n); 
+  status = posix_memalign(&x, CORE_VEC_ALIGNMENT, n); 
   if ( status < 0 ) { WHEREAMI; return NULL; }
   // printf("core_vec.c : Malloc'd %llu \n", n);
   if ( x == NULL ) { WHEREAMI; return NULL; }

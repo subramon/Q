@@ -1,12 +1,5 @@
 //START_INCLUDES
-#include <stdio.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <string.h>
-#include <fcntl.h>
-#include "q_macros.h"
+#include "q_incs.h"
 //STOP_INCLUDES
 #include "_rs_mmap.h"
 //START_FUNC_DECL

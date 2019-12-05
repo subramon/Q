@@ -30,4 +30,5 @@ libcmem.so:   cmem.c
 		../../../UTILS/gen_src/_F8_to_txt.c \
 		-shared -o libcmem.so
 	cp ../inc/cmem_struct.h ${Q_BUILD_DIR}/include/
+	cp ../inc/cmem.h ${Q_BUILD_DIR}/include/
 

@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "_txt_to_B1.h"
 //START_FUNC_DECL
 int

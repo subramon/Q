@@ -1,7 +1,5 @@
 //START_INCLUDES
-#include <stdio.h>
-#include <inttypes.h>
-#include <sys/time.h>
+#include "q_incs.h"
 //STOP_INCLUDES
 #include "_get_time_usec.h"
 //START_FUNC_DECL

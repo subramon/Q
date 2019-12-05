@@ -1,8 +1,5 @@
 //START_INCLUDES
-#include <stdio.h>
-#include <stdbool.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+#include "q_incs.h"
 //STOP_INCLUDES
 #include "_isdir.h"
 

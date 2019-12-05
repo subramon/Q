@@ -1,11 +1,5 @@
 //START_INCLUDES
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include "q_macros.h"
+#include "q_incs.h"
 //STOP_INCLUDES
 #include "_get_file_size.h"
 //START_FUNC_DECL

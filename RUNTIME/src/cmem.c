@@ -1,6 +1,6 @@
 #define LUA_LIB
 
-#define ALIGNMENT  256 // TODO P2 DOCUMENT AND PLACE CAREFULLY
+#define CMEM_ALIGNMENT  256 // TODO P2 DOCUMENT AND PLACE CAREFULLY
 
 #include <stdlib.h>
 #include <malloc.h>
@@ -187,7 +187,7 @@ static int l_cmem_new( lua_State *L)
   CMEM_REC_TYPE *ptr_cmem = NULL;
   char *field_type = NULL;
   char *cell_name = NULL;
-  int alignment = ALIGNMENT; // default 
+  int alignment = CMEM_ALIGNMENT; // default 
 
   int64_t size =  luaL_checknumber(L, 1);
   if ( size <= 0 ) { go_BYE(-1); }

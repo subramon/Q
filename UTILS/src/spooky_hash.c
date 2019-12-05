@@ -12,8 +12,9 @@
 
 // Assumes little endian ness. Caller has to check this case.
 //START_INCLUDES
-#include <memory.h>
 //STOP_INCLUDES
+#include "q_incs.h"
+#include "spooky_struct.h"
 #include "spooky_hash.h"
 
 #if defined(__i386__) || defined(__x86_64__) // add more architectures here

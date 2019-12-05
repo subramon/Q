@@ -1,16 +1,12 @@
 #define LUA_LIB
 
-#include <stdlib.h>
-#include <math.h>
-#include <inttypes.h>
-
-#include "luaconf.h"
-#include "lua.h"
+#include "q_incs.h"
 
 #include "lauxlib.h"
+#include "lua.h"
+#include "luaconf.h"
 #include "lualib.h"
 
-#include "q_incs.h"
 #include "_txt_to_B1.h"
 #include "_txt_to_I1.h"
 #include "_txt_to_I2.h"

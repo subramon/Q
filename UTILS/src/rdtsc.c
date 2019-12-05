@@ -1,6 +1,5 @@
 //START_INCLUDES
-#include <stdio.h>
-#include <stdint.h>
+#include "q_incs.h"
 #include "_get_time_usec.h"
 //STOP_INCLUDES
 #include "_rdtsc.h"

@@ -1,7 +1,12 @@
-local plpath = require 'pl.path'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local plpath         = require 'pl.path'
+local qconsts        = require 'Q/UTILS/lua/q_consts'
 local recursive_copy = require 'Q/UTILS/build/recursive_copy'
-local function copy_generated_files()
+
+-- From all directories under root_dir that match "/gen_src/"
+-- copy *.c files into cdir
+-- From all directories under root_dir that match "/gen_inc/"
+-- copy *.h files into hdir
+local function copy_gen_files()
   local numc = 0 
   local numh = 0 
   --==========================
@@ -20,10 +25,10 @@ local function copy_generated_files()
   if ( not plpath.isdir(hdir) ) then plpath.mkdir(hdir) end
   numh = recursive_copy("*.h", "/gen_inc", rootdir, hdir)
   --==========================
---  print("Copied generated files " .. numc .. " .c files ")
---  print("Copied generated files " .. numh .. " .h files ")
-  -- TODO P1 Should we do assert(numc == num) ?
+  print("Copied gen files " .. numc .. " .c files ")
+  print("Copied gen files " .. numh .. " .h files ")
+  -- TODO P1 Should we do assert(numc == numh) ?
   return numc, numh
 end
-return  copy_generated_files
--- copy_generated_files()
+return  copy_gen_files
+-- copy_gen_files()

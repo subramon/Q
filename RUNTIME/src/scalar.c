@@ -1,18 +1,13 @@
 #define LUA_LIB
 
-#define ALIGNMENT 0 // TODO P2 Document and place carefully
+#define SCLR_ALIGNMENT 0 // TODO P2 Document and place carefully
 
-#include <stdlib.h>
-#include <math.h>
-#include <inttypes.h>
-
+#include "q_incs.h"
 #include "luaconf.h"
 #include "lua.h"
-
 #include "lauxlib.h"
 #include "lualib.h"
 
-#include "q_incs.h"
 #include "_txt_to_B1.h"
 #include "_txt_to_I1.h"
 #include "_txt_to_I2.h"
@@ -60,7 +55,7 @@ static int l_sclr_to_cmem( lua_State *L)
   int status = 0;
   if ( ! is_foreign ) {
     status = cmem_malloc(ptr_cmem,  ptr_sclr->field_size, 
-        ptr_sclr->field_type, "", ALIGNMENT);
+        ptr_sclr->field_type, "", SCLR_ALIGNMENT);
     memcpy(ptr_cmem->data, &(ptr_sclr->cdata), ptr_sclr->field_size);
   }
   else { 

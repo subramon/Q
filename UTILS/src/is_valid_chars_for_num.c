@@ -1,10 +1,5 @@
 //START_INCLUDES
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include "q_macros.h"
+#include "q_incs.h"
 //STOP_INCLUDES
 #include "_is_valid_chars_for_num.h"
 //START_FUNC_DECL

@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-//START_INCLUDES
-#include <limits.h>
-#include <float.h>
-//STOP_INCLUDES
-#include "q_macros.h"
+#include "q_incs.h"
 #include "_set_bit_u64.h"
 #include "_generate_bin.h"
 #include "_get_time_usec.h"
