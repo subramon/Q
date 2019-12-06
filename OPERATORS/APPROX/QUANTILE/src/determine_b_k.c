@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <math.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "determine_b_k.h"
 
 //START_FUNC_DECL

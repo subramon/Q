@@ -1,9 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
-#include "q_macros.h"
+#include "q_incs.h"
 
 extern int
 sum_prod3(

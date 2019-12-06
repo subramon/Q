@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <time.h>
-#include <stdlib.h>
-#include <limits.h>
-#include <math.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "tmpl_rand.h"
 
 static inline uint64_t RDTSC()

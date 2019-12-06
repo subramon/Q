@@ -1,4 +1,7 @@
-INCLUDES = -I../../SORT/gen_inc/ -I./gen_inc/ -I./inc/
+INCLUDES = \
+	-I../../SORT/gen_inc/  \
+	-I./gen_inc/ -I./inc/ \
+	-I../../../UTILS/inc/
 SRC_INCLUDES = ../../SORT/gen_src/*.c gen_src/*.c
 
 all: libapprox_frequent.so

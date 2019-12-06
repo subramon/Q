@@ -2,17 +2,7 @@ return require 'Q/UTILS/lua/code_gen'
 {
 
   declaration = [=[
-
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <math.h>
-#include <limits.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "_qsort_asc_${qtype}.h"
 #include "determine_b_k.h"
 #include "_New_${qtype}.h"

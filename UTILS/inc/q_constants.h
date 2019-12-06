@@ -9,8 +9,17 @@
 #define Q_MAX_LEN_DIR 127
 #define Q_MAX_LEN_BASE_FILE 63
 #define Q_MAX_LEN_FILE_NAME  Q_MAX_LEN_DIR+Q_MAX_LEN_BASE_FILE+1
-#define ALIGNMENT  32 // TODO P4 DOCUMENT AND PLACE CAREFULLY
+
+#define Q_CORE_VEC_ALIGNMENT  256 
+#define Q_CMEM_ALIGNMENT  256 
+#define Q_SCLR_ALIGNMENT  0
+#define Q_VEC_ALIGNMENT   16
 
 #define Q_CHUNK_SIZE 65536
 
+//- for spooky hash 
+#define SC_NUMVARS 12 
+#define SC_BLOCKSIZE (8 * SC_NUMVARS)
+#define SC_BUFSIZE (2 * SC_BLOCKSIZE)
+//-----------------
 #endif

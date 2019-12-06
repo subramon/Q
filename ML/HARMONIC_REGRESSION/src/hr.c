@@ -1,13 +1,4 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <float.h>
-#include <math.h>
-#include <string.h>
-#include <limits.h>
-#include <inttypes.h>
-#include <ctype.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "mmap.h"
 #include "aux_driver.h"
 #include "positive_solver.h"

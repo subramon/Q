@@ -31,8 +31,9 @@ clean:
 	rm -f ${Q_SRC_ROOT}/experimental/python_q_wrapper/lua/q_op_stub_file.pyi
 	#---
 	make -C ${Q_SRC_ROOT}/RUNTIME/src/      clean
+	make -C ${Q_SRC_ROOT}/RUNTIME/CMEM/src/ clean
 	make -C ${Q_SRC_ROOT}/RUNTIME/DNN/src/  clean
-	make -C ${Q_SRC_ROOT}/RUNTIME/AGG/src/  clean
+	make -C ${Q_SRC_ROOT}/RUNTIME/SCLR/src/ clean
 	#---
 	make -C ${Q_SRC_ROOT}/UTILS/src/  clean
 	#---

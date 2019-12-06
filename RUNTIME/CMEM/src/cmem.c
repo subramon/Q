@@ -150,7 +150,7 @@ static int l_cmem_new( lua_State *L)
   CMEM_REC_TYPE *ptr_cmem = NULL;
   char *fldtype = NULL;
   char *cell_name = NULL;
-  int alignment = ALIGNMENT; // default 
+  int alignment = Q_CMEM_ALIGNMENT; // default 
 
   int64_t size =  luaL_checknumber(L, 1);
   if ( size <= 0 ) { go_BYE(-1); }

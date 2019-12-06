@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "_qsort_asc_val_F8_idx_I4.h"
 #include "_qsort_dsc_val_I8_idx_I2.h"
 int

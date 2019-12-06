@@ -3,7 +3,7 @@
 #include "cmem.h"
 
 typedef struct _vec_rec_type {
-  char field_type[3+1]; // TODO Do not hard code length
+  char field_type[Q_MAX_LEN_QTYPE_NAME+1]; 
   uint32_t field_size;
   uint32_t chunk_size;
 
@@ -11,10 +11,8 @@ typedef struct _vec_rec_type {
   uint32_t num_in_chunk;
   uint32_t chunk_num;   
 
-  // TODO Change 31 to  Q_MAX_LEN_INTERNAL_NAME
-  char name[31+1]; 
-  // TODO Change 255 to  Q_MAX_LEN_FILE_NAME
-  char file_name[255+1];
+  char name[Q_MAX_LEN_INTERNAL_NAME+1]; 
+  char file_name[Q_MAX_LEN_FILE_NAME+1];
   uint64_t file_size; // valid only after eov()
   char *map_addr;
   size_t map_len;

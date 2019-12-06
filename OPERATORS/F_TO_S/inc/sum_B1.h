@@ -1,8 +1,4 @@
-#include <inttypes.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <strings.h>
-#include "q_macros.h"
+#include "q_incs.h"
 
 #ifndef __SUM_B1
 #define __SUM_B1

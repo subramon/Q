@@ -32,7 +32,11 @@ local function clean_defs(
   -- check that you do not get back empty string 
   local chk = string.gsub(rslt, "%s", "")
   assert(#chk > 0) 
-  return rslt
+  -- now get the #define statements
+  cmd = string.format("grep \"^#define\" %s | grep -v __ ", file)
+  local  defines = exec_and_capture_stdout(cmd)
+  --==============
+  return rslt, defines
 end
 return clean_defs
 -- x = clean_defs("/home/subramon/WORK/Q/RUNTIME/VCTR/inc/core_vec_struct.h", "-I../../../UTILS/inc/")

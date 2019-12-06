@@ -12,7 +12,7 @@ typedef union _cdata_type {
 } CDATA_TYPE;
 
 typedef struct _sclr_rec_type {
-  char field_type[4]; // MAX_LEN_FIELD_TYPE TODO Fix hard coding
+  char field_type[Q_MAX_LEN_QTYPE_NAME+1]; 
   uint32_t field_size;
   CDATA_TYPE cdata;
 } SCLR_REC_TYPE;

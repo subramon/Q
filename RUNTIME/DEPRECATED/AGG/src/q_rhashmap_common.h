@@ -8,16 +8,7 @@
 #ifndef _Q_RHASHMAP__H
 #define _Q_RHASHMAP_H
 
-#include <assert.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <omp.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "fastdiv.h"
 
 #define	Q_RHM_SET  1

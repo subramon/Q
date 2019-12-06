@@ -1,11 +1,6 @@
 return require 'Q/UTILS/lua/code_gen' {
     declaration = [[
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <malloc.h>
-#include "macros.h"
+#include "q_incs.h"
 #include "_qsort_asc_${elem_qtype}.h"
 
 ${data_ty} {
@@ -44,11 +39,6 @@ ${out_fn}(
     uint32_t *out_len);
 
 extern void ${free_fn}(${data_ty} *data);
-
-#define STATUS_HIGH_MEMORY 1
-#define STATUS_GOOD 0
-#define STATUS_ERROR -1
-#define STATUS_INVALID_INPUT -2
 
 extern int
 ${fn}(

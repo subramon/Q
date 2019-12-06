@@ -1,7 +1,5 @@
 #define LUA_LIB
 
-#define SCLR_ALIGNMENT 0 // TODO P2 Document and place carefully
-
 #include "q_incs.h"
 #include "luaconf.h"
 #include "lua.h"
@@ -55,7 +53,7 @@ static int l_sclr_to_cmem( lua_State *L)
   int status = 0;
   if ( ! is_foreign ) {
     status = cmem_malloc(ptr_cmem,  ptr_sclr->field_size, 
-        ptr_sclr->field_type, "", SCLR_ALIGNMENT);
+        ptr_sclr->field_type, "", Q_SCLR_ALIGNMENT);
     memcpy(ptr_cmem->data, &(ptr_sclr->cdata), ptr_sclr->field_size);
   }
   else { 

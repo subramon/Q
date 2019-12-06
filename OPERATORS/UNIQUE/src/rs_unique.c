@@ -1,6 +1,4 @@
-#include <time.h>
 #include "q_incs.h"
-#include "q_macros.h"
 
 static int
 srt_compare(

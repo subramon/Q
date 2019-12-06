@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <omp.h>
-#include <unistd.h>
-#include "q_macros.h"
+#include "q_incs.h"
 
 uint64_t num_ops;
 

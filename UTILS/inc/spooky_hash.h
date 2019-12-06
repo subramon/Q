@@ -29,11 +29,6 @@
 #ifndef __SPOOKY_HASH
 #define __SPOOKY_HASH
 
-#define SC_NUMVARS 12 // NOTE: If you change this, mnodify spooky_struct
-#define SC_BLOCKSIZE (8 * SC_NUMVARS)
-#define SC_BUFSIZE (2 * SC_BLOCKSIZE)
-
-#include "spooky_struct.h"
 extern void 
 spooky_shorthash (
     const void *message,

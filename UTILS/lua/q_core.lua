@@ -22,7 +22,6 @@ local inc_dir  = Q_ROOT .. "/include/"
 local lib_dir  = Q_ROOT .. "/lib/"
 
 -- START: Put in a bunch of cdefs that we will need later
---[=[
 ffi.cdef([[
 typedef struct {
    char *fpos;
@@ -48,7 +47,6 @@ typedef struct {
    --NOTE: I gave a name TM to the struct tm because LuaFFI complained
 --]]
 
---]=]
 -- STOP: Put in a bunch of cdefs that we will need later
 
 -- The first thing we do is to make sure that we can access functionality
@@ -86,7 +84,6 @@ local libs            = {}
 
 
 local function get_qc_val(val)
-  print("get_qc_val", val)
   return qc[val]
 end
 
@@ -133,7 +130,6 @@ local function add_libs()
   local hfiles = fileops.list_files_in_dir(inc_dir, "*.h")
   local found_qcore = false
   for _, hfile in pairs(hfiles) do 
-    print("load_lib: " .. hfile)
     if not hfile:find("q_core.h") then 
       load_lib(hfile)
     else
@@ -202,7 +198,6 @@ local qc_mt = {
     -- get it from qc (all statically compiled stuff)
     -- INDRA: Why pcall? Why not die?
     local status, func = pcall(get_qc_val, key)
-    print(status)
     if status == true then
       qt[key] = func 
       return func

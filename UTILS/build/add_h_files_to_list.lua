@@ -1,4 +1,5 @@
 local clean_defs   = require 'Q/UTILS/build/clean_defs'
+local exec_and_capture_stdout=require 'Q/UTILS/lua/exec_and_capture_stdout'
 local qconsts      = require 'Q/UTILS/lua/q_consts'
 
 local struct_files = {
@@ -18,6 +19,7 @@ local function add_h_files_to_list(
   h_files
   )
   local cleaned_defs = {}
+  local hash_defines = {}
   -- assemble files to be excluded in x_files
   local x_files = {}
   for k, file in pairs(struct_files) do 
@@ -33,14 +35,24 @@ local function add_h_files_to_list(
   -- add struct files first
   for _, file in ipairs(struct_files) do
     local full_file_name = qconsts.Q_BUILD_DIR .. "/include/" .. file
-    cleaned_defs[#cleaned_defs + 1] = clean_defs(full_file_name)
+    local cleaned_def, hash_define = clean_defs(full_file_name)
+    cleaned_defs[#cleaned_defs + 1] = cleaned_def
+    hash_defines[#hash_defines + 1] = hash_define
   end
   -- add other files, excluding some 
   for _, h_file in ipairs(h_files) do
     if ( not x_files[h_file] ) then 
-      cleaned_defs[#cleaned_defs + 1] = clean_defs(h_file)
+      local cleaned_def, hash_define = clean_defs(h_file)
+      cleaned_defs[#cleaned_defs + 1] = cleaned_def
+      hash_defines[#hash_defines + 1] = hash_define
     end
   end
-  return cleaned_defs
+  -- add stuff from q_constants.h
+  local full_file_name = qconsts.Q_BUILD_DIR .. "/include/q_constants.h"
+  cmd = string.format("grep \"^#define\" %s | grep -v __ ", full_file_name)
+  local  defines = exec_and_capture_stdout(cmd)
+  hash_defines[#hash_defines + 1] = defines
+  --=========================
+  return cleaned_defs, hash_defines
 end
 return add_h_files_to_list
