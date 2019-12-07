@@ -1,7 +1,6 @@
 #ifndef __AVX_H_
 #define __AVX_H_
-#include <smmintrin.h>
-#include <immintrin.h>
+#include "q_incs.h"
 extern int
 va_times_sb_plus_vc(
     float *A,

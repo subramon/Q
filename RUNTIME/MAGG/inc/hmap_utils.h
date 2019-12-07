@@ -8,10 +8,7 @@
 #ifndef	_UTILS_H_
 #define	_UTILS_H_
 
-#include <stddef.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <assert.h>
+#include "q_incs.h"
 
 /*
  * A regular assert (debug/diagnostic only).

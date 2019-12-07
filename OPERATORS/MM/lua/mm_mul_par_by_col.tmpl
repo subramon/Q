@@ -3,8 +3,6 @@ return require 'Q/UTILS/lua/code_gen' {
 
    declaration = [[
 #include "q_incs.h"
-#include <omp.h>
-#include <sys/sysinfo.h>
 extern int 
 ${fn}(
     ${in1_ctype} ** x,  /* M by K */

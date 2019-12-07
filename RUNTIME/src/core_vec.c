@@ -1,6 +1,3 @@
-#include <stdlib.h>
-#include <time.h>
-#include <malloc.h>
 #include "q_incs.h"
 #include "core_vec.h"
 #include "cmem.h"

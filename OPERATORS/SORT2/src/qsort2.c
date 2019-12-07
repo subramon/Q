@@ -18,9 +18,7 @@ You should have received a copy of the GNU General Public License
 along with GNU QSORT; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#include <stdint.h>
-#include <inttypes.h>
-#include <stdlib.h>
+#include "qsort2.h"
 /* swap two items of size SIZE. */
 #define SWAP(A,B) { { int32_t swap;  swap = *A; *A = *B; *B = swap; } } 
 

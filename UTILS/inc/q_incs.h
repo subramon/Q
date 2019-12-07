@@ -1,12 +1,20 @@
 #ifndef __Q_INCS
 #define __Q_INCS
+#include <alloca.h>
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <float.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_linalg.h>
+#include <immintrin.h> // for AVX
+#include <smmintrin.h> // for AVX
 #include <inttypes.h>
 #include <limits.h>
+#include <malloc.h>
 #include <math.h>
 #include <memory.h>
 #include <omp.h>
@@ -19,6 +27,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/sysinfo.h>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>

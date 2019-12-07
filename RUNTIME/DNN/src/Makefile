@@ -2,6 +2,8 @@
 INCS= -I../inc/ \
 	-I../../inc/ \
 	-I../../../UTILS/inc/ \
+	-I../../CMEM/inc/ \
+	-I../../SCLR/inc/ \
 	-I/usr/include/lua5.1/
 
 CC=clang

@@ -1,13 +1,8 @@
-#include <stdlib.h>
-#include <math.h>
-
 #include "luaconf.h"
 #include "lua.h"
-
 #include "lauxlib.h"
 #include "lualib.h"
 
-#include "q_constants.h" 
 #include "q_incs.h"
 #include "core_vec.h"
 #include "scalar_struct.h"

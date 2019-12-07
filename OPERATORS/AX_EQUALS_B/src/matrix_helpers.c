@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <inttypes.h>
-#include "macros.h"
+#include "q_incs.h"
 #include "matrix_helpers.h"
 
 /* some utilities.

@@ -1,4 +1,3 @@
-#include <math.h>
 #include "q_incs.h"
 #include "calc_vote_per_g.h"
 static uint64_t RDTSC(

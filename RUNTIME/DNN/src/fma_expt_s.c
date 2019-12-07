@@ -1,10 +1,6 @@
 // gcc -mavx2 -mfma -S -c  x.c   # to produce assembler
 // gcc -mavx2 -mfma -O4 x.c -lm  # produces executable a.out
-#include <immintrin.h>
-#include <stdio.h>
-#include <string.h>
-#include <malloc.h>
-#include <inttypes.h>
+#include "q_incs.h"
 
 #define N 35
 #define REG_WIDTH_IN_BITS 256

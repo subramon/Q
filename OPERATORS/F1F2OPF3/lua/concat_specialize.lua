@@ -55,7 +55,6 @@ return function (
     end
     local subs = {}
     -- This includes is just as a demo. Not really needed
-    subs.includes = "#include <math.h>\n"
     subs.fn = 
     "concat_" .. in1_qtype .. "_" .. in2_qtype .. "_" .. l_out_qtype 
     subs.in1_ctype = "u" .. qconsts.qtypes[in1_qtype].ctype

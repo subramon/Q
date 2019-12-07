@@ -1,5 +1,4 @@
 #include "q_incs.h"
-#include <unistd.h>
 #define EXISTS 1
 #define MIN 2
 #define MAX 3

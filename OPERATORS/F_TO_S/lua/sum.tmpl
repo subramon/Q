@@ -3,9 +3,6 @@ return require 'Q/UTILS/lua/code_gen' {
    declaration = [[
 
 #include "q_incs.h"
-#include <unistd.h>
-#include <stdint.h>
-#include <stdbool.h>
 
 typedef struct _reduce_${op}_${qtype}_args {
   ${reduce_ctype} ${op}_val;

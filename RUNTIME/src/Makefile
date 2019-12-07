@@ -2,6 +2,8 @@
 INCS=-I. -I../inc/ \
 	-I../../UTILS/gen_inc/ \
 	-I../../UTILS/inc \
+	-I../CMEM/inc \
+	-I../SCLR/inc \
 	-I/usr/include/lua5.1/ \
 
 
@@ -21,7 +23,7 @@ libvec.so: vector.c core_vec.c buf_to_file.c copy_file.c \
   	libmm.so
 	gcc ${QC_FLAGS} $(INCS) \
 		vector.c \
-		cmem.c \
+		../CMEM/src/cmem.c \
 		core_vec.c \
 		buf_to_file.c \
                 copy_file.c \

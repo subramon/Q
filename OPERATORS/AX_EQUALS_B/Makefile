@@ -1,10 +1,12 @@
 C_FLAGS = -O4 -I src/ -Wall -fopenmp -std=gnu99
 LIBS = -llapack -llapacke
 
-INCS=-I../../UTILS/inc -I../src/ -I.
+INCS=\
+     	-I../../UTILS/inc \
+	-I../src/ -I.
 
 all: src/*.c src/*.h
-	gcc ${QC_FLAGS} src/*.c -shared -o _libsolver.so
+	gcc ${QC_FLAGS} ${INCS} src/*.c -shared -o _libsolver.so
 	rm _libsolver.so
 	cp src/*.c ${Q_BUILD_DIR}/src/
 	cp src/*.h ${Q_BUILD_DIR}/include/

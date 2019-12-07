@@ -1,4 +1,3 @@
-
 #include "q_incs.h"
 #include "_bytes_to_bits.h"
 

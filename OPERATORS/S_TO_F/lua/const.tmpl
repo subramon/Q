@@ -2,9 +2,7 @@ return require 'Q/UTILS/lua/code_gen' {
 
    declaration = [[
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
+#include "q_incs.h"
 extern int
 const_${out_qtype}(
   ${out_ctype} * const restrict X,

@@ -1,9 +1,4 @@
-#include <unistd.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <inttypes.h>
-#include <string.h>
+#include "q_incs.h"
 #define EXISTS 1
 #define MIN 2
 #define MAX 3

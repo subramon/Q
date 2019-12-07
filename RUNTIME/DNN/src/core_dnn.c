@@ -1,11 +1,9 @@
-#include <sys/time.h>
 #include "q_incs.h"
 #include "dnn_types.h"
 #include "core_dnn.h"
 #include "fstep_a.h"
 #include "bstep.h"
 #include "update_W_b.h"
-#include <malloc.h>
 
 #define BITS_IN_VEC_REG 256
 #define MEMALIGN_BATCH 32

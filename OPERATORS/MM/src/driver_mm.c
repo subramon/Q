@@ -1,12 +1,7 @@
 /*
- *gcc -O4 -Wall driver_mm.c matrix_multiply.c -fopenmp -lgomp -lm -o mm
+ *gcc -O4 -Wall driver_mm.c matrix_multiply.c -fopenmp -lgomp -lm -o mm -I ../../UTILS/inc/
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include "macros.h"
+#include "q_incs.h"
 #include "matrix_multiply.h"
 int
 main(

@@ -30,8 +30,7 @@
 #ifndef	_FASTDIV_H_
 #define	_FASTDIV_H_
 
-#include <inttypes.h>
-
+#include "q_incs.h"
 #include "hmap_utils.h"
 
 /*

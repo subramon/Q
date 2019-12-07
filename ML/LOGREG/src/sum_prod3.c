@@ -1,4 +1,4 @@
-#include <time.h>
+#include "q_incs.h"
 #include "sum_prod3.h"
 
 extern uint64_t num_ops;

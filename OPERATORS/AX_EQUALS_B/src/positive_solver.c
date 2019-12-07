@@ -1,12 +1,6 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <inttypes.h>
-#include <malloc.h>
-#include <unistd.h>
-#include <stdbool.h>
+#include "q_incs.h"
 #include "matrix_helpers.h"
 #include "positive_solver.h"
-#include "macros.h"
 
 #define DEFAULT_EPS 0.001
 

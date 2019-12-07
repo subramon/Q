@@ -1,9 +1,5 @@
-// gcc -mavx2 -mfma -S x.c   -lm - x 
-#include <immintrin.h>
-#include <stdio.h>
-#include <string.h>
-#include <malloc.h>
-
+// gcc -mavx2 -mfma -S x.c   -lm - x  -I../../../UTILS/inc/
+#include "q_incs.h"
 #define N 1048576
 
 int main() {

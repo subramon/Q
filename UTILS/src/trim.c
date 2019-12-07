@@ -1,6 +1,3 @@
-// #include <stdio.h>
-// #include <ctype.h>
-// #include <string.h>
 #include "q_incs.h"
 #include "_trim.h"
 // assumption that inbuf and outbuf have been malloc'd with n bytes

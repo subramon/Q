@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <math.h>
-#include <omp.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include "macros.h"
+#include "q_incs.h"
 #include "matrix_multiply.h"
 #include "_rdtsc.h"
 

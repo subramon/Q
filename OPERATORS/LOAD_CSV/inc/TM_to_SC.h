@@ -1,6 +1,6 @@
 #ifndef __TM_to_SC
 #define __TM_to_SC
-#include <time.h>
+#include "q_incs.h"
 extern int
 TM_to_SC(
       struct tm *inv,

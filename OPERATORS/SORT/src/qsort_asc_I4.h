@@ -1,8 +1,4 @@
-#include <alloca.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
+#include "q_incs.h"
 
 extern void
 qsort_asc_I4 (

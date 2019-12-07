@@ -1,8 +1,5 @@
-// gcc -O4 -lm non_fma_expt_s.c  # produces executable a.out
-#include <stdio.h>
-#include <string.h>
-#include <malloc.h>
-#include <inttypes.h>
+// gcc -O4 -lm non_fma_expt_s.c  # produces executable a.out // -I../../../UTILS/inc/
+#include "q_incs.h"
 
 #define N 1048576
 

@@ -9,15 +9,7 @@
   * and the GNU Scientific Library (GSL) for math. 
   */
  
- #include <stdio.h>
- #include <stdlib.h>
- #include <math.h>
- #include "mmio.h"
- #include <mpi.h>
- #include <gsl/gsl_vector.h>
- #include <gsl/gsl_matrix.h>
- #include <gsl/gsl_blas.h>
- #include <gsl/gsl_linalg.h>
+ #include "q_incs.h"
  
  void soft_threshold(gsl_vector *v, double k);
  double objective(gsl_matrix *A, gsl_vector *b, double lambda, gsl_vector *z);

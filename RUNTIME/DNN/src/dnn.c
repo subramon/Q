@@ -111,12 +111,12 @@ static int l_dnn_new( lua_State *L)
   ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
   if ( ptr_cmem == NULL ) { go_BYE(-1); }
   int *npl = (int *)ptr_cmem->data;
-  if ( strcmp(ptr_cmem->field_type, "I4") != 0 ) { go_BYE(-1); }
+  if ( strcmp(ptr_cmem->fldtype, "I4") != 0 ) { go_BYE(-1); }
 
   ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 3, "CMEM");
   if ( ptr_cmem == NULL ) { go_BYE(-1); }
   float *dpl = (float *)ptr_cmem->data;
-  if ( strcmp(ptr_cmem->field_type, "F4") != 0 ) { go_BYE(-1); }
+  if ( strcmp(ptr_cmem->fldtype, "F4") != 0 ) { go_BYE(-1); }
 
   const char * const afns  = luaL_checkstring(L, 4); // activation fns
 

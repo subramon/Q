@@ -27,11 +27,7 @@ return require 'Q/UTILS/lua/code_gen' {
    smaller partition.  This *guarantees* no more than log (total_elems)
    stack size is needed (actually O(1) in this case)!  */
 
-#include <alloca.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
+#include "q_incs.h"
 
 extern int
 ${fn} (

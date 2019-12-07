@@ -1,4 +1,3 @@
-#include <omp.h>
 #include "q_incs.h"
 #include "dnn_types.h"
 #include "act_fns.h"

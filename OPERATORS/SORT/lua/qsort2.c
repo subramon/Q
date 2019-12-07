@@ -18,10 +18,6 @@ You should have received a copy of the GNU General Public License
 along with GNU QSORT; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. */
 
-#ifdef sparc
-#include <alloca.h>
-#endif
-
 /* Invoke the comparison function, returns either 0, < 0, or > 0. */
 #define CMP(A,B) ((*cmp)((A),(B)))
 

@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include "q_incs.h"
 #include "sum_B1.h"
 #include "_get_bit_u64.h"
 

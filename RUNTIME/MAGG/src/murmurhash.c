@@ -9,7 +9,7 @@
  */
 
 //START_INCLUDES
-#include <inttypes.h>
+#include "q_incs.h"
 #include "hmap_utils.h"
 //STOP_INCLUDES
 #include "_murmurhash.h"

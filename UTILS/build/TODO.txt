@@ -1,0 +1,2 @@
+Go through all places where q_incs is used and strip it down to the basics
+custom for each piece of code

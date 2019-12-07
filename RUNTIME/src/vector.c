@@ -1,12 +1,9 @@
 #define LUA_LIB
 
-#include <stdlib.h>
-#include <math.h>
-
-#include "luaconf.h"
-#include "lua.h"
 
 #include "lauxlib.h"
+#include "lua.h"
+#include "luaconf.h"
 #include "lualib.h"
 
 // #include "q_constants.h" // gets us Q_CHUNK_SIZE 
@@ -318,7 +315,7 @@ static int l_vec_get( lua_State *L) {
 
     num_to_return++;
     strcpy(ptr_sclr->field_type, ptr_vec->field_type);
-    ptr_sclr->field_size = ptr_vec->field_size;
+    ptr_sclr->field_width = ptr_vec->field_size;
     if ( strcmp(ptr_sclr->field_type, "B1") == 0 ) { 
       uint64_t word = ((uint64_t *)ret_addr)[0];
       uint32_t bit_idx = idx % 64;

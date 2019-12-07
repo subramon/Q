@@ -1,8 +1,4 @@
-#define WHEREAMI { fprintf(stderr, "Line %3d of File %s \n", __LINE__, __FILE__);  }
-#define go_BYE(x) { WHEREAMI; status = x ; goto BYE; }
-
-#include <stdio.h>
-#include <stdint.h>
+#include "q_incs.h"
 
 int merge_min(
     int32_t *X, /* [nX] */

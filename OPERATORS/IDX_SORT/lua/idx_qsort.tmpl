@@ -26,11 +26,7 @@ return require 'Q/UTILS/lua/code_gen' {
    Engineering a sort function; Jon Bentley and M. Douglas McIlroy;
    Software - Practice and Experience; Vol. 23 (11), 1249-1265, 1993.  */
 
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdint.h>
+#include "q_incs.h"
 extern int
 qsort_${srt_ordr}_val_${val_qtype}_idx_${idx_qtype} (
 		${idx_ctype} *srt_ordr,

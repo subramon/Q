@@ -1,4 +1,3 @@
-#include <math.h>
 #include "q_incs.h"
 #include "calc_scale.h"
 
