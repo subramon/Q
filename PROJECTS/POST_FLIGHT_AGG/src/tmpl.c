@@ -32,35 +32,83 @@ uint8_t **P; // [nPD][nP]
 */
 #define nOaD 8 // number of output columns = n_steps + 1 
 //
-// Note that for a single perturbation index, we have 1 output value 
-// defined by the struct TracesSummary
-
-float **Oa; // [nOaD][nP]
-/* Note that Oa is extracted from 
+/* Note that for a single perturbation index, we have 1 output value 
+   defined by the struct TracesSummary. We break these into 2 parts
+   TracesASummary and TracesBSummary for exposition
 typedef struct {
   float *avg_revenue; // [n_steps] 
   float *avg_units_sold; // [n_steps] 
   float num_price_changes;
   float *avg_markdowns; // [n_steps] 
 } TracesSummary;
- * so that for the perturbation index by i, the following holds
- * Oa[0][i] = avg_markdowns[0]
- * Oa[1][i] = avg_markdowns[1]
- * .......
- * Oa[nOaD-2][i] = avg_markdowns[n_steps-1]
- * Oa[nOaD-1][i] = num_price_changes
+typedef struct {
+  float *avg_revenue; // [n_steps] 
+  float *avg_units_sold; // [n_steps] 
+} TracesASummary;
+typedef struct {
+  float num_price_changes;
+  float *avg_markdowns; // [n_steps] 
+} TracesBSummary;
 */
 
-// Similarly, 
-#define nObD 8 // number of output columns = 2*n_steps
-//
-float **Ob; // [nObD][nP]
-/*
- * Ob[0][i] = avg_units_sold[0]
- * Ob[1][i] = avg_units_sold[1]
- * .......
- * Ob[nOBD-2][i] = avg_revenue[n_steps-2]
- * Ob[nObD-1][i] = avg_revenue[n_steps-1]
-*/
+TracesASummary *Oa; // [nP]
+TracesBSummary *Ob; // [nP]
+
+// In this implementation, we consider only pair-wise aggregation
+// The composite key is represented in 32 bits, with 16 bits to represent a key
+// ID and the value of that key
+// Let's take an example. Consider the composite key
+// ((State, California), (Department, Automotive))
+// Assume that there are no more than 15 dimensions that we will slice by
+// Assume that State is one of those dimensions and has 4 
+// Assume that Depeartment is another of those dimensions and has 8
+// Assume that California is encoded as 3 and Automotive is encoded as 1
+// Then (State, California) is the 16 bits ( 4 << 12 ) | 3
+// Then (Department, Automotive) is the 16 bits ( 8 << 12 ) | 1
+// The entire composite key is then 
+// ( ( ( 4 << 12 ) | 3 ) << 16 ) | ( ( 8 << 12 ) | 1 )
+uint8_t *Rk; // [nRD]
+uint8_t *Pk; // [nPD]
+// so that Rk[i] gives us the key index for the ith provenance dimension
+// so that Pk[i] gives us the key index for the ith perturbation dimension
 
 // STOP: Above is Lua's responsibility
+// Now C gets to work
+
+uint32_t *comp_keys;
+// TODO: malloc the above
+int comp_key_idx = 0;
+
+for ( int p = 0; p < nP; p++ ) { // for each perturbation
+  TracesASummary val = Oa[p];
+  // create composite keys based on perturbation dimensions
+  for ( int i = 0; i < nPD; i++ )  {
+    uint32_t kv1 = ( Pk[i] << SHIFT_KEY ) | P[i][p];
+    for ( int j = i + 1; j < nPD; j++ )  {
+      uint32_t kv2 = ( Pk[j] << SHIFT_KEY ) | P[j][p];
+      uint32_t comp_key = (kv1 << SHIFT_KEY_VAL) | kv2;
+      comp_keys[comp_key_idx++] = comp_key;
+    }
+  }
+  // create composite keys based on provenance dimensions
+  for ( int r = 0; r < nR; r++ ) { 
+    for ( int i = 0; i < nRD; i++ )  {
+      uint32_t kv1 = ( Rk[i] << SHIFT_KEY ) | R[i][r];
+      for ( int j = i + 1; j < nRD; j++ )  {
+        uint32_t kv2 = ( Rk[j] << SHIFT_KEY ) | R[j][r];
+        uint32_t comp_key = (kv1 << SHIFT_KEY_VAL) | kv2;
+        comp_keys[comp_key_idx++] = comp_key;
+      }
+    }
+  }
+  // create composite keys based on provenance and perturbation
+  for ( int r = 0; r < nR; r++ ) { 
+    for ( int i = 0; i < nPD; i++ )  {
+      uint32_t kv1 = ( Pk[i] << SHIFT_KEY ) | P[i][p];
+      for ( int j = 0; j < nRD; j++ )  {
+        uint32_t kv2 = ( Rk[j] << SHIFT_KEY ) | R[j][p];
+        uint32_t comp_key = (kv1 << SHIFT_KEY_VAL) | kv2;
+        comp_keys[comp_key_idx++] = comp_key;
+      }
+    }
+  }
