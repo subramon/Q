@@ -1,6 +1,6 @@
 local ffi = require 'ffi'
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local clean_defs = require 'Q/UTILS/build/clean_defs'
+local get_func_decl = require 'Q/UTILS/build/get_func_decl'
 
 
 local is_cdef = false
@@ -13,7 +13,7 @@ local function get_ptr(
   if ( not is_cdef ) then 
     local incs = "-I" .. qconsts.Q_SRC_ROOT .. "/UTILS/inc/"
     local doth = qconsts.Q_SRC_ROOT .. "/RUNTIME/CMEM/inc/cmem_struct.h"
-    local hdrs = clean_defs(doth, incs)
+    local hdrs = get_func_decl(doth, incs)
     ffi.cdef(hdrs)
     is_cdef = true
   end

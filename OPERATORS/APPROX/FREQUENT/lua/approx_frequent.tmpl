@@ -402,7 +402,7 @@ ${fn} (
 
   for (uint64_t i = 0; i < siz; i += data->cntr_siz) {
     ${elem_ctype} *chunk_start = x + i;
-    uint64_t chunk_siz = min(data->cntr_siz, siz - i);
+    uint64_t chunk_siz = mcr_min(data->cntr_siz, siz - i);
     status = ${chunk_fn}(chunk_start, chunk_siz, data); cBYE(status);
   }
 

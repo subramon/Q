@@ -10,7 +10,7 @@
 
 local exec_and_capture_stdout = require 'Q/UTILS/lua/exec_and_capture_stdout'
 
-local function clean_defs(
+local function get_func_decl(
   file,
   incs
   )
@@ -23,10 +23,10 @@ local function clean_defs(
   local cmd
   if ( incs ) then
     assert(type(incs) == "string")
-    cmd = string.format( "cat %s|grep -v q_incs |cpp %s %s|grep -v '^#'",
+    cmd = string.format( "cat %s | grep -v q_incs | grep -v q_macros | cpp %s %s|grep -v '^#'",
       file, file, incs)
   else
-    cmd = string.format( "cat %s | grep -v q_incs | grep -v '^#'", file)
+    cmd = string.format( "cat %s | grep -v q_incs | grep -v q_macros | grep -v '^#'", file)
   end
   local  rslt = exec_and_capture_stdout(cmd)
   -- check that you do not get back empty string 
@@ -38,6 +38,6 @@ local function clean_defs(
   --==============
   return rslt, defines
 end
-return clean_defs
+return get_func_decl
 -- x = clean_defs("/home/subramon/WORK/Q/RUNTIME/VCTR/inc/core_vec_struct.h", "-I../../../UTILS/inc/")
 -- print(x)

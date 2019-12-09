@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "macros.h"
+#include "q_macros.h"
 #include "fastdiv.h"
 
  /*

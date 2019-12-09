@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "macros.h"
-#include "eigenvectors.h"
 #include <lapacke.h>
+#include "q_macros.h"
+#include "eigenvectors.h"
 
 int
 eigenvectors(
