@@ -76,6 +76,12 @@ uint8_t *Pk; // [nPD]
 // Now C gets to work
 
 uint32_t *comp_keys;
+uint32_t n_comp_keys = ( 
+    ( ( nPD * (nPD+1) ) / 2 ) + 
+    ( nR * ( nRD * (nRD+1) ) / 2 ) + 
+    ( nR * ( nRD * nPD ) ) );
+comp_keys = malloc(n_comp_keys * sizeof(int));
+return_if_malloc_failed(comp_keys);
 // TODO: malloc the above
 int comp_key_idx = 0;
 
@@ -106,9 +112,15 @@ for ( int p = 0; p < nP; p++ ) { // for each perturbation
     for ( int i = 0; i < nPD; i++ )  {
       uint32_t kv1 = ( Pk[i] << SHIFT_KEY ) | P[i][p];
       for ( int j = 0; j < nRD; j++ )  {
-        uint32_t kv2 = ( Rk[j] << SHIFT_KEY ) | R[j][p];
+        uint32_t kv2 = ( Rk[j] << SHIFT_KEY ) | R[j][r];
         uint32_t comp_key = (kv1 << SHIFT_KEY_VAL) | kv2;
         comp_keys[comp_key_idx++] = comp_key;
       }
     }
   }
+  // At this point we have populated the n_comp_keys entries in comp_keys[]
+  // The "value" for all these composite keys is Oa[p]
+  // We send this off to Aggregator
+  // If n_comp_keys is too small, we may execute more iterations of 
+  // the outer most loop until we get enough to send to Aggregator
+}
