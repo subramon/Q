@@ -1,4 +1,3 @@
--- local dbg = require 'Q/UTILS/lua/debugger'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local Q_ROOT      = qconsts.Q_ROOT 
@@ -66,8 +65,6 @@ typedef struct {
 -- In the case of dynamic compilation, the incfile and sofile referenced 
 -- above will be quite small and will contain the bare essentials
 -- In the case of static compilation, they are likely to be quite large
--- TODO P2: Need to be more disciplined about what is available in the
--- minimal case
 --
 -- Regardless, they need to exist before we can continue
 
@@ -75,16 +72,18 @@ assertx(fileops.isfile(incfile), "File not found ", incfile)
 ffi.cdef(fileops.read(incfile))
 
 assertx(fileops.isfile(sofile), "File not found ", sofile)
-local qc = ffi.load(sofile) -- statically compiled library
+local q_static = ffi.load(sofile) -- statically compiled library
+-- had we done no dynamic compilation, we would have
+-- returned q_static and we would be done
 --=========================================================
 
-local function_lookup = {}
-local qt              = {}  -- for all dynamically compiled stuff
-local libs            = {}
+local known_functions = {}  -- this is to make sure that we do not dynamically compile the same function twice 
+local qc              = {}  -- what we will return
+local libs            = {}  -- Subtle but important reason why we have this here. Explained further down.
 
 
-local function get_qc_val(val)
-  return qc[val]
+local function get_val_in_q_static(val)
+  return q_static[val]
 end
 
 local function load_lib(
@@ -99,27 +98,33 @@ local function load_lib(
   assert(#func_name > 0)
   assert(num_subs == 1, "Should have a .h extension")
 
-  -- verify that func_name is not in qc
-  local status, _ = pcall(get_qc_val, func_name)
+  -- verify that func_name is not in q_static
+  local status, _ = pcall(get_val_in_q_static, func_name)
   assert( not status)
 
   -- verify that function name not seen before
-  assertx(function_lookup[func_name] == nil,
-    "Library name is already declared: ", func_name)
+  assertx(not known_functions[func_name],
+    "Function already declared: ", func_name)
 
   local so_name = "lib" .. func_name .. ".so"
   assert(so_name ~= "libq_core.so", 
     "Specical case. Qcore should not be loaded with load_lib()")
 
   -- INDRA: Why do we pcall? Why not fail?
+  -- INDRA: Should we run cpp on hfile first?
   local status, err_msg = pcall(ffi.cdef, fileops.read(hfile))
   assert(status, " Unable to cdef the .h file " .. hfile)
+  -- INDRA: Why do we pcall? Why not fail?
   local status, L = pcall(ffi.load, so_name)
   assert(status, " Unable to load .so file " .. so_name)
   -- Now that cdef and load have worked, keep track of it
+  -- if you don't store L outside the scope of this function, 
+  -- then it gets garbage collected 
+  -- and when you try and invoke qc.foo, the program crashes
   libs[func_name] = L
-  function_lookup[func_name] = libs[func_name][func_name]
-  qt[func_name] = libs[func_name][func_name]
+  known_functions[func_name] = libs[func_name][func_name]
+  qc[func_name] = libs[func_name][func_name]
+  return true
 end
 
 -- Pseudo code:
@@ -127,11 +132,16 @@ end
 -- 2: For each such file foo, call load_lib(foo)
 -- 3: Confirm that you did see a file called q_core.h
 local function add_libs()
+  -- After a make clean and a fresh build of Q, the only .h file in
+  -- inc_dir will be q_core.h. If dynamic compilation is on and new 
+  -- symbols are compiled, then a .h file will exist for each new 
+  -- symbol in inc_dir. Do NOT corrupt this directory with any other
+  -- .h files!!!
   local hfiles = fileops.list_files_in_dir(inc_dir, "*.h")
   local found_qcore = false
   for _, hfile in pairs(hfiles) do 
     if not hfile:find("q_core.h") then 
-      load_lib(hfile)
+      assert(load_lib(hfile))
     else
       found_qcore = true
     end
@@ -140,14 +150,15 @@ local function add_libs()
 end
 
 -- q_add is used by Q opertors to dynamically add a symbol that is missing
--- Differs from all other symbols in qc/qt in this important regard.
+-- Differs from all other symbols in q_static/qt in this important regard.
 local function q_add(
   subs 
   )
-  -- the fact that we come here means that qc does not have this symbol
+  -- the fact that we come here => q_static does not have this symbol
   -- we neeed to do the following
 
   local tmpl, doth, dotc
+  -- EITHER provide a tmpl OR the doth and dotc 
   assert(type(subs) == "table")
   if ( subs.tmpl ) then 
     assert(not subs.doth) assert(not subs.dotc)
@@ -162,8 +173,8 @@ local function q_add(
   function_name = assert(subs.fn)
   assert( (type(function_name) == "string") and  ( #function_name > 0 ) )
 
-  assert(not function_lookup[function_name], "Function already registered")
-  assert(not qt[function_name], "Function already registered")
+  assert(not known_functions[function_name], "Function already registered")
+  assert(not qc[function_name], "Function already registered")
   --==================================
   if tmpl then 
     assert(type(tmpl) == "string")
@@ -186,26 +197,52 @@ end
 
 local qc_mt = {
   __newindex = function(self, key, value)
-    -- INDRA DISCUSS 
+    -- Write more details on why you might want to redfine a function
+    -- Might want to protect this with a qconsts.debug e.g.
+    -- assert(qconsts.debug)
     rawset(self, key, value)
-    -- assert(nil) --- You cannot define a function this way. Use q_add()
+    -- If you genuinely believe that you do not want to give the developer
+    -- this ability, then
+    -- error("you cannot redfine a function")
   end,
   __index = function(self, key)
     -- the very fact that you came here means that this "key" was 
     -- not a dynamically generated function
     -- for a statically generated function, you come here only once
     if key == "q_add" then return q_add end
-    -- get it from qc (all statically compiled stuff)
-    -- INDRA: Why pcall? Why not die?
-    local status, func = pcall(get_qc_val, key)
+    -- get it from q_static (all statically compiled stuff)
+    local status, func = pcall(get_val_in_q_static, key)
     if status == true then
-      qt[key] = func 
+      qc[key] = func 
       return func
     else
+      -- Returning nil is our way of telling the caller that the symbol
+      -- does not exist and they had better invoke dynamic compilation
       return nil
     end
   end
 }
-setmetatable(qt, qc_mt)
+setmetatable(qc, qc_mt)
 add_libs() 
-return qt
+return qc
+--[[ Some explanation of index method on metatables
+If we did qcjfoo, then 
+  if qcjfoo ~= nil then 
+    return it
+  else
+    the __index function would be invoked
+    What does our __index function do?
+    It checks to see if this is available in qc using get_val_in_q_static()
+    But we protect this with a pcall so that we don't bomb out
+    If status from pcall is true then
+       It means that the "func" you get back is what qc had
+       Do qcjkey] = func to prevent __index from being called again
+       Return "func"
+    else
+    end
+  end
+end
+2 cases 
+-- (1) qcjfoo refers to some known C function and we return it
+-- (2) 
+--]]

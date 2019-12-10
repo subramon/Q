@@ -1,4 +1,4 @@
--- TODO P2 Replace these with C functions
+-- TODO P2 Replace these with C functions using a Lua/C binding like Scalar
 --
 local assertx = require 'Q/UTILS/lua/assertx'
 local fileops = {}

@@ -1,3 +1,4 @@
+--TODO P2 Add to fileops and move to C library 
 local assertx = require 'Q/UTILS/lua/assertx'
 local function write_to_file(content, fname)
   local file = assertx(io.open(fname, "w+"), "unable to create ", fname)
