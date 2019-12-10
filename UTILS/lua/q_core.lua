@@ -106,8 +106,8 @@ local function load_lib(
   assertx(not known_functions[func_name],
     "Function already declared: ", func_name)
 
-  local so_name = "lib" .. func_name .. ".so"
-  assert(so_name ~= "libq_core.so", 
+  local sofile = "lib" .. func_name .. ".so"
+  assert(sofile ~= "libq_core.so", 
     "Specical case. Qcore should not be loaded with load_lib()")
 
   -- INDRA: Why do we pcall? Why not fail?
@@ -115,8 +115,8 @@ local function load_lib(
   local status, err_msg = pcall(ffi.cdef, fileops.read(hfile))
   assert(status, " Unable to cdef the .h file " .. hfile)
   -- INDRA: Why do we pcall? Why not fail?
-  local status, L = pcall(ffi.load, so_name)
-  assert(status, " Unable to load .so file " .. so_name)
+  local status, L = pcall(ffi.load, sofile)
+  assert(status, " Unable to load .so file " .. sofile)
   -- Now that cdef and load have worked, keep track of it
   -- if you don't store L outside the scope of this function, 
   -- then it gets garbage collected 
@@ -191,7 +191,7 @@ local function q_add(
   assert(not fileops.isfile(sofile), ".so file should not pre-exist")
   --==================================
 
-  compile(doth, dotc, hfile, sofile, function_name)
+  compile(doth, dotc, function_name, hfile, sofile)
   load_lib(hfile)
 end
 

@@ -17,11 +17,11 @@ local inc_dir = Q_ROOT .. "/include/"
 assert(fileops.isdir(Q_SRC_ROOT))
 --================================================
 local function compile(
-  doth, 
-  dotc, 
-  hfile, 
-  sofile, 
-  func_name
+  doth,  -- INPUT 
+  dotc,  -- INPUT 
+  func_name, -- INPUT
+  hfile, --  created by this function
+  sofile --  created by this function
   )
   -- START: Error checking on inputs
   assert(type(doth  ) == "string", "need a valid string for .h file")
@@ -44,8 +44,10 @@ local function compile(
   local status = os.execute(q_cmd)
   assertx(status == 0, "gcc failed for command: ", q_cmd)
   assertx(fileops.isfile(sofile), "Target " ..  sofile .. " not created")
-  -- TODO: Why do we need following? 
-  local h_file = clean_h_file(tmp_h)
+  -- Now, we need to make sure .h file is in place so that when server
+  -- restarts, we can pick up the .h file and .so file are present
+  -- and can be loaded and we do not compile mid-way through execution
+  local h_file = clean_h_file(tmp_h) -- TODO: can we use get_func_decl?
   write_to_file(h_file, hfile)
 end
 
