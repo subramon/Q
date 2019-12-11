@@ -1,3 +1,3 @@
-T = require 'test_reducer'
-for k, v in pairs(T) do print(k); v() end
+T = require 'test_cmem'
+T.t3()
 os.exit()

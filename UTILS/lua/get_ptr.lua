@@ -2,14 +2,14 @@ local ffi = require 'ffi'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_func_decl = require 'Q/UTILS/build/get_func_decl'
 
-
-local is_cdef = false
+-- TODO P2 Do we still need thislocal is_cdef = false
 local function get_ptr(
   x, 
   qtype -- optional 
 )
 
   if not x then return nil end
+  --[[ TODO P2 Do we still need this?
   if ( not is_cdef ) then 
     local incs = "-I" .. qconsts.Q_SRC_ROOT .. "/UTILS/inc/"
     local doth = qconsts.Q_SRC_ROOT .. "/RUNTIME/CMEM/inc/cmem_struct.h"
@@ -17,6 +17,7 @@ local function get_ptr(
     ffi.cdef(hdrs)
     is_cdef = true
   end
+  --]]
 
   local ret_ptr 
   assert(type(x) == "CMEM")

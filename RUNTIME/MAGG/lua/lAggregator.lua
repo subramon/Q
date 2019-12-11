@@ -382,59 +382,32 @@ function lAggregator:set_produce(keyvec)
   return val_vecs
 end
 
-function lAggregator:put_cmem(key, vals)
+function lAggregator:put_cmem(keys, vals, n_keys_per_val)
   assert ( self._is_dead == false ) 
   assert ( self._is_frozen == false ) 
   if ( self._is_instantiated == false ) then self:instantiate() end
   --==============
-  -- get key and convert to Scalar if not already so 
-  assert(key)
-  if ( type(key) == "number" ) then 
-    key = to_scalar(key, self._params.keytype)
-  end
-  assert(type(key) == "Scalar") 
+  assert(type(keys) == "CMEM")
+  local key_size = keys:size()
+  local key_type = keys:fldtype()
+  local key_width = qconsts.qtypes[key_type].width
+  local n_keys = math.floor(key_size / key_width)
+  assert(n_keys == (key_size / key_width))
+  --============================
+  assert(type(vals) == "CMEM")
+  local val_size = vals:size()
+  local val_width = assert(keys:width())
+  local n_vals = math.floor(val_size / val_width)
+  assert(n_vals == (val_size / val_width))
+  --============================
+  assert(type(n_keys_per_val) == "number")
+  assert(n_keys_per_val > 0)
+  assert( (n_keys / n_keys_per_val) == n_vals)
   --==========
-  local invaltype  -- to remember whether val was given to us as a
-  -- Scalar or a table to make sure that we return it in same way
-  -- Note that we convert vals to table of Scalars before calling C
-  --==========
-  assert(vals)
-  if ( type(vals) == "number" ) then 
-    vals = to_scalar(vals, self._params.keytype)
-  end
-  if ( type(vals) == "Scalar" ) then 
-    vals = { vals }
-    invaltype = "Scalar"
-  else
-    invaltype = "table"
-  end
-  assert(type(vals) == "table")
-  --==========
-
-  local cnt = 0
-  for i, v in ipairs(vals) do 
-    if ( type(v) == "number" ) then 
-      vals[i] = assert(to_scalar(v, self._params.vals[i].valtype))
-    end
-    assert(type(vals[i]) == "Scalar" )
-  end
-  --==============
   local oldvals, is_updated = assert(Aggregator.put1(self._agg, key, vals))
-  self._meta._num_puts = self._meta._num_puts + 1
-  if ( qconsts.debug ) then 
-    assert(type(is_updated) == "boolean" )
-    assert(type(oldvals) == "table" )
-    for  i, v in ipairs(oldvals) do 
-      assert(type(v) == "Scalar" ) 
-      assert(v:fldtype() == self._params.vals[i].valtype)
-    end
-    self:check() 
-  end 
-  if ( invaltype == "Scalar" ) then 
-    oldvals = oldvals[1]
-    assert(type(oldvals) == "Scalar" ) 
-  end
-  return oldvals, is_updated
+  self._meta._num_puts = self._meta._num_puts + n_keys
+  if ( qconsts.debug ) then self:check() end 
+  return self
 end
 
 return lAggregator

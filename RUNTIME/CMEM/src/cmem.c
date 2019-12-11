@@ -377,6 +377,28 @@ static int l_cmem_zero( lua_State *L) {
   return 1;
 }
 
+static int l_cmem_get_width( lua_State *L) {
+  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
+  lua_pushnumber(L, ptr_cmem->width);
+  return 1;
+}
+
+static int l_cmem_set_width( lua_State *L) {
+  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
+  int64_t width =  luaL_checknumber(L, 2);
+  if ( ptr_cmem->width > 0 ) { WHEREAMI; goto BYE; }
+  if ( width <= 0 ) { WHEREAMI; goto BYE; }
+  if ( ( ( ptr_cmem->size / width )  * width ) != ptr_cmem->size ) {
+    WHEREAMI; goto BYE;
+  }
+  ptr_cmem->width = width;
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
 
 static int l_cmem_fldtype( lua_State *L) {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
@@ -659,40 +681,44 @@ BYE:
 //----------------------------------------
 static const struct luaL_Reg cmem_methods[] = {
     { "__gc",          l_cmem_free               },
-    { "delete",          l_cmem_free               },
-    { "set",          l_cmem_set               },
-    { "seq",          l_cmem_seq               },
-    { "zero",        l_cmem_zero },
-    { "set_min",        l_cmem_set_min },
-    { "set_max",        l_cmem_set_max },
-    { "to_str",        l_cmem_to_str },
-    { "prbuf",        l_cmem_prbuf },
-    { "fldtype",     l_cmem_fldtype },
-    { "data",     l_cmem_data },
-    { "size",     l_cmem_size },
-    { "is_foreign",     l_cmem_is_foreign },
-    { "dupe",     l_cmem_dupe }, // only for testing
-    { "name",     l_cmem_name },
+    { "data",       l_cmem_data },
+    { "dupe",       l_cmem_dupe }, // only for testing
+    { "fldtype",    l_cmem_fldtype },
+    { "is_foreign", l_cmem_is_foreign },
+    { "name",       l_cmem_name },
+    { "new",        l_cmem_new },
+    { "prbuf",      l_cmem_prbuf },
+    { "set",        l_cmem_set               },
     { "set_default", l_cmem_set_default },
-    { NULL,          NULL               },
+    { "set_max",    l_cmem_set_max },
+    { "set_min",    l_cmem_set_min },
+    { "set_width",  l_cmem_set_width },
+    { "seq",        l_cmem_seq               },
+    { "size",       l_cmem_size },
+    { "to_str",     l_cmem_to_str },
+    { "width",      l_cmem_get_width },
+    { "zero",       l_cmem_zero },
+    { NULL,  NULL         }
 };
  
 static const struct luaL_Reg cmem_functions[] = {
-    { "new", l_cmem_new },
-    { "to_str",        l_cmem_to_str },
-    { "prbuf",        l_cmem_prbuf },
-    { "zero",        l_cmem_zero },
-    { "set_min",        l_cmem_set_min },
-    { "set_max",        l_cmem_set_max },
-    { "fldtype",     l_cmem_fldtype },
-    { "data",     l_cmem_data },
-    { "size",     l_cmem_size },
-    { "is_foreign",     l_cmem_is_foreign },
-    { "dupe",     l_cmem_dupe }, // only for testing
-    { "name",     l_cmem_name },
-    { "set",          l_cmem_set               },
-    { "seq",          l_cmem_seq               },
+    { "data",       l_cmem_data },
+    { "dupe",       l_cmem_dupe }, // only for testing
+    { "fldtype",    l_cmem_fldtype },
+    { "is_foreign", l_cmem_is_foreign },
+    { "name",       l_cmem_name },
+    { "new",        l_cmem_new },
+    { "prbuf",      l_cmem_prbuf },
+    { "set",        l_cmem_set               },
     { "set_default", l_cmem_set_default },
+    { "set_max",    l_cmem_set_max },
+    { "set_min",    l_cmem_set_min },
+    { "set_width",  l_cmem_set_width },
+    { "seq",        l_cmem_seq               },
+    { "size",       l_cmem_size },
+    { "to_str",     l_cmem_to_str },
+    { "width",      l_cmem_get_width },
+    { "zero",       l_cmem_zero },
     { NULL,  NULL         }
 };
  

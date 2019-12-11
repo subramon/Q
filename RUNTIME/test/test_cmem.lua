@@ -3,6 +3,7 @@ local ffi = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local tests = {}
 local qconsts = require 'Q/UTILS/lua/q_consts'
+local qc      = require  'Q/UTILS/lua/q_core' -- to cdef CMEM_REC_TYPE 
 
 ffi.cdef([[
 char *strncpy(char *dest, const char *src, size_t n);
@@ -64,7 +65,7 @@ tests.t3 = function()
   -- setting data using ffi and verifying using to_str()
   local buf = cmem.new(ffi.sizeof("int32_t"), "I4")
   cbuf = ffi.cast("CMEM_REC_TYPE *", buf)
-  ffi.C.strncpy(cbuf[0].field_type, "I4", 2)
+  ffi.C.strncpy(cbuf[0].fldtype, "I4", 2)
   ffi.C.strncpy(cbuf[0].cell_name, "some bogus name", 15)
   iptr = assert(get_ptr(buf, "I4"))
   iptr[0] = 123456789;
@@ -230,6 +231,31 @@ tests.t12 = function()
   local c1 = cmem.new(size, qtype, name)
   assert(c1:name() == name)
   print("test t12 passed")
+end
+
+tests.t13 = function()
+  -- test set/get width
+  local size = 1024
+  local qtype = "I4"
+  local c1 = cmem.new(size, qtype)
+  local width = qconsts.qtypes[qtype].width
+  assert(c1:set_width(width))
+  assert(c1:width() == width)
+  -- cannot set width twice 
+  status = pcall(c1.set_width, width)
+  assert(not status)
+  print("test t13 passed")
+end
+tests.t14 = function()
+  -- test bad set width
+  local size = 1024
+  local qtype = "I4"
+  local c1 = cmem.new(size, qtype)
+  local width = 13
+  -- bad width should fail
+  status = pcall(c1.set_width, width)
+  assert(not status)
+  print("test t14 passed")
 end
 
 
