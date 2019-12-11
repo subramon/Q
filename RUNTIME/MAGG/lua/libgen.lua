@@ -12,6 +12,7 @@ local make_putn = require 'Q/RUNTIME/MAGG/lua/make_putn'
 
 local make_put1_return = require 'Q/RUNTIME/MAGG/lua/make_put1_return'
 
+local incs 
 local function gen_src(
   subs,
   fn,
@@ -29,10 +30,22 @@ end
 local function create_dot_o(
   X
   )
-  local incs = " -I../inc/ -I../../inc/ -I../xgen_inc/ -I../../../UTILS/inc/ "
+  if ( not incs ) then 
+    incs = {}
+    incs[#incs+1] = "-I../inc/"
+    incs[#incs+1] = "-I../../inc/"
+    incs[#incs+1] = "-I../xgen_inc/"
+    incs[#incs+1] = "-I../../CMEM/inc/"
+    incs[#incs+1] = "-I../../SCLR/inc/"
+    incs[#incs+1] = "-I../../../UTILS/inc/"
+    incs[#incs+1] = " "
+    incs = table.concat(incs, " ")
+  end
+  print("incs = ", incs)
   assert(type(X) == "table")
   for k, v in pairs(X) do 
     local command = "gcc -c "  .. qconsts.QC_FLAGS .. incs .. v
+    print("command = ", command)
     status = os.execute(command)
     if ( status ~= 0 ) then print(command) end 
     assert(status == 0)
@@ -113,9 +126,9 @@ local function libgen(
     elseif ( aggstype[i] == "cnt" ) then 
       X[#X+1] = dst .. " += 1 " 
     elseif ( aggstype[i] == "min" ) then 
-      X[#X+1] = dst .. " = min(" .. dst .. "," .. src .. ")"
+      X[#X+1] = dst .. " = mcr_min(" .. dst .. "," .. src .. ")"
     elseif ( aggstype[i] == "max" ) then 
-      X[#X+1] = dst .. " = max(" .. dst .. "," .. src .. ")"
+      X[#X+1] = dst .. " = mcr_max(" .. dst .. "," .. src .. ")"
     else
       assert(nil, "Unknown aggtype = ", aggstype[1])
     end

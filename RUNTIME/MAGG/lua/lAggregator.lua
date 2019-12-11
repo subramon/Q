@@ -390,13 +390,15 @@ function lAggregator:put_cmem(keys, vals, n_keys_per_val)
   assert(type(keys) == "CMEM")
   local key_size = keys:size()
   local key_type = keys:fldtype()
+  assert ( (key_type == "I4") or (key_type == "I8"))
   local key_width = qconsts.qtypes[key_type].width
   local n_keys = math.floor(key_size / key_width)
   assert(n_keys == (key_size / key_width))
   --============================
   assert(type(vals) == "CMEM")
   local val_size = vals:size()
-  local val_width = assert(keys:width())
+  local val_width = assert(vals:width())
+  assert(val_width > 0)
   local n_vals = math.floor(val_size / val_width)
   assert(n_vals == (val_size / val_width))
   --============================
@@ -404,7 +406,7 @@ function lAggregator:put_cmem(keys, vals, n_keys_per_val)
   assert(n_keys_per_val > 0)
   assert( (n_keys / n_keys_per_val) == n_vals)
   --==========
-  local oldvals, is_updated = assert(Aggregator.put1(self._agg, key, vals))
+  -- local oldvals, is_updated = assert(Aggregator.put1(self._agg, key, vals))
   self._meta._num_puts = self._meta._num_puts + n_keys
   if ( qconsts.debug ) then self:check() end 
   return self
