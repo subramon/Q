@@ -22,6 +22,7 @@ return require 'Q/UTILS/lua/code_gen' {
 #include "_hmap_instantiate.h"
 #include "_hmap_put.h"
 #include "_hmap_putn.h"
+#include "_hmap_put_cmem.h"
 #include "agg_struct.h" // depends on hmap_types
 
 int luaopen_libagg${lbl} (lua_State *L);

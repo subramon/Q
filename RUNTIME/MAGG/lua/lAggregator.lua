@@ -407,6 +407,8 @@ function lAggregator:put_cmem(keys, vals, n_keys_per_val)
   assert( (n_keys / n_keys_per_val) == n_vals)
   --==========
   -- local oldvals, is_updated = assert(Aggregator.put1(self._agg, key, vals))
+  local K = assert(get_ptr(keys, key_type))
+  -- assert(Aggregator.put_cmem(self._agg, K, V, n_keys_per_val)
   self._meta._num_puts = self._meta._num_puts + n_keys
   if ( qconsts.debug ) then self:check() end 
   return self
