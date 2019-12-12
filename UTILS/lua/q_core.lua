@@ -10,6 +10,7 @@ local fileops  = require 'Q/UTILS/lua/fileops'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 
 --=== From runtime
+local cutils = require 'libcutils'
 local cmem   = require 'libcmem'
 local Scalar = require 'libsclr'
 local Vector = require 'libvec'
@@ -21,6 +22,7 @@ local inc_dir  = Q_ROOT .. "/include/"
 local lib_dir  = Q_ROOT .. "/lib/"
 
 -- START: Put in a bunch of cdefs that we will need later
+-- TODO P1 Do we still need FILE? 
 ffi.cdef([[
 typedef struct {
    char *fpos;
@@ -68,10 +70,10 @@ typedef struct {
 --
 -- Regardless, they need to exist before we can continue
 
-assertx(fileops.isfile(incfile), "File not found ", incfile)
+assertx(cutils.isfile(incfile), "File not found ", incfile)
 ffi.cdef(fileops.read(incfile))
 
-assertx(fileops.isfile(sofile), "File not found ", sofile)
+assertx(cutils.isfile(sofile), "File not found ", sofile)
 local q_static = ffi.load(sofile) -- statically compiled library
 -- had we done no dynamic compilation, we would have
 -- returned q_static and we would be done
@@ -86,6 +88,9 @@ local function get_val_in_q_static(val)
   return q_static[val]
 end
 
+-- Important: Note that there are 2 places where load_liob is called from
+-- 1) add_lib -> this is done whenever Q restarts
+-- 2) q_add   -> this is dynamic compilation
 local function load_lib(
   hfile
   )
@@ -110,11 +115,10 @@ local function load_lib(
   assert(sofile ~= "libq_core.so", 
     "Specical case. Qcore should not be loaded with load_lib()")
 
-  -- INDRA: Why do we pcall? Why not fail?
-  -- INDRA: Should we run cpp on hfile first?
+  -- Important to pcall and then assert status so that
+  -- you can identify the culprit hfile
   local status, err_msg = pcall(ffi.cdef, fileops.read(hfile))
   assert(status, " Unable to cdef the .h file " .. hfile)
-  -- INDRA: Why do we pcall? Why not fail?
   local status, L = pcall(ffi.load, sofile)
   assert(status, " Unable to load .so file " .. sofile)
   -- Now that cdef and load have worked, keep track of it
@@ -187,8 +191,8 @@ local function q_add(
   local hfile  = inc_dir           .. function_name .. ".h"
   local sofile = lib_dir .. "/lib" .. function_name .. ".so"
   
-  assert(not fileops.isfile(hfile),  ".h  file should not pre-exist")
-  assert(not fileops.isfile(sofile), ".so file should not pre-exist")
+  assert(not cutils.isfile(hfile),  ".h  file should not pre-exist")
+  assert(not cutils.isfile(sofile), ".so file should not pre-exist")
   --==================================
 
   compile(doth, dotc, function_name, hfile, sofile)

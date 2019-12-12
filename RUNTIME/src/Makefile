@@ -18,12 +18,14 @@ clean:
 ../../UTILS/gen_src/_txt_to_I4.c :
 	make -C ../../UTILS/src/
 
+../CMEM/src/libcmem.so :
+	make -C ../CMEM/src/
+
 libvec.so: vector.c core_vec.c buf_to_file.c copy_file.c \
 	../../UTILS/gen_src/_txt_to_I4.c \
-  	libmm.so
+  	libmm.so ../CMEM/src/libcmem.so
 	gcc ${QC_FLAGS} $(INCS) \
 		vector.c \
-		../CMEM/src/cmem.c \
 		core_vec.c \
 		buf_to_file.c \
                 copy_file.c \
@@ -44,7 +46,8 @@ libvec.so: vector.c core_vec.c buf_to_file.c copy_file.c \
 		../../UTILS/gen_src/_F4_to_txt.c \
 		../../UTILS/gen_src/_F8_to_txt.c \
 		libmm.so \
-		-shared -o libvec.so
+		 ../CMEM/src/libcmem.so \
+		-shared -o libvec.so 
 	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
 
 libmm.so :

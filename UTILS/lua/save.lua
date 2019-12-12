@@ -1,6 +1,6 @@
-local ffi = require 'ffi'
+local ffi     = require 'ffi'
+local cutils  = require 'libcutils'
 local qconsts = require 'Q/UTILS/lua/q_consts'
-ffi.cdef([[ extern bool isfile ( const char * const ); ]])
 local qc = ffi.load('libq_core')
 
 local basic_serialize = require 'Q/UTILS/lua/basic_serialize'
@@ -74,7 +74,7 @@ local function save(file_to_save)
     metadata_file = qconsts.Q_METADATA_FILE
   end
   assert(type(metadata_file) == "string")
-  if  qc.isfile(metadata_file) then 
+  if  cutils.isfile(metadata_file) then 
     print("Warning! Over-writing meta data file ", metadata_file)
   end
   local fp = assert(io.open(metadata_file, "w+"), 

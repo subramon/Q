@@ -3,6 +3,7 @@ local chk_env_vars        = require 'Q/UTILS/build/chk_env_vars'
 local pldir               = require 'pl.dir'
 local plfile              = require 'pl.file'
 local plpath              = require 'pl.path'
+local cutils              = require 'libcutils'
 local function mk_q_core_h()
 -- final_h is where all the .h files that need to be cdef'd will be kept
   local final_h, _, q_build_dir = chk_env_vars()
@@ -31,11 +32,11 @@ local function mk_q_core_h()
   print(hash_defines)
   print("== STOP  hash_defines")
   plfile.write(tmp_h, hash_defines .. cleaned_defs)
-  assert(plpath.isfile(tmp_h))
+  assert(cutils.isfile(tmp_h))
   cmd = string.format("cpp %s > %s ", tmp_h, tgt_h)
   assert(os.execute(cmd))
-  assert(plpath.isfile(tgt_h))
-  -- TODO put this back plfile.delete(tmp_h)
+  assert(cutils.isfile(tgt_h))
+  assert(cutils.delete(tmp_h))
   pldir.copyfile(tgt_h, final_h)
   print("Created and Copied " .. tgt_h .. " to " .. final_h)
   return true

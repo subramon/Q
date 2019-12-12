@@ -1,5 +1,5 @@
+local cutils        = require 'libcutils'
 local qconsts       = require 'Q/UTILS/lua/q_consts'
-local fileops       = require 'Q/UTILS/lua/fileops'
 local assertx       = require 'Q/UTILS/lua/assertx'
 local clean_h_file  = require 'Q/UTILS/lua/clean_h_file'
 local write_to_file = require 'Q/UTILS/lua/write_to_file'
@@ -14,7 +14,7 @@ local lib_link_path = string.format("-L%s/lib", Q_ROOT)
 local inc_dir = Q_ROOT .. "/include/"
 
 -- some basic checks
-assert(fileops.isdir(Q_SRC_ROOT))
+assert(cutils.isdir(Q_SRC_ROOT))
 --================================================
 local function compile(
   doth,  -- INPUT 
@@ -29,25 +29,43 @@ local function compile(
   assert(type(hfile ) == "string", "need a valid hfile")
   assert(type(sofile) == "string", "need a valid sofile")
   --===============================
-  local tmp_c = string.format("/tmp/_%s.c", func_name)
-  local tmp_h = string.format("/tmp/_%s.h", func_name)
+  local tmp_c = string.format("%s/src/_%s.c", qconsts.Q_BUILD_DIR, func_name)
+  local tmp_h = string.format("%s/include/_%s.h", qconsts.Q_BUILD_DIR, func_name)
   write_to_file(dotc, tmp_c)
   write_to_file(doth, tmp_h)
-  local incs = string.format("-I /tmp/ -I %s -I %s ", Q_SRC_ROOT .. "/UTILS/inc", Q_SRC_ROOT .. "/UTILS/gen_inc")
-  -- TODO: What would we expect to find in Q_BUILD_DIR that we need?
-  if fileops.isdir(Q_BUILD_DIR) then
-    incs = string.format("%s -I %s", incs, Q_BUILD_DIR .. "/include")
-  end
-  -- TODO: Why do we need to link in lq_core? 
+  -- Following means that in dynamically generated code, you can only 
+  -- include "_foo.h" in _foo.c and in _foo.h, you can only include things
+  -- that will be found in UTILS/inc or UTILS/gen_inc/
+  -- As an example, you CANNOT include "cmem.h"
+  local incs = {}
+  incs[#incs+1] = qconsts.Q_BUILD_DIR .. "/include/"
+  incs[#incs+1] = qconsts.Q_SRC_ROOT  .. "/UTILS/inc/"
+  incs[#incs+1] = qconsts.Q_SRC_ROOT  .. "/UTILS/gen_inc/"
+  incs = table.concat(incs, " ")
+
+  -- Note that in a dynamically generated function, the only functions you 
+  -- can call are those that are part of static compilation i.e.,
+  -- the .h file will exit in UTILS/inc or UTILS/gen_inc/ and 
+  -- the symbol will be available in the minimal libq_core.so
+  -- Other assumptions
+  -- (1) You will not refer to any constants from another file e.g.
+  -- Do not use Q_MAX_LEN_FILE_NAME which is in q_constants.h
+  -- On the other hand, you can do
+  -- #define MY_MAX_LEN_FILE_NAME 63
+  -- (2) Any structs you create and any functions you create have
+  -- unique names
   local q_cmd = string.format("gcc %s %s %s %s %s %s -o %s", 
        QC_FLAGS, lib_link_path, tmp_c, incs, Q_LINK_FLAGS, "-lq_core",  sofile)
   local status = os.execute(q_cmd)
   assertx(status == 0, "gcc failed for command: ", q_cmd)
-  assertx(fileops.isfile(sofile), "Target " ..  sofile .. " not created")
+  assertx(cutils.isfile(sofile), "Target " ..  sofile .. " not created")
   -- Now, we need to make sure .h file is in place so that when server
   -- restarts, we can pick up the .h file and .so file are present
   -- and can be loaded and we do not compile mid-way through execution
-  local h_file = clean_h_file(tmp_h) -- TODO: can we use get_func_decl?
+  -- No need for get_func_decl(), clean_h_file is enough because
+  -- we do not need to run through cpp because (for now) no constants 
+  -- to worry about
+  local h_file = clean_h_file(tmp_h) 
   write_to_file(h_file, hfile)
 end
 

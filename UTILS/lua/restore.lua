@@ -1,3 +1,4 @@
+local cutils  = require 'libcutils'
 local qc      = require 'Q/UTILS/lua/q_core'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
@@ -9,8 +10,7 @@ local function restore(file_to_restore)
     metadata_file = qconsts.Q_METADATA_FILE
   end
   assert(type(metadata_file) == "string", "metadata file is not provided")
-  -- checking isfile present
-  assert(qc.isfile(metadata_file),
+  assert(cutils.isfile(metadata_file), -- checking isfile present
     "Meta file not found = " .. metadata_file)
   local status, reason = pcall(dofile, metadata_file)
   return status, reason -- responsibility of caller

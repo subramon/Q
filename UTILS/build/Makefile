@@ -96,6 +96,10 @@ _utils:
 	make  -C ${Q_SRC_ROOT}/UTILS/src/ 
 	touch _utils
 
+_cutils: _utils
+	make  -C ${Q_SRC_ROOT}/RUNTIME/CUTILS/src/ clean
+	make  -C ${Q_SRC_ROOT}/RUNTIME/CUTILS/src/
+	touch _cmem
 _cmem: _utils
 	make  -C ${Q_SRC_ROOT}/RUNTIME/CMEM/src/ clean
 	make  -C ${Q_SRC_ROOT}/RUNTIME/CMEM/src/

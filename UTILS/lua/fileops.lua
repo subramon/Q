@@ -8,6 +8,7 @@ local exists = function(name)
    local v = os.execute(str) 
 	return v == 0
 end
+--[[ replaced by cutils
 --- Check if a directory exists in this path
 fileops.isdir = function(path)
   -- "/" works on both Unix and Windows
@@ -17,6 +18,7 @@ end
 fileops.isfile = function(path)
     return exists(path) and not exists(path.."/")
 end
+--]]
 
 fileops.read = function(path)
   local file = io.open(path, "r")

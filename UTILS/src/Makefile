@@ -170,6 +170,9 @@ libutils.so : ${hdr_files} ${src_files}
 	mkdir -p ${Q_BUILD_DIR}/src/
 	cp ${src_files}      ${Q_BUILD_DIR}/src/
 	cp ../inc/*          ${Q_BUILD_DIR}/include/
+	# copy all generated files so that Lua not needed
+	bash copy.sh ../gen_src/ ../src/
+	bash copy.sh ../gen_inc/ ../inc/
 
 clean :
 	rm -f ../gen_src/*
