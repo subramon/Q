@@ -2,7 +2,7 @@
 #include "q_incs.h"
 #include "_trim.h"
 //STOP_INCLUDES
-#include "_get_cell.h"
+#include "get_cell.h"
 //START_FUNC_DECL
 size_t
 get_cell(

@@ -9,3 +9,5 @@ Verify that extra bits are zeroed out for vveq and vseq and so on
 Should be able to compare a Lua number with a scalar
 
 Is Q_BUILD_DIR used at run time for dynamic compilation?
+
+Delete get_hdr.lua -- used in MDB

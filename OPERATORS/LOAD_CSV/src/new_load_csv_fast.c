@@ -6,24 +6,13 @@
 #include "_txt_to_I8.h"
 #include "_txt_to_F4.h"
 #include "_txt_to_F8.h"
-#include "_get_cell.h"
+#include "get_cell.h"
 #include "_rs_mmap.h"
 #include "_trim.h"
 #include "_set_bit_u64.h"
 //STOP_INCLUDES
-#include "_new_load_csv_fast.h"
+#include "new_load_csv_fast.h"
 
-// I really don't like this hard coding below especially since
-// bridge_C.lua needs to kept in sync with this. But it helped
-// work around  some strange memory corruption
-#define B1 1 
-#define I1 2 
-#define I2 3 
-#define I4 4 
-#define I8 5 
-#define F4 6 
-#define F8 7 
-#define SC 8 
 /*Given a CSV file, this function reads a cell at a time. It then 
  * places this into buffers provided by the caller.
  */
@@ -33,8 +22,6 @@
  *2) convert cell from string to C type using _txt_to_* methods
  *3) write results to buffer of vector
  */
-
-#define BUFSZ 2047 
 
 //START_FUNC_DECL
 int

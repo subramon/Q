@@ -19,18 +19,6 @@ all : libload_csv.so
 ../../UTILS/gen_inc/_is_valid_chars_for_num.h :
 	make -C ../../../UTILS/src/ 
 
-../gen_inc/_get_cell.h : 
-	mkdir -p ../gen_inc/
-	lua ${UDIR}/cli_extract_func_decl.lua ../src/get_cell.c ${INCDIR}
-
-../gen_inc/_new_load_csv_fast.h : 
-	mkdir -p ../gen_inc/
-	lua ${UDIR}/cli_extract_func_decl.lua ../src/new_load_csv_fast.c ${INCDIR}
-
-../gen_inc/_TM_to_I8.h : 
-	mkdir -p ../gen_inc/
-	lua ${UDIR}/cli_extract_func_decl.lua ../src/TM_to_I8.c ${INCDIR}
-  
 #----------------------------------
 clean :
 	rm -r -f ../gen_src; 
@@ -42,11 +30,11 @@ clean :
 
 ../src/TM_to_SC.c : ../inc/TM_to_SC.h
 
-../src/TM_to_I8.c : ../gen_inc/_TM_to_I8.h
+../src/TM_to_I8.c : ../inc/TM_to_I8.h
 
-../src/get_cell.c : ../gen_inc/_get_cell.h
+../src/get_cell.c : ../inc/get_cell.h
 
-../src/new_load_csv_fast.c : ../gen_inc/_new_load_csv_fast.h
+../src/new_load_csv_fast.c : ../inc/new_load_csv_fast.h
 
 SRC_FILES =  \
 	../src/SC_to_TM.c  \
@@ -80,11 +68,11 @@ libload_csv.so : ${SRC_FILES} ${GEN_FILES} ${AUX_FILES}
 	gcc ${QC_FLAGS} ${Q_LINK_FLAGS} ${SRC_FILES} ${GEN_FILES} ${AUX_FILES} ${CFLAGS} ${INCS} -shared -o libload_csv.so
 	test -d  ${Q_BUILD_DIR}/src/
 	cp ${SRC_FILES}      ${Q_BUILD_DIR}/src/
-#	cp ${GEN_FILES}      ${Q_BUILD_DIR}/src/
 	cp ../inc/SC_to_TM.h ${Q_BUILD_DIR}/include/
 	cp ../inc/TM_to_SC.h ${Q_BUILD_DIR}/include/
-#	cp ${GEN_INC_FILES}        ${Q_BUILD_DIR}/include/
-#	cp ../gen_inc/_TM_to_I8.h ${Q_BUILD_DIR}/include/
+	cp ../inc/get_cell.h ${Q_BUILD_DIR}/include/
+	cp ../inc/TM_to_I8.h ${Q_BUILD_DIR}/include/
+	cp ../inc/new_load_csv_fast.h ${Q_BUILD_DIR}/include/
 
 test_q : libload_csv.so
 	echo "TODO"

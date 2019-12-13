@@ -1,7 +1,7 @@
 //START_INCLUDES
 #include "q_incs.h"
 //STOP_INCLUDES
-#include "_TM_to_I8.h"
+#include "TM_to_I8.h"
 //START_FUNC_DECL
 int
 TM_to_I8(

@@ -1,6 +1,5 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-local file_exists = require 'Q/UTILS/lua/file_exists'
 local tmpl = qconsts.Q_SRC_ROOT .. '/UTILS/src/print.tmpl'
 return function (
   qtype, 

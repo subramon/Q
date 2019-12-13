@@ -2,6 +2,7 @@
 -- If it is something that has special meaning to Q, starts with __
 -- If not, any other string will work but do not use __ as a prefix
 local ffi = require 'ffi'
+local cutils            = require 'libcutils'
 local qconsts		= require 'Q/UTILS/lua/q_consts'
 local log		= require 'Q/UTILS/lua/log'
 local cmem		= require 'libcmem'
@@ -156,7 +157,7 @@ function lVector.new(arg)
   local is_memo = qconsts.is_memo -- referring value from qconsts, default to true
   local q_data_dir = qconsts.Q_DATA_DIR
 
-  assert(qc.isdir(q_data_dir), "Q_DATA_DIR not present")
+  assert(cutils.isdir(q_data_dir), "Q_DATA_DIR not present")
   assert(type(arg) == "table", "Vector constructor requires table as arg")
 
   if ( arg.is_memo ~= nil ) then 
@@ -557,7 +558,7 @@ function lVector:clone(optargs)
   -- assert(self:is_eov(), "can clone vector only if is EOV")
 
   local q_data_dir = qconsts.Q_DATA_DIR
-  assert(qc.isdir(q_data_dir), "Q_DATA_DIR not present")
+  assert(cutils.isdir(q_data_dir), "Q_DATA_DIR not present")
 
   local vector = setmetatable({}, lVector)
   -- for meta data stored in vector
