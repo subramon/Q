@@ -2,7 +2,6 @@ local cutils        = require 'libcutils'
 local qconsts       = require 'Q/UTILS/lua/q_consts'
 local assertx       = require 'Q/UTILS/lua/assertx'
 local clean_h_file  = require 'Q/UTILS/lua/clean_h_file'
-local write_to_file = require 'Q/UTILS/lua/write_to_file'
 
 local QC_FLAGS     = qconsts.QC_FLAGS
 local Q_ROOT       = qconsts.Q_ROOT 
@@ -31,8 +30,8 @@ local function compile(
   --===============================
   local tmp_c = string.format("%s/src/_%s.c", qconsts.Q_BUILD_DIR, func_name)
   local tmp_h = string.format("%s/include/_%s.h", qconsts.Q_BUILD_DIR, func_name)
-  write_to_file(dotc, tmp_c)
-  write_to_file(doth, tmp_h)
+  cutils.write(tmp_c, dotc)
+  cutils.write(tmp_h, doth)
   -- Following means that in dynamically generated code, you can only 
   -- include "_foo.h" in _foo.c and in _foo.h, you can only include things
   -- that will be found in UTILS/inc or UTILS/gen_inc/
@@ -66,7 +65,7 @@ local function compile(
   -- we do not need to run through cpp because (for now) no constants 
   -- to worry about
   local h_file = clean_h_file(tmp_h) 
-  write_to_file(h_file, hfile)
+  cutils.write(hfile, h_file)
 end
 
 return compile

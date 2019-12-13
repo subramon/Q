@@ -37,6 +37,26 @@ static int l_cutils_isfile(
   return 1;
 }
 //----------------------------------------
+static int l_cutils_write( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  FILE *fp = NULL;
+  const char *const filename = luaL_checkstring(L, 1);
+  const char *const contents = luaL_checkstring(L, 2);
+  fp = fopen(filename, "w");
+  return_if_fopen_failed(fp, filename, "w");
+  fprintf(fp, "%s",contents);
+  fclose(fp);
+  lua_pushboolean(L, true);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_cutils_read( 
     lua_State *L
     )
@@ -167,6 +187,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "read",        l_cutils_read },
+    { "write",       l_cutils_write },
     { NULL,  NULL         }
 };
  
@@ -177,6 +198,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "read",        l_cutils_read },
+    { "write",       l_cutils_write },
     { NULL,  NULL         }
 };
  

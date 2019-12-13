@@ -9,3 +9,5 @@ for i = 1, 1 do
 end
 x = cutils.read("../test/test.lua")
 print(x)
+--==============
+cutils.write("/tmp/_x", "hello world\n");
