@@ -8,7 +8,7 @@ all: libsclr.so
 	cp libsclr.so ${Q_ROOT}/lib/
 	echo "done"
 
-../../../UTILS/src/_txt_to_B1.c :
+../../../UTILS/src/txt_to_B1.c :
 	make -C ../../../UTILS/src/
 
 clean:
@@ -18,7 +18,7 @@ clean:
 	make -C ../../CMEM/src/
 
 libsclr.so: gen_cmp.lua gen_arith.lua _gen_cmp _gen_arith \
-	../../../UTILS/src/_txt_to_B1.c \
+	../../../UTILS/src/txt_to_B1.c \
 	../../CMEM/src/libcmem.so
 	rm -f _*.c
 	lua gen_cmp.lua
@@ -28,20 +28,20 @@ libsclr.so: gen_cmp.lua gen_arith.lua _gen_cmp _gen_arith \
 		../../CMEM/src/cmem.c \
 		../../../UTILS/src/txt_to_B1.c \
 		../../../UTILS/src/txt_to_SC.c \
-		../../../UTILS/gen_src/_txt_to_I1.c \
-		../../../UTILS/gen_src/_txt_to_I2.c \
-		../../../UTILS/gen_src/_txt_to_I4.c \
-		../../../UTILS/gen_src/_txt_to_I8.c \
-		../../../UTILS/gen_src/_txt_to_F4.c \
-		../../../UTILS/gen_src/_txt_to_F8.c \
+		../../../UTILS/src/txt_to_I1.c \
+		../../../UTILS/src/txt_to_I2.c \
+		../../../UTILS/src/txt_to_I4.c \
+		../../../UTILS/src/txt_to_I8.c \
+		../../../UTILS/src/txt_to_F4.c \
+		../../../UTILS/src/txt_to_F8.c \
 		../../../UTILS/src/B1_to_txt.c \
 		../../../UTILS/src/SC_to_txt.c \
-		../../../UTILS/gen_src/_I1_to_txt.c \
-		../../../UTILS/gen_src/_I2_to_txt.c \
-		../../../UTILS/gen_src/_I4_to_txt.c \
-		../../../UTILS/gen_src/_I8_to_txt.c \
-		../../../UTILS/gen_src/_F4_to_txt.c \
-		../../../UTILS/gen_src/_F8_to_txt.c \
+		../../../UTILS/src/I1_to_txt.c \
+		../../../UTILS/src/I2_to_txt.c \
+		../../../UTILS/src/I4_to_txt.c \
+		../../../UTILS/src/I8_to_txt.c \
+		../../../UTILS/src/F4_to_txt.c \
+		../../../UTILS/src/F8_to_txt.c \
 		../../../UTILS/src/is_valid_chars_for_num.c \
 		-shared -o libsclr.so
 	cp ../inc/scalar_struct.h ${Q_BUILD_DIR}/include/

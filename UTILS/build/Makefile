@@ -84,7 +84,7 @@ uninstall:
 	rm -f /usr/lib/libq_core.so;\
 	echo "Q uninstalled"
 
-_q_basic: _utils  _cmem _sclr _vec _dnn 
+_q_basic: _utils _cutils _cmem _sclr _vec _dnn 
 	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua all_for_dc
 	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua all_for_dc
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua all_for_dc
@@ -100,21 +100,21 @@ _cutils: _utils
 	make  -C ${Q_SRC_ROOT}/RUNTIME/CUTILS/src/ clean
 	make  -C ${Q_SRC_ROOT}/RUNTIME/CUTILS/src/
 	touch _cmem
-_cmem: _utils
+_cmem: _utils _cutils
 	make  -C ${Q_SRC_ROOT}/RUNTIME/CMEM/src/ clean
 	make  -C ${Q_SRC_ROOT}/RUNTIME/CMEM/src/
 	touch _cmem
 
-_sclr: _utils _cmem
+_sclr: _utils _cutils _cmem
 	make  -C ${Q_SRC_ROOT}/RUNTIME/SCLR/src/ clean
 	make  -C ${Q_SRC_ROOT}/RUNTIME/SCLR/src/
 	touch _sclr
 
-_vec: _utils _cmem _sclr
+_vec: _utils _cutils _cmem _sclr
 	make  -C ${Q_SRC_ROOT}/RUNTIME/src/
 	touch _vec
 
-_dnn: _utils _cmem _sclr _vec
+_dnn: _utils _cutils _cmem _sclr _vec
 	make  -C ${Q_SRC_ROOT}/RUNTIME/DNN/src/
 	touch _dnn
 

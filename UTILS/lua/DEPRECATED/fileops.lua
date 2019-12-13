@@ -1,7 +1,9 @@
 -- TODO P2 Replace these with C functions using a Lua/C binding like Scalar
+-- This entire file should be deleted and replaced with cutils
 --
 local assertx = require 'Q/UTILS/lua/assertx'
 local fileops = {}
+local cutils = require 'libcutils'
 
 local exists = function(name)
    local str = string.format("ls %s 2>/dev/null 1>/dev/null", name)
@@ -18,18 +20,9 @@ end
 fileops.isfile = function(path)
     return exists(path) and not exists(path.."/")
 end
---]]
-
-fileops.read = function(path)
-  local file = io.open(path, "r")
-  assertx(file ~= nil, "Unable to open file", path)
-  local contents = file:read("*a")
-  file:close()
-  return contents
-end
 
 fileops.list_files_in_dir = function(path, regex)
-  assertx(fileops.isdir(path), "Must be a dir ", path)
+  assertx(cutils.isdir(path), "Must be a dir ", path)
   local cmd_str = string.format("find %s -name '%s'", path, regex)
   local stream = io.popen(cmd_str)
    local c = {}
@@ -41,5 +34,15 @@ fileops.list_files_in_dir = function(path, regex)
   stream:close()
   return c
 end
+--]]
+
+fileops.read = function(path)
+  local file = io.open(path, "r")
+  assertx(file ~= nil, "Unable to open file", path)
+  local contents = file:read("*a")
+  file:close()
+  return contents
+end
+
 
 return fileops

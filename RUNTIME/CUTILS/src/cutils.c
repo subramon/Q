@@ -1,5 +1,8 @@
 #define LUA_LIB
 
+#include <dirent.h>
+#include <regex.h>
+
 #include "luaconf.h"
 #include "lua.h"
 
@@ -8,8 +11,9 @@
 
 #include "q_incs.h"
 
-#include "_isdir.h"
-#include "_isfile.h"
+#include "isdir.h"
+#include "isfile.h"
+#include "rs_mmap.h"
 
 int luaopen_libcutils (lua_State *L);
 
@@ -27,10 +31,33 @@ static int l_cutils_isfile(
     lua_State *L
     )
 {
-  const char *const dir = luaL_checkstring(L, 1);
-  bool exists = isfile(dir);
+  const char *const filename = luaL_checkstring(L, 1);
+  bool exists = isfile(filename);
   lua_pushboolean(L, exists);
   return 1;
+}
+//----------------------------------------
+static int l_cutils_read( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  char *X = NULL; size_t nX = 0;
+  char *buf = NULL;
+  const char *const filename = luaL_checkstring(L, 1);
+  status = rs_mmap(filename, &X, &nX, 0); cBYE(status);
+  buf = malloc(nX+1);
+  return_if_malloc_failed(buf);
+  memcpy(buf, X, nX);
+  buf[nX] = '\0';
+  lua_pushstring(L, buf);
+  free(buf);
+  munmap(X, nX);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
 }
 //----------------------------------------
 static int l_cutils_delete( 
@@ -68,19 +95,88 @@ BYE:
   return 2;
 }
 //----------------------------------------
+static int l_cutils_getfiles( 
+    lua_State *L
+    )
+{
+  DIR *d = NULL;
+  struct dirent *dir;
+  const char *mask = NULL;
+  regex_t regex; int reti;
+  const char *const dirname = luaL_checkstring(L, 1);
+  if ( ( dirname == NULL ) || ( *dirname == '\0' ) )  {
+    WHEREAMI; goto BYE;
+  }
+  /* Use mask = ".*.c" to match .c files */
+  if ( lua_gettop(L) >= 2 ) {
+    mask  = luaL_checkstring(L, 2);
+    /* Compile regular expression */
+    reti = regcomp(&regex, mask, 0);
+    if ( reti != 0 ) { 
+      fprintf(stderr, "Could not compile regex\n"); WHEREAMI; goto BYE;
+    }
+  }
+
+  //-------------
+  d = opendir(dirname);
+  if ( d == NULL ) { WHEREAMI; goto BYE; }
+  // Now return table of strings
+  lua_newtable(L);
+  int dir_idx = 1;
+  while ( (dir = readdir(d)) != NULL) {
+    const char *file_name = dir->d_name;
+    bool include = false;
+    if ( mask != NULL ) { 
+      reti = regexec(&regex, file_name, 0, NULL, 0);
+    }
+    if ( mask == NULL ) {
+      include = true;
+    }
+    else {
+      if ( !reti ) { 
+        include= true;
+      }
+    }
+    if ( include ) {
+      lua_pushnumber(L, dir_idx);
+      lua_pushstring(L, file_name);
+      lua_settable(L, -3);
+      // printf("including %s \n", file_name);
+      dir_idx++;
+    }
+    else {
+      // printf("Excluding %s \n", file_name);
+    }
+  }
+  closedir(d);
+  if ( mask != NULL ) { 
+    /* Free memory allocated to the pattern buffer by regcomp() */
+    regfree(&regex);
+  }
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static const struct luaL_Reg cutils_methods[] = {
     { "currentdir",  l_cutils_currentdir },
+    { "getfiles",    l_cutils_getfiles },
     { "delete",      l_cutils_delete },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
+    { "read",        l_cutils_read },
     { NULL,  NULL         }
 };
  
 static const struct luaL_Reg cutils_functions[] = {
     { "currentdir",  l_cutils_currentdir },
     { "delete",      l_cutils_delete },
+    { "getfiles",    l_cutils_getfiles },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
+    { "read",        l_cutils_read },
     { NULL,  NULL         }
 };
  

@@ -15,15 +15,15 @@ all: libvec.so libmm.so
 clean:
 	rm -f *.so *.o _*
 		
-../../UTILS/gen_src/_txt_to_I4.c :
+../../UTILS/src/txt_to_I4.c :
 	make -C ../../UTILS/src/
 
-../CMEM/src/libcmem.so :
+libcmem.so :
 	make -C ../CMEM/src/
 
 libvec.so: vector.c core_vec.c buf_to_file.c copy_file.c \
-	../../UTILS/gen_src/_txt_to_I4.c \
-  	libmm.so ../CMEM/src/libcmem.so
+	../../UTILS/src/txt_to_I4.c \
+  	libmm.so libcmem.so
 	gcc ${QC_FLAGS} $(INCS) \
 		vector.c \
 		core_vec.c \
@@ -38,15 +38,15 @@ libvec.so: vector.c core_vec.c buf_to_file.c copy_file.c \
                 ../../UTILS/src/isfile.c \
 		../../UTILS/src/rand_file_name.c \
 		../../UTILS/src/rs_mmap.c \
-		../../UTILS/gen_src/_txt_to_I4.c \
-		../../UTILS/gen_src/_I1_to_txt.c \
-		../../UTILS/gen_src/_I2_to_txt.c \
-		../../UTILS/gen_src/_I4_to_txt.c \
-		../../UTILS/gen_src/_I8_to_txt.c \
-		../../UTILS/gen_src/_F4_to_txt.c \
-		../../UTILS/gen_src/_F8_to_txt.c \
+		../../UTILS/src/txt_to_I4.c \
+		../../UTILS/src/I1_to_txt.c \
+		../../UTILS/src/I2_to_txt.c \
+		../../UTILS/src/I4_to_txt.c \
+		../../UTILS/src/I8_to_txt.c \
+		../../UTILS/src/F4_to_txt.c \
+		../../UTILS/src/F8_to_txt.c \
 		libmm.so \
-		 ../CMEM/src/libcmem.so \
+		${Q_ROOT}/lib/libcmem.so \
 		-shared -o libvec.so 
 	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
 

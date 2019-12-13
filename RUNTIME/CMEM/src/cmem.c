@@ -8,13 +8,13 @@
 
 #include "q_incs.h"
 
-#include "_B1_to_txt.h"
-#include "_I1_to_txt.h"
-#include "_I2_to_txt.h"
-#include "_I4_to_txt.h"
-#include "_I8_to_txt.h"
-#include "_F4_to_txt.h"
-#include "_F8_to_txt.h"
+#include "B1_to_txt.h"
+#include "I1_to_txt.h"
+#include "I2_to_txt.h"
+#include "I4_to_txt.h"
+#include "I8_to_txt.h"
+#include "F4_to_txt.h"
+#include "F8_to_txt.h"
 
 #include "cmem_struct.h"
 #include "cmem.h"

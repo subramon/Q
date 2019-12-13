@@ -6,7 +6,6 @@ local assertx  = require 'Q/UTILS/lua/assertx'
 local compile  = require 'Q/UTILS/lua/compile'
 local ffi      = require 'ffi'
 local gen_code = require 'Q/UTILS/lua/gen_code'
-local fileops  = require 'Q/UTILS/lua/fileops'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 
 --=== From runtime
@@ -71,7 +70,7 @@ typedef struct {
 -- Regardless, they need to exist before we can continue
 
 assertx(cutils.isfile(incfile), "File not found ", incfile)
-ffi.cdef(fileops.read(incfile))
+ffi.cdef(cutils.read(incfile))
 
 assertx(cutils.isfile(sofile), "File not found ", sofile)
 local q_static = ffi.load(sofile) -- statically compiled library
@@ -117,7 +116,7 @@ local function load_lib(
 
   -- Important to pcall and then assert status so that
   -- you can identify the culprit hfile
-  local status, err_msg = pcall(ffi.cdef, fileops.read(hfile))
+  local status, err_msg = pcall(ffi.cdef, cutils.read(hfile))
   assert(status, " Unable to cdef the .h file " .. hfile)
   local status, L = pcall(ffi.load, sofile)
   assert(status, " Unable to load .so file " .. sofile)
@@ -141,7 +140,7 @@ local function add_libs()
   -- symbols are compiled, then a .h file will exist for each new 
   -- symbol in inc_dir. Do NOT corrupt this directory with any other
   -- .h files!!!
-  local hfiles = fileops.list_files_in_dir(inc_dir, "*.h")
+  local hfiles = cutils.getfiles(inc_dir, ".*.h$")
   local found_qcore = false
   for _, hfile in pairs(hfiles) do 
     if not hfile:find("q_core.h") then 

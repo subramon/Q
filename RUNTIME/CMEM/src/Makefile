@@ -19,12 +19,12 @@ libcmem.so:   cmem.c ../../UTILS/src/B1_to_txt.c
 	gcc ${QC_FLAGS} ${INCS} \
 		cmem.c \
 		../../../UTILS/src/B1_to_txt.c \
-		../../../UTILS/gen_src/_I1_to_txt.c \
-		../../../UTILS/gen_src/_I2_to_txt.c \
-		../../../UTILS/gen_src/_I4_to_txt.c \
-		../../../UTILS/gen_src/_I8_to_txt.c \
-		../../../UTILS/gen_src/_F4_to_txt.c \
-		../../../UTILS/gen_src/_F8_to_txt.c \
+		../../../UTILS/src/I1_to_txt.c \
+		../../../UTILS/src/I2_to_txt.c \
+		../../../UTILS/src/I4_to_txt.c \
+		../../../UTILS/src/I8_to_txt.c \
+		../../../UTILS/src/F4_to_txt.c \
+		../../../UTILS/src/F8_to_txt.c \
 		-shared -o libcmem.so
 	cp ../inc/cmem_struct.h ${Q_BUILD_DIR}/include/
 	cp ../inc/cmem.h        ${Q_BUILD_DIR}/include/
