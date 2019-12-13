@@ -140,7 +140,7 @@ local function add_libs()
   -- symbols are compiled, then a .h file will exist for each new 
   -- symbol in inc_dir. Do NOT corrupt this directory with any other
   -- .h files!!!
-  local hfiles = cutils.getfiles(inc_dir, ".*.h$")
+  local hfiles = cutils.getfiles(inc_dir, ".*.h$", "only_files")
   local found_qcore = false
   for _, hfile in pairs(hfiles) do 
     if not hfile:find("q_core.h") then 

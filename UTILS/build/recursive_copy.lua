@@ -1,7 +1,7 @@
+local cutils = require 'libcutils'
 local plpath = require 'pl.path'
 local pldir  = require 'pl.dir'
-local plfile = require 'pl.file'
-local md5 = require 'md5'
+local md5    = require 'md5'
 --=================================
 local function recursive_copy( 
   file_pattern, 
@@ -31,13 +31,13 @@ directory that matches dir_pattern
     for k, file in pairs(files) do
       local skip = false -- skip if old file == new file
       local oldfile = destdir .. string.gsub(file, "^.*/", "")
-      if ( plpath.isfile(oldfile) ) then 
+      if ( cutils.isfile(oldfile) ) then 
         local m1 = md5.sumhexa(file)
         local m2 = md5.sumhexa(oldfile)
         skip = true
       end
       if ( not skip ) then 
-        plfile.copy(file, destdir)
+        cutils.copyfile(file, destdir)
         -- print("Copying " ..  file .. " to " ..  destdir)
         num_files_copied = num_files_copied + 1
       end

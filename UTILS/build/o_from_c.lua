@@ -1,8 +1,6 @@
 local chk_env_vars = require 'Q/UTILS/build/chk_env_vars'
 local qconsts      = require 'Q/UTILS/lua/q_consts'
-local plfile = require 'pl.file'
-local pldir  = require 'pl.dir'
-local plpath = require 'pl.path'
+local cutils       = require 'libcutils'
 
 --======= Create .o files from .c files
 local function o_from_c(
@@ -15,7 +13,7 @@ local function o_from_c(
   assert(type(only_new) == "boolean")
   
   ---------- Get list of all C files 
-  local q_c_files = pldir.getfiles(cdir, "*.c")
+  local q_c_files = cutils.getfiles(cdir, ".*.c$", "only_files")
   assert(type(q_c_files) == "table")
   assert(#q_c_files > 0, "No C files found")
   print("Initial number of C files ", #q_c_files)
@@ -25,9 +23,11 @@ local function o_from_c(
     for i, cfile in pairs(q_c_files) do
       ofile = string.gsub(cfile, "/src/", "/obj/")
       ofile = string.gsub(ofile, "%.c", "%.o")
-      if ( plpath.isfile(ofile) ) then 
-        otime = plfile.creation_time(ofile) 
-        ctime = plfile.creation_time(cfile) 
+      cfile = cdir .. cfile 
+      ofile = cdir .. ofile 
+      if ( cutils.isfile(ofile) ) then 
+        otime = cutils.gettime(ofile, "last_mod")
+        ctime = cutils.gettime(cfile, "last_mod") 
         if ( ctime > otime ) then 
           T[#T+1] = cfile
           -- print("XX Stale  " ..  i .. " " .. ofile)
@@ -45,10 +45,10 @@ local function o_from_c(
   
   -- Determine directory for .o files
   local odir   = q_build_dir .. "/obj/"
-  if ( not plpath.isdir(odir)) then 
-    pldir.makepath(odir)
+  if ( not cutils.isdir(odir)) then 
+    cutils.makepath(odir)
   end
-  assert(plpath.isdir(odir))
+  assert(cutils.isdir(odir))
   --================================
   local cflags = qconsts.QC_FLAGS
   assert( ( type(cflags) == "string") and ( #cflags > 0 ) )

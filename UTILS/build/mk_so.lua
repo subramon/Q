@@ -1,6 +1,3 @@
-local plpath         = require 'pl.path'
-local pldir          = require 'pl.dir'
-local plfile         = require 'pl.file'
 
 local copy_gen_files     = require 'Q/UTILS/build/copy_gen_files'
 local mk_q_core_h     = require 'Q/UTILS/build/mk_q_core_h'

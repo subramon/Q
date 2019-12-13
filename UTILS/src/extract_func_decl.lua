@@ -1,15 +1,12 @@
--- TODO P1 REMOVE need for penlight 
-local cutils = require 'libcutils'
 local plpath = require 'pl.path'
 local plstr  = require 'pl.stringx'
-
 local function extract_func_decl(
   infile, 
   opdir
   )
   local opdir = plstr.strip(opdir)
-  assert(cutils.isfile(infile), "Input file not found" .. infile)
-  assert(cutils.isdir(opdir), "Output directory not found" .. opdir)
+  assert(plpath.isfile(infile), "Input file not found" .. infile)
+  assert(plpath.isdir(opdir), "Output directory not found" .. opdir)
   io.input(infile)
   code = io.read("*all")
   --=========================================

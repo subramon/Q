@@ -1,8 +1,5 @@
 local add_h_files_to_list = require 'Q/UTILS/build/add_h_files_to_list'
 local chk_env_vars        = require 'Q/UTILS/build/chk_env_vars'
-local pldir               = require 'pl.dir'
-local plfile              = require 'pl.file'
-local plpath              = require 'pl.path'
 local cutils              = require 'libcutils'
 local function mk_q_core_h()
 -- final_h is where all the .h files that need to be cdef'd will be kept
@@ -12,7 +9,7 @@ local function mk_q_core_h()
   local hdir   = q_build_dir .. "/include/"
 
   -- assemble all .h files  in table h_files
-  local h_files = pldir.getfiles(hdir, "*.h")
+  local h_files = cutils.getfiles(hdir, "*.h")
   --[[
   local q_h_files = {}      
   for _, h_file in pairs(h_files) do 
@@ -31,13 +28,13 @@ local function mk_q_core_h()
   print("== START hash_defines")
   print(hash_defines)
   print("== STOP  hash_defines")
-  plfile.write(tmp_h, hash_defines .. cleaned_defs)
+  cutils.write(tmp_h, hash_defines .. cleaned_defs)
   assert(cutils.isfile(tmp_h))
   cmd = string.format("cpp %s > %s ", tmp_h, tgt_h)
   assert(os.execute(cmd))
   assert(cutils.isfile(tgt_h))
   assert(cutils.delete(tmp_h))
-  pldir.copyfile(tgt_h, final_h)
+  cutils.copyfile(tgt_h, final_h)
   print("Created and Copied " .. tgt_h .. " to " .. final_h)
   return true
 end

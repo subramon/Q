@@ -12,7 +12,8 @@ local val_qtypes = { 'I1', 'I2', 'I4', 'I8', 'F4', 'F8' }
 local cnt_qtypes = { 'I1', 'I2', 'I4', 'I8' }
 local num_produced = 0
 for i, operator in ipairs(operators) do
-  local sp_fn = assert(require(operator .. "_specialize"))
+  local fn_name = operator .. "_specialize"
+  local sp_fn = assert(require(fn_name))
   for i, val_qtype in ipairs(val_qtypes) do
     for j, cnt_qtype in ipairs(cnt_qtypes) do
       local optargs = {}; 
@@ -28,6 +29,7 @@ for i, operator in ipairs(operators) do
         print(subs)
         print(operator)
         print(fldtype)
+        error("premature") 
       end
     end
   end

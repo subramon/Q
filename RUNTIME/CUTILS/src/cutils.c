@@ -1,9 +1,10 @@
 #define LUA_LIB
 
+#include <fcntl.h>
 #include <dirent.h>
+#include <libgen.h>
 #include <regex.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 
 #include "luaconf.h"
 #include "lua.h"
@@ -29,14 +30,102 @@ static int l_cutils_isdir(
   return 1;
 }
 //----------------------------------------
+static int l_cutils_makepath( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  const char *const dir_name = luaL_checkstring(L, 1);
+  if ( !isdir(dir_name) ) { 
+    status = mkdir(dir_name, 0777); cBYE(status);
+  }
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_cutils_isfile( 
     lua_State *L
     )
 {
-  const char *const filename = luaL_checkstring(L, 1);
-  bool exists = isfile(filename);
+  const char *const file_name = luaL_checkstring(L, 1);
+  bool exists = isfile(file_name);
   lua_pushboolean(L, exists);
   return 1;
+}
+//----------------------------------------
+static int l_cutils_gettime( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  struct stat st_buf;
+  double sec, nsec;
+  const char *const file_name = luaL_checkstring(L, 1);
+  status = stat(file_name, &st_buf); cBYE(status);
+
+  const char *const str_mode = luaL_checkstring(L, 2);
+  if ( strcmp(str_mode, "last_access") == 0 ) { 
+    sec =  st_buf.st_atim.tv_sec;
+    nsec = st_buf.st_atim.tv_nsec;
+  }
+  else if ( strcmp(str_mode, "last_mod") == 0 ) { 
+    sec =  st_buf.st_mtim.tv_sec;
+    nsec = st_buf.st_mtim.tv_nsec;
+  }
+  else {
+    go_BYE(-1);
+  }
+  lua_pushnumber(L, sec);
+  lua_pushnumber(L, nsec);
+  return 2; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
+static int l_cutils_copyfile( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  FILE *fp = NULL;
+  char *X = NULL; size_t nX = 0;
+  const char *const old_file = luaL_checkstring(L, 1);
+  const char *const new_file = luaL_checkstring(L, 2);
+  char *x_new_file = NULL; 
+  if ( !isfile(old_file) ) { go_BYE(-1); }
+  if ( isdir(new_file) ) {
+    int len = strlen(new_file) + strlen(old_file) + 8;
+    x_new_file = malloc(len * sizeof(char));
+    return_if_malloc_failed(x_new_file);
+    sprintf(x_new_file, "%s/%s", new_file, basename((char *)old_file));
+  }
+  else {
+    x_new_file = strdup(new_file);
+  }
+  if ( strcmp(x_new_file, old_file) == 0 ) { go_BYE(-1); }
+  status = rs_mmap(old_file, &X, &nX, 0); cBYE(status);
+  fp = fopen(x_new_file, "w");
+  printf("%s, %s, %s \n", old_file, new_file, x_new_file);
+  return_if_fopen_failed(fp, x_new_file, "w");
+  fwrite(X, nX, 1, fp);
+  fclose(fp);
+  free(x_new_file);
+  munmap(X, nX);
+  lua_pushboolean(L, true);
+  return 1; 
+BYE:
+  free_if_non_null(x_new_file);
+  fclose_if_non_null(fp);
+  if ( X != NULL ) { munmap(X, nX); }
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
 }
 //----------------------------------------
 static int l_cutils_write( 
@@ -45,10 +134,10 @@ static int l_cutils_write(
 {
   int status = 0;
   FILE *fp = NULL;
-  const char *const filename = luaL_checkstring(L, 1);
+  const char *const file_name = luaL_checkstring(L, 1);
   const char *const contents = luaL_checkstring(L, 2);
-  fp = fopen(filename, "w");
-  return_if_fopen_failed(fp, filename, "w");
+  fp = fopen(file_name, "w");
+  return_if_fopen_failed(fp, file_name, "w");
   fprintf(fp, "%s",contents);
   fclose(fp);
   lua_pushboolean(L, true);
@@ -66,8 +155,8 @@ static int l_cutils_read(
   int status = 0;
   char *X = NULL; size_t nX = 0;
   char *buf = NULL;
-  const char *const filename = luaL_checkstring(L, 1);
-  status = rs_mmap(filename, &X, &nX, 0); cBYE(status);
+  const char *const file_name = luaL_checkstring(L, 1);
+  status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
   buf = malloc(nX+1);
   return_if_malloc_failed(buf);
   memcpy(buf, X, nX);
@@ -86,11 +175,11 @@ static int l_cutils_delete(
     lua_State *L
     )
 {
-  const char *const filename = luaL_checkstring(L, 1);
-  if ( ( filename == NULL ) || ( *filename == '\0' ) )  {
+  const char *const file_name = luaL_checkstring(L, 1);
+  if ( ( file_name == NULL ) || ( *file_name == '\0' ) )  {
     WHEREAMI; goto BYE;
   }
-  int status = remove(filename);
+  int status = remove(file_name);
   if ( status != 0 ) { WHEREAMI; goto BYE; }
   lua_pushboolean(L, true);
   return 1;
@@ -192,13 +281,18 @@ static int l_cutils_getfiles(
 
       if ( mode == ONLY_FILES ) { 
         if ( !S_ISREG (st_buf.st_mode)) {
-          printf("skipping %s because not a file\n", file_name);
+          // printf("skipping %s because not a file\n", file_name);
           continue; 
         }
       }
       else if ( mode == ONLY_DIRS ) { 
+        /* IMPORTANT: We do not return . or .. */
+        if ( ( strcmp(file_name, "." ) == 0 ) || 
+             ( strcmp(file_name, ".." ) == 0 )  ) {
+          continue;
+        }
         if ( !S_ISDIR (st_buf.st_mode)) {
-          printf("skipping %s because not a directory\n", file_name);
+          // printf("skipping %s because not a directory\n", file_name);
           continue; 
         }
       }
@@ -245,22 +339,28 @@ BYE:
 }
 //----------------------------------------
 static const struct luaL_Reg cutils_methods[] = {
+    { "copyfile",   l_cutils_copyfile },
     { "currentdir",  l_cutils_currentdir },
     { "getfiles",    l_cutils_getfiles },
+    { "gettime",     l_cutils_gettime },
     { "delete",      l_cutils_delete },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
+    { "makepath",    l_cutils_makepath },
     { "read",        l_cutils_read },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };
  
 static const struct luaL_Reg cutils_functions[] = {
+    { "copyfile",   l_cutils_copyfile },
     { "currentdir",  l_cutils_currentdir },
     { "delete",      l_cutils_delete },
     { "getfiles",    l_cutils_getfiles },
+    { "gettime",     l_cutils_gettime },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
+    { "makepath",    l_cutils_makepath },
     { "read",        l_cutils_read },
     { "write",       l_cutils_write },
     { NULL,  NULL         }

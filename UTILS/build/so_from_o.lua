@@ -1,7 +1,6 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local chk_env_vars         = require 'Q/UTILS/build/chk_env_vars'
-local plpath = require 'pl.path'
-local pldir  = require 'pl.dir'
+local cutils       = require 'libcutils'
+local qconsts      = require 'Q/UTILS/lua/q_consts'
+local chk_env_vars = require 'Q/UTILS/build/chk_env_vars'
 
 local function so_from_o()
   local final_h, final_so, q_build_dir = chk_env_vars()
@@ -17,9 +16,9 @@ local function so_from_o()
     odir, lflags, tgt_so)
   local status = os.execute(q_cmd)
   assert(status, q_cmd)
-  assert(plpath.isfile(tgt_so), "Target " .. tgt_so .. " not created")
+  assert(cutils.isfile(tgt_so), "Target " .. tgt_so .. " not created")
   print("Successfully created " .. tgt_so)
-  pldir.copyfile(tgt_so, final_so)
+  cutils.copyfile(tgt_so, final_so)
   print("Copied " .. tgt_so .. " to " .. final_so)
   return true
 end

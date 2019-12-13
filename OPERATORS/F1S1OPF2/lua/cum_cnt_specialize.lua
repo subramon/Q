@@ -1,8 +1,9 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local ffi = require 'ffi'
-local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local cmem    = require 'libcmem'
+local cmem           = require 'libcmem'
+local ffi            = require 'ffi'
+local qconsts        = require 'Q/UTILS/lua/q_consts'
+local qc             = require 'Q/UTILS/lua/q_core'
+local is_base_qtype  = require 'Q/UTILS/lua/is_base_qtype'
+local get_ptr        = require 'Q/UTILS/lua/get_ptr'
 local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/cum_cnt.tmpl"
 --[[
 The input Vector * be sorted but I am deliberately not going to enforce 

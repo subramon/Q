@@ -16,7 +16,7 @@ static: _q_basic _q_operators
 	luajit mk_so.lua
 	echo "Q statically compiled"
 
-dynamic: _q_basic
+dynamic: _q_basic _pre_req_for_dynamic 
 	luajit mk_so.lua 
 	echo "Q dynamically compiled"
 
@@ -85,28 +85,29 @@ uninstall:
 	echo "Q uninstalled"
 
 _q_basic: _utils _cutils _cmem _sclr _vec _dnn 
+	luajit mk_so.lua
+	touch _q_basic
+
+_pre_req_for_dynamic : _utils _cutils
 	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua all_for_dc
 	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua all_for_dc
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua all_for_dc
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua all_for_dc
-	luajit mk_so.lua
-	touch _q_basic
+	touch _pre_req_for_dynamic
 
 _utils:
 	make  -C ${Q_SRC_ROOT}/UTILS/src/ 
 	touch _utils
 
 _cutils: _utils
-	make  -C ${Q_SRC_ROOT}/RUNTIME/CUTILS/src/ clean
 	make  -C ${Q_SRC_ROOT}/RUNTIME/CUTILS/src/
-	touch _cmem
+	touch _cutils
+
 _cmem: _utils _cutils
-	make  -C ${Q_SRC_ROOT}/RUNTIME/CMEM/src/ clean
 	make  -C ${Q_SRC_ROOT}/RUNTIME/CMEM/src/
 	touch _cmem
 
 _sclr: _utils _cutils _cmem
-	make  -C ${Q_SRC_ROOT}/RUNTIME/SCLR/src/ clean
 	make  -C ${Q_SRC_ROOT}/RUNTIME/SCLR/src/
 	touch _sclr
 
