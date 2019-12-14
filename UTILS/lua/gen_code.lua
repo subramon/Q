@@ -1,11 +1,11 @@
-local cutils = require 'libcutils'
+local file_exists = require 'Q/UTILS/lua/file_exists'
 
 local section = { c = 'definition', h = 'declaration' }
 
 local function do_replacements(subs)
   local tmpl = subs.tmpl
   local T
-  assert(cutils.isfile(tmpl), "File not found " .. tmpl)
+  assert(file_exists(tmpl), "File not found " .. tmpl)
   T = assert(dofile(tmpl))
   for k, v in pairs(subs) do
      T[k] = v

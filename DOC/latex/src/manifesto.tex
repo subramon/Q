@@ -1,0 +1,72 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\usepackage{hyperref}
+\usepackage{fancyheadings}
+\pagestyle{fancy}
+\usepackage{pmc}
+\usepackage{graphicx}
+\setlength\textwidth{6.5in}
+\setlength\textheight{9.0in}
+\begin{document}
+\title{The case for ``Medium Data''}
+\author{ Ramesh Subramonian }
+\maketitle
+\thispagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{}
+\lfoot{}
+\cfoot{Ramesh Subramonian}
+\rfoot{{\small \thepage}}
+
+Marc Andreesen has claimed that ``software is eating the world''. It is more
+likely to burn up the world before it has a chance to finish.
+
+The introduction of map-reduce \cite{mapreduce2004} both legitimized and spawned a plethora
+of distributed solutions to data and compute intensive problems. Unfortunately,
+as McSherry has noted --- ``Big data systems may scale well, but this can often
+be just because they introduce a lot of overhead.''
+
+This phenomenon has not gone unnoticed. 
+McSherry asks us to account for the COST of scalability in \cite{McSherry2015}.
+From the Kx systems blog, ``The Semiconductor Industry Association (SIA)
+recently reported that in roughly 20 years today’s computer chips will require
+more power than global energy production can provide.''
+(\url{https://kx.com/blog/kdb-enables-green-computing/})
+
+Fuel efficiency standards for cars were introduced in 1975. LEED standards for
+buildings were
+established in 1994. It is unthinkable to believe that software should not be
+subject to similar standards.
+
+The response of cloud compute providers to the very real pain felt by CIOs is
+not dissimlar from that of pharmaceutical companies. 
+Computation is headed down its own opiod crisis without an intervention.
+
+
+The need for scale-out is not debatable --- if your problem cannot be solved on
+one machine in a reasonable time frame, you need to distribute the workload.
+However, that does not obviate the need to squeeze every last bit out of each
+machine. 
+
+
+While we are likely to find supporters of ``green computing'' (
+\cite{Limits2018}), our alternatives must provide significant cost-savings. 
+My experiences at LinkedIn and Target has convinced me that this is possible.
+While ``big data'' may all be the rage, the truth is that most problems are
+better characterized as ``medium data''. We define {\em medium data} to be
+problems that are big enough to require performance engineering yet small enough
+to fit on one well-provisioned server.
+
+It is human nature to suffer from ``Google-envy'' which drives one to adopt
+techniques that while entirely appropriate for the top end are wholly mismatched to one's
+actual needs. But envy is quickly coming up against the hard stop of the cost
+incurred from indiscriminate computing.
+
+Thesis: {\em I believe there is a market opportunity in providing highly 
+performant replacements for many current compute hogs. }
+\bibliographystyle{alpha}
+\bibliography{../../Q_PAPER/ref}
+\end{document}

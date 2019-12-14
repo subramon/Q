@@ -1,2 +1,8 @@
 TEMP.*
 *.pdf
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.log
+*.ps
