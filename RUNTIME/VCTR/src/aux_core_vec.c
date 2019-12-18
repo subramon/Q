@@ -489,7 +489,6 @@ get_chunk_dir_idx(
     status = allocate_chunk(ptr_vec->chunk_size_in_bytes, chunk_num, 
         ptr_vec->uqid, &chunk_dir_idx); 
     cBYE(status);
-    ptr_vec->num_chunks++;
   }
   *ptr_chunk_dir_idx = chunk_dir_idx;
   if ( chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
