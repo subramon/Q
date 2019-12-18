@@ -40,7 +40,7 @@ get_exp_file_size(
     const char * const fldtype
     );
 extern int32_t
-get_chunk_size(
+get_chunk_size_in_bytes(
     uint32_t field_width, 
     const char * const field_type
     );
@@ -75,10 +75,16 @@ extern int
 initial_case(
     VEC_REC_TYPE *ptr_vec
     );
-extern int
-get_chunk_idx(
+extern int 
+chunk_dir_idx_for_read(
     VEC_REC_TYPE *ptr_vec,
-    uint32_t *ptr_chunk_idx
+    uint64_t idx,
+    uint32_t *ptr_chunk_dir_idx
+    );
+extern int
+get_chunk_num_for_write(
+    VEC_REC_TYPE *ptr_vec,
+    uint32_t *ptr_chunk_num
     );
 extern int
 init_chunk_dir(
@@ -89,4 +95,16 @@ get_chunk_dir_idx(
     VEC_REC_TYPE *ptr_vec,
     uint32_t chunk_idx,
     uint32_t *ptr_chunk_dir_idx
+    );
+extern int
+vec_new_common(
+    VEC_REC_TYPE *ptr_vec,
+    const char * const field_type,
+    uint32_t field_width
+    );
+extern int
+delete_file(
+    bool is_file, 
+    bool is_persist, 
+    uint64_t uqid
     );

@@ -9,7 +9,8 @@ local function mk_q_core_h()
   local hdir   = q_build_dir .. "/include/"
 
   -- assemble all .h files  in table h_files
-  local h_files = cutils.getfiles(hdir, "*.h")
+  local h_files = cutils.getfiles(hdir, ".*.h$")
+  assert(#h_files > 0)
   --[[
   local q_h_files = {}      
   for _, h_file in pairs(h_files) do 
@@ -22,12 +23,14 @@ local function mk_q_core_h()
   assert(type(hash_defines) == "table")
   cleaned_defs = table.concat(cleaned_defs, "\n")
   hash_defines = table.concat(hash_defines,  "\n")
+  --[[
   print("== START cleaned_defs")
   print(cleaned_defs)
   print("== STOP  cleaned_defs")
   print("== START hash_defines")
   print(hash_defines)
   print("== STOP  hash_defines")
+  --]]
   cutils.write(tmp_h, hash_defines .. cleaned_defs)
   assert(cutils.isfile(tmp_h))
   cmd = string.format("cpp %s > %s ", tmp_h, tgt_h)

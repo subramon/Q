@@ -15,8 +15,18 @@ end
 
 
 local _dotfile = function(subs, opdir, ext)
-  if ( ( ext == "c" ) and ( subs.dotc ) ) then return subs.dotc end
-  if ( ( ext == "h" ) and ( subs.doth ) ) then return subs.doth end
+  if ( ( ext == "c" ) and ( subs.dotc ) ) then 
+    -- This is to catch an old  but discontinued convention
+    -- TODO P3 Delete when no longer needed
+    error("WHY WOULD WE CALL gen_code when we have .c file")
+    return subs.dotc 
+  end
+  if ( ( ext == "h" ) and ( subs.doth ) ) then 
+    -- This is to catch an old  but discontinued convention
+    -- TODO P3 Delete when no longer needed
+    error("WHY WOULD WE CALL gen_code when we have .h file")
+    return subs.doth 
+  end
   local T = do_replacements(subs)
   local dotfile = T(section[ext])
 
@@ -24,7 +34,6 @@ local _dotfile = function(subs, opdir, ext)
     return dotfile
   end
   assert( ( opdir )  and ( type(opdir) == "string" ) ) 
-  --TODO P1 local fname = opdir .. "/_" .. subs.fn .. "." .. ext, "w"
   local fname = opdir .. "/_" .. subs.fn .. "." .. ext
   local f = assert(io.open(fname, "w"))
   assert(f, "Unable to open file " .. fname)

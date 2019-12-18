@@ -158,7 +158,7 @@ static int l_vec_me( lua_State *L) {
   // Now return table of CHUNK_REC_TYPE
   lua_newtable(L);
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
-    int chunk_dir_idx = ptr_vec->chunk_dir_idxs[i];
+    int chunk_dir_idx = ptr_vec->chunks[i];
     CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
     lua_pushnumber(L, i+1);
     lua_pushlightuserdata(L, ptr_chunk);
@@ -321,7 +321,7 @@ BYE:
   return 2;
 }
 //------------------------------------------
-static int l_vec_get_all( lua_State *L) 
+static int l_vec_start_read( lua_State *L) 
 {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
@@ -338,7 +338,7 @@ static int l_vec_get_all( lua_State *L)
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
   cmem_undef(ptr_cmem);
 
-  status = vec_get_all(ptr_vec, &data, &num_elements, ptr_cmem); 
+  status = vec_start_read(ptr_vec, &data, &num_elements, ptr_cmem); 
   cBYE(status);
   lua_pushinteger(L, num_elements);
   return 2;
@@ -413,6 +413,18 @@ static int l_vec_start_write( lua_State *L) {
   status = vec_start_write(ptr_vec, ptr_cmem); cBYE(status);
   lua_pushinteger(L, ptr_vec->num_elements);
   return 2;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
+static int l_vec_end_read( lua_State *L) {
+  int status = 0;
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vec_end_read(ptr_vec); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
@@ -536,7 +548,7 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
-static int l_vec_rehydrate( lua_State *L) 
+static int l_vec_rehydrate_single( lua_State *L) 
 {
   int status = 0;
   VEC_REC_TYPE *ptr_vec = NULL;
@@ -551,8 +563,8 @@ static int l_vec_rehydrate( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vec_rehydrate(ptr_vec, field_type, field_width, num_elements, 
-      file_name);
+  status = vec_rehydrate_single(ptr_vec, field_type, field_width, 
+      num_elements, file_name);
   cBYE(status);
 
   return 1; 
@@ -561,7 +573,7 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
-static int l_vec_mrehydrate( lua_State *L) 
+static int l_vec_rehydrate_multi( lua_State *L) 
 {
   int status = 0;
   VEC_REC_TYPE *ptr_vec = NULL;
@@ -577,9 +589,7 @@ static int l_vec_mrehydrate( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vec_mrehydrate(ptr_vec, field_type, field_width, num_elements, 
-      file_name);
-  cBYE(status);
+  go_BYE(-1);
 
   return 1; 
 BYE:
@@ -632,37 +642,15 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
-
-static int l_vec_clone( lua_State *L) 
-{
-  int status = 0;
-  VEC_REC_TYPE *ptr_new_vec = NULL;
-
-  VEC_REC_TYPE *ptr_old_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-
-  ptr_new_vec = (VEC_REC_TYPE *)lua_newuserdata(L, sizeof(VEC_REC_TYPE));
-  return_if_malloc_failed(ptr_new_vec);
-  memset(ptr_new_vec, '\0', sizeof(VEC_REC_TYPE));
-  luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
-  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
-
-  status = vec_clone(ptr_old_vec, ptr_new_vec);
-  cBYE(status);
-
-  return 1; // Used to be return 2 because of errbuf return
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, "ERROR: Could not clone vector\n");
-  return 2;
-}
 //-----------------------
 static const struct luaL_Reg vector_methods[] = {
     { "__gc",    l_vec_free   },
     { "check", l_vec_check },
     { "chunk_size_in_bytes", l_vec_chunk_size_in_bytes },
     { "delete", l_vec_delete },
-    { "meta", l_vec_meta },
     { "eov", l_vec_eov },
+    { "end_read", l_vec_end_read },
+    { "end_write", l_vec_end_write },
     { "field_width", l_vec_field_width },
     { "file_name", l_vec_file_name },
     { "file_size", l_vec_file_size },
@@ -670,27 +658,27 @@ static const struct luaL_Reg vector_methods[] = {
     { "flush_mem", l_vec_flush_mem },
     { "flush_to_disk", l_vec_flush_to_disk },
     { "get1", l_vec_get1 },
-    { "get_all", l_vec_get_all },
     { "get_chunk", l_vec_get_chunk },
     { "get_name", l_vec_get_name },
     { "is_eov", l_vec_is_eov },
     { "is_memo", l_vec_is_memo },
     { "is_mono", l_vec_is_mono },
     { "me", l_vec_me },
+    { "meta", l_vec_meta },
     { "memo", l_vec_memo },
     { "mono", l_vec_mono },
-    { "mrehydrate", l_vec_mrehydrate },
     { "num_elements", l_vec_num_elements },
     { "num_chunks", l_vec_num_chunks },
     { "persist", l_vec_persist },
     { "print_timers", l_vec_print_timers },
     { "put1", l_vec_put1 },
     { "put_chunk", l_vec_put_chunk },
-    { "end_write", l_vec_end_write },
     { "no_memcpy", l_vec_no_memcpy },
-    { "rehydrate", l_vec_rehydrate },
+    { "rehydrate_multi", l_vec_rehydrate_multi },
+    { "rehydrate_single", l_vec_rehydrate_single },
     { "reset_timers", l_vec_reset_timers },
     { "set_name", l_vec_set_name },
+    { "start_read", l_vec_start_read },
     { "start_write", l_vec_start_write },
     { NULL,          NULL               },
 };
@@ -698,8 +686,8 @@ static const struct luaL_Reg vector_methods[] = {
 static const struct luaL_Reg vector_functions[] = {
     { "check", l_vec_check },
     { "chunk_size_in_bytes", l_vec_chunk_size_in_bytes },
-    { "clone", l_vec_clone },
     { "delete", l_vec_delete },
+    { "end_read", l_vec_end_read },
     { "end_write", l_vec_end_write },
     { "eov", l_vec_eov },
     { "field_width", l_vec_field_width },
@@ -709,7 +697,6 @@ static const struct luaL_Reg vector_functions[] = {
     { "flush_mem", l_vec_flush_mem },
     { "flush_to_disk", l_vec_flush_to_disk },
     { "get1", l_vec_get1 },
-    { "get_all", l_vec_get_all },
     { "get_chunk", l_vec_get_chunk },
     { "get_name", l_vec_get_name },
     { "is_eov", l_vec_is_eov },
@@ -719,7 +706,6 @@ static const struct luaL_Reg vector_functions[] = {
     { "memo", l_vec_memo },
     { "meta", l_vec_meta },
     { "mono", l_vec_mono },
-    { "mrehydrate", l_vec_mrehydrate },
     { "new", l_vec_new },
     { "no_memcpy", l_vec_no_memcpy },
     { "num_elements", l_vec_num_elements },
@@ -728,9 +714,11 @@ static const struct luaL_Reg vector_functions[] = {
     { "print_timers", l_vec_print_timers },
     { "put1", l_vec_put1 },
     { "put_chunk", l_vec_put_chunk },
-    { "rehydrate", l_vec_rehydrate },
+    { "rehydrate_multi", l_vec_rehydrate_multi },
+    { "rehydrate_single", l_vec_rehydrate_single },
     { "reset_timers", l_vec_reset_timers },
     { "set_name", l_vec_set_name },
+    { "start_read", l_vec_start_read },
     { "start_write", l_vec_start_write },
     { NULL,  NULL         }
   };

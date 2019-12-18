@@ -70,7 +70,9 @@ typedef struct {
 -- Regardless, they need to exist before we can continue
 
 assertx(cutils.isfile(incfile), "File not found ", incfile)
-ffi.cdef(cutils.read(incfile))
+local str = assert(cutils.read(incfile))
+assert(#str > 0)
+ffi.cdef(str)
 
 assertx(cutils.isfile(sofile), "File not found ", sofile)
 local q_static = ffi.load(sofile) -- statically compiled library
@@ -102,6 +104,9 @@ local function load_lib(
   assert(#func_name > 0)
   assert(num_subs == 1, "Should have a .h extension")
 
+  func_name, num_subs = string.gsub(func_name,"^_", "")
+  assert(num_subs == 1, "Should start with  underscore")
+
   -- verify that func_name is not in q_static
   local status, _ = pcall(get_val_in_q_static, func_name)
   assert( not status)
@@ -110,20 +115,24 @@ local function load_lib(
   assertx(not known_functions[func_name],
     "Function already declared: ", func_name)
 
-  local sofile = "lib" .. func_name .. ".so"
-  assert(sofile ~= "libq_core.so", 
+  local so_name = "lib" .. func_name 
+  assert(so_name ~= "libq_core", 
     "Specical case. Qcore should not be loaded with load_lib()")
 
   -- Important to pcall and then assert status so that
   -- you can identify the culprit hfile
-  local status, err_msg = pcall(ffi.cdef, cutils.read(hfile))
-  assert(status, " Unable to cdef the .h file " .. hfile)
-  local status, L = pcall(ffi.load, sofile)
-  assert(status, " Unable to load .so file " .. sofile)
+  local full_hfile = inc_dir .. "_" .. func_name .. ".h"
+  local status, err_msg = pcall(ffi.cdef, cutils.read(full_hfile))
+  assert(status, " Unable to cdef the .h file " .. full_hfile)
+  -- check that .so file exists
+  local so_file = lib_dir .. so_name .. ".so"
+  assertx(cutils.isfile(so_file), "File not found " .. so_file)
+  local L = ffi.load(so_name)
   -- Now that cdef and load have worked, keep track of it
   -- if you don't store L outside the scope of this function, 
   -- then it gets garbage collected 
   -- and when you try and invoke qc.foo, the program crashes
+  print("Added previous dynamic ", func_name)
   libs[func_name] = L
   known_functions[func_name] = libs[func_name][func_name]
   qc[func_name] = libs[func_name][func_name]
@@ -181,13 +190,14 @@ local function q_add(
   --==================================
   if tmpl then 
     assert(type(tmpl) == "string")
-    doth = gen_code.doth(subs, tmpl) -- this is string containing .h file
-    dotc = gen_code.dotc(subs, tmpl) -- this is string containing .c file
+    doth = gen_code.doth(subs, "") -- this is string containing .h file
+    dotc = gen_code.dotc(subs, "") -- this is string containing .c file
   end
   assert(type(dotc) == "string")
   assert(type(doth) == "string")
   --==================================
-  local hfile  = inc_dir           .. function_name .. ".h"
+  -- Note the underscore which is convention for generated files
+  local hfile  = inc_dir           .. "_" .. function_name .. ".h"
   local sofile = lib_dir .. "/lib" .. function_name .. ".so"
   
   assert(not cutils.isfile(hfile),  ".h  file should not pre-exist")
@@ -214,6 +224,7 @@ local qc_mt = {
     -- for a statically generated function, you come here only once
     if key == "q_add" then return q_add end
     -- get it from q_static (all statically compiled stuff)
+    print("getting from q_static ", key)
     local status, func = pcall(get_val_in_q_static, key)
     if status == true then
       qc[key] = func 
@@ -227,6 +238,7 @@ local qc_mt = {
 }
 setmetatable(qc, qc_mt)
 add_libs() 
+print("Initial qc completed")
 return qc
 --[[ Some explanation of index method on metatables
 If we did qcjfoo, then 

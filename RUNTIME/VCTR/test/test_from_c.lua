@@ -1,20 +1,24 @@
 local plpath = require 'pl.path'
 local ffi     = require 'ffi'
-local lVector = require 'libvctr'
+local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local clean_defs = require 'Q/UTILS/build/clean_defs'
+local get_func_decl = require 'Q/UTILS/build/get_func_decl'
 
-local hdrs = clean_defs("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
+local hdrs = get_func_decl("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
 ffi.cdef(hdrs)
+-- following only because we are testing. Normally, we get this from q_core
+local hdrs = get_func_decl("../../CMEM/inc/cmem_struct.h", " -I../../../UTILS/inc/")
+ffi.cdef(hdrs)
+--=================================
 local tests = {}
 -- testing put1 and get1 
 tests.t1 = function()
   local qtype = "F4"
   local width = qconsts.qtypes[qtype].width
-  local v = lVector.new(qtype, width);
+  local v = cVector.new(qtype, width);
   print(">>> start deliberate error")
   assert( not  v:get1(0))
   assert( not  v:get1(-1))
@@ -60,15 +64,15 @@ tests.t1 = function()
       assert(chunk[0].num_in_chunk == 65536)
     end
   end
-  -- lVector:print_timers()
-  lVector:reset_timers()
+  -- cVector:print_timers()
+  cVector:reset_timers()
   print("Successfully completed test t1")
 end
 -- testing put_chunk and get_chunk
 tests.t2 = function()
   local qtype = "I4"
   local width = qconsts.qtypes[qtype].width
-  local v = lVector.new(qtype, width);
+  local v = cVector.new(qtype, width);
   
   local chunk_size = qconsts.chunk_size
 
@@ -107,7 +111,7 @@ end
 tests.t3 = function()
   local qtype = "B1"
   local width = qconsts.qtypes[qtype].width
-  local v = lVector.new(qtype, width);
+  local v = cVector.new(qtype, width);
   
   for i = 1, 1000000 do 
     local bval
@@ -133,7 +137,7 @@ end
 tests.t4 = function()
   local qtype = "F4"
   local width = qconsts.qtypes[qtype].width
-  local v = lVector.new(qtype, width);
+  local v = cVector.new(qtype, width);
   local n = 1000000
   for i = 1, n do 
     local s = Scalar.new(i, "F4")
@@ -183,7 +187,7 @@ end
 tests.t5 = function()
   local qtype = "F4"
   local width = qconsts.qtypes[qtype].width
-  local v = lVector.new(qtype, width);
+  local v = cVector.new(qtype, width);
   local n = 1000000
   for i = 1, n do 
     local s = Scalar.new(i, "F4")
@@ -195,7 +199,7 @@ tests.t5 = function()
   local M, C = assert(v:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
   local S = {}
-  S[#S+1] = "lVector("
+  S[#S+1] = "cVector("
   S[#S+1] = "{ "
   S[#S+1] = "has_nulls = false, "
   S[#S+1] = "qtype = \"" .. qtype .. "\"," 

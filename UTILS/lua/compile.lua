@@ -9,7 +9,7 @@ local Q_SRC_ROOT   = qconsts.Q_SRC_ROOT
 local Q_BUILD_DIR  = qconsts.Q_BUILD_DIR
 local Q_LINK_FLAGS = qconsts.Q_LINK_FLAGS
 
-local lib_link_path = string.format("-L%s/lib", Q_ROOT)
+local lib_link_path = string.format(" -L%s/lib", Q_ROOT)
 local inc_dir = Q_ROOT .. "/include/"
 
 -- some basic checks
@@ -37,9 +37,9 @@ local function compile(
   -- that will be found in UTILS/inc or UTILS/gen_inc/
   -- As an example, you CANNOT include "cmem.h"
   local incs = {}
-  incs[#incs+1] = qconsts.Q_BUILD_DIR .. "/include/"
-  incs[#incs+1] = qconsts.Q_SRC_ROOT  .. "/UTILS/inc/"
-  incs[#incs+1] = qconsts.Q_SRC_ROOT  .. "/UTILS/gen_inc/"
+  incs[#incs+1] = "-I" .. qconsts.Q_BUILD_DIR .. "/include/"
+  incs[#incs+1] = "-I" .. qconsts.Q_SRC_ROOT  .. "/UTILS/inc/"
+  incs[#incs+1] = "-I" .. qconsts.Q_SRC_ROOT  .. "/UTILS/gen_inc/"
   incs = table.concat(incs, " ")
 
   -- Note that in a dynamically generated function, the only functions you 

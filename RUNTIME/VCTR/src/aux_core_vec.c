@@ -11,6 +11,7 @@
 
 #define NUM_CHUNKS_TO_ALLOCATE 65536
 #define INITIAL_NUM_CHUNKS_PER_VECTOR 32
+#define Q_NUM_HEX_DIGITS_IN_UINT64 31 
 
 // TODO P4 Following macro duplicated. Eliminate that.
 #define chk_chunk_dir_idx(x) { \
@@ -49,7 +50,7 @@ l_malloc(
   void  *x = NULL;
   uint64_t delta = 0, t_start = RDTSC(); n_malloc++;
 
-  status = posix_memalign(&x, ALIGNMENT, n); 
+  status = posix_memalign(&x, Q_CORE_VEC_ALIGNMENT, n); 
   if ( status < 0 ) { WHEREAMI; return NULL; }
   if ( x == NULL ) { WHEREAMI; return NULL; }
   if ( status < 0 ) { WHEREAMI; return NULL; }
@@ -135,18 +136,13 @@ free_chunk(
     )
 {
   int status = 0;
-  status = chk_chunk(chunk_dir_idx); cBYE(status);
+  chk_chunk_dir_idx(chunk_dir_idx); 
 
   CHUNK_REC_TYPE *ptr_chunk =  g_chunk_dir+chunk_dir_idx;
   free_if_non_null(ptr_chunk->data);
-  if ( !is_persist ) { 
-    char file_name[Q_MAX_LEN_FILE_NAME+1];
-    memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-    status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
-    if ( isfile(file_name) ) {
-      remove(file_name);
-    }
-  }
+  status = delete_file(ptr_chunk->is_file, is_persist, 
+      ptr_chunk->uqid);
+  cBYE(status);
   memset(ptr_chunk, '\0', sizeof(CHUNK_REC_TYPE));
 BYE:
   return status;
@@ -161,37 +157,38 @@ load_chunk(
 {
   int status = 0;
   if ( ptr_chunk->data != NULL ) { return status; } // already loaded
-  //-- Get the chunk from its backup file if it exists
-  if ( ptr_chunk->is_file ) {
-    char file_name[Q_MAX_LEN_FILE_NAME+1];
-    memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
+  // double check that this chunk is yours
+  if ( ptr_chunk->vec_uqid != ptr_vec->uqid ) { go_BYE(-1); }
+
+  // must be able to backup data from chunk file or vector file 
+  if ( ( !ptr_chunk->is_file ) && ( !ptr_vec->is_file ) ) { go_BYE(-1); }
+
+  char file_name[Q_MAX_LEN_FILE_NAME+1];
+  memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
+  char *X = NULL; size_t nX = 0;
+  ptr_chunk->data = l_malloc(ptr_vec->chunk_size_in_bytes);
+  return_if_malloc_failed( ptr_chunk->data);
+  memset(ptr_chunk->data, '\0', ptr_vec->chunk_size_in_bytes);
+
+  if ( ptr_chunk->is_file ) { // chunk has a backup file 
     status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
-    char *X = NULL; size_t nX = 0;
     status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
     if ( X == NULL ) { go_BYE(-1); }
-    if ( nX != ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); }
-    ptr_chunk->data = l_malloc(ptr_vec->chunk_size_in_bytes);
-    return_if_malloc_failed( ptr_chunk->data);
+    if ( nX > ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); }
     memcpy( ptr_chunk->data, X, nX);
-    munmap(X, nX);
-    // TODO P1 Need to set num_in_chunk
   }
-  else {
-    //-- Get the chunk from vector's backup file if it exists
-    if ( !ptr_vec->is_file ) { go_BYE(-1); }
-    char file_name[Q_MAX_LEN_FILE_NAME+1];
-    memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
+  else { // vector has a backup file 
     status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
-    char *X = NULL; size_t nX = 0;
     status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
     if ( X == NULL ) { go_BYE(-1); }
     if ( nX != ptr_vec->file_size ) { go_BYE(-1); }
-    ptr_chunk->data = l_malloc(ptr_vec->chunk_size_in_bytes);
-    return_if_malloc_failed( ptr_chunk->data);
-    size_t offset = ptr_vec->chunk_size_in_bytes*ptr_chunk->chunk_num;
-    memcpy( ptr_chunk->data, X+offset, ptr_vec->chunk_size_in_bytes);
-    munmap(X, nX);
+    size_t offset = ptr_vec->chunk_size_in_bytes * ptr_chunk->chunk_num;
+    if ( offset >= nX ) { go_BYE(-1); }
+    size_t num_to_copy = ptr_vec->chunk_size_in_bytes;
+    if ( nX - offset < num_to_copy ) { num_to_copy = nX - offset; }
+    memcpy( ptr_chunk->data, X + offset, num_to_copy);
   }
+  munmap(X, nX);
 BYE:
   return status;
 }
@@ -208,7 +205,6 @@ chk_chunk(
   memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
   status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
   if ( ptr_chunk->uqid == 0 ) { // we expect this to be free 
-    if ( ptr_chunk->num_in_chunk != 0 ) { go_BYE(-1); }
     if ( ptr_chunk->chunk_num != 0 ) { go_BYE(-1); }
     if ( ptr_chunk->uqid != 0 ) { go_BYE(-1); }
     if ( ptr_chunk->vec_uqid != 0 ) { go_BYE(-1); }
@@ -218,10 +214,6 @@ chk_chunk(
   }
   else {
     if ( ptr_chunk->data == NULL ) { go_BYE(-1); }
-    if ( ptr_chunk->num_in_chunk == 0 ) { 
-      // if no data, then can be no file
-      if ( ptr_chunk->is_file ) { go_BYE(-1); }
-    }
     if ( ptr_chunk->is_file ) { 
       if ( !isfile(file_name) ) { 
         printf("hello world\n");
@@ -269,28 +261,44 @@ BYE:
 int
 allocate_chunk(
     size_t sz,
-    uint32_t chunk_idx,
+    uint32_t chunk_num,
     uint64_t vec_uqid,
     uint32_t *ptr_chunk_dir_idx
     )
 {
   int status = 0;
+  static unsigned int start_search = 1;
   if ( sz == 0 ) { go_BYE(-1); }
   status = chk_space_in_chunk_dir();  cBYE(status); 
   // NOTE: we do not allocate 0th entry
-  for ( unsigned int i = 1 ; i < g_sz_chunk_dir; i++ ) { 
-    if ( g_chunk_dir[i].uqid == 0 ) {
-      g_chunk_dir[i].num_in_chunk = 0;
-      g_chunk_dir[i].uqid = RDTSC(); 
-      g_chunk_dir[i].chunk_num = chunk_idx;
-      g_chunk_dir[i].is_file = false;
-      g_chunk_dir[i].vec_uqid = vec_uqid;
-      g_chunk_dir[i].data = malloc(sz);
-      return_if_malloc_failed(g_chunk_dir[i].data);
-      *ptr_chunk_dir_idx = i; return status;
+  for ( int iter = 0; iter < 2; iter++ ) { 
+    unsigned int lb, ub;
+    if ( iter == 0 ) { 
+      lb = start_search; // note not 0
+      ub = g_sz_chunk_dir;
+    }
+    else {
+      lb = 1; 
+      ub = start_search; // note not 0
+    }
+    for ( unsigned int i = lb ; i < ub; i++ ) { 
+      if ( g_chunk_dir[i].uqid == 0 ) {
+        g_chunk_dir[i].uqid = RDTSC(); 
+        g_chunk_dir[i].chunk_num = chunk_num;
+        g_chunk_dir[i].is_file = false;
+        g_chunk_dir[i].vec_uqid = vec_uqid;
+        g_chunk_dir[i].data = malloc(sz);
+        return_if_malloc_failed(g_chunk_dir[i].data);
+        *ptr_chunk_dir_idx = i; 
+        g_n_chunk_dir++;
+        start_search = i+1;
+        if ( start_search >= g_sz_chunk_dir ) { start_search = 1; }
+        return status;
+      }
     }
   }
-  fprintf(stderr, "No space in chunk directory\n"); go_BYE(-1); 
+  /* control should not come here */
+  go_BYE(-1); 
 BYE:
   return status;
 }
@@ -312,7 +320,7 @@ get_exp_file_size(
 }
 
 int32_t
-get_chunk_size(
+get_chunk_size_in_bytes(
       uint32_t field_width, 
       const char * const field_type
       )
@@ -371,14 +379,17 @@ mk_file_name(
     )
 {
   int status = 0;
-  int buflen = 31;
-  char buf[buflen+1];
-  memset(buf, '\0', buflen+1);
-  status = as_hex(uqid, buf, buflen); cBYE(status);
+  int len = Q_NUM_HEX_DIGITS_IN_UINT64;
+  char buf[len+1];
+  memset(buf, '\0', len+1);
+  status = as_hex(uqid, buf, len); cBYE(status);
   // TODO P3 Need to avoid repeated initialization
-  strcpy(g_q_data_dir, getenv("Q_DATA_DIR"));
-  if ( isdir(g_q_data_dir) == false ) { go_BYE(-1); }
-  snprintf(file_name, Q_MAX_LEN_FILE_NAME, "%s/_%s.bin", g_q_data_dir, buf);
+  char *data_dir = getenv("Q_DATA_DIR");
+  if ( data_dir == NULL ) { go_BYE(-1); }
+  if ( !isdir(data_dir) ) { go_BYE(-1); }
+  int nw = snprintf(file_name, Q_MAX_LEN_FILE_NAME, 
+      "%s/_%s.bin", data_dir, buf);
+  if ( nw == Q_MAX_LEN_FILE_NAME ) { go_BYE(-1); }
 BYE:
   return status;
 }
@@ -389,10 +400,11 @@ init_chunk_dir(
     )
 {
   int status = 0;
+  // if elements exist, you would have initialized directory
   if ( ptr_vec->num_elements != 0 ) { return status; }
-  if ( ptr_vec->chunk_dir_idxs    != NULL ) { go_BYE(-1); }
-  if ( ptr_vec->sz_chunk_dir_idx  != 0 )    { go_BYE(-1); }
-  if ( ptr_vec->num_chunks        != 0 )    { go_BYE(-1); }
+  if ( ptr_vec->chunks     != NULL ) { go_BYE(-1); }
+  if ( ptr_vec->sz_chunks  != 0    ) { go_BYE(-1); }
+  if ( ptr_vec->num_chunks != 0    ) { go_BYE(-1); }
   int nc;
   if ( ptr_vec->is_memo ) { 
     nc = 1;
@@ -400,36 +412,65 @@ init_chunk_dir(
   else {
     nc = INITIAL_NUM_CHUNKS_PER_VECTOR;
   }
-  ptr_vec->chunk_dir_idxs = calloc(nc, sizeof(int32_t));
-  return_if_malloc_failed(ptr_vec->chunk_dir_idxs);
-  ptr_vec->sz_chunk_dir_idx = nc;
+  ptr_vec->chunks = calloc(nc, sizeof(uint32_t));
+  return_if_malloc_failed(ptr_vec->chunks);
+  ptr_vec->sz_chunks = nc;
 BYE:
   return status;
 }
 
+// tells us which chunk to read this element from
+int 
+chunk_dir_idx_for_read(
+    VEC_REC_TYPE *ptr_vec,
+    uint64_t idx,
+    uint32_t *ptr_chunk_dir_idx
+    )
+{
+  int status = 0;
+  if ( ptr_vec->num_elements == 0 ) { go_BYE(-1); }
+  if ( idx >= ptr_vec->num_elements ) { go_BYE(-1); }
+  uint32_t chunk_num;
+  if ( ptr_vec->is_memo ) { 
+    chunk_num = 0; 
+  }
+  else {
+    chunk_num = idx / g_chunk_size;
+  }
+  if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
+
+  *ptr_chunk_dir_idx = ptr_vec->chunks[chunk_num];
+  if ( *ptr_chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
+BYE:
+  return status;
+}
 // tells us which chunk to write this element into
 int 
-get_chunk_idx(
+get_chunk_num_for_write(
     VEC_REC_TYPE *ptr_vec,
-    uint32_t *ptr_chunk_idx
+    uint32_t *ptr_chunk_num
     )
 {
   int status = 0;
   uint32_t *new = NULL;
-  if ( ptr_vec->is_memo ) { *ptr_chunk_idx = 0; return status; }
-  uint32_t chunk_idx =  (ptr_vec->num_elements / g_chunk_size);
-  uint32_t sz = ptr_vec->sz_chunk_dir_idx;
-  if ( chunk_idx >= sz ) { // need to reallocate space
+  if ( ptr_vec->is_memo ) { *ptr_chunk_num = 0; return status; }
+  // let us say chunk size = 64 and num elements = 63
+  // this means that when you want to write, you write to chunk 0
+  // let us say chunk size = 64 and num elements = 64
+  // this means that when you want to write, you write to chunk 1
+  uint32_t chunk_num =  (ptr_vec->num_elements / g_chunk_size);
+  uint32_t sz = ptr_vec->sz_chunks;
+  if ( chunk_num >= sz ) { // need to reallocate space
     new = calloc(2*sz, sizeof(uint32_t));
     return_if_malloc_failed(new);
     for ( uint32_t i = 0; i < sz; i++ ) {
-      new[i] = ptr_vec->chunk_dir_idxs[i];
+      new[i] = ptr_vec->chunks[i];
     }
-    free(ptr_vec->chunk_dir_idxs);
-    ptr_vec->chunk_dir_idxs  = new;
-    ptr_vec->sz_chunk_dir_idx  = 2*sz;
+    free(ptr_vec->chunks);
+    ptr_vec->chunks  = new;
+    ptr_vec->sz_chunks  = 2*sz;
   }
-  *ptr_chunk_idx = chunk_idx;
+  *ptr_chunk_num = chunk_num;
 BYE:
   return status;
 }
@@ -437,24 +478,68 @@ BYE:
 int 
 get_chunk_dir_idx(
     VEC_REC_TYPE *ptr_vec,
-    uint32_t chunk_idx,
+    uint32_t chunk_num,
     uint32_t *ptr_chunk_dir_idx
     )
 {
   int status = 0;
-  if ( chunk_idx >= ptr_vec->sz_chunk_dir_idx )  { go_BYE(-1); }
-  uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_idx];
+  if ( chunk_num >= ptr_vec->sz_chunks )  { go_BYE(-1); }
+  uint32_t chunk_dir_idx = ptr_vec->chunks[chunk_num];
   if ( chunk_dir_idx == 0 ) { // we need to set it 
-    status = allocate_chunk(ptr_vec->chunk_size_in_bytes, chunk_idx, 
+    status = allocate_chunk(ptr_vec->chunk_size_in_bytes, chunk_num, 
         ptr_vec->uqid, &chunk_dir_idx); 
     cBYE(status);
     ptr_vec->num_chunks++;
   }
-  if ( ( chunk_dir_idx <= 0 ) || ( chunk_dir_idx >= g_sz_chunk_dir ) ) { 
-    go_BYE(-1);
-  }
   *ptr_chunk_dir_idx = chunk_dir_idx;
-  ptr_vec->chunk_dir_idxs[chunk_idx] = chunk_dir_idx;
+  if ( chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
+  ptr_vec->chunks[chunk_num] = chunk_dir_idx;
+BYE:
+  return status;
+}
+
+int
+vec_new_common(
+    VEC_REC_TYPE *ptr_vec,
+    const char * const field_type,
+    uint32_t field_width
+    )
+{
+  int status = 0;
+  if ( ptr_vec == NULL ) { go_BYE(-1); }
+  status = chk_field_type(field_type, field_width); cBYE(status);
+
+  g_chunk_size = Q_CHUNK_SIZE; // TODO P2 Where should this go for real?
+  memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
+
+  strncpy(ptr_vec->fldtype, field_type, Q_MAX_LEN_QTYPE_NAME-1);
+  ptr_vec->field_width = field_width;
+  ptr_vec->chunk_size_in_bytes = get_chunk_size_in_bytes(field_width, field_type);
+  ptr_vec->uqid = RDTSC();
+BYE:
+  return status;
+}
+int
+delete_file(
+    bool is_file, 
+    bool is_persist, 
+    uint64_t uqid
+    )
+{
+  int status = 0;
+  if ( is_file ) { 
+    if ( !is_persist ) { 
+      char file_name[Q_MAX_LEN_FILE_NAME+1];
+      status = mk_file_name(uqid, file_name); cBYE(status);
+      if ( !isfile(file_name) ) { 
+        WHEREAMI; /* error. Should not happen  */ 
+      }
+      status = remove(file_name);
+      if ( status != 0 ) { 
+        WHEREAMI; /* error. Should not happen */ 
+      }
+    }
+  }
 BYE:
   return status;
 }

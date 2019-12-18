@@ -111,7 +111,7 @@ static int l_cutils_copyfile(
   if ( strcmp(x_new_file, old_file) == 0 ) { go_BYE(-1); }
   status = rs_mmap(old_file, &X, &nX, 0); cBYE(status);
   fp = fopen(x_new_file, "w");
-  printf("%s, %s, %s \n", old_file, new_file, x_new_file);
+  // printf("%s, %s, %s \n", old_file, new_file, x_new_file);
   return_if_fopen_failed(fp, x_new_file, "w");
   fwrite(X, nX, 1, fp);
   fclose(fp);

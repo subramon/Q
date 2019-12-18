@@ -19,20 +19,25 @@
     for i, intype in ipairs(types) do 
      local status, subs
       if ( operator == "is_next" ) then 
-        for _, comparison in ipairs(comparisons) do 
-          for j = 1, 2 do 
-            local optargs = {}
-            if ( j == 2 ) then optargs.mode = "fast" end 
-            status, subs = pcall(sp_fn, intype, 
-              comparison, optargs)
-            if ( status ) then 
-              assert(type(subs) == "table")
-              gen_code.doth(subs, incdir)
-              gen_code.dotc(subs, srcdir)
-              print("Generated ", subs.fn)
-              num_produced = num_produced + 1
-            else
-              print("Failed ", intype, subs)
+        if ( intype == "B1" ) then
+          -- nothing to do 
+            -- TODO P3 This special case is dirty. Clean it up
+        else
+          for _, comparison in ipairs(comparisons) do 
+            for j = 1, 2 do 
+              local optargs = {}
+              if ( j == 2 ) then optargs.mode = "fast" end 
+              status, subs = pcall(sp_fn, intype, 
+                comparison, optargs)
+              if ( status ) then 
+                assert(type(subs) == "table")
+                gen_code.doth(subs, incdir)
+                gen_code.dotc(subs, srcdir)
+                print("Generated ", subs.fn)
+                num_produced = num_produced + 1
+              else
+                print("Failed ", intype, subs)
+              end
             end
           end
         end
@@ -41,10 +46,15 @@
         print(operator, intype)
         if ( status ) then 
           assert(type(subs) == "table")
-          gen_code.doth(subs, incdir)
-          gen_code.dotc(subs, srcdir)
-          print("Generated ", subs.fn)
-          num_produced = num_produced + 1
+          if ( ( intype == "B1" ) and ( operator == "sum" ) ) then
+            -- TODO P3 This special case is dirty. Clean it up
+            print("skipping")
+          else 
+            gen_code.doth(subs, incdir)
+            gen_code.dotc(subs, srcdir)
+            print("Generated ", subs.fn)
+            num_produced = num_produced + 1
+          end
         end
       end
     end

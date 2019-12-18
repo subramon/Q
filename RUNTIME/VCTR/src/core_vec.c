@@ -17,54 +17,11 @@
 
 #include "lauxlib.h"
 
-#define chk_chunk_dir_idx(x) { \
+#define chk_chunk_idx(x) { \
   if ( ( x <= 0 ) || ( (uint32_t)x >= g_sz_chunk_dir ) ) { go_BYE(-1); } \
 }
-void
-vec_reset_timers(
-    void
-    )
-{
-  printf("reset timers\n");
-  t_l_vec_check = 0;        n_l_vec_check = 0;
-  t_l_vec_clone = 0;        n_l_vec_clone = 0;
-  t_l_vec_flush = 0;        n_l_vec_flush = 0;
-  t_l_vec_free = 0;         n_l_vec_free = 0;
-  t_l_vec_get1 = 0;         n_l_vec_get1 = 0;
-  t_l_vec_get_all = 0;      n_l_vec_get_all = 0;
-  t_l_vec_get_chunk = 0;    n_l_vec_get_chunk = 0;
-  t_l_vec_new = 0;          n_l_vec_new = 0;
-  t_l_vec_put1 = 0;         n_l_vec_put1 = 0;
-  t_l_vec_put_chunk = 0;    n_l_vec_put_chunk = 0;
-  t_l_vec_start_write = 0;  n_l_vec_start_write = 0;
-
-  t_malloc = 0;             n_malloc = 0;
-  t_memcpy = 0;             n_memcpy = 0;
-  t_memset = 0;             n_memset = 0;
-}
-
-void
-vec_print_timers(
-    void
-    )
-{
-  printf("print timers\n");
-  fprintf(stdout, "0,check,%u,%" PRIu64 "\n",n_l_vec_check, t_l_vec_check);
-  fprintf(stdout, "0,clone,%u,%" PRIu64 "\n",n_l_vec_clone, t_l_vec_clone);
-  fprintf(stdout, "0,free,%u,%" PRIu64 "\n",n_l_vec_free, t_l_vec_free);
-  fprintf(stdout, "0,get,%u,%" PRIu64 "\n",n_l_vec_get1, t_l_vec_get1);
-  fprintf(stdout, "0,get,%u,%" PRIu64 "\n",n_l_vec_get_all, t_l_vec_get_all);
-  fprintf(stdout, "0,get,%u,%" PRIu64 "\n",n_l_vec_get_chunk, t_l_vec_get_chunk);
-  fprintf(stdout, "0,new,%u,%" PRIu64 "\n",n_l_vec_new, t_l_vec_new);
-  fprintf(stdout, "0,put1,%u,%" PRIu64 "\n",n_l_vec_put1, t_l_vec_put1);
-  fprintf(stdout, "0,put_chunk,%u,%" PRIu64 "\n",n_l_vec_put_chunk, t_l_vec_put_chunk);
-  fprintf(stdout, "0,start_write,%u,%" PRIu64 "\n", n_l_vec_start_write, t_l_vec_start_write);
-
-  fprintf(stdout, "1,flush,%u,%" PRIu64 "\n", n_l_vec_flush, t_l_vec_flush);
-  fprintf(stdout, "1,memcpy,%u,%" PRIu64 "\n", n_memcpy, t_memcpy);
-  fprintf(stdout, "1,memset,%u,%" PRIu64 "\n", n_memset, t_memset);
-  fprintf(stdout, "1,malloc,%u,%" PRIu64 "\n", n_malloc, t_malloc);
-}
+#include "_reset_timers.c"
+#include "_print_timers.c"
 
 int
 vec_meta(
@@ -73,8 +30,10 @@ vec_meta(
     )
 {
   int status = 0;
-  // TODO P1 Need to print information about chunks in vector
-  char  buf[1024];
+  char file_name[Q_MAX_LEN_FILE_NAME+1];
+  status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
+  char  buf[65536]; // TODO P3 Need to avoid static allocation
+  memset(buf, '\0', 65536);
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
   strcpy(opbuf, "return { ");
   //------------------------------------------------
@@ -84,18 +43,27 @@ vec_meta(
   strcat(opbuf, buf);
   sprintf(buf, "chunk_size_in_bytes   = %" PRIu32 ", ", ptr_vec->chunk_size_in_bytes);
   strcat(opbuf, buf);
-  sprintf(buf, "num_chunks = %" PRIu32 ", ", ptr_vec->num_chunks);
+  sprintf(buf, "uqid         = %" PRIu64 ", ", ptr_vec->uqid);
   strcat(opbuf, buf);
+
+  //-------------------------------------
   sprintf(buf, "num_elements = %" PRIu64 ", ", ptr_vec->num_elements);
   strcat(opbuf, buf);
   sprintf(buf, "name         = \"%s\", ", ptr_vec->name);
   strcat(opbuf, buf);
-  sprintf(buf, "uqid         = %" PRIu64 ", ", ptr_vec->uqid);
+
+  //-------------------------------------
+  sprintf(buf, "is_file = %s, ", ptr_vec->is_file ? "true" : "false");
   strcat(opbuf, buf);
-  sprintf(buf, "file_name    = \"%s\", ", ptr_vec->file_name);
+  sprintf(buf, "file_name    = \"%s\", ", file_name);
   strcat(opbuf, buf);
   sprintf(buf, "file_size    = %" PRIu64 ", ", ptr_vec->file_size);
   strcat(opbuf, buf);
+  sprintf(buf, "num_readers   = %d, ", ptr_vec->num_readers);
+  strcat(opbuf, buf);
+  sprintf(buf, "num_writers   = %d, ", ptr_vec->num_writers);
+  strcat(opbuf, buf);
+
   //-------------------------------------
   sprintf(buf, "is_persist = %s, ", ptr_vec->is_persist ? "true" : "false");
   strcat(opbuf, buf);
@@ -107,13 +75,14 @@ vec_meta(
   strcat(opbuf, buf);
   sprintf(buf, "is_no_memcpy = %s, ", ptr_vec->is_no_memcpy ? "true" : "false");
   strcat(opbuf, buf);
-  switch ( ptr_vec->access_mode ) {
-    case 0 : strcpy(buf, "access_mode = \"NOT_OPEN\", "); break;
-    case 1 : strcpy(buf, "access_mode = \"READ\", "); break;
-    case 2 : strcpy(buf, "access_mode = \"WRITE\", "); break;
-    default : go_BYE(-1); break;
-  }
+  //-------------------------------------
+  sprintf(buf, "num_chunks = %" PRIu32 ", ", ptr_vec->num_chunks);
   strcat(opbuf, buf);
+  sprintf(buf, "sz_chunks = %" PRIu32 ", ", ptr_vec->sz_chunks);
+  strcat(opbuf, buf);
+  // TODO P1 Need to print information about chunks in vector
+
+  //-------------------------------------
   strcat(opbuf, "} ");
 BYE:
   return status;
@@ -125,9 +94,11 @@ vec_free(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_free++;
+  uint64_t delta = 0, t_start = RDTSC(); n_free++;
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
   if ( ptr_vec->is_dead ) {  go_BYE(-1); }
+  if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
+  if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
   // If file has been opened, close it and delete it 
   if ( ( ptr_vec->mmap_addr  != NULL ) && ( ptr_vec->mmap_len > 0 ) )  {
     munmap(ptr_vec->mmap_addr, ptr_vec->mmap_len);
@@ -135,24 +106,18 @@ vec_free(
     ptr_vec->mmap_len  = 0;
   }
   // delete file created for entire access
-  if ( ptr_vec->is_file ) { 
-    if ( ptr_vec->is_persist == false ) { 
-      if ( !isfile(ptr_vec->file_name) ) { WHEREAMI; /* error */ }
-      status = remove(ptr_vec->file_name);
-      if ( status != 0 ) { /* should not happen */ WHEREAMI; }
-    }
-  }
+  status = delete_file(ptr_vec->is_file, ptr_vec->is_persist, ptr_vec->uqid);
+  cBYE(status);
   //-- Free all chunks that you own
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
-    free_chunk(ptr_vec->chunk_dir_idxs[i], ptr_vec->is_persist); 
+    free_chunk(ptr_vec->chunks[i], ptr_vec->is_persist); 
   }
   memset(ptr_vec->fldtype, '\0', sizeof(Q_MAX_LEN_QTYPE_NAME+1));
-  memset(ptr_vec->file_name, '\0', sizeof(Q_MAX_LEN_FILE_NAME+1));
   memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
   ptr_vec->is_dead = true;
   // Don't do this in C. Lua will do it: free(ptr_vec);
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_free += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_free += delta; }
   return status;
 }
 // vec_delete is *almost* identical as vec_free but hard delete of files
@@ -169,23 +134,6 @@ BYE:
 }
 
 int 
-vec_clone(
-    VEC_REC_TYPE *ptr_old_vec,
-    VEC_REC_TYPE *ptr_new_vec
-    )
-{
-  int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_clone++;
-  if ( ptr_old_vec == NULL ) { go_BYE(-1); }
-  if ( ptr_new_vec == NULL ) { go_BYE(-1); }
-  if ( ptr_new_vec == ptr_old_vec ) { go_BYE(-1); }
-  // TODO  P1
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_clone += delta; }
-BYE:
-  return status;
-}
-
-int 
 vec_new(
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
@@ -193,23 +141,16 @@ vec_new(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_new++;
+  uint64_t delta = 0, t_start = RDTSC(); n_new++;
 
-  g_chunk_size = Q_CHUNK_SIZE; // TODO P2 Where should this go for real?
-  if ( ptr_vec == NULL ) { go_BYE(-1); }
-  memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
-  strncpy(ptr_vec->fldtype, field_type, Q_MAX_LEN_QTYPE_NAME-1);
-  ptr_vec->field_width = field_width;
-  status = chk_field_type(field_type, field_width); cBYE(status);
-  ptr_vec->chunk_size_in_bytes = get_chunk_size(field_width, field_type);
-  ptr_vec->uqid = RDTSC();
+  status = vec_new_common(ptr_vec, field_type, field_width); cBYE(status);
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_new += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_new += delta; }
   return status;
 }
 
 int 
-vec_mrehydrate(
+vec_rehydrate_multi(
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
     uint32_t field_width,
@@ -218,15 +159,17 @@ vec_mrehydrate(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_new++;
-  g_chunk_size = Q_CHUNK_SIZE; // TODO P2 Where should this go for real?
-// BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_new += delta; }
+  uint64_t delta = 0, t_start = RDTSC(); n_rehydrate_multi++;
+
+  status = vec_new_common(ptr_vec, field_type, field_width); cBYE(status);
+  fprintf(stderr," TODO: To be implemented  \n"); go_BYE(-1); 
+BYE:
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_rehydrate_multi += delta; }
   return status;
 }
 
 int 
-vec_rehydrate(
+vec_rehydrate_single(
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
     uint32_t field_width,
@@ -235,49 +178,108 @@ vec_rehydrate(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_new++;
-  g_chunk_size = Q_CHUNK_SIZE; // TODO P2 Where should this go for real?
+  uint64_t delta = 0, t_start = RDTSC(); n_rehydrate_single++;
+
+  status = vec_new_common(ptr_vec, field_type, field_width); cBYE(status);
   //
-  // Note that we just accept the file name (after some checking)
+  // Note that we just accept the file (after some checking)
   // we do not "load" it into memory. We delay that until needed
   if ( !isfile(file_name) ) { go_BYE(-1); }
   int64_t expected_file_size = get_exp_file_size(ptr_vec->num_elements,
       ptr_vec->field_width, ptr_vec->fldtype);
   int64_t actual_file_size = get_file_size(file_name);
   if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
-  //------------
-  strncpy(ptr_vec->fldtype, field_type, Q_MAX_LEN_QTYPE_NAME-1);
-  strncpy(ptr_vec->file_name, file_name, Q_MAX_LEN_FILE_NAME-1);
   ptr_vec->file_size = actual_file_size;
-  ptr_vec->chunk_size_in_bytes = get_chunk_size(field_width, field_type);
+  //------------
+  // IMPORTANT: File gets renamed
+  char new_file_name[Q_MAX_LEN_FILE_NAME+1];
+  status = mk_file_name(ptr_vec->uqid, new_file_name); cBYE(status);
+  status = rename(file_name, new_file_name);
+  //--------------------
   ptr_vec->is_eov    = true;
   ptr_vec->is_memo   = true;
   //------------
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_new += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_rehydrate_single += delta; }
   return status;
 }
 
 int
 vec_check(
-    VEC_REC_TYPE *ptr_vec
+    VEC_REC_TYPE *v
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_check++;
-  if ( !isdir(g_q_data_dir) ) { go_BYE(-1); }
-  // cast as int64_t to avoid overflow
-  /*
-  int64_t chunk_num    = ptr_vec->chunk_num;
-  int64_t chunk_size   = ptr_vec->chunk_size;
-  int64_t chunk_sz     = ptr_vec->chunk_sz;
-  int64_t num_elements = ptr_vec->num_elements;
-  int64_t num_in_chunk = ptr_vec->num_in_chunk;
-  if ( !ptr_vec->is_memo ) { if ( ptr_vec->is_mono ) { go_BYE(-1); } }
-  if ( ptr_vec->is_no_memcpy ) { if ( ptr_vec->chunk == NULL ) { go_BYE(-1); } }
-  */
+  uint64_t delta = 0, t_start = RDTSC(); n_check++;
+  if ( v->num_elements == 0 ) {
+    if ( v->chunks != NULL ) { go_BYE(-1); }
+    if ( v->num_chunks != 0 ) { go_BYE(-1); }
+    if ( v->sz_chunks != 0 ) { go_BYE(-1); }
+    if ( v->file_size != 0 ) { go_BYE(-1); }
+    if ( v->mmap_addr != NULL ) { go_BYE(-1); }
+    if ( v->mmap_len  != 0 ) { go_BYE(-1); }
+    if ( v->num_readers != 0 ) { go_BYE(-1); }
+    if ( v->num_writers != 0 ) { go_BYE(-1); }
+    if ( v->is_dead  ) { go_BYE(-1); }
+    if ( v->is_eov  ) { go_BYE(-1); }
+    if ( v->is_file  ) { go_BYE(-1); }
+  }
+  //------------------------------------------
+  if ( v->is_file ) { 
+    if ( v->file_size == 0 ) { go_BYE(-1); }
+  }
+  else {
+    if ( v->file_size != 0 ) { go_BYE(-1); }
+    if ( v->mmap_addr != NULL ) { go_BYE(-1); }
+    if ( v->mmap_len  != 0 ) { go_BYE(-1); }
+    if ( v->num_readers != 0 ) { go_BYE(-1); }
+    if ( v->num_writers != 0 ) { go_BYE(-1); }
+  }
+  //-------------------------------------------
+  if ( v->num_readers > 0 ) { 
+    if ( v->num_writers != 0 ) { go_BYE(-1); }
+  }
+  if ( v->num_writers > 1 ) { go_BYE(-1); }
+  if ( v->num_writers == 1 ) { 
+    if ( v->num_readers != 0 ) { go_BYE(-1); }
+  }
+  //-------------------------------------------
+  if ( v->mmap_addr != NULL ) { 
+    if ( v->mmap_len == 0 ) { go_BYE(-1); }
+    if ( ( v->num_readers == 0 ) && ( v->num_writers == 0 ) )  {
+      go_BYE(-1);
+    }
+  }
+  //-------------------------------------------
+  if ( v->is_dead ) { 
+    char *cptr = (char *)v;
+    for ( uint32_t i = 0; i < sizeof(VEC_REC_TYPE); i++ ) { 
+      if ( *cptr != '\0' ) { go_BYE(-1); }
+    }
+  }
+  //-------------------------------------------
+  // if ( v->num_chunks < 0 ) { go_BYE(-1); }
+  // if ( v->sz_chunks < 0 ) { go_BYE(-1); }
+  if ( v->num_chunks > v->sz_chunks ) { go_BYE(-1); }
+  //-------------------------------------------
+  if ( v->chunks != NULL ) { 
+    if ( v->num_chunks == 0 ) { go_BYE(-1); }
+    if ( v->sz_chunks  == 0 ) { go_BYE(-1); }
+  }
+  //-------------------------------------------
+  if ( v->is_memo ) { 
+    if ( v->chunks != NULL ) { 
+      if ( v->num_chunks != 1 ) { go_BYE(-1); }
+      if ( v->sz_chunks  != 1 ) { go_BYE(-1); }
+    }
+  }
+  else {
+    // if ( v->num_chunks < 0 ) { go_BYE(-1); }
+    // if ( v->sz_chunks < 0 ) { go_BYE(-1); }
+  }
+  //-------------------------------------------
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_check += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_check += delta; }
   return status;
 }
 
@@ -302,12 +304,12 @@ vec_memo(
     )
 {
   int status = 0;
-  if ( ptr_vec->is_eov == true ) { go_BYE(-1); }
   // No changes about is_memo can be made once creation starts
+  if ( ptr_vec->is_eov == true ) { go_BYE(-1); }
   if ( ptr_vec->num_elements > 0 ) { go_BYE(-1); }
   //----------------------------------------
+  // If Vector is to be persisted, it must be memoized 
   if ( ( is_memo == false ) && ( ptr_vec->is_persist == true )) {
-    // If Vector is to be persisted, it must be memoized 
     go_BYE(-1);
   }
   ptr_vec->is_memo = is_memo;
@@ -327,32 +329,30 @@ vec_get1(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_get1++;
-  if ( ptr_vec->num_elements == 0 ) { go_BYE(-1); }
-  if ( idx >= ptr_vec->num_elements ) { go_BYE(-1); }
-  uint32_t chunk_idx = idx / g_chunk_size;
-  if ( chunk_idx >= ptr_vec->num_chunks ) { go_BYE(-1); }
-  uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_idx];
-  chk_chunk_dir_idx(chunk_dir_idx);
+  uint64_t delta = 0, t_start = RDTSC(); n_get1++;
+  uint32_t chunk_dir_idx, in_chunk_idx;
+
+  status = chunk_dir_idx_for_read(ptr_vec, idx, &chunk_dir_idx);
+  cBYE(status);
+  in_chunk_idx = idx % g_chunk_size;
+
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
   status = load_chunk(ptr_chunk, ptr_vec); cBYE(status);
   if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { 
-    uint32_t words_in_chunk = g_chunk_size / (8 * sizeof(uint64_t));
-    uint32_t word_idx = (idx / words_in_chunk) % words_in_chunk;
+    uint32_t word_idx = in_chunk_idx / 64;
     *ptr_data =  ptr_chunk->data + word_idx;
   }
   else {
-    uint32_t in_chunk_idx = idx % g_chunk_size;
     *ptr_data =  ptr_chunk->data + (in_chunk_idx * ptr_vec->field_width);
   }
 
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_get1 += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_get1 += delta; }
   return status;
 }
 
 int
-vec_get_all(
+vec_start_read(
     VEC_REC_TYPE *ptr_vec,
     char **ptr_data,
     uint64_t *ptr_num_elements,
@@ -360,45 +360,39 @@ vec_get_all(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_get_all++;
-  char *data = NULL;
-  if ( ptr_vec->access_mode == 2 ) { go_BYE(-1); }
-  if ( ptr_vec->access_mode == 0 ) { 
-    ptr_vec->access_mode = 1;
-  }
+  uint64_t delta = 0, t_start = RDTSC(); n_get_all++;
+  if ( !ptr_vec->is_eov ) { go_BYE(-1); }
+  if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
+  ptr_vec->num_readers++;
   *ptr_num_elements = ptr_vec->num_elements;
   if ( *ptr_num_elements == 0 ) { go_BYE(-1); }
+  // handle special case where everything fits in one chunk
   if ( ptr_vec->num_chunks == 1 ) { 
-    uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[0];
-    chk_chunk_dir_idx(chunk_dir_idx);
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
-    if ( ptr_chunk->data != NULL ) { 
-      data = ptr_chunk->data;
-    }
-    else {
-      // TODO 
-    }
+    uint32_t chunk_idx = ptr_vec->chunks[0];
+    chk_chunk_idx(chunk_idx);
+    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+    status = load_chunk(ptr_chunk, ptr_vec); cBYE(status);
+    ptr_cmem->data = ptr_chunk->data;
+    ptr_cmem->size = ptr_vec->chunk_size_in_bytes;
   }
   else {
-    // TODO ptr_vec->num_file_readers++; 
     if ( ptr_vec->mmap_addr != NULL ) { 
-      data = ptr_vec->mmap_addr;
+      ptr_cmem->data = ptr_vec->mmap_addr;
+      ptr_cmem->size = ptr_vec->mmap_len;
     }
     else {
       char *X = NULL; size_t nX = 0;
       char file_name[Q_MAX_LEN_FILE_NAME+1];
       status = mk_file_name(ptr_vec->uqid, file_name);
       status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
-      if ( nX != ptr_vec->file_size ) { go_BYE(-1); }
-      data = X;
+      ptr_cmem->data = X;
+      ptr_cmem->size = ptr_vec->file_size;
     }
   }
-  ptr_cmem->data = data;
-  ptr_cmem->size = ptr_vec->file_size;
   strncpy(ptr_cmem->fldtype, ptr_vec->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_cmem->is_foreign = true;
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_get_all += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_get_all += delta; }
   return status;
 }
 
@@ -411,25 +405,51 @@ vec_get_chunk(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_get_chunk++;
-  if ( chunk_num > ptr_vec->num_chunks ) { go_BYE(-1); }
-  uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_num];
-  if ( chunk_dir_idx == 0 ) { go_BYE(-1); }
-  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+  uint64_t delta = 0, t_start = RDTSC(); n_get_chunk++;
+  if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
+  uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
+  chk_chunk_idx(chunk_idx);
+  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
   status = load_chunk(ptr_chunk, ptr_vec); cBYE(status);
 
   ptr_cmem->data = ptr_chunk->data;
-  ptr_cmem->size = ptr_chunk->num_in_chunk * ptr_vec->field_width;
-  memset(ptr_cmem->fldtype, '\0', Q_MAX_LEN_QTYPE_NAME);
+  ptr_cmem->size = ptr_vec->chunk_size_in_bytes;
   strncpy(ptr_cmem->fldtype, ptr_vec->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_cmem->is_foreign = true;
-  status = as_hex(ptr_chunk->uqid, ptr_cmem->cell_name, 
-      Q_MAX_LEN_INTERNAL_NAME); 
-  cBYE(status);
 
-  *ptr_num_in_chunk =  ptr_chunk->num_in_chunk;
+  // set chunk size
+  if ( chunk_num < ptr_vec->num_chunks - 1 ) {
+    *ptr_num_in_chunk = g_chunk_size;
+  }
+  else {
+    *ptr_num_in_chunk = ptr_vec->num_elements % g_chunk_size;
+    if ( *ptr_num_in_chunk == 0 ) { 
+      *ptr_num_in_chunk = g_chunk_size;
+    }
+  }
+  //----------------------------------
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_get_chunk += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_get_chunk += delta; }
+  return status;
+}
+
+int
+vec_end_read(
+    VEC_REC_TYPE *ptr_vec
+    )
+{
+  int status = 0;
+  if ( ptr_vec->mmap_addr  == NULL ) { go_BYE(-1); }
+  if ( ptr_vec->mmap_len   == 0    )  { go_BYE(-1); }
+  if ( ptr_vec->num_readers == 0 ) { go_BYE(-1); }
+
+  ptr_vec->num_readers--;
+  if ( ptr_vec->num_readers == 0 ) { 
+    munmap(ptr_vec->mmap_addr, ptr_vec->mmap_len);
+    ptr_vec->mmap_addr  = NULL;
+    ptr_vec->mmap_len   = 0;
+  }
+BYE:
   return status;
 }
 
@@ -440,36 +460,27 @@ vec_start_write(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_start_write++;
+  uint64_t delta = 0, t_start = RDTSC(); n_start_write++;
   char *X = NULL; size_t nX = 0;
-  if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
-  if ( ptr_vec->access_mode != 0 ) { go_BYE(-1); }
-  if ( ptr_vec->num_chunks == 1 ) { 
-    uint32_t chunk_num = 0;
-    uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_num];
-    if ( chunk_dir_idx == 0 ) { go_BYE(-1); }
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
-    status = load_chunk(ptr_chunk, ptr_vec);  cBYE(status);
-    X  = ptr_chunk->data;
-    nX = ptr_chunk->num_in_chunk;
+  if ( !ptr_vec->is_eov ) { go_BYE(-1); }
+  if ( ptr_vec->num_writers != 0 ) { go_BYE(-1); }
+  if ( ptr_vec->num_readers != 0 ) { go_BYE(-1); }
+  if ( !ptr_vec->is_file  ) { 
+    fprintf(stderr, "TO BE IMPLEMENTED\n"); go_BYE(-1); 
   }
-  else {
-    if ( ptr_vec->is_memo == false ) { go_BYE(-1); }
-    if (( ptr_vec->mmap_addr != NULL ) && ( ptr_vec->mmap_len != 0 ) ) {
-      munmap(ptr_vec->mmap_addr, ptr_vec->mmap_len);
-    }
-    rs_mmap(ptr_vec->file_name, &X, &nX, 1); cBYE(status);
-    ptr_vec->mmap_addr = X;
-    ptr_vec->mmap_len  = nX;
-  }
-  ptr_cmem->data       = X;
+  if ( !ptr_vec->is_file  ) { go_BYE(-1); }
+
+  char file_name[Q_MAX_LEN_FILE_NAME+1];
+  status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
+  rs_mmap(file_name, &X, &nX, 1); cBYE(status);
+  ptr_vec->mmap_addr = ptr_cmem->data     = X;
+  ptr_vec->mmap_len  = ptr_cmem->size     = nX;
   ptr_cmem->is_foreign = true;
-  ptr_cmem->size       = nX;
   strncpy(ptr_cmem->fldtype, ptr_vec->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
 
-  ptr_vec->access_mode = 2; // for write
+  ptr_vec->num_writers = 1;
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_start_write += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_start_write += delta; }
   return status;
 }
 
@@ -479,13 +490,13 @@ vec_end_write(
     )
 {
   int status = 0;
-  if ( ptr_vec->access_mode != 2 ) { go_BYE(-1); }
+  if ( ptr_vec->num_writers != 1 ) { go_BYE(-1); }
   if ( ptr_vec->mmap_addr  == NULL ) { go_BYE(-1); }
   if ( ptr_vec->mmap_len   == 0    )  { go_BYE(-1); }
   munmap(ptr_vec->mmap_addr, ptr_vec->mmap_len);
   ptr_vec->mmap_addr  = NULL;
   ptr_vec->mmap_len   = 0;
-  ptr_vec->access_mode = 0; // not opened for read or write
+  ptr_vec->num_writers = 0; 
 BYE:
   return status;
 }
@@ -498,7 +509,9 @@ vec_persist(
     )
 {
   int status = 0;
-  if ( ptr_vec->is_memo == true ) { go_BYE(-1); }
+  if ( !ptr_vec->is_memo ) { go_BYE(-1); }
+  // no changes once elements are created
+  if ( ptr_vec->num_elements > 0 ) { go_BYE(-1); }
   ptr_vec->is_persist = is_persist;
 BYE:
   return status;
@@ -566,17 +579,20 @@ BYE:
   return status;
 }
 
+
 int
 vec_eov(
     VEC_REC_TYPE *ptr_vec
     )
 {
   int status = 0;
-  if ( ptr_vec->is_eov       == true  ) { 
+  if ( ptr_vec->is_dead ) { go_BYE(-1); }
+  if ( ptr_vec->is_eov ) { 
     // fprintf(stderr, "Already eov, nothing to do\n"); 
     return status; 
   } 
   ptr_vec->is_eov = true;
+BYE:
   return status;
 }
 
@@ -589,35 +605,42 @@ vec_put_chunk(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_put_chunk++;
+  uint64_t delta = 0, t_start = RDTSC(); n_put_chunk++;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( data  == NULL ) { go_BYE(-1); }
-  if ( num_elements > g_chunk_size ) { go_BYE(-1); }
-  if ( size != ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); } // aggressive
+  if ( ptr_vec->is_dead ) { go_BYE(-1); }
+  if ( ptr_vec->is_eov ) { go_BYE(-1); }
+
   if ( num_elements == 0 ) { num_elements = g_chunk_size; }
+  if ( num_elements > g_chunk_size ) { go_BYE(-1); }
+  if ( size > ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); } 
   //-----------------------------------------
   status = init_chunk_dir(ptr_vec); cBYE(status);
+  // is previous chunk full 
   if ( ( ( ptr_vec->num_elements / g_chunk_size ) * g_chunk_size ) !=
            ptr_vec->num_elements ) {
     go_BYE(-1);
   }
-  uint32_t chunk_idx;
-  status = get_chunk_idx(ptr_vec, &chunk_idx); cBYE(status);
-  uint32_t chunk_dir_idx = 0;
-  status = get_chunk_dir_idx(ptr_vec, chunk_idx, &chunk_dir_idx); cBYE(status);
-  chk_chunk_dir_idx(chunk_dir_idx);
-  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
-  if ( ptr_chunk->num_in_chunk != 0 ) { go_BYE(-1); }
+  uint32_t chunk_num;
+  status = get_chunk_num_for_write(ptr_vec, &chunk_num); cBYE(status);
+  uint32_t chunk_idx = 0;
+  status = get_chunk_dir_idx(ptr_vec, chunk_num, &chunk_idx); cBYE(status);
+  chk_chunk_idx(chunk_idx);
+  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
 
-  ptr_chunk->num_in_chunk = num_elements;
-  ptr_vec->num_elements += num_elements;
-  ptr_vec->chunk_dir_idxs[chunk_idx] = chunk_dir_idx;
   memcpy(ptr_chunk->data, data, size);
 
+  ptr_vec->num_elements += num_elements;
+  ptr_vec->num_chunks++;
+  ptr_vec->chunks[chunk_num] = chunk_idx;
+
 BYE:
-  delta = RDTSC()-t_start; if ( delta > 0 ) { t_l_vec_put_chunk += delta; }
+  delta = RDTSC()-t_start; if ( delta > 0 ) { t_put_chunk += delta; }
   return status;
 }
+
+#ifdef LATER
+
 
 int
 vec_put1(
@@ -626,18 +649,18 @@ vec_put1(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_put1++;
+  uint64_t delta = 0, t_start = RDTSC(); n_put1++;
   // START: Do some basic checks
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( data == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov ) { go_BYE(-1); }
-  uint32_t chunk_dir_idx = 0;
+  uint32_t chunk_idx = 0;
   //---------------------------------------
   status = init_chunk_dir(ptr_vec); cBYE(status);
   uint32_t chunk_idx;
   status = get_chunk_idx(ptr_vec, &chunk_idx); cBYE(status);
-  status = get_chunk_dir_idx(ptr_vec, chunk_idx, &chunk_dir_idx); cBYE(status);
-  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+  status = get_chunk_idx(ptr_vec, chunk_idx, &chunk_idx); cBYE(status);
+  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
   if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { 
     // Unfortunately, need to handle B1 as a special case
     uint64_t *in_bdata = (uint64_t *)data;
@@ -651,7 +674,7 @@ vec_put1(
       char buf[buflen];
       memset(buf, '\0', buflen);
       as_hex(mask, buf, buflen);
-      printf("%llu, %llu, %s \n", n_l_vec_put1, *in_bdata, buf);
+      printf("%llu, %llu, %s \n", n_put1, *in_bdata, buf);
     */
     if ( *in_bdata == 0 ) { 
       mask = ~mask;
@@ -672,7 +695,7 @@ vec_put1(
   ptr_chunk->num_in_chunk++;
   ptr_vec->num_elements++;
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_put1 += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_put1 += delta; }
   return status;
 }
 
@@ -684,7 +707,7 @@ vec_flush_mem(
 {
   int status = 0;
   FILE *fp = NULL;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_flush++;
+  uint64_t delta = 0, t_start = RDTSC(); n_flush++;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
   uint32_t lb, ub;
@@ -699,9 +722,9 @@ vec_flush_mem(
   }
   for ( unsigned int i = lb; i < ub; i++ ) { 
     char file_name[Q_MAX_LEN_FILE_NAME+1];
-    uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[i];
-    chk_chunk_dir_idx(chunk_dir_idx);
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+    uint32_t chunk_idx = ptr_vec->chunks[i];
+    chk_chunk_idx(chunk_idx);
+    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
     memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
     status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
     // flush buffer only if backup exists
@@ -711,7 +734,7 @@ vec_flush_mem(
   }
 BYE:
   fclose_if_non_null(fp);
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_flush += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_flush += delta; }
   return status;
 }
 int
@@ -723,7 +746,7 @@ vec_flush_to_disk(
 {
   int status = 0;
   FILE *fp = NULL;
-  uint64_t delta = 0, t_start = RDTSC(); n_l_vec_flush++;
+  uint64_t delta = 0, t_start = RDTSC(); n_flush++;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
   if ( is_flush_all ) { // flush entire vector 
@@ -736,9 +759,9 @@ vec_flush_to_disk(
     ptr_vec->is_file = true;
     for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
       char chnk_file_name[Q_MAX_LEN_FILE_NAME+1];
-      uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[i];
-      chk_chunk_dir_idx(chunk_dir_idx);
-      CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+      uint32_t chunk_idx = ptr_vec->chunks[i];
+      chk_chunk_idx(chunk_idx);
+      CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
       if ( ptr_chunk->data == NULL ) {
         char *X = NULL; size_t nX = 0;
         memset(chnk_file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
@@ -768,9 +791,9 @@ vec_flush_to_disk(
     }
     for ( unsigned int i = lb; i < ub; i++ ) { 
       char file_name[Q_MAX_LEN_FILE_NAME+1];
-      uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[i];
-      chk_chunk_dir_idx(chunk_dir_idx);
-      CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+      uint32_t chunk_idx = ptr_vec->chunks[i];
+      chk_chunk_idx(chunk_idx);
+      CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
       memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
       status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
       remove(file_name);
@@ -782,9 +805,10 @@ vec_flush_to_disk(
   }
 BYE:
   fclose_if_non_null(fp);
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_l_vec_flush += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { t_flush += delta; }
   return status;
 }
+#endif
 
 int
 vec_file_name(
@@ -800,9 +824,9 @@ vec_file_name(
   }
   else if ( chunk_num >= 0 ) {
     if ( (uint32_t)chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
-    uint32_t chunk_dir_idx = ptr_vec->chunk_dir_idxs[chunk_num];
-    if ( chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+    uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
+    chk_chunk_idx(chunk_idx);
+    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
     status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
   }
   else { 

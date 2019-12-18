@@ -40,7 +40,7 @@ get_qtype_and_field_width(
     int * res_field_width
     );
 extern int 
-vec_rehydrate(
+vec_rehydrate_single(
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
     uint32_t field_width,
@@ -48,7 +48,7 @@ vec_rehydrate(
     const char *const file_name
     );
 extern int 
-vec_mrehydrate(
+vec_rehydrate_multi(
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
     uint32_t field_width,
@@ -99,7 +99,7 @@ vec_persist(
     bool is_persist
     );
 extern int
-vec_get_all(
+vec_start_read(
     VEC_REC_TYPE *ptr_vec,
     char **ptr_data,
     uint64_t *ptr_num_elements,
@@ -149,6 +149,10 @@ extern int
 vec_start_write(
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem
+    );
+extern int
+vec_end_read(
+    VEC_REC_TYPE *ptr_vec
     );
 extern int
 vec_end_write(
