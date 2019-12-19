@@ -139,10 +139,13 @@ free_chunk(
   chk_chunk_dir_idx(chunk_dir_idx); 
 
   CHUNK_REC_TYPE *ptr_chunk =  g_chunk_dir+chunk_dir_idx;
+  if ( ptr_chunk->num_readers > 0 ) { go_BYE(-1); }
+  if ( ptr_chunk->num_writers > 0 ) { go_BYE(-1); }
   free_if_non_null(ptr_chunk->data);
   status = delete_file(ptr_chunk->is_file, is_persist, 
       ptr_chunk->uqid);
   cBYE(status);
+  g_n_chunk_dir--;
   memset(ptr_chunk, '\0', sizeof(CHUNK_REC_TYPE));
 BYE:
   return status;
@@ -151,14 +154,18 @@ BYE:
 
 int
 load_chunk(
-    CHUNK_REC_TYPE *ptr_chunk, 
-    VEC_REC_TYPE *ptr_vec
+    const CHUNK_REC_TYPE *const ptr_chunk, 
+    const VEC_REC_TYPE *const ptr_vec,
+    char **ptr_data
     )
 {
   int status = 0;
+  char *data = NULL;
   if ( ptr_chunk->data != NULL ) { return status; } // already loaded
   // double check that this chunk is yours
   if ( ptr_chunk->vec_uqid != ptr_vec->uqid ) { go_BYE(-1); }
+  if ( ptr_chunk->num_readers != 0 ) { go_BYE(-1); }
+  if ( ptr_chunk->num_writers != 0 ) { go_BYE(-1); }
 
   // must be able to backup data from chunk file or vector file 
   if ( ( !ptr_chunk->is_file ) && ( !ptr_vec->is_file ) ) { go_BYE(-1); }
@@ -166,16 +173,16 @@ load_chunk(
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
   char *X = NULL; size_t nX = 0;
-  ptr_chunk->data = l_malloc(ptr_vec->chunk_size_in_bytes);
-  return_if_malloc_failed( ptr_chunk->data);
-  memset(ptr_chunk->data, '\0', ptr_vec->chunk_size_in_bytes);
+  data = l_malloc(ptr_vec->chunk_size_in_bytes);
+  return_if_malloc_failed(data);
+  memset(data, '\0', ptr_vec->chunk_size_in_bytes);
 
   if ( ptr_chunk->is_file ) { // chunk has a backup file 
     status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
     status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
     if ( X == NULL ) { go_BYE(-1); }
     if ( nX > ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); }
-    memcpy( ptr_chunk->data, X, nX);
+    memcpy(data, X, nX);
   }
   else { // vector has a backup file 
     status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
@@ -186,8 +193,9 @@ load_chunk(
     if ( offset >= nX ) { go_BYE(-1); }
     size_t num_to_copy = ptr_vec->chunk_size_in_bytes;
     if ( nX - offset < num_to_copy ) { num_to_copy = nX - offset; }
-    memcpy( ptr_chunk->data, X + offset, num_to_copy);
+    memcpy(data, X + offset, num_to_copy);
   }
+  *ptr_data = data;
   munmap(X, nX);
 BYE:
   return status;
@@ -201,6 +209,10 @@ chk_chunk(
   int status = 0;
   if ( chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+  /* What checks on these guys?
+  if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
+  if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
+  */
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
   status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
@@ -437,7 +449,10 @@ chunk_dir_idx_for_read(
   else {
     chunk_num = idx / g_chunk_size;
   }
-  if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
+  if ( chunk_num >= ptr_vec->num_chunks ) { 
+    printf("hello world\n");
+    go_BYE(-1); 
+  }
 
   *ptr_chunk_dir_idx = ptr_vec->chunks[chunk_num];
   if ( *ptr_chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
@@ -477,8 +492,10 @@ BYE:
 
 int 
 get_chunk_dir_idx(
-    VEC_REC_TYPE *ptr_vec,
+    const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_num,
+    uint32_t *chunks,
+    uint32_t *ptr_num_chunks,
     uint32_t *ptr_chunk_dir_idx
     )
 {
@@ -489,6 +506,7 @@ get_chunk_dir_idx(
     status = allocate_chunk(ptr_vec->chunk_size_in_bytes, chunk_num, 
         ptr_vec->uqid, &chunk_dir_idx); 
     cBYE(status);
+    *ptr_num_chunks = *ptr_num_chunks + 1;
   }
   *ptr_chunk_dir_idx = chunk_dir_idx;
   if ( chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }

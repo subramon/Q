@@ -45,6 +45,7 @@ tests.t1 = function()
     local M = assert(v:me())
     M = ffi.cast("VEC_REC_TYPE *", M)
     assert(M[0].num_elements == i, "failed at " .. i)
+    assert(M[0].num_chunks > 0)
   end
   for i = 1, n do 
     local s = v:get1(i-1)
@@ -52,18 +53,31 @@ tests.t1 = function()
     assert(s:fldtype() == "F4")
     assert(s:to_num() == i)
   end
-  local M, C = assert(v:me())
-  M = ffi.cast("VEC_REC_TYPE *", M)
+  local V, C = assert(v:me())
+  V = ffi.cast("VEC_REC_TYPE *", M)
   assert(type(C) == "table")
+  local chunk_nums = {}
+  local uqids = {}
   for i = 1, #C do
     local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
-    -- dependent on n = 1000000 and chunk_size = 65536
-    if ( i == 16 ) then
-      assert(chunk[0].num_in_chunk == 16960)
-    else 
-      assert(chunk[0].num_in_chunk == 65536)
+    assert(chunk[0].vec_uqid == V[0].uqid)
+    chunk_nums[#chunk_nums+1] = chunk[0].chunk_num
+    uqids[#uqids+1] = chunk[0].uqid
+    -- assert(chunk[0].num_readers == 0) TODO Think about thsi one
+    assert(chunk[0].num_writers == 0)
+  end
+  for k1, v1 in pairs(chunk_nums) do 
+    for k2, v2 in pairs(chunk_nums) do 
+      if ( k1 ~= k2 ) then assert(v1 ~= v2) end
+    end
+    assert( ( v1 >= 0 ) and ( v1 < V[0].num_chunks) )
+  end
+  for k1, v1 in pairs(uqids) do 
+    for k2, v2 in pairs(uqids) do 
+      if ( k1 ~= k2 ) then assert(v1 ~= v2) end
     end
   end
+  --===============================
   -- cVector:print_timers()
   cVector:reset_timers()
   print("Successfully completed test t1")
@@ -229,8 +243,8 @@ tests.t5 = function()
 end
 -- return tests
 tests.t1()
-tests.t2()
 os.exit()
+tests.t2()
 tests.t3()
 tests.t4()
 tests.t5()

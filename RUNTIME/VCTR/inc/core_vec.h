@@ -119,31 +119,27 @@ vec_get_chunk(
     uint32_t *ptr_num_in_chunk
     );
 extern int
+vec_unget_chunk(
+    VEC_REC_TYPE *ptr_vec,
+    uint32_t chunk_num
+    );
+extern int
 is_eq_I4(
     void *X,
     int val
     );
 extern int
 vec_mono(
-    VEC_REC_TYPE *ptr_vec,
+    const VEC_REC_TYPE *const ptr_vec,
+    bool *ptr_is_mono,
     bool is_mono
     );
 extern int
 vec_memo(
-    VEC_REC_TYPE *ptr_vec,
+    const VEC_REC_TYPE *const ptr_vec,
+    bool *ptr_is_memo,
+    bool *ptr_is_mono,
     bool is_memo
-    );
-extern int
-vec_add(
-    VEC_REC_TYPE *ptr_vec,
-    char * const addr, 
-    int32_t len
-    );
-extern int
-vec_add_B1(
-    VEC_REC_TYPE *ptr_vec,
-    char * addr, 
-    int32_t len
     );
 extern int
 vec_start_write(
@@ -197,15 +193,8 @@ vec_delete(
     VEC_REC_TYPE *ptr_vec
     );
 extern int
-vec_flush_mem(
-    VEC_REC_TYPE *ptr_vec,
-    int chunk_idx
-    );
-extern int
-vec_flush_to_disk(
-    VEC_REC_TYPE *ptr_vec,
-    bool is_flush_all,
-    int chunk_idx
+vec_flush_all(
+    VEC_REC_TYPE *ptr_vec
     );
 extern int
 vec_put_chunk(
@@ -224,5 +213,11 @@ vec_file_name(
     VEC_REC_TYPE *ptr_vec,
     int32_t chunk_num,
     char *file_name
+    );
+extern int
+vec_flush_chunk(
+    const VEC_REC_TYPE *const ptr_vec,
+    bool is_free_mem,
+    int chunk_num
     );
 #endif

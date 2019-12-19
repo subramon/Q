@@ -13,6 +13,8 @@ typedef struct _chunk_rec_type {
   bool is_file;  // has chunk been backed up to a file?
   // name of file is derived using mk_file_name()
   char *data; 
+  int num_readers;
+  int num_writers;
 } CHUNK_REC_TYPE;
 
 typedef struct _vec_rec_type {

@@ -19,8 +19,9 @@ free_chunk(
     );
 extern int
 load_chunk(
-      CHUNK_REC_TYPE *ptr_chunk, 
-      VEC_REC_TYPE *ptr_vec
+      const CHUNK_REC_TYPE *const ptr_chunk, 
+      const VEC_REC_TYPE *const ptr_vec,
+      char **ptr_data
       );
 extern int
 chk_chunk(
@@ -92,8 +93,10 @@ init_chunk_dir(
     );
 extern int 
 get_chunk_dir_idx(
-    VEC_REC_TYPE *ptr_vec,
+    const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_idx,
+    uint32_t *chunks,
+    uint32_t *ptr_num_chunks,
     uint32_t *ptr_chunk_dir_idx
     );
 extern int

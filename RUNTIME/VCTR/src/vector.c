@@ -225,7 +225,7 @@ static int l_vec_mono( lua_State *L) {
     is_mono = lua_toboolean(L, 2);
   }
   //------------------------------
-  status = vec_mono(ptr_vec, is_mono); cBYE(status);
+  status = vec_mono(ptr_vec, &(ptr_vec->is_mono), is_mono); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -244,7 +244,8 @@ static int l_vec_memo( lua_State *L) {
     is_memo = lua_toboolean(L, 2);
   }
   //------------------------------
-  status = vec_memo(ptr_vec, is_memo); cBYE(status);
+  status = vec_memo(ptr_vec, &(ptr_vec->is_memo), &(ptr_vec->is_mono), 
+      is_memo); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -597,7 +598,7 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
-static int l_vec_flush_mem( lua_State *L) 
+static int l_vec_flush_chunk( lua_State *L) 
 {
   int status = 0;
   int num_args = lua_gettop(L);
@@ -607,7 +608,8 @@ static int l_vec_flush_mem( lua_State *L)
   if ( num_args == 2 ) {
     chunk_idx = lua_tonumber(L, 2); 
   }
-  status = vec_flush_mem(ptr_vec, chunk_idx); cBYE(status);
+  bool free_mem = false; // TODO Accept as parameter
+  status = vec_flush_chunk(ptr_vec, free_mem, chunk_idx); cBYE(status);
   lua_pushboolean(L, true);
   return 1; 
 BYE:
@@ -615,26 +617,13 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
-static int l_vec_flush_to_disk( lua_State *L) 
+static int l_vec_flush_all( lua_State *L) 
 {
   int status = 0;
   int num_args = lua_gettop(L);
-  bool is_flush_all = true;
-  int chunk_idx  = -1;
   if ( num_args < 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  if ( num_args == 1 ){
-    // nothing to do 
-  }
-  else if ( num_args >= 2 ) {
-    is_flush_all = lua_toboolean(L, 2); 
-    if ( is_flush_all ) { if ( num_args > 2 ) { go_BYE(-1); } }
-    if ( num_args == 3 ) {
-      chunk_idx = lua_tonumber(L, 3); 
-    }
-    if ( num_args > 3 ) { go_BYE(-1); }
-  }
-  status = vec_flush_to_disk(ptr_vec, is_flush_all, chunk_idx); cBYE(status);
+  status = vec_flush_all(ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1; 
 BYE:
@@ -655,8 +644,8 @@ static const struct luaL_Reg vector_methods[] = {
     { "file_name", l_vec_file_name },
     { "file_size", l_vec_file_size },
     { "fldtype", l_vec_fldtype },
-    { "flush_mem", l_vec_flush_mem },
-    { "flush_to_disk", l_vec_flush_to_disk },
+    { "flush_all", l_vec_flush_all },
+    { "flush_chunk", l_vec_flush_chunk },
     { "get1", l_vec_get1 },
     { "get_chunk", l_vec_get_chunk },
     { "get_name", l_vec_get_name },
@@ -694,8 +683,8 @@ static const struct luaL_Reg vector_functions[] = {
     { "file_name", l_vec_file_name },
     { "file_size", l_vec_file_size },
     { "fldtype", l_vec_fldtype },
-    { "flush_mem", l_vec_flush_mem },
-    { "flush_to_disk", l_vec_flush_to_disk },
+    { "flush_all", l_vec_flush_all },
+    { "flush_chunk", l_vec_flush_chunk },
     { "get1", l_vec_get1 },
     { "get_chunk", l_vec_get_chunk },
     { "get_name", l_vec_get_name },
