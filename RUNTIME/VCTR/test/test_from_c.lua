@@ -241,7 +241,7 @@ tests.t5 = function()
   end
   assert(v:eov())
   assert(v:persist())
-  assert(v:flush_to_disk(true))
+  assert(v:flush_all())
   local M, C = assert(v:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
   local S = {}
@@ -252,10 +252,6 @@ tests.t5 = function()
   local sn = string.gsub(tostring(M[0].num_elements), "ULL", "")
   S[#S+1] = "num_elements = " .. sn .. ","
 
-  local file_name = ffi.string(ffi.cast("char *", M[0].file_name))
-  assert(plpath.isfile(file_name), "file not found " .. file_name)
-  S[#S+1] = "file_name = " .. file_name .. ","
-
   S[#S+1] = "}"
   S[#S+1] = ") "
   local s = table.concat(S, " ")
@@ -265,7 +261,6 @@ tests.t5 = function()
   end
   status = v:__gc()
   assert(status)
-  assert(plpath.isfile(file_name))
   print(">>> start deliberate error")
   status = v:delete()
   print("<<<< stop deliberate error")
@@ -274,9 +269,9 @@ tests.t5 = function()
   print("garbage collection starts")
 end
 -- return tests
--- tests.t1()
--- tests.t2()
--- tests.t3()
+tests.t1()
+tests.t2()
+tests.t3()
 tests.t4()
-os.exit()
 tests.t5()
+os.exit()

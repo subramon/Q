@@ -550,9 +550,7 @@ vec_persist(
     )
 {
   int status = 0;
-  if ( !ptr_vec->is_memo ) { go_BYE(-1); }
-  // no changes once elements are created
-  if ( ptr_vec->num_elements > 0 ) { go_BYE(-1); }
+  if ( ptr_vec->is_dead ) { go_BYE(-1); }
   ptr_vec->is_persist = is_persist;
 BYE:
   return status;

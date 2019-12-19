@@ -260,9 +260,12 @@ static int l_vec_persist( lua_State *L) {
   if ( (  lua_gettop(L) != 1 ) && ( lua_gettop(L) != 2 ) ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   //------------------------------
-  bool is_persist = true;
-  if ( lua_isboolean(L, 2) ) { 
-    is_persist = lua_toboolean(L, 2);
+  bool is_persist = true; // default value
+  int num_args = lua_gettop(L);
+  if ( num_args >= 2 )  {
+    if ( lua_isboolean(L, 2) ) { 
+      is_persist = lua_toboolean(L, 2);
+    }
   }
   //------------------------------
   status = vec_persist(ptr_vec, is_persist); cBYE(status);
