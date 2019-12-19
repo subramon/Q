@@ -16,10 +16,20 @@
 
 #include "isdir.h"
 #include "isfile.h"
+#include "rdtsc.h"
 #include "rs_mmap.h"
 
 int luaopen_libcutils (lua_State *L);
 
+//----------------------------------------
+static int l_cutils_rdtsc( 
+    lua_State *L
+    )
+{
+  lua_pushnumber(L, RDTSC());
+  return 1;
+}
+//----------------------------------------
 static int l_cutils_isdir( 
     lua_State *L
     )
@@ -348,6 +358,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },
     { "read",        l_cutils_read },
+    { "rdtsc",       l_cutils_rdtsc },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };
@@ -362,6 +373,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },
     { "read",        l_cutils_read },
+    { "rdtsc",       l_cutils_rdtsc },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };

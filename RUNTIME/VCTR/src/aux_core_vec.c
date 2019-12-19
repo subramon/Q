@@ -178,14 +178,16 @@ load_chunk(
   memset(data, '\0', ptr_vec->chunk_size_in_bytes);
 
   if ( ptr_chunk->is_file ) { // chunk has a backup file 
-    status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
+    status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+    cBYE(status);
     status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
     if ( X == NULL ) { go_BYE(-1); }
     if ( nX > ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); }
     memcpy(data, X, nX);
   }
   else { // vector has a backup file 
-    status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
+    status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+    cBYE(status);
     status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
     if ( X == NULL ) { go_BYE(-1); }
     if ( nX != ptr_vec->file_size ) { go_BYE(-1); }
@@ -203,7 +205,8 @@ BYE:
 
 int
 chk_chunk(
-      uint32_t chunk_dir_idx
+      uint32_t chunk_dir_idx,
+      uint64_t vec_uqid
       )
 {
   int status = 0;
@@ -215,7 +218,8 @@ chk_chunk(
   */
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-  status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
+  status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+  cBYE(status);
   if ( ptr_chunk->uqid == 0 ) { // we expect this to be free 
     if ( ptr_chunk->chunk_num != 0 ) { go_BYE(-1); }
     if ( ptr_chunk->uqid != 0 ) { go_BYE(-1); }
@@ -387,13 +391,15 @@ BYE:
 int
 mk_file_name(
     uint64_t uqid, 
-    char *file_name
+    char *file_name, // [sz]
+    int len_file_name
     )
 {
   int status = 0;
   int len = Q_NUM_HEX_DIGITS_IN_UINT64;
   char buf[len+1];
   memset(buf, '\0', len+1);
+  if ( len_file_name > 0 ) { memset(file_name, '\0', len_file_name+1); }
   status = as_hex(uqid, buf, len); cBYE(status);
   // TODO P3 Need to avoid repeated initialization
   char *data_dir = getenv("Q_DATA_DIR");
@@ -547,7 +553,8 @@ delete_file(
   if ( is_file ) { 
     if ( !is_persist ) { 
       char file_name[Q_MAX_LEN_FILE_NAME+1];
-      status = mk_file_name(uqid, file_name); cBYE(status);
+      status = mk_file_name(uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+      cBYE(status);
       if ( !isfile(file_name) ) { 
         WHEREAMI; /* error. Should not happen  */ 
       }

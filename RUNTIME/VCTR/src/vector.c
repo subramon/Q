@@ -142,7 +142,8 @@ static int l_vec_file_name( lua_State *L) {
   else {
     go_BYE(-1);
   }
-  status = vec_file_name(ptr_vec, chunk_number, file_name); cBYE(status);
+  status = vec_file_name(ptr_vec, chunk_number, file_name, Q_MAX_LEN_FILE_NAME); 
+  cBYE(status);
   lua_pushstring(L, file_name);
   return 1;
 BYE:
@@ -500,6 +501,7 @@ static int l_vec_check( lua_State *L) {
 }
 //----------------------------------------
 static int l_vec_free( lua_State *L) {
+  printf("l_vec_free: Freeing vector\n");
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int status = vec_free(ptr_vec); cBYE(status);
   lua_pushboolean(L, true);

@@ -1,3 +1,4 @@
+local cutils = require 'libcutils'
 local plpath = require 'pl.path'
 local ffi     = require 'ffi'
 local cVector = require 'libvctr'
@@ -30,9 +31,17 @@ tests.t1 = function()
   assert(v:memo(true))
   assert(v:memo(false))
   
-  -- test is currently a bit brittle
-  -- some asserts rely on n=1000000 and chunk_size=65536
+  --=============
+  local chunk_size = 65536 
+  -- above is brittle but here is a test to verify it is in sync
+  -- with g_chunk_size
+  assert(M[0].chunk_size_in_bytes ==
+    (chunk_size * qconsts.qtypes[qtype].width))
+  --=============
+
   local n = 1000000
+  local exp_num_chunks = 0
+  local exp_num_elements = 0
   for i = 1, n do 
     local s = Scalar.new(i, "F4")
     v:put1(s)
@@ -42,10 +51,13 @@ tests.t1 = function()
       assert( not v:memo(true)) 
       print(">>>  stop deliberate error")
     end
+    exp_num_elements = exp_num_elements + 1
     local M = assert(v:me())
     M = ffi.cast("VEC_REC_TYPE *", M)
-    assert(M[0].num_elements == i, "failed at " .. i)
-    assert(M[0].num_chunks > 0)
+    assert(M[0].num_elements == exp_num_elements)
+    exp_num_chunks = math.ceil(exp_num_elements / chunk_size)
+    assert(M[0].num_chunks == exp_num_chunks)
+    assert(v:check())
   end
   for i = 1, n do 
     local s = v:get1(i-1)
@@ -88,8 +100,15 @@ tests.t2 = function()
   local width = qconsts.qtypes[qtype].width
   local v = cVector.new(qtype, width);
   
-  local chunk_size = qconsts.chunk_size
-
+  --=============
+  local M = assert(v:me())
+  M = ffi.cast("VEC_REC_TYPE *", M)
+  local chunk_size = 65536 
+  -- above is brittle but here is a test to verify it is in sync
+  -- with g_chunk_size
+  assert(M[0].chunk_size_in_bytes ==
+    (chunk_size * qconsts.qtypes[qtype].width))
+  --=============
   local num_chunks = 1024
   local D = cmem.new(chunk_size * width, qtype)
   for i = 1, num_chunks do 
@@ -101,7 +120,9 @@ tests.t2 = function()
     v:put_chunk(D)
     local M = assert(v:me())
     M = ffi.cast("VEC_REC_TYPE *", M)
+    assert(M[0].num_chunks == i)
     assert(M[0].num_elements == i*chunk_size, "failed at " .. i)
+    assert(v:check())
   end
   local M = assert(v:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
@@ -149,21 +170,28 @@ end
 -- not put after eov
 -- no flush to disk before eov
 tests.t4 = function()
+  -- check no files in data directory
+  local ddir = os.getenv("Q_DATA_DIR")
+  local pldir = require 'pl.dir'
+  pldir.rmtree(ddir)
+  pldir.makepath(ddir)
+  local x = pldir.getfiles(ddir, "_*.bin")
+  assert( x == nil or #x == 0 )
   local qtype = "F4"
   local width = qconsts.qtypes[qtype].width
   local v = cVector.new(qtype, width);
+  v:persist(false)
   local n = 1000000
   for i = 1, n do 
     local s = Scalar.new(i, "F4")
     v:put1(s)
   end
   print(">>> start deliberate error")
-  local status = v:flush_to_disk()
+  local status = v:flush_all()
   print(status)
   print(">>>  stop deliberate error")
   v:eov()
-  local status =  v:flush_to_disk(false); -- each chunk individually
-  local status =  v:flush_to_disk(true); -- all data as one file 
+  local status =  v:flush_all(); -- each chunk individually
   assert(status)
   assert(plpath.isfile(v:file_name()))
   local s = Scalar.new(0, "F4")
@@ -171,29 +199,33 @@ tests.t4 = function()
   local status = v:put1(s)
   assert(not status)
   print(">>>  stop deliberate error")
-  local num_chunks = n / qconsts.chunk_size ;
-  if ( ( num_chunks % n ) ~= 0 ) then num_chunks = num_chunks + 1 end 
+  local num_chunks = math.ceil(n / qconsts.chunk_size) ;
   for i = 1, num_chunks do 
-    local status = v:flush_to_disk(false, i-1)
+    local status = v:flush_chunk(i-1)
     assert(status, i)
     local filesz = plpath.getsize(v:file_name(i-1))
     assert(filesz == qconsts.chunk_size * width)
   end
-  print(">>> start deliberate error")
-  local status = v:flush_to_disk(false, num_chunks)
-  assert(not status)
-  print(">>>  stop deliberate error")
   -- Now delete all the buffers
-  for i = 1, num_chunks do 
-    local status = v:flush_mem(i-1)
-    assert(status)
-  end
+  -- TODO need to implement delete data, delete file 
 
   -- Now get all the stuff you put in 
   for i = 1, n do 
     local sin = Scalar.new(i, "F4")
     local sout = v:get1(i-1)
     assert(sin == sout)
+  end
+  local x = pldir.getfiles(ddir, "_*.bin")
+  print(#x, num_chunks)
+  assert(#x == num_chunks + 1 ) -- +1 for whole file
+  local r = cutils.rdtsc() % 3
+  print("random choice = ", r)
+  if ( r == 0 ) then v:delete() end 
+  if ( r == 1 ) then v = nil collectgarbage() end 
+  if ( ( r == 0 ) or ( r == 1 ) ) then 
+    local x = pldir.getfiles(ddir, "_*.bin")
+    for k, v in pairs(x) do print(k, v) end 
+    assert(x == nil or #x == 0 )
   end
   print("Successfully completed test t4")
 end
@@ -242,9 +274,9 @@ tests.t5 = function()
   print("garbage collection starts")
 end
 -- return tests
-tests.t1()
-os.exit()
-tests.t2()
-tests.t3()
+-- tests.t1()
+-- tests.t2()
+-- tests.t3()
 tests.t4()
+os.exit()
 tests.t5()

@@ -21,4 +21,5 @@ libcutils.so:   cutils.c \
 	../../../UTILS/src/isdir.c \
 	../../../UTILS/src/isfile.c \
 	../../../UTILS/src/rs_mmap.c \
+	../../../UTILS/src/rdtsc.c \
 		-shared -o libcutils.so

@@ -25,7 +25,8 @@ load_chunk(
       );
 extern int
 chk_chunk(
-      uint32_t chunk_dir_idx
+      uint32_t chunk_dir_idx,
+      uint64_t vec_uqid
       );
 extern int
 allocate_chunk(
@@ -70,7 +71,8 @@ as_hex(
 extern int
 mk_file_name(
     uint64_t uqid, 
-    char *file_name
+    char *file_name,
+    int len_file_name
     );
 extern int
 initial_case(

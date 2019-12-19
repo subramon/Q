@@ -30,7 +30,7 @@ vec_meta(
 {
   int status = 0;
   char file_name[Q_MAX_LEN_FILE_NAME+1];
-  status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
+  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); cBYE(status);
   char  buf[65536]; // TODO P3 Need to avoid static allocation
   memset(buf, '\0', 65536);
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
@@ -94,6 +94,7 @@ vec_free(
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_free++;
+  printf("vec_free: Freeing vector\n");
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
   if ( ptr_vec->is_dead ) {  go_BYE(-1); }
   if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
@@ -193,7 +194,8 @@ vec_rehydrate_single(
   //------------
   // IMPORTANT: File gets renamed
   char new_file_name[Q_MAX_LEN_FILE_NAME+1];
-  status = mk_file_name(ptr_vec->uqid, new_file_name); cBYE(status);
+  status = mk_file_name(ptr_vec->uqid, new_file_name, Q_MAX_LEN_FILE_NAME);
+  cBYE(status);
   status = rename(file_name, new_file_name);
   //--------------------
   ptr_vec->is_eov    = true;
@@ -276,6 +278,18 @@ vec_check(
   else {
     // if ( v->num_chunks < 0 ) { go_BYE(-1); }
     // if ( v->sz_chunks < 0 ) { go_BYE(-1); }
+  }
+  //-------------------------------------------
+  for ( uint32_t i = 0; i < v->num_chunks; i++ ) {
+    status = chk_chunk(v->chunks[i], v->uqid);
+    cBYE(status);
+  }
+  for ( uint32_t i = 0; i  < v->num_chunks; i++ ) {
+    if (  v->chunks[i] == 0 ) { go_BYE(-1); }
+    if (  v->chunks[i] >= g_sz_chunk_dir ) { go_BYE(-1); }
+    for ( uint32_t j = i+1; j  < v->num_chunks; j++ ) {
+      if (  v->chunks[i] == v->chunks[j] ) { go_BYE(-1); }
+    }
   }
   //-------------------------------------------
 BYE:
@@ -384,7 +398,7 @@ vec_start_read(
     if ( ptr_vec->mmap_addr == NULL ) { 
       char *X = NULL; size_t nX = 0;
       char file_name[Q_MAX_LEN_FILE_NAME+1];
-      status = mk_file_name(ptr_vec->uqid, file_name);
+      status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME);
       status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
       ptr_vec->mmap_addr = X;
       ptr_vec->mmap_len  = nX;
@@ -497,7 +511,8 @@ vec_start_write(
   if ( !ptr_vec->is_file  ) { go_BYE(-1); }
 
   char file_name[Q_MAX_LEN_FILE_NAME+1];
-  status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
+  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+  cBYE(status);
   rs_mmap(file_name, &X, &nX, 1); cBYE(status);
   ptr_vec->mmap_addr = ptr_cmem->data     = X;
   ptr_vec->mmap_len  = ptr_cmem->size     = nX;
@@ -659,7 +674,6 @@ vec_put_chunk(
   memcpy(ptr_chunk->data, data, size);
 
   ptr_vec->num_elements += num_elements;
-  ptr_vec->num_chunks++;
   ptr_vec->chunks[chunk_num] = chunk_idx;
 
 BYE:
@@ -753,7 +767,8 @@ vec_flush_chunk(
     chk_chunk_idx(chunk_idx);
     CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
     memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-    status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
+    status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+    cBYE(status);
     if ( !ptr_chunk->is_file ) { 
       // flush buffer only if backup exists
       FILE *fp = fopen(file_name, "wb");
@@ -764,6 +779,7 @@ vec_flush_chunk(
       if ( is_free_mem ) { 
         free_if_non_null(ptr_chunk->data);
       }
+      ptr_chunk->is_file = true;
     }
   }
 BYE:
@@ -784,7 +800,8 @@ vec_flush_all(
   if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-  status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
+  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+  cBYE(status);
   fp = fopen(file_name, "wb");
   return_if_fopen_failed(fp, file_name, "wb");
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
@@ -795,7 +812,8 @@ vec_flush_all(
     if ( ptr_chunk->data == NULL ) {
       char *X = NULL; size_t nX = 0;
       memset(chnk_file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-      status = mk_file_name(ptr_chunk->uqid, chnk_file_name); cBYE(status);
+      status = mk_file_name(ptr_chunk->uqid, chnk_file_name, Q_MAX_LEN_FILE_NAME); 
+      cBYE(status);
       status = rs_mmap(chnk_file_name, &X, &nX, 0); cBYE(status);
       fwrite(X, nX, 1, fp);
       munmap(X, nX);
@@ -817,20 +835,23 @@ int
 vec_file_name(
     VEC_REC_TYPE *ptr_vec,
     int32_t chunk_num,
-    char *file_name
+    char *file_name,
+    int len_file_name
     )
 {
   int status = 0;
 
   if ( chunk_num == -1 ) { // want file name for vector 
-    status = mk_file_name(ptr_vec->uqid, file_name); cBYE(status);
+    status = mk_file_name(ptr_vec->uqid, file_name, len_file_name); 
+    cBYE(status);
   }
   else if ( chunk_num >= 0 ) {
     if ( (uint32_t)chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
     uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
     chk_chunk_idx(chunk_idx);
     CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
-    status = mk_file_name(ptr_chunk->uqid, file_name); cBYE(status);
+    status = mk_file_name(ptr_chunk->uqid, file_name, len_file_name); 
+    cBYE(status);
   }
   else { 
     go_BYE(-1);

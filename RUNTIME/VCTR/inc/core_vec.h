@@ -212,7 +212,8 @@ extern int
 vec_file_name(
     VEC_REC_TYPE *ptr_vec,
     int32_t chunk_num,
-    char *file_name
+    char *file_name,
+    int len_file_name
     );
 extern int
 vec_flush_chunk(
