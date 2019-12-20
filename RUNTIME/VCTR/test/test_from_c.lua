@@ -140,6 +140,19 @@ tests.t2 = function()
     local s = v:get1(i-1)
     assert(s:to_num() == i)
   end
+  for i = 1, num_chunks do 
+    v:unget_chunk(i-1)
+    assert(not status)
+  end
+  print(">>>> start deliberate error")
+  for i = 1, num_chunks do 
+    local x, status, func = pcall(v.unget_chunk, v, i-1)
+    assert(not status)
+    if ( i == 5 ) then break end
+  end
+  print(">>>> stop  deliberate error")
+  status = v:__gc()
+  assert(status)
   print("Successfully completed test t2")
 end
 -- testing put1 and get1 for B1
@@ -191,7 +204,7 @@ tests.t4 = function()
   print(status)
   print(">>>  stop deliberate error")
   v:eov()
-  local status =  v:flush_all(); -- each chunk individually
+  local status =  v:flush_all(); 
   assert(status)
   assert(plpath.isfile(v:file_name()))
   local s = Scalar.new(0, "F4")
@@ -200,21 +213,23 @@ tests.t4 = function()
   assert(not status)
   print(">>>  stop deliberate error")
   local num_chunks = math.ceil(n / qconsts.chunk_size) ;
+  -- now we backup each chunk to file and delete in memory data
   for i = 1, num_chunks do 
-    local status = v:flush_chunk(i-1)
+    local free_mem = true
+    local status = v:flush_chunk(i-1, free_mem)
     assert(status, i)
-    local filesz = plpath.getsize(v:file_name(i-1))
-    assert(filesz == qconsts.chunk_size * width)
+    local file_name = assert(v:file_name(i-1) )
+    local filesz = assert(plpath.getsize(file_name))
+    assert((filesz == qconsts.chunk_size * width), "filesz = " ..filesz)
+    assert(v:check())
   end
-  -- Now delete all the buffers
-  -- TODO need to implement delete data, delete file 
-
   -- Now get all the stuff you put in 
   for i = 1, n do 
     local sin = Scalar.new(i, "F4")
     local sout = v:get1(i-1)
     assert(sin == sout)
   end
+  assert(v:check())
   local x = pldir.getfiles(ddir, "_*.bin")
   print(#x, num_chunks)
   assert(#x == num_chunks + 1 ) -- +1 for whole file
@@ -248,8 +263,10 @@ tests.t5 = function()
   S[#S+1] = "cVector("
   S[#S+1] = "{ "
   S[#S+1] = "has_nulls = false, "
+  local qtype = ffi.string(M[0].fldtype)
   S[#S+1] = "qtype = \"" .. qtype .. "\"," 
-  local sn = string.gsub(tostring(M[0].num_elements), "ULL", "")
+  -- local sn = string.gsub(tostring(M[0].num_elements), "ULL", "")
+  local sn = tonumber(M[0].num_elements)
   S[#S+1] = "num_elements = " .. sn .. ","
 
   S[#S+1] = "}"
@@ -269,9 +286,9 @@ tests.t5 = function()
   print("garbage collection starts")
 end
 -- return tests
-tests.t1()
+-- tests.t1()
 tests.t2()
-tests.t3()
-tests.t4()
-tests.t5()
+-- tests.t3()
+-- tests.t4()
+-- tests.t5()
 os.exit()

@@ -142,8 +142,8 @@ free_chunk(
   if ( ptr_chunk->num_readers > 0 ) { go_BYE(-1); }
   if ( ptr_chunk->num_writers > 0 ) { go_BYE(-1); }
   free_if_non_null(ptr_chunk->data);
-  status = delete_file(ptr_chunk->is_file, is_persist, 
-      ptr_chunk->uqid);
+  status = delete_chunk_file(ptr_chunk, is_persist, &(ptr_chunk->is_file));
+  ptr_chunk->is_file = false;
   cBYE(status);
   g_n_chunk_dir--;
   memset(ptr_chunk, '\0', sizeof(CHUNK_REC_TYPE));
@@ -229,14 +229,13 @@ chk_chunk(
     if ( ptr_chunk->data != NULL ) { go_BYE(-1); }
   }
   else {
-    if ( ptr_chunk->data == NULL ) { go_BYE(-1); }
+    if ( ptr_chunk->data == NULL ) { 
+      if ( !ptr_chunk->is_file ) { go_BYE(-1); }
+    }
     if ( ptr_chunk->is_file ) { 
       if ( !isfile(file_name) ) { 
         printf("hello world\n");
         go_BYE(-1); }
-    }
-    else {
-      if ( isfile(file_name) ) { go_BYE(-1); }
     }
   }
 BYE:
@@ -542,18 +541,19 @@ vec_new_common(
 BYE:
   return status;
 }
+
 int
-delete_file(
-    bool is_file, 
-    bool is_persist, 
-    uint64_t uqid
+delete_vec_file(
+    const VEC_REC_TYPE *ptr_vec,
+    bool *ptr_is_file, 
+    uint64_t *ptr_file_size
     )
 {
   int status = 0;
-  if ( is_file ) { 
-    if ( !is_persist ) { 
+  if ( ptr_vec->is_file ) { 
+    if ( !ptr_vec->is_persist ) {
       char file_name[Q_MAX_LEN_FILE_NAME+1];
-      status = mk_file_name(uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+      status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
       cBYE(status);
       if ( !isfile(file_name) ) { 
         WHEREAMI; /* error. Should not happen  */ 
@@ -562,6 +562,34 @@ delete_file(
       if ( status != 0 ) { 
         WHEREAMI; /* error. Should not happen */ 
       }
+      *ptr_is_file = false;
+      *ptr_file_size = 0;
+    }
+  }
+BYE:
+  return status;
+}
+int
+delete_chunk_file(
+    const CHUNK_REC_TYPE *ptr_chunk,
+    bool is_persist,
+    bool *ptr_is_file
+    )
+{
+  int status = 0;
+  if ( ptr_chunk->is_file ) { 
+    if ( !is_persist ) {
+      char file_name[Q_MAX_LEN_FILE_NAME+1];
+      status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+      cBYE(status);
+      if ( !isfile(file_name) ) { 
+        WHEREAMI; /* error. Should not happen  */ 
+      }
+      status = remove(file_name);
+      if ( status != 0 ) { 
+        WHEREAMI; /* error. Should not happen */ 
+      }
+      *ptr_is_file = false;
     }
   }
 BYE:

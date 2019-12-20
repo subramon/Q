@@ -353,6 +353,23 @@ BYE:
   return 2;
 }
 //------------------------------------------
+static int l_vec_unget_chunk( lua_State *L) 
+{
+  int status = 0;
+
+  if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint32_t chunk_num = luaL_checknumber(L, 2);
+
+  status = vec_unget_chunk(ptr_vec, chunk_num); cBYE(status);
+  lua_pushboolean(L, 1);
+  return 1;
+BYE:
+  lua_pushnil(L); 
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//------------------------------------------
 static int l_vec_get_chunk( lua_State *L) 
 {
   int status = 0;
@@ -504,7 +521,7 @@ static int l_vec_check( lua_State *L) {
 }
 //----------------------------------------
 static int l_vec_free( lua_State *L) {
-  printf("l_vec_free: Freeing vector\n");
+  // printf("l_vec_free: Freeing vector\n");
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int status = vec_free(ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
@@ -607,13 +624,16 @@ static int l_vec_flush_chunk( lua_State *L)
 {
   int status = 0;
   int num_args = lua_gettop(L);
-  if ( ( num_args != 1 ) && ( num_args != 2 ) ) { go_BYE(-1); }
+  if ( ( num_args < 1 ) || ( num_args > 3 ) ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int chunk_idx  = -1;
-  if ( num_args == 2 ) {
+  bool free_mem = false; // default 
+  if ( num_args >= 2 ) {
     chunk_idx = lua_tonumber(L, 2); 
   }
-  bool free_mem = false; // TODO Accept as parameter
+  if ( num_args >= 3 ) {
+    free_mem = lua_toboolean(L, 3); 
+  }
   status = vec_flush_chunk(ptr_vec, free_mem, chunk_idx); cBYE(status);
   lua_pushboolean(L, true);
   return 1; 
@@ -674,6 +694,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "set_name", l_vec_set_name },
     { "start_read", l_vec_start_read },
     { "start_write", l_vec_start_write },
+    { "unget_chunk", l_vec_unget_chunk },
     { NULL,          NULL               },
 };
  
@@ -714,6 +735,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "set_name", l_vec_set_name },
     { "start_read", l_vec_start_read },
     { "start_write", l_vec_start_write },
+    { "unget_chunk", l_vec_unget_chunk },
     { NULL,  NULL         }
   };
 

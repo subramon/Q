@@ -108,8 +108,14 @@ vec_new_common(
     uint32_t field_width
     );
 extern int
-delete_file(
-    bool is_file, 
-    bool is_persist, 
-    uint64_t uqid
+delete_vec_file(
+    const VEC_REC_TYPE *ptr_vec,
+    bool *ptr_is_file, 
+    uint64_t *ptr_file_size
+    );
+extern int
+delete_chunk_file(
+    const CHUNK_REC_TYPE *ptr_chunk,
+    bool is_persist,
+    bool *ptr_is_file
     );

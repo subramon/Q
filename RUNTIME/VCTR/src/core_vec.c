@@ -94,7 +94,7 @@ vec_free(
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_free++;
-  printf("vec_free: Freeing vector\n");
+  // printf("vec_free: Freeing vector\n");
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
   if ( ptr_vec->is_dead ) {  go_BYE(-1); }
   if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
@@ -106,7 +106,7 @@ vec_free(
     ptr_vec->mmap_len  = 0;
   }
   // delete file created for entire access
-  status = delete_file(ptr_vec->is_file, ptr_vec->is_persist, ptr_vec->uqid);
+  status = delete_vec_file(ptr_vec, &(ptr_vec->is_file), &(ptr_vec->file_size));
   cBYE(status);
   //-- Free all chunks that you own
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
@@ -802,6 +802,7 @@ vec_flush_all(
   cBYE(status);
   fp = fopen(file_name, "wb");
   return_if_fopen_failed(fp, file_name, "wb");
+  uint64_t file_size = 0;
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
     char chnk_file_name[Q_MAX_LEN_FILE_NAME+1];
     uint32_t chunk_idx = ptr_vec->chunks[i];
@@ -814,15 +815,18 @@ vec_flush_all(
       cBYE(status);
       status = rs_mmap(chnk_file_name, &X, &nX, 0); cBYE(status);
       fwrite(X, nX, 1, fp);
+      file_size += nX;
       munmap(X, nX);
 
     }
     else {
       fwrite(ptr_chunk->data, ptr_vec->chunk_size_in_bytes, 1, fp);
+      file_size += ptr_vec->chunk_size_in_bytes;
       fflush(fp);
     }
   }
   ptr_vec->is_file = true;
+  ptr_vec->file_size = file_size;
 BYE:
   fclose_if_non_null(fp);
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_flush += delta; }
