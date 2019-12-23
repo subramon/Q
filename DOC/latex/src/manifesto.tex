@@ -26,15 +26,14 @@ likely to burn up the world before it has a chance to finish.
 
 The introduction of map-reduce \cite{mapreduce2004} both legitimized and spawned a plethora
 of distributed solutions to data and compute intensive problems. Unfortunately,
-as McSherry has noted --- ``Big data systems may scale well, but this can often
-be just because they introduce a lot of overhead.''
+this has also spurred indiscriminate use of computing power, often in cases
+where the cost --- both financial and environmental --- are not justified.
 
 This phenomenon has not gone unnoticed. 
 McSherry asks us to account for the COST of scalability in \cite{McSherry2015}.
-From the Kx systems blog, ``The Semiconductor Industry Association (SIA)
+``The Semiconductor Industry Association (SIA)
 recently reported that in roughly 20 years today’s computer chips will require
-more power than global energy production can provide.''
-(\url{https://kx.com/blog/kdb-enables-green-computing/})
+more power than global energy production can provide.'' \cite{kxblog}
 
 Fuel efficiency standards for cars were introduced in 1975. LEED standards for
 buildings were
@@ -48,8 +47,9 @@ Computation is headed down its own opiod crisis without an intervention.
 
 The need for scale-out is not debatable --- if your problem cannot be solved on
 one machine in a reasonable time frame, you need to distribute the workload.
-However, that does not obviate the need to squeeze every last bit out of each
-machine. 
+However, that does not give the lie to the apocryphal quote attributed to Paul
+Barham ``You can have a second computer once you've
+shown you know how to use the first one.”
 
 
 While we are likely to find supporters of ``green computing'' (

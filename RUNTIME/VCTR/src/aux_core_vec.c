@@ -156,11 +156,13 @@ int
 load_chunk(
     const CHUNK_REC_TYPE *const ptr_chunk, 
     const VEC_REC_TYPE *const ptr_vec,
+    uint64_t *ptr_t_last_get,
     char **ptr_data
     )
 {
   int status = 0;
   char *data = NULL;
+  *ptr_t_last_get = RDTSC();
   if ( ptr_chunk->data != NULL ) { return status; } // already loaded
   // double check that this chunk is yours
   if ( ptr_chunk->vec_uqid != ptr_vec->uqid ) { go_BYE(-1); }

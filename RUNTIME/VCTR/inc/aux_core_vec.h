@@ -19,10 +19,11 @@ free_chunk(
     );
 extern int
 load_chunk(
-      const CHUNK_REC_TYPE *const ptr_chunk, 
-      const VEC_REC_TYPE *const ptr_vec,
-      char **ptr_data
-      );
+    const CHUNK_REC_TYPE *const ptr_chunk, 
+    const VEC_REC_TYPE *const ptr_vec,
+    uint64_t *ptr_t_last_get,
+    char **ptr_data
+    );
 extern int
 chk_chunk(
       uint32_t chunk_dir_idx,

@@ -286,8 +286,8 @@ tests.t5 = function()
   print("garbage collection starts")
 end
 -- return tests
--- tests.t1()
-tests.t2()
+tests.t1()
+-- tests.t2()
 -- tests.t3()
 -- tests.t4()
 -- tests.t5()

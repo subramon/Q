@@ -354,7 +354,9 @@ vec_get1(
   in_chunk_idx = idx % g_chunk_size;
 
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
-  status = load_chunk(ptr_chunk, ptr_vec, &(ptr_chunk->data)); cBYE(status);
+  status = load_chunk(ptr_chunk, ptr_vec, &(ptr_chunk->t_last_get), 
+      &(ptr_chunk->data)); 
+  cBYE(status);
   if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { 
     uint32_t word_idx = in_chunk_idx / 64;
     *ptr_data =  ptr_chunk->data + word_idx;
@@ -388,7 +390,8 @@ vec_start_read(
     uint32_t chunk_idx = ptr_vec->chunks[0];
     chk_chunk_idx(chunk_idx);
     CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
-    status = load_chunk(ptr_chunk, ptr_vec, &(ptr_chunk->data)); 
+    status = load_chunk(ptr_chunk, ptr_vec, &(ptr_chunk->t_last_get), 
+        &(ptr_chunk->data)); 
     cBYE(status);
     ptr_chunk->num_readers++;
     ptr_cmem->data = ptr_chunk->data;
@@ -448,7 +451,9 @@ vec_get_chunk(
   uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
   chk_chunk_idx(chunk_idx);
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
-  status = load_chunk(ptr_chunk, ptr_vec, &(ptr_chunk->data)); cBYE(status);
+  status = load_chunk(ptr_chunk, ptr_vec, &(ptr_chunk->t_last_get), 
+      &(ptr_chunk->data)); 
+  cBYE(status);
   if ( ptr_chunk->num_writers  > 0 ) { go_BYE(-1); }
   if ( ptr_chunk->num_readers  < 0 ) { go_BYE(-1); }
   ptr_chunk->num_readers++;

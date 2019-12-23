@@ -9,6 +9,7 @@ typedef struct _chunk_rec_type {
   // (vec_uqid, chunk_num) are pointer back to parent
   uint64_t vec_uqid; // pointer to parent 
   uint32_t chunk_num;   // 0 <= chunk_num <  num_chunks
+  uint64_t t_last_get; // time of last read acces
 
   bool is_file;  // has chunk been backed up to a file?
   // name of file is derived using mk_file_name()
