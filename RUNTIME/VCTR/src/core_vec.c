@@ -22,6 +22,52 @@
 #include "_reset_timers.c"
 #include "_print_timers.c"
 
+typedef struct _vec_uqid_chunk_num_rec_type {
+  uint64_t vec_uqid;
+  uint32_t chunk_num;
+} VEC_UQID_CHUNK_NUM_REC_TYPE;
+
+
+static int
+sortfn2(
+    const void *p1, 
+    const void *p2
+    )
+{
+  uint64_t *r1 = (uint64_t *)p1;
+  uint64_t *r2 = (uint64_t *)p2;
+  if ( *r1 < *r2 ) { 
+    return -1;
+  }
+  else  {
+    return 1;
+  }
+}
+
+static int
+sortfn(
+    const void *p1, 
+    const void *p2
+    )
+{
+  VEC_UQID_CHUNK_NUM_REC_TYPE *r1 = (VEC_UQID_CHUNK_NUM_REC_TYPE *)p1;
+  VEC_UQID_CHUNK_NUM_REC_TYPE *r2 = (VEC_UQID_CHUNK_NUM_REC_TYPE *)p2;
+  if ( r1->vec_uqid < r2->vec_uqid ) { 
+    return -1;
+  }
+  else if ( r1->vec_uqid > r2->vec_uqid ) { 
+    return 1;
+  }
+  else {
+    if ( r1->chunk_num < r2->chunk_num ) { 
+      return -1;
+    }
+    else {
+      return 1;
+    }
+  }
+}
+
 int
 vec_meta(
     VEC_REC_TYPE *ptr_vec,
@@ -67,8 +113,6 @@ vec_meta(
   sprintf(buf, "is_persist = %s, ", ptr_vec->is_persist ? "true" : "false");
   strcat(opbuf, buf);
   sprintf(buf, "is_memo = %s, ", ptr_vec->is_memo ? "true" : "false");
-  strcat(opbuf, buf);
-  sprintf(buf, "is_mono = %s, ", ptr_vec->is_mono ? "true" : "false");
   strcat(opbuf, buf);
   sprintf(buf, "is_eov = %s, ", ptr_vec->is_eov ? "true" : "false");
   strcat(opbuf, buf);
@@ -207,6 +251,63 @@ BYE:
 }
 
 int
+g_check_chunks(
+    CHUNK_REC_TYPE *chunk_dir,
+    uint32_t sz,
+    uint32_t n
+    )
+{
+  int status = 0;
+  if ( n == 0 ) { return status;  }
+  if ( n > sz ) { go_BYE(-1); }
+  VEC_UQID_CHUNK_NUM_REC_TYPE *buf = NULL;
+  uint64_t *buf2 = NULL;
+
+  buf = malloc(n * sizeof(VEC_UQID_CHUNK_NUM_REC_TYPE));
+  return_if_malloc_failed(buf);
+
+  buf2 = malloc(n * sizeof(uint64_t));
+  return_if_malloc_failed(buf2);
+
+  uint32_t alt_n = 0;
+  for ( uint32_t i = 0; i < sz; i++ ) { 
+    if ( chunk_dir[i].uqid == 0 ) { continue;}
+    if ( alt_n >= n ) { go_BYE(-1); }
+    buf[alt_n].vec_uqid = chunk_dir[i].vec_uqid;
+    buf[alt_n].chunk_num = chunk_dir[i].chunk_num;
+    buf2[alt_n] = chunk_dir[i].uqid;
+    alt_n++;
+    // other checks 
+    if ( chunk_dir[i].num_readers < 0 ) { go_BYE(-1); }
+    if ( chunk_dir[i].num_writers < 0 ) { go_BYE(-1); }
+    if ( ( chunk_dir[i].num_readers > 0 ) && 
+         ( chunk_dir[i].num_writers > 0 ) ) { 
+      go_BYE(-1); 
+    }
+  }
+  if ( alt_n != n ) { go_BYE(-1); }
+  // check uniqueness of (vec_uqid, chunk_num);
+  qsort(buf, n, sizeof(VEC_UQID_CHUNK_NUM_REC_TYPE), sortfn);
+  for ( uint32_t i = 1; i < n; i++ )   {
+    if ( ( buf[i].vec_uqid = buf[i-1].vec_uqid ) && 
+         ( buf[i].chunk_num = buf[i-1].chunk_num ) ) {
+      go_BYE(-1);
+    }
+  }
+  // check uniqueness of (uqid);
+  qsort(buf2, n, sizeof(uint64_t), sortfn2);
+  for ( uint32_t i = 1; i < n; i++ )   {
+    if ( buf2[i] == buf2[i-1] ) { go_BYE(-1); }
+  }
+
+BYE:
+  free_if_non_null(buf);
+  free_if_non_null(buf2);
+  return status;
+
+
+}
+int
 vec_check(
     VEC_REC_TYPE *v
     )
@@ -298,25 +399,9 @@ BYE:
 }
 
 int
-vec_mono(
-    const VEC_REC_TYPE *const ptr_vec,
-    bool *ptr_mono,
-    bool is_mono
-    )
-{
-  int status = 0;
-  // Note that all error handling is done at the time memo was set to true
-  if ( !ptr_vec->is_memo ) { go_BYE(-1); }
-  *ptr_mono = is_mono;
-BYE:
-  return status;
-}
-
-int
 vec_memo(
     const VEC_REC_TYPE *const ptr_vec,
     bool *ptr_is_memo,
-    bool *ptr_is_mono,
     bool is_memo
     )
 {
@@ -330,10 +415,6 @@ vec_memo(
     go_BYE(-1);
   }
   *ptr_is_memo = is_memo;
-  // if memo is set on then mono must be set off
-  if ( is_memo ) {
-    *ptr_is_mono = false;
-  }
 BYE:
   return status;
 }
@@ -447,7 +528,8 @@ vec_get_chunk(
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_get_chunk++;
-  if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
+  if ( !ptr_vec->is_memo ) { chunk_num = 0; } // Important
+  if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); } 
   uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
   chk_chunk_idx(chunk_idx);
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
@@ -485,6 +567,7 @@ vec_unget_chunk(
     )
 {
   int status = 0;
+  if ( !ptr_vec->is_memo ) { chunk_num = 0; } // Important
   if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
   uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
@@ -665,12 +748,27 @@ vec_put_chunk(
            ptr_vec->num_elements ) {
     go_BYE(-1);
   }
-  uint32_t chunk_num;
-  status = get_chunk_num_for_write(ptr_vec, &chunk_num); cBYE(status);
-  uint32_t chunk_idx = 0;
-  status = get_chunk_dir_idx(ptr_vec, chunk_num, ptr_vec->chunks, 
-      &(ptr_vec->num_chunks), &chunk_idx); 
-  cBYE(status);
+  uint32_t chunk_num, chunk_idx;
+  if ( !ptr_vec->is_memo ) {
+    if ( ptr_vec->num_chunks == 0 ) { // indicating no allocation done 
+      chunk_num = 0;
+      status = allocate_chunk(ptr_vec->chunk_size_in_bytes, chunk_num, 
+          ptr_vec->uqid, &chunk_idx); 
+      cBYE(status);
+      if ( chunk_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
+      ptr_vec->chunks[chunk_num] = chunk_idx;
+      ptr_vec->num_chunks = 1;
+    }
+    else {
+      chunk_idx = ptr_vec->chunks[chunk_num];
+    }
+  }
+  else {
+    status = get_chunk_num_for_write(ptr_vec, &chunk_num); cBYE(status);
+    status = get_chunk_dir_idx(ptr_vec, chunk_num, ptr_vec->chunks, 
+        &(ptr_vec->num_chunks), &chunk_idx); 
+    cBYE(status);
+  }
   chk_chunk_idx(chunk_idx);
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
 
@@ -862,6 +960,73 @@ vec_file_name(
   }
   else { 
     go_BYE(-1);
+  }
+BYE:
+  return status;
+}
+
+int
+vec_delete_master_file(
+    VEC_REC_TYPE *ptr_vec
+    )
+{
+  int status = 0;
+  if  ( !ptr_vec->is_file ) { go_BYE(-1); }
+  // can delete file only if data can be restored from elsewhere
+  bool can_delete = true;
+  for ( uint32_t i = 0; i < ptr_vec->num_chunks; i++ ) { 
+    uint32_t chunk_idx = ptr_vec->chunks[i];
+    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+    if ( ( ptr_chunk->is_file ) || ( ptr_chunk->data != NULL ) ) {
+      /* all is well */
+    }
+    else {
+      can_delete = false; break;
+    }
+  }
+  if ( can_delete ) {
+    char file_name[Q_MAX_LEN_FILE_NAME+1];
+    status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+    cBYE(status);
+    status = remove(file_name); cBYE(status);
+    ptr_vec->is_file = false;
+    ptr_vec->file_size = 0;
+  }
+  else {
+    go_BYE(-1);
+  }
+BYE:
+  return status;
+}
+int
+vec_delete_chunk_file(
+    VEC_REC_TYPE *ptr_vec,
+    int chunk_num
+    )
+{
+  int status = 0;
+  uint32_t lb, ub;
+  if ( (uint32_t)chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
+  if ( chunk_num < 0 ) { 
+    lb = 0;
+    ub = ptr_vec->num_chunks;
+  }
+  else {
+    lb = chunk_num;
+    ub = lb + 1;
+  }
+  for ( uint32_t i = lb; i < ub; i++ ) { 
+    uint32_t chunk_idx = ptr_vec->chunks[i];
+    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+    if ( !ptr_chunk->is_file ) { continue; }
+    // can delete either if data in memory or msater file exists
+    if  ( ( ptr_vec->is_file ) || ( ptr_chunk->data != NULL ) ) {
+      char file_name[Q_MAX_LEN_FILE_NAME+1];
+      status = mk_file_name(ptr_chunk->uqid,file_name,Q_MAX_LEN_FILE_NAME); 
+      cBYE(status);
+      status = remove(file_name); cBYE(status);
+      ptr_chunk->is_file = false;
+    }
   }
 BYE:
   return status;

@@ -129,16 +129,9 @@ is_eq_I4(
     int val
     );
 extern int
-vec_mono(
-    const VEC_REC_TYPE *const ptr_vec,
-    bool *ptr_is_mono,
-    bool is_mono
-    );
-extern int
 vec_memo(
     const VEC_REC_TYPE *const ptr_vec,
     bool *ptr_is_memo,
-    bool *ptr_is_mono,
     bool is_memo
     );
 extern int
@@ -220,5 +213,28 @@ vec_flush_chunk(
     const VEC_REC_TYPE *const ptr_vec,
     bool is_free_mem,
     int chunk_num
+    );
+extern int
+vec_delete_master_file(
+    VEC_REC_TYPE *ptr_vec
+    );
+extern int
+vec_delete_chunk_file(
+    VEC_REC_TYPE *ptr_vec,
+    int chunk_num
+    );
+extern int
+g_check_chunks(
+    CHUNK_REC_TYPE *chunk_dir,
+    uint32_t sz,
+    uint32_t n
+    );
+extern void 
+g_reset_timers(
+    void
+    );
+extern void 
+g_print_timers(
+    void
     );
 #endif

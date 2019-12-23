@@ -27,13 +27,13 @@ local function gen_timers_code(
   )
   local T = {}
   if ( mode == "reset" ) then 
-    T[#T+1] = "void vec_reset_timers( void) { "
+    T[#T+1] = "void g_reset_timers( void) { "
     for k, v in pairs(timers) do 
       T[#T+1] = "t_" .. v .. " = 0 ; "  ..  "n_" .. v .. " = 0 ; "
     end
     T[#T+1] = "}"
   elseif ( mode == "print" ) then 
-    T[#T+1] = " void vec_print_timers( void) { "
+    T[#T+1] = "void g_print_timers( void) { "
     for k, v in pairs(timers) do 
       T[#T+1] = "fprintf(stdout, \"0,check,%u,%\" PRIu64 \"\\n\", " ..
         "n_" .. v .. ", t_" .. v .. ");"

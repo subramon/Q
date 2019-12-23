@@ -20,14 +20,23 @@
 LUALIB_API void *luaL_testudata (lua_State *L, int ud, const char *tname);
 int luaopen_libvctr (lua_State *L);
 //----------------------------------------
+// TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_reset_timers( lua_State *L) {
-  vec_reset_timers();
+  g_reset_timers();
   lua_pushboolean(L, true);
   return 1;
 }
 //-----------------------------------
+// TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_print_timers( lua_State *L) {
-  vec_print_timers();
+  g_print_timers();
+  lua_pushboolean(L, true);
+  return 1;
+}
+//-----------------------------------
+// TODO P3 Should not be part of vector code, this deals with globals
+static int l_vec_check_chunks( lua_State *L) {
+  g_check_chunks(g_chunk_dir, g_sz_chunk_dir, g_n_chunk_dir);
   lua_pushboolean(L, true);
   return 1;
 }
@@ -194,40 +203,10 @@ BYE:
   return 2;
 }
 //----------------------------------------
-static int l_vec_is_mono( lua_State *L) {
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  lua_pushboolean(L, ptr_vec->is_mono);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//----------------------------------------
 static int l_vec_is_memo( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   lua_pushboolean(L, ptr_vec->is_memo);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//----------------------------------------
-static int l_vec_mono( lua_State *L) {
-  int status = 0;
-  if ( (  lua_gettop(L) != 1 ) && ( lua_gettop(L) != 2 ) ) { go_BYE(-1); }
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  //------------------------------
-  bool is_mono = true;
-  if ( lua_isboolean(L, 2) ) { 
-    is_mono = lua_toboolean(L, 2);
-  }
-  //------------------------------
-  status = vec_mono(ptr_vec, &(ptr_vec->is_mono), is_mono); cBYE(status);
-  lua_pushboolean(L, true);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -245,8 +224,7 @@ static int l_vec_memo( lua_State *L) {
     is_memo = lua_toboolean(L, 2);
   }
   //------------------------------
-  status = vec_memo(ptr_vec, &(ptr_vec->is_memo), &(ptr_vec->is_mono), 
-      is_memo); cBYE(status);
+  status = vec_memo(ptr_vec, &(ptr_vec->is_memo), is_memo); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -548,6 +526,34 @@ BYE:
   return 2;
 }
 //----------------------------------------
+static int l_vec_delete_chunk_file( lua_State *L) {
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  int num_args = lua_gettop(L);
+  int chunk_num = -1; // default is to delete for all chunks
+  if ( num_args == 2 ) { 
+    chunk_num = lua_tonumber(L, 2);
+  }
+  int status = vec_delete_chunk_file(ptr_vec, chunk_num); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
+//----------------------------------------
+static int l_vec_delete_master_file( lua_State *L) {
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  int status = vec_delete_master_file(ptr_vec); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_vec_new( lua_State *L) 
 {
   int status = 0;
@@ -660,8 +666,11 @@ BYE:
 static const struct luaL_Reg vector_methods[] = {
     { "__gc",    l_vec_free   },
     { "check", l_vec_check },
+    { "check_chunks", l_vec_check_chunks }, 
     { "chunk_size_in_bytes", l_vec_chunk_size_in_bytes },
     { "delete", l_vec_delete },
+    { "delete_chunk_file", l_vec_delete_chunk_file },
+    { "delete_master_file", l_vec_delete_master_file },
     { "eov", l_vec_eov },
     { "end_read", l_vec_end_read },
     { "end_write", l_vec_end_write },
@@ -676,11 +685,9 @@ static const struct luaL_Reg vector_methods[] = {
     { "get_name", l_vec_get_name },
     { "is_eov", l_vec_is_eov },
     { "is_memo", l_vec_is_memo },
-    { "is_mono", l_vec_is_mono },
     { "me", l_vec_me },
     { "meta", l_vec_meta },
     { "memo", l_vec_memo },
-    { "mono", l_vec_mono },
     { "num_elements", l_vec_num_elements },
     { "num_chunks", l_vec_num_chunks },
     { "persist", l_vec_persist },
@@ -702,6 +709,8 @@ static const struct luaL_Reg vector_functions[] = {
     { "check", l_vec_check },
     { "chunk_size_in_bytes", l_vec_chunk_size_in_bytes },
     { "delete", l_vec_delete },
+    { "delete_chunk_file", l_vec_delete_chunk_file },
+    { "delete_master_file", l_vec_delete_master_file },
     { "end_read", l_vec_end_read },
     { "end_write", l_vec_end_write },
     { "eov", l_vec_eov },
@@ -716,11 +725,9 @@ static const struct luaL_Reg vector_functions[] = {
     { "get_name", l_vec_get_name },
     { "is_eov", l_vec_is_eov },
     { "is_memo", l_vec_is_memo },
-    { "is_mono", l_vec_is_mono },
     { "me", l_vec_me },
     { "memo", l_vec_memo },
     { "meta", l_vec_meta },
-    { "mono", l_vec_mono },
     { "new", l_vec_new },
     { "no_memcpy", l_vec_no_memcpy },
     { "num_elements", l_vec_num_elements },

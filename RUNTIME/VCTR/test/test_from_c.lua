@@ -58,6 +58,9 @@ tests.t1 = function()
     exp_num_chunks = math.ceil(exp_num_elements / chunk_size)
     assert(M[0].num_chunks == exp_num_chunks)
     assert(v:check())
+    if ( ( i % 1000 ) == 0 ) then 
+      assert(v.check_chunks())
+    end
   end
   for i = 1, n do 
     local s = v:get1(i-1)
@@ -93,67 +96,6 @@ tests.t1 = function()
   -- cVector:print_timers()
   cVector:reset_timers()
   print("Successfully completed test t1")
-end
--- testing put_chunk and get_chunk
-tests.t2 = function()
-  local qtype = "I4"
-  local width = qconsts.qtypes[qtype].width
-  local v = cVector.new(qtype, width);
-  
-  --=============
-  local M = assert(v:me())
-  M = ffi.cast("VEC_REC_TYPE *", M)
-  local chunk_size = 65536 
-  -- above is brittle but here is a test to verify it is in sync
-  -- with g_chunk_size
-  assert(M[0].chunk_size_in_bytes ==
-    (chunk_size * qconsts.qtypes[qtype].width))
-  --=============
-  local num_chunks = 1024
-  local D = cmem.new(chunk_size * width, qtype)
-  for i = 1, num_chunks do 
-    local Dptr = ffi.cast("int32_t *", get_ptr(D, qtype))
-    local offset = (i-1) * chunk_size
-    for i = 1, chunk_size do
-      Dptr[i-1] = offset + i
-    end
-    v:put_chunk(D)
-    local M = assert(v:me())
-    M = ffi.cast("VEC_REC_TYPE *", M)
-    assert(M[0].num_chunks == i)
-    assert(M[0].num_elements == i*chunk_size, "failed at " .. i)
-    assert(v:check())
-  end
-  local M = assert(v:me())
-  M = ffi.cast("VEC_REC_TYPE *", M)
-  local num_elements = tonumber(M[0].num_elements)
-  -- print("num_elements = ", M[0].num_elements)
-  -- print("num_chunks = ",   M[0].num_chunks)
-  assert(M[0].num_chunks == num_chunks)
-  
-  for i = 1, num_chunks do 
-    local s = v:get_chunk(i-1)
-    assert(type(s) == "CMEM")
-    assert(s:size() == chunk_size * width)
-  end
-  for i = 1, num_elements do 
-    local s = v:get1(i-1)
-    assert(s:to_num() == i)
-  end
-  for i = 1, num_chunks do 
-    v:unget_chunk(i-1)
-    assert(not status)
-  end
-  print(">>>> start deliberate error")
-  for i = 1, num_chunks do 
-    local x, status, func = pcall(v.unget_chunk, v, i-1)
-    assert(not status)
-    if ( i == 5 ) then break end
-  end
-  print(">>>> stop  deliberate error")
-  status = v:__gc()
-  assert(status)
-  print("Successfully completed test t2")
 end
 -- testing put1 and get1 for B1
 tests.t3 = function()
@@ -222,6 +164,7 @@ tests.t4 = function()
     local filesz = assert(plpath.getsize(file_name))
     assert((filesz == qconsts.chunk_size * width), "filesz = " ..filesz)
     assert(v:check())
+    assert(v.check_chunks())
   end
   -- Now get all the stuff you put in 
   for i = 1, n do 
@@ -230,6 +173,7 @@ tests.t4 = function()
     assert(sin == sout)
   end
   assert(v:check())
+  assert(v.check_chunks())
   local x = pldir.getfiles(ddir, "_*.bin")
   print(#x, num_chunks)
   assert(#x == num_chunks + 1 ) -- +1 for whole file
@@ -285,10 +229,120 @@ tests.t5 = function()
   print("Successfully completed test t5")
   print("garbage collection starts")
 end
+-- testing flushing files 
+tests.t6 = function()
+  local qtype = "F4"
+  local width = qconsts.qtypes[qtype].width
+  local v = cVector.new(qtype, width);
+  local M = v:me()
+  M = ffi.cast("VEC_REC_TYPE *", M)
+  local n = M[0].chunk_size_in_bytes* 4
+  --=============
+  for i = 1, n do 
+    local s = Scalar.new(i, "F4") v:put1(s)
+  end
+  --=============
+  -- cannot flush until eov 
+  print(">>> start deliberate error")
+  local x, status = pcall(v.flush_all, v)
+  assert(not status) 
+  print(">>>  stop deliberate error")
+  -- master file not created until requested
+  v:eov()
+  assert(not plpath.isfile(v:file_name()))
+  -- create master file, then delete it and verify its gone
+  assert(v:flush_all())
+  local M = v:me()
+  M = ffi.cast("VEC_REC_TYPE *", M)
+  assert(M[0].is_file == true)
+  assert(plpath.isfile(v:file_name()))
+  --==================
+  assert(v:delete_master_file())
+  assert(not plpath.isfile(v:file_name()))
+  -- check isfile == false
+  local M = v:me()
+  M = ffi.cast("VEC_REC_TYPE *", M)
+  assert(M[0].is_file == false)
+  --============ Now check that chunks do not have files 
+  local V, C = assert(v:me())
+  for i = 1, #C do
+    local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
+    assert(not chunk[0].is_file)
+  end
+  --=============================
+  --= flush all chunks and then verify that they have files 
+  for i = 1, #C do
+    v:flush_chunk(i-1)
+  end
+  local V, C = assert(v:me())
+  for i = 1, #C do
+    local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
+    assert(chunk[0].is_file)
+  end
+  --=============================
+  --= delete chunk files and then verify that are gone
+  for i = 1, #C do
+    v:delete_chunk_file(i-1)
+  end
+  local V, C = assert(v:me())
+  for i = 1, #C do
+    local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
+    assert(not chunk[0].is_file)
+  end
+  assert(v:check())
+  assert(v.check_chunks())
+  --=============================
+  print("Successfully completed test t6")
+end
+-- testing number of chunks == 1 when is_memo = true 
+tests.t7 = function()
+  local qtype = "I4"
+  local width = qconsts.qtypes[qtype].width
+  local v = cVector.new(qtype, width)
+  v:memo(false) -- set memo to false
+  assert(v:is_memo() == false)
+  --=============
+  local M = assert(v:me())
+  M = ffi.cast("VEC_REC_TYPE *", M)
+  local chunk_size = math.ceil(M[0].chunk_size_in_bytes / 
+    qconsts.qtypes[qtype].width)
+  assert(chunk_size == math.floor(M[0].chunk_size_in_bytes / 
+    qconsts.qtypes[qtype].width))
+  --=============
+  local num_chunks = 1024
+  local D = cmem.new(chunk_size * width, qtype)
+  for i = 1, num_chunks do 
+    -- assemble some known data 
+    local Dptr = ffi.cast("int32_t *", get_ptr(D, qtype))
+    local offset = (i-1) * chunk_size
+    for i = 1, chunk_size do
+      Dptr[i-1] = offset + i
+    end
+    -- put a chunk of known data 
+    v:put_chunk(D)
+    local M = assert(v:me())
+    M = ffi.cast("VEC_REC_TYPE *", M)
+    assert(M[0].num_chunks == 1)
+    assert(M[0].num_elements == i*chunk_size, "failed at " .. i)
+    assert(v:check())
+    assert(v.check_chunks())
+    
+    local chk_D, nD = v:get_chunk(i-1)
+    local chk_Dptr = ffi.cast("int32_t *", get_ptr(chk_D, qtype))
+    assert(nD == chunk_size)
+    for i = 1, chunk_size do
+      assert(chk_Dptr[i-1] == Dptr[i-1])
+    end
+    v:unget_chunk(i-1)
+  end
+  print("Successfully completed test t7")
+end
 -- return tests
-tests.t1()
+-- tests.t1()
 -- tests.t2()
 -- tests.t3()
 -- tests.t4()
 -- tests.t5()
+-- tests.t6()
+tests.t7()
 os.exit()
