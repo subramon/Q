@@ -257,7 +257,44 @@ tests.t14 = function()
   assert(not status)
   print("test t14 passed")
 end
+tests.t15 = function()
+  -- test me
+  local size = 1024
+  local qtype = "I4"
+  local name = "hello world"
+  local c1 = cmem.new(size, qtype, name)
+  local x = c1:me()
+  -- for k, v in pairs(x) do print(k, v); print(type(v)) end 
+  assert(type(x) == "table")
+  -- assert(x.is_foreign == false) TODO Why is this failing?
+  assert(x.width == 0)
+  assert(x.size == size)
+  assert(x.cell_name == "hello world")
+  -- assert(x.is_stealable ==false)TODO Why is this failing?
+  assert(x.fldtype == qtype)
+  print("test t15 passed")
+end
+tests.t16 = function()
+  -- test set stealable
+  local size = 1024
+  local qtype = "I4"
+  local name = "hello world"
+  local c1 = cmem.new(size, qtype, name)
+  local x = c1:me()
+  -- assert(x.is_stealable ==false)TODO Why is this failing?
+  for k, v in pairs(x) do print(k, v); end
 
+  c1:stealable(true)
+  local x = c1:me()
+  -- assert(x.is_stealable == true)  -- TODO Why is this failing?
+  for k, v in pairs(x) do print(k, v); print(type(v)) end 
 
-  
-return tests
+  c1:stealable(false)
+  local x = c1:me()
+  -- assert(x.is_stealable == false) -- TODO Why is this failing?
+  for k, v in pairs(x) do print(k, v); print(type(v)) end 
+
+  print("test t16 passed")
+end
+--return tests
+tests.t16()

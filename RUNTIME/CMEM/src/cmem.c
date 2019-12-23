@@ -424,6 +424,54 @@ static int l_cmem_is_foreign( lua_State *L) {
   lua_pushboolean(L, ptr_cmem->is_foreign);
   return 1;
 }
+
+static int l_cmem_me( lua_State *L) {
+  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
+  // Now return meta-data as table 
+  lua_newtable(L);
+  // size
+  lua_pushstring(L, "size");
+  lua_pushnumber(L, ptr_cmem->size);
+  lua_settable(L, -3);
+  // width
+  lua_pushstring(L, "width");
+  lua_pushnumber(L, ptr_cmem->width);
+  lua_settable(L, -3);
+  // is_foreign 
+  lua_pushstring(L, "is_foreign ");
+  lua_pushboolean(L, ptr_cmem->is_foreign );
+  lua_settable(L, -3);
+  // is_stealable 
+  lua_pushstring(L, "is_stealable ");
+  lua_pushboolean(L, ptr_cmem->is_stealable );
+  lua_settable(L, -3);
+  // fldtype
+  lua_pushstring(L, "fldtype");
+  lua_pushstring(L, ptr_cmem->fldtype );
+  lua_settable(L, -3);
+  // cell_name
+  lua_pushstring(L, "cell_name");
+  lua_pushstring(L, ptr_cmem->cell_name );
+  lua_settable(L, -3);
+  return 1; 
+}
+
+static int l_cmem_stealable( lua_State *L) 
+{
+  CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
+  bool stealable = false;
+  int num_args = lua_gettop(L);
+  if ( num_args == 2 ) { 
+    stealable = lua_toboolean(L, 2);
+  }
+  ptr_cmem->is_stealable = stealable;
+  lua_pushboolean(L, true);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
 static int l_cmem_free( lua_State *L) 
 {
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
@@ -685,6 +733,7 @@ static const struct luaL_Reg cmem_methods[] = {
     { "dupe",       l_cmem_dupe }, // only for testing
     { "fldtype",    l_cmem_fldtype },
     { "is_foreign", l_cmem_is_foreign },
+    { "me",         l_cmem_me },
     { "name",       l_cmem_name },
     { "new",        l_cmem_new },
     { "prbuf",      l_cmem_prbuf },
@@ -695,6 +744,7 @@ static const struct luaL_Reg cmem_methods[] = {
     { "set_width",  l_cmem_set_width },
     { "seq",        l_cmem_seq               },
     { "size",       l_cmem_size },
+    { "stealable",  l_cmem_stealable },
     { "to_str",     l_cmem_to_str },
     { "width",      l_cmem_get_width },
     { "zero",       l_cmem_zero },
@@ -706,6 +756,7 @@ static const struct luaL_Reg cmem_functions[] = {
     { "dupe",       l_cmem_dupe }, // only for testing
     { "fldtype",    l_cmem_fldtype },
     { "is_foreign", l_cmem_is_foreign },
+    { "me",         l_cmem_me },
     { "name",       l_cmem_name },
     { "new",        l_cmem_new },
     { "prbuf",      l_cmem_prbuf },
@@ -716,6 +767,7 @@ static const struct luaL_Reg cmem_functions[] = {
     { "set_width",  l_cmem_set_width },
     { "seq",        l_cmem_seq               },
     { "size",       l_cmem_size },
+    { "stealable",  l_cmem_stealable },
     { "to_str",     l_cmem_to_str },
     { "width",      l_cmem_get_width },
     { "zero",       l_cmem_zero },
