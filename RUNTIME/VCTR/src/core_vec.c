@@ -140,7 +140,10 @@ vec_free(
   uint64_t delta = 0, t_start = RDTSC(); n_free++;
   // printf("vec_free: Freeing vector\n");
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
-  if ( ptr_vec->is_dead ) {  go_BYE(-1); }
+  if ( ptr_vec->is_dead ) {  
+    fprintf(stderr, "Freeing Vector that is already dead\n");
+    return status; // TODO Should this be an error?
+  }
   if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
   if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
   // If file has been opened, close it and delete it 
@@ -557,6 +560,65 @@ vec_get_chunk(
   }
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_get_chunk += delta; }
+  return status;
+}
+//------------------------------------------------
+int
+vec_shutdown(
+    VEC_REC_TYPE *ptr_vec,
+    char **ptr_str_to_reincarnate
+    )
+{
+  int status = 0;
+  *ptr_str_to_reincarnate = NULL;
+
+  if ( !ptr_vec->is_memo )  {
+    fprintf(stderr, "TO BE IMPLEMEMTED\n"); go_BYE(-1); 
+  }
+
+  if ( !ptr_vec->is_eov )  {
+    status = vec_delete(ptr_vec); cBYE(status);
+    return status;
+  }
+  // check if anybody is using it 
+  if ( ( ptr_vec->num_readers > 0 ) || ( ptr_vec->num_writers > 0 ) ) {
+    go_BYE(-1);
+  }
+  for ( uint32_t i = 0; i < ptr_vec->num_chunks; i++ ) { 
+    uint32_t chunk_idx = ptr_vec->chunks[i];
+    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+    if ( ( ptr_chunk->num_readers > 0 )||( ptr_chunk->num_writers > 0 ) ) {
+      go_BYE(-1);
+    }
+  }
+  //------------------------------------------
+  status = vec_backup(ptr_vec); cBYE(status);
+  if ( ptr_vec->is_persist ) { 
+    status = reincarnate(ptr_vec, ptr_str_to_reincarnate);  cBYE(status);
+  }
+  status = vec_free(ptr_vec); cBYE(status);
+BYE:
+  return status;
+}
+//------------------------------------------------
+int
+vec_backup(
+    VEC_REC_TYPE *ptr_vec
+    )
+{
+  int status = 0;
+  if ( !ptr_vec->is_eov  ) { go_BYE(-1); }
+  if ( !ptr_vec->is_memo ) { 
+  }
+  else {
+    if ( ptr_vec->is_file ) { 
+      return status; 
+    }
+    else {
+      status = vec_flush_chunk(ptr_vec, false, -1);
+    }
+  }
+BYE:
   return status;
 }
 //------------------------------------------------

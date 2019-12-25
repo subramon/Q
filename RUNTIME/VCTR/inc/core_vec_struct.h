@@ -22,7 +22,7 @@ typedef struct _vec_rec_type {
   char fldtype[Q_MAX_LEN_QTYPE_NAME+1]; // set by vec_new()
   uint32_t field_width; // set by vec_new()
   uint32_t chunk_size_in_bytes; // set by vec_new()
-  uint64_t uqid; // unique identifier across all vectors. Set by vec_new() CHECK TODO
+  uint64_t uqid; // unique identifier across all vectors. Set by vec_new() 
 
   uint64_t num_elements; // starts at 0, increases monotonically
   char name[Q_MAX_LEN_VEC_NAME+1]; 

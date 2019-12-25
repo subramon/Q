@@ -120,3 +120,8 @@ delete_chunk_file(
     bool is_persist,
     bool *ptr_is_file
     );
+extern int
+reincarnate(
+    VEC_REC_TYPE *ptr_v,
+    char **ptr_x
+    );

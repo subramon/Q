@@ -56,6 +56,22 @@ BYE:
   return 2;
 }
 //-----------------------------------
+static int l_vec_shutdown( lua_State *L) {
+  int status = 0;
+  char *X = NULL;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vec_shutdown(ptr_vec, &X); 
+  if ( status < 0 ) { free_if_non_null(X); } cBYE(status);
+  lua_pushstring(L, X);
+  free_if_non_null(X); 
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------------------
 static int l_vec_set_name( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
@@ -484,6 +500,17 @@ static int l_vec_meta( lua_State *L) {
   }
 }
 //----------------------------------------
+static int l_vec_backup( lua_State *L) {
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  int status = vec_backup(ptr_vec); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_vec_check( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int status = vec_check(ptr_vec);
@@ -665,6 +692,7 @@ BYE:
 //-----------------------
 static const struct luaL_Reg vector_methods[] = {
     { "__gc",    l_vec_free   },
+    { "backup", l_vec_backup },
     { "check", l_vec_check },
     { "check_chunks", l_vec_check_chunks }, 
     { "chunk_size_in_bytes", l_vec_chunk_size_in_bytes },
@@ -699,6 +727,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "rehydrate_single", l_vec_rehydrate_single },
     { "reset_timers", l_vec_reset_timers },
     { "set_name", l_vec_set_name },
+    { "shutdown", l_vec_shutdown },
     { "start_read", l_vec_start_read },
     { "start_write", l_vec_start_write },
     { "unget_chunk", l_vec_unget_chunk },
@@ -706,6 +735,7 @@ static const struct luaL_Reg vector_methods[] = {
 };
  
 static const struct luaL_Reg vector_functions[] = {
+    { "backup", l_vec_backup },
     { "check", l_vec_check },
     { "chunk_size_in_bytes", l_vec_chunk_size_in_bytes },
     { "delete", l_vec_delete },
@@ -740,6 +770,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "rehydrate_single", l_vec_rehydrate_single },
     { "reset_timers", l_vec_reset_timers },
     { "set_name", l_vec_set_name },
+    { "shutdown", l_vec_shutdown },
     { "start_read", l_vec_start_read },
     { "start_write", l_vec_start_write },
     { "unget_chunk", l_vec_unget_chunk },

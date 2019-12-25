@@ -475,7 +475,7 @@ get_chunk_num_for_write(
 {
   int status = 0;
   uint32_t *new = NULL;
-  if ( ptr_vec->is_memo ) { *ptr_chunk_num = 0; return status; }
+  if ( !ptr_vec->is_memo ) { *ptr_chunk_num = 0; return status; }
   // let us say chunk size = 64 and num elements = 63
   // this means that when you want to write, you write to chunk 0
   // let us say chunk size = 64 and num elements = 64
@@ -540,6 +540,7 @@ vec_new_common(
   ptr_vec->field_width = field_width;
   ptr_vec->chunk_size_in_bytes = get_chunk_size_in_bytes(field_width, field_type);
   ptr_vec->uqid = RDTSC();
+  ptr_vec->is_memo = true;
 BYE:
   return status;
 }
@@ -597,3 +598,55 @@ delete_chunk_file(
 BYE:
   return status;
 }
+
+int
+reincarnate(
+    VEC_REC_TYPE *ptr_v,
+    char **ptr_x
+    )
+{
+  int status = 0;
+  char buf[65536]; // TODO P3 Undo this hard code; 
+  char *x = NULL;
+  x = malloc(65536); // TODO P3 Undo this hard code
+  memset(x, '\0', 65536);
+  strcpy(x, " return { ");
+
+  sprintf(buf, "fldtype = \"%s\", ", ptr_v->fldtype); 
+  strcat(x, buf);
+
+  sprintf(buf, "num_elements = %" PRIu64 ", ", ptr_v->num_elements); 
+  strcat(x, buf);
+
+  sprintf(buf, "field_width = %u, ", ptr_v->field_width); 
+  strcat(x, buf);
+
+  if ( ptr_v->is_file ) { 
+    char file_name[Q_MAX_LEN_FILE_NAME+1];
+    status = mk_file_name(ptr_v->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+    cBYE(status);
+    sprintf(buf, "file_name = \"%s\", ",  file_name);
+    strcat(x, buf);
+  }
+  else {
+    strcat(x, "file_names = { ");
+    for ( unsigned int i = 0; i < ptr_v->num_chunks; i++ ) { 
+      char file_name[Q_MAX_LEN_FILE_NAME+1];
+      uint32_t chunk_idx = ptr_v->chunks[i];
+      chk_chunk_dir_idx(chunk_idx);
+      CHUNK_REC_TYPE *ptr_c = g_chunk_dir + chunk_idx;
+      if ( !ptr_c->is_file ) { go_BYE(-1); }
+      status = mk_file_name(ptr_c->uqid,file_name,Q_MAX_LEN_FILE_NAME); 
+      cBYE(status);
+      sprintf(buf, "\"%s\", ",  file_name);
+      strcat(x, buf);
+    }
+    strcat(x, " }, ");
+  }
+  strcat(x, " }  ");
+  *ptr_x = x;
+BYE:
+  if ( status < 0 ) { free_if_non_null(x); }
+  return status;
+}
+

@@ -237,4 +237,13 @@ extern void
 g_print_timers(
     void
     );
+extern int
+vec_backup(
+    VEC_REC_TYPE *ptr_vec
+    );
+extern int
+vec_shutdown(
+    VEC_REC_TYPE *ptr_vec,
+    char **ptr_x
+    );
 #endif
