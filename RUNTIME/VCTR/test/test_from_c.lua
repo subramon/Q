@@ -13,6 +13,12 @@ ffi.cdef(hdrs)
 -- following only because we are testing. Normally, we get this from q_core
 local hdrs = get_func_decl("../../CMEM/inc/cmem_struct.h", " -I../../../UTILS/inc/")
 ffi.cdef(hdrs)
+
+--=================================
+local chunk_size = 65536
+local params = { chunk_size = chunk_size, sz_chunk_dir = 4096, 
+    data_dir = qconsts.Q_DATA_DIR }
+assert(cVector.init_globals(params))
 --=================================
 local tests = {}
 -- testing put1 and get1 
@@ -28,20 +34,17 @@ tests.t1 = function()
   local M = assert(v:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
   assert(M[0].num_elements == 0)
-  assert(v:memo(true))
+  assert(v:is_memo() == true)
   assert(v:memo(false))
-  
-  --=============
-  local chunk_size = 65536 
-  -- above is brittle but here is a test to verify it is in sync
-  -- with g_chunk_size
-  assert(M[0].chunk_size_in_bytes ==
-    (chunk_size * qconsts.qtypes[qtype].width))
+  assert(v:memo(true))
+  assert(v:is_memo() == true)
+  assert(M[0].chunk_size_in_bytes == (chunk_size * width))
   --=============
 
   local n = 1000000
   local exp_num_chunks = 0
   local exp_num_elements = 0
+  -- put elements as 1, 2, 3, ...
   for i = 1, n do 
     local s = Scalar.new(i, "F4")
     v:put1(s)
@@ -62,12 +65,15 @@ tests.t1 = function()
       assert(v.check_chunks())
     end
   end
+  --================
+  -- make sure you get what you put
   for i = 1, n do 
     local s = v:get1(i-1)
     assert(type(s) == "Scalar")
     assert(s:fldtype() == "F4")
-    assert(s:to_num() == i)
+    assert(s:to_num() == i, i)
   end
+  --================
   local V, C = assert(v:me())
   V = ffi.cast("VEC_REC_TYPE *", M)
   assert(type(C) == "table")
@@ -78,9 +84,11 @@ tests.t1 = function()
     assert(chunk[0].vec_uqid == V[0].uqid)
     chunk_nums[#chunk_nums+1] = chunk[0].chunk_num
     uqids[#uqids+1] = chunk[0].uqid
-    -- assert(chunk[0].num_readers == 0) TODO Think about thsi one
+    -- note that get increments num_readers but get1 does not
+    assert(chunk[0].num_readers == 0) 
     assert(chunk[0].num_writers == 0)
   end
+  --====================
   for k1, v1 in pairs(chunk_nums) do 
     for k2, v2 in pairs(chunk_nums) do 
       if ( k1 ~= k2 ) then assert(v1 ~= v2) end
@@ -154,7 +162,7 @@ tests.t4 = function()
   local status = v:put1(s)
   assert(not status)
   print(">>>  stop deliberate error")
-  local num_chunks = math.ceil(n / qconsts.chunk_size) ;
+  local num_chunks = math.ceil(n / chunk_size) ;
   -- now we backup each chunk to file and delete in memory data
   for i = 1, num_chunks do 
     local free_mem = true
@@ -162,7 +170,7 @@ tests.t4 = function()
     assert(status, i)
     local file_name = assert(v:file_name(i-1) )
     local filesz = assert(plpath.getsize(file_name))
-    assert((filesz == qconsts.chunk_size * width), "filesz = " ..filesz)
+    assert((filesz == chunk_size * width), "filesz = " ..filesz)
     assert(v:check())
     assert(v.check_chunks())
   end
@@ -225,7 +233,6 @@ tests.t5 = function()
   print(">>> start deliberate error")
   status = v:delete()
   print("<<<< stop deliberate error")
-  assert(not status)
   print("Successfully completed test t5")
   print("garbage collection starts")
 end
@@ -294,20 +301,19 @@ tests.t6 = function()
   --=============================
   print("Successfully completed test t6")
 end
--- testing number of chunks == 1 when is_memo = true 
+-- testing number of chunks == 1 when is_memo = false
 tests.t7 = function()
   local qtype = "I4"
   local width = qconsts.qtypes[qtype].width
   local v = cVector.new(qtype, width)
-  v:memo(false) -- set memo to false
+  v:memo(false) -- set memo to true
   assert(v:is_memo() == false)
   --=============
   local M = assert(v:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
-  local chunk_size = math.ceil(M[0].chunk_size_in_bytes / 
-    qconsts.qtypes[qtype].width)
-  assert(chunk_size == math.floor(M[0].chunk_size_in_bytes / 
-    qconsts.qtypes[qtype].width))
+  assert(
+    math.ceil(M[0].chunk_size_in_bytes / width) == 
+    math.floor(M[0].chunk_size_in_bytes / width))
   --=============
   local num_chunks = 1024
   local D = cmem.new(chunk_size * width, qtype)
@@ -335,10 +341,6 @@ tests.t7 = function()
     end
     v:unget_chunk(i-1)
   end
-  local x = v:shutdown() 
-  assert(type(x) == "string") 
-  assert(#x > 0)
-  print("reincarnate = ", x)
   print("Successfully completed test t7")
 end
 -- testing reincarnate
@@ -402,16 +404,63 @@ tests.t8 = function()
     pldir.makepath(ddir)
     --=====================
   end
-  print("Successfully completed test t7")
+  print("Successfully completed test t8")
+end
+-- testing reincarnate when memo is false
+tests.t9 = function()
+  for case = 1, 2 do 
+    -- case = 1 => num_elements <= chunk_size, memo = false
+    -- case = 2 => num_elements >  chunk_size, memo = false
+    local qtype = "I4"
+    local width = qconsts.qtypes[qtype].width
+    local v = cVector.new(qtype, width)
+    local num_elements
+    v:memo(false)
+    v:persist(true)
+    if ( case == 1 ) then 
+      num_elements = chunk_size
+    elseif ( case == 2 ) then 
+      num_elements = chunk_size + 1
+    else 
+      error("bad case")
+    end 
+    --=============
+    for i = 1, num_elements do 
+      local s = Scalar.new(i,qtype)
+      assert(v:put1(s))
+    end
+    v:eov()
+    --==================
+    local x = v:shutdown() 
+    if ( case == 1 ) then 
+      assert(type(x) == "string") 
+      assert(#x > 0)
+      y = loadstring(x)()
+      assert(y.num_elements == num_elements)
+      assert(y.field_width == width)
+      assert(y.fldtype == qtype)
+    elseif ( case == 2 ) then 
+      assert(x == nil)
+    else
+      error("bad case")
+    end
+  end
+  -- clean up after yourself
+  local ddir = qconsts.Q_DATA_DIR
+  pldir = require 'pl.dir'
+  pldir.rmtree(ddir)
+  pldir.makepath(ddir)
+  --=====================
+  print("Successfully completed test t9")
 end
 -- TODO Write some tests for backup()
 -- return tests
--- tests.t1()
--- tests.t2()
--- tests.t3()
--- tests.t4()
--- tests.t5()
--- tests.t6()
--- tests.t7()
-tests.t8()
-os.exit()
+-- tests.t1() -- PASSES
+-- tests.t3() -- PASSES
+-- tests.t4() -- PASSES 
+-- tests.t5() -- PASSES
+-- tests.t6() -- PASSES
+-- tests.t7() -- PASSES
+-- tests.t8() -- PASSES
+-- tests.t9() -- PASSES
+-- os.exit()

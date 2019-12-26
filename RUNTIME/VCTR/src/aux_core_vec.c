@@ -9,9 +9,8 @@
 #include "_rs_mmap.h"
 #include "vec_globals.h"
 
-#define NUM_CHUNKS_TO_ALLOCATE 65536
 #define INITIAL_NUM_CHUNKS_PER_VECTOR 32
-#define Q_NUM_HEX_DIGITS_IN_UINT64 31 
+#define NUM_HEX_DIGITS_IN_UINT64 31 
 
 // TODO P4 Following macro duplicated. Eliminate that.
 #define chk_chunk_dir_idx(x) { \
@@ -244,16 +243,27 @@ BYE:
   return status;
 }
 
-static int
-allocate_chunk_dir(
+int
+init_globals(
+    void
     )
 {
   int status = 0;
-  g_chunk_size = Q_CHUNK_SIZE;
-  g_chunk_dir = calloc(NUM_CHUNKS_TO_ALLOCATE, sizeof(CHUNK_REC_TYPE));
-  return_if_malloc_failed(g_chunk_dir);
-  g_sz_chunk_dir = NUM_CHUNKS_TO_ALLOCATE;
-  g_n_chunk_dir = 0;
+  static bool globals_initialized = false;
+
+  if  ( globals_initialized ) {
+    fprintf(stderr, "Cannot initialize globals twice\n"); go_BYE(-1);
+  }
+  else {
+    if ( g_chunk_size    ==   0  ) { go_BYE(-1); }
+    if ( g_q_data_dir[0] == '\0' ) { go_BYE(-1); }
+    if ( g_sz_chunk_dir  ==   0  )  { go_BYE(-1); }
+
+    g_chunk_dir = calloc(g_sz_chunk_dir, sizeof(CHUNK_REC_TYPE));
+    return_if_malloc_failed(g_chunk_dir);
+    g_n_chunk_dir = 0;
+    globals_initialized = true;
+  }
 BYE:
   return status;
 }
@@ -263,12 +273,13 @@ chk_space_in_chunk_dir(
     )
 {
   int status = 0;
-  if ( g_chunk_dir == NULL ) {
-    status =  allocate_chunk_dir(); cBYE(status);
+  if ( g_chunk_dir == NULL ) { 
+    status = init_globals(); 
+    cBYE(status);
   }
   else {
-    if ( g_n_chunk_dir == g_sz_chunk_dir ) { 
-      fprintf(stderr, "Need to allocate space\n"); go_BYE(-1);
+    if ( g_n_chunk_dir >= g_sz_chunk_dir ) { 
+      fprintf(stderr, "TO BE IMPLEMENTED: allocate space\n"); go_BYE(-1);
     }
   }
 BYE:
@@ -397,7 +408,7 @@ mk_file_name(
     )
 {
   int status = 0;
-  int len = Q_NUM_HEX_DIGITS_IN_UINT64;
+  int len = NUM_HEX_DIGITS_IN_UINT64;
   char buf[len+1];
   memset(buf, '\0', len+1);
   if ( len_file_name > 0 ) { memset(file_name, '\0', len_file_name+1); }
@@ -450,7 +461,7 @@ chunk_dir_idx_for_read(
   if ( ptr_vec->num_elements == 0 ) { go_BYE(-1); }
   if ( idx >= ptr_vec->num_elements ) { go_BYE(-1); }
   uint32_t chunk_num;
-  if ( ptr_vec->is_memo ) { 
+  if ( !ptr_vec->is_memo ) { 
     chunk_num = 0; 
   }
   else {
@@ -533,7 +544,6 @@ vec_new_common(
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   status = chk_field_type(field_type, field_width); cBYE(status);
 
-  g_chunk_size = Q_CHUNK_SIZE; // TODO P2 Where should this go for real?
   memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
 
   strncpy(ptr_vec->fldtype, field_type, Q_MAX_LEN_QTYPE_NAME-1);

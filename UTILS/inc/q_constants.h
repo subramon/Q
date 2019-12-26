@@ -1,7 +1,5 @@
 #ifndef __Q_CONSTANTS_H
 #define __Q_CONSTANTS_H
-// Commnting Q_CHUNK_SIZE as it is referenced from q_consts.lua
-//#define Q_CHUNK_SIZE 65536
 #define Q_MAX_LEN_VEC_NAME 63
 #define Q_MIN_CHUNK_SIZE_OPENMP 64
 #define Q_MAX_LEN_INTERNAL_NAME  31
@@ -15,11 +13,11 @@
 #define Q_SCLR_ALIGNMENT  0
 #define Q_VEC_ALIGNMENT   16
 
-#define Q_CHUNK_SIZE 65536
-
 //- for spooky hash 
 #define SC_NUMVARS 12 
 #define SC_BLOCKSIZE (8 * SC_NUMVARS)
 #define SC_BUFSIZE (2 * SC_BLOCKSIZE)
 //-----------------
+// for vector globals
+#define Q_INITIAL_SZ_CHUNK_DIR 1024
 #endif

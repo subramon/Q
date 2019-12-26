@@ -373,10 +373,10 @@ vec_check(
     if ( v->sz_chunks  == 0 ) { go_BYE(-1); }
   }
   //-------------------------------------------
-  if ( v->is_memo ) { 
+  if ( !v->is_memo ) { 
     if ( v->chunks != NULL ) { 
       if ( v->num_chunks != 1 ) { go_BYE(-1); }
-      if ( v->sz_chunks  != 1 ) { go_BYE(-1); }
+      if ( v->sz_chunks  < v->num_chunks ) { go_BYE(-1); }
     }
   }
   else {
@@ -413,9 +413,11 @@ vec_memo(
   if ( ptr_vec->is_eov == true ) { go_BYE(-1); }
   if ( ptr_vec->num_elements > 0 ) { go_BYE(-1); }
   //----------------------------------------
-  // If Vector is to be persisted, it must be memoized 
   if ( ( is_memo == false ) && ( ptr_vec->is_persist == true )) {
-    go_BYE(-1);
+    // If Vector is to be persisted, and you don't memoize it, you take 
+    // the chance of losing it. You will get lucky if the number of 
+    // elements is less than the chunk size
+    // However, note that this is NOT an error
   }
   *ptr_is_memo = is_memo;
 BYE:
@@ -572,10 +574,10 @@ vec_shutdown(
   int status = 0;
   *ptr_str_to_reincarnate = NULL;
 
-  if ( !ptr_vec->is_memo )  {
-    fprintf(stderr, "TO BE IMPLEMEMTED\n"); go_BYE(-1); 
+  if (( !ptr_vec->is_memo )  && ( ptr_vec->num_elements > g_chunk_size )){ 
+      // We have lost data and there is no hope of recovering it
+      go_BYE(-1); 
   }
-
   if ( !ptr_vec->is_eov )  {
     status = vec_delete(ptr_vec); cBYE(status);
     return status;
@@ -608,15 +610,12 @@ vec_backup(
 {
   int status = 0;
   if ( !ptr_vec->is_eov  ) { go_BYE(-1); }
-  if ( !ptr_vec->is_memo ) { 
+  if ( ptr_vec->is_file ) { return status; }
+  if ( !ptr_vec->is_memo ) {  
+    status = vec_flush_chunk(ptr_vec, false, 0); cBYE(status);
   }
   else {
-    if ( ptr_vec->is_file ) { 
-      return status; 
-    }
-    else {
-      status = vec_flush_chunk(ptr_vec, false, -1);
-    }
+    status = vec_flush_chunk(ptr_vec, false, -1); cBYE(status);
   }
 BYE:
   return status;

@@ -8,7 +8,10 @@
 #include "scalar_struct.h"
 #include "cmem_struct.h"
 #include "cmem.h"
-#include "_txt_to_I4.h"
+#include "aux_core_vec.h"
+
+#include "txt_to_I4.h"
+#include "isdir.h"
 #define MAIN_PGM
 #include "vec_globals.h"
 #undef MAIN_PGM
@@ -39,6 +42,71 @@ static int l_vec_check_chunks( lua_State *L) {
   g_check_chunks(g_chunk_dir, g_sz_chunk_dir, g_n_chunk_dir);
   lua_pushboolean(L, true);
   return 1;
+}
+//-----------------------------------
+// TODO P3 Should not be part of vector code, this deals with globals
+static int l_vec_init_globals( lua_State *L) {
+  int status = 0;
+  int n, num_args;
+  //-------------------------------
+  static bool called = false;
+  if ( called ) { 
+    fprintf(stderr, "ERROR: init_globals cannot be called twice \n");
+    go_BYE(-1);
+  }
+  else {
+    called = true;
+  }
+  if ( ( g_chunk_dir != NULL ) || ( g_q_data_dir[0] != '\0' ) ||
+       ( g_chunk_size > 0 ) ) {
+    fprintf(stderr, "ERROR: globals have been initialized already\n");
+    go_BYE(-1); 
+  }
+  //-------------------------------
+  num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
+  if ( !lua_istable(L, 1) ) { go_BYE(-1); }
+  luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
+
+  //------------------- get sz_chunk_dir
+  lua_getfield (L, 1, "sz_chunk_dir");
+  n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
+  if  ( lua_type(L, 1+1) != LUA_TNUMBER ) { 
+    g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
+  }
+  else {
+    int new_sz_chunk_dir = luaL_checknumber(L, 1+1); 
+    if ( new_sz_chunk_dir <= 8 ) { go_BYE(-1); }
+    g_sz_chunk_dir = new_sz_chunk_dir;
+  }
+  lua_pop(L, 1);
+  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
+  //------------------- get chunk size 
+  lua_getfield (L, 1, "chunk_size");
+  n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
+  if  ( lua_type(L, 1+1) != LUA_TNUMBER ) { go_BYE(-1); }
+  int new_chunk_size = luaL_checknumber(L, 1+1); 
+  if ( new_chunk_size <= 1024 ) { go_BYE(-1); }
+  g_chunk_size = new_chunk_size;
+  lua_pop(L, 1);
+  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
+  //------------------- get q_data_dir
+  lua_getfield (L, 1, "data_dir");
+  n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
+  if  ( lua_type(L, 1+1) != LUA_TSTRING ) { go_BYE(-1); }
+  const char * const cptr = luaL_checkstring(L, 1+1); 
+  if ( !isdir(cptr) ) { go_BYE(-1); }
+  if ( strlen(cptr) > Q_MAX_LEN_DIR ) { go_BYE(-1); }
+  strcpy(g_q_data_dir, cptr);
+  lua_pop(L, 1);
+  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
+  //-------------------
+  status = init_globals(); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
 }
 //-----------------------------------
 static int l_vec_no_memcpy( lua_State *L) {
@@ -711,6 +779,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "get1", l_vec_get1 },
     { "get_chunk", l_vec_get_chunk },
     { "get_name", l_vec_get_name },
+    { "init_globals", l_vec_init_globals },
     { "is_eov", l_vec_is_eov },
     { "is_memo", l_vec_is_memo },
     { "me", l_vec_me },
@@ -753,6 +822,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "get1", l_vec_get1 },
     { "get_chunk", l_vec_get_chunk },
     { "get_name", l_vec_get_name },
+    { "init_globals", l_vec_init_globals },
     { "is_eov", l_vec_is_eov },
     { "is_memo", l_vec_is_memo },
     { "me", l_vec_me },

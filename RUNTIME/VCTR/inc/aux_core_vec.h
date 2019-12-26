@@ -125,3 +125,7 @@ reincarnate(
     VEC_REC_TYPE *ptr_v,
     char **ptr_x
     );
+extern int
+init_globals(
+    void
+    );

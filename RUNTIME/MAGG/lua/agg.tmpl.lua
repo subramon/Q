@@ -527,8 +527,7 @@ static const struct luaL_Reg aggregator_functions[] = {
      * top of the stack. */
     lua_createtable(L, 0, 0);
     luaL_register(L, NULL, aggregator_functions);
-    // Why is return code not 0
-    return 1;
+    return 1; -- because you are returning 1 thing - a table of functions
 }
 ]],
 }
