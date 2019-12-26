@@ -1,10 +1,10 @@
+local qc     = require 'Q/UTILS/lua/q_core'
 local cmem   = require 'libcmem' ; 
 local Scalar = require 'libsclr' ; 
 local tests = {}
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 tests.t1 = function()
   local num_iters = 1000000
-  -- create boolean scalars in several different ways
   for i = 1, num_iters do 
     local s1 = assert(Scalar.new(i, "I4"))
     local c1 = s1:to_cmem()
@@ -18,3 +18,4 @@ tests.t1 = function()
 end
 --================
 return tests
+-- tests.t1()
