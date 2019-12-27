@@ -16,6 +16,63 @@
 #include "vec_globals.h"
 #undef MAIN_PGM
 
+static int check_args_is_table(
+    lua_State *L
+    )
+{
+  int status =0;
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
+  if ( !lua_istable(L, 1) ) { go_BYE(-1); }
+  luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
+BYE:
+  return status;
+}
+
+static int get_str_from_tbl(
+      lua_State *L,
+      const char * const key,
+      bool *ptr_is_key,
+      const char **ptr_cptr
+      )
+{
+  int status = 0; 
+  *ptr_cptr = false;
+  *ptr_is_key = NULL;
+  lua_getfield (L, 1, key); 
+  int n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
+  if  ( lua_type(L, 1+1) != LUA_TSTRING ) { 
+    *ptr_is_key = false; return status;
+  }
+  *ptr_cptr = luaL_checkstring(L, 1+1); 
+  *ptr_is_key = true;
+BYE:
+  lua_pop(L, 1);
+  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
+  return status;
+}
+static int
+get_int_from_tbl(
+    lua_State *L, 
+    const char * const key,
+    bool *ptr_is_key,
+    int *ptr_itmp
+    )
+{
+  int status = 0;
+  *ptr_itmp = -1; *ptr_is_key = false;
+  //------------------- get sz_chunk_dir
+  lua_getfield (L, 1, key);
+  int n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
+  if  ( lua_type(L, 1+1) != LUA_TNUMBER ) { 
+    *ptr_is_key = false; return status;
+  }
+  *ptr_itmp = luaL_checknumber(L, 1+1); 
+  *ptr_is_key = true;
+BYE:
+  lua_pop(L, 1);
+  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
+  return status;
+}
 // Set globals in C in main program after creating Lua state
 // but before doing anything else
 // chunk_size, memory structures, ...
@@ -47,7 +104,8 @@ static int l_vec_check_chunks( lua_State *L) {
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_init_globals( lua_State *L) {
   int status = 0;
-  int n, num_args;
+  bool is_key; int itmp;
+  const char * cptr = NULL;
   //-------------------------------
   static bool called = false;
   if ( called ) { 
@@ -62,43 +120,28 @@ static int l_vec_init_globals( lua_State *L) {
     fprintf(stderr, "ERROR: globals have been initialized already\n");
     go_BYE(-1); 
   }
+  status = check_args_is_table(L); cBYE(status);
   //-------------------------------
-  num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
-  if ( !lua_istable(L, 1) ) { go_BYE(-1); }
-  luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
-
-  //------------------- get sz_chunk_dir
-  lua_getfield (L, 1, "sz_chunk_dir");
-  n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
-  if  ( lua_type(L, 1+1) != LUA_TNUMBER ) { 
+  status = get_int_from_tbl(L, "sz_chunk_dir", &is_key, &itmp); 
+  cBYE(status);
+  if ( !is_key )  {
     g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
   }
   else {
-    int new_sz_chunk_dir = luaL_checknumber(L, 1+1); 
-    if ( new_sz_chunk_dir <= 8 ) { go_BYE(-1); }
-    g_sz_chunk_dir = new_sz_chunk_dir;
+    if ( itmp <= 8 ) { go_BYE(-1); }
+    g_sz_chunk_dir = itmp;
   }
-  lua_pop(L, 1);
-  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
   //------------------- get chunk size 
-  lua_getfield (L, 1, "chunk_size");
-  n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
-  if  ( lua_type(L, 1+1) != LUA_TNUMBER ) { go_BYE(-1); }
-  int new_chunk_size = luaL_checknumber(L, 1+1); 
-  if ( new_chunk_size <= 1024 ) { go_BYE(-1); }
-  g_chunk_size = new_chunk_size;
-  lua_pop(L, 1);
-  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
+  status = get_int_from_tbl(L, "chunk_size", &is_key, &itmp); 
+  if (  ( !is_key) || ( itmp < 1024 ) ) { go_BYE(-1); }
+  if ( ( ( itmp / 64 ) * 64 )  != itmp ) { go_BYE(-1); }
+  g_chunk_size = itmp;
   //------------------- get q_data_dir
-  lua_getfield (L, 1, "data_dir");
-  n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
-  if  ( lua_type(L, 1+1) != LUA_TSTRING ) { go_BYE(-1); }
-  const char * const cptr = luaL_checkstring(L, 1+1); 
+  status = get_str_from_tbl(L, "data_dir", &is_key, &cptr);  cBYE(status);
+  if ( !is_key ) { go_BYE(-1); }
   if ( !isdir(cptr) ) { go_BYE(-1); }
   if ( strlen(cptr) > Q_MAX_LEN_DIR ) { go_BYE(-1); }
   strcpy(g_q_data_dir, cptr);
-  lua_pop(L, 1);
-  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
   //-------------------
   status = init_globals(); cBYE(status);
   lua_pushboolean(L, true);
@@ -653,9 +696,22 @@ static int l_vec_new( lua_State *L)
 {
   int status = 0;
   VEC_REC_TYPE *ptr_vec = NULL;
-
-  const char * const field_type = luaL_checkstring(L, 1);
-  uint32_t field_width          = lua_tonumber(L, 2);
+  bool is_key; int itmp; 
+  const char * qtype;
+  uint32_t field_width;
+  //------------------- get qtype
+  status = check_args_is_table(L); cBYE(status);
+  status = get_str_from_tbl(L, "qtype", &is_key, &qtype);  cBYE(status);
+  if ( !is_key ) { go_BYE(-1); }
+  if ( *qtype == '\0' ) { go_BYE(-1); }
+  status = get_int_from_tbl(L, "width", &is_key, &itmp); cBYE(status);
+  if ( !is_key )  { go_BYE(-1); }
+  if ( itmp < 1 ) { go_BYE(-1); }
+  if ( strcmp(qtype, "QC") == 0 ) { 
+    if ( itmp < 2 ) { go_BYE(-1); }
+  }
+  field_width = itmp;
+  //------------------
 
   ptr_vec = (VEC_REC_TYPE *)lua_newuserdata(L, sizeof(VEC_REC_TYPE));
   return_if_malloc_failed(ptr_vec);
@@ -663,7 +719,7 @@ static int l_vec_new( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vec_new(ptr_vec, field_type, field_width);
+  status = vec_new(ptr_vec, qtype, field_width);
   cBYE(status);
 
   return 1; 

@@ -25,7 +25,7 @@ local tests = {}
 tests.t1 = function()
   local qtype = "F4"
   local width = qconsts.qtypes[qtype].width
-  local v = cVector.new(qtype, width);
+  local v = cVector.new( { qtype = qtype, width = width} )
   print(">>> start deliberate error")
   assert( not  v:get1(0))
   assert( not  v:get1(-1))
@@ -38,6 +38,7 @@ tests.t1 = function()
   assert(v:memo(false))
   assert(v:memo(true))
   assert(v:is_memo() == true)
+  print(M[0].chunk_size_in_bytes,  chunk_size, width)
   assert(M[0].chunk_size_in_bytes == (chunk_size * width))
   --=============
 
@@ -109,7 +110,7 @@ end
 tests.t3 = function()
   local qtype = "B1"
   local width = qconsts.qtypes[qtype].width
-  local v = cVector.new(qtype, width);
+  local v = cVector.new({qtype = qtype, width = width})
   
   for i = 1, 1000000 do 
     local bval
@@ -142,7 +143,7 @@ tests.t4 = function()
   assert( x == nil or #x == 0 )
   local qtype = "F4"
   local width = qconsts.qtypes[qtype].width
-  local v = cVector.new(qtype, width);
+  local v = cVector.new({qtype = qtype, width = width})
   v:persist(false)
   local n = 1000000
   for i = 1, n do 
@@ -200,7 +201,7 @@ end
 tests.t5 = function()
   local qtype = "F4"
   local width = qconsts.qtypes[qtype].width
-  local v = cVector.new(qtype, width);
+  local v = cVector.new({qtype = qtype, width = width})
   local n = 1000000
   for i = 1, n do 
     local s = Scalar.new(i, "F4")
@@ -240,7 +241,7 @@ end
 tests.t6 = function()
   local qtype = "F4"
   local width = qconsts.qtypes[qtype].width
-  local v = cVector.new(qtype, width);
+  local v = cVector.new({qtype = qtype, width = width})
   local M = v:me()
   M = ffi.cast("VEC_REC_TYPE *", M)
   local n = M[0].chunk_size_in_bytes* 4
@@ -305,7 +306,7 @@ end
 tests.t7 = function()
   local qtype = "I4"
   local width = qconsts.qtypes[qtype].width
-  local v = cVector.new(qtype, width)
+  local v = cVector.new({qtype = qtype, width = width})
   v:memo(false) -- set memo to true
   assert(v:is_memo() == false)
   --=============
@@ -348,7 +349,7 @@ tests.t8 = function()
   for iter = 1, 2 do 
     local qtype = "I4"
     local width = qconsts.qtypes[qtype].width
-    local v = cVector.new(qtype, width)
+    local v = cVector.new({qtype = qtype, width = width})
     v:persist()
     assert(v:is_memo() == true)
     --=============
@@ -413,7 +414,7 @@ tests.t9 = function()
     -- case = 2 => num_elements >  chunk_size, memo = false
     local qtype = "I4"
     local width = qconsts.qtypes[qtype].width
-    local v = cVector.new(qtype, width)
+    local v = cVector.new({qtype = qtype, width = width})
     local num_elements
     v:memo(false)
     v:persist(true)
@@ -453,14 +454,14 @@ tests.t9 = function()
   --=====================
   print("Successfully completed test t9")
 end
--- TODO Write some tests for backup()
 -- return tests
--- tests.t1() -- PASSES
--- tests.t3() -- PASSES
--- tests.t4() -- PASSES 
--- tests.t5() -- PASSES
--- tests.t6() -- PASSES
--- tests.t7() -- PASSES
--- tests.t8() -- PASSES
--- tests.t9() -- PASSES
--- os.exit()
+
+tests.t1() -- PASSES
+tests.t3() -- PASSES
+tests.t4() -- PASSES 
+tests.t5() -- PASSES
+tests.t6() -- PASSES
+tests.t7() -- PASSES
+tests.t8() -- PASSES
+tests.t9() -- PASSES
+os.exit()
