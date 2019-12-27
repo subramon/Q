@@ -53,7 +53,8 @@ vec_rehydrate_multi(
     const char * const field_type,
     uint32_t field_width,
     int64_t num_elements,
-    const char *const file_name
+    int num_chunks,
+    const char **const file_names /* [num_chunks] */
     );
 extern int 
 vec_new(

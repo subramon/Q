@@ -43,7 +43,6 @@ typedef struct _vec_rec_type {
 
   bool is_persist;
   bool is_memo;
-  bool is_mono;
   bool is_eov;
   bool is_no_memcpy; // true=> we are trying to reduce memcpy
   bool is_dead; // true=> all C resources freed. Waiting for Lua to GC

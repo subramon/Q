@@ -338,6 +338,8 @@ get_exp_file_size(
     const char * const fldtype
     )
 {
+  // TODO: Currently we write entire chunk even if partially used
+  num_elements = ceil((double)num_elements / g_chunk_size) * g_chunk_size;
   int64_t expected_file_size = num_elements * field_width;
   if ( strcmp(fldtype, "B1") == 0 ) {
     uint64_t num_words = num_elements / 64;
@@ -622,13 +624,16 @@ reincarnate(
   memset(x, '\0', 65536);
   strcpy(x, " return { ");
 
-  sprintf(buf, "fldtype = \"%s\", ", ptr_v->fldtype); 
+  sprintf(buf, "qtype = \"%s\", ", ptr_v->fldtype); 
   strcat(x, buf);
 
   sprintf(buf, "num_elements = %" PRIu64 ", ", ptr_v->num_elements); 
   strcat(x, buf);
 
-  sprintf(buf, "field_width = %u, ", ptr_v->field_width); 
+  sprintf(buf, "chunk_size = %d, ", g_chunk_size);
+  strcat(x, buf);
+
+  sprintf(buf, "width = %u, ", ptr_v->field_width); 
   strcat(x, buf);
 
   if ( ptr_v->is_file ) { 
@@ -639,7 +644,12 @@ reincarnate(
     strcat(x, buf);
   }
   else {
-    strcat(x, "file_names = { ");
+    if ( ptr_v->num_chunks == 1 ) { 
+      strcat(x, "file_name = ");
+    }
+    else {
+      strcat(x, "file_names = { ");
+    }
     for ( unsigned int i = 0; i < ptr_v->num_chunks; i++ ) { 
       char file_name[Q_MAX_LEN_FILE_NAME+1];
       uint32_t chunk_idx = ptr_v->chunks[i];
@@ -651,7 +661,9 @@ reincarnate(
       sprintf(buf, "\"%s\", ",  file_name);
       strcat(x, buf);
     }
-    strcat(x, " }, ");
+    if ( ptr_v->num_chunks > 1 ) { 
+      strcat(x, " }, ");
+    }
   }
   strcat(x, " }  ");
   *ptr_x = x;

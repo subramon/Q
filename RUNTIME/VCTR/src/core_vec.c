@@ -203,7 +203,8 @@ vec_rehydrate_multi(
     const char * const field_type,
     uint32_t field_width,
     int64_t num_elements,
-    const char *const file_name
+    int num_chunks,
+    const char **const file_names /* [num_chunks] */
     )
 {
   int status = 0;
@@ -233,11 +234,12 @@ vec_rehydrate_single(
   // Note that we just accept the file (after some checking)
   // we do not "load" it into memory. We delay that until needed
   if ( !isfile(file_name) ) { go_BYE(-1); }
-  int64_t expected_file_size = get_exp_file_size(ptr_vec->num_elements,
+  int64_t expected_file_size = get_exp_file_size(num_elements,
       ptr_vec->field_width, ptr_vec->fldtype);
   int64_t actual_file_size = get_file_size(file_name);
   if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
   ptr_vec->file_size = actual_file_size;
+  ptr_vec->num_elements = num_elements;
   //------------
   // IMPORTANT: File gets renamed
   char new_file_name[Q_MAX_LEN_FILE_NAME+1];
@@ -247,6 +249,7 @@ vec_rehydrate_single(
   //--------------------
   ptr_vec->is_eov    = true;
   ptr_vec->is_memo   = true;
+  ptr_vec->is_file   = true;
   //------------
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_rehydrate_single += delta; }

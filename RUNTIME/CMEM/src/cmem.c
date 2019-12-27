@@ -71,7 +71,6 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
   void *data = NULL;
   if ( size <= 0 ) { go_BYE(-1); }
   // Always allocate a multiple of Q_CMEM_ALIGNMENT
-  int n = Q_CMEM_ALIGNMENT;
   size = (size_t)ceil((double)size / Q_CMEM_ALIGNMENT) * Q_CMEM_ALIGNMENT;
   status = posix_memalign(&data, Q_CMEM_ALIGNMENT, size);
   cBYE(status);
@@ -449,10 +448,6 @@ static int l_cmem_stealable( lua_State *L)
   ptr_cmem->is_stealable = stealable;
   lua_pushboolean(L, true);
   return 1; 
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
 }
 static int l_cmem_free( lua_State *L) 
 {
@@ -500,6 +495,7 @@ BYE:
 
 // Following only for debugging 
 static int l_cmem_seq( lua_State *L) {
+  int status = 0;
   char buf[BUFLEN+1]; 
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata( L, 1, "CMEM");
   lua_Number start  = luaL_checknumber(L, 2);
@@ -507,33 +503,43 @@ static int l_cmem_seq( lua_State *L) {
   lua_Number num    = luaL_checknumber(L, 4);
   const char *qtype = luaL_checkstring(L, 5);
   void *X = ptr_cmem->data;
+  // width must be set
+  int width = ptr_cmem->width;
+  if ( ( width < 1 ) || ( width > 8 ) ) { go_BYE(-1); }
+  if ( num > ( ptr_cmem->size / width ) ) { go_BYE(-1); }
   memset(buf, '\0', BUFLEN);
   if ( strcmp(qtype, "I1") == 0 ) { 
+    if ( width != sizeof(int8_t) ) { go_BYE(-1); }
     int8_t *ptr = (int8_t *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
   }
   else if ( strcmp(qtype, "I2") == 0 ) { 
+    if ( width != sizeof(int16_t) ) { go_BYE(-1); }
     int16_t *ptr = (int16_t *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
   }
   else if ( strcmp(qtype, "I4") == 0 ) { 
+    if ( width != sizeof(int32_t) ) { go_BYE(-1); }
     int32_t *ptr = (int32_t *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
   }
   else if ( strcmp(qtype, "I8") == 0 ) { 
+    if ( width != sizeof(int64_t) ) { go_BYE(-1); }
     int64_t *ptr = (int64_t *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
   }
   else if ( strcmp(qtype, "F4") == 0 ) { 
+    if ( width != sizeof(float) ) { go_BYE(-1); }
     float *ptr = (float *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
   }
   else if ( strcmp(qtype, "F8") == 0 ) { 
+    if ( width != sizeof(double) ) { go_BYE(-1); }
     double *ptr = (double *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
   }
   else {
-    WHEREAMI; goto BYE;
+    go_BYE(-1); 
   }
   lua_pushboolean(L, true);
   return 1;

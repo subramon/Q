@@ -27,7 +27,7 @@ tests.t1 = function()
   local width = 4 -- remember 1 byte for nullc
   local v = cVector.new( { qtype = qtype, width = width} )
   --=============
-  local n = chunk_size + 1
+  local n = chunk_size - 1
   local exp_num_chunks = 0
   local exp_num_elements = 0
   -- put elements as 1, 2, 3, ...
@@ -55,12 +55,15 @@ tests.t1 = function()
   v:persist()
   v:eov()
   local x = v:shutdown() 
+  assert(v:is_dead())
   assert(type(x) == "string") 
   assert(#x > 0)
+  print(x)
   y = loadstring(x)()
+  assert(type(y) == "table")
   assert(y.num_elements == n)
-  assert(y.field_width == width)
-  assert(y.fldtype == qtype)
+  assert(y.width == width)
+  assert(y.qtype == qtype)
   if ( iter == 1 ) then 
     assert(not y.file_name)
     assert(type(y.file_names) == "table")
@@ -69,6 +72,11 @@ tests.t1 = function()
       assert(plpath.isfile(v)) 
     end
   end
+  local z = assert(cVector.rehydrate(y))
+  assert(z:num_elements() == n)
+  assert(z:field_width() == width)
+  assert(z:fldtype() == qtype)
+
   print("Successfully completed test t1")
 end
 -- return tests

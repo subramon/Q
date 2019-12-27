@@ -11,15 +11,10 @@ __sum
 __meaning
 
 
-
-When vector is created with rehydrate, then you need to rename
-files to be consistent with uqid and Q_DATA_DIR format
-
-Does one always need to do the above? Think about it a bit
-
-Fix clean_defs and delete local version of clean_defs
-
 Deal with chunk_dir expansion and contraction
 Deal with chunk_dir_idxs expansion and contraction
 
 put_chunk has to deal with no_memcpy
+
+Currently, last chunk is saved in full even if only partially occupied. 
+Reduce extra file writes
