@@ -211,7 +211,27 @@ vec_rehydrate_multi(
   uint64_t delta = 0, t_start = RDTSC(); n_rehydrate_multi++;
 
   status = vec_new_common(ptr_vec, field_type, field_width); cBYE(status);
-  fprintf(stderr," TODO: To be implemented  \n"); go_BYE(-1); 
+
+  ptr_vec->is_eov     = true;
+  ptr_vec->is_persist = true;
+
+  status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
+  ptr_vec->num_elements = num_elements; // after init_chunk_dir()
+  ptr_vec->num_chunks   = num_chunks;
+  for ( int i = 0; i < num_chunks; i++ ) { 
+    uint32_t chunk_idx;
+    status = allocate_chunk(0, i, ptr_vec->uqid, &chunk_idx, false); 
+    cBYE(status); chk_chunk_idx(chunk_idx); 
+    ptr_vec->chunks[i] = chunk_idx;
+    CHUNK_REC_TYPE *ptr_c = g_chunk_dir + chunk_idx;
+    // IMPORTANT: File gets renamed
+    char new_file_name[Q_MAX_LEN_FILE_NAME+1];
+    status = mk_file_name(ptr_c->uqid, new_file_name, Q_MAX_LEN_FILE_NAME);
+    status = rename(file_names[i], new_file_name); cBYE(status);
+    ptr_c->is_file = true;
+    //--------------------
+  }
+
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_rehydrate_multi += delta; }
   return status;
@@ -245,11 +265,13 @@ vec_rehydrate_single(
   char new_file_name[Q_MAX_LEN_FILE_NAME+1];
   status = mk_file_name(ptr_vec->uqid, new_file_name, Q_MAX_LEN_FILE_NAME);
   cBYE(status);
-  status = rename(file_name, new_file_name);
+  status = rename(file_name, new_file_name); cBYE(status);
   //--------------------
-  ptr_vec->is_eov    = true;
-  ptr_vec->is_memo   = true;
-  ptr_vec->is_file   = true;
+  // TODO P1 IMPORTANT: What do we do about chunks?
+  //--------------------
+  ptr_vec->is_eov     = true;
+  ptr_vec->is_persist = true;
+  ptr_vec->is_file    = true;
   //------------
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { t_rehydrate_single += delta; }
@@ -806,7 +828,7 @@ vec_put_chunk(
   if ( num_elements > g_chunk_size ) { go_BYE(-1); }
   if ( size > ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); } 
   //-----------------------------------------
-  status = init_chunk_dir(ptr_vec); cBYE(status);
+  status = init_chunk_dir(ptr_vec, -1); cBYE(status);
   // is previous chunk full 
   if ( ( ( ptr_vec->num_elements / g_chunk_size ) * g_chunk_size ) !=
            ptr_vec->num_elements ) {
@@ -817,7 +839,7 @@ vec_put_chunk(
     if ( ptr_vec->num_chunks == 0 ) { // indicating no allocation done 
       chunk_num = 0;
       status = allocate_chunk(ptr_vec->chunk_size_in_bytes, chunk_num, 
-          ptr_vec->uqid, &chunk_idx); 
+          ptr_vec->uqid, &chunk_idx, true); 
       cBYE(status);
       if ( chunk_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
       ptr_vec->chunks[chunk_num] = chunk_idx;
@@ -860,7 +882,7 @@ vec_put1(
   if ( data == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov ) { go_BYE(-1); }
   //---------------------------------------
-  status = init_chunk_dir(ptr_vec); cBYE(status);
+  status = init_chunk_dir(ptr_vec, -1); cBYE(status);
   uint32_t chunk_num, chunk_idx;
   status = get_chunk_num_for_write(ptr_vec, &chunk_num); cBYE(status);
   status = get_chunk_dir_idx(ptr_vec, chunk_num, ptr_vec->chunks, 

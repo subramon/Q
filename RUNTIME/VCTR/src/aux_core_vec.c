@@ -291,12 +291,12 @@ allocate_chunk(
     size_t sz,
     uint32_t chunk_num,
     uint64_t vec_uqid,
-    uint32_t *ptr_chunk_dir_idx
+    uint32_t *ptr_chunk_dir_idx,
+    bool is_malloc
     )
 {
   int status = 0;
   static unsigned int start_search = 1;
-  if ( sz == 0 ) { go_BYE(-1); }
   status = chk_space_in_chunk_dir();  cBYE(status); 
   // NOTE: we do not allocate 0th entry
   for ( int iter = 0; iter < 2; iter++ ) { 
@@ -315,8 +315,11 @@ allocate_chunk(
         g_chunk_dir[i].chunk_num = chunk_num;
         g_chunk_dir[i].is_file = false;
         g_chunk_dir[i].vec_uqid = vec_uqid;
-        g_chunk_dir[i].data = malloc(sz);
-        return_if_malloc_failed(g_chunk_dir[i].data);
+        if ( is_malloc ) { 
+          if ( sz == 0 ) { go_BYE(-1); }
+          g_chunk_dir[i].data = malloc(sz);
+          return_if_malloc_failed(g_chunk_dir[i].data);
+        }
         *ptr_chunk_dir_idx = i; 
         g_n_chunk_dir++;
         start_search = i+1;
@@ -428,7 +431,8 @@ BYE:
 
 int
 init_chunk_dir(
-    VEC_REC_TYPE *ptr_vec
+    VEC_REC_TYPE *ptr_vec,
+    int num_chunks
     )
 {
   int status = 0;
@@ -437,16 +441,17 @@ init_chunk_dir(
   if ( ptr_vec->chunks     != NULL ) { go_BYE(-1); }
   if ( ptr_vec->sz_chunks  != 0    ) { go_BYE(-1); }
   if ( ptr_vec->num_chunks != 0    ) { go_BYE(-1); }
-  int nc;
-  if ( ptr_vec->is_memo ) { 
-    nc = 1;
+  if ( num_chunks < 0 ) { 
+    if ( ptr_vec->is_memo ) { 
+      num_chunks = 1;
+    }
+    else {
+      num_chunks = INITIAL_NUM_CHUNKS_PER_VECTOR;
+    }
   }
-  else {
-    nc = INITIAL_NUM_CHUNKS_PER_VECTOR;
-  }
-  ptr_vec->chunks = calloc(nc, sizeof(uint32_t));
+  ptr_vec->chunks = calloc(num_chunks, sizeof(uint32_t));
   return_if_malloc_failed(ptr_vec->chunks);
-  ptr_vec->sz_chunks = nc;
+  ptr_vec->sz_chunks = num_chunks;
 BYE:
   return status;
 }
@@ -524,7 +529,7 @@ get_chunk_dir_idx(
   uint32_t chunk_dir_idx = ptr_vec->chunks[chunk_num];
   if ( chunk_dir_idx == 0 ) { // we need to set it 
     status = allocate_chunk(ptr_vec->chunk_size_in_bytes, chunk_num, 
-        ptr_vec->uqid, &chunk_dir_idx); 
+        ptr_vec->uqid, &chunk_dir_idx, true); 
     cBYE(status);
     *ptr_num_chunks = *ptr_num_chunks + 1;
   }

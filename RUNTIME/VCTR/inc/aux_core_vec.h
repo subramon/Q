@@ -34,7 +34,8 @@ allocate_chunk(
     size_t sz,
     uint32_t chunk_idx,
     uint64_t vec_uqid,
-    uint32_t *ptr_chunk_dir_idx
+    uint32_t *ptr_chunk_dir_idx,
+    bool is_malloc
     );
 extern int64_t 
 get_exp_file_size(
@@ -92,7 +93,8 @@ get_chunk_num_for_write(
     );
 extern int
 init_chunk_dir(
-    VEC_REC_TYPE *ptr_vec
+    VEC_REC_TYPE *ptr_vec,
+    int num_chunks
     );
 extern int 
 get_chunk_dir_idx(

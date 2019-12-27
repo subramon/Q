@@ -28,6 +28,42 @@ BYE:
   return status;
 }
 
+static int get_tbl_from_tbl(
+      lua_State *L,
+      const char * const key,
+      bool *ptr_is_key,
+      const char **file_names, // [n] 
+      int n
+      )
+{
+  int status = 0; 
+  *ptr_is_key = false;
+  int nstack = lua_gettop(L); 
+  if ( nstack != 1 ) { go_BYE(-1); }
+  lua_getfield (L, 1, key); 
+  nstack = lua_gettop(L); 
+  if ( nstack != (1+1) ) { go_BYE(-1); }
+  if  ( lua_type(L, 1+1) != LUA_TTABLE ) { 
+    *ptr_is_key = false; goto BYE;
+  }
+  int chk_n = luaL_getn(L, 1+1);
+  if ( chk_n != n ) { go_BYE(-1); }
+  for ( int i = 0; i < n; i++ ) { 
+    lua_rawgeti(L, 1+1, i+1);
+    nstack = lua_gettop(L);
+    if ( nstack != 1+1+1 ) { go_BYE(-1); }
+    file_names[i] = luaL_checkstring(L, 1+1+1);
+    lua_pop(L, 1);
+    nstack = lua_gettop(L);
+    if ( nstack != 1+1 ) { go_BYE(-1); }
+  }
+
+  *ptr_is_key = true;
+BYE:
+  lua_pop(L, 1);
+  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
+  return status;
+}
 static int get_str_from_tbl(
       lua_State *L,
       const char * const key,
@@ -37,7 +73,7 @@ static int get_str_from_tbl(
 {
   int status = 0; 
   *ptr_cptr = false;
-  *ptr_is_key = NULL;
+  *ptr_is_key = false;
   int n = lua_gettop(L); if ( n != 1 ) { go_BYE(-1); }
   lua_getfield (L, 1, key); 
   n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
@@ -801,16 +837,15 @@ static int l_vec_rehydrate( lua_State *L)
     if ( *file_name == '\0' ) { go_BYE(-1); }
   }
   else {
-    status = get_str_from_tbl(L, "file_names", &is_key, &file_name);  
-    cBYE(status);
-    if ( !is_key ) { go_BYE(-1); }
-    // get all the file names 
     num_chunks = ceil((double)num_elements / (double)g_chunk_size);
     if ( num_chunks == 1 ) { go_BYE(-1); }
     is_single = false;
     file_names = malloc(num_chunks * sizeof(char *));
     return_if_malloc_failed(file_names);
-    // TODO More work to do here
+    memset(file_names, '\0',  (num_chunks * sizeof(char *)));
+    status = get_tbl_from_tbl(L, "file_names", &is_key, file_names, 
+        num_chunks);
+    cBYE(status);
   }
   //------------------
 

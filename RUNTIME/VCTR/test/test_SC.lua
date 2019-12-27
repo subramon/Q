@@ -22,12 +22,14 @@ assert(cVector.init_globals(params))
 --=================================
 local tests = {}
 -- testing put1 and get1 
-tests.t1 = function()
+
+tests.t0 = function(incr)
+  if ( not  incr ) then incr = 0 end 
   local qtype = "SC"
   local width = 4 -- remember 1 byte for nullc
   local v = cVector.new( { qtype = qtype, width = width} )
   --=============
-  local n = chunk_size - 1
+  local n = chunk_size + incr
   local exp_num_chunks = 0
   local exp_num_elements = 0
   -- put elements as 1, 2, 3, ...
@@ -77,6 +79,13 @@ tests.t1 = function()
   assert(z:field_width() == width)
   assert(z:fldtype() == qtype)
 
+  print("Successfully completed test t0 with n = ", n )
+  return true
+end
+
+tests.t1 = function()
+  assert(tests.t0(-1))
+  assert(tests.t0(1))
   print("Successfully completed test t1")
 end
 -- return tests
