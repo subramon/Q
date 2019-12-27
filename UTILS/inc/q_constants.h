@@ -8,10 +8,8 @@
 #define Q_MAX_LEN_BASE_FILE 63
 #define Q_MAX_LEN_FILE_NAME  Q_MAX_LEN_DIR+Q_MAX_LEN_BASE_FILE+1
 
-#define Q_CORE_VEC_ALIGNMENT  256 
-#define Q_CMEM_ALIGNMENT  256 
-#define Q_SCLR_ALIGNMENT  0
-#define Q_VEC_ALIGNMENT   16
+#define Q_CORE_VEC_ALIGNMENT  64
+#define Q_CMEM_ALIGNMENT  64 
 
 //- for spooky hash 
 #define SC_NUMVARS 12 

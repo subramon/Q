@@ -399,30 +399,50 @@ BYE:
 static int l_vec_get1( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
-  char *data = NULL;
   SCLR_REC_TYPE *ptr_sclr = NULL;
+  CMEM_REC_TYPE *ptr_cmem = NULL;
 
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int64_t idx = luaL_checknumber(L, 2);
+  char *data = NULL; int width = ptr_vec->field_width;
 
   status = vec_get1(ptr_vec, idx, &data); cBYE(status);
 
-  ptr_sclr = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
-  return_if_malloc_failed(ptr_sclr);
-  memset(ptr_sclr, '\0', sizeof(SCLR_REC_TYPE));
-  luaL_getmetatable(L, "Scalar");/* Add the metatable to the stack. */
-  lua_setmetatable(L, -2);/* Set the metatable on the userdata. */
-    // printf("sclr new to %x \n", ptr_sclr);
-
-  strcpy(ptr_sclr->field_type, ptr_vec->fldtype);
-  ptr_sclr->field_width = ptr_vec->field_width;
-  if ( strcmp(ptr_sclr->field_type, "B1") == 0 ) { 
-    uint64_t word = ((uint64_t *)data)[0];
-    uint32_t bit_idx = idx % 64;
-    ptr_sclr->cdata.valB1 = (word >> bit_idx) & 0x1;
+  if ( strcmp(ptr_vec->fldtype, "SC") == 0 ) { 
+    // set up mechanics for return 
+    ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
+    return_if_malloc_failed(ptr_cmem);
+    memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
+    luaL_getmetatable(L, "CMEM");/* Add the metatable to the stack. */
+    lua_setmetatable(L, -2);/* Set the metatable on the userdata. */
+    //-- now set the value 
+    strcpy(ptr_cmem->fldtype, ptr_vec->fldtype);
+    ptr_cmem->data  = malloc(width);
+    return_if_malloc_failed(ptr_cmem->data);
+    memset(ptr_cmem->data, '\0',   width); 
+    ptr_cmem->size  = width;
+    ptr_cmem->width = width;
+    memcpy(ptr_cmem->data, data, width-1);  // Note the -1
   }
-  else {
-    memcpy(&(ptr_sclr->cdata), data, ptr_vec->field_width);
+  else { 
+    // set up mechanics for return 
+    ptr_sclr = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
+    return_if_malloc_failed(ptr_sclr);
+    memset(ptr_sclr, '\0', sizeof(SCLR_REC_TYPE));
+    luaL_getmetatable(L, "Scalar");/* Add the metatable to the stack. */
+    lua_setmetatable(L, -2);/* Set the metatable on the userdata. */
+    // now set the value 
+
+    strcpy(ptr_sclr->field_type, ptr_vec->fldtype);
+    ptr_sclr->field_width = width;
+    if ( strcmp(ptr_sclr->field_type, "B1") == 0 ) { 
+      uint64_t word = ((uint64_t *)data)[0];
+      uint32_t bit_idx = idx % 64;
+      ptr_sclr->cdata.valB1 = (word >> bit_idx) & 0x1;
+    }
+    else {
+      memcpy(&(ptr_sclr->cdata), data, width);
+    }
   }
   return 1;
 BYE:

@@ -64,28 +64,17 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
     CMEM_REC_TYPE *ptr_cmem,
     int64_t size,
     const char *fldtype,
-    const char *cell_name,
-    int alignment
+    const char *cell_name
     )
 {
   int status = 0;
   void *data = NULL;
   if ( size <= 0 ) { go_BYE(-1); }
-  // Always allocate a multiple of 16 
-  if ( ( ( size / 16 ) * 16 ) != size ) { 
-    size = ( ( size / 16 ) * 16 ) + 16;
-  }
-  // following is a precaution. change if necessary
-  if ( alignment > 1024 ) { go_BYE(-1); }
-  if ( alignment <    0 ) { go_BYE(-1); }
- 
-  if ( alignment == 0 ) {
-    data = malloc(size);
-  }
-  else {
-    status = posix_memalign(&data, alignment, size);
-    cBYE(status);
-  }
+  // Always allocate a multiple of Q_CMEM_ALIGNMENT
+  int n = Q_CMEM_ALIGNMENT;
+  size = (size_t)ceil((double)size / Q_CMEM_ALIGNMENT) * Q_CMEM_ALIGNMENT;
+  status = posix_memalign(&data, Q_CMEM_ALIGNMENT, size);
+  cBYE(status);
   // TODO P4: make sure that posix_memalign is not causing any problems
   return_if_malloc_failed(data);
   ptr_cmem->data = data;
@@ -150,7 +139,6 @@ static int l_cmem_new( lua_State *L)
   CMEM_REC_TYPE *ptr_cmem = NULL;
   char *fldtype = NULL;
   char *cell_name = NULL;
-  int alignment = Q_CMEM_ALIGNMENT; // default 
 
   int64_t size =  luaL_checknumber(L, 1);
   if ( size <= 0 ) { go_BYE(-1); }
@@ -172,13 +160,7 @@ static int l_cmem_new( lua_State *L)
       cell_name = (char *)luaL_checkstring(L, 3);
     }
   }
-  if ( num_on_stack > 4 ) { 
-    if ( lua_isnumber(L, 4) ) {
-      alignment = luaL_checknumber(L, 4);
-      if ( alignment < 0 ) { go_BYE(-1); }
-    }
-  }
-  status = cmem_malloc(ptr_cmem, size, fldtype, cell_name, alignment);
+  status = cmem_malloc(ptr_cmem, size, fldtype, cell_name);
   cBYE(status);
   return 1;
 BYE:
