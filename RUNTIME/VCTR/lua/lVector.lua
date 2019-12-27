@@ -1,9 +1,9 @@
 -- TODO Document properly. Key of set_meta is always a string
 -- If it is something that has special meaning to Q, starts with __
 -- If not, any other string will work but do not use __ as a prefix
-local ffi = require 'ffi'
+local ffi               = require 'ffi'
 local qconsts		= require 'Q/UTILS/lua/q_consts'
-local log		= require 'Q/UTILS/lua/log'
+local cutils            = require 'libcutils'
 local cmem		= require 'libcmem'
 local Scalar		= require 'libsclr'
 local Vector		= require 'libvec'
@@ -22,16 +22,6 @@ setmetatable(lVector, {
 })
 
 register_type(lVector, "lVector")
--- -- TODO Indrajeet to change
--- local original_type = type  -- saves `type` function
--- -- monkey patch type function
--- type = function( obj )
---    local otype = original_type( obj )
---    if  otype == "table" and getmetatable( obj ) == lVector then
---       return "lVector"
---    end
---    return otype
--- end
 
 function lVector:get_name()
   -- the name of an lVector is the name of its base Vector

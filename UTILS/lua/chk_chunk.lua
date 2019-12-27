@@ -4,8 +4,7 @@ local function chk_chunk_return(
   x_chunk, 
   nn_x_chunk
   )
-  -- TODO P4 Is following if statement idiomatically sound?
-  if ( qconsts.debug ) and ( qconsts.debug == true ) then
+  if ( qconsts.debug == true ) then
     if ( x_len ) then 
       assert(type(x_len) == "number")
       assert(x_len >= 0)

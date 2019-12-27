@@ -18,3 +18,8 @@ put_chunk has to deal with no_memcpy
 
 Currently, last chunk is saved in full even if only partially occupied. 
 Reduce extra file writes
+
+Currently, we do not write vector name on shutdown. 
+Hence, it is lost on reincarnation.
+Okay because this is just a debugging feature.
+But would be nice to fix it some time.

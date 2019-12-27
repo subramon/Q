@@ -36,24 +36,29 @@ tests.t2 = function()
   local buf = cmem.new(128, "I4")
   local num_trials = 10 -- 1024*1048576
   local sz = 65537
+  local qtype = "I4"
   for j = 1, num_trials do 
-    local buf = cmem.new(sz, "I4", "inbuf")
-    buf:set(j, "I4") -- for debugging
+    local buf = cmem.new(sz, qtype, "inbuf")
+    buf:set_width(qconsts.qtypes[qtype].width)
+    assert(buf:width() == qconsts.qtypes[qtype].width)
+    buf:set(j, qtype)
     -- print(buf, "I4")
-    x = buf:to_str("I4")
+    x = buf:to_str(qtype)
     assert(j == tonumber(x))
     -- print(j, x)
     buf = nil
   end
   local num_elements = 1024
-  local buf = cmem.new(num_elements * 4, "I4")
+  local buf = cmem.new(num_elements * 4, qtype)
+  buf:set_width(qconsts.qtypes[qtype].width)
   local start = 123
   local incr  = 1
-  buf:seq(start, incr, num_elements, "I4")
-  x = buf:to_str("I4")
+  buf:seq(start, incr, num_elements, qtype)
+  x = buf:to_str(qtype)
+  print(start, tonumber(x))
   assert(start == tonumber(x))
   -- check using FFI
-  iptr = assert(get_ptr(buf, "I4"))
+  iptr = assert(get_ptr(buf, qtype))
   for i = 1, num_elements do
     assert(iptr[i-1] == start + (i-1) * incr)
   end
@@ -144,18 +149,20 @@ end
   
 tests.t8 = function()
   -- test SC with bad values 
+  -- make a long string 
   local bval = {}
-  bval[1] = "1234567890123456";
+  for i = 1, 10 do 
+    bval[i] = "1234567890123456";
+  end
+  local bigstr = table.concat(bval, "_")
   local size = 16
   local qtype = "SC"
   local name = "some bogus name"
-  for k, v in ipairs(bval) do 
-    local c1 = assert(cmem.new(size, qtype, name))
-    print("START: Deliberate error")
-    local x = c1:set(v)
-    print("STOP: Deliberate error")
-    assert(x == nil)
-  end
+  local c1 = assert(cmem.new(size, qtype, name))
+  print("START: Deliberate error")
+  local x = c1:set(bigstr)
+  print("STOP: Deliberate error")
+  assert(x == nil)
   print("test t8 passed")
 end
   
@@ -296,5 +303,6 @@ tests.t16 = function()
 
   print("test t16 passed")
 end
---return tests
-tests.t16()
+return tests
+-- tests.t8()
+-- tests.t16()
