@@ -218,7 +218,7 @@ vec_rehydrate_multi(
   status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
   ptr_vec->num_elements = num_elements; // after init_chunk_dir()
   ptr_vec->num_chunks   = num_chunks;
-  for ( int i = 0; i < num_chunks; i++ ) { 
+  for ( int i = 0; i < num_chunks; i++ ) {
     uint32_t chunk_idx;
     status = allocate_chunk(0, i, ptr_vec->uqid, &chunk_idx, false); 
     cBYE(status); chk_chunk_idx(chunk_idx); 
@@ -250,6 +250,19 @@ vec_rehydrate_single(
   uint64_t delta = 0, t_start = RDTSC(); n_rehydrate_single++;
 
   status = vec_new_common(ptr_vec, field_type, field_width); cBYE(status);
+  uint32_t num_chunks = ceil((double)num_elements / (double)g_chunk_size);
+  status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
+  ptr_vec->num_elements = num_elements; // after init_chunk_dir()
+  ptr_vec->num_chunks   = num_chunks;
+  for ( uint32_t i = 0; i < num_chunks; i++ ) {
+    uint32_t chunk_idx;
+    status = allocate_chunk(0, i, ptr_vec->uqid, &chunk_idx, false); 
+    cBYE(status); chk_chunk_idx(chunk_idx); 
+    ptr_vec->chunks[i] = chunk_idx;
+    CHUNK_REC_TYPE *ptr_c = g_chunk_dir + chunk_idx;
+    ptr_c->vec_uqid = ptr_vec->uqid;
+    ptr_c->chunk_num = i;
+  }
   //
   // Note that we just accept the file (after some checking)
   // we do not "load" it into memory. We delay that until needed
@@ -1114,6 +1127,22 @@ vec_delete_chunk_file(
       ptr_chunk->is_file = false;
     }
   }
+BYE:
+  return status;
+}
+int
+vec_same_state(
+    VEC_REC_TYPE *ptr_v1,
+    VEC_REC_TYPE *ptr_v2
+    )
+{
+  int status = 0;
+  if ( ptr_v1 == NULL ) { go_BYE(-1); }
+  if ( ptr_v2 == NULL ) { go_BYE(-1); }
+  if ( ptr_v1->num_elements != ptr_v2->num_elements ) { go_BYE(-1); }
+  if ( ptr_v1->is_eov != ptr_v2->is_eov ) { go_BYE(-1); }
+  if ( ptr_v1->is_memo != ptr_v2->is_memo ) { go_BYE(-1); }
+  if ( ptr_v1->is_persist != ptr_v2->is_persist ) { go_BYE(-1); }
 BYE:
   return status;
 }

@@ -247,4 +247,9 @@ vec_shutdown(
     VEC_REC_TYPE *ptr_vec,
     char **ptr_x
     );
+extern int
+vec_same_state(
+    VEC_REC_TYPE *ptr_v1,
+    VEC_REC_TYPE *ptr_v2
+    );
 #endif

@@ -1,5 +1,3 @@
--- TODO Document properly. Key of set_meta is always a string
--- If it is something that has special meaning to Q, starts with __
 -- If not, any other string will work but do not use __ as a prefix
 local ffi               = require 'ffi'
 local qconsts		= require 'Q/UTILS/lua/q_consts'
@@ -23,111 +21,123 @@ setmetatable(lVector, {
 
 register_type(lVector, "lVector")
 
-function lVector:get_name()
-  -- the name of an lVector is the name of its base Vector
-  if ( qconsts.debug ) then self:check() end
-  -- note that Lua is master and C is just for debugging
-  -- TODO P4 We have a problem becuase when restore happens, the name
-  -- is set on the Lua side but not on the C side 
-  if ( self._meta.name ) then 
-    local status = Vector.set_name(self._base_vec, self._meta.name)
-    assert(status)
-  end
-  return Vector.get_name(self._base_vec)
+-- ABBREVATIONS cbv = casted_base_vec
+-- ABBREVATIONS cnnv = casted_nn_vec
+
+function on_both(
+  base_vec,
+  nn_vec,
+  fn_to_apply
+  )
+  assert(fn_to_apply(base_vec))
+  if ( nn_vec ) then assert(fn_to_apply(nn_vec)) end 
+  return true
 end
 
-function lVector:set_name(vname)
-  -- the name of an lVector is the name of its base Vector
-  if ( qconsts.debug ) then self:check() end
-  assert(type(vname) == "string")
-  assert(#vname > 0)
-  -- set on the C side to help with debugging
-  local status = Vector.set_name(self._base_vec, vname)
-  assert(status)
-  -- set on the Lua side 
-  self._meta.__name = vname
-  return self
+local function chk_addr_len(x, len, chk_len)
+  assert(type(x) == "CMEM")
+  assert(type(len) == "number")
+  assert(len > 0)
+  if ( chk_len ) then
+    assert(len == chk_len)
+  end
 end
 
-function lVector:cast(new_field_type)
-  assert(new_field_type)
-  assert(type(new_field_type) == "string")
-  local new_field_width
-  if is_base_qtype(new_field_type) then 
-    new_field_width = qconsts.qtypes[new_field_type].width
-  elseif ( new_field_type == "B1" ) then
-    new_field_width = 0
-  else
-    assert(nil, "Cannot cast to ", new_field_type)
-  end
+function lVector:backup()
+  return on_both(self._base_vec, self._nn_vec, Vector.backup)
+end
+
+function lVector:check()
+  return on_both(self._base_vec, self._nn_vec, Vector.check)
+end
+
+-- not from Lua function lVector:check_chunks()
+-- directly from struct: lVector:chunk_size_in_bytes()
+--
+function lVector:delete()
+  return on_both(self._base_vec, self._nn_vec, Vector.delete)
+end
+
+function lVector:delete_chunk_file(chunk_num)
+  assert(Vector.delete_chunk_file(self._base_vec, chunk_num))
   if ( self._nn_vec ) then 
-    assert(nil, "TO BE IMPLEMENTED")
+    assert(Vector.delete_chunk_file(self._nn_vec, chunk_num))
   end
-  local status = Vector.cast(self._base_vec,new_field_type, new_field_width)
-  assert(status)
+  return true
+end
+
+function lVector:delete_master_file()
+  return on_both(self._base_vec, self._nn_vec, Vector.delete_master_file)
+end
+
+function lVector:end_read()
+  return on_both(self._base_vec, self._nn_vec, Vector.end_read)
+end
+
+function lVector:end_write()
+  return on_both(self._base_vec, self._nn_vec, Vector.end_write)
+end
+
+function lVector:eov()
+  assert(on_both(self._base_vec, self._nn_vec, Vector.eov))
+-- destroy generator (if any) and thereby 
+-- (1) release resources held by it 
+-- (2) no more data can be added to Vector
+  self._gen = nil 
+  if ( self:num_elements() == 0 ) then return nil end
   if ( qconsts.debug ) then self:check() end
   return self
 end
 
--- Older version of is_memo, kept just for reference if required in future
-function lVector:is_memo_old()
-  if ( qconsts.debug ) then self:check() end
-  return Vector.is_memo(self._base_vec)
+-- directly from struct: lVector:field_width()
+function lVector:file_name()
+  local s1, s2
+  s1 = assert(Vector.file_name(self._base_vec))
+  if ( self._nn_vec ) then 
+    s2 = assert(Vector.file_name(self._nn_vec))
+  end
+  return s1, s2
 end
 
-function lVector:is_dead()
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return casted_base_vec.is_dead
+-- not from Lua function lVector:file_size()
+
+-- directly from struct: lVector:fldtype()
+function lVector:flush_all()
+  return on_both(self._base_vec, self._nn_vec, Vector.flush_all)
 end
 
-function lVector:is_mono()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return casted_base_vec.is_mono
+function lVector:flush_chunk(chunk_num)
+  assert(Vector.flush_chunk(self._base_vec, chunk_num))
+  if ( self._nn_vec ) then 
+    assert(Vector.flush_chunk(self._nn_vec, chunk_num))
+  end
+  return true
 end
 
-function lVector:is_memo()
+-- not from Lua function lVector:file_size()
+
+function lVector:get1(idx)
+  local s1, s2
+  s1 = assert(Vector.get1(self._base_vec, idx))
+  if ( self._nn_vec ) then 
+    s2 = assert(Vector.get1(self._nn_vec, idx))
+  end
   if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return casted_base_vec.is_memo
+  return s1, s2
 end
 
-function lVector:is_nascent()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return casted_base_vec.is_nascent
-end
+-- not from Lua function lVector:get_name()
+-- not from Lua function init_globals()
+-- not from Lua function lVector:me()
 
-function lVector:num_in_chunk()
+function lVector:memo(is_memo)
+  if ( is_memo == nil ) then 
+    is_memo = true
+  else
+    assert(type(is_memo) == "boolean")
+  end
+  assert(on_both(self._base_vec, self._nn_vec, Vector.memo))
   if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return casted_base_vec.num_in_chunk
-end
-
-function lVector:file_size()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  -- added tonumber() because casted_base_vec.file_size is of type cdata
-  return tonumber(casted_base_vec.file_size)
-end
-
-function lVector:is_eov()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  local x =  casted_base_vec.is_eov
-  assert(type(x) == "boolean")
-  return casted_base_vec.is_eov
-end
-
-function lVector:no_memcpy(cmem)
-  if ( qconsts.debug ) then self:check() end
-  local status = Vector.no_memcpy(self._base_vec, cmem)
-  return self
-end
-
-function lVector:flush_buffer()
-  if ( qconsts.debug ) then self:check() end
-  local status = Vector.flush_buffer(self._base_vec)
   return self
 end
 
@@ -246,204 +256,27 @@ function lVector.new(arg)
   return vector
 end
 
-function lVector:set_sibling(x)
-  assert(type(x) == "lVector")
-  local exists = false
-  for k, v in ipairs(self.siblings) do
-    if ( x == v ) then
-      exists = true
-    end
-  end
-  if ( not exists ) then
-    self.siblings[#self.siblings+1] = x
-  end
-end
+-- directly from struct lVector:num_elements()
+-- not from Lua: num_chunks()
 function lVector:persist(is_persist)
-  local base_status = true
-  local nn_status = true
   if ( is_persist == nil ) then 
     is_persist = true
   else
     assert(type(is_persist) == "boolean")
   end
-  base_status = Vector.persist(self._base_vec, is_persist)
-  if ( self._nn_vec ) then 
-    nn_status = Vector.persist(self._nn_vec, is_persist)
-  end
-  if ( qconsts.debug ) then self:check() end
-  if ( base_status and nn_status ) then
-    return self
-  else
-    return nil
-  end
-end
-
-function lVector:nn_vec()
-  -- TODO Can only do this when vector has been materialized
-  -- That is because one generator starts feeding 2 vectors and 
-  -- we are not prepared for that
-  -- P1 Fix this code. In current state, it is not working
-  assert(self:is_eov())
-  local vector = setmetatable({}, lVector)
-  vector._meta = {}
-  vector._base_vec = self._nn_vec
-  if ( qconsts.debug ) then self:check() end
-  return vector
-end
-  
-function lVector:drop_nulls()
-  assert(self:is_eov())
-  self._nn_vec = nil
-  self:set_meta("__has_nulls", false)
+  assert(on_both(self._base_vec, self._nn_vec, Vector.persist))
   if ( qconsts.debug ) then self:check() end
   return self
 end
 
-function lVector:make_nulls(bvec)
-  assert(self:is_eov())
-  assert(self._nn_vec == nil) 
-  assert(type(bvec) == "lVector")
-  assert(bvec:fldtype() == "B1")
-  assert(bvec:num_elements() == self:num_elements())
-  assert(bvec:has_nulls() == false)
-  self._nn_vec = bvec._base_vec
-  self:set_meta("__has_nulls", true)
-  if ( qconsts.debug ) then self:check() end
-  return self
-end
-  
-function lVector:memo(is_memo)
-  local base_status, nn_status = true, true
-  if ( is_memo == nil ) then 
-    is_memo = true
-  else
-    assert(type(is_memo) == "boolean")
-  end
-  base_status = Vector.memo(self._base_vec, is_memo)
-  if ( self._nn_vec ) then 
-    nn_status = Vector.memo(self._nn_vec, is_memo)
-  end
-  if ( qconsts.debug ) then self:check() end
-  assert ( base_status and nn_status ) 
-  return self
-end
+-- TODO put1
+-- TODO put_chunk
+-- TODO rehydate
+-- TODO get_chunk
 
--- TODO P4: mono code is same as memo code. But we have duplicated it :-(
-function lVector:mono(is_mono)
-  local base_status, nn_status = true, true
-  if ( is_mono == nil ) then 
-    is_mono = true
-  else
-    assert(type(is_mono) == "boolean")
-  end
-  base_status = Vector.mono(self._base_vec, is_mono)
-  if ( self._nn_vec ) then 
-    nn_status = Vector.mono(self._nn_vec, is_mono)
-  end
-  if ( qconsts.debug ) then self:check() end
-  assert ( base_status and nn_status ) 
-  return self
-end
-
-
-function lVector:chunk_num()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return casted_base_vec.chunk_num
-end
-
-function lVector:chunk_size()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return casted_base_vec.chunk_size
-end
-
-function lVector:has_nulls()
-  if ( qconsts.debug ) then self:check() end
-  if ( self._nn_vec ) then return true else return false end
-end
-
-function lVector:num_elements()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  -- added tonumber() because casted_base_vec.num_elements is of type cdata
-  return tonumber(casted_base_vec.num_elements)
-end
-
-function lVector:length()
-  -- As long as eov is not done, we really do not know length of Vector
-  -- so we return nil
-  -- We could argue that we should return current length.
-  -- Not sure if thats a good idea but jury is out.
-  if ( not self:is_eov() ) then 
-    -- print("Vector not EOV so length not known")
-    return nil 
-  end
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  -- added tonumber() because casted_base_vec.num_elements is of type cdata
-  return tonumber(casted_base_vec.num_elements)
-end
-
--- Older version of fldtype(), kept just for reference if required in future
-function lVector:fldtype_old()
-  if ( qconsts.debug ) then self:check() end
-  return Vector.fldtype(self._base_vec)
-end
-
-function lVector:fldtype()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return ffi.string(casted_base_vec.field_type)
-end
-
-function lVector:qtype()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return ffi.string(casted_base_vec.field_type)
-end
-
-function lVector:field_size()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return casted_base_vec.field_size
-end
-
-function lVector:field_width()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return casted_base_vec.field_size
-end
-
-function lVector:file_name()
-  if ( qconsts.debug ) then self:check() end
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  return ffi.string(casted_base_vec.file_name)
-end
-
-function lVector:nn_file_name()
-  local vec_meta = self:meta()
-  local nn_file_name = nil
-  if vec_meta.nn then
-    nn_file_name = assert(vec_meta.nn.file_name)
-  end
-  if ( qconsts.debug ) then self:check() end
-  return nn_file_name
-end
-
-function lVector:check()
-  local chk = Vector.check(self._base_vec)
-  assert(chk, "Error on base vector")
-  local num_elements = Vector.num_elements(self._base_vec)
-  if ( self._nn_vec ) then
-    local nn_num_elements = Vector.num_elements(self._nn_vec)
-    chk = Vector.check(self._nn_vec)
-    assert(num_elements == nn_num_elements)
-    -- TODO P4 Anything else to be same between base_vec and nn_vec?
-    assert(chk, "Error on nn vector")
-  end
-  return true
-end
+-- not from Lua function lVector:print_timers()
+-- not from Lua function lVector:reset_timers()
+-- not from Lua function lVector:same_state()
 
 -- TODO P4 I don't think this is really needed. Consider eliminating
 function lVector:set_generator(gen)
@@ -455,69 +288,34 @@ function lVector:set_generator(gen)
   self._gen = gen
 end
 
-function lVector:eov()
-  local status = Vector.eov(self._base_vec)
-  assert(status)
-  if self._nn_vec then 
-    local status = Vector.eov(self._nn_vec)
-    assert(status)
-  end
--- destroy generator (if any) and thereby 
--- (1) release resources held by it 
--- (2) no more data can be added to Vector
-  self._gen = nil 
-  if ( self:num_elements() == 0 ) then return nil end
-  if ( qconsts.debug ) then self:check() end
-  assert( self._base_vec:is_eov() == true)
-  return true
-end
-
 function lVector:put1(s, nn_s)
-  assert(s)
   assert( ( type(s) == "Scalar" ) or ( type(s) == "CMEM" ) )
-  local status = Vector.put1(self._base_vec, s)
-  assert(status)
+  assert(Vector.put1(self._base_vec, s))
   if ( self._nn_vec ) then 
-    assert(nn_s)
     assert(type(nn_s) == "Scalar")
     assert(nn_s:fldtype() == "B1")
-    local status = Vector.put1(self._nn_vec, nn_s)
-    assert(status)
+    assert(Vector.put1(self._nn_vec, nn_s))
   end
   if ( qconsts.debug ) then self:check() end
 end
 
-function lVector:start_write(is_read_only_nn)
-  if ( is_read_only_nn ) then 
-    assert(type(is_read_only_nn) == "boolean")
-  end
-  local nn_X, nn_nX
+function lVector:start_write()
   local X, nX = Vector.start_write(self._base_vec)
-  assert(X)
+  assert(type(X) == "CMEM")
   assert(type(nX) == "number")
   assert(nX > 0)
   if ( self._nn_vec ) then
-    if ( is_read_only_nn ) then 
-      nn_X, nn_nX = assert(Vector.get(self._nn_vec, 0, 0))
-    else
-      nn_X, nn_nX = Vector.start_write(self._nn_vec)
-    end
+    nn_X, nn_nX = assert(Vector.start_write(self._nn_vec))
+    assert(type(nn_X) == "CMEM")
+    assert(type(nn_nX) == "number")
     assert(nn_nX == nX)
-    assert(nn_nX)
   end
   if ( qconsts.debug ) then self:check() end
   return nX, X, nn_X
 end
 
 function lVector:end_write()
-  local status = Vector.end_write(self._base_vec)
-  assert(status)
-  if ( self._nn_vec ) then
-    local status = Vector.end_write(self._nn_vec)
-    assert(status)
-  end
-  if ( qconsts.debug ) then self:check() end
-  return true
+  return on_both(self._base_vec, self._nn_vec, Vector.end_write)
 end
 
 -- TODO P4. Signature of put_chunk() should have matched chunk()
@@ -543,60 +341,6 @@ function lVector:put_chunk(base_addr, nn_addr, len)
     end
   end
   if ( qconsts.debug ) then self:check() end
-end
-
-function lVector:delete()
-  -- This method free up all vector resources
-  assert(self._base_vec)
-  local has_nulls = self:has_nulls()
-  local status = Vector.delete(self._base_vec)
-  assert(status)
-
-  -- Check for nulls
-  if ( has_nulls ) then
-    status = Vector.delete(self._nn_vec)
-    assert(status)
-  end
-  return status
-end
-
-function lVector:clone(optargs)
-  assert(self._base_vec)
-  -- Now we are supporting clone for non_eov vector as well, so commenting below condition
-  -- assert(self:is_eov(), "can clone vector only if is EOV")
-
-  local q_data_dir = qconsts.Q_DATA_DIR
-  assert(qc.isdir(q_data_dir), "Q_DATA_DIR not present")
-
-  local vector = setmetatable({}, lVector)
-  -- for meta data stored in vector
-  vector._meta = {}
-
-  vector._base_vec = Vector.clone(self._base_vec, q_data_dir)
-  assert(vector._base_vec)
-
-  -- Check for nulls
-  if ( self:has_nulls() ) then
-    vector._nn_vec = Vector.clone(self._nn_vec, q_data_dir)
-    assert(vector._nn_vec) 
-  end
-
-  -- copy aux metadata if any
-  for i, v in pairs(self._meta) do
-    vector._meta[i] = v
-  end
-
-  -- check for the optargs
-  if optargs then
-    assert(type(optargs) == "table")
-    for i, v in pairs(optargs) do
-      -- currently entertaining just "name" field, in future there might be many other fields
-      if i == "name" then
-        Vector.set_name(vector._base_vec, v)
-      end
-    end
-  end
-  return vector
 end
 
 function lVector:eval()
@@ -626,21 +370,6 @@ function lVector:eval()
   return self
 end
 
-function lVector:get_all()
-  assert(self:is_eov())
-  local nn_addr, nn_len
-  local base_addr, base_len = assert(Vector.get(self._base_vec, 0, 0))
-  assert(base_len > 0)
-  assert(base_addr)
-  if ( self._nn_vec ) then
-    nn_addr, nn_len = assert(Vector.get(self._nn_vec, 0, 0))
-    assert(nn_len == base_len)
-    assert(nn_addr)
-  end
-  if ( qconsts.debug ) then self:check() end
-  return base_len, base_addr, nn_addr
-end
-
 function lVector:get_one(idx)
   -- TODO More checks to make sure that this is only for 
   -- vectors in file mode. We may need to move vector from buffer 
@@ -658,7 +387,6 @@ function lVector:get_one(idx)
   if ( qconsts.debug ) then self:check() end
   return base_scalar, nn_scalar
 end
-
 
 function lVector:chunk(chunk_num)
   local status
@@ -719,6 +447,119 @@ function lVector:chunk(chunk_num)
   end
 end
 
+function lVector:set_name(vname)
+  -- the name of an lVector is the name of its base Vector
+  if ( type(vname) == nil ) then vname = "" end 
+  assert(type(vname) == "string")
+  assert(Vector.set_name(self._base_vec, vname))
+  if ( qconsts.debug ) then self:check() end
+  return self
+end
+
+function lVector:start_read()
+  assert(self:is_eov())
+  local nn_addr, nn_len
+  local base_addr, base_len = assert(Vector.get(self._base_vec, 0, 0))
+  assert(chk_addr_len(base_addr, base_len))
+  if ( self._nn_vec ) then
+    nn_addr, nn_len = assert(Vector.get(self._nn_vec, 0, 0))
+    assert(chk_addr_len(nn_addr, nn_len, base_len))
+  end
+  if ( qconsts.debug ) then self:check() end
+  return base_len, base_addr, nn_addr
+end
+
+
+function lVector:unget_chunk(chunk_num)
+  local s1, s2
+  s1 = assert(Vector.unget_chunk(self._base_vec, chunk_num))
+  if ( self._nn_vec ) then 
+    s2 = assert(Vector.unget_chunk(self._nn_vec, chunk_num))
+  end
+  return s1, s2
+end
+
+
+--=== These are without any help from C 
+
+function lVector:chunk_size_in_bytes()
+  if ( qconsts.debug ) then self:check() end
+  local cbv = ffi.cast("VEC_REC_TYPE *", self._base_vec)
+  return cbv[0].chunk_size_in_bytes
+end
+
+function lVector:drop_nulls() 
+  assert(self:is_eov())
+  assert(Vector.delete(self._nn_vec))
+  self._nn_vec = nil
+  self:set_meta("__has_nulls", false)
+  if ( qconsts.debug ) then self:check() end
+  return self
+end
+
+function lVector:field_width()
+  if ( qconsts.debug ) then self:check() end
+  local cbv = ffi.cast("VEC_REC_TYPE *", self._base_vec)
+  return cbv[0].field_width
+end
+
+function lVector:fldtype()
+  if ( qconsts.debug ) then self:check() end
+  local cbv = ffi.cast("VEC_REC_TYPE *", self._base_vec)
+  return ffi.string(cbv[0].fldtype)
+end
+
+function lVector:get_meta(k)
+  if ( qconsts.debug ) then self:check() end
+  assert(k)
+  assert(type(k) == "string")
+  return self._meta[k]
+end
+
+function lVector:get_name()
+  -- the name of an lVector is the name of its base Vector
+  if ( qconsts.debug ) then self:check() end
+  cbv = ffi.cast("VEC_REC_TYPE *", self._base_vec)
+  return ffi.string(cbv[0].name)
+end
+
+function lVector:has_nulls()
+  if ( qconsts.debug ) then self:check() end
+  if ( self._nn_vec ) then return true else return false end
+end
+
+function lVector:is_dead()
+  if ( qconsts.debug ) then self:check() end
+  local cbv = ffi.cast("VEC_REC_TYPE *", self._base_vec)
+  return cbv[0].is_dead
+end
+
+function lVector:is_eov()
+  if ( qconsts.debug ) then self:check() end
+  local cbv = ffi.cast("VEC_REC_TYPE *", self._base_vec)
+  return cbv[0].is_eov
+end
+
+function lVector:is_memo()
+  if ( qconsts.debug ) then self:check() end
+  local cbv = ffi.cast("VEC_REC_TYPE *", self._base_vec)
+  return cbv[0].is_memo
+end
+
+function lVector:make_nulls(bvec)
+  assert(self:is_eov())
+  assert(self._nn_vec == nil) 
+  assert(type(bvec) == "lVector")
+  assert(bvec:fldtype() == "B1")
+  assert(Vector.same_state(self._base_vec, bvec))
+  assert(bvec:has_nulls() == false)
+  self._nn_vec = bvec._base_vec
+  self:set_meta("__has_nulls", true)
+  if ( qconsts.debug ) then self:check() end
+  return self
+end
+  
+
 function lVector:meta()
   -- with lua interpreter, load() is not supported with strings so using loadstring() 
   -- earlier with luajit interpreter, load() supported strings 
@@ -774,6 +615,26 @@ function lVector:reincarnate()
   return table.concat(T, '')
 end
 
+function lVector:num_elements()
+  if ( qconsts.debug ) then self:check() end
+  local cbv = ffi.cast("VEC_REC_TYPE *", self._base_vec)
+  -- As long as eov is not done, we really do not know length of Vector
+  -- so we return nil
+  -- We could argue that we should return current length.
+  -- Not sure if thats a good idea but jury is out.
+  if ( cbv[0].is_eov == false ) then 
+    -- print("Vector not EOV so length not known")
+    return nil 
+  end
+  return tonumber(cbv[0].num_elements)
+end
+
+function lVector:num_chunks()
+  if ( qconsts.debug ) then self:check() end
+  local cbv = ffi.cast("VEC_REC_TYPE *", self._base_vec)
+  return tonumber(cbv[0].num_chunks)
+end
+
 
 function lVector:set_meta(k, v)
   if ( qconsts.debug ) then self:check() end
@@ -806,11 +667,39 @@ function lVector:set_meta(k, v)
   end
 end
 
-function lVector:get_meta(k)
-  if ( qconsts.debug ) then self:check() end
-  assert(k)
-  assert(type(k) == "string")
-  return self._meta[k]
+function lVector:set_sibling(x)
+  assert(type(x) == "lVector")
+  local exists = false
+  for k, v in ipairs(self.siblings) do
+    if ( x == v ) then
+      exists = true
+    end
+  end
+  if ( not exists ) then
+    self.siblings[#self.siblings+1] = x
+  end
 end
+--====================
+-- This are aliases to maintain backward compatibility
+function lVector:get_chunk(chunk_num)
+  return lVector:chunk(chunk_num)
+end
+
+function lVector:length()
+  return lVector:num_elements()
+end
+
+function lVector:get_all()
+  return lVector:get_read()
+end
+
+function lVector:qtype()
+  return lVector:fldtype()
+end
+
+function lVector:width()
+  return lVector:field_width()
+end
+--====================
 
 return lVector

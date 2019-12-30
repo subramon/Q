@@ -60,7 +60,6 @@ tests.t0 = function(incr)
   assert(v:is_dead())
   assert(type(x) == "string") 
   assert(#x > 0)
-  print(x)
   y = loadstring(x)()
   assert(type(y) == "table")
   assert(y.num_elements == n)
@@ -78,6 +77,17 @@ tests.t0 = function(incr)
   assert(z:num_elements() == n)
   assert(z:field_width() == width)
   assert(z:fldtype() == qtype)
+  for i = 1, n do
+    local s = z:get1(i-1)
+    assert(type(s) == "CMEM")
+    local sp = ffi.cast("CMEM_REC_TYPE *", s)
+    assert(sp.width == width)
+    assert(ffi.string(sp.fldtype) == "SC")
+    assert(ffi.string(sp.data) == "ABC")
+    assert(s:fldtype() == "SC")
+  end
+  z:check()
+  cVector:check_chunks()
 
   print("Successfully completed test t0 with n = ", n )
   return true
@@ -90,6 +100,7 @@ tests.t1 = function()
 end
 -- return tests
 
+tests.t0() 
 tests.t1() 
 os.exit()
 

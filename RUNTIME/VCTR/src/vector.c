@@ -194,7 +194,7 @@ static int l_vec_no_memcpy( lua_State *L) {
   if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE  *ptr_vec  = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
-  // TODO: Study the mempcy thingy
+  // TODO P1 : Study the mempcy thingy
   status = vec_no_memcpy(ptr_vec, ptr_cmem, g_chunk_size); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
@@ -226,6 +226,20 @@ static int l_vec_set_name( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   const char * const name  = luaL_checkstring(L, 2);
   status = vec_set_name(ptr_vec, name); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------------------
+static int l_vec_same_state( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 3 ) { go_BYE(-1); }
+  VEC_REC_TYPE *ptr_v1 = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  VEC_REC_TYPE *ptr_v2 = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vec_same_state(ptr_v1, ptr_v2); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -919,9 +933,9 @@ static const struct luaL_Reg vector_methods[] = {
     { "delete", l_vec_delete },
     { "delete_chunk_file", l_vec_delete_chunk_file },
     { "delete_master_file", l_vec_delete_master_file },
-    { "eov", l_vec_eov },
     { "end_read", l_vec_end_read },
     { "end_write", l_vec_end_write },
+    { "eov", l_vec_eov },
     { "field_width", l_vec_field_width },
     { "file_name", l_vec_file_name },
     { "file_size", l_vec_file_size },
@@ -947,6 +961,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "no_memcpy", l_vec_no_memcpy },
     { "rehydrate", l_vec_rehydrate},
     { "reset_timers", l_vec_reset_timers },
+    { "same_state", l_vec_same_state },
     { "set_name", l_vec_set_name },
     { "shutdown", l_vec_shutdown },
     { "start_read", l_vec_start_read },
@@ -958,6 +973,7 @@ static const struct luaL_Reg vector_methods[] = {
 static const struct luaL_Reg vector_functions[] = {
     { "backup", l_vec_backup },
     { "check", l_vec_check },
+    { "check_chunks", l_vec_check_chunks }, 
     { "chunk_size_in_bytes", l_vec_chunk_size_in_bytes },
     { "delete", l_vec_delete },
     { "delete_chunk_file", l_vec_delete_chunk_file },
@@ -991,6 +1007,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "put_chunk", l_vec_put_chunk },
     { "rehydrate", l_vec_rehydrate},
     { "reset_timers", l_vec_reset_timers },
+    { "same_state", l_vec_same_state },
     { "set_name", l_vec_set_name },
     { "shutdown", l_vec_shutdown },
     { "start_read", l_vec_start_read },

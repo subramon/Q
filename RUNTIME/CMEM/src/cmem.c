@@ -546,7 +546,8 @@ static int l_cmem_seq( lua_State *L) {
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 // Following only for debugging and hence has limited usage 
 static int l_cmem_set( lua_State *L) {
