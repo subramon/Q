@@ -34,10 +34,11 @@ tests.t1 = function()
   local M = assert(v:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
   assert(M[0].num_elements == 0)
-  assert(v:is_memo() == true)
+  assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == true)
   assert(v:memo(false))
+  assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == false)
   assert(v:memo(true))
-  assert(v:is_memo() == true)
+  assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == true)
   print(M[0].chunk_size_in_bytes,  chunk_size, width)
   assert(M[0].chunk_size_in_bytes == (chunk_size * width))
   --=============
@@ -308,7 +309,7 @@ tests.t7 = function()
   local width = qconsts.qtypes[qtype].width
   local v = cVector.new({qtype = qtype, width = width})
   v:memo(false) -- set memo to true
-  assert(v:is_memo() == false)
+  assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == false)
   --=============
   local M = assert(v:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
@@ -351,7 +352,7 @@ tests.t8 = function()
     local width = qconsts.qtypes[qtype].width
     local v = cVector.new({qtype = qtype, width = width})
     v:persist()
-    assert(v:is_memo() == true)
+    assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == true)
     --=============
     local M = assert(v:me())
     M = ffi.cast("VEC_REC_TYPE *", M)
@@ -383,8 +384,9 @@ tests.t8 = function()
     assert(#x > 0)
     y = loadstring(x)()
     assert(y.num_elements == num_chunks * chunk_size)
-    assert(y.field_width == qconsts.qtypes[qtype].width)
-    assert(y.fldtype == qtype)
+
+    assert(y.width == qconsts.qtypes[qtype].width)
+    assert(y.qtype == qtype)
     if ( iter == 1 ) then 
       assert(not y.file_name)
       assert(type(y.file_names) == "table")
@@ -438,8 +440,8 @@ tests.t9 = function()
       assert(#x > 0)
       y = loadstring(x)()
       assert(y.num_elements == num_elements)
-      assert(y.field_width == width)
-      assert(y.fldtype == qtype)
+      assert(y.width == width)
+      assert(y.qtype == qtype)
     elseif ( case == 2 ) then 
       assert(x == nil)
     else
@@ -454,8 +456,8 @@ tests.t9 = function()
   --=====================
   print("Successfully completed test t9")
 end
-return tests
---[[
+-- return tests
+
 tests.t1() -- PASSES
 tests.t3() -- PASSES
 tests.t4() -- PASSES 
@@ -465,4 +467,4 @@ tests.t7() -- PASSES
 tests.t8() -- PASSES
 tests.t9() -- PASSES
 os.exit()
---]]
+

@@ -57,7 +57,7 @@ tests.t0 = function(incr)
   v:persist()
   v:eov()
   local x = v:shutdown() 
-  assert(v:is_dead())
+  assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_dead)
   assert(type(x) == "string") 
   assert(#x > 0)
   y = loadstring(x)()
@@ -74,9 +74,15 @@ tests.t0 = function(incr)
     end
   end
   local z = assert(cVector.rehydrate(y))
-  assert(z:num_elements() == n)
-  assert(z:field_width() == width)
-  assert(z:fldtype() == qtype)
+  local M = assert(z:me())
+  M = ffi.cast("VEC_REC_TYPE *", M)
+  -- testing different style of access
+  local x = "num_elements"
+  assert(M[0][x] == n)
+  --==========
+  assert(M[0].num_elements == n)
+  assert(M[0].field_width == width)
+  assert(ffi.string(M[0].fldtype) == qtype)
   for i = 1, n do
     local s = z:get1(i-1)
     assert(type(s) == "CMEM")

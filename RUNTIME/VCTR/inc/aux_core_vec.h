@@ -131,3 +131,8 @@ extern int
 init_globals(
     void
     );
+extern bool
+is_multiple(
+    uint64_t x, 
+    uint32_t y
+    );

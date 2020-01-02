@@ -194,8 +194,7 @@ extern int
 vec_put_chunk(
     VEC_REC_TYPE *ptr_vec,
     const char * const data,
-    uint32_t num_elements,
-    int64_t size
+    uint32_t num_elements
     );
 extern int
 vec_put1(

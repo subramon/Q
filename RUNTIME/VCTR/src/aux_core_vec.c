@@ -677,3 +677,11 @@ BYE:
   return status;
 }
 
+bool
+is_multiple(
+    uint64_t x, 
+    uint32_t y
+    )
+{
+  if ( ( ( x /y ) * y ) == x ) { return true; } else { return false; }
+}

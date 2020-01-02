@@ -248,72 +248,6 @@ BYE:
   return 2;
 }
 //-----------------------------------
-static int l_vec_get_name( lua_State *L) {
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  lua_pushstring(L, ptr_vec->name);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//----------------------------------------
-static int l_vec_num_chunks( lua_State *L) {
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  lua_pushnumber(L, ptr_vec->num_chunks);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//----------------------------------------
-static int l_vec_chunk_size_in_bytes( lua_State *L) {
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  lua_pushnumber(L, ptr_vec->chunk_size_in_bytes);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//----------------------------------------
-static int l_vec_fldtype( lua_State *L) {
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  lua_pushstring(L, ptr_vec->fldtype);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//----------------------------------------
-static int l_vec_field_width( lua_State *L) {
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  lua_pushnumber(L, ptr_vec->field_width);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//----------------------------------------
-static int l_vec_file_size( lua_State *L) {
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  lua_pushnumber(L, ptr_vec->file_size);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//----------------------------------------
 static int l_vec_file_name( lua_State *L) {
   int status = 0;
   char file_name[Q_MAX_LEN_FILE_NAME+1];
@@ -656,18 +590,14 @@ static int l_vec_put_chunk( lua_State *L) {
   int status = 0;
   void *addr = NULL;
   int num_args = lua_gettop(L);
-  if ( ( num_args != 2 ) && ( num_args != 3 ) ) { go_BYE(-1); }
+  if ( num_args != 3 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   if ( !luaL_testudata (L, 2, "CMEM") ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 2, "CMEM");
   if ( ptr_cmem == NULL ) { go_BYE(-1); }
   addr = ptr_cmem->data;
-  uint32_t num_in_chunk = 0;
-  if ( num_args == 3 ) {
-    num_in_chunk = luaL_checknumber(L, 3);
-  }
-  status = vec_put_chunk(ptr_vec, addr, num_in_chunk, ptr_cmem->size);
-  cBYE(status);
+  uint32_t num_in_cmem = luaL_checknumber(L, 3);
+  status = vec_put_chunk(ptr_vec, addr, num_in_cmem); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -929,22 +859,17 @@ static const struct luaL_Reg vector_methods[] = {
     { "backup", l_vec_backup },
     { "check", l_vec_check },
     { "check_chunks", l_vec_check_chunks }, 
-    { "chunk_size_in_bytes", l_vec_chunk_size_in_bytes },
     { "delete", l_vec_delete },
     { "delete_chunk_file", l_vec_delete_chunk_file },
     { "delete_master_file", l_vec_delete_master_file },
     { "end_read", l_vec_end_read },
     { "end_write", l_vec_end_write },
     { "eov", l_vec_eov },
-    { "field_width", l_vec_field_width },
     { "file_name", l_vec_file_name },
-    { "file_size", l_vec_file_size },
-    { "fldtype", l_vec_fldtype },
     { "flush_all", l_vec_flush_all },
     { "flush_chunk", l_vec_flush_chunk },
     { "get1", l_vec_get1 },
     { "get_chunk", l_vec_get_chunk },
-    { "get_name", l_vec_get_name },
     { "init_globals", l_vec_init_globals },
     { "is_dead", l_vec_is_dead },
     { "is_eov", l_vec_is_eov },
@@ -953,7 +878,6 @@ static const struct luaL_Reg vector_methods[] = {
     { "meta", l_vec_meta },
     { "memo", l_vec_memo },
     { "num_elements", l_vec_num_elements },
-    { "num_chunks", l_vec_num_chunks },
     { "persist", l_vec_persist },
     { "print_timers", l_vec_print_timers },
     { "put1", l_vec_put1 },
@@ -974,22 +898,17 @@ static const struct luaL_Reg vector_functions[] = {
     { "backup", l_vec_backup },
     { "check", l_vec_check },
     { "check_chunks", l_vec_check_chunks }, 
-    { "chunk_size_in_bytes", l_vec_chunk_size_in_bytes },
     { "delete", l_vec_delete },
     { "delete_chunk_file", l_vec_delete_chunk_file },
     { "delete_master_file", l_vec_delete_master_file },
     { "end_read", l_vec_end_read },
     { "end_write", l_vec_end_write },
     { "eov", l_vec_eov },
-    { "field_width", l_vec_field_width },
     { "file_name", l_vec_file_name },
-    { "file_size", l_vec_file_size },
-    { "fldtype", l_vec_fldtype },
     { "flush_all", l_vec_flush_all },
     { "flush_chunk", l_vec_flush_chunk },
     { "get1", l_vec_get1 },
     { "get_chunk", l_vec_get_chunk },
-    { "get_name", l_vec_get_name },
     { "init_globals", l_vec_init_globals },
     { "is_dead", l_vec_is_dead },
     { "is_eov", l_vec_is_eov },
@@ -1000,7 +919,6 @@ static const struct luaL_Reg vector_functions[] = {
     { "new", l_vec_new },
     { "no_memcpy", l_vec_no_memcpy },
     { "num_elements", l_vec_num_elements },
-    { "num_chunks", l_vec_num_chunks },
     { "persist", l_vec_persist },
     { "print_timers", l_vec_print_timers },
     { "put1", l_vec_put1 },

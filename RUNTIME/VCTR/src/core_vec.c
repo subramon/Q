@@ -280,8 +280,6 @@ vec_rehydrate_single(
   cBYE(status);
   status = rename(file_name, new_file_name); cBYE(status);
   //--------------------
-  // TODO P1 IMPORTANT: What do we do about chunks?
-  //--------------------
   ptr_vec->is_eov     = true;
   ptr_vec->is_persist = true;
   ptr_vec->is_file    = true;
@@ -826,8 +824,7 @@ int
 vec_put_chunk(
     VEC_REC_TYPE *ptr_vec,
     const char * const data,
-    uint32_t num_elements,
-    int64_t size // for debugging only
+    uint32_t num_elements
     )
 {
   int status = 0;
@@ -839,14 +836,10 @@ vec_put_chunk(
 
   if ( num_elements == 0 ) { num_elements = g_chunk_size; }
   if ( num_elements > g_chunk_size ) { go_BYE(-1); }
-  if ( size > ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); } 
   //-----------------------------------------
   status = init_chunk_dir(ptr_vec, -1); cBYE(status);
-  // is previous chunk full 
-  if ( ( ( ptr_vec->num_elements / g_chunk_size ) * g_chunk_size ) !=
-           ptr_vec->num_elements ) {
-    go_BYE(-1);
-  }
+  // number of elements must be a multiple of g_chunk_size
+  if ( !is_multiple(ptr_vec->num_elements, g_chunk_size) ) { go_BYE(-1); }
   uint32_t chunk_num, chunk_idx;
   if ( !ptr_vec->is_memo ) {
     if ( ptr_vec->num_chunks == 0 ) { // indicating no allocation done 
@@ -871,7 +864,7 @@ vec_put_chunk(
   chk_chunk_idx(chunk_idx);
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
 
-  memcpy(ptr_chunk->data, data, size);
+  memcpy(ptr_chunk->data, data, num_elements * ptr_vec->field_width);
 
   ptr_vec->num_elements += num_elements;
   ptr_vec->chunks[chunk_num] = chunk_idx;
