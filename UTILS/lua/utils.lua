@@ -1,52 +1,39 @@
 local g_err	= require 'Q/UTILS/lua/error_code'
 local base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-local mk_col = require 'Q/OPERATORS/MK_COL/lua/mk_col'
 local c_to_txt = require 'Q/UTILS/lua/C_to_txt'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local fns = {}
 
 fns.clone = function(t) -- deep-copy a table
-    if type(t) ~= "table" then return t end
-    local meta = getmetatable(t)
-    local target = {}
-    for k, v in pairs(t) do
-        if type(v) == "table" then
-            target[k] = clone(v)
-        else
-            target[k] = v
-        end
+  if type(t) ~= "table" then return t end
+  local meta = getmetatable(t)
+  local target = {}
+  for k, v in pairs(t) do
+    if type(v) == "table" then
+      target[k] = clone(v)
+    else
+      target[k] = v
     end
-    setmetatable(target, meta)
-    return target
-end
-
-fns.load_file_as_string = function (fname)
-  local f = assert(io.open(fname))
-  local str = f:read("*a")
-  f:close()
-  return str
-end
--- Following code was taken from : http://lua-users.org/wiki/CsvUtils
--- Used to escape "'s , so that string can be inserted in csv line
-fns.escape_csv = function (s)
-  if string.find(s, '[,"]') then
-    s = '"' .. string.gsub(s, '"', '""') .. '"'
   end
-  return s
+  setmetatable(target, meta)
+  return target
 end
 
 fns.preprocess_bool_values = function (metadata_table, ...)
   local col_names = {...}
   for i, metadata in pairs(metadata_table) do 
     for j, col_name in pairs(col_names) do
-       if metadata[col_name] ~= nil and type(metadata[col_name]) ~= "boolean" then
+      if ( ( metadata[col_name] ~= nil ) and 
+           ( type(metadata[col_name]) ~= "boolean" ) ) then
         if string.lower(metadata[col_name]) == "true" then
           metadata[col_name] = true
         elseif string.lower(metadata[col_name]) == "false" then
           metadata[col_name] = false
         else
-          assert(string.lower(metadata[col_name]) == "true" or string.lower(metadata[col_name]) == "false","Invalid value in metadata for boolean field " .. col_name)
+          assert( (string.lower(metadata[col_name]) == "true" or 
+                   string.lower(metadata[col_name]) == "false"),
+                   "Invalid value in metadata for boolean field " .. col_name)
         end
        end
     end
@@ -110,6 +97,8 @@ fns.get_index = function(vec, value)
 end
 
 -- function to get vector from table of values
+--[[ Disabled this one  TODO P1 FIX 
+local mk_col = require 'Q/OPERATORS/MK_COL/lua/mk_col'
 fns.table_to_vector = function(tbl, qtype)
   assert(type(tbl) == "table", "must of type table")
   assert(#tbl < 1024, "max limit is upto 1024")
@@ -120,6 +109,7 @@ fns.table_to_vector = function(tbl, qtype)
   return col
 end
 
+--]]
 -- function to get table of vector values
 fns.vector_to_table = function(vector)
   assert(type(vector) == "lVector", "must be of lVector")

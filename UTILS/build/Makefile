@@ -30,10 +30,11 @@ clean:
 	#removing the stub file which is required by python-Q wrapper
 	rm -f ${Q_SRC_ROOT}/experimental/python_q_wrapper/lua/q_op_stub_file.pyi
 	#---
-	make -C ${Q_SRC_ROOT}/RUNTIME/src/      clean
 	make -C ${Q_SRC_ROOT}/RUNTIME/CMEM/src/ clean
 	make -C ${Q_SRC_ROOT}/RUNTIME/DNN/src/  clean
 	make -C ${Q_SRC_ROOT}/RUNTIME/SCLR/src/ clean
+	make -C ${Q_SRC_ROOT}/RUNTIME/VCTR/src/ clean
+	make -C ${Q_SRC_ROOT}/RUNTIME/CUTILS/src/ clean
 	#---
 	make -C ${Q_SRC_ROOT}/UTILS/src/  clean
 	#---
@@ -84,7 +85,7 @@ uninstall:
 	rm -f /usr/lib/libq_core.so;\
 	echo "Q uninstalled"
 
-_q_basic: _utils _cutils _cmem _sclr _vec _dnn 
+_q_basic: _utils _cutils _cmem _sclr _vctr _dnn 
 	luajit mk_so.lua
 	touch _q_basic
 
@@ -111,11 +112,11 @@ _sclr: _utils _cutils _cmem
 	make  -C ${Q_SRC_ROOT}/RUNTIME/SCLR/src/
 	touch _sclr
 
-_vec: _utils _cutils _cmem _sclr
-	make  -C ${Q_SRC_ROOT}/RUNTIME/src/
-	touch _vec
+_vctr: _utils _cutils _cmem _sclr
+	make  -C ${Q_SRC_ROOT}/RUNTIME/VCTR/src/
+	touch _vctr
 
-_dnn: _utils _cutils _cmem _sclr _vec
+_dnn: _utils _cutils _cmem _sclr _vctr
 	make  -C ${Q_SRC_ROOT}/RUNTIME/DNN/src/
 	touch _dnn
 
@@ -238,6 +239,8 @@ _where:
 #	_approx_quantile \
 # need to do mem_initialize
 	# _count  
+# need to fix lvector
+#	_mv_mul \
 # maintain following list in alphabetical order
 _q_operators: \
 	_approx_frequent \
@@ -258,7 +261,6 @@ _q_operators: \
 	_load_csv \
 	_join \
 	_mdb \
-	_mv_mul \
 	_s_to_f \
 	_sort \
 	_sort2 \

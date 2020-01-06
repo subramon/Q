@@ -9,11 +9,11 @@ local gen_code = require 'Q/UTILS/lua/gen_code'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 
 --=== From runtime
-local cutils = require 'libcutils'
-local cmem   = require 'libcmem'
-local Scalar = require 'libsclr'
-local Vector = require 'libvec'
-local Dnn    = require 'libdnn'
+local cutils  = require 'libcutils'
+local cmem    = require 'libcmem'
+local Scalar  = require 'libsclr'
+local cVector = require 'libvctr'
+local Dnn     = require 'libdnn'
 --==================
 local sofile   = Q_ROOT .. "/lib/libq_core.so"
 local incfile  = Q_ROOT .. "/include/q_core.h"

@@ -132,6 +132,12 @@ static int l_vec_print_timers( lua_State *L) {
 }
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
+static int l_vec_chunk_size( lua_State *L) {
+  lua_pushnumber(L, g_chunk_size);
+  return 1;
+}
+//-----------------------------------
+// TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_check_chunks( lua_State *L) {
   g_check_chunks(g_chunk_dir, g_sz_chunk_dir, g_n_chunk_dir);
   lua_pushboolean(L, true);
@@ -590,13 +596,19 @@ static int l_vec_put_chunk( lua_State *L) {
   int status = 0;
   void *addr = NULL;
   int num_args = lua_gettop(L);
-  if ( num_args != 3 ) { go_BYE(-1); }
+  if ( ( num_args != 3 ) && ( num_args != 2 ) ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   if ( !luaL_testudata (L, 2, "CMEM") ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 2, "CMEM");
   if ( ptr_cmem == NULL ) { go_BYE(-1); }
   addr = ptr_cmem->data;
-  uint32_t num_in_cmem = luaL_checknumber(L, 3);
+  uint32_t num_in_cmem;
+  if ( num_args == 2 ) {
+    num_in_cmem = g_chunk_size;
+  }
+  else {
+    num_in_cmem = luaL_checknumber(L, 3);
+  }
   status = vec_put_chunk(ptr_vec, addr, num_in_cmem); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
@@ -859,6 +871,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "backup", l_vec_backup },
     { "check", l_vec_check },
     { "check_chunks", l_vec_check_chunks }, 
+    { "chunk_size", l_vec_chunk_size }, 
     { "delete", l_vec_delete },
     { "delete_chunk_file", l_vec_delete_chunk_file },
     { "delete_master_file", l_vec_delete_master_file },
@@ -898,6 +911,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "backup", l_vec_backup },
     { "check", l_vec_check },
     { "check_chunks", l_vec_check_chunks }, 
+    { "chunk_size", l_vec_chunk_size }, 
     { "delete", l_vec_delete },
     { "delete_chunk_file", l_vec_delete_chunk_file },
     { "delete_master_file", l_vec_delete_master_file },
