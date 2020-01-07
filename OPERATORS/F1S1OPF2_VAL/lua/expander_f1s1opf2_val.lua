@@ -1,11 +1,11 @@
-local ffi = require 'ffi'
-local lVector = require 'Q/RUNTIME/lua/lVector'
+local ffi     = require 'ffi'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local qc      = require 'Q/UTILS/lua/q_core'
 local cmem    = require 'libcmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local qtils = require 'Q/QTILS/lua/is_sorted'
-local sort = require 'Q/OPERATORS/SORT/lua/sort'
+local qtils   = require 'Q/QTILS/lua/is_sorted'
+local sort    = require 'Q/OPERATORS/SORT/lua/sort'
 local record_time = require 'Q/UTILS/lua/record_time'
 
 local function chk_params(op, a, s, optargs)

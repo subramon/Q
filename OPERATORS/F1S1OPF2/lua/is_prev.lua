@@ -1,9 +1,9 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local ffi = require 'ffi'
+local ffi     = require 'ffi'
 local qc      = require 'Q/UTILS/lua/q_core'
-local lVector = require 'Q/RUNTIME/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local is_in   = require 'Q/UTILS/lua/is_in'
-local cmem	= require 'libcmem'
+local cmem    = require 'libcmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 

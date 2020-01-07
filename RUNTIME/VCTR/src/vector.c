@@ -261,9 +261,11 @@ static int l_vec_file_name( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int32_t chunk_number = -1;
   int num_args = lua_gettop(L); 
-  if ( num_args == 1 ) { // we want name of file for vector
+  if ( num_args == 1 ) { 
+    // we want name of file for vector
   } 
-  else if ( num_args == 2 ) { // we want name of file for chunk
+  else if ( num_args == 2 ) { 
+    // we want name of file for chunk
     chunk_number = luaL_checknumber(L, 2);
   }
   else {
@@ -345,14 +347,9 @@ BYE:
 //----------------------------------------
 static int l_vec_memo( lua_State *L) {
   int status = 0;
-  if ( (  lua_gettop(L) != 1 ) && ( lua_gettop(L) != 2 ) ) { go_BYE(-1); }
+  if ( lua_gettop(L) != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  //------------------------------
-  bool is_memo = true;
-  if ( lua_isboolean(L, 2) ) { 
-    is_memo = lua_toboolean(L, 2);
-  }
-  //------------------------------
+  bool is_memo = lua_toboolean(L, 2);
   status = vec_memo(ptr_vec, &(ptr_vec->is_memo), is_memo); cBYE(status);
   lua_pushboolean(L, true);
   return 1;

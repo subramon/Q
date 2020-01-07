@@ -1,12 +1,12 @@
+local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
+local base_qtype  = require 'Q/UTILS/lua/is_base_qtype'
+local qconsts     = require 'Q/UTILS/lua/q_consts'
+local ffi         = require 'ffi' 
+local get_ptr     = require 'Q/UTILS/lua/get_ptr'
+local cmem        = require 'libcmem'
+local qc          = require 'Q/UTILS/lua/q_core'
+local record_time = require 'Q/UTILS/lua/record_time'
 local function cat(X, optargs)
-  local lVector     = require 'Q/RUNTIME/lua/lVector'
-  local base_qtype  = require 'Q/UTILS/lua/is_base_qtype'
-  local qconsts     = require 'Q/UTILS/lua/q_consts'
- local ffi = require 'ffi' 
-  local get_ptr     = require 'Q/UTILS/lua/get_ptr'
-  local cmem        = require 'libcmem'
-  local qc          = require 'Q/UTILS/lua/q_core'
-  local record_time = require 'Q/UTILS/lua/record_time'
 
   assert(X and type(X) == "table", "X must be a table")
   local qtype 

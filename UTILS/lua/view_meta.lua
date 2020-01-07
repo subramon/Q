@@ -1,5 +1,5 @@
-local lVector = require 'Q/RUNTIME/lua/lVector'
-local json = require 'Q/UTILS/lua/json'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+local json    = require 'Q/UTILS/lua/json'
 local T = {}
 local function view_meta ()
   local V = {}

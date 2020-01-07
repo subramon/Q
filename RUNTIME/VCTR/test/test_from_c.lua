@@ -6,18 +6,25 @@ local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local get_func_decl = require 'Q/UTILS/build/get_func_decl'
 
-local hdrs = get_func_decl("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
-ffi.cdef(hdrs)
--- following only because we are testing. Normally, we get this from q_core
-local hdrs = get_func_decl("../../CMEM/inc/cmem_struct.h", " -I../../../UTILS/inc/")
-ffi.cdef(hdrs)
-
+local lVector 
+  local modes
+local test_without_q = false
+if test_without_q then 
+  -- following only because we are testing. 
+  -- Normally, we get this from q_core
+  local get_func_decl = require 'Q/UTILS/build/get_func_decl'
+  local hdrs = get_func_decl("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
+  ffi.cdef(hdrs)
+  modes = { "cVector" }
+else
+  lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+  modes = { "cVector", "lVector" }
+end
 --=================================
 local chunk_size = 65536
 local params = { chunk_size = chunk_size, sz_chunk_dir = 4096, 
-    data_dir = qconsts.Q_DATA_DIR }
+      data_dir = qconsts.Q_DATA_DIR }
 assert(cVector.init_globals(params))
 assert(cVector.chunk_size() == chunk_size)
 --=================================
@@ -26,81 +33,104 @@ local tests = {}
 tests.t1 = function()
   local qtype = "F4"
   local width = qconsts.qtypes[qtype].width
-  local v = cVector.new( { qtype = qtype, width = width} )
-  print(">>> start deliberate error")
-  assert( not  v:get1(0))
-  assert( not  v:get1(-1))
-  assert( not  v:get1(1))
-  print(">>>  stop deliberate error")
-  local M = assert(v:me())
-  M = ffi.cast("VEC_REC_TYPE *", M)
-  assert(M[0].num_elements == 0)
-  assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == true)
-  assert(v:memo(false))
-  assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == false)
-  assert(v:memo(true))
-  assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == true)
-  print(M[0].chunk_size_in_bytes,  chunk_size, width)
-  assert(M[0].chunk_size_in_bytes == (chunk_size * width))
-  --=============
-
-  local n = 1000000
-  local exp_num_chunks = 0
-  local exp_num_elements = 0
-  -- put elements as 1, 2, 3, ...
-  for i = 1, n do 
-    local s = Scalar.new(i, "F4")
-    v:put1(s)
-    if ( i == 1 ) then 
-      print(">>> start deliberate error")
-      print( v:memo(true)) 
-      assert( not v:memo(true)) 
-      print(">>>  stop deliberate error")
+  local v 
+  for _, mode in pairs(modes) do 
+    if ( mode == "cVector" ) then 
+      v = cVector.new( { qtype = qtype, width = width} )
+    elseif ( mode == "lVector" ) then 
+      v = lVector.new( { qtype = qtype, width = width} )
+    else
+      error("")
     end
-    exp_num_elements = exp_num_elements + 1
+    print(">>> start deliberate error")
+    if ( mode == "cVector" ) then 
+      assert( not  v:get1(0))
+      assert( not  v:get1(-1))
+      assert( not  v:get1(1))
+    elseif ( mode == "lVector" ) then 
+      status = pcall(v.get1, 0)  assert( not  status) 
+      status = pcall(v.get1,-1)  assert( not  status) 
+      status = pcall(v.get1,1)   assert( not  status) 
+    else
+      error("")
+    end
+    print(">>>  stop deliberate error")
     local M = assert(v:me())
     M = ffi.cast("VEC_REC_TYPE *", M)
-    assert(M[0].num_elements == exp_num_elements)
-    exp_num_chunks = math.ceil(exp_num_elements / chunk_size)
-    assert(M[0].num_chunks == exp_num_chunks)
-    assert(v:check())
-    if ( ( i % 1000 ) == 0 ) then 
-      assert(v.check_chunks())
+    assert(M[0].num_elements == 0)
+    assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == true)
+    assert(v:memo(false))
+    assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == false)
+    assert(v:memo(true))
+    assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == true)
+    print(M[0].chunk_size_in_bytes,  chunk_size, width)
+    assert(M[0].chunk_size_in_bytes == (chunk_size * width))
+    --=============
+  
+    local n = 1000000
+    local exp_num_chunks = 0
+    local exp_num_elements = 0
+    -- put elements as 1, 2, 3, ...
+    for i = 1, n do 
+      local s = Scalar.new(i, "F4")
+      v:put1(s)
+      if ( i == 1 ) then 
+        print(">>> start deliberate error")
+        if ( mode == "cVector" ) then 
+          assert( not v:memo(true)) 
+        elseif ( mode == "lVector" ) then 
+          local status = pcall(v.memo, true)
+          assert( not status)
+        else
+          error("")
+        end
+        print(">>>  stop deliberate error")
+      end
+      exp_num_elements = exp_num_elements + 1
+      local M = assert(v:me())
+      M = ffi.cast("VEC_REC_TYPE *", M)
+      assert(M[0].num_elements == exp_num_elements)
+      exp_num_chunks = math.ceil(exp_num_elements / chunk_size)
+      assert(M[0].num_chunks == exp_num_chunks)
+      assert(v:check())
+      if ( ( i % 1000 ) == 0 ) then 
+        assert(cVector.check_chunks())
+      end
     end
-  end
-  --================
-  -- make sure you get what you put
-  for i = 1, n do 
-    local s = v:get1(i-1)
-    assert(type(s) == "Scalar")
-    assert(s:fldtype() == "F4")
-    assert(s:to_num() == i, i)
-  end
-  --================
-  local V, C = assert(v:me())
-  V = ffi.cast("VEC_REC_TYPE *", M)
-  assert(type(C) == "table")
-  local chunk_nums = {}
-  local uqids = {}
-  for i = 1, #C do
-    local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
-    assert(chunk[0].vec_uqid == V[0].uqid)
-    chunk_nums[#chunk_nums+1] = chunk[0].chunk_num
-    uqids[#uqids+1] = chunk[0].uqid
-    -- note that get increments num_readers but get1 does not
-    assert(chunk[0].num_readers == 0) 
-    assert(chunk[0].num_writers == 0)
-  end
-  --====================
-  for k1, v1 in pairs(chunk_nums) do 
-    for k2, v2 in pairs(chunk_nums) do 
-      if ( k1 ~= k2 ) then assert(v1 ~= v2) end
+    --================
+    -- make sure you get what you put
+    for i = 1, n do 
+      local s = v:get1(i-1)
+      assert(type(s) == "Scalar")
+      assert(s:fldtype() == "F4")
+      assert(s:to_num() == i, i)
     end
-    assert( ( v1 >= 0 ) and ( v1 < V[0].num_chunks) )
-  end
-  for k1, v1 in pairs(uqids) do 
-    for k2, v2 in pairs(uqids) do 
-      if ( k1 ~= k2 ) then assert(v1 ~= v2) end
+    --================
+    local V, C = assert(v:me())
+    V = ffi.cast("VEC_REC_TYPE *", M)
+    assert(type(C) == "table")
+    local chunk_nums = {}
+    local uqids = {}
+    for i = 1, #C do
+      local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
+      assert(chunk[0].vec_uqid == V[0].uqid)
+      chunk_nums[#chunk_nums+1] = chunk[0].chunk_num
+      uqids[#uqids+1] = chunk[0].uqid
+      -- note that get increments num_readers but get1 does not
+      assert(chunk[0].num_readers == 0) 
+      assert(chunk[0].num_writers == 0)
+    end
+    --====================
+    for k1, v1 in pairs(chunk_nums) do 
+      for k2, v2 in pairs(chunk_nums) do 
+        if ( k1 ~= k2 ) then assert(v1 ~= v2) end
+      end
+      assert( ( v1 >= 0 ) and ( v1 < V[0].num_chunks) )
+    end
+    for k1, v1 in pairs(uqids) do 
+      for k2, v2 in pairs(uqids) do 
+        if ( k1 ~= k2 ) then assert(v1 ~= v2) end
+      end
     end
   end
   --===============================
@@ -110,92 +140,140 @@ tests.t1 = function()
 end
 -- testing put1 and get1 for B1
 tests.t3 = function()
-  local qtype = "B1"
-  local width = qconsts.qtypes[qtype].width
-  local v = cVector.new({qtype = qtype, width = width})
-  
-  for i = 1, 1000000 do 
-    local bval
-    if ( ( i % 2 ) == 0 ) then bval = 1 else bval = 0 end 
-    local s = Scalar.new(bval, "B1")
-    v:put1(s)
-    local M = assert(v:me())
-    M = ffi.cast("VEC_REC_TYPE *", M)
-    assert(M[0].num_elements == i, "failed at " .. i)
-  end
-  for i = 1, 1000000 do 
-    local bval
-    if ( ( i % 2 ) == 0 ) then bval = 1 else bval = 0 end 
-    local s = v:get1(i-1)
-    assert(type(s) == "Scalar")
-    assert(s:fldtype() == "B1")
-    assert(s:to_num() == bval, "Entry " .. i .. " expected " .. bval .. " got " .. s:to_num())
+  for _, mode in pairs(modes) do 
+    local qtype = "B1"
+    local width = qconsts.qtypes[qtype].width
+    local v
+    if ( mode == "cVector" ) then 
+      v = cVector.new({qtype = qtype, width = width})
+    elseif ( mode == "lVector" ) then 
+      if ( test_without_q ) then 
+        print("Not testing lVector")
+        break
+      end
+      print("Testing lVector")
+      v = lVector.new({qtype = qtype, width = width})
+    else
+      error("base case")
+    end
+    for i = 1, 1000000 do 
+      local bval
+      if ( ( i % 2 ) == 0 ) then bval = 1 else bval = 0 end 
+      local s = Scalar.new(bval, "B1")
+      v:put1(s)
+      local M = assert(v:me())
+      M = ffi.cast("VEC_REC_TYPE *", M)
+      assert(M[0].num_elements == i, "failed at " .. i)
+    end
+    for i = 1, 1000000 do 
+      local bval
+      if ( ( i % 2 ) == 0 ) then bval = 1 else bval = 0 end 
+      local s = v:get1(i-1)
+      assert(type(s) == "Scalar")
+      assert(s:fldtype() == "B1")
+      assert(s:to_num() == bval, "Entry " .. i .. " expected " .. bval .. " got " .. s:to_num())
+    end
   end
   print("Successfully completed test t3")
 end
 -- not put after eov
 -- no flush to disk before eov
 tests.t4 = function()
-  -- check no files in data directory
-  local ddir = os.getenv("Q_DATA_DIR")
-  local pldir = require 'pl.dir'
-  pldir.rmtree(ddir)
-  pldir.makepath(ddir)
-  local x = pldir.getfiles(ddir, "_*.bin")
-  assert( x == nil or #x == 0 )
-  local qtype = "F4"
-  local width = qconsts.qtypes[qtype].width
-  local v = cVector.new({qtype = qtype, width = width})
-  v:persist(false)
-  local n = 1000000
-  for i = 1, n do 
-    local s = Scalar.new(i, "F4")
-    v:put1(s)
-  end
-  print(">>> start deliberate error")
-  local status = v:flush_all()
-  print(status)
-  print(">>>  stop deliberate error")
-  v:eov()
-  local status =  v:flush_all(); 
-  assert(status)
-  assert(plpath.isfile(v:file_name()))
-  local s = Scalar.new(0, "F4")
-  print(">>> start deliberate error")
-  local status = v:put1(s)
-  assert(not status)
-  print(">>>  stop deliberate error")
-  local num_chunks = math.ceil(n / chunk_size) ;
-  -- now we backup each chunk to file and delete in memory data
-  for i = 1, num_chunks do 
-    local free_mem = true
-    local status = v:flush_chunk(i-1, free_mem)
-    assert(status, i)
-    local file_name = assert(v:file_name(i-1) )
-    local filesz = assert(plpath.getsize(file_name))
-    assert((filesz == chunk_size * width), "filesz = " ..filesz)
-    assert(v:check())
-    assert(v.check_chunks())
-  end
-  -- Now get all the stuff you put in 
-  for i = 1, n do 
-    local sin = Scalar.new(i, "F4")
-    local sout = v:get1(i-1)
-    assert(sin == sout)
-  end
-  assert(v:check())
-  assert(v.check_chunks())
-  local x = pldir.getfiles(ddir, "_*.bin")
-  print(#x, num_chunks)
-  assert(#x == num_chunks + 1 ) -- +1 for whole file
-  local r = cutils.rdtsc() % 3
-  print("random choice = ", r)
-  if ( r == 0 ) then v:delete() end 
-  if ( r == 1 ) then v = nil collectgarbage() end 
-  if ( ( r == 0 ) or ( r == 1 ) ) then 
+  local modes = { "cVector", "lVector" }
+  for _, mode in pairs(modes) do 
+    -- check no files in data directory
+    local ddir = os.getenv("Q_DATA_DIR")
+    local pldir = require 'pl.dir'
+    pldir.rmtree(ddir)
+    pldir.makepath(ddir)
     local x = pldir.getfiles(ddir, "_*.bin")
-    for k, v in pairs(x) do print(k, v) end 
-    assert(x == nil or #x == 0 )
+    assert( x == nil or #x == 0 )
+    local qtype = "F4"
+    local width = qconsts.qtypes[qtype].width
+    local v
+    if ( mode == "cVector" ) then 
+      print("Testing cVector")
+      v = cVector.new({qtype = qtype, width = width})
+    elseif ( mode == "lVector" ) then 
+      if ( test_without_q ) then 
+        print("Not testing lVector")
+        break
+      end
+      print("Testing lVector")
+      v = lVector.new({qtype = qtype, width = width})
+    else
+      error("base case")
+    end
+    v:persist(false)
+    local n = 1000000
+    for i = 1, n do 
+      local s = Scalar.new(i, "F4")
+      v:put1(s)
+    end
+    print(">>> start deliberate error")
+    if ( mode == "cVector" ) then 
+      local status = v:flush_all()
+      assert(not status)
+    elseif ( mode == "lVector" ) then 
+      local status = pcall(v.flush_all)
+      assert(not status)
+    else
+      error("")
+    end
+    print(">>>  stop deliberate error")
+    v:eov()
+    local status =  v:flush_all(); 
+    assert(status)
+    assert(plpath.isfile(v:file_name()))
+    local s = Scalar.new(0, "F4")
+    print(">>> start deliberate error")
+    if ( mode == "cVector" ) then 
+      local status = v:put1(s)
+      assert(not status)
+    elseif ( mode == "lVector" ) then 
+      local status = pcall(v.put1, s)
+      assert(not status)
+    else
+      error("")
+    end
+    print(">>>  stop deliberate error")
+    local num_chunks = math.ceil(n / chunk_size) ;
+    -- now we backup each chunk to file and delete in memory data
+    for i = 1, num_chunks do 
+      local free_mem = true
+      local status = v:flush_chunk(i-1, free_mem)
+      assert(status, i)
+      local file_name = assert(v:file_name(i-1) )
+      local filesz = assert(plpath.getsize(file_name))
+      assert((filesz == chunk_size * width), 
+        "filesz/chunk_size/width = " .. filesz .. " " .. chunk_size .. " " .. width)
+      assert(v:check())
+      if ( mode == "cVector" ) then 
+        assert(v.check_chunks())
+      end
+    end
+    -- Now get all the stuff you put in 
+    for i = 1, n do 
+      local sin = Scalar.new(i, "F4")
+      local sout = v:get1(i-1)
+      assert(sin == sout)
+    end
+    assert(v:check())
+    if ( mode == "cVector" ) then 
+      assert(v.check_chunks())
+    end
+    local x = pldir.getfiles(ddir, "_*.bin")
+    print(#x, num_chunks)
+    assert(#x == num_chunks + 1 ) -- +1 for whole file
+    local r = cutils.rdtsc() % 3
+    print("random choice = ", r)
+    if ( r == 0 ) then v:delete() end 
+    if ( r == 1 ) then v = nil collectgarbage() end 
+    if ( ( r == 0 ) or ( r == 1 ) ) then 
+      local x = pldir.getfiles(ddir, "_*.bin")
+      for k, v in pairs(x) do print(k, v) end 
+      assert(x == nil or #x == 0 )
+    end
   end
   print("Successfully completed test t4")
 end
@@ -460,12 +538,12 @@ end
 -- return tests
 
 tests.t1() -- PASSES
-tests.t3() -- PASSES
-tests.t4() -- PASSES 
-tests.t5() -- PASSES
-tests.t6() -- PASSES
-tests.t7() -- PASSES
-tests.t8() -- PASSES
-tests.t9() -- PASSES
+-- tests.t3() -- PASSES
+-- tests.t4() -- PASSES 
+-- tests.t5() -- PASSES
+-- tests.t6() -- PASSES
+-- tests.t7() -- PASSES
+-- tests.t8() -- PASSES
+-- tests.t9() -- PASSES
 os.exit()
 

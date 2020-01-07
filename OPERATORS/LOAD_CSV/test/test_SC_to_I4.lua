@@ -2,7 +2,7 @@
 local Q       = require 'Q'
 local cmem    = require 'libcmem'
 local Vector  = require 'libvec'
-local lVector = require 'Q/RUNTIME/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local plfile  = require 'pl.file'
 require 'Q/UTILS/lua/strict'

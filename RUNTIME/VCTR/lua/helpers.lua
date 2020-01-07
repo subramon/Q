@@ -54,21 +54,20 @@ helpers.determine_kind_of_new = function (args)
 end
 
 helpers.on_both = function(
-  base_vec,
-  nn_vec,
+  self,
   fn_to_apply,
   arg_to_fn
   )
-  if ( arg_to_fn ) then 
-    assert(fn_to_apply(base_vec, arg_to_fn))
+  if ( arg_to_fn ~= nil ) then 
+    assert(fn_to_apply(self._base_vec, arg_to_fn))
   else
-    assert(fn_to_apply(base_vec))
+    assert(fn_to_apply(self._base_vec))
   end
-  if ( nn_vec ) then 
-    if ( arg_to_fn ) then 
-      assert(fn_to_apply(nn_vec, arg_to_fn)) 
+  if ( self._nn_vec ) then 
+    if ( arg_to_fn ~= nil ) then 
+      assert(fn_to_apply(self._nn_vec, arg_to_fn)) 
     else 
-      assert(fn_to_apply(nn_vec)) 
+      assert(fn_to_apply(self._nn_vec)) 
     end
   end
   if ( qconsts.debug ) then self:check() end

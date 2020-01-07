@@ -1,9 +1,9 @@
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
-local ffi = require 'ffi'
+local ffi      = require 'ffi'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 local qc       = require 'Q/UTILS/lua/q_core'
 local cmem     = require 'libcmem'
-local lVector   = require 'Q/RUNTIME/lua/lVector'
+local lVector  = require 'Q/RUNTIME/VCTR/lua/lVector'
 local record_time = require 'Q/UTILS/lua/record_time'
 local mem_initialize = require 'Q/OPERATORS/HASH/lua/hash_mem_initialize'
 

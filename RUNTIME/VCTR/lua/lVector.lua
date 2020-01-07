@@ -23,11 +23,16 @@ setmetatable(lVector, {
 register_type(lVector, "lVector")
 
 function lVector:backup()
-  return H.on_both(self._base_vec, self._nn_vec, cVector.backup)
+  return H.on_both(self, cVector.backup)
 end
 
 function lVector:check()
-  return H.on_both(self._base_vec, self._nn_vec, cVector.check)
+  -- cannot use on_both here because check called from within
+  assert(cVector.check(self._base_vec))
+  if ( self._nn_vec ) then 
+    assert(cVector.check(self._nn_vec))
+  end 
+  return true
 end
 
 -- not from Lua. Use cVector:check_chunks()
@@ -36,28 +41,33 @@ function lVector:chunk_size_in_bytes()
 end
 
 function lVector:delete()
-  return H.on_both(self._base_vec, self._nn_vec, cVector.delete)
+  local status = cVector.delete(self._base_vec) 
+  if ( not status ) then print("Likely you are deleting dead vector") end
+  if ( self._nn_vec ) then 
+    status = cVector.delete(self._nn_vec) 
+    if ( not status ) then print("Likely you are deleting dead vector") end
+  end
+  return true
 end
 
 function lVector:delete_chunk_file(chunk_num)
-  return on_both(self._base_vec, self._nn_vec, 
-    cVector.delete_chunk_file, chunk_num)
+  return on_both(self, cVector.delete_chunk_file, chunk_num)
 end
 
 function lVector:delete_master_file()
-  return H.on_both(self._base_vec, self._nn_vec, cVector.delete_master_file)
+  return H.on_both(self, cVector.delete_master_file)
 end
 
 function lVector:end_read()
-  return H.on_both(self._base_vec, self._nn_vec, cVector.end_read)
+  return H.on_both(self, cVector.end_read)
 end
 
 function lVector:end_write()
-  return H.on_both(self._base_vec, self._nn_vec, cVector.end_write)
+  return H.on_both(self, cVector.end_write)
 end
 
 function lVector:eov()
-  assert(H.on_both(self._base_vec, self._nn_vec, cVector.eov))
+  assert(H.on_both(self, cVector.eov))
 -- destroy generator (if any) and thereby 
 -- (1) release resources held by it 
 -- (2) no more data can be added to Vector
@@ -96,8 +106,21 @@ function lVector:field_width()
   return H.extract_field(self, "field_width", "number")
 end
 
-function lVector:file_name()
-  return H.extract_field(self, "file_name", "string")
+function lVector:file_name(chunk_num)
+  local f1, f2
+  if ( chunk_num) then 
+    f1 = cVector.file_name(self._base_vec, chunk_num)
+  else
+    f1 = cVector.file_name(self._base_vec)
+  end
+  if ( self._nn_vec ) then 
+    if ( chunk_num) then 
+      f2 = cVector.file_name(self._nn_vec, chunk_num)
+    else
+      f2 = cVector.file_name(self._nn_vec)
+    end
+  end
+  return f1, f2
 end
 
 function lVector:fldtype()
@@ -105,12 +128,11 @@ function lVector:fldtype()
 end
 
 function lVector:flush_all()
-  return H.on_both(self._base_vec, self._nn_vec, cVector.flush_all)
+  return H.on_both(self, cVector.flush_all)
 end
 
 function lVector:flush_chunk(chunk_num)
-  return H.on_both(self._base_vec, self._nn_vec, 
-    cVector.flush_chunk, chunk_num)
+  return H.on_both(self, cVector.flush_chunk, chunk_num)
 end
 
 function lVector:get1(idx)
@@ -203,8 +225,10 @@ end
 
 
 function lVector:memo(is_memo)
+  print("A: is_memo = ", is_memo)
   local is_memo = H.mk_boolean(is_memo, true)
-  assert(H.on_both(self._base_vec, self._nn_vec, cVector.memo, is_memo))
+  print("B: is_memo = ", is_memo)
+  assert(H.on_both(self, cVector.memo, is_memo))
   return self
 end
 
@@ -252,8 +276,7 @@ end
 
 function lVector:persist(is_persist)
   local is_persist = H.mk_boolean(is_persist, true)
-  assert(H.on_both(self._base_vec, self._nn_vec, 
-    cVector.persist, is_persist))
+  assert(H.on_both(self, cVector.persist, is_persist))
   if ( qconsts.debug ) then self:check() end
   return self
 end
@@ -280,7 +303,7 @@ end
 -- But that would involve a lot of changes. To be done sometime
 function lVector:put_chunk(base_addr, nn_addr, len)
   if ( len == 0 )  then -- no more data
-    return H.on_both(self._base_vec, self._nn_vec, cVector.eov)
+    return H.on_both(self, cVector.eov)
   end
   --====================
   -- TODO P4 Use on_both for the following..
@@ -445,8 +468,7 @@ function lVector:set_sibling(x)
 end
 
 function lVector:unget_chunk(chunk_num)
-  assert(on_both(self._base_vec, self._nn_vec, 
-  cVector.unget_chunk, chunk_num))
+  assert(on_both(self, cVector.unget_chunk, chunk_num))
   return self
 end
 --====================

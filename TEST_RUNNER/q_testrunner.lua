@@ -161,24 +161,24 @@ local function get_files(path, pattern)
 end
 
 
-local test_type = arg[1]
-local path = arg[2]
+local test_type = assert(arg[1], "need to provide test type")
+local path      = assert(arg[2], "need to provide path")
 args = nil
 local test_res = {}
 local files = {}
-if test_type == "i" then
+if ( test_type == "i" ) then
   files = get_files(path,"test_") -- only the prefix is needed 
   for _,f in pairs(files) do
     test_res[f] = {}
     test_res[f].pass, test_res[f].fail = run_isolated_tests(f)
   end
-elseif test_type == "s" then
+elseif ( test_type == "s" ) then
   files = get_files(path, "stress_test_") -- only the prefix is needed 
   for _,f in pairs(files) do
     test_res[f] = {}
     test_res[f].pass, test_res[f].fail = run_isolated_tests(f)
   end
-elseif test_type:match("^l") ~= nil then
+elseif ( test_type:match("^l") ~= nil ) then
   local duration = tonumber(test_type:match("^l([0-9]+)$"))
   assert(duration ~= nil, "Must have a valid duration for the long term run")
   local long_files = {}

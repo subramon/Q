@@ -6,7 +6,7 @@ local qconsts       = require 'Q/UTILS/lua/q_consts'
 local get_ptr       = require 'Q/UTILS/lua/get_ptr'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 local record_time   = require 'Q/UTILS/lua/record_time'
-local lVector       = require 'Q/RUNTIME/lua/lVector'
+local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
 local function SC_to_XX(
   invec, 
   lfn, -- Lua function 

@@ -1,13 +1,13 @@
-local function ss_ifxthenyelsez(x, y, z)
-  local Q       = require 'Q/q_export'
-  local qc      = require 'Q/UTILS/lua/q_core'
-  local qconsts = require 'Q/UTILS/lua/q_consts'
-  local ffi = require 'ffi'
-  local lVector = require 'Q/RUNTIME/lua/lVector'
-  local cmem    = require 'libcmem'
-  local get_ptr = require 'Q/UTILS/lua/get_ptr'
-  local record_time = require 'Q/UTILS/lua/record_time'
+local Q       = require 'Q/q_export'
+local qc      = require 'Q/UTILS/lua/q_core'
+local qconsts = require 'Q/UTILS/lua/q_consts'
+local ffi     = require 'ffi'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+local cmem    = require 'libcmem'
+local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local record_time = require 'Q/UTILS/lua/record_time'
 
+local function ss_ifxthenyelsez(x, y, z)
   assert(type(x) == "lVector", "error")
   assert(type(y) == "Scalar", "error") 
   assert(type(z) == "Scalar", "error") 

@@ -8,17 +8,18 @@
 
 local function min(x, y) if ( x < y ) then return x else return y end  end
 
+local Q           = require 'Q/q_export'
+local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
+local qc          = require 'Q/UTILS/lua/q_core'
+local get_ptr     = require 'Q/UTILS/lua/get_ptr'
+local record_time = require 'Q/UTILS/lua/record_time'
+local get_nDR     = require 'Q/OPERATORS/MDB/lua/get_nDR'
+local mk_template = require 'Q/OPERATORS/MDB/lua/mk_template'
+local qconsts     = require 'Q/UTILS/lua/q_consts'
+local ffi         = require 'ffi' 
+local cmem        = require 'libcmem'
+
 local function mk_comp_key_val(Tk, in_val_vec)
-  local Q           = require 'Q/q_export'
-  local lVector     = require 'Q/RUNTIME/lua/lVector'
-  local qc          = require 'Q/UTILS/lua/q_core'
-  local get_ptr     = require 'Q/UTILS/lua/get_ptr'
-  local record_time = require 'Q/UTILS/lua/record_time'
-  local get_nDR     = require 'Q/OPERATORS/MDB/lua/get_nDR'
-  local mk_template = require 'Q/OPERATORS/MDB/lua/mk_template'
-  local qconsts     = require 'Q/UTILS/lua/q_consts'
- local ffi = require 'ffi' 
-  local cmem        = require 'libcmem'
 
   -- START: Basic checks on input 
   -- nDR = number of derived attributes per raw attribute

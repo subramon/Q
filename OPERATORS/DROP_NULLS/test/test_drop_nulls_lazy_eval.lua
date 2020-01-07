@@ -1,11 +1,11 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
-local Q = require 'Q'
+local Q        = require 'Q'
 local C_to_txt = require "Q/UTILS/lua/C_to_txt"
-local lVector = require 'Q/RUNTIME/lua/lVector'
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local ffi = require 'ffi'
-local Scalar = require 'libsclr' ; 
+local lVector  = require 'Q/RUNTIME/VCTR/lua/lVector'
+local qconsts  = require 'Q/UTILS/lua/q_consts'
+local ffi      = require 'ffi'
+local Scalar  = require 'libsclr' ; 
 local cmem    = require 'libcmem';
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local tests = {}

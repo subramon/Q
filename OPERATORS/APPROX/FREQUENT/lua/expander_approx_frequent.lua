@@ -1,9 +1,8 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local ffi = require 'ffi'
-local lVector = require 'Q/RUNTIME/lua/lVector'
+local ffi     = require 'ffi'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local Reducer = require 'Q/RUNTIME/lua/Reducer'
 local qc      = require 'Q/UTILS/lua/q_core'
-
 local qtypes  = require 'Q/OPERATORS/APPROX/FREQUENT/lua/qtypes'
 local spfn    = require 'Q/OPERATORS/APPROX/FREQUENT/lua/specializer_approx_frequent'
 

@@ -1,7 +1,6 @@
 local Q = require 'Q'
 local plstring = require 'pl.stringx'
-local Vector = require 'Q/RUNTIME/lua/lVector'
-local lVector = require 'Q/RUNTIME/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local load_csv = require 'Q/OPERATORS/LOAD_CSV/lua/load_csv'
 local print_csv = require 'Q/OPERATORS/PRINT/lua/print_csv'
 local convert_c_to_txt = require 'Q/UTILS/lua/C_to_txt'

@@ -1,11 +1,11 @@
 local Q           = require 'Q/q_export'
 local qc          = require 'Q/UTILS/lua/q_core'
-local ffi = require 'ffi'
+local ffi         = require 'ffi'
 local cmem        = require 'libcmem'
 local qconsts     = require 'Q/UTILS/lua/q_consts'
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
-local lVector     = require 'Q/RUNTIME/lua/lVector'
+local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
 local function SC_to_I4(
   inv, 
   dict,
