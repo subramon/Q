@@ -7,7 +7,6 @@ local Scalar		= require 'libsclr'
 local cVector		= require 'libvctr'
 local register_type	= require 'Q/UTILS/lua/q_types'
 local is_base_qtype	= require 'Q/UTILS/lua/is_base_qtype'
-local chk_chunk_return	= require 'Q/UTILS/lua/chk_chunk'
 local qc		= require 'Q/UTILS/lua/q_core'
 --====================================
 local helpers = {}
@@ -125,7 +124,8 @@ helpers.mk_boolean = function(inval, default_val)
 end
 
 helpers.is_multiple_of_chunk_size = function(n)
-  if ( ceil(n / cVector.chunk_size ) == floor(n / cVector.chunk_size ) ) then
+  local chunk_size = cVector.chunk_size()
+  if ( math.ceil(n / chunk_size ) == math.floor(n / chunk_size ) ) then
     return true
   else
     return false
