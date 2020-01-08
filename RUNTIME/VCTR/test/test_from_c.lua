@@ -478,62 +478,71 @@ tests.t8 = function()
   for iter = 1, 2 do 
     local qtype = "I4"
     local width = qconsts.qtypes[qtype].width
-    local v = cVector.new({qtype = qtype, width = width})
-    v:persist()
-    assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == true)
-    --=============
-    local M = assert(v:me())
-    M = ffi.cast("VEC_REC_TYPE *", M)
-    assert(M[0].is_persist == true)
-    local chunk_size = math.ceil(M[0].chunk_size_in_bytes / 
-      qconsts.qtypes[qtype].width)
-    assert(chunk_size == math.floor(M[0].chunk_size_in_bytes / 
-      qconsts.qtypes[qtype].width))
-    --=============
-    local num_chunks = 1024
-    local D = cmem.new(chunk_size * width, qtype)
-    for i = 1, num_chunks do 
-      -- assemble some known data 
-      local Dptr = ffi.cast("int32_t *", get_ptr(D, qtype))
-      local offset = (i-1) * chunk_size
-      for i = 1, chunk_size do Dptr[i-1] = offset + i end
-      -- put a chunk of known data 
-      v:put_chunk(D)
+    local v 
+    for _, mode in pairs(modes) do 
+      if ( mode == "cVector" ) then 
+        v = cVector.new( { qtype = qtype, width = width} )
+      elseif ( mode == "lVector" ) then 
+        v = lVector.new( { qtype = qtype, width = width} )
+      else
+        error("")
+      end
+      v:persist()
+      assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == true)
+      --=============
       local M = assert(v:me())
       M = ffi.cast("VEC_REC_TYPE *", M)
-      assert(M[0].num_chunks == i, i)
+      assert(M[0].is_persist == true)
+      local chunk_size = math.ceil(M[0].chunk_size_in_bytes / 
+        qconsts.qtypes[qtype].width)
+      assert(chunk_size == math.floor(M[0].chunk_size_in_bytes / 
+        qconsts.qtypes[qtype].width))
+      --=============
+      local num_chunks = 1024
+      local D = cmem.new(chunk_size * width, qtype)
+      for i = 1, num_chunks do 
+        -- assemble some known data 
+        local Dptr = ffi.cast("int32_t *", get_ptr(D, qtype))
+        local offset = (i-1) * chunk_size
+        for i = 1, chunk_size do Dptr[i-1] = offset + i end
+        -- put a chunk of known data 
+        v:put_chunk(D)
+        local M = assert(v:me())
+        M = ffi.cast("VEC_REC_TYPE *", M)
+        assert(M[0].num_chunks == i, i)
+        end
+      v:eov()
+      if ( iter == 2 ) then 
+        v:flush_all()
       end
-    v:eov()
-    if ( iter == 2 ) then 
-      v:flush_all()
-    end
-    local x = v:shutdown() 
-    assert(type(x) == "string") 
-    assert(#x > 0)
-    y = loadstring(x)()
-    assert(y.num_elements == num_chunks * chunk_size)
-
-    assert(y.width == qconsts.qtypes[qtype].width)
-    assert(y.qtype == qtype)
-    if ( iter == 1 ) then 
-      assert(not y.file_name)
-      assert(type(y.file_names) == "table")
-      assert(#y.file_names == num_chunks)
-      for k, v in pairs(y.file_names) do 
-        assert(plpath.isfile(v)) 
+      local x = v:shutdown() 
+      assert(type(x) == "string") 
+      assert(#x > 0)
+      y = loadstring(x)()
+      assert(y.num_elements == num_chunks * chunk_size)
+  
+      assert(y.width == qconsts.qtypes[qtype].width)
+      assert(y.qtype == qtype)
+      if ( iter == 1 ) then 
+        assert(not y.file_name)
+        assert(type(y.file_names) == "table")
+        assert(#y.file_names == num_chunks)
+        for k, v in pairs(y.file_names) do 
+          assert(plpath.isfile(v)) 
+        end
       end
+      if ( iter == 2 ) then 
+        assert(not y.file_names)
+        assert(type(y.file_name) == "string")
+        assert(plpath.isfile(y.file_name)) 
+      end 
+      -- clean up after yourself
+      local ddir = qconsts.Q_DATA_DIR
+      pldir = require 'pl.dir'
+      pldir.rmtree(ddir)
+      pldir.makepath(ddir)
+      --=====================
     end
-    if ( iter == 2 ) then 
-      assert(not y.file_names)
-      assert(type(y.file_name) == "string")
-      assert(plpath.isfile(y.file_name)) 
-    end 
-    -- clean up after yourself
-    local ddir = qconsts.Q_DATA_DIR
-    pldir = require 'pl.dir'
-    pldir.rmtree(ddir)
-    pldir.makepath(ddir)
-    --=====================
   end
   print("Successfully completed test t8")
 end
@@ -622,7 +631,7 @@ tests.t4() -- PASSES
 tests.t5() -- PASSES
 tests.t6() -- PASSES
 tests.t7() -- PASSES
--- tests.t8() -- PASSES
+tests.t8() -- PASSES
 tests.t9() -- PASSES
 os.exit()
 
