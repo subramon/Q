@@ -1,21 +1,12 @@
 return require 'Q/UTILS/lua/code_gen' {
-
    declaration = [[
-
 #include "q_incs.h"
-
-// Below structure needs to be same as structure template in seq_mem_initialize.lua
-typedef struct _seq_${out_qtype}_rec_type {
-   ${out_ctype} start;
-   ${out_ctype} by;
-} SEQ_${out_qtype}_REC_TYPE;
-
 extern int
 seq_${out_qtype}(
   ${out_ctype} *X,
   uint64_t nX,
-  SEQ_${out_qtype}_REC_TYPE *ptr_in,
-  uint64_t idx
+  ${arg_ctype} *ptr_in,
+  uint64_t idx // which element of vector 
   );
    ]],
 
@@ -28,8 +19,8 @@ int
 seq_${out_qtype}(
   ${out_ctype} *X,
   uint64_t nX,
-  SEQ_${out_qtype}_REC_TYPE *ptr_in,
-  uint64_t idx
+  ${arg_ctype} *ptr_in,
+  uint64_t idx // which element of vector 
   )
 //STOP_FUNC_DECL
 {

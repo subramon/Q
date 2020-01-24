@@ -1,6 +1,6 @@
 local gen_code = require "Q/UTILS/lua/gen_code"
 local qconsts  = require 'Q/UTILS/lua/q_consts'
-local extract_func_decl  = require 'Q/UTILS/lua/extract_func_decl'
+local extract_func_decl  = require 'Q/UTILS/src/extract_func_decl'
 local plpath   = require "pl.path"
 local srcdir   = "../xgen_src/"
 local incdir   = "../xgen_inc/"

@@ -3,7 +3,7 @@ local cmem            = require 'libcmem'
 local register_type   = require 'Q/UTILS/lua/q_types'
 local qc              = require 'Q/UTILS/lua/q_core'
 local to_scalar       = require 'Q/UTILS/lua/to_scalar'
-local lVector         = require 'Q/RUNTIME/lua/lVector'
+local lVector         = require 'Q/RUNTIME/VCTR/lua/lVector'
 local libgen          = require 'Q/RUNTIME/MAGG/lua/libgen'
 local Aggregator      -- will be set in instantiate()
 --====================================

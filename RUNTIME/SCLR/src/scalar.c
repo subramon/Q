@@ -72,7 +72,7 @@ static int l_sclr_to_cmem( lua_State *L)
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: sclr_to_cmem. ");
+  lua_pushstring(L, __func__);
   return 2;
 }
 
@@ -125,7 +125,7 @@ static int l_sclr_reincarnate(lua_State *L) {
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: sclr_reincarnate. ");
+  lua_pushstring(L, __func__);
   lua_pushnumber(L, status);
   return 2;
 }
@@ -161,7 +161,7 @@ static int l_sclr_to_num( lua_State *L) {
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: sclr_to_num. ");
+  lua_pushstring(L, __func__);
   return 2;
 }
 
@@ -172,7 +172,7 @@ static int l_fldtype(lua_State *L) {
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: fldtype. ");
+  lua_pushstring(L, __func__);
   return 2;
 }
 
@@ -222,7 +222,7 @@ static int l_sclr_to_str( lua_State *L) {
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: sclr_to_str. ");
+  lua_pushstring(L, __func__);
   lua_pushnumber(L, status);
   return 3;
 }
@@ -263,7 +263,7 @@ static int l_sclr_abs( lua_State *L) {
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: sclr_abs. ");
+  lua_pushstring(L, __func__);
   lua_pushnumber(L, status);
   return 3;
 }
@@ -446,7 +446,7 @@ static int l_sclr_conv( lua_State *L) {
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: sclr_conv. ");
+  lua_pushstring(L, __func__);
   lua_pushnumber(L, status);
   return 3;
 }
@@ -606,7 +606,7 @@ static int l_sclr_new( lua_State *L) {
   return 1;
 BYE:
   lua_pushnil(L);
-  lua_pushstring(L, "ERROR: sclr_new. ");
+  lua_pushstring(L, __func__);
   return 2;
 }
 

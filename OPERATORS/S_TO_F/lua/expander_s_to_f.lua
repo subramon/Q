@@ -1,23 +1,22 @@
-local ffi      = require 'ffi'
+local ffi     = require 'ffi'
 local qc      = require 'Q/UTILS/lua/q_core'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
-local multiple_of_8 = require 'Q/UTILS/lua/multiple_of_8'
 local cmem    = require 'libcmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
 return function (a, args)
   -- Get name of specializer function. By convention
-  local sp_fn_name = "Q/OPERATORS/S_TO_F/lua/" .. a .. "_specialize"
-  local mem_init_name = "Q/OPERATORS/S_TO_F/lua/" .. a .. "_mem_initialize"
-  local mem_initialize = assert(require(mem_init_name), "mem_initializer not found")
+  local sp_fn_name     = "Q/OPERATORS/S_TO_F/lua/" .. a .. "_specialize"
+  local mem_init_name  = "Q/OPERATORS/S_TO_F/lua/" .. a .. "_mem_initialize"
+  local mem_initialize = assert(require(mem_init_name), 
+    "mem_initializer not found")
   local spfn = assert(require(sp_fn_name), "Specializer not found")
   local status, subs = pcall(spfn, args)
-  if ( not status ) then print(subs) end 
-  assert(status, "Specializer failed " .. sp_fn_name)
+  if ( not status ) then print(sp_fn_name, subs) end 
+  assert(status, "Specializer failed ")
   local func_name = assert(subs.fn)
-  local out_qtype = assert(args.qtype)
 
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
@@ -26,44 +25,35 @@ return function (a, args)
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Function not found " .. func_name)
 
-  -- calling mem_initializer
-  local c_mem, cst_as = mem_initialize(subs)
-  local chunk_size = qconsts.chunk_size
-  local width =  assert(qconsts.qtypes[out_qtype].width)
-  local bufsz =  multiple_of_8(chunk_size * width)
+  local cast_as = subs.out_ctype .. "*"
   local buff =  nil
-  local chunk_idx = 0
+  local l_chunk_num = 0
   local first_call = true
   local myvec
   
-  local gen1 = function(chunk_num)
-    -- Adding assert on chunk_idx to have sync between expected chunk_num and generator's chunk_idx state
-    assert(chunk_num == chunk_idx)
+  local generator = function(chunk_num)
+    -- Adding assert on l_chunk_num to have sync between 
+    -- expected chunk_num and generator's l_chunk_num state
+    assert(chunk_num == l_chunk_num)
     if ( first_call ) then
       first_call = false
-      buff = assert(cmem.new(bufsz, out_qtype))
+      buff = assert(cmem.new(subs.buf_size, subs.out_qtype))
       myvec:no_memcpy(buff) -- hand control of this buff to the vector
     else
       myvec:flush_buffer()
     end
-    local lb = chunk_size * chunk_idx
-    local ub = lb + chunk_size
-    local chunk_size = ub - lb;
-    chunk_idx = chunk_idx + 1
-    if ( ub > subs.len ) then 
-      chunk_size = subs.len - lb
-    end
-    if ( chunk_size <= 0 ) then
-      return 0
-    else
-      local casted_buff = ffi.cast( qconsts.qtypes[out_qtype].ctype .. "*",  get_ptr(buff))
-      local casted_struct = ffi.cast(cst_as, get_ptr(c_mem))
-      local start_time = qc.RDTSC()
-      qc[func_name](casted_buff, chunk_size, casted_struct, lb)
-      record_time(start_time, func_name)
-      return chunk_size, buff
-    end
+    local lb = chunk_size * l_chunk_num
+    assert(lb < subs.len) -- Note not <=
+    local num_elements = subs.len - lb
+    if ( num_elements > chunk_size ) then num_elements = chunk_size end
+    if ( num_elements <= 0 ) then return 0, nil end
+    --=============================
+    local casted_buff   = ffi.cast(cast_as,  get_ptr(buff))
+    local start_time = qc.RDTSC()
+    qc[func_name](casted_buff, chunk_size, subs.args, lb)
+    record_time(start_time, func_name)
+    return chunk_size, buff
   end
-  myvec = lVector{gen=gen1, has_nulls=false, qtype=out_qtype}
+  myvec = lVector{gen=generator, has_nulls=false, qtype=out_qtype}
   return myvec
 end

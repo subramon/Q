@@ -1,6 +1,6 @@
 local Q           = require 'Q'
 local qconsts     = require 'Q/UTILS/lua/q_consts'
-local lVector     = require 'Q/RUNTIME/lua/lVector'
+local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
 local lAggregator = require 'Q/RUNTIME/MAGG/lua/lAggregator'
 
 local tests = {}

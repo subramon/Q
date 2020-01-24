@@ -23,7 +23,7 @@ local function get_func_decl(
   local cmd
   if ( incs ) then
     assert(type(incs) == "string")
-    cmd = string.format( "cat %s | grep -v q_incs | grep -v q_macros | cpp %s %s|grep -v '^#'",
+    cmd = string.format( "cat %s | grep -v q_incs | grep -v q_macros | cpp %s -I/%s|grep -v '^#'",
       file, file, incs)
   else
     cmd = string.format( "cat %s | grep -v q_incs | grep -v q_macros | grep -v '^#'", file)

@@ -1,8 +1,13 @@
 #!/usr/bin/env lua
+local ffi      = require 'ffi'
+local qconsts  =  require 'Q/UTILS/lua/q_consts'
+local get_func_decl  = require 'Q/UTILS/build/get_func_decl'
+local get_hdr  = require 'Q/UTILS/lua/get_hdr'
 local gen_code = require 'Q/UTILS/lua/gen_code'
-local plpath = require "pl.path"
-local srcdir = "../gen_src/"
-local incdir = "../gen_inc/"
+local check_subs = require 'Q/OPERATORS/S_TO_F/lua/check_subs'
+local plpath   = require "pl.path"
+local srcdir   = "../gen_src/"
+local incdir   = "../gen_inc/"
 if ( not plpath.isdir(srcdir) ) then plpath.mkdir(srcdir) end
 if ( not plpath.isdir(incdir) ) then plpath.mkdir(incdir) end
 
@@ -12,15 +17,46 @@ local operators = dofile(operator_file)
 
 qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
 
+-- START Some cdefs that we could have gotten from q_core
+local hfile = qconsts.Q_SRC_ROOT .. "/RUNTIME/SCLR/inc/scalar_struct.h"
+assert(plpath.isfile(hfile))
+incs = qconsts.Q_SRC_ROOT .. "/UTILS/inc/"
+local dcl = get_func_decl(hfile, incs)
+ffi.cdef(dcl)
+--===============
+local hfile = qconsts.Q_SRC_ROOT .. "/RUNTIME/CMEM/inc/cmem_struct.h"
+assert(plpath.isfile(hfile))
+incs = qconsts.Q_SRC_ROOT .. "/UTILS/inc/"
+local dcl = get_func_decl(hfile, incs)
+ffi.cdef(dcl)
+--===============
+ffi.cdef([[
+  struct drand48_data
+  {
+    unsigned short int __x[3];	/* Current state.  */
+    unsigned short int __old_x[3]; /* Old state.  */
+    unsigned short int __c;	/* Additive const. in congruential formula.  */
+    unsigned short int __init;	/* Flag for initializing.  */
+    __extension__ unsigned long long int __a;	/* Factor in congruential
+						   formula.  */
+  };
+   ]])
+
+-- STOP Some cdefs that we could have gotten from q_core
+
 local args = {}
 args.len = 100
 for i, operator in ipairs(operators) do
+  local hfile = "../inc/" .. operator .. "_struct.h"
+  assert(plpath.isfile(hfile))
+  local hstr = assert(get_hdr(hfile))
+  ffi.cdef(hstr)
   local num_produced = 0
-  print("working on " .. operator)
   local sp_fn = assert(require(operator .. "_specialize"))
   for i, qtype in ipairs(qtypes) do
-    -- args.qtype = qtype
     args.qtype = qtype
+    -- we need some sample values because specializer needs to
+    -- create data structures with input/output values
     if ( operator == "const" ) then 
       args.val = 1
     elseif ( operator == "rand" ) then 
@@ -39,8 +75,11 @@ for i, operator in ipairs(operators) do
     end
     local status, subs = pcall(sp_fn, args)
     assert(status, subs)
+    assert(check_subs(subs))
     gen_code.doth(subs, incdir)
     gen_code.dotc(subs, srcdir)
+    num_produced = num_produced + 1
   end
-  assert(num_produced >= 0)
+  print("finished on " .. operator)
+--  assert(num_produced >= 0)
 end

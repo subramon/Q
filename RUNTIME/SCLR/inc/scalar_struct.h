@@ -1,6 +1,6 @@
 #ifndef __SCALAR_H
 #define __SCALAR_H
-#include "q_incs.h"
+#include "q_constants.h"
 
 typedef union _cdata_type {
   bool    valB1;
@@ -13,7 +13,7 @@ typedef union _cdata_type {
 } CDATA_TYPE;
 
 typedef struct _sclr_rec_type {
-  char field_type[4]; // MAX_LEN_FIELD_TYPE TODO Fix hard coding
+  char field_type[Q_MAX_LEN_QTYPE_NAME+1];
   uint32_t field_width;
   CDATA_TYPE cdata;
 } SCLR_REC_TYPE;
