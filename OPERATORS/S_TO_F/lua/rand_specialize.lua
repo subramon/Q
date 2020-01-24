@@ -1,66 +1,72 @@
+local cutils    = require 'libcutils'
+local ffi       = require 'ffi'
+local cmem      = require 'libcmem'
+local Scalar    = require 'libsclr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
-local is_base_qtype = assert(require 'Q/UTILS/lua/is_base_qtype')
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/rand.tmpl"
+local is_in     = require 'Q/UTILS/lua/is_in'
+local get_ptr   = require 'Q/UTILS/lua/get_ptr'
+local qconsts   = require 'Q/UTILS/lua/q_consts'
+local tmpl      = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/rand.tmpl"
 
 return function (
-  args
+  in_args
   )
   --=================================
-
+  assert(type(in_args) == "table")
+  local qtype = assert(in_args.qtype)
+  local len   = assert(in_args.len)
+  assert(is_in(qtype, { "B1", "I1", "I2", "I4", "I8", "F4", "F8"}))
+  assert(len > 0, "vector length must be positive")
+  --=======================
   local subs = {}
-  local status
-  assert(type(args) == "table")
-  local qtype = assert(args.qtype)
-  if ( qtype == "B1" ) then
-    local spfn = require 'Q/OPERATORS/S_TO_F/lua/rand_specialize_B1'
-    status, subs, tmpl = pcall(spfn, args)
-    if ( not status ) then 
-      print(subs) 
-      return 
-    else 
-      return subs, tmpl
-    end
-  end
+  subs.fn = "rand_" .. qtype
+  subs.len = len
+  subs.out_ctype = qconsts.qtypes[qtype].ctype
+  subs.out_qtype = qtype
+  subs.tmpl = tmpl
+  subs.buf_size = qconsts.chunk_size * qconsts.qtypes[qtype].width
+  --=======================
+  -- set up args for C code
+  local args_ctype = "RAND_" .. qtype .. "_REC_TYPE";
+  local sz = ffi.sizeof(args_ctype)
+  local cargs = cmem.new(sz, qtype, qtype); 
+  local args = ffi.cast(args_ctype .. " *", get_ptr(cargs))
 
-  local lb	= assert(args.lb)
-  local ub	= assert(args.ub)
-  local len	= assert(args.len)
-  local seed	= args.seed
-  local ctype	= qconsts.qtypes[qtype].ctype
+  -- set lb
+  local lb   = assert(in_args.lb)
+  local slb = assert(to_scalar(lb, qtype))
+  local slb = ffi.cast("SCLR_REC_TYPE *", slb)
+  args[0]["lb"] = slb[0].cdata["val" .. qtype]
+  -- set ub
+  local ub   = assert(in_args.ub)
+  local sub = assert(to_scalar(ub, qtype))
+  local sub = ffi.cast("SCLR_REC_TYPE *", sub)
+  args[0]["ub"] = sub[0].cdata["val" .. qtype]
 
+  assert(ub > lb)
+  --TODO P2 Check  lb, ub in range for type
+  -- set seed
+  local seed	= in_args.seed
   if ( seed ) then 
     assert(type(seed) == "number")
+    assert(seed > 0)
   else
-    seed = 0 
+    seed = cutils.rdtsc()
   end
-  assert(is_base_qtype(qtype))
-  assert(type(len) == "number")
-  assert(len > 0, "vector length must be positive")
-  lb = assert(to_scalar(lb, qtype))
-  ub = assert(to_scalar(ub, qtype))
-  assert(ub > lb, "upper bound should be strictly greater than lower bound")
-  assert(type(len) == "number")
-  assert(len > 0)
+  local sseed = Scalar.new(seed, "I8")
+  local sseed = ffi.cast("SCLR_REC_TYPE *", sseed)
+  args[0]["ub"] = sub[0].cdata["valI8"]
 
-  subs.seed = seed
-  subs.lb = lb
-  subs.ub = ub
-  --==============================
-  if ( qconsts.iorf[qtype] == "fixed" ) then 
-    subs.conv_fn = "floor"
-    subs.identity_fn = " /* no identitu function needed */ "
-  elseif ( qconsts.iorf[qtype] == "floating_point" ) then 
-    subs.conv_fn = "identity"
-    subs.identity_fn = " static double identity(double x) { return x; }"
-  else
-    assert(nil, "Unknown type " .. qtype)
-  end
+  subs.args       = args
+  subs.args_ctype = args_ctype
   --=========================
-  subs.fn = "rand_" .. qtype
-  subs.out_ctype = qconsts.qtypes[qtype].ctype
-  subs.len = len
-  subs.out_qtype = qtype
-  subs.tmpl      = tmpl
+  --=== handle B1 as special case
+  if ( qtype == "B1" ) then
+    subs.buf_size = qconsts.chunk_size / 8
+    subs.tmpl = nil -- this is not generated code 
+    subs.out_ctype = "uint64_t" 
+    subs.dotc = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/src/rand_B1.c"
+    subs.doth = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/inc/rand_B1.h"
+  end
   return subs
 end

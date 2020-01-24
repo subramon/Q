@@ -12,25 +12,24 @@ return function (
   )
 
   assert(type(in_args) == "table")
-  local val   = assert(in_args.val)
   local qtype = assert(in_args.qtype)
   local len   = assert(in_args.len)
-  local out_ctype = qconsts.qtypes[qtype].ctype
   assert(is_in(qtype, { "B1", "I1", "I2", "I4", "I8", "F4", "F8"}))
   assert(len > 0, "vector length must be positive")
   --=======================
   local subs = {};
   subs.fn = "const_" .. qtype
   subs.len = len
-  subs.out_ctype = out_ctype
+  subs.out_ctype = qconsts.qtypes[qtype].ctype
   subs.out_qtype = qtype
-  local sval = assert(to_scalar(val, qtype))
   subs.tmpl = tmpl
   subs.buf_size = qconsts.chunk_size * qconsts.qtypes[qtype].width
   -- set up args for C code
+  local val   = assert(in_args.val)
+  local sval = assert(to_scalar(val, qtype))
   local args_ctype = "CONST_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(args_ctype)
-  local cargs = cmem.new(sz, qtype, qtype); cargs:set(111)
+  local cargs = cmem.new(sz, qtype, qtype); 
   args = ffi.cast(args_ctype .. " *", get_ptr(cargs))
 
   local s = ffi.cast("SCLR_REC_TYPE *", sval)
@@ -41,6 +40,7 @@ return function (
   subs.args_ctype = args_ctype
   --=== handle B1 as special case
   if ( qtype == "B1" ) then
+    subs.buf_size = qconsts.chunk_size / 8
     subs.tmpl = nil -- this is not generated code 
     assert(type(sval) == "boolean")
     subs.out_ctype = "uint64_t" 

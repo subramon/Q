@@ -1,5 +1,5 @@
 return {
-  "const",
+"const",
 "seq",
 "period",
 "rand"

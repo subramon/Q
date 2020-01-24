@@ -17,9 +17,8 @@ return function (
   local len   = assert(in_args.len)
   local by    = assert(in_args.by)
   local ctype = assert(qconsts.qtypes[qtype].ctype)
-  assert(is_in(qtype, { "B1", "I1", "I2", "I4", "I8", "F4", "F8"}))
+  assert(is_in(qtype, { "I1", "I2", "I4", "I8", "F4", "F8"}))
   assert(len > 0, "vector length must be positive")
-
 
   local subs = {};
   --========================
@@ -38,7 +37,7 @@ return function (
 
   local args_ctype = "SEQ_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(args_ctype)
-  local cargs = cmem.new(sz, qtype, qtype); cargs:set(111)
+  local cargs = cmem.new(sz, qtype, qtype); 
   args = ffi.cast(args_ctype .. " *", get_ptr(cargs))
 
   local kc = val

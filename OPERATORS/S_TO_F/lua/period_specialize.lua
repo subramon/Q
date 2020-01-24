@@ -1,38 +1,55 @@
+local ffi       = require 'ffi'
+local cmem      = require 'libcmem'
+local Scalar    = require 'libsclr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
-local is_base_qtype = assert(require 'Q/UTILS/lua/is_base_qtype')
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/period.tmpl"
+local is_in     = require 'Q/UTILS/lua/is_in'
+local get_ptr   = require 'Q/UTILS/lua/get_ptr'
+local qconsts   = require 'Q/UTILS/lua/q_consts'
+local tmpl      = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/period.tmpl"
 
 return function (
-  args
+  in_args
   )
-  --============================
-  assert(type(args) == "table")
-  local start = assert(args.start)
-  local period = assert(args.period)
-  local qtype = assert(args.qtype)
-  local len   = assert(args.len)
-  local by    = args.by
-  if ( not by ) then by = 1 end
-  assert(is_base_qtype(qtype))
-  assert(type(len) == "number")
+  --====================================
+  assert(type(in_args) == "table")
+  local qtype = assert(in_args.qtype)
+  local len   = assert(in_args.len)
+  local start = assert(in_args.start)
+  local by    = assert(in_args.by)
+  local period= assert(in_args.period)
+  local ctype = assert(qconsts.qtypes[qtype].ctype)
+  assert(is_in(qtype, { "I1", "I2", "I4", "I8", "F4", "F8"}))
   assert(len > 0, "vector length must be positive")
-
-  local out_ctype = qconsts.qtypes[qtype].ctype
-  start   = assert(to_scalar(start, qtype))
-  by	  = assert(to_scalar(by, qtype))
-  period  = assert(to_scalar(period, qtype))
-  assert(period:to_num() > 1, "length of period must be > 1")
+  assert(period > 0, "period must be positive")
 
   local subs = {};
-  subs.fn          = "period_" .. qtype
-  subs.out_ctype   = out_ctype
-  subs.len         = len
-  subs.out_qtype   = qtype
-  subs.start       = start
-  subs.by          = by
-  subs.period      = period
-  subs.tmpl        = tmpl
+  --========================
+  subs.fn	    = "period_" .. qtype
+  subs.len	    = len
+  subs.out_qtype    = qtype
+  subs.out_ctype    = qconsts.qtypes[qtype].ctype
+  subs.tmpl         = tmpl
+  subs.buf_size = qconsts.chunk_size * qconsts.qtypes[qtype].width
+  --========================
+  -- set up args for C code
+  local sstart = assert(to_scalar(start, qtype))
+  sstart = ffi.cast("SCLR_REC_TYPE *", sstart)
+  local sby    = assert(to_scalar(by, qtype))
+  sby    = ffi.cast("SCLR_REC_TYPE *", sby)
+  local speriod    = assert(to_scalar(period, "I4"))
+  speriod    = ffi.cast("SCLR_REC_TYPE *", speriod)
 
+  local args_ctype = "PERIOD_" .. qtype .. "_REC_TYPE";
+  local sz = ffi.sizeof(args_ctype)
+  local cargs = cmem.new(sz, qtype, qtype); 
+  args = ffi.cast(args_ctype .. " *", get_ptr(cargs))
+
+  local kc = val
+  args[0]["start"]  =  sstart[0].cdata["val" .. qtype]
+  args[0]["by"]     =     sby[0].cdata["val" .. qtype]
+  args[0]["period"] = speriod[0].cdata["valI4"]
+
+  subs.args       = args
+  subs.args_ctype = args_ctype
   return subs
 end
