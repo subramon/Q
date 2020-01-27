@@ -14,7 +14,9 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
-all : _s_to_f.lua $(TMPL_FILES) $(SRC_FILES) $(INCL_FILES) $(GEN_FILES)
+all : _s_to_f.lua \
+  	$(TMPL_FILES) $(SRC_FILES) $(INCL_FILES) $(GEN_FILES) \
+	libs_to_f.so
 	luajit generator.lua operators.lua
 
 so : libs_to_f.so 
@@ -42,8 +44,15 @@ SRC_FILES = \
 INC_FILES = \
 	../inc/rand_B1.h \
 	../inc/const_B1.h \
+	../inc/const_struct.h \
+	../inc/seq_struct.h \
+	../inc/rand_struct.h \
+	../inc/period_struct.h \
 
 TMPL_FILES = period.tmpl rand.tmpl seq.tmpl const.tmpl
+
+../gen_src/_const_F4.c : const.tmpl const_specialize.lua
+	luajit generator.lua operators.lua
 
 libs_to_f.so : ${GEN_FILES} ${SRC_FILES} ${INC_FILES} ${TMPL_FILES}
 	luajit generator.lua operators.lua
@@ -53,14 +62,10 @@ libs_to_f.so : ${GEN_FILES} ${SRC_FILES} ${INC_FILES} ${TMPL_FILES}
 	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
 	cp ${SRC_FILES} ${Q_BUILD_DIR}/src/
 	cp ${INC_FILES} ${Q_BUILD_DIR}/include/
-	test -d ${Q_BUILD_DIR}
-
-# _s_to_f.lua : $(TMPL_FILES) # $(SRC_FILES) $(INCL_FILES
-# 	luajit generator.lua operators.lua
-# 	lua pkg_s_to_f.lua
 
 _s_to_f.lua : 
 	lua pkg_s_to_f.lua
+	cp ${INC_FILES} ${Q_BUILD_DIR}/include/
 
 test_q : libs_to_f.so
 	luajit ../test/test_s_to_f.lua

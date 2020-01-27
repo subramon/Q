@@ -182,7 +182,7 @@ local function q_add(
     dotc = subs.dotc
     assert( (type(dotc) == "string") and  ( #dotc > 0 ) )
   end
-  function_name = assert(subs.fn)
+  local function_name = assert(subs.fn)
   assert( (type(function_name) == "string") and  ( #function_name > 0 ) )
 
   assert(not known_functions[function_name], "Function already registered")
@@ -224,7 +224,7 @@ local qc_mt = {
     -- for a statically generated function, you come here only once
     if key == "q_add" then return q_add end
     -- get it from q_static (all statically compiled stuff)
-    print("getting from q_static ", key)
+    -- print("getting from q_static ", key)
     local status, func = pcall(get_val_in_q_static, key)
     if status == true then
       qc[key] = func 

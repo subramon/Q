@@ -132,12 +132,6 @@ static int l_vec_print_timers( lua_State *L) {
 }
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
-static int l_vec_chunk_size( lua_State *L) {
-  lua_pushnumber(L, g_chunk_size);
-  return 1;
-}
-//-----------------------------------
-// TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_check_chunks( lua_State *L) {
   g_check_chunks(g_chunk_dir, g_sz_chunk_dir, g_n_chunk_dir);
   lua_pushboolean(L, true);
@@ -176,12 +170,21 @@ static int l_vec_init_globals( lua_State *L) {
   }
   //------------------- get chunk size 
   status = get_int_from_tbl(L, "chunk_size", &is_key, &itmp); 
-  if (  ( !is_key) || ( itmp < 1024 ) ) { go_BYE(-1); }
-  if ( ( ( itmp / 64 ) * 64 )  != itmp ) { go_BYE(-1); }
-  g_chunk_size = itmp;
+  if ( !is_key ) { 
+    g_chunk_size = Q_DEFAULT_CHUNK_SIZE;
+  }
+  else {
+    if ( itmp < 1024 ) { go_BYE(-1); }
+    // must be a multiple of 1024
+    if ( ( ( itmp / 64 ) * 64 )  != itmp ) { go_BYE(-1); }
+    g_chunk_size = itmp;
+  }
   //------------------- get q_data_dir
   status = get_str_from_tbl(L, "data_dir", &is_key, &cptr);  cBYE(status);
-  if ( !is_key ) { go_BYE(-1); }
+  if ( !is_key ) {  // get from environment variable
+    cptr = getenv("Q_DATA_DIR");
+    if ( ( cptr == NULL ) || ( *cptr == '\0' ) ) { go_BYE(-1); }
+  }
   if ( !isdir(cptr) ) { go_BYE(-1); }
   if ( strlen(cptr) > Q_MAX_LEN_DIR ) { go_BYE(-1); }
   strcpy(g_q_data_dir, cptr);
@@ -193,6 +196,23 @@ BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
   return 2;
+}
+//-----------------------------------
+// TODO P3 Should not be part of vector code, this deals with globals
+static int l_vec_chunk_size( lua_State *L) {
+  if ( g_chunk_size == 0 ) {  
+    // set default values
+    g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
+    g_chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    snprintf(g_q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
+    if ( !isdir(g_q_data_dir) ) { 
+      lua_pushnil(L);
+      lua_pushstring(L, __func__);
+      return 2;
+    }
+  }
+  lua_pushnumber(L, g_chunk_size);
+  return 1;
 }
 //-----------------------------------
 static int l_vec_no_memcpy( lua_State *L) {

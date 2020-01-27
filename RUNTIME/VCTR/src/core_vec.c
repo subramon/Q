@@ -6,13 +6,13 @@
 #include "buf_to_file.h"
 #include "copy_file.h"
 
-#include "_file_exists.h"
-#include "_get_file_size.h"
-#include "_isfile.h"
-#include "_isdir.h"
-#include "_rdtsc.h"
-#include "_rs_mmap.h"
-#include "_txt_to_I4.h"
+#include "file_exists.h"
+#include "get_file_size.h"
+#include "isfile.h"
+#include "isdir.h"
+#include "rdtsc.h"
+#include "rs_mmap.h"
+#include "txt_to_I4.h"
 
 #include "lauxlib.h"
 
@@ -504,7 +504,7 @@ vec_start_read(
   uint64_t delta = 0, t_start = RDTSC(); n_get_all++;
   if ( !ptr_vec->is_eov ) { go_BYE(-1); }
   if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
-  ptr_vec->num_readers++;
+  ptr_vec->num_readers++; // TODO P1 is this right? See increment beloe
   *ptr_num_elements = ptr_vec->num_elements;
   if ( *ptr_num_elements == 0 ) { go_BYE(-1); }
   if ( ptr_vec->num_chunks == 1 ) { 

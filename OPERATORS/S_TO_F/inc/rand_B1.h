@@ -1,10 +1,5 @@
 #include "q_incs.h"
-
-typedef struct _rand_B1_rec_type {
-  uint64_t seed;
-  struct drand48_data buffer;
-  double probability;
-} RAND_B1_REC_TYPE;
+#include "rand_struct.h"
 
 extern int
 rand_B1(

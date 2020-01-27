@@ -31,7 +31,6 @@ local qconsts = {}
   qconsts.Q_SRC_ROOT	= os.getenv("Q_SRC_ROOT")
   qconsts.Q_ROOT	= os.getenv("Q_ROOT")
   qconsts.QC_FLAGS	= os.getenv("QC_FLAGS")
-  qconsts.Q_DATA_DIR	= os.getenv("Q_DATA_DIR")
   qconsts.Q_TRACE_DIR	= os.getenv("Q_TRACE_DIR")
   qconsts.Q_BUILD_DIR	= os.getenv("Q_BUILD_DIR")
   qconsts.Q_LINK_FLAGS	= os.getenv("Q_LINK_FLAGS")
@@ -39,7 +38,10 @@ local qconsts = {}
   qconsts.Q_METADATA_FILE = os.getenv("Q_METADATA_FILE")
   qconsts.LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")
 
-  qconsts.chunk_size = 64 * 1024 -- make this power of 2 and >= 1024
+  -- from cVector qconsts.Q_DATA_DIR	= os.getenv("Q_DATA_DIR")
+  -- from cVector qconsts.chunk_size = chunk_size
+--=================================
+
   qconsts.debug = true -- set to TRUE only if you want debugging
   qconsts.is_memo = true -- Vector code uses this default value
   qconsts.has_nulls = false -- Vector code uses this default value

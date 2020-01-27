@@ -15,7 +15,7 @@ local operator_file = assert(arg[1])
 assert(plpath.isfile(operator_file))
 local operators = dofile(operator_file)
 
-qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
+qtypes = { "B1", "I1", "I2", "I4", "I8", "F4", "F8" }
 
 -- START Some cdefs that we could have gotten from q_core
 local hfile = qconsts.Q_SRC_ROOT .. "/RUNTIME/SCLR/inc/scalar_struct.h"
@@ -73,12 +73,30 @@ for i, operator in ipairs(operators) do
     else
       assert(nil, "Control should not come here")
     end
-    local status, subs = pcall(sp_fn, args)
-    assert(status, subs)
-    assert(check_subs(subs))
-    gen_code.doth(subs, incdir)
-    gen_code.dotc(subs, srcdir)
-    num_produced = num_produced + 1
+    if ( ( qtype == "B1" ) and 
+         ( ( operator == "seq" ) or ( operator == "period" ) ) ) then
+         -- do nothing
+    else
+      if ( qtype == "B1" ) then
+        if ( operator == "const" ) then
+          args.val = true
+        elseif ( operator == "rand" ) then
+          args.probability = 0.5
+        else
+          error("")
+        end
+      end
+      local status, subs = pcall(sp_fn, args)
+      assert(status, subs)
+      assert(check_subs(subs))
+      if ( not subs.tmpl ) then
+        print("Not generating code for " .. subs.fn)
+      else
+        gen_code.doth(subs, incdir)
+        gen_code.dotc(subs, srcdir)
+        num_produced = num_produced + 1
+      end
+    end
   end
   print("finished on " .. operator)
 --  assert(num_produced >= 0)

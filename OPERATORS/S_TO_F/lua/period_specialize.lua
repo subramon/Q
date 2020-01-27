@@ -1,5 +1,6 @@
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
+local cVector   = require 'libvctr'
 local Scalar    = require 'libsclr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local is_in     = require 'Q/UTILS/lua/is_in'
@@ -29,7 +30,7 @@ return function (
   subs.out_qtype    = qtype
   subs.out_ctype    = qconsts.qtypes[qtype].ctype
   subs.tmpl         = tmpl
-  subs.buf_size = qconsts.chunk_size * qconsts.qtypes[qtype].width
+  subs.buf_size = cVector.chunk_size() * qconsts.qtypes[qtype].width
   --========================
   -- set up args for C code
   local sstart = assert(to_scalar(start, qtype))

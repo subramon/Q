@@ -1,3 +1,4 @@
+local plpath = require 'pl.path'
 local get_func_decl   = require 'Q/UTILS/build/get_func_decl'
 local exec_and_capture_stdout=require 'Q/UTILS/lua/exec_and_capture_stdout'
 local qconsts      = require 'Q/UTILS/lua/q_consts'
@@ -7,6 +8,10 @@ local struct_files = {
   "scalar_struct.h",
   "spooky_struct.h",
   "cmem_struct.h",
+  "const_struct.h", -- from OPERATORS/S_TO_F/
+  "seq_struct.h", -- from OPERATORS/S_TO_F/
+  "rand_struct.h", -- from OPERATORS/S_TO_F/
+  "period_struct.h", -- from OPERATORS/S_TO_F/
 }
 
 local q_files =  { 
@@ -36,9 +41,13 @@ local function add_h_files_to_list(
   -- add struct files first
   for _, file in ipairs(struct_files) do
     local full_file_name = qconsts.Q_BUILD_DIR .. "/include/" .. file
-    local cleaned_def, hash_define = get_func_decl(full_file_name)
-    cleaned_defs[#cleaned_defs + 1] = cleaned_def
-    hash_defines[#hash_defines + 1] = hash_define
+    if ( not plpath.isfile(full_file_name) ) then 
+      print("Not adding struct file " .. file)
+    else
+      local cleaned_def, hash_define = get_func_decl(full_file_name)
+      cleaned_defs[#cleaned_defs + 1] = cleaned_def
+      hash_defines[#hash_defines + 1] = hash_define
+    end
   end
   -- add other files, excluding some 
   for _, h_file in ipairs(h_files) do

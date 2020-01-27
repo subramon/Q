@@ -36,7 +36,7 @@ end
 
 -- not from Lua. Use cVector:check_chunks()
 function lVector:chunk_size_in_bytes()
-  return extract_field(self, "chunk_size_in_bytes", "number")
+  return extract_field(self.base_vec, self._nn_vec, "chunk_size_in_bytes", "number")
 end
 
 function lVector:delete()
@@ -78,15 +78,22 @@ end
 function lVector:eval()
   if ( self:is_eov() ) then return self end 
   assert(H.is_multiple_of_chunk_size(self:num_elements()))
-  local chunk_num = self:num_elements() / cVector.chunk_size
+  local csz = cVector.chunk_size()
+  local chunk_num = self:num_elements() / csz
   local base_len, base_addr, nn_addr 
   repeat
     base_len, base_addr, nn_addr = self:get_chunk(chunk_num)
+
+    -- this unget needed because get_chunk increments num readers 
+    -- and he eval doesn't actually get the chunk for itself
+    cVector.unget_chunk(self._base_vec, chunk_num)
+    if ( self._nn_vec ) then cVector.unget_chunk(self._nn_vec, chunk_num) end
+
     chunk_num = chunk_num + 1 
-  until ( base_len ~= qconsts.chunk_size )
+  until ( base_len ~= csz ) 
   assert(self:is_eov())
   -- cannot have Vector with 0 elements
-  if ( self:length() == 0 ) then  return nil  end
+  if ( self:num_elements() == 0 ) then  return nil  end
   -- 07/2019
   -- This delete() is an important change from previous implemenation.
   -- The generator that gave us the data would have allocated a CMEM
@@ -102,7 +109,7 @@ function lVector:eval()
 end
 
 function lVector:field_width()
-  return H.extract_field(self, "field_width", "number")
+  return H.extract_field(self._base_vec, self._nn_vec, "field_width", "number")
 end
 
 function lVector:file_name(chunk_num)
@@ -123,7 +130,7 @@ function lVector:file_name(chunk_num)
 end
 
 function lVector:fldtype()
-  return H.extract_field(self, "fldtype", "string")
+  return H.extract_field(self._base_vec, self._nn_vec, "fldtype", "string")
 end
 
 function lVector:flush_all()
@@ -165,7 +172,8 @@ function lVector:get_chunk(chunk_num)
   local base_addr, base_len
   local nn_addr,   nn_len  
   local num_elements = self:num_elements()
-  local chunk_size = cVector.chunk_size()
+  local csz = cVector.chunk_size()
+
   --=======
   -- If you don't specify a chunk number, then we will 
   -- 1) assert that the number of elements is a multiple of chunk size
@@ -173,20 +181,21 @@ function lVector:get_chunk(chunk_num)
   -- elements and the chunk size was 5, then chunk num would be 2
   if ( type(chunk_num) == "nil" ) then 
     assert(H.is_multiple_of_chunk_size(num_elements))
-    chunk_num = num_elements / chunk_size
+    chunk_num = num_elements / csz
+    assert(math.floor(chunk_num) == math.ceil(chunk_num))
   end
   assert(type(chunk_num) == "number"); assert(chunk_num >= 0)
   --=======
   -- If we have created n chunks, then you can ask for chunk n+1 but not
   -- for n+2, n+3, ...
-  if ( chunk_num * chunk_size > num_elements ) then 
+  if ( chunk_num * csz > num_elements ) then 
     print("asking for data too far away from where we are")
     return 0
   end
   --=======
   -- if Vector has been memo-ized, then you can only get recent chunk
   if ( num_elements > 0 ) then 
-    local most_recent_chunk = math.floor(num_elements-1/chunk_size)
+    local most_recent_chunk = math.floor((num_elements-1)/ csz)
     if ( ( self:is_memo() ) and ( chunk_num < most_recent_chunk ) ) then 
       error("Cannot serve earlier chunks")
     end
@@ -194,8 +203,8 @@ function lVector:get_chunk(chunk_num)
   --=======
   -- Assume num_elements = 6 ,chunk_size = 4, chunk_num = 1
   -- In that case, we do NOT invoke the generator
-  if ( chunk_num * chunk_size == num_elements ) then 
-    -- we have to get some more elements
+  if ( chunk_num * csz == num_elements ) then 
+    -- we have to get some more elements 
     assert(not self:is_eov()) 
     -- Invoke generator
     if (type(self._gen) == "function") then 
@@ -203,19 +212,20 @@ function lVector:get_chunk(chunk_num)
       assert(type(buf_size) == "number")
       if ( buf_size > 0 ) then 
         assert(type(base_data) == "CMEM")
-        assert(lVector.put_chunk(self._base_vec, base_data, buf_size))
+        assert(cVector.put_chunk(self._base_vec, base_data, buf_size))
         if ( self._nn_vec ) then 
           assert(type(nn_data) == "CMEM")
           assert(lVector.put_chunk(self._nn_vec, nn_data, buf_size))
         end
       end
-      if ( buf_size < qconsts.chunk_size ) then self:eov() end
+      if ( buf_size < csz ) then self:eov() end
     else
       return 0
     end
   end
   --== Now you should be able to get the data you want
   base_addr, base_len = cVector.get_chunk(self._base_vec, chunk_num)
+
   H.chk_addr_len(base_addr, base_len)
   if ( self._nn_vec ) then 
     nn_addr, nn_len = cVector.get_chunk(self._nn_vec, chunk_num)
@@ -234,21 +244,21 @@ function lVector:get_chunk(chunk_num)
 end
 
 function lVector:get_name()
-  return H.extract_field(self, "name", "string")
+  return H.extract_field(self._base_vec, self._nn_vec, "name", "string")
 end
 
 -- not from Lua. Use cVector:init_globals()
 --
 function lVector:is_dead()
-  return H.extract_field(self, "is_dead", "boolean")
+  return H.extract_field(self._base_vec, self._nn_vec, "is_dead", "boolean")
 end
 
 function lVector:is_eov()
-  return H.extract_field(self, "is_eov", "boolean")
+  return H.extract_field(self._base_vec, self._nn_vec, "is_eov", "boolean")
 end
 
 function lVector:is_memo()
-  return H.extract_field(self, "is_memo", "boolean")
+  return H.extract_field(self._base_vec, self._nn_vec, "is_memo", "boolean")
 end
 
 function lVector:me()
@@ -273,7 +283,7 @@ function lVector.new(args)
   local is_rehydrate, is_single = H.determine_kind_of_new(args)
 
   if ( not is_rehydrate ) then 
-    if arg.gen then vector._gen = arg.gen end 
+    if args.gen then vector._gen = args.gen end 
     vector._base_vec = cVector.new(args)
     if ( args.has_nulls ) then 
       vector._nn_vec   = cVector.new( { qtype = "B1", width = 1 })
@@ -301,12 +311,12 @@ function lVector.new(args)
 end
 
 function lVector:num_chunks()
-  return H.extract_field(self, "num_chunks", "number")
+  return H.extract_field(self._base_vec, self._nn_vec, "num_chunks", "number")
 end
 
 -- Earlier, we would return nil if eov == false, have changed that
 function lVector:num_elements()
-  return H.extract_field(self, "num_elements", "number")
+  return H.extract_field(self._base_vec, self._nn_vec, "num_elements", "number")
 end
 
 function lVector:persist(is_persist)
@@ -520,7 +530,9 @@ function lVector:chunk(chunk_num)
 end
 
 function lVector:length()
-  return lVector:num_elements()
+  -- TODO P2 Why does following not work 
+  -- return lVector:num_elements()
+  return H.extract_field(self._base_vec, self._nn_vec, "num_elements", "number")
 end
 
 function lVector:get_all()
@@ -528,7 +540,9 @@ function lVector:get_all()
 end
 
 function lVector:qtype()
-  return lVector:fldtype()
+  -- TODO P2 Why does following not work 
+  -- return lVector:fldtype()
+  return H.extract_field(self._base_vec, self._nn_vec, "fldtype", "string")
 end
 
 function lVector:width()

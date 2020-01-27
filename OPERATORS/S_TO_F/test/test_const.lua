@@ -2,48 +2,41 @@
 local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
 local qconsts = require 'Q/UTILS/lua/q_consts'
+local cVector = require 'libvctr'
+cVector.init_globals({})
 
 local tests = {}
 tests.t1 = function() 
-  local num = (2048*1048576)-1
-  local c1 = Q.const( {val = num, qtype = "I4", len = 8000000 })
-  local minval = Q.min(c1):eval():to_num()
-  local maxval = Q.max(c1):eval():to_num()
-  assert(minval == num)
-  assert(maxval == num)
+  local val = (2048*1048576)-1
+  local len = cVector.chunk_size() * 2 + 3
+  local qtype = "I4"
+  local c1 = Q.const( {val = val, qtype = qtype, len = len })
+  c1:eval()
+  for i = 1, len do
+    assert(c1:get1(i-1):to_num() == val)
+  end
+  assert(c1:num_elements() == len)
+  assert(c1:qtype() == qtype)
   print("Test t1 succeeded")
 end
 tests.t2 = function() 
-  local len = qconsts.chunk_size * 3 + 1941;
-  for val = 0, 2 do 
-    if ( val > 1 ) then 
-      
-      local status = pcall(Q.const, {val = val, qtype = "B1", len = len })
-      assert(not status )
-    else
-      --[[TODO Need to implement min/max for B1
-      local c1 = Q.const( {val = val, qtype = "B1", len = len })
-
-      local minval = Q.min(c1):eval():to_num()
-      local maxval = Q.max(c1):eval():to_num()
-      assert(minval == maxval)
-      assert(minval == val)
-      --]]
+  local len = cVector.chunk_size() * 3 + 1941;
+  local vals = { true, false}
+  local qtype = "B1"
+  for _, val in vals do 
+    local ival 
+    if ( val == true ) then ival = 1 else ival = 0 end 
+    local c1 = Q.const( {val = val, qtype = qtype, len = len })
+    c1:eval()
+    for i = 1, len do
+      assert(c1:get1(i-1):to_num() == ival)
     end
   end
+  assert(c1:len() == len)
+  assert(c1:qtype() == qtype)
   print("Test t2 succeeded")
 end
-tests.t3 = function() 
-  local len = 1941;
-  local ival
-  for _, val in pairs({true, false}) do
-    if ( val == true ) then ival = 1 end
-    if ( val == false ) then ival = 0 end
-    local c1 = Q.const( {val = val, qtype = "B1", len = len }):eval()
-    for i = 1, len do
-      assert(c1:get_one(i-1):to_num() == ival)
-    end
-  end
-  print("Test t3 succeeded")
-end
-return tests
+tests.t1()
+os.exit()
+-- tests.t2()
+-- return tests

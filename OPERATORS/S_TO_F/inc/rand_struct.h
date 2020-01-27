@@ -42,4 +42,9 @@ typedef struct _rand_I8_rec_type {
   int64_t ub;
 } RAND_I8_REC_TYPE;
 
+typedef struct _rand_B1_rec_type {
+  uint64_t seed;
+  float probability;
+  struct drand48_data buffer;
+} RAND_B1_REC_TYPE;
 #endif

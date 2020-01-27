@@ -82,38 +82,34 @@ helpers.chk_addr_len = function(x, len, chk_len)
   end
 end
 
-helpers.extract_field = function(self, key, valtype)
-  assert(type(key) == "string")
-  assert(#key > 0)
-  local casted_base_vec = ffi.cast("VEC_REC_TYPE *", self._base_vec)
-  local base_val, nn_val
-  --=============================
+local function get_val(vec, key, valtype)
+  if ( not vec ) then return nil end 
+  local cvec = ffi.cast("VEC_REC_TYPE *", vec)
+  local val
+  if ( type(cvec[0][key]) == "nil" ) then return nil end 
+
   if ( valtype == "number" ) then 
-    if ( casted_base_vec[0][key]) then 
-      base_val = tonumber(casted_base_vec[0][key])
-    end
+    val = tonumber(cvec[0][key])
   elseif ( valtype == "string" ) then 
-    base_val = ffi.string(casted_base_vec[0][key])
+    val = ffi.string(cvec[0][key])
   elseif ( valtype == "boolean" ) then 
-    base_val = casted_base_vec[0][key]
+    val = cvec[0][key]
   else
     error("bad valtype")
   end
-  --=============================
-  if ( self._nn_vec ) then 
-    local casted_nn_vec   = ffi.cast("VEC_REC_TYPE *", self._nn_vec)
-    if ( valtype == "number" ) then 
-      nn_val = tonumber(casted_base_vec[0][key])
-    elseif ( valtype == "string" ) then 
-      nn_val = ffi.string(casted_base_vec[0][key])
-    elseif ( valtype == "boolean" ) then 
-      nn_val = casted_base_vec[0][key]
-    else
-      error("bad valtype")
-    end
-  end
+  return val
+end
+
+helpers.extract_field = function(base_vec, nn_vec, key, valtype)
+  assert(type(key) == "string")
+  assert(type(base_vec) == "Vector")
+  if ( nn_vec ) then assert(type(nn_vec) == "Vector") end 
+  assert(#key > 0)
+  local base_val = get_val(base_vec, key, valtype)
+  local nn_val   = get_val(nn_vec,   key, valtype)
   return base_val, nn_val
 end
+
 helpers.mk_boolean = function(inval, default_val)
   if ( inval == nil ) then 
     assert(type(default_val) == "boolean")
@@ -124,8 +120,10 @@ helpers.mk_boolean = function(inval, default_val)
 end
 
 helpers.is_multiple_of_chunk_size = function(n)
-  local chunk_size = cVector.chunk_size()
-  if ( math.ceil(n / chunk_size ) == math.floor(n / chunk_size ) ) then
+  if ( n == 0 ) then return true end 
+  local csz = cVector.chunk_size()
+  assert(csz > 0)
+  if ( math.ceil(n / csz ) == math.floor(n / csz ) ) then
     return true
   else
     return false
