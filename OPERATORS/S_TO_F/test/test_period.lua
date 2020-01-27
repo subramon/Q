@@ -1,25 +1,24 @@
 -- FUNCTIONAL 
 require 'Q/UTILS/lua/strict'
-local Q = require 'Q'
+local Q       = require 'Q'
+local cVector = require 'libvctr'
 local tests = {}
 tests.t1 = function()
-  local n
-  n = 67
-  n = 32768
-  n = 32768+10923
-  print("n = ", n)
-  local len = n * 3 
-  local start = 1
-  local by = 2
+  local len = cVector.chunk_size() * 7 + 19 
+  local start  = 1
+  local by     = 2
   local period = 3
-  local y = Q.period({start = start, by = by, period = period, qtype = "I4", len = len })
+  local qtype  = "I4"
+  local c1 = Q.period(
+  {len = len, start = start, by = by, period = period, qtype = qtype})
+  c1:eval()
   local val = start
   local cnt = 0
   for i = 1, len do
-    assert(c1:get_one(i-1):to_num() == val)
+    assert(c1:get1(i-1):to_num() == val)
     val = val + by
     cnt = cnt + 1 
-    if ( cnt == period ) then val = start end 
+    if ( cnt == period ) then val = start; cnt = 0 end 
   end
   print("successfully executed t1")
 end

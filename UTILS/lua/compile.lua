@@ -18,6 +18,7 @@ assert(cutils.isdir(Q_SRC_ROOT))
 local function compile(
   doth,  -- INPUT 
   dotc,  -- INPUT 
+  type_doth_dotc, -- INPUT
   func_name, -- INPUT
   hfile, --  created by this function
   sofile --  created by this function
@@ -30,8 +31,15 @@ local function compile(
   --===============================
   local tmp_c = string.format("%s/src/_%s.c", qconsts.Q_BUILD_DIR, func_name)
   local tmp_h = string.format("%s/include/_%s.h", qconsts.Q_BUILD_DIR, func_name)
-  cutils.write(tmp_c, dotc)
-  cutils.write(tmp_h, doth)
+  if ( type_doth_dotc == "strings" ) then 
+    cutils.write(tmp_c, dotc)
+    cutils.write(tmp_h, doth)
+  elseif ( type_doth_dotc == "files" ) then 
+    cutils.copyfile(dotc, tmp_c)
+    cutils.copyfile(doth, tmp_h)
+  else
+    error("bad type_doth_dotc")
+  end
   -- Following means that in dynamically generated code, you can only 
   -- include "_foo.h" in _foo.c and in _foo.h, you can only include things
   -- that will be found in UTILS/inc or UTILS/gen_inc/

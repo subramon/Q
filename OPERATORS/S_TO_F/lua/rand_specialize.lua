@@ -62,7 +62,7 @@ return function (
     args[0]["ub"] = sub[0].cdata["val" .. qtype]
   
     assert(ub > lb)
-    --TODO P2 Check  lb, ub in range for type
+    -- Check  lb, ub in range for type dony b to_scalar()
   else
     -- set probability
     local probability   = assert(in_args.probability)

@@ -172,7 +172,7 @@ static int l_cutils_read(
   memcpy(buf, X, nX);
   buf[nX] = '\0';
   lua_pushstring(L, buf);
-  free(buf);
+  free(buf); // TODO P1 Write tests to verify that this is okay
   munmap(X, nX);
   return 1; 
 BYE:

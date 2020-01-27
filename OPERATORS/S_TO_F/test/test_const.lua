@@ -16,14 +16,16 @@ tests.t1 = function()
     assert(c1:get1(i-1):to_num() == val)
   end
   assert(c1:num_elements() == len)
+  local status = pcall(c1.get1, len) -- deliberate error
+  assert(not status)
   assert(c1:qtype() == qtype)
   print("Test t1 succeeded")
 end
 tests.t2 = function() 
   local len = cVector.chunk_size() * 3 + 1941;
-  local vals = { true, false}
+  local vals = { true, false }
   local qtype = "B1"
-  for _, val in vals do 
+  for _, val in pairs(vals) do 
     local ival 
     if ( val == true ) then ival = 1 else ival = 0 end 
     local c1 = Q.const( {val = val, qtype = qtype, len = len })
@@ -31,12 +33,13 @@ tests.t2 = function()
     for i = 1, len do
       assert(c1:get1(i-1):to_num() == ival)
     end
+    assert(c1:num_elements() == len)
+    local status = pcall(c1.get1, len) -- deliberate error
+    assert(c1:qtype() == qtype)
   end
-  assert(c1:len() == len)
-  assert(c1:qtype() == qtype)
   print("Test t2 succeeded")
 end
 tests.t1()
+tests.t2()
 os.exit()
--- tests.t2()
 -- return tests

@@ -188,13 +188,19 @@ local function q_add(
   assert(not known_functions[function_name], "Function already registered")
   assert(not qc[function_name], "Function already registered")
   --==================================
+  local type_doth_dotc
   if tmpl then 
+    type_doth_dotc = "strings"
     assert(type(tmpl) == "string")
     doth = gen_code.doth(subs, "") -- this is string containing .h file
     dotc = gen_code.dotc(subs, "") -- this is string containing .c file
+  else
+    type_doth_dotc = "files"
+    assert(type(dotc) == "string")
+    assert(type(doth) == "string")
+    assert(cutils.isfile(dotc))
+    assert(cutils.isfile(doth))
   end
-  assert(type(dotc) == "string")
-  assert(type(doth) == "string")
   --==================================
   -- Note the underscore which is convention for generated files
   local hfile  = inc_dir           .. "_" .. function_name .. ".h"
@@ -204,7 +210,7 @@ local function q_add(
   assert(not cutils.isfile(sofile), ".so file should not pre-exist")
   --==================================
 
-  compile(doth, dotc, function_name, hfile, sofile)
+  compile(doth, dotc, type_doth_dotc, function_name, hfile, sofile)
   load_lib(hfile)
 end
 

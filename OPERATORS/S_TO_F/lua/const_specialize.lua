@@ -26,7 +26,8 @@ return function (
   subs.tmpl = tmpl
   subs.buf_size = cVector.chunk_size() * qconsts.qtypes[qtype].width
   -- set up args for C code
-  local val   = assert(in_args.val)
+  local val  = in_args.val
+  assert(type(val) ~= nil)
   local sval = assert(to_scalar(val, qtype))
   local args_ctype = "CONST_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(args_ctype)

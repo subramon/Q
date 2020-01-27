@@ -864,7 +864,12 @@ vec_put_chunk(
   chk_chunk_idx(chunk_idx);
   CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
 
-  memcpy(ptr_chunk->data, data, num_elements * ptr_vec->field_width);
+  size_t sz = num_elements * ptr_vec->field_width;
+  // handle special case for B1
+  if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { 
+    sz = ceil((double)num_elements / 8.0); 
+  }
+  memcpy(ptr_chunk->data, data, sz);
 
   ptr_vec->num_elements += num_elements;
   ptr_vec->chunks[chunk_num] = chunk_idx;
