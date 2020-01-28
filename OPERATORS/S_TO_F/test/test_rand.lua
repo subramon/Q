@@ -17,12 +17,20 @@ tests.t1 = function()
   local c1 = Q.rand( 
   { seed = seed, probability = probability, qtype = qtype, len = len })
   c1:eval()
+  local num_true = 0
+  local strue = Scalar.new(true, "B1")
   for i = 1, len do
     local val = c1:get1(i-1)
     assert(type(val) == "Scalar")
     assert(val:fldtype() == "B1")
+    if ( val == strue ) then num_true = num_true + 1 end 
   end
   assert(c1:qtype() == qtype)
+  print("B1, num_true, len = ", num_true, len)
+  local ratio = num_true / len
+  local lb = probability - 0.2
+  local ub = probability + 0.2
+  assert ( ( ratio >= lb ) and ( ratio <= ub ) ) 
   print("Test t1 succeeded")
 end
 tests.t2 = function()
