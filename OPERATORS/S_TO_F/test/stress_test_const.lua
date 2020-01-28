@@ -1,4 +1,5 @@
 -- FUNCTIONAL
+-- TODO P3 Understand what this test is trying to do 
 local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
 local qc = require 'Q/UTILS/lua/q_core'

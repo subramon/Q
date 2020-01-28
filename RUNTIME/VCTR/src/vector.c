@@ -611,14 +611,16 @@ BYE:
 //----------------------------------------
 static int l_vec_put_chunk( lua_State *L) {
   int status = 0;
-  void *addr = NULL;
   int num_args = lua_gettop(L);
   if ( ( num_args != 2 ) && ( num_args != 3 ) ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   if ( !luaL_testudata (L, 2, "CMEM") ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 2, "CMEM");
   if ( ptr_cmem == NULL ) { go_BYE(-1); }
-  addr = ptr_cmem->data;
+  // Ideally should have == in comparison below
+  // You (generator) need to give me (Vector) a buffer whose size 
+  // is *at least* as the size of my chunk
+  if ( ptr_cmem->size < ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); }
   int64_t num_in_cmem;
   if ( num_args == 3 ) { 
     num_in_cmem = luaL_checknumber(L, 3);
@@ -627,7 +629,7 @@ static int l_vec_put_chunk( lua_State *L) {
     num_in_cmem = g_chunk_size; 
   }
   if ( num_in_cmem < 0 ) { num_in_cmem = g_chunk_size; }
-  status = vec_put_chunk(ptr_vec, addr, num_in_cmem); cBYE(status);
+  status = vec_put_chunk(ptr_vec, ptr_cmem, num_in_cmem); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:

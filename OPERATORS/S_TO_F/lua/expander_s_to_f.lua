@@ -27,7 +27,6 @@ return function (a, args)
   local buf =  nil
   local l_chunk_num = 0
   local first_call = true
-  -- TODO Avoid the memcpy that the put  chunk would cause
   
   local generator = function(chunk_num)
     -- Adding assert on l_chunk_num to have sync between 
@@ -36,10 +35,18 @@ return function (a, args)
     if ( first_call ) then
       first_call = false
       buf = assert(cmem.new(subs.buf_size, subs.out_qtype))
+      buf:stealable(true)
+    else
+      local meta_buf = buf:me()
+      if ( meta_buf.size == 0 ) then 
+        -- need to allocate because it has been stolen
+        buf = assert(cmem.new(subs.buf_size, subs.out_qtype))
+        buf:stealable(true)
+      end
     end
     --=============================
     local lb = csz * l_chunk_num
-    assert(lb < subs.len) -- Note not <=
+    if ( lb >= subs.len) then return 0, nil end 
     local num_elements = subs.len - lb
     if ( num_elements > csz ) then 
       num_elements = csz 

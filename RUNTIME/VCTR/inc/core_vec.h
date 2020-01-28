@@ -193,7 +193,7 @@ vec_flush_all(
 extern int
 vec_put_chunk(
     VEC_REC_TYPE *ptr_vec,
-    const char * const data,
+    CMEM_REC_TYPE *ptr_cmem,
     uint32_t num_elements
     );
 extern int

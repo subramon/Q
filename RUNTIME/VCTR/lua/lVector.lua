@@ -217,6 +217,8 @@ function lVector:get_chunk(chunk_num)
           assert(type(nn_data) == "CMEM")
           assert(lVector.put_chunk(self._nn_vec, nn_data, buf_size))
         end
+      else
+        self:eov(); return 0 
       end
       if ( buf_size < csz ) then self:eov() end
     else

@@ -102,7 +102,8 @@ get_chunk_dir_idx(
     uint32_t chunk_idx,
     uint32_t *chunks,
     uint32_t *ptr_num_chunks,
-    uint32_t *ptr_chunk_dir_idx
+    uint32_t *ptr_chunk_dir_idx,
+    bool is_malloc
     );
 extern int
 vec_new_common(

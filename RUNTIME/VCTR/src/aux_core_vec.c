@@ -521,7 +521,8 @@ get_chunk_dir_idx(
     uint32_t chunk_num,
     uint32_t *chunks,
     uint32_t *ptr_num_chunks,
-    uint32_t *ptr_chunk_dir_idx
+    uint32_t *ptr_chunk_dir_idx,
+    bool is_malloc
     )
 {
   int status = 0;
@@ -529,7 +530,7 @@ get_chunk_dir_idx(
   uint32_t chunk_dir_idx = ptr_vec->chunks[chunk_num];
   if ( chunk_dir_idx == 0 ) { // we need to set it 
     status = allocate_chunk(ptr_vec->chunk_size_in_bytes, chunk_num, 
-        ptr_vec->uqid, &chunk_dir_idx, true); 
+        ptr_vec->uqid, &chunk_dir_idx, is_malloc); 
     cBYE(status);
     *ptr_num_chunks = *ptr_num_chunks + 1;
   }
