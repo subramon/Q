@@ -1,4 +1,4 @@
-local cmem = require 'libcmem' ; 
+require 'Q/UTILS/lua/strict'
 local Scalar = require 'libsclr' ; 
 
 local tests = {}

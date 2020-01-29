@@ -54,7 +54,7 @@ tests.t4 = function()
   for _, qtype in ipairs(qtypes) do
     local val = 123
     local s1 = Scalar.new(val, qtype)
-    local c1 = cmem.new(8, qtype, "test cmem")
+    local c1 = cmem.new({size = 8, qtype = qtype, name = "test cmem"})
     c1:set(val);
     local s2 = assert(Scalar.new(c1, qtype))
     assert(Scalar.eq(s1, s2) == true)

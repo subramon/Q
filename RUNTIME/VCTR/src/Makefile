@@ -45,6 +45,7 @@ libvctr.so: vector.o core_vec.o aux_core_vec.o
 	gcc ${QC_FLAGS} $(INCS) \
 		vector.c \
 		../../CMEM/src/cmem.c \
+		../../CMEM/src/aux_lua_to_c.c \
 		core_vec.c \
 		aux_core_vec.c \
 		buf_to_file.c \

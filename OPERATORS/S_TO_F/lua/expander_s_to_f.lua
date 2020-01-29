@@ -31,20 +31,21 @@ return function (a, args)
   local generator = function(chunk_num)
     -- Adding assert on l_chunk_num to have sync between 
     -- expected chunk_num and generator's l_chunk_num state
-    assert(chunk_num == l_chunk_num)
+    --=== START: buffer allocation
     if ( first_call ) then
       first_call = false
-      buf = assert(cmem.new(subs.buf_size, subs.out_qtype))
+      buf = assert(cmem.new({size = subs.buf_size, qtype = subs.out_qtype}))
       buf:stealable(true)
     else
-      local meta_buf = buf:me()
-      if ( meta_buf.size == 0 ) then 
+      if ( not buf:is_data() ) then 
         -- need to allocate because it has been stolen
-        buf = assert(cmem.new(subs.buf_size, subs.out_qtype))
+        buf = assert(cmem.new({size = subs.buf_size, qtype = subs.out_qtype}))
         buf:stealable(true)
       end
     end
+    --=== STOP : buffer allocation
     --=============================
+    assert(chunk_num == l_chunk_num)
     local lb = csz * l_chunk_num
     if ( lb >= subs.len) then return 0, nil end 
     local num_elements = subs.len - lb

@@ -1,3 +1,4 @@
+require 'Q/UTILS/lua/strict'
 local qc     = require 'Q/UTILS/lua/q_core'
 local cmem   = require 'libcmem'
 local ffi    = require 'ffi' 
@@ -34,7 +35,7 @@ ffi.cdef([[
   local qtypes = { "I1", "I2", "I4", "I8", "F4", "F8", "B1" }
   local cnt = 1
   local c = cmem.new(ffi.sizeof("some_struct"))
-  c2 = ffi.cast("some_struct *", c)
+  local c2 = ffi.cast("some_struct *", c)
   for _, qtype in pairs(qtypes) do
     local s
     if ( qtype == "B1" ) then 

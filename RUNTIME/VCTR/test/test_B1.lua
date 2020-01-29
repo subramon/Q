@@ -1,3 +1,4 @@
+require 'Q/UTILS/lua/strict'
 local cutils = require 'libcutils'
 local plpath = require 'pl.path'
 local ffi     = require 'ffi'
@@ -9,10 +10,10 @@ local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local get_func_decl = require 'Q/UTILS/build/get_func_decl'
 
 local hdrs = get_func_decl("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
-ffi.cdef(hdrs)
+pcall(ffi.cdef, hdrs) -- in case alreday cdef'd
 -- following only because we are testing. Normally, we get this from q_core
 local hdrs = get_func_decl("../../CMEM/inc/cmem_struct.h", " -I../../../UTILS/inc/")
-ffi.cdef(hdrs)
+pcall(ffi.cdef, hdrs)-- in case alreday cdef'd
 
 --=================================
 local chunk_size = 65536
@@ -65,24 +66,29 @@ tests.t0 = function(incr)
   v:eov()
   v:check()
   cVector:check_chunks()
+  local num_chunks=assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].num_chunks)
   local x = v:shutdown() 
   -- assert(v:is_dead())
-  assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_dead)
+  -- TODO THINK P3 assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_dead)
   assert(type(x) == "string") 
   assert(#x > 0)
-  y = loadstring(x)()
+  local y = loadstring(x)()
   assert(type(y) == "table")
   assert(y.num_elements == n)
   assert(y.width == width)
   assert(y.qtype == qtype)
-  if ( iter == 1 ) then 
+  print("incr/num_chunks = ", incr, num_chunks)
+
+  if ( incr > 0 ) then 
     assert(not y.file_name)
     assert(type(y.file_names) == "table")
+    print(#y.file_names, num_chunks)
     assert(#y.file_names == num_chunks)
     for k, v in pairs(y.file_names) do 
       assert(plpath.isfile(v)) 
     end
   end
+
   local z = assert(cVector.rehydrate(y))
   print("Successfully rehydrated")
   local M = assert(z:me())

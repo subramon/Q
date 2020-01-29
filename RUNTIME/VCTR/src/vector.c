@@ -9,6 +9,7 @@
 #include "cmem_struct.h"
 #include "cmem.h"
 #include "aux_core_vec.h"
+#include "aux_lua_to_c.h"
 
 #include "txt_to_I4.h"
 #include "isdir.h"
@@ -16,100 +17,6 @@
 #include "vec_globals.h"
 #undef MAIN_PGM
 
-static int check_args_is_table(
-    lua_State *L
-    )
-{
-  int status =0;
-  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
-  if ( !lua_istable(L, 1) ) { go_BYE(-1); }
-  luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
-BYE:
-  return status;
-}
-
-static int get_tbl_from_tbl(
-      lua_State *L,
-      const char * const key,
-      bool *ptr_is_key,
-      const char **file_names, // [n] 
-      int n
-      )
-{
-  int status = 0; 
-  *ptr_is_key = false;
-  int nstack = lua_gettop(L); 
-  if ( nstack != 1 ) { go_BYE(-1); }
-  lua_getfield (L, 1, key); 
-  nstack = lua_gettop(L); 
-  if ( nstack != (1+1) ) { go_BYE(-1); }
-  if  ( lua_type(L, 1+1) != LUA_TTABLE ) { 
-    *ptr_is_key = false; goto BYE;
-  }
-  int chk_n = luaL_getn(L, 1+1);
-  if ( chk_n != n ) { go_BYE(-1); }
-  for ( int i = 0; i < n; i++ ) { 
-    lua_rawgeti(L, 1+1, i+1);
-    nstack = lua_gettop(L);
-    if ( nstack != 1+1+1 ) { go_BYE(-1); }
-    file_names[i] = luaL_checkstring(L, 1+1+1);
-    lua_pop(L, 1);
-    nstack = lua_gettop(L);
-    if ( nstack != 1+1 ) { go_BYE(-1); }
-  }
-
-  *ptr_is_key = true;
-BYE:
-  lua_pop(L, 1);
-  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
-  return status;
-}
-static int get_str_from_tbl(
-      lua_State *L,
-      const char * const key,
-      bool *ptr_is_key,
-      const char **ptr_cptr
-      )
-{
-  int status = 0; 
-  *ptr_cptr = false;
-  *ptr_is_key = false;
-  int n = lua_gettop(L); if ( n != 1 ) { go_BYE(-1); }
-  lua_getfield (L, 1, key); 
-  n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
-  if  ( lua_type(L, 1+1) != LUA_TSTRING ) { 
-    *ptr_is_key = false; goto BYE;
-  }
-  *ptr_cptr = luaL_checkstring(L, 1+1); 
-  *ptr_is_key = true;
-BYE:
-  lua_pop(L, 1);
-  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
-  return status;
-}
-static int
-get_int_from_tbl(
-    lua_State *L, 
-    const char * const key,
-    bool *ptr_is_key,
-    int64_t *ptr_itmp
-    )
-{
-  int status = 0;
-  *ptr_itmp = -1; *ptr_is_key = false;
-  //------------------- get sz_chunk_dir
-  lua_getfield (L, 1, key);
-  int n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
-  if  ( lua_type(L, 1+1) != LUA_TNUMBER ) { 
-    *ptr_is_key = false; goto BYE;
-  }
-  *ptr_itmp = luaL_checknumber(L, 1+1); 
-  *ptr_is_key = true;
-BYE:
-  lua_pop(L, 1);
-  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
-  return status;
-}
 // Set globals in C in main program after creating Lua state
 // but before doing anything else
 // chunk_size, memory structures, ...
@@ -204,6 +111,7 @@ static int l_vec_chunk_size( lua_State *L) {
     // set default values
     g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
     g_chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    memset(g_q_data_dir, '\0', Q_MAX_LEN_DIR+1);
     snprintf(g_q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
     if ( !isdir(g_q_data_dir) ) { 
       lua_pushnil(L);
@@ -215,19 +123,22 @@ static int l_vec_chunk_size( lua_State *L) {
   return 1;
 }
 //-----------------------------------
-static int l_vec_no_memcpy( lua_State *L) {
-  int status = 0;
-  if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
-  VEC_REC_TYPE  *ptr_vec  = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
-  // TODO P1 : Study the mempcy thingy
-  status = vec_no_memcpy(ptr_vec, ptr_cmem, g_chunk_size); cBYE(status);
-  lua_pushboolean(L, true);
+// TODO P3 Should not be part of vector code, this deals with globals
+static int l_vec_data_dir( lua_State *L) {
+  if ( g_q_data_dir[0] == '\0' ) {  
+    // set default values
+    g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
+    g_chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    memset(g_q_data_dir, '\0', Q_MAX_LEN_DIR+1);
+    snprintf(g_q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
+    if ( !isdir(g_q_data_dir) ) { 
+      lua_pushnil(L);
+      lua_pushstring(L, __func__);
+      return 2;
+    }
+  }
+  lua_pushstring(L, g_q_data_dir);
   return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
 }
 //-----------------------------------
 static int l_vec_shutdown( lua_State *L) {
@@ -457,7 +368,13 @@ static int l_vec_get1( lua_State *L) {
     if ( strcmp(ptr_sclr->field_type, "B1") == 0 ) { 
       uint64_t word = ((uint64_t *)data)[0];
       uint32_t bit_idx = idx % 64;
-      ptr_sclr->cdata.valB1 = (word >> bit_idx) & 0x1;
+      uint32_t bitval = (word >> bit_idx) & 0x1;
+      if ( bitval == 0 ) { 
+        ptr_sclr->cdata.valB1 = false;
+      }
+      else {
+        ptr_sclr->cdata.valB1 = true;
+      }
     }
     else {
       memcpy(&(ptr_sclr->cdata), data, width);
@@ -724,7 +641,6 @@ BYE:
   return 2;
 }
 //----------------------------------------
-//----------------------------------------
 static int l_vec_delete_master_file( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int status = vec_delete_master_file(ptr_vec); cBYE(status);
@@ -743,15 +659,16 @@ static int l_vec_new( lua_State *L)
   bool is_key; int64_t itmp; 
   const char * qtype;
   uint32_t field_width;
-  //------------------- get qtype
+  //------------------- get qtype and width
   status = check_args_is_table(L); cBYE(status);
   status = get_str_from_tbl(L, "qtype", &is_key, &qtype);  cBYE(status);
   if ( !is_key ) { go_BYE(-1); }
   if ( *qtype == '\0' ) { go_BYE(-1); }
+  //----------------
   status = get_int_from_tbl(L, "width", &is_key, &itmp); cBYE(status);
   if ( !is_key )  { go_BYE(-1); }
   if ( itmp < 1 ) { go_BYE(-1); }
-  if ( strcmp(qtype, "QC") == 0 ) { 
+  if ( strcmp(qtype, "SC") == 0 ) { 
     if ( itmp < 2 ) { go_BYE(-1); }
   }
   field_width = itmp;
@@ -819,8 +736,8 @@ static int l_vec_rehydrate( lua_State *L)
     file_names = malloc(num_chunks * sizeof(char *));
     return_if_malloc_failed(file_names);
     memset(file_names, '\0',  (num_chunks * sizeof(char *)));
-    status = get_tbl_from_tbl(L, "file_names", &is_key, file_names, 
-        num_chunks);
+    status = get_array_of_strings_from_tbl(
+        L, "file_names", &is_key, file_names, num_chunks);
     cBYE(status);
   }
   //------------------
@@ -892,6 +809,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "check", l_vec_check },
     { "check_chunks", l_vec_check_chunks }, 
     { "chunk_size", l_vec_chunk_size }, 
+    { "data_dir", l_vec_data_dir }, 
     { "delete", l_vec_delete },
     { "delete_chunk_file", l_vec_delete_chunk_file },
     { "delete_master_file", l_vec_delete_master_file },
@@ -916,7 +834,6 @@ static const struct luaL_Reg vector_methods[] = {
     { "print_timers", l_vec_print_timers },
     { "put1", l_vec_put1 },
     { "put_chunk", l_vec_put_chunk },
-    { "no_memcpy", l_vec_no_memcpy },
     { "rehydrate", l_vec_rehydrate},
     { "reset_timers", l_vec_reset_timers },
     { "same_state", l_vec_same_state },
@@ -933,6 +850,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "check", l_vec_check },
     { "check_chunks", l_vec_check_chunks }, 
     { "chunk_size", l_vec_chunk_size }, 
+    { "data_dir", l_vec_data_dir }, 
     { "delete", l_vec_delete },
     { "delete_chunk_file", l_vec_delete_chunk_file },
     { "delete_master_file", l_vec_delete_master_file },
@@ -953,7 +871,6 @@ static const struct luaL_Reg vector_functions[] = {
     { "memo", l_vec_memo },
     { "meta", l_vec_meta },
     { "new", l_vec_new },
-    { "no_memcpy", l_vec_no_memcpy },
     { "num_elements", l_vec_num_elements },
     { "persist", l_vec_persist },
     { "print_timers", l_vec_print_timers },

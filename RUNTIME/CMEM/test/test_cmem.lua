@@ -1,3 +1,4 @@
+require 'Q/UTILS/lua/strict'
 local cmem = require 'libcmem' ; 
 local ffi = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
@@ -12,10 +13,10 @@ char *strncpy(char *dest, const char *src, size_t n);
 
 tests.t0 = function()
   -- basic test 
-  local buf = cmem.new(128, "I4")
+  local buf = cmem.new(16)
   assert(type(buf) == "CMEM")
   buf:zero()
-  y = buf:to_str("I4")
+  local y = buf:to_str("I4")
   assert(y == "0")
   buf:prbuf(4)
   print("test 0 passed")
@@ -23,42 +24,41 @@ end
 
 tests.t1 = function()
   -- basic test 
-  local buf = cmem.new(128, "I4")
+  local buf = cmem.new({ size = 128, qtype = "I4"})
   assert(type(buf) == "CMEM")
   buf:set(65535, "I4")
-  y = buf:to_str("I4")
-  print(y)
+  local y = buf:to_str("I4")
   assert(y == "65535")
   print("test 1 passed")
 end
 
 tests.t2 = function()
-  local buf = cmem.new(128, "I4")
+  local buf = cmem.new({ size = 128, qtype = "I4"})
   local num_trials = 10 -- 1024*1048576
   local sz = 65537
   local qtype = "I4"
   for j = 1, num_trials do 
-    local buf = cmem.new(sz, qtype, "inbuf")
+    local buf = cmem.new( {size = sz, qtype = qtype, name = "inbuf"})
     buf:set_width(qconsts.qtypes[qtype].width)
     assert(buf:width() == qconsts.qtypes[qtype].width)
     buf:set(j, qtype)
     -- print(buf, "I4")
-    x = buf:to_str(qtype)
+    local x = buf:to_str(qtype)
     assert(j == tonumber(x))
     -- print(j, x)
     buf = nil
   end
   local num_elements = 1024
-  local buf = cmem.new(num_elements * 4, qtype)
+  local buf = cmem.new( { size = num_elements * 4, qtype = qtype})
   buf:set_width(qconsts.qtypes[qtype].width)
   local start = 123
   local incr  = 1
   buf:seq(start, incr, num_elements, qtype)
-  x = buf:to_str(qtype)
+  local x = buf:to_str(qtype)
   print(start, tonumber(x))
   assert(start == tonumber(x))
   -- check using FFI
-  iptr = assert(get_ptr(buf, qtype))
+  local iptr = assert(get_ptr(buf, qtype))
   for i = 1, num_elements do
     assert(iptr[i-1] == start + (i-1) * incr)
   end
@@ -68,14 +68,14 @@ end
 
 tests.t3 = function()
   -- setting data using ffi and verifying using to_str()
-  local buf = cmem.new(ffi.sizeof("int32_t"), "I4")
-  cbuf = ffi.cast("CMEM_REC_TYPE *", buf)
+  local buf = cmem.new( {size = ffi.sizeof("int32_t"), qtype = "I4"})
+  local cbuf = ffi.cast("CMEM_REC_TYPE *", buf)
   ffi.C.strncpy(cbuf[0].fldtype, "I4", 2)
   ffi.C.strncpy(cbuf[0].cell_name, "some bogus name", 15)
-  iptr = assert(get_ptr(buf, "I4"))
+  local iptr = assert(get_ptr(buf, "I4"))
   iptr[0] = 123456789;
   assert(type(buf) == "CMEM")
-  y = buf:to_str("I4")
+  local y = buf:to_str("I4")
   assert(y == "123456789")
   assert(buf:fldtype() == "I4")
   assert(buf:name() == "some bogus name")
@@ -84,9 +84,9 @@ end
 
 tests.t4 = function()
   -- using set 
-  local buf = cmem.new(ffi.sizeof("int"), "I4")
+  local buf = cmem.new( { size = ffi.sizeof("int"), qtype = "I4"})
   buf:set(123456789)
-  y = buf:to_str("I4")
+  local y = buf:to_str("I4")
   assert(y == "123456789")
   assert(buf:fldtype() == "I4")
   print("test t4 passed")
@@ -98,8 +98,8 @@ tests.t5 = function()
   -- test foreign functionality
   local size = 1024
   local qtype = "I4"
-  local name = "some bigus name"
-  local c1 = cmem.new(size, qtype, name)
+  local name = "some bogus name"
+  local c1 = cmem.new( { size = size, qtypei = qtype, name = name})
   c1:set(123456789)
 
   local niters = 100000
@@ -119,7 +119,7 @@ tests.t6 = function()
   local size = 1024
   local qtype = "I8"
   local name = "some bogus name"
-  local c1 = assert(cmem.new(size, qtype, name))
+  local c1 = assert(cmem.new({ size = size, qtype = qtype, name = name}))
   assert(c1:size() == size)
   assert(c1:fldtype() == qtype)
   assert(c1:name() == name)
@@ -138,9 +138,9 @@ tests.t7 = function()
   local qtype = "SC"
   local name = "some bogus name"
   for k, v in ipairs(gval) do 
-  local c1 = assert(cmem.new(size, qtype, name))
+  local c1 = assert(cmem.new({size = size, qtype = qtype, name = name}))
     c1:set(v)
-    y = c1:to_str("SC")
+    local y = c1:to_str("SC")
     print(y)
     assert(y == v)
   end
@@ -158,7 +158,7 @@ tests.t8 = function()
   local size = 16
   local qtype = "SC"
   local name = "some bogus name"
-  local c1 = assert(cmem.new(size, qtype, name))
+  local c1 = assert(cmem.new({ size = size, qtype = qtype, name = name}))
   print("START: Deliberate error")
   local x = c1:set(bigstr)
   print("STOP: Deliberate error")
@@ -171,7 +171,7 @@ tests.t9 = function()
   -- than what user asked for 
   local n = 1048576
   local size = 4*n
-  local c1 = assert(cmem.new(size, "I4"))
+  local c1 = assert(cmem.new(size))
   local iptr = get_ptr(c1, "I4")
   for i = 1, n do
     iptr[i-1] = i
@@ -192,7 +192,7 @@ tests.t10 = function()
   for qtype, width in pairs(qtypes) do 
     print(qtype, width)
     local size = width * n
-    local c1 = assert(cmem.new(size, qtype))
+    local c1 = assert(cmem.new({size = size, qtype = qtype}))
     c1:set_min()
     -- c1:prbuf(n)
     c1:set_max()
@@ -205,7 +205,7 @@ end
 tests.t11 = function()
   local num_elements = 10
   local qtype = "I4"
-  local buf = cmem.new((num_elements * 4), qtype)
+  local buf = cmem.new({ size = (num_elements * 4), qtype = qtype})
   local iptr = get_ptr(buf, qtype)
   
   buf:set_min()
@@ -235,7 +235,7 @@ tests.t12 = function()
   local size = 1024
   local qtype = "I4"
   local name = "some bigus name"
-  local c1 = cmem.new(size, qtype, name)
+  local c1 = cmem.new({size = size, name = name})
   assert(c1:name() == name)
   print("test t12 passed")
 end
@@ -244,12 +244,12 @@ tests.t13 = function()
   -- test set/get width
   local size = 1024
   local qtype = "I4"
-  local c1 = cmem.new(size, qtype)
+  local c1 = cmem.new({ size = size, qtype = qtype})
   local width = qconsts.qtypes[qtype].width
   assert(c1:set_width(width))
   assert(c1:width() == width)
   -- cannot set width twice 
-  status = pcall(c1.set_width, width)
+  local status = pcall(c1.set_width, width)
   assert(not status)
   print("test t13 passed")
 end
@@ -257,10 +257,10 @@ tests.t14 = function()
   -- test bad set width
   local size = 1024
   local qtype = "I4"
-  local c1 = cmem.new(size, qtype)
+  local c1 = cmem.new({ size = size, qtype = qtype})
   local width = 13
   -- bad width should fail
-  status = pcall(c1.set_width, width)
+  local status = pcall(c1.set_width, width)
   assert(not status)
   print("test t14 passed")
 end
@@ -269,7 +269,7 @@ tests.t15 = function()
   local size = 1024
   local qtype = "I4"
   local name = "hello world"
-  local c1 = cmem.new(size, qtype, name)
+  local c1 = cmem.new( { size = size,  qtype = qtype, name = name})
   local x = c1:me()
   -- for k, v in pairs(x) do print(k, v); print(type(v)) end 
   assert(type(x) == "table")
@@ -286,7 +286,7 @@ tests.t16 = function()
   local size = 1024
   local qtype = "I4"
   local name = "hello world"
-  local c1 = cmem.new(size, qtype, name)
+  local c1 = cmem.new({ size = size, qtype = qtype, name = name})
   local x = c1:me()
   -- assert(x.is_stealable ==false)TODO Why is this failing?
   for k, v in pairs(x) do print(k, v); end
@@ -304,5 +304,5 @@ tests.t16 = function()
   print("test t16 passed")
 end
 return tests
--- tests.t8()
+-- tests.t13()
 -- tests.t16()

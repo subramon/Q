@@ -17,6 +17,7 @@
 #include "F8_to_txt.h"
 
 #include "cmem_struct.h"
+#include "aux_lua_to_c.h"
 #include "cmem.h"
 
 #define MIN_VAL 1
@@ -69,13 +70,15 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
 {
   int status = 0;
   void *data = NULL;
-  if ( size <= 0 ) { go_BYE(-1); }
-  // Always allocate a multiple of Q_CMEM_ALIGNMENT
-  size = (size_t)ceil((double)size / Q_CMEM_ALIGNMENT) * Q_CMEM_ALIGNMENT;
-  status = posix_memalign(&data, Q_CMEM_ALIGNMENT, size);
-  cBYE(status);
-  // TODO P4: make sure that posix_memalign is not causing any problems
-  return_if_malloc_failed(data);
+  if ( size < 0 ) { go_BYE(-1); } // we allow size == 0 
+  if ( size > 0 ) { 
+    // Always allocate a multiple of Q_CMEM_ALIGNMENT
+    size = (size_t)ceil((double)size / Q_CMEM_ALIGNMENT) * Q_CMEM_ALIGNMENT;
+    status = posix_memalign(&data, Q_CMEM_ALIGNMENT, size);
+    cBYE(status);
+    // TODO P4: make sure that posix_memalign is not causing any problems
+    return_if_malloc_failed(data);
+  }
   ptr_cmem->data = data;
   ptr_cmem->size = size;
   if ( fldtype != NULL ) { 
@@ -136,11 +139,27 @@ static int l_cmem_new( lua_State *L)
 {
   int status = 0;
   CMEM_REC_TYPE *ptr_cmem = NULL;
-  char *fldtype = NULL;
-  char *cell_name = NULL;
+  bool is_key;
 
-  int64_t size =  luaL_checknumber(L, 1);
-  if ( size <= 0 ) { go_BYE(-1); }
+  const char * fldtype = NULL;   // info to be set from input 
+  const char * cell_name = NULL; // info to be set from input 
+  int64_t size;           // info to be set from input 
+  
+  //-- get info from input 
+  int num_on_stack = lua_gettop(L);
+  if ( num_on_stack != 1 ) { go_BYE(-1); }
+  if ( lua_isnumber(L, 1 ) ) { 
+    size =  luaL_checknumber(L, 1);
+  }
+  else {
+    if ( !lua_istable(L, 1) ) { go_BYE(-1); }
+    status = get_int_from_tbl(L, "size", &is_key, &size); cBYE(status);
+    if ( !is_key ) { go_BYE(-1); }
+    status = get_str_from_tbl(L, "qtype", &is_key, &fldtype); cBYE(status);
+    status = get_str_from_tbl(L, "name", &is_key, &cell_name); cBYE(status);
+  }
+  // Note we allow size == 0 for dummy CMEM so that we do not 
+  if ( size < 0 ) { go_BYE(-1); }
 
   ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
   return_if_malloc_failed(ptr_cmem);
@@ -148,17 +167,6 @@ static int l_cmem_new( lua_State *L)
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  int num_on_stack = lua_gettop(L);
-  if ( num_on_stack > 2 ) { 
-    if ( lua_isstring(L, 2) ) {
-      fldtype = (char *)luaL_checkstring(L, 2);
-    }
-  }
-  if ( num_on_stack > 3 ) { 
-    if ( lua_isstring(L, 3) ) {
-      cell_name = (char *)luaL_checkstring(L, 3);
-    }
-  }
   status = cmem_malloc(ptr_cmem, size, fldtype, cell_name);
   cBYE(status);
   return 1;
@@ -400,6 +408,19 @@ static int l_cmem_size( lua_State *L) {
   return 1;
 }
 
+static int l_cmem_is_data( lua_State *L) {
+  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
+  bool ret_val;
+  if ( ( ptr_cmem->data == NULL ) || ( ptr_cmem->size == 0 ) ) { 
+    ret_val = false;
+  }
+  else {
+    ret_val = true;
+  }
+  lua_pushboolean(L, ret_val);
+  return 1;
+}
+
 static int l_cmem_is_foreign( lua_State *L) {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   lua_pushboolean(L, ptr_cmem->is_foreign);
@@ -454,7 +475,8 @@ static int l_cmem_free( lua_State *L)
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
   if ( ptr_cmem->data == NULL ) { 
     // explicit free will cause control to come here
-    if ( ( ptr_cmem->size == -1 ) && 
+    if ( ( ptr_cmem->size == 0 ) &&  /* Note < not <= */
+        // TODO P2 Might need to update the following checks
          ( strcmp(ptr_cmem->fldtype, "XXX") == 0 ) && 
          ( strcmp(ptr_cmem->cell_name, "Uninitialized") == 0 ) ) {
       /* all is well */
@@ -722,6 +744,7 @@ static const struct luaL_Reg cmem_methods[] = {
     { "dupe",       l_cmem_dupe }, // only for testing
     { "fldtype",    l_cmem_fldtype },
     { "is_foreign", l_cmem_is_foreign },
+    { "is_data",    l_cmem_is_data },
     { "me",         l_cmem_me },
     { "name",       l_cmem_name },
     { "new",        l_cmem_new },
@@ -745,6 +768,7 @@ static const struct luaL_Reg cmem_functions[] = {
     { "dupe",       l_cmem_dupe }, // only for testing
     { "fldtype",    l_cmem_fldtype },
     { "is_foreign", l_cmem_is_foreign },
+    { "is_data",    l_cmem_is_data },
     { "me",         l_cmem_me },
     { "name",       l_cmem_name },
     { "new",        l_cmem_new },

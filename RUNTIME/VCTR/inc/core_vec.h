@@ -176,12 +176,6 @@ vec_clone(
     VEC_REC_TYPE *ptr_old_vec,
     VEC_REC_TYPE *ptr_new_vec
     );
-extern int 
-vec_no_memcpy(
-    VEC_REC_TYPE *ptr_vec,
-    CMEM_REC_TYPE *ptr_cmem,
-    size_t chunk_size
-    );
 extern int
 vec_delete(
     VEC_REC_TYPE *ptr_vec

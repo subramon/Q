@@ -60,8 +60,10 @@ tests.t3 = function() -- this is a stress test
   assert(c1:eval())
   print("Test t3 succeeded")
 end
+--[[
 tests.t1()
--- tests.t2()
--- tests.t3()
+tests.t2()
+tests.t3()
 os.exit()
--- return tests
+--]]
+return tests

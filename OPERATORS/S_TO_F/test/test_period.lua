@@ -22,5 +22,8 @@ tests.t1 = function()
   end
   print("successfully executed t1")
 end
+--[[
 tests.t1()
--- return tests
+os.exit()
+--]]
+return tests

@@ -26,6 +26,7 @@ libsclr.so: gen_cmp.lua gen_arith.lua _gen_cmp _gen_arith \
 	gcc ${QC_FLAGS} ${INCS} \
 		scalar.c \
 		../../CMEM/src/cmem.c \
+		../../CMEM/src/aux_lua_to_c.c \
 		../../../UTILS/src/txt_to_B1.c \
 		../../../UTILS/src/txt_to_SC.c \
 		../../../UTILS/src/txt_to_I1.c \

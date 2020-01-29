@@ -1,4 +1,4 @@
-local vec = require 'libvec' ; 
+require 'Q/UTILS/lua/strict'
 local cmem = require 'libcmem' ; 
 local Scalar = require 'libsclr' ; 
 

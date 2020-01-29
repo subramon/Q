@@ -18,6 +18,7 @@ clean:
 libcmem.so:   cmem.c ../../UTILS/src/B1_to_txt.c
 	gcc ${QC_FLAGS} ${INCS} \
 		cmem.c \
+		aux_lua_to_c.c \
 		../../../UTILS/src/B1_to_txt.c \
 		../../../UTILS/src/I1_to_txt.c \
 		../../../UTILS/src/I2_to_txt.c \

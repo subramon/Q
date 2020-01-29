@@ -116,8 +116,6 @@ vec_meta(
   strcat(opbuf, buf);
   sprintf(buf, "is_eov = %s, ", ptr_vec->is_eov ? "true" : "false");
   strcat(opbuf, buf);
-  sprintf(buf, "is_no_memcpy = %s, ", ptr_vec->is_no_memcpy ? "true" : "false");
-  strcat(opbuf, buf);
   //-------------------------------------
   sprintf(buf, "num_chunks = %" PRIu32 ", ", ptr_vec->num_chunks);
   strcat(opbuf, buf);
@@ -766,45 +764,6 @@ vec_get_name(
 }
 
 int
-vec_no_memcpy(
-    VEC_REC_TYPE *ptr_vec,
-    CMEM_REC_TYPE *ptr_cmem,
-    size_t chunk_size
-    )
-{
-  int status = 0;
-#ifdef XXX
-  if (  ptr_vec  == NULL        ) { go_BYE(-1); }
-  if (  ptr_vec->chunk != NULL  ) { go_BYE(-1); }
-  if (  ptr_vec->is_eov         ) { go_BYE(-1); }
-  if (  ptr_vec->file_size != 0 ) { go_BYE(-1); }
-
-  if (  ptr_cmem == NULL        ) { go_BYE(-1); }
-  if ( ptr_cmem->is_foreign     ) { go_BYE(-1); }
-  if ( ptr_cmem->data == NULL   ) { go_BYE(-1); }
-  if ( ptr_cmem->size <= 0      ) { go_BYE(-1); }
-
-  ptr_vec->chunk_sz = (ptr_vec->field_width * ptr_vec->chunk_size);
-  // The CMEM must be the same size as the buffer that the Vector
-  // would have allocated had it allocated it on its own
-  if ( ptr_cmem->size != ptr_vec->chunk_sz ) { 
-    go_BYE(-1); 
-  }
-  //------------------------------------
-  ptr_vec->uqid  = RDTSC();
-  ptr_vec->chunk = ptr_cmem->data;
-  // ptr_vec->chunk_sz = ptr_cmem->size;
-  // This is a necessary pre-condition ptr_vec->chunk_size = chunk_size; 
-  ptr_vec->is_no_memcpy = true;
-  ptr_cmem->is_foreign = true; // de-allocation is for Vector not CMEM
-
-BYE:
-#endif
-  return status;
-}
-
-
-int
 vec_eov(
     VEC_REC_TYPE *ptr_vec
     )
@@ -887,6 +846,13 @@ vec_put_chunk(
     if ( !is_malloc ) { 
       ptr_cmem->is_foreign   = true;
       g_chunk_dir[chunk_idx].data = ptr_cmem->data;
+      ptr_cmem->data = NULL;
+      ptr_cmem->size = 0;
+      // following to tell cmem that it is okay for data to be NULL
+      // when its free is invoked
+      strcpy(ptr_cmem->fldtype, "XXX");
+      strcpy(ptr_cmem->cell_name, "Uninitialized");
+      //-----
       ptr_vec->num_elements += num_elements;
       return 0;
     }

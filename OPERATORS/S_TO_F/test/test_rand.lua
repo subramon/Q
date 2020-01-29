@@ -55,6 +55,9 @@ tests.t2 = function()
   assert(c1:qtype() == qtype)
   print("Test t2 succeeded")
 end
+--[[
 tests.t1()
 tests.t2()
+os.exit()
+--]]
 return tests

@@ -1,3 +1,4 @@
+require 'Q/UTILS/lua/strict'
 local cutils = require 'libcutils'
 local plpath = require 'pl.path'
 local ffi     = require 'ffi'
@@ -9,10 +10,10 @@ local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local get_func_decl = require 'Q/UTILS/build/get_func_decl'
 
 local hdrs = get_func_decl("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
-ffi.cdef(hdrs)
+pcall(ffi.cdef, hdrs)
 -- following only because we are testing. Normally, we get this from q_core
 local hdrs = get_func_decl("../../CMEM/inc/cmem_struct.h", " -I../../../UTILS/inc/")
-ffi.cdef(hdrs)
+pcall(ffi.cdef, hdrs)
 
 --=================================
 local chunk_size = 65536
@@ -33,7 +34,7 @@ tests.t0 = function(incr)
   local exp_num_chunks = 0
   local exp_num_elements = 0
   -- put elements as 1, 2, 3, ...
-  local s = cmem.new(4, "SC")
+  local s = assert(cmem.new({size =4, qtype = "SC"}))
   s:zero()
   ffi.cdef("char *strcpy(char *dest, const char *src);");
   local sp = ffi.cast("char *", get_ptr(s))
@@ -56,16 +57,17 @@ tests.t0 = function(incr)
   --================
   v:persist()
   v:eov()
+  local num_chunks=assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].num_chunks)
   local x = v:shutdown() 
   assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_dead)
   assert(type(x) == "string") 
   assert(#x > 0)
-  y = loadstring(x)()
+  local y = loadstring(x)()
   assert(type(y) == "table")
   assert(y.num_elements == n)
   assert(y.width == width)
   assert(y.qtype == qtype)
-  if ( iter == 1 ) then 
+  if ( incr > 0 ) then 
     assert(not y.file_name)
     assert(type(y.file_names) == "table")
     assert(#y.file_names == num_chunks)
@@ -104,9 +106,8 @@ tests.t1 = function()
   assert(tests.t0(1))
   print("Successfully completed test t1")
 end
--- return tests
-
-tests.t0() 
-tests.t1() 
-os.exit()
+return tests
+-- tests.t0() 
+-- tests.t1() 
+-- os.exit()
 

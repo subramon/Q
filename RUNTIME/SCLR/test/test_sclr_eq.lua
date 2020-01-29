@@ -1,5 +1,4 @@
-local vec = require 'libvec' ; 
-local cmem = require 'libcmem' ; 
+require 'Q/UTILS/lua/strict'
 local Scalar = require 'libsclr' ; 
 
 local tests = {}
@@ -16,7 +15,7 @@ tests.t1 = function ()
   -- x  = Scalar.new(123, "F4")
   local y  = Scalar.new("123", "I4")
   -- z  = Scalar.eq(x, y)
-  z = (x == y)
+  local z = (x == y)
   assert(z == true)
   local w  = (x == Scalar.new("1234", "F4"))
   -- w  = Scalar.eq(x,  Scalar.new("1234", "F4"))

@@ -1,3 +1,4 @@
+require 'Q/UTILS/lua/strict'
 local cutils = require 'libcutils'
 local plpath = require 'pl.path'
 local ffi     = require 'ffi'
@@ -48,7 +49,7 @@ tests.t1 = function()
       assert( not  v:get1(-1))
       assert( not  v:get1(1))
     elseif ( mode == "lVector" ) then 
-      status = pcall(v.get1, 0)  assert( not  status) 
+      local status = pcall(v.get1, 0)  assert( not  status) 
       status = pcall(v.get1,-1)  assert( not  status) 
       status = pcall(v.get1,1)   assert( not  status) 
     else
@@ -317,6 +318,7 @@ tests.t5 = function()
     for i = 1, #C do
       local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
     end
+    local status
     if ( mode == "cVector" ) then 
       status = v:__gc()
     elseif ( mode == "lVector" ) then 
@@ -426,7 +428,7 @@ tests.t7 = function()
     else
       error("")
     end
-    v:memo(false) -- set memo to true
+    v:memo(false) -- set memo to false
     assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == false)
     --=============
     local M = assert(v:me())
@@ -436,11 +438,11 @@ tests.t7 = function()
       math.floor(M[0].chunk_size_in_bytes / width))
     --=============
     local num_chunks = 1024
-    local D = cmem.new(chunk_size * width, qtype)
-    for i = 1, num_chunks do 
+    local D = cmem.new({size = chunk_size * width, qtype=qtype})
+    for chunk_idx  = 1, num_chunks do 
       -- assemble some known data 
       local Dptr = ffi.cast("int32_t *", get_ptr(D, qtype))
-      local offset = (i-1) * chunk_size
+      local offset = (chunk_idx -1) * chunk_size
       for i = 1, chunk_size do
         Dptr[i-1] = offset + i
       end
@@ -449,15 +451,16 @@ tests.t7 = function()
       local M = assert(v:me())
       M = ffi.cast("VEC_REC_TYPE *", M)
       assert(M[0].num_chunks == 1)
-      assert(M[0].num_elements == i*chunk_size, "failed at " .. i)
+      assert(M[0].num_elements == chunk_idx*chunk_size, 
+        "failed at " .. chunk_idx)
       assert(v:check())
       assert(cVector.check_chunks())
       
       local chk_D, nD
       if ( mode == "cVector" ) then
-        chk_D, nD = v:get_chunk(i-1)
+        chk_D, nD = v:get_chunk(chunk_idx-1)
       elseif ( mode == "lVector" ) then
-        nD, chk_D = v:get_chunk(i-1)
+        nD, chk_D = v:get_chunk(chunk_idx-1)
       else
         error("")
       end
@@ -468,7 +471,7 @@ tests.t7 = function()
       for i = 1, chunk_size do
         assert(chk_Dptr[i-1] == Dptr[i-1])
       end
-      v:unget_chunk(i-1)
+      v:unget_chunk(chunk_idx-1)
     end
   end
   print("Successfully completed test t7")
@@ -499,7 +502,7 @@ tests.t8 = function()
         qconsts.qtypes[qtype].width))
       --=============
       local num_chunks = 1024
-      local D = cmem.new(chunk_size * width, qtype)
+      local D = cmem.new({size = chunk_size * width, qtype = qtype})
       for i = 1, num_chunks do 
         -- assemble some known data 
         local Dptr = ffi.cast("int32_t *", get_ptr(D, qtype))
@@ -518,7 +521,7 @@ tests.t8 = function()
       local x = v:shutdown() 
       assert(type(x) == "string") 
       assert(#x > 0)
-      y = loadstring(x)()
+      local y = loadstring(x)()
       assert(y.num_elements == num_chunks * chunk_size)
   
       assert(y.width == qconsts.qtypes[qtype].width)
@@ -537,8 +540,8 @@ tests.t8 = function()
         assert(plpath.isfile(y.file_name)) 
       end 
       -- clean up after yourself
-      local ddir = qconsts.Q_DATA_DIR
-      pldir = require 'pl.dir'
+      local ddir = cVector.data_dir()
+      local pldir = require 'pl.dir'
       pldir.rmtree(ddir)
       pldir.makepath(ddir)
       --=====================
@@ -586,7 +589,7 @@ tests.t9 = function()
         if ( case == 1 ) then 
           assert(type(x) == "string") 
           assert(#x > 0)
-          y = loadstring(x)()
+          local y = loadstring(x)()
           assert(y.num_elements == num_elements)
           assert(y.width == width)
           assert(y.qtype == qtype)
@@ -600,12 +603,12 @@ tests.t9 = function()
           local x = v:shutdown() 
           assert(type(x) == "string") 
           assert(#x > 0)
-          y = loadstring(x)()
+          local y = loadstring(x)()
           assert(y.num_elements == num_elements)
           assert(y.width == width)
           assert(y.qtype == qtype)
         elseif ( case == 2 ) then 
-          x = pcall(v.shutdown, v)
+          local x = pcall(v.shutdown, v)
           assert(not x)
         else
           error("bad case")
@@ -615,16 +618,16 @@ tests.t9 = function()
       end
     end
     -- clean up after yourself
-    local ddir = qconsts.Q_DATA_DIR
-    pldir = require 'pl.dir'
+    local ddir = cVector.data_dir()
+    local pldir = require 'pl.dir'
     pldir.rmtree(ddir)
     pldir.makepath(ddir)
   end
   --=====================
   print("Successfully completed test t9")
 end
--- return tests
-
+return tests
+--[[
 tests.t1() -- PASSES
 tests.t3() -- PASSES
 tests.t4() -- PASSES 
@@ -635,3 +638,4 @@ tests.t8() -- PASSES
 tests.t9() -- PASSES
 os.exit()
 
+--]]
