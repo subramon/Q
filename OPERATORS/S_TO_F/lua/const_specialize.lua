@@ -31,11 +31,10 @@ return function (
   local sval = assert(to_scalar(val, qtype))
   local args_ctype = "CONST_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(args_ctype)
-  local cargs = cmem.new({size = sz, qtype = qtype}); 
+  local cargs = cmem.new({size = sz}); 
   local args = ffi.cast(args_ctype .. " *", get_ptr(cargs))
 
   local s = ffi.cast("SCLR_REC_TYPE *", sval)
-  local kc = val
   args[0]["val"] = s[0].cdata["val" .. qtype]
 
   subs.args       = args

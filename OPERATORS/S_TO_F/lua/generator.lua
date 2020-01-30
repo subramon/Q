@@ -6,6 +6,7 @@ local get_hdr  = require 'Q/UTILS/lua/get_hdr'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 local check_subs = require 'Q/OPERATORS/S_TO_F/lua/check_subs'
 local plpath   = require "pl.path"
+
 local srcdir   = "../gen_src/"
 local incdir   = "../gen_inc/"
 if ( not plpath.isdir(srcdir) ) then plpath.mkdir(srcdir) end
@@ -14,7 +15,6 @@ if ( not plpath.isdir(incdir) ) then plpath.mkdir(incdir) end
 local operator_file = assert(arg[1])
 assert(plpath.isfile(operator_file))
 local operators = dofile(operator_file)
-
 qtypes = { "B1", "I1", "I2", "I4", "I8", "F4", "F8" }
 
 -- START Some cdefs that we could have gotten from q_core

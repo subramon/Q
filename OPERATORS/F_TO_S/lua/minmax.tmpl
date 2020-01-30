@@ -1,0 +1,67 @@
+return require 'Q/UTILS/lua/code_gen' {
+   declaration = [[
+#include "q_incs.h"
+#include "minmax_struct.h"
+${includes}
+extern int
+${fn}(  
+      const ${in_ctype} * restrict in,  // [nR] 
+      uint64_t nR,
+      ${args_ctype} *ptr_args,
+      uint64_t offset
+      ) 
+;
+]],
+definition = [[
+#include "_${fn}.h"
+int
+${fn}(  
+      const ${in_ctype} * restrict in,  // [nR] 
+      uint64_t nR,
+      ${args_ctype} *ptr_args,
+      uint64_t offset
+      )
+{
+  int status = 0;
+
+  ${in_ctype} val = ptr_args->val;
+  int64_t     idx = ptr_args->idx;
+  uint32_t nT     = sysconf(_SC_NPROCESSORS_ONLN);
+
+  if ( offset == 0 ) { val = in[0]; idx = 0; }
+  uint64_t block_size = nR / num_threads;
+#pragma omp parallel for schedule(static)
+  for ( uint32_t t = 0; t < num_threads; t++ ) { 
+
+    uint64_t lb = t * block_size;
+    uint64_t ub = lb + block_size;
+    if ( t == 0               ) { lb =  0; }
+    if ( t == (num_threads-1) ) { ub = nR; }
+
+    ${in_ctype} lval = val;
+    for ( uint64_t i  = lb; i < ub; i++ ) {  
+      inval = in[i];
+      if ( inval ${operator} lval ) ) {
+        lval = inval;
+        lidx = offset + i;
+      }
+    }
+#pragma omp critical (_${fn})
+    {
+      if ( lval ${comparator} val ) {
+        val = lval;
+        idx = lidx;
+      }
+      if ( lval ${alt_comparator} val ) {
+        if ( lidx < idx ) { 
+          idx = lidx;
+        }
+      }
+    }
+  }
+  ptr_args->$val = val;
+  ptr_args->$idx = idx;
+  return status;
+}
+]]
+}
