@@ -243,6 +243,29 @@ BYE:
   return 2;
 }
 //----------------------------------------
+static int l_vec_kill( lua_State *L) {
+  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  int status = vec_kill(ptr_vec); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
+static int l_vec_is_killable( lua_State *L) {
+  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  lua_pushboolean(L, ptr_vec->is_killable);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_vec_is_eov( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
@@ -282,6 +305,28 @@ static int l_vec_memo( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool is_memo = lua_toboolean(L, 2);
   status = vec_memo(ptr_vec, &(ptr_vec->is_memo), is_memo); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
+static int l_vec_killable( lua_State *L) {
+  int status = 0;
+  if ( (  lua_gettop(L) != 1 ) && ( lua_gettop(L) != 2 ) ) { go_BYE(-1); }
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  //------------------------------
+  bool is_killable = false; // default value
+  int num_args = lua_gettop(L);
+  if ( num_args >= 2 )  {
+    if ( lua_isboolean(L, 2) ) { 
+      is_killable = lua_toboolean(L, 2);
+    }
+  }
+  //------------------------------
+  status = vec_killable(ptr_vec, is_killable); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -825,7 +870,9 @@ static const struct luaL_Reg vector_methods[] = {
     { "init_globals", l_vec_init_globals },
     { "is_dead", l_vec_is_dead },
     { "is_eov", l_vec_is_eov },
+    { "is_killable", l_vec_killable },
     { "is_memo", l_vec_is_memo },
+    { "killable", l_vec_killable },
     { "me", l_vec_me },
     { "meta", l_vec_meta },
     { "memo", l_vec_memo },
@@ -866,7 +913,10 @@ static const struct luaL_Reg vector_functions[] = {
     { "init_globals", l_vec_init_globals },
     { "is_dead", l_vec_is_dead },
     { "is_eov", l_vec_is_eov },
+    { "is_killable", l_vec_is_killable },
     { "is_memo", l_vec_is_memo },
+    { "kill", l_vec_kill},
+    { "killable", l_vec_killable },
     { "me", l_vec_me },
     { "memo", l_vec_memo },
     { "meta", l_vec_meta },

@@ -24,24 +24,17 @@ return function (a, args)
   assert(qc[func_name], "Function not found " .. func_name)
 
   local cast_as = subs.out_ctype .. "*"
-  local buf =  nil
   local l_chunk_num = 0
   local first_call = true
+  local buf = assert(cmem.new(0)) -- note we don't really allocate data
   
   local generator = function(chunk_num)
     -- Adding assert on l_chunk_num to have sync between 
     -- expected chunk_num and generator's l_chunk_num state
     --=== START: buffer allocation
-    if ( first_call ) then
-      first_call = false
+    if ( not buf:is_data() ) then 
       buf = assert(cmem.new({size = subs.buf_size, qtype = subs.out_qtype}))
       buf:stealable(true)
-    else
-      if ( not buf:is_data() ) then 
-        -- need to allocate because it has been stolen
-        buf = assert(cmem.new({size = subs.buf_size, qtype = subs.out_qtype}))
-        buf:stealable(true)
-      end
     end
     --=== STOP : buffer allocation
     --=============================

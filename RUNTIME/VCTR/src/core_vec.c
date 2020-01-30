@@ -112,6 +112,8 @@ vec_meta(
   //-------------------------------------
   sprintf(buf, "is_persist = %s, ", ptr_vec->is_persist ? "true" : "false");
   strcat(opbuf, buf);
+  sprintf(buf, "is_killable = %s, ", ptr_vec->is_killable ? "true" : "false");
+  strcat(opbuf, buf);
   sprintf(buf, "is_memo = %s, ", ptr_vec->is_memo ? "true" : "false");
   strcat(opbuf, buf);
   sprintf(buf, "is_eov = %s, ", ptr_vec->is_eov ? "true" : "false");
@@ -725,6 +727,32 @@ BYE:
   return status;
 }
 
+int
+vec_kill(
+    VEC_REC_TYPE *ptr_vec
+    )
+{
+  int status = 0;
+  if ( ptr_vec->is_dead ) { go_BYE(-1); }
+  if ( !ptr_vec->is_killable ) { return status; } // ignore if necessary
+  status = vec_delete(ptr_vec); cBYE(status);
+BYE:
+  return status;
+}
+
+int
+vec_killable(
+    VEC_REC_TYPE *ptr_vec,
+    bool is_killable
+    )
+{
+  int status = 0;
+  if ( ptr_vec->is_dead ) { go_BYE(-1); }
+  if ( ptr_vec->num_elements > 0 ) { go_BYE(-1); }
+  ptr_vec->is_killable = is_killable;
+BYE:
+  return status;
+}
 
 int
 vec_persist(

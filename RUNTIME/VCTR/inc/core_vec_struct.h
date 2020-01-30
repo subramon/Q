@@ -45,6 +45,9 @@ typedef struct _vec_rec_type {
   bool is_memo;
   bool is_eov;
   bool is_dead; // true=> all C resources freed. Waiting for Lua to GC
+  bool is_killable; 
+  // if you get kill signal and is_killable = true, commit sicide
+  // if you get kill signal and is_killable = false, ignore it 
 
   /* Difference between num_chunks and sz_chunks is as follows.
    * sz_chunks tells us how big the chunk array is.

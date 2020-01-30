@@ -245,4 +245,13 @@ vec_same_state(
     VEC_REC_TYPE *ptr_v1,
     VEC_REC_TYPE *ptr_v2
     );
+extern int
+vec_killable(
+    VEC_REC_TYPE *ptr_vec,
+    bool is_killable
+    );
+extern int
+vec_kill(
+    VEC_REC_TYPE *ptr_vec
+    );
 #endif
