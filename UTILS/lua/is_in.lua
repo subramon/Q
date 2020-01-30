@@ -1,11 +1,10 @@
-local vals 
 local function is_in (x, X)
-  if ( not vals ) then
-    vals = {}
-    for k, v in pairs(X) do 
-      vals[v] = true
+  assert(x)
+  assert(type(X) == "table")
+  for k, v in pairs(X) do 
+    if ( v == x ) then return true
     end
   end
-  return vals[x]
+  return false
 end
 return is_in

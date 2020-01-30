@@ -1,4 +1,5 @@
 -- FUNCTIONAL 
+-- TODO P2 THIS TEST SHOULD NOT BE HERE. Move to proper place and fix it 
 local Q = require 'Q'
 -- deliberate comment to allow for globals require 'Q/UTILS/lua/strict'
 local tests = {}

@@ -29,19 +29,20 @@ ${fn}(
   uint32_t nT     = sysconf(_SC_NPROCESSORS_ONLN);
 
   if ( offset == 0 ) { val = in[0]; idx = 0; }
-  uint64_t block_size = nR / num_threads;
+  uint64_t block_size = nR / nT;
 #pragma omp parallel for schedule(static)
-  for ( uint32_t t = 0; t < num_threads; t++ ) { 
+  for ( uint32_t t = 0; t < nT; t++ ) { 
 
     uint64_t lb = t * block_size;
     uint64_t ub = lb + block_size;
     if ( t == 0               ) { lb =  0; }
-    if ( t == (num_threads-1) ) { ub = nR; }
+    if ( t == (nT-1) ) { ub = nR; }
 
     ${in_ctype} lval = val;
+    int64_t lidx     = -1;
     for ( uint64_t i  = lb; i < ub; i++ ) {  
-      inval = in[i];
-      if ( inval ${operator} lval ) ) {
+      ${in_ctype} inval = in[i];
+      if ( inval ${comparator} lval ) {
         lval = inval;
         lidx = offset + i;
       }
@@ -59,8 +60,9 @@ ${fn}(
       }
     }
   }
-  ptr_args->$val = val;
-  ptr_args->$idx = idx;
+  ptr_args->val = val;
+  ptr_args->idx = idx;
+  ptr_args->num += nR;
   return status;
 }
 ]]

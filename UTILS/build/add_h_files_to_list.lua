@@ -12,6 +12,8 @@ local struct_files = {
   "seq_struct.h", -- from OPERATORS/S_TO_F/
   "rand_struct.h", -- from OPERATORS/S_TO_F/
   "period_struct.h", -- from OPERATORS/S_TO_F/
+  "minmax_struct.h", -- from OPERATORS/F_TO_S/
+  "sum_struct.h", -- from OPERATORS/F_TO_S/
 }
 
 local q_files =  { 

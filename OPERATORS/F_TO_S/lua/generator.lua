@@ -15,7 +15,7 @@ if ( not plpath.isdir(incdir) ) then plpath.mkdir(incdir) end
 local operator_file = assert(arg[1])
 assert(plpath.isfile(operator_file))
 local operators = dofile(operator_file)
-local qtypes = { 'I1', 'I2', 'I4', 'I8','F4', 'F8' }
+local qtypes = { 'B1', 'I1', 'I2', 'I4', 'I8','F4', 'F8' }
 
 -- START Some cdefs that we could have gotten from q_core
 local hfile = qconsts.Q_SRC_ROOT .. "/RUNTIME/SCLR/inc/scalar_struct.h"
@@ -54,17 +54,22 @@ for _, operator in ipairs(operators) do
   local sp_fn = assert(require(operator .. "_specialize"))
   local num_produced = 0
   for _, qtype in ipairs(qtypes) do 
-    local status, subs
-    status, subs = pcall(sp_fn, qtype)
-    assert(status, subs)
-    assert(check_subs(subs))
-    if ( not subs.tmpl ) then 
-      print("Not generating code for " .. subs.fn)
+    if ( ( qtype == "B1" ) and 
+         ( ( operator == "min" ) or ( operator == "max" ) ) ) then
+         -- nothing to do 
     else
-      assert(type(subs) == "table")
-      gen_code.doth(subs, incdir)
-      gen_code.dotc(subs, srcdir)
-      num_produced = num_produced + 1
+      local status, subs
+      status, subs = pcall(sp_fn, qtype)
+      assert(status, subs)
+      assert(check_subs(subs))
+      if ( not subs.tmpl ) then 
+        print("Not generating code for " .. subs.fn)
+      else
+        assert(type(subs) == "table")
+        gen_code.doth(subs, incdir)
+        gen_code.dotc(subs, srcdir)
+        num_produced = num_produced + 1
+      end
     end
   end
   assert(num_produced > 0)

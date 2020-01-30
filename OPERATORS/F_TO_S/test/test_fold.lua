@@ -1,8 +1,8 @@
 -- FUNCTIONAL
-local Q = require 'Q'
-local Scalar = require 'libsclr'
-local qconsts = require 'Q/UTILS/lua/q_consts'
 require 'Q/UTILS/lua/strict'
+local Q       = require 'Q'
+local Scalar  = require 'libsclr'
+local qconsts = require 'Q/UTILS/lua/q_consts'
 local tests = {}
 tests.t1 = function()
   local len = 2 * qconsts.chunk_size + 17

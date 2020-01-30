@@ -1,5 +1,5 @@
 return { 
  "min",
  "max",
--- TODO  "sum",
+ "sum",
 }

@@ -1,68 +1,52 @@
 return require 'Q/UTILS/lua/code_gen' {
-
-   declaration = [[
-
+declaration = [[
 #include "q_incs.h"
-
-typedef struct _reduce_${op}_${qtype}_args {
-  ${reduce_ctype} ${op}_val;
-  uint64_t num; // number of non-null elements inspected
-  } REDUCE_${op}_${qtype}_ARGS;
-  
+#include "sum_struct.h"
 ${includes}
 extern int
 ${fn}(  
-      const ${ctype} * restrict in,  
+      const ${in_ctype} * restrict in,  
       uint64_t nR,
-      void *ptr_args,
+      ${args_ctype}  *ptr_args,
       uint64_t idx
       ) 
 ;
-
-   ]],
-   definition = [[
-
+]],
+definition = [[
 #include "_${fn}.h"
-
 int
 ${fn}(  
-      const ${ctype} * restrict in,
+      const ${in_ctype} * restrict in,
       uint64_t nR,  
-      void *in_ptr_args,
+      ${args_ctype}  *ptr_args,
       uint64_t idx
       )
 
 {
   int status = 0;
-  REDUCE_${op}_${qtype}_ARGS *ptr_args = (REDUCE_${op}_${qtype}_ARGS *)in_ptr_args;
-
-  if ( idx == 0 ) {
-    ptr_args->${op}_val = ${initial_val};
-    ptr_args->num     = 0;
-  }
-  
-  ${reduce_ctype} curr_val = 0;
-  uint32_t num_threads = sysconf(_SC_NPROCESSORS_ONLN);
-
-  uint64_t block_size = mcr_max(1, nR / num_threads);
+  ${reduce_ctype} sum = 0;
+  uint32_t nT = sysconf(_SC_NPROCESSORS_ONLN);
+  uint64_t block_size = nR / nT;
 #pragma omp parallel for schedule(static)
-  for ( uint32_t t = 0; t < num_threads; t++ ) { 
+  for ( uint32_t t = 0; t < nT; t++ ) { 
     uint64_t lb = t * block_size;
     uint64_t ub = lb + block_size;
-    if ( t == (num_threads-1) ) { ub = nR; }
-    ${reduce_ctype} lval = ${initial_val};
-#pragma omp simd reduction(+:lval)
+    if ( t == 0               ) { lb = 0;  }
+    if ( t == (nT-1) ) { ub = nR; }
+
+    ${reduce_ctype} lsum = 0;
+#pragma omp simd reduction(+:lsum)
     for ( uint64_t i  = lb; i < ub; i++ ) {  
-      lval += ${macro}(in[i]);
+      lsum += in[i];
     }
 #pragma omp critical (_${fn})
     {
-    curr_val = ${t_reducer}(curr_val, lval);
+      sum += lsum;
     }
   } 
-  ptr_args->${op}_val += curr_val;
-  ptr_args->num     += nR;
+  ptr_args->val += sum;
+  ptr_args->num += nR;
   return status;
 }
-   ]]
+]]
 }
