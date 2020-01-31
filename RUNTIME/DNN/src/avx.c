@@ -1,4 +1,8 @@
 #include "q_incs.h"
+#ifdef AVX
+#include <immintrin.h> // for AVX
+#include <smmintrin.h> // for AVX
+#endif
 #include "avx.h"
 
 #if defined(__GNUC__)

@@ -1,26 +1,25 @@
 local ffi     = require 'ffi'
+local cVector = require 'libvctr'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local qc      = require 'Q/UTILS/lua/q_core'
 local cmem    = require 'libcmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local qtils = require 'Q/QTILS/lua/is_sorted'
-local sort = require 'Q/OPERATORS/SORT/lua/sort'
 local record_time = require 'Q/UTILS/lua/record_time'
 
 local function expander_f1opf2f3(op, x, optargs)
   -- Verification
   assert(op == "split")
   assert(type(x) == "lVector", "a must be a lVector ")
+  assert(not x:has_nulls())
   
   local sp_fn_name = "Q/OPERATORS/F1OPF2F3/lua/split_specialize"
   local spfn = assert(require(sp_fn_name))
 
   local status, subs = pcall(spfn, x:fldtype())
   if not status then print(subs) end
-  assert(status, "Specializer failed " .. sp_fn_name)
-  local func_name = assert(subs.fn)
 
+  local func_name = assert(subs.fn)
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
     qc.q_add(subs); print("Dynamic compilation kicking in... ")
@@ -28,82 +27,74 @@ local function expander_f1opf2f3(op, x, optargs)
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Symbol not defined " .. func_name)
   
-  local shift = subs.shift
-  assert(type(shift) == "number")
-  assert(shift > 0)
-  local sz_out          = qconsts.chunk_size 
+  local shift  = subs.shift
+  for k, v in pairs(cVector) do print(k, v) end 
+  print(cVector.chunk_size())
+  local chunk_size = cVector.chunk_size()
   local out_qtype = subs.out_qtype
-  local sz_out_in_bytes = sz_out * qconsts.qtypes[out_qtype].width
-  local out1_buf = nil
-  local out2_buf = nil
-  local first_call = true
+  local bufsz = chunk_size * qconsts.qtypes[out_qtype].width
+  local bufs = {}
   
-  local out1_vec = lVector({gen=true, has_nulls=false, qtype=out_qtype} )
-  local out2_vec = lVector({gen=true, has_nulls=false, qtype=out_qtype} )
 
-  local chunk_idx = 0
-  local function f1opf2f3_gen(chunk_num)
-    -- Adding assert on chunk_idx to have sync between expected chunk_num and generator's chunk_idx state
-    assert(chunk_num == chunk_idx, "chunk_num = " .. chunk_num 
-      .. " chunk_idx = " .. chunk_idx)
-    if ( first_call ) then 
-      -- allocate buffer for output
-      out1_buf = assert(cmem.new(sz_out_in_bytes))
-      out2_buf = assert(cmem.new(sz_out_in_bytes))
-      first_call = false
-    end
-    
-    local in_len, in_chunk, in_nn_chunk = x:chunk(chunk_idx)
-    -- TODO DISCUSS FOLLOWING WITH KRUSHNAKANT
-    if ( in_len == 0 ) then 
-      return 0
-      --[[
-      out1_vec:eov()
-      out2_vec:eov()
-      return nil, nil, nil, true -- indicating put chunk done
-      --]]
-    end
-    if ( first_call ) then  assert(in_len > 0) end 
-    assert(in_nn_chunk == nil, "nulls not supported as yet")
-    
-    local in_cast_as  = subs.in_ctype  .. "*"
-    local out_cast_as = subs.out_ctype .. "*"
-    local cst_in_chunk = ffi.cast(in_cast_as,  get_ptr(in_chunk))
-    local cst_out1_buf = ffi.cast(out_cast_as, get_ptr(out1_buf))
-    local cst_out2_buf = ffi.cast(out_cast_as, get_ptr(out2_buf))
-
-    local start_time = qc.RDTSC()
-    local status = qc[func_name](cst_in_chunk, in_len, shift,
-      cst_out1_buf, cst_out2_buf)
-    record_time(start_time, func_name)
-    assert(status == 0, "C error in split")
-
-    -- Write values to vector
-    out1_vec:put_chunk(out1_buf, nil, in_len)
-    out2_vec:put_chunk(out2_buf, nil, in_len)
-    local is_put_chunk = true
-    chunk_idx = chunk_idx + 1
-    if ( in_len < qconsts.chunk_size ) then 
-      out1_vec:eov()
-      out2_vec:eov()
-    end
-    return in_len, nil, nil
-  end
-  out1_vec:set_generator(f1opf2f3_gen)
-  out2_vec:set_generator(f1opf2f3_gen)
-  if ( optargs ) then 
-    assert(type(optargs) == "table")
-    if ( optargs.names ) then
-      assert(type(optargs.names) == "table") 
-      assert(optargs.names[1] and type(optargs.names[1] == "string"))
-      assert(optargs.names[2] and type(optargs.names[2] == "string"))
-      assert(optargs.names[1] ~= optargs.names[2])
-      out1_vec:set_name(optargs.names[1])
-      out1_vec:set_name(optargs.names[2])
+  local in_cast_as  = subs.in_ctype  .. "*"
+  local out_cast_as = subs.out_ctype .. "*"
+  local l_chunk_num = 0
+  local gens = {}
+  local vecs = {}
+  local bufs = {}
+  local cbufs = {}
+  for i = 1, 2 do 
+    bufs[i] = cmem.new(0)
+    local myidx = i
+    gens[i] = function(chunk_num)
+      assert(chunk_num == l_chunk_num)
+      for i = 1, 2 do 
+        if ( not bufs[i]:is_data() ) then
+          bufs[i] = assert(cmem.new(bufsz))
+        end
+      end
+      
+      local in_len, in_chunk = x:get_chunk(l_chunk_num)
+      if ( in_len == 0 ) then 
+        for i = 1, 2 do 
+          bufs[i]:delete()
+          vecs[i]:eov()
+        end
+        return 0
+      end
+      
+      local cst_in_chunk = ffi.cast(in_cast_as,  get_ptr(in_chunk))
+      for i = 1, 2 do 
+        cbufs[i] = ffi.cast(out_cast_as, get_ptr(bufs[i]))
+      end
+  
+      local start_time = qc.RDTSC()
+      local status = qc[func_name](cst_in_chunk, in_len, shift,
+        bufs[1], bufs[2])
+      record_time(start_time, func_name)
+      assert(status == 0)
+  
+      -- Write values to vector
+      for i = 1, 2 do 
+        if ( myidx ~= i ) then 
+          vecs[i]:put_chunk(out1_buf, nil, in_len)
+        end
+      end
+      local is_put_chunk = true
+      x:unget_chunk(l_chunk_num)
+      l_chunk_num = l_chunk_num + 1
+      if ( in_len < qconsts.chunk_size ) then 
+        for i = 1, 2 do 
+          bufs[i]:delete()
+          vecs[i]:eov()
+        end
+      end
+      return in_len, bufs[my_idx]
     end
   end
-
-  return out1_vec, out2_vec
+  for i = 1, 2 do 
+    vecs[i] = lVector({gen= gen[i], has_nulls=false, qtype=out_qtype} )
+  end
+  return vecs
 end
-
 return expander_f1opf2f3
