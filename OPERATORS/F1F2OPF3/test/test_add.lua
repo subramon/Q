@@ -1,28 +1,28 @@
 -- FUNCTIONAL
-local Q = require 'Q'
-local c_to_txt = require 'Q/UTILS/lua/C_to_txt'
-local diff = require 'Q/UTILS/lua/diff'
 require 'Q/UTILS/lua/strict'
+local Q = require 'Q'
+local cVector = require 'libvctr'
+local Scalar  = require 'libsclr'
+cVector.init_globals({})
 local plpath  = require 'pl.path'
-local path_to_here = os.getenv("Q_SRC_ROOT") .. "/OPERATORS/F1F2OPF3/test/"
-assert(plpath.isdir(path_to_here))
+local chunk_size = cVector.chunk_size()
 
 local tests = {}
 tests.t1 = function()
-  local c1 = Q.mk_col( {1,2,3,4,5,6,7,8}, "I4"):set_name("c1")
-  Q.print_csv(c1)
-  local c3 = c1
-  c1 = 10
-  local c2 = Q.mk_col( {80,70,60,50,40,30,20,10}, "I8"):set_name("c1")
-  local z = Q.vvadd(c3, c2):set_name("z")
-  assert(z:get_name() == "z")
-  local opt_args = { opfile = path_to_here .. "_out1.txt", filter = { lb = 1, ub = 4} }
-  Q.print_csv(z, opt_args)
-  local diff_status = diff(path_to_here .. "_out1.txt", path_to_here .. "out1.txt")
-  assert(diff_status, "Input and Output csv file not matched")
-  local w = Q.vvneq(z, Q.mk_col({81,72,63,54,45,36,27,18}, "I4")):set_name("w")
-  -- w:eval()
-  assert(Q.sum(Q.vvneq(z, Q.mk_col({81,72,63,54,45,36,27,18}, "I4"))):eval():to_num() == 0 )
+  local qtype = "I4"
+  local len = 2 * chunk_size + 3
+  local x1 = {}; for i = 1, len do x1[i] = i end
+  local x2 = {}; for i = 1, len do x2[i] = 2*i end
+
+  local c1 = Q.mk_col(x1, qtype)
+  local c2 = Q.mk_col(x2, qtype)
+  print("Created input")
+  assert(c1:num_elements() == len)
+  assert(c2:num_elements() == len)
+  local z = Q.vvadd(c1, c2):eval()
+  for i = 1, len do 
+    assert(z:get1(i-1) == Scalar.new(3*i, qtype))
+  end
   print("Test t1 succeeded")
 end
 
@@ -48,4 +48,5 @@ tests.t2 = function()
   print("Test t2 succeeded")
 end
 
-return tests
+-- return tests
+tests.t1()

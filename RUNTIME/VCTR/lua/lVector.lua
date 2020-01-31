@@ -75,6 +75,10 @@ function lVector:eov()
   return self
 end
 
+function lVector:kill()
+  assert(H.on_both(self, cVector.kill))
+end
+
 function lVector:eval()
   if ( self:is_eov() ) then return self end 
   assert(H.is_multiple_of_chunk_size(self:num_elements()))
@@ -209,7 +213,7 @@ function lVector:get_chunk(chunk_num)
     assert(not self:is_eov()) 
     -- Invoke generator
     if (type(self._gen) == "function") then 
-      local buf_size, base_data, nn_data = self._gen(chunk_num, self)
+      local buf_size, base_data, nn_data = self._gen(chunk_num)
       assert(type(buf_size) == "number")
       if ( buf_size > 0 ) then 
         assert(type(base_data) == "CMEM")
@@ -527,11 +531,6 @@ function lVector:unget_chunk(chunk_num)
   return self
 end
 --====================
--- This are aliases to maintain backward compatibility
-function lVector:chunk(chunk_num)
-  return lVector:get_chunk(chunk_num)
-end
-
 function lVector:length()
   -- TODO P2 Why does following not work 
   -- return lVector:num_elements()
