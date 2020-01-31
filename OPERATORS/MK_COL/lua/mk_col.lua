@@ -5,6 +5,9 @@ local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
+local rev_lkp =  require 'Q/UTILS/lua/rev_lkp'
+
+local good_qtypes = rev_lkp({ "I1",  "I2",  "I4", "I8",  "F4", "F8", "B1", "SC"})
 
 local mk_col = function (
   input, 
@@ -33,14 +36,8 @@ local mk_col = function (
     has_nulls = true
   end
   
-  assert( qconsts.qtypes[qtype], err.INVALID_COLUMN_TYPE)
-  assert((( qtype == "I1" )  or ( qtype == "I2" )  or ( qtype == "I4" )  or
-          ( qtype == "I8" )  or ( qtype == "F4" )  or ( qtype == "F8" ) or 
-          ( qtype == "B1") or ( qtype == "SC" ) ),
-  err.INVALID_COLUMN_TYPE)
-  
+  assert(good_qtypes[qtype])
   local width
-
   local ctype =  assert(qconsts.qtypes[qtype].ctype, err.NULL_CTYPE_ERROR)
   local table_length = table.getn(input)
   local length_in_bytes = nil
@@ -57,15 +54,14 @@ local mk_col = function (
     end
     width = width + 1 -- add space for nullc
     --=====================
-    col = lVector{ qtype=qtype, gen = true, width = width, 
-      has_nulls = false}
+    col = lVector({ qtype=qtype, width = width, has_nulls = false})
     for k, v in pairs(input) do 
       local sval = cmem.new(width, "SC")
       assert(sval:set(v))
       col:put1(sval)
     end
   else
-    col = lVector{ qtype=qtype, gen = true, has_nulls = has_nulls}
+    col = lVector({ qtype=qtype, has_nulls = has_nulls})
     for k, v in ipairs(input) do
       local v_nn = nil
       v = assert(to_scalar(v, qtype))
@@ -80,5 +76,4 @@ local mk_col = function (
   col:eov()
   return col
 end
-
 return require('Q/q_export').export('mk_col', mk_col)

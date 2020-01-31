@@ -1,28 +1,62 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
+local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+cVector.init_globals({})
+
 local tests = {}
-tests.t1 = function()
-  local len = 2 * qconsts.chunk_size + 17
+tests.t1 = function( to_memo)
+  if ( type(to_memo) == "nil" ) then to_memo = false end 
+
+  local chunk_size = cVector.chunk_size()
+  local len = 2 * chunk_size + 17
   local x, y, z 
-  local c1 = Q.seq({start = 1, by = 1, len = len, qtype = "I4"}):set_name("c1")
-  local c2 = Q.seq({start = 1, by = 1, len = len, qtype = "I4"}):set_name("c2")
-  x, y, z = Q.fold({ "sum", "min", "max" }, c1)
+  local qtype = "I4"
+  local c1 = Q.seq({start = 1, by = 1, len = len, qtype = qtype})
 
-  assert(type(x) == "Scalar") -- not Reducer 
-  assert(type(y) == "Scalar") -- not Reducer 
-  assert(type(z) == "Scalar") -- not Reducer 
-  -- print(x:to_num())
-  -- print(y:to_num())
-  -- print(z:to_num())
+  c1:memo(to_memo)
 
-  print(x, Q.sum(c1):eval(), Q.sum(c2):eval())
-  Q.print_csv({c1, c2}, { opfile = "_xx"} )
-  assert(x == Q.sum(c1):eval()) 
-  assert(y == Q.min(c1):eval())
-  assert(z == Q.max(c1):eval())
+  local ops ={ "sum", "min", "max" }
+  local T  = Q.fold({ "sum", "min", "max" }, c1)
+  for _, op in pairs(ops) do 
+    local tt = assert(T[op])
+    assert(type(tt) == "table")
+    for k, v in pairs(tt) do 
+      assert(type(tt[1]) == "Scalar")
+      assert(type(tt[2]) == "Scalar")
+      if ( tt[3] ) then 
+        assert(type(tt[3]) == "Scalar")
+      end
+    end
+  end
+  -- for comparison
+  local d1 = Q.seq({start = 1, by = 1, len = len, qtype = qtype})
+  local sumval, sumnum = Q.sum(d1):eval()
+  local minval, minnum, minidx  = Q.min(d1):eval()
+  local maxval, maxnum, maxidx  = Q.max(d1):eval()
+
+  assert(T["sum"][1] == sumval)
+  assert(T["sum"][2] == sumnum)
+
+  assert(T["min"][1] == minval)
+  assert(T["min"][2] == minnum)
+
+  assert(T["max"][1] == maxval)
+  assert(T["max"][2] == maxnum)
+
   print("Test t1 succeeded")
+  return true
+end
+tests.t2 = function()
+  assert(tests.t1(true))
+  assert(tests.t1(false))
+  print("Test t2 succeeded")
+  return true
 end
 return tests
+--[[
+tests.t1()
+tests.t2()
+os.exit()
+--]]

@@ -1,11 +1,12 @@
 -- FUNCTIONAL 
-local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
+local Q = require 'Q'
 local tests = {}
 --=========================================
 tests.t1 = function()
   for iter = 1, 100 do 
-    Q.sum(Q.rand( { lb = 0, ub = 1, qtype = "F8", len = 65537 } )):eval()
+    local x = Q.sum(Q.rand( { lb = 0, ub = 1, qtype = "F8", len = 65537 } )):eval()
+    x:eval()
   end
   print("Test t1 succeeded")
 --=========================================
@@ -18,4 +19,6 @@ tests.t2 = function()
   print("Test t2 succeeded")
 end
 --=========================================
-return tests
+-- return tests
+tests.t1()
+tests.t2()

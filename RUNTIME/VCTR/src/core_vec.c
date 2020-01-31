@@ -816,6 +816,7 @@ vec_put_chunk(
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_put_chunk++;
+  if ( g_chunk_size == 0 ) { go_BYE(-1); }
   if ( ptr_vec  == NULL ) { go_BYE(-1); }
   if ( ptr_cmem == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_dead ) { go_BYE(-1); }
@@ -913,6 +914,7 @@ vec_put1(
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); n_put1++;
   // START: Do some basic checks
+  if ( g_chunk_size == 0 ) { go_BYE(-1); }
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( data == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov ) { go_BYE(-1); }

@@ -1,19 +1,22 @@
 -- FUNCTIONAL
-
-local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
-local mk_col = require 'Q/OPERATORS/MK_COL/lua/mk_col'
-local convert_c_to_txt = require 'Q/UTILS/lua/C_to_txt'
+local Q       = require 'Q'
+local cVector = require 'libvctr'
+local Scalar  = require 'libsclr'
+cVector.init_globals({})
+
+local mk_col  = require 'Q/OPERATORS/MK_COL/lua/mk_col'
 local tests = {}
 tests.t1 = function()
   -- input table of values 1,2,3 of type I4, given to mk_col
-  local col = mk_col({1,3,4}, "I4")
-  assert(col)
-  assert(type(col) == "lVector", " Output of mk_col is not lVector")
-  for i=1, col:length() do  
-    local status, result = pcall(convert_c_to_txt, col, i)
-    assert(status, "Failed to get the value from vector at index: "..tostring(i))
-    if result == nil then result = "" end
+  local qtype = "I4"
+  local col = assert(mk_col({1,2,3,4}, qtype))
+  assert(type(col) == "lVector")
+  for i = 1, col:num_elements() do  
+    local x = col:get1(i-1)
+    assert(type(x) == "Scalar")
+    assert(x:fldtype() == qtype)
+    assert(x == Scalar.new(i, "I4")) -- dependent on input values
   end
   assert(col:has_nulls() == false)
   print("Test t1 succeeded")
@@ -23,13 +26,21 @@ tests.t2 = function()
   local col = mk_col({1,2,3,4}, "I4", {true, false, true, false})
   assert(col)
   assert(type(col) == "lVector", " Output of mk_col is not lVector")
-  for i=1, col:length() do  
-    local status, result = pcall(convert_c_to_txt, col, i)
-    assert(status, "Failed to get the value from vector at index: "..tostring(i))
-    if result == nil then result = "" end
+  for i = 1, col:num_elements() do  
+    local x, nn_x = col:get1(i-1)
+    assert(type(x) == "Scalar")
+    assert(type(nn_x) == "Scalar")
+    if ( ( i == 1 ) or ( i == 3 ) ) then 
+      assert(nn_x == Scalar.new(true, "B1"))
+    elseif ( ( i == 2 ) or ( i == 4 ) ) then 
+      assert(nn_x == Scalar.new(false, "B1"))
+    else
+      error("")
+    end
   end
   assert(col:has_nulls())
-  -- TODO assert(Q.sum(col):eval():to_num() == 1+3)
   print("Test t2 succeeded")
 end   
 return tests
+-- tests.t1()
+-- tests.t2()

@@ -16,7 +16,7 @@ setmetatable(Reducer, {
 register_type(Reducer, "Reducer")
 
 function Reducer.new(arg)
-  local start_time = cutils.RDTSC()
+  local start_time = cutils.rdtsc()
   assert(type(arg) == "table")
   local reducer = setmetatable({}, Reducer)
   -- gen is optional
@@ -25,18 +25,23 @@ function Reducer.new(arg)
   assert(type(arg.func) == "function")
   -- func is a function which does XXXX 
   reducer._func = arg.func
+  --[[ I liked this test but there are cases where we want a default
+  -- value even before we have generated anything
+  -- TODO P4 Think about a smart way of handling it 
   -- we need generator or value but not both
   if ( arg.gen ) then assert ( not arg.value ) end 
   if ( arg.value ) then assert ( not arg.gen ) end 
+  --]]
   assert ( ( arg.gen ) or ( arg.value ) )
   --==============
+  -- is_eor = is end of reducer
   if arg.value then 
-    reducer._value= assert(arg.value) 
-    reducer._is_eov = true -- we have the final answer
+    reducer._value = arg.value
+    reducer._is_eor = true -- we have the final answer
   end
  if ( arg.gen ) then 
     reducer._gen = arg.gen
-    reducer._is_eov = false -- we still need to figure out final answer
+    reducer._is_eor = false -- we still need to figure out final answer
   end
   reducer._index = 0
   record_time(start_time, "Reducer.new")
@@ -44,19 +49,22 @@ function Reducer.new(arg)
 end
 
 function Reducer:next()
-  if ( self._is_eov ) then
+  if ( self._is_eor ) then
     return false
   end
-  local start_time = cutils.RDTSC()
+  local start_time = cutils.rdtsc()
   if self._gen == nil then return false end
   -- assert(self._gen ~= nil,  'Reducer: The reducer is materialized')
-  local val = self._gen(self._index)
+  local val, is_eor = self._gen(self._index)
   self._index = self._index + 1
   if val then
     self._value = val
+    if ( type(is_eor) == "boolean" ) then 
+      self._is_eor = is_eor
+    end
     return true
   else
-    self._is_eov = true
+    self._is_eor = true
     self._gen = nil -- destroy the generator once generation done
     return false
   end
@@ -80,9 +88,9 @@ function Reducer:value()
 end
 
 function Reducer:eval()
-  local start_time = cutils.RDTSC()
+  local start_time = cutils.rdtsc()
   local status = self._gen ~= nil
-  if ( self._is_eov ) then 
+  if ( self._is_eor ) then 
     return self._func(self._value)
   end
   while status == true do

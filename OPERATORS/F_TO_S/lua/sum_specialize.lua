@@ -1,6 +1,7 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
+local Scalar    = require 'libsclr'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local rev_lkp   = require 'Q/UTILS/lua/rev_lkp'
@@ -42,14 +43,15 @@ return function (in_qtype)
 
     local sval = Scalar.new(0, subs.reduce_qtype) -- out_qtype from closure
     local s = ffi.cast("SCLR_REC_TYPE *", sval)
-    local key = val .. subs.reduce_qtype
-    s[0][key] = x[0].val
+    local key = "val" .. subs.reduce_qtype
+    s[0].cdata[key] = x[0].val
     -------------------
     local snum = Scalar.new(0, "I8")
-    local s = ffi.cast("SCLR_REC_TYPE *", sval)
-    s[0]["I8"] = x[0].val
+    local s = ffi.cast("SCLR_REC_TYPE *", snum)
+    local key = "valI8"
+    s[0].cdata[key] = x[0].num
     -------------------
-    return s1, s2
+    return sval, snum
   end
   subs.getter = getter
   -- handle B1 as special case 

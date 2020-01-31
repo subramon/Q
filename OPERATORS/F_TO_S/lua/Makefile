@@ -18,6 +18,7 @@ all : libf_to_s.so _f_to_s.lua
 
 all_for_dc : \
 	_f_to_s.lua
+	cp ../inc/*.h ${Q_BUILD_DIR}/include/
 	
 #----------------------------------
 clean :

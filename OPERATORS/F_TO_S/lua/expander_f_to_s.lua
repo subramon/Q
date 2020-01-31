@@ -1,6 +1,7 @@
 local qconsts   = require 'Q/UTILS/lua/q_consts'
 local Reducer   = require 'Q/RUNTIME/lua/Reducer'
 local ffi       = require 'ffi'
+local cVector   = require 'libvctr'
 local qc        = require 'Q/UTILS/lua/q_core'
 local chk_chunk = require 'Q/UTILS/lua/chk_chunk'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
@@ -14,8 +15,8 @@ return function (a, x)
   local sp_fn_name = "Q/OPERATORS/F_TO_S/lua/" .. a .. "_specialize"
   local spfn = assert(require(sp_fn_name))
   local status, subs = pcall(spfn, x_qtype)
-  assert(type(subs) == "table")
   assert(status, "Failure of specializer " .. sp_fn_name)
+  assert(type(subs) == "table")
 
   -- Return early if you have cached the result of a previous call
   if ( x:is_eov() ) then 
@@ -41,20 +42,25 @@ return function (a, x)
   local getter        = assert(subs.getter)
   assert(reduce_struct)
   assert(type(getter) == "function")
-  local cast_x_as = subs.in_ctype .. " *"
   --==================
+  local cast_x_as = subs.in_ctype .. " *"
+  local is_eor = false
   local l_chunk_num = 0
+  local chunk_size = cVector.chunk_size()
+  --==================
   local lgen = function(chunk_num)
     assert(chunk_num == l_chunk_num)
-    local offset = l_chunk_num * qconsts.chunk_size
-    local x_len, x_chunk, nn_x_chunk = x:chunk(l_chunk_num)
+    local offset = l_chunk_num * chunk_size
+    local x_len, x_chunk, nn_x_chunk = x:get_chunk(l_chunk_num)
     if ( ( not x_len ) or ( x_len == 0 ) ) then return nil end 
     local inx = ffi.cast(cast_x_as, get_ptr(x_chunk))
     local start_time = qc.RDTSC()
     qc[func_name](inx, x_len, reduce_struct, offset)
     record_time(start_time, func_name)
+    x:unget_chunk(l_chunk_num)
     l_chunk_num = l_chunk_num + 1
-    return reduce_struct
+    if ( x_len < chunk_size ) then is_eor = true  end
+    return reduce_struct, is_eor
   end
   local s =  Reducer ( { gen = lgen, func = getter, value = reduce_struct} )
   return s

@@ -38,9 +38,9 @@ ${fn}(
     if ( t == 0               ) { lb =  0; }
     if ( t == (nT-1) ) { ub = nR; }
 
-    ${in_ctype} lval = val;
-    int64_t lidx     = -1;
-    for ( uint64_t i  = lb; i < ub; i++ ) {  
+    ${in_ctype} lval = in[lb];
+    int64_t lidx     = offset + lb;
+    for ( uint64_t i  = lb+1; i < ub; i++ ) {  
       ${in_ctype} inval = in[i];
       if ( inval ${comparator} lval ) {
         lval = inval;

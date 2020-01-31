@@ -193,10 +193,11 @@ function lVector:get_chunk(chunk_num)
     return 0
   end
   --=======
-  -- if Vector has been memo-ized, then you can only get recent chunk
+  -- if Vector has NOT been memo-ized, then you can only get recent chunk
   if ( num_elements > 0 ) then 
     local most_recent_chunk = math.floor((num_elements-1)/ csz)
-    if ( ( self:is_memo() ) and ( chunk_num < most_recent_chunk ) ) then 
+    if ( ( self:is_memo() == false ) and ( chunk_num < most_recent_chunk ) ) then 
+      print(chunk_num, most_recent_chunk, num_elements)
       error("Cannot serve earlier chunks")
     end
   end
