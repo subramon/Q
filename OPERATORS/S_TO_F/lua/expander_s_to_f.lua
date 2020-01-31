@@ -25,7 +25,6 @@ return function (a, args)
 
   local cast_as = subs.out_ctype .. "*"
   local l_chunk_num = 0
-  local first_call = true
   local buf = assert(cmem.new(0)) -- note we don't really allocate data
   
   local generator = function(chunk_num)
