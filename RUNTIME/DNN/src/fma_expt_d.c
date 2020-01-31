@@ -1,5 +1,7 @@
 // gcc -mavx2 -mfma -S x.c   -lm - x  -I../../../UTILS/inc/
 #include "q_incs.h"
+#include <immintrin.h> // for AVX
+#include <smmintrin.h> // for AVX
 #define N 1048576
 
 int main() {

@@ -44,7 +44,7 @@ local function add_h_files_to_list(
   for _, file in ipairs(struct_files) do
     local full_file_name = qconsts.Q_BUILD_DIR .. "/include/" .. file
     if ( not plpath.isfile(full_file_name) ) then 
-      print("Not adding struct file " .. file)
+      print("Not adding struct file " .. file .. " " .. full_file_name)
     else
       local cleaned_def, hash_define = get_func_decl(full_file_name)
       cleaned_defs[#cleaned_defs + 1] = cleaned_def

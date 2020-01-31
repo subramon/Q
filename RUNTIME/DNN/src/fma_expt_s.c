@@ -1,6 +1,8 @@
 // gcc -mavx2 -mfma -S -c  x.c   # to produce assembler
 // gcc -mavx2 -mfma -O4 x.c -lm  # produces executable a.out
 #include "q_incs.h"
+#include <immintrin.h> // for AVX
+#include <smmintrin.h> // for AVX
 
 #define N 35
 #define REG_WIDTH_IN_BITS 256

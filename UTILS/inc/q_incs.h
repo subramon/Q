@@ -10,8 +10,6 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_linalg.h>
-#include <immintrin.h> // for AVX
-#include <smmintrin.h> // for AVX
 #include <inttypes.h>
 #include <limits.h>
 #include <malloc.h>
