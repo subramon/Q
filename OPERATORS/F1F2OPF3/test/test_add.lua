@@ -48,5 +48,5 @@ tests.t2 = function()
   print("Test t2 succeeded")
 end
 
--- return tests
-tests.t1()
+return tests
+-- tests.t1()
