@@ -28,8 +28,6 @@ local function expander_f1opf2f3(op, x, optargs)
   assert(qc[func_name], "Symbol not defined " .. func_name)
   
   local shift  = subs.shift
-  for k, v in pairs(cVector) do print(k, v) end 
-  print(cVector.chunk_size())
   local chunk_size = cVector.chunk_size()
   local out_qtype = subs.out_qtype
   local bufsz = chunk_size * qconsts.qtypes[out_qtype].width
@@ -42,7 +40,6 @@ local function expander_f1opf2f3(op, x, optargs)
   local gens = {}
   local vecs = {}
   local bufs = {}
-  local cbufs = {}
   for i = 1, 2 do 
     bufs[i] = cmem.new(0)
     local myidx = i
@@ -51,6 +48,7 @@ local function expander_f1opf2f3(op, x, optargs)
       for i = 1, 2 do 
         if ( not bufs[i]:is_data() ) then
           bufs[i] = assert(cmem.new(bufsz))
+          bufs[i]:stealable(true)
         end
       end
       
@@ -58,11 +56,16 @@ local function expander_f1opf2f3(op, x, optargs)
       if ( in_len == 0 ) then 
         for i = 1, 2 do 
           bufs[i]:delete()
-          vecs[i]:eov()
+        end
+        for i = 1, 2 do 
+          if ( myidx ~= i ) then 
+            vecs[i]:eov()
+          end
         end
         return 0
       end
       
+      local cbufs = {}
       local cst_in_chunk = ffi.cast(in_cast_as,  get_ptr(in_chunk))
       for i = 1, 2 do 
         cbufs[i] = ffi.cast(out_cast_as, get_ptr(bufs[i]))
@@ -70,30 +73,36 @@ local function expander_f1opf2f3(op, x, optargs)
   
       local start_time = qc.RDTSC()
       local status = qc[func_name](cst_in_chunk, in_len, shift,
-        bufs[1], bufs[2])
+        cbufs[1], cbufs[2])
       record_time(start_time, func_name)
       assert(status == 0)
   
       -- Write values to vector
       for i = 1, 2 do 
         if ( myidx ~= i ) then 
-          vecs[i]:put_chunk(out1_buf, nil, in_len)
+          vecs[i]:put_chunk(bufs[i], nil, in_len)
         end
       end
       local is_put_chunk = true
       x:unget_chunk(l_chunk_num)
       l_chunk_num = l_chunk_num + 1
-      if ( in_len < qconsts.chunk_size ) then 
+      if ( in_len < chunk_size ) then 
+        --[[ TODO 
         for i = 1, 2 do 
           bufs[i]:delete()
-          vecs[i]:eov()
+        end
+        --]]
+        for i = 1, 2 do 
+          if ( myidx ~= i ) then 
+            vecs[i]:eov()
+          end
         end
       end
-      return in_len, bufs[my_idx]
+      return in_len, bufs[myidx]
     end
   end
   for i = 1, 2 do 
-    vecs[i] = lVector({gen= gen[i], has_nulls=false, qtype=out_qtype} )
+    vecs[i] = lVector({gen= gens[i], has_nulls=false, qtype=out_qtype} )
   end
   return vecs
 end

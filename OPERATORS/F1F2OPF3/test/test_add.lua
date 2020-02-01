@@ -1,8 +1,8 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
-local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
+local cVector = require 'libvctr'
 cVector.init_globals({})
 local plpath  = require 'pl.path'
 local chunk_size = cVector.chunk_size()

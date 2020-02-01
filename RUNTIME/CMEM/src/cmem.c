@@ -745,8 +745,9 @@ BYE:
 }
 //----------------------------------------
 static const struct luaL_Reg cmem_methods[] = {
-    { "__gc",          l_cmem_free               },
+    { "__gc",       l_cmem_free               },
     { "data",       l_cmem_data },
+    { "delete",     l_cmem_free               },
     { "dupe",       l_cmem_dupe }, // only for testing
     { "fldtype",    l_cmem_fldtype },
     { "is_foreign", l_cmem_is_foreign },
@@ -771,6 +772,7 @@ static const struct luaL_Reg cmem_methods[] = {
  
 static const struct luaL_Reg cmem_functions[] = {
     { "data",       l_cmem_data },
+    { "delete",     l_cmem_free               },
     { "dupe",       l_cmem_dupe }, // only for testing
     { "fldtype",    l_cmem_fldtype },
     { "is_foreign", l_cmem_is_foreign },

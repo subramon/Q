@@ -26,7 +26,7 @@ end
 local chunk_size = 65536
 local params = { chunk_size = chunk_size, sz_chunk_dir = 4096, 
       data_dir = qconsts.Q_DATA_DIR }
-assert(cVector.init_globals(params))
+cVector.init_globals(params)
 assert(cVector.chunk_size() == chunk_size)
 --=================================
 local tests = {}

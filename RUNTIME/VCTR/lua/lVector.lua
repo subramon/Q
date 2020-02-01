@@ -355,7 +355,15 @@ end
 -- TODO P4. Signature of put_chunk() should have matched get_chunk()
 -- But that would involve a lot of changes. To be done sometime
 function lVector:put_chunk(base_addr, nn_addr, len)
-  assert ( not self._gen ) -- if you have a generator, cannot apply put*
+  --[[ This is an interesting point. I had initially had a check as follows
+  -- assert ( not self._gen ) -- if you have a generator, cannot apply put*
+  -- But I realized that it is too aggressive. To see why this is the case,
+  -- look at any expander that returns 2 Vectors. When the generator of
+  -- Vector 1 is called, we have to put_chunk on Vector 2.  When the 
+  -- generator of Vector 2 is called, we have to put_chunk on Vector 1.
+  -- So both Vectors have generators and both must allow put chunk to be
+  -- called on them
+  --]]
   if ( ( type(len) == "number") and ( len == 0 ) )  then -- no more data
     return H.on_both(self, cVector.eov)
   end

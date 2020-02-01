@@ -5,12 +5,18 @@ local tests = {}
 --=========================================
 tests.t1 = function()
   for iter = 1, 100 do 
-    local x = Q.sum(Q.rand( { lb = 0, ub = 1, qtype = "F8", len = 65537 } )):eval()
+    local x = Q.rand( { lb = 0, ub = 1, qtype = "F8", len = 65537 } )
+    assert(type(x) == "lVector")
+    assert(x:fldtype() == "F8")
     x:eval()
+    -- local y = Q.sum(x)
+    -- y:eval()
+    -- assert(type(y) == "Scalar")
+    -- assert(y:fldtype() == "F8")
   end
   print("Test t1 succeeded")
---=========================================
 end
+--=========================================
 tests.t2 = function()
   local n = 1048576+17
   local y = Q.seq({start = 1, by = 1, qtype = "I4", len = n })
@@ -21,4 +27,6 @@ end
 --=========================================
 -- return tests
 tests.t1()
+--[[
 tests.t2()
+--]]

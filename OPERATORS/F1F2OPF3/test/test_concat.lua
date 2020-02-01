@@ -1,6 +1,8 @@
 -- FUNCTIONAL
 local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
+local cVector = require 'libvctr'
+cVector.init_globals({})
 
 local tests = {}
 tests.t1 = function()

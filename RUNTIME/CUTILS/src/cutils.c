@@ -26,7 +26,8 @@ static int l_cutils_rdtsc(
     lua_State *L
     )
 {
-  lua_pushnumber(L, RDTSC());
+  int64_t x = RDTSC();
+  lua_pushnumber(L, x);
   return 1;
 }
 //----------------------------------------

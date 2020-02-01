@@ -34,13 +34,19 @@ return function (
   local args = ffi.cast(args_ctype .. " *", get_ptr(cargs))
 
   -- set seed
-  local seed	= in_args.seed
-  if ( seed ) then 
-    assert(type(seed) == "number")
-    assert(seed > 0)
+  local seed
+  if ( in_args.seed ) then 
+    seed = in_args.seed
+    print("seed = ", seed)
   else
-    seed = cutils.rdtsc()
+    seed = cutils.rdtsc() 
+    -- following is to make sure we stay as integer and not fp
+    seed = seed % (128*1048576*1048576-1)
+    print("XX seed = ", seed)
   end
+  assert(type(seed) == "number")
+  assert(seed > 0)
+  --=============
   local sseed = Scalar.new(seed, "I8")
   local sseed = ffi.cast("SCLR_REC_TYPE *", sseed)
   args[0]["seed"] = sseed[0].cdata["valI8"]

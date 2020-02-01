@@ -57,9 +57,9 @@ tests.t_max = function ()
   print("t_max succeeded")
 end
 
--- return tests
-tests.t_sum()
-tests.t_min()
-tests.t_max()
-os.exit()
+return tests
+-- tests.t_sum()
+-- tests.t_min()
+-- tests.t_max()
+-- os.exit()
 

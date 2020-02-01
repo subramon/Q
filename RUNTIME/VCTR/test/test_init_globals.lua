@@ -19,7 +19,7 @@ local tests = {}
 tests.t1 = function ()
 local params = { chunk_size = 65536, sz_chunk_dir = 1024, 
   data_dir = qconsts.Q_DATA_DIR }
-assert(cVector.init_globals(params))
+cVector.init_globals(params)
 print(">>>> START:  Deliberate error")
 local status = cVector.init_globals(params)
 assert(not status)
