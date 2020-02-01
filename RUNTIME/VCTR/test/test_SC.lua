@@ -102,12 +102,15 @@ tests.t0 = function(incr)
 end
 
 tests.t1 = function()
+  assert(tests.t0())
   assert(tests.t0(-1))
   assert(tests.t0(1))
   print("Successfully completed test t1")
 end
 return tests
--- tests.t0() 
--- tests.t1() 
--- os.exit()
+--[[
+tests.t0() 
+tests.t1() 
+os.exit()
 
+--]]

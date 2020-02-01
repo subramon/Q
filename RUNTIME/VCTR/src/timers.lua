@@ -8,7 +8,7 @@ local timers = {
   "flush ",
   "free ",
   "get1 ",
-  "get_all ",
+  "start_read ",
   "get_chunk ",
   "new ",
   "put1 ",

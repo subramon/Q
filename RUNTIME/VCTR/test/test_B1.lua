@@ -120,9 +120,9 @@ tests.t1 = function()
   assert(tests.t0(1))
   print("Successfully completed test t1")
 end
--- return tests
-
+return tests
+--[[
 tests.t0() 
 tests.t1() 
 os.exit()
-
+--]]

@@ -22,4 +22,4 @@ libcutils.so:   cutils.c \
 	../../../UTILS/src/isfile.c \
 	../../../UTILS/src/rs_mmap.c \
 	../../../UTILS/src/rdtsc.c \
-		-shared -o libcutils.so
+	${Q_LINK_FLAGS} -shared -o libcutils.so

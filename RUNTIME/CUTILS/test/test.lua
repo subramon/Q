@@ -2,9 +2,7 @@ require 'Q/UTILS/lua/strict'
 cutils = require 'libcutils'
 local x 
 x = cutils.rdtsc()
-print(x)
 assert(math.ceil(x) == math.floor(x))
-os.exit()
 x = cutils.getfiles("../src/", ".*.c$", "only_files")
 print("here is what we got")
 for k, v in pairs(x) do print(k, v) end

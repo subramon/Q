@@ -141,7 +141,9 @@ free_chunk(
   if ( ptr_chunk->num_readers > 0 ) { go_BYE(-1); }
   if ( ptr_chunk->num_writers > 0 ) { go_BYE(-1); }
   free_if_non_null(ptr_chunk->data);
-  status = delete_chunk_file(ptr_chunk, is_persist, &(ptr_chunk->is_file));
+  if ( !is_persist ) { 
+    status = delete_chunk_file(ptr_chunk, &(ptr_chunk->is_file));
+  }
   ptr_chunk->is_file = false;
   cBYE(status);
   g_n_chunk_dir--;
@@ -187,15 +189,17 @@ load_chunk(
     memcpy(data, X, nX);
   }
   else { // vector has a backup file 
+    size_t num_to_copy = ptr_vec->chunk_size_in_bytes;
     status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
     cBYE(status);
     status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
-    if ( X == NULL ) { go_BYE(-1); }
+    if ( X == NULL                ) { go_BYE(-1); }
     if ( nX != ptr_vec->file_size ) { go_BYE(-1); }
     size_t offset = ptr_vec->chunk_size_in_bytes * ptr_chunk->chunk_num;
-    if ( offset >= nX ) { go_BYE(-1); }
-    size_t num_to_copy = ptr_vec->chunk_size_in_bytes;
+    // handle case where last chunk requested and vec_size not multiple 
     if ( nX - offset < num_to_copy ) { num_to_copy = nX - offset; }
+    //--------
+    if ( offset + num_to_copy > nX ) { go_BYE(-1); }
     memcpy(data, X + offset, num_to_copy);
   }
   *ptr_data = data;
@@ -359,6 +363,7 @@ get_chunk_size_in_bytes(
       )
 {
   int32_t chunk_size_in_bytes = g_chunk_size * field_width;
+  if ( g_chunk_size == 0 ) { WHEREAMI; return -1; }
   if ( strcmp(field_type, "B1") == 0 ) {  // SPECIAL CASE
     chunk_size_in_bytes = g_chunk_size / 8;
     if ( ( ( g_chunk_size / 64 ) * 64 ) != g_chunk_size ) { 
@@ -474,11 +479,7 @@ chunk_dir_idx_for_read(
   else {
     chunk_num = idx / g_chunk_size;
   }
-  if ( chunk_num >= ptr_vec->num_chunks ) { 
-    printf("hello world\n");
-    go_BYE(-1); 
-  }
-
+  if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
   *ptr_chunk_dir_idx = ptr_vec->chunks[chunk_num];
   if ( *ptr_chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
 BYE:
@@ -558,7 +559,7 @@ vec_new_common(
   ptr_vec->field_width = field_width;
   ptr_vec->chunk_size_in_bytes = get_chunk_size_in_bytes(field_width, field_type);
   ptr_vec->uqid = RDTSC();
-  ptr_vec->is_memo = true;
+  ptr_vec->is_memo = true; // default behavior
 BYE:
   return status;
 }
@@ -576,44 +577,32 @@ delete_vec_file(
       char file_name[Q_MAX_LEN_FILE_NAME+1];
       status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
       cBYE(status);
-      if ( !isfile(file_name) ) { 
-        WHEREAMI; /* error. Should not happen  */ 
-      }
-      status = remove(file_name);
-      if ( status != 0 ) { 
-        WHEREAMI; /* error. Should not happen */ 
-      }
-      *ptr_is_file = false;
-      *ptr_file_size = 0;
+      if ( !isfile(file_name) ) { go_BYE(-1); }
+      status = remove(file_name); cBYE(status);
     }
   }
 BYE:
+  *ptr_is_file = false;
+  *ptr_file_size = 0;
   return status;
 }
+//---------------------
 int
 delete_chunk_file(
     const CHUNK_REC_TYPE *ptr_chunk,
-    bool is_persist,
     bool *ptr_is_file
     )
 {
   int status = 0;
-  if ( ptr_chunk->is_file ) { 
-    if ( !is_persist ) {
-      char file_name[Q_MAX_LEN_FILE_NAME+1];
-      status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
-      cBYE(status);
-      if ( !isfile(file_name) ) { 
-        WHEREAMI; /* error. Should not happen  */ 
-      }
-      status = remove(file_name);
-      if ( status != 0 ) { 
-        WHEREAMI; /* error. Should not happen */ 
-      }
-      *ptr_is_file = false;
-    }
+  if ( ptr_chunk->is_file ) {
+    char file_name[Q_MAX_LEN_FILE_NAME+1];
+    status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+    cBYE(status);
+    if ( !isfile(file_name) ) { go_BYE(-1); }
+    status = remove(file_name); cBYE(status);
   }
 BYE:
+  *ptr_is_file = false;
   return status;
 }
 

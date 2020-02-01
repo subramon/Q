@@ -120,7 +120,6 @@ delete_vec_file(
 extern int
 delete_chunk_file(
     const CHUNK_REC_TYPE *ptr_chunk,
-    bool is_persist,
     bool *ptr_is_file
     );
 extern int

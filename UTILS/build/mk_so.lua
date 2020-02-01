@@ -1,4 +1,3 @@
-
 local copy_gen_files     = require 'Q/UTILS/build/copy_gen_files'
 local mk_q_core_h     = require 'Q/UTILS/build/mk_q_core_h'
 local o_from_c       = require 'Q/UTILS/build/o_from_c'

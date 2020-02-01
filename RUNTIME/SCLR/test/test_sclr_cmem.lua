@@ -63,8 +63,12 @@ ffi.cdef([[
     if ( qtype == "F4" ) then assert(c2[0][qtype] == 5 ) end 
     if ( qtype == "F8" ) then assert(c2[0][qtype] == 6 ) end 
   end
+  print("test 2 passed")
 end
 --================
 return tests
--- tests.t2()
--- os.exit()
+--[[
+tests.t1()
+tests.t2()
+os.exit()
+--]]
