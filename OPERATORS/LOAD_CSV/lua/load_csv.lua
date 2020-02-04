@@ -53,6 +53,7 @@ local function free_buffers(M, databuf, nn_databuf, my_name)
       -- Note subtlety of above if condition.  You can't delete 
       -- buffer for vector whose chunk you are returning
       if ( v.is_load ) then
+        print("Freeing buffer for ", v.name)
         databuf[v.name]:delete() 
         if ( v.has_nulls ) then 
           nn_databuf[v.name]:delete() 
@@ -105,30 +106,23 @@ local function load_csv(
           for _, v in ipairs(M) do 
             if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
               vectors[v.name]:put_chunk(
-                databuf[v.name], nn_databuf[i], l_num_rows_read)
-              if ( l_num_rows_read < chunk_size ) then 
-                free_buffers(M, databuf, nn_databuf, my_name)
-                -- signal eov for all vectors other than yourself
-                vectors[v.name]:eov()
-              end
+                databuf[v.name], nn_databuf[v.name], l_num_rows_read)
             end
           end
         end 
         --=====================
         if ( l_num_rows_read < chunk_size ) then 
-          F.free_aux()
-        end
-        if ( l_num_rows_read > 0 ) then 
-          return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
-        else
           -- signal eov for all vectors other than yourself
           for _, v in ipairs(M) do 
             if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
               vectors[v.name]:eov()
             end
           end
-          return 0, nil, nil
+          -- free buffers, you won't need them any more
+          F.free_aux()
+          free_buffers(M, databuf, nn_databuf, my_name)
         end
+        return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
       end
       lgens[my_name] = lgen
     end

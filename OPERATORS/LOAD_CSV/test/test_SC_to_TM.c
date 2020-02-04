@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include "SC_to_TM.h"
 #include "TM_to_SC.h"
-#include "_TM_to_I8.h"
+#include "TM_to_I8.h"
 int
 main(void)
 {

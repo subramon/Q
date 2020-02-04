@@ -214,6 +214,7 @@ function lVector:get_chunk(chunk_num)
     -- Invoke generator
     if (type(self._gen) == "function") then 
       local buf_size, base_data, nn_data = self._gen(chunk_num)
+      -- NOTE: if buf_size == 0, do not look at base_data/nn_data
       assert(type(buf_size) == "number")
       if ( buf_size > 0 ) then 
         assert(type(base_data) == "CMEM")
@@ -297,12 +298,13 @@ function lVector.new(args)
       end
     end 
     assert(type(args.qtype) == "string") 
-    if ( args.qtype == "string" ) then 
-      assert(type(args.width) == "number") 
-    else
+    --=======================
+    if ( args.qtype ~= "SC" ) then 
       args.width = qconsts.qtypes[args.qtype].width
     end
-    vector._base_vec = cVector.new(args)
+    assert(type(args.width) == "number") 
+    --=======================
+    vector._base_vec = assert(cVector.new(args))
     if ( qconsts.debug ) then 
       assert(cVector.check(vector._base_vec)) 
     end 

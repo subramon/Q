@@ -1,3 +1,6 @@
+require 'Q/UTILS/lua/strict'
+local ffi = require 'ffi'
+local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 cVector.init_globals({})
@@ -61,7 +64,6 @@ tests.t2 = function()
   for k, v in ipairs(M) do 
     assert(type(T[v.name]) == "lVector")
   end
-  print("xxxxxxxxxxx")
   local chunk_idx = 0
   for k, v in pairs(T) do 
     assert(type(v) == "lVector")
@@ -71,13 +73,25 @@ tests.t2 = function()
   repeat 
     local n 
     for k, v in pairs(T) do 
-      n = v:chunk(chunk_idx)
+      n = v:get_chunk(chunk_idx)
+      if ( n > 0 ) then 
+        v:unget_chunk(chunk_idx)
+      end
     end
     print("Completed " .. chunk_idx )
     chunk_idx = chunk_idx + 1
   until n == 0 
-  print("Completed load")
-  Q.print_csv(T)
+  -- This test is specific to the in2.csv we have crafted
+  assert(T.i1:get1(0) == Scalar.new(10, "I4"))
+  assert(T.i1:get1(1) == Scalar.new(20, "I4"))
+  assert(T.i1:get1(2) == Scalar.new(30, "I4"))
+  for i = 1, T.s1:num_elements() do
+    assert(type(T.s1:get1(i-1)) == "CMEM")
+  end
+  assert(ffi.string(get_ptr(T.s1:get1(0))) == "ABC")
+  assert(ffi.string(get_ptr(T.s1:get1(1))) == "DEFX")
+  assert(ffi.string(get_ptr(T.s1:get1(2))) == "GHIYZ")
+  --===================
   print("Test t2 succeeded")
 end
 --=======================================================
@@ -95,14 +109,13 @@ tests.t3 = function()
   repeat 
     local n 
     for k, v in pairs(T) do 
-      n = v:chunk(chunk_idx)
+      n = v:get_chunk(chunk_idx)
+      if ( n > 0 ) then 
+        v:unget_chunk(chunk_idx)
+      end
     end
     chunk_idx = chunk_idx + 1
   until n == 0 
-  local opfile = '_x.csv'
-  plfile.delete(opfile)
-  Q.print_csv(T.price, { lb = 0, ub = 10, opfile = opfile})
-  assert(plpath.isfile(opfile))
   print("Test t3 succeeded")
 end
 tests.t4 = function()
@@ -112,7 +125,7 @@ tests.t4 = function()
   M[#M+1] = { name = "store_id", qtype = "I4", has_nulls = false}
   local datafile = "in4.csv"
   local format = "%Y-%m-%d %H:%M:%S"
-  local T = Q.oad_csv(datafile, M, O)
+  local T = Q.load_csv(datafile, M, O)
   local x = Q.SC_to_TM(T.datetime, format)
   local y = Q.TM_to_SC(x:eval(), format)
   -- Q.print_csv({T.datetime, y})
@@ -155,7 +168,10 @@ tests.t5 = function()
   local n
   repeat 
     for i, tm_fld in ipairs(tm_flds) do 
-      n = out[i]:chunk(chunk_idx)
+      n = out[i]:get_chunk(chunk_idx)
+      if ( n > 0 ) then 
+        out[i]:unget_chunk(chunk_idx)
+      end
     end
     print("Chunk", chunk_idx)
     chunk_idx = chunk_idx + 1 
@@ -165,12 +181,12 @@ tests.t5 = function()
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
-tests.t1()
-os.exit()
 --[[
+tests.t1()
 tests.t2()
 tests.t3()
 tests.t4()
 tests.t5()
-return tests
+os.exit()
 --]]
+return tests

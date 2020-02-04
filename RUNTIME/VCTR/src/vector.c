@@ -582,7 +582,9 @@ static int l_vec_put_chunk( lua_State *L) {
   // Ideally should have == in comparison below
   // You (generator) need to give me (Vector) a buffer whose size 
   // is *at least* as the size of my chunk
-  if ( ptr_cmem->size < ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); }
+  if ( ptr_cmem->size < ptr_vec->chunk_size_in_bytes ) { 
+    printf("hello\n"); go_BYE(-1); 
+  }
   int64_t num_in_cmem;
   if ( num_args == 3 ) { 
     num_in_cmem = luaL_checknumber(L, 3);
