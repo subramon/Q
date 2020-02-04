@@ -6,12 +6,103 @@
 #include "_txt_to_I8.h"
 #include "_txt_to_F4.h"
 #include "_txt_to_F8.h"
-#include "get_cell.h"
 #include "_rs_mmap.h"
 #include "_trim.h"
 #include "_set_bit_u64.h"
 //STOP_INCLUDES
-#include "new_load_csv_fast.h"
+#include "load_csv_fast.h"
+
+/*- Note: I would have liked get_cell in a separate file but
+    causes havoc with our simplistic dynamic compilation strategy
+    where when we compile load_csv_fast.c, we get an undefined symbol
+    error for get_cell
+    */
+static size_t
+get_cell(
+    char *X,
+    size_t nX,
+    size_t xidx,
+    char fld_sep,
+    bool is_last_col,
+    char *buf,
+    char *lbuf,
+    size_t bufsz
+    )
+//STOP_FUNC_DECL
+{
+  int status = 0;
+  char dquote = '"'; 
+  char bslash = '\\'; char eoln = '\n';
+  uint32_t bufidx = 0;
+  bool is_trim = true;
+  //--------------------------------
+  if ( X == NULL ) { go_BYE(-1); }
+  if ( nX == 0 ) { go_BYE(-1); }
+  if ( xidx == nX ) { go_BYE(-1); }
+  if ( buf == NULL ) { go_BYE(-1); }
+  if ( lbuf == NULL ) {
+    is_trim = false;
+    lbuf = buf;
+  }
+  if ( bufsz == 0 ) { go_BYE(-1); }
+  memset(lbuf, '\0', bufsz);
+  memset(buf, '\0', bufsz);
+  char last_char;
+  bool start_dquote = false;
+  if ( X[xidx] == dquote ) { // must end with dquote
+    start_dquote = true;
+    last_char = '"';
+    xidx++;
+  }
+  else {
+    if ( is_last_col ) { 
+      last_char = eoln;
+    }
+    else {
+      last_char = fld_sep;
+    }
+  }
+  //----------------------------
+  for ( ; ; ) { 
+    if ( xidx > nX ) { go_BYE(-1); }
+    if ( xidx == nX ) {
+      if ( is_trim ) {
+        status = trim(lbuf, buf, bufsz); cBYE(status);
+      }
+      return xidx;
+    }
+    if ( X[xidx] == last_char ) {
+      xidx++; // jumo over last char;
+      if ( start_dquote ) { 
+        if ( xidx >= nX ) { go_BYE(-1); }
+        if ( is_last_col ) { 
+          if ( X[xidx] != eoln ) { go_BYE(-1); }
+        }
+        else {
+          if ( X[xidx] != fld_sep ) { go_BYE(-1); }
+        }
+        xidx++;
+      }
+      if ( is_trim ) {
+        status = trim(lbuf, buf, bufsz); cBYE(status);
+      }
+      return xidx;
+    }
+    //---------------------------------
+    if ( X[xidx] == bslash ) {
+      xidx++;
+      if ( xidx >= nX ) { go_BYE(-1); }
+      if ( bufidx >= bufsz ) { go_BYE(-1); }
+      lbuf[bufidx++] = X[xidx++];
+      continue;
+    }
+    if ( bufidx >= bufsz ) { go_BYE(-1); }
+    lbuf[bufidx++] = X[xidx++];
+  }
+BYE:
+  if ( status < 0 ) { xidx = 0; }
+  return xidx;
+}
 
 /*Given a CSV file, this function reads a cell at a time. It then 
  * places this into buffers provided by the caller.
@@ -25,7 +116,7 @@
 
 //START_FUNC_DECL
 int
-new_load_csv_fast(
+load_csv_fast(
     const char * const infile,
     uint32_t nC,
     char *str_fld_sep,

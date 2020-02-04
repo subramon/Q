@@ -1,13 +1,13 @@
-local ffi           = require 'ffi'
-local qc            = require 'Q/UTILS/lua/q_core'
-local qconsts       = require 'Q/UTILS/lua/q_consts'
-local get_ptr       = require 'Q/UTILS/lua/get_ptr'
+local ffi     = require 'ffi'
+local qc      = require 'Q/UTILS/lua/q_core'
+local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local function bridge_C(
   M, 
   infile, 
   fld_sep,
   is_hdr,
+  chunk_size,
   file_offset,
   num_rows_read,
   data,
@@ -49,14 +49,26 @@ local function bridge_C(
     end
   end
   for i = 1, nC do
-    is_load[i-1] = M[i].is_load
+    is_load[i-1]   = M[i].is_load
     has_nulls[i-1] = M[i].has_nulls
-    width[i-1] = M[i].width
+    width[i-1]     = M[i].width
   end
+  -- START: Dynamic compilation
+  local func_name = "load_csv_fast"
+  if ( not qc[func_name] ) then 
+    local root = assert(qconsts.Q_SRC_ROOT)
+    local subs = {}
+    subs.fn = func_name
+    subs.dotc = root .. "/OPERATORS/LOAD_CSV/src/load_csv_fast.c"
+    subs.doth = root .. "/OPERATORS/LOAD_CSV/inc/load_csv_fast.h"
+    qc.q_add(subs); print("Dynamic compilation kicking in... ")
+  end 
+  -- STOP : Dynamic compilation
+  assert(qc[func_name], "Symbol not available" .. func_name)
 
-  local status = qc["new_load_csv_fast"](infile, nC, 
+  local status = qc[func_name](infile, nC, 
     ffi.cast("char *", fld_sep),
-    qconsts.chunk_size, num_rows_read, file_offset, fldtypes, 
+    chunk_size, num_rows_read, file_offset, fldtypes, 
     is_trim, is_hdr, is_load, has_nulls, width, data, nn_data)
   assert(status == 0, "load_csv_fast failed")
   return true

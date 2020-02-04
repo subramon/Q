@@ -18,6 +18,7 @@
 #include "isfile.h"
 #include "rdtsc.h"
 #include "rs_mmap.h"
+#include "get_file_size.h"
 
 int luaopen_libcutils (lua_State *L);
 
@@ -56,6 +57,16 @@ BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
   return 2;
+}
+//----------------------------------------
+static int l_cutils_getsize( 
+    lua_State *L
+    )
+{
+  const char *const file_name = luaL_checkstring(L, 1);
+  int64_t file_size =  get_file_size(file_name);
+  lua_pushnumber(L, file_size);
+  return 1;
 }
 //----------------------------------------
 static int l_cutils_isfile( 
@@ -353,6 +364,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "copyfile",   l_cutils_copyfile },
     { "currentdir",  l_cutils_currentdir },
     { "getfiles",    l_cutils_getfiles },
+    { "getsize",     l_cutils_getsize },
     { "gettime",     l_cutils_gettime },
     { "delete",      l_cutils_delete },
     { "isdir",       l_cutils_isdir },
@@ -369,6 +381,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "currentdir",  l_cutils_currentdir },
     { "delete",      l_cutils_delete },
     { "getfiles",    l_cutils_getfiles },
+    { "getsize",     l_cutils_getsize },
     { "gettime",     l_cutils_gettime },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },

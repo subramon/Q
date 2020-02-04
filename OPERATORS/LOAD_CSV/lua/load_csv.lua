@@ -1,21 +1,66 @@
 -- This version supports chunking in load_csv
-local Dictionary    = require 'Q/UTILS/lua/dictionary'
-local err           = require 'Q/UTILS/lua/error_code'
 local ffi           = require 'ffi'
+local cutils        = require 'libcutils'
+local cVector       = require 'libvctr'
 local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
-local qc            = require 'Q/UTILS/lua/q_core'
-local qconsts       = require 'Q/UTILS/lua/q_consts'
-local validate_meta = require "Q/OPERATORS/LOAD_CSV/lua/new_validate_meta"
+local validate_meta = require "Q/OPERATORS/LOAD_CSV/lua/validate_meta"
 local chk_file      = require "Q/OPERATORS/LOAD_CSV/lua/chk_file"
+local get_ptr       = require "Q/UTILS/lua/get_ptr"
 local process_opt_args = 
-  require "Q/OPERATORS/LOAD_CSV/lua/new_process_opt_args"
+  require "Q/OPERATORS/LOAD_CSV/lua/process_opt_args"
 local malloc_buffers_for_data = 
   require "Q/OPERATORS/LOAD_CSV/lua/malloc_buffers_for_data"
 local F             = require "Q/OPERATORS/LOAD_CSV/lua/malloc_aux"
 local bridge_C      = require "Q/OPERATORS/LOAD_CSV/lua/bridge_C"
-local get_ptr	    = require 'Q/UTILS/lua/get_ptr'
-local cmem          = require 'libcmem'
 local record_time   = require 'Q/UTILS/lua/record_time'
+
+ --======================================
+local function setup_ptrs(M, databuf, nn_databuf, cdata, nn_cdata)
+  assert(cdata)
+  assert(nn_cdata)
+  assert(type(databuf)    == "table")
+  assert(type(nn_databuf) == "table")
+  for k, v in pairs(M) do 
+    if ( v.is_load ) then 
+      assert(databuf[v.name])
+      if ( v.has_nulls) then 
+        assert(nn_databuf[v.name])
+      end
+    end
+  end
+
+  local ptr_cdata    = ffi.cast("char     **", get_ptr(   cdata))
+  local ptr_nn_cdata = ffi.cast("uint64_t **", get_ptr(nn_cdata))
+  assert(ptr_cdata)
+  assert(ptr_nn_cdata)
+  for i, v in ipairs(M) do
+    ptr_nn_cdata[i-1] = ffi.NULL
+    ptr_cdata   [i-1] = ffi.NULL
+    if ( v.is_load ) then 
+      ptr_cdata[i-1]  = get_ptr(databuf[v.name])
+      if ( v.has_nulls ) then
+        ptr_nn_cdata[i-1] = get_ptr(nn_databuf[v.name])
+      end
+    end
+  end
+  return ptr_cdata, ptr_nn_cdata
+end
+ --======================================
+local function free_buffers(M, databuf, nn_databuf, my_name)
+  -- print(" Free buffers since you won't need them again")
+  for i, v in ipairs(M) do 
+    if ( v.name ~= my_name ) then
+      -- Note subtlety of above if condition.  You can't delete 
+      -- buffer for vector whose chunk you are returning
+      if ( v.is_load ) then
+        databuf[v.name]:delete() 
+        if ( v.has_nulls ) then 
+          nn_databuf[v.name]:delete() 
+        end
+      end
+    end
+  end
+end
  --======================================
 local function load_csv(
   infile,   -- input file to read (string)
@@ -25,106 +70,91 @@ local function load_csv(
   assert(chk_file(infile))
   assert(validate_meta(M))
   local is_hdr, fld_sep = process_opt_args(opt_args)
+  local chunk_size = cVector.chunk_size()
   --=======================================
   local databuf, nn_databuf, cdata, nn_cdata = malloc_buffers_for_data(M)
-  -- This bak_cdata was a hack around the unexpected GC "bug"
-  -- Now that you know the correct way to handle it, do it
-  -- TODO P1
-  local bak_cdata = {}
-  for i = 1, #M do 
-    bak_cdata[i] = cdata[i-1]
-  end
+
   local file_offset, num_rows_read, is_load, has_nulls, is_trim, width, 
     fldtypes = F.malloc_aux(#M)
   --=======================================
   local vectors = {} 
-  local chunk_idx = -1
+
+  local l_chunk_num = 0
   -- This is tricky. We create generators for each vector
   local lgens = {}
-  for midx, v in pairs(M) do 
-    local vec_name = v.name
+  for midx, v in ipairs(M) do 
+    local my_name = v.name
     if ( v.is_load ) then 
       local name = v.name
       local function lgen(chunk_num)
-        for i = 1, #M do 
-          cdata[i-1] = bak_cdata[i] -- TODO UNDO 
-        end
-        chunk_idx = chunk_idx + 1 
-        assert(chunk_num == chunk_idx)
+        --=== Set up pointers to the data buffers for each loadable column
+        local ptr_cdata, ptr_nn_cdata = setup_ptrs(
+          M, databuf, nn_databuf, cdata, nn_cdata)
         --===================================
-        local start_time = qc.RDTSC()
-        -- print("BEFORE LUA", cdata, nn_cdata, cdata[0], nn_cdata[0])
-
-        assert(bridge_C(M, infile, fld_sep, is_hdr,
-          file_offset, num_rows_read, cdata, nn_cdata,
+        assert(chunk_num == l_chunk_num)
+        l_chunk_num = l_chunk_num + 1 
+        --===================================
+        local start_time = cutils.rdtsc()
+        assert(bridge_C(M, infile, fld_sep, is_hdr, chunk_size,
+          file_offset, num_rows_read, ptr_cdata, ptr_nn_cdata,
           is_load, has_nulls, is_trim, width, fldtypes))
-
-        -- print("AFTER  LUA", cdata, nn_cdata, cdata[0], nn_cdata[0])
-
         record_time(start_time, "load_csv_fast")
         local l_num_rows_read = tonumber(num_rows_read[0])
         --===================================
         if ( l_num_rows_read > 0 ) then 
-          for k, v in pairs(M) do 
-            if ( ( v.name ~= vec_name )  and ( v.is_load ) ) then
+          for _, v in ipairs(M) do 
+            if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
               vectors[v.name]:put_chunk(
                 databuf[v.name], nn_databuf[i], l_num_rows_read)
+              if ( l_num_rows_read < chunk_size ) then 
+                free_buffers(M, databuf, nn_databuf, my_name)
+                -- signal eov for all vectors other than yourself
+                vectors[v.name]:eov()
+              end
             end
           end
+        end 
+        --=====================
+        if ( l_num_rows_read < chunk_size ) then 
+          F.free_aux()
         end
-        if ( l_num_rows_read < qconsts.chunk_size ) then 
-          -- print(" Free buffers since you won't need them again")
-          for k, v in pairs(M) do 
-            if ( ( v.name ~= vec_name )  and ( v.is_load ) ) then
-              -- Note subtlety of above if condition.  You can't delete 
-              -- buffer for vector whose chunk you are returning
-              if ( not    databuf[v.name] ) then    
-                databuf[v.name]:delete() 
-                if ( not nn_databuf[v.name] ) then 
-                  nn_databuf[v.namei]:delete() 
-                end
-              end
+        if ( l_num_rows_read > 0 ) then 
+          return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
+        else
+          -- signal eov for all vectors other than yourself
+          for _, v in ipairs(M) do 
+            if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
               vectors[v.name]:eov()
             end
           end
-          F.free_aux()
-        end 
-        if ( l_num_rows_read > 0 ) then 
-          --[[
-          print("About to return to lVector for " .. v.name)
-          print("base", get_ptr(databuf[v.name]))
-          print("base", cdata[0])
-          print("nn  ", get_ptr(nn_databuf[v.name]))
-          print("nn", nn_cdata[0])
-          print("-----------")
-          --]]
-          return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
-        else
           return 0, nil, nil
         end
       end
-      lgens[vec_name] = lgen
+      lgens[my_name] = lgen
     end
   end
-  -- Note that you may have a vector that does not have any null 
+  -- Note that you *may* have a vector that does not have any null 
   -- vales but still has a nn_vec. This will happen if you marked it as
   -- has_nulls==true. Caller's responsibility to clean this up
   --==============================================
-  for k, v in pairs(M) do 
+  for _, v in ipairs(M) do 
     if ( v.is_load ) then 
       local tinfo = {}
-      tinfo.gen = lgens[v.name]
+      tinfo.gen       = lgens[v.name]
       tinfo.has_nulls = v.has_nulls
-      tinfo.qtype = v.qtype
+      tinfo.qtype     = v.qtype
       if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
-      vectors[v.name] = lVector(tinfo):set_name(v.name)
-      if ( type(v.meaning) == "string" ) then 
-        vectors[v.name]:set_meta("__meaning", M[i].meaning)
+      local V = lVector(tinfo)
+      V:set_name(v.name)
+      if ( v.meaning ) then 
+        V:set_meta("__meaning", M[i].meaning)
       end
-      vectors[v.name]:memo(v.is_memo)
+      V:memo(v.is_memo)
+      vectors[v.name] = V
     end
   end
+  -- Note that while M is a table indexed as 1, 2, ...
+  -- the table of Vectors that we return is indexed with field names
   return vectors
 end
-
 return require('Q/q_export').export('load_csv', load_csv)

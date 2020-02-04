@@ -290,10 +290,27 @@ function lVector.new(args)
   local is_rehydrate, is_single = H.determine_kind_of_new(args)
 
   if ( not is_rehydrate ) then 
-    if args.gen then vector._gen = args.gen end 
+    if args.gen then 
+      if ( args.gen ) then 
+        assert(type(args.gen) == "function") 
+        vector._gen = args.gen 
+      end
+    end 
+    assert(type(args.qtype) == "string") 
+    if ( args.qtype == "string" ) then 
+      assert(type(args.width) == "number") 
+    else
+      args.width = qconsts.qtypes[args.qtype].width
+    end
     vector._base_vec = cVector.new(args)
+    if ( qconsts.debug ) then 
+      assert(cVector.check(vector._base_vec)) 
+    end 
     if ( args.has_nulls ) then 
       vector._nn_vec   = cVector.new( { qtype = "B1", width = 1 })
+      if ( qconsts.debug ) then 
+        assert(cVector.check(vector._nn_vec)) 
+      end 
     end
   else -- materialized vector
     if ( args.has_nulls ) then

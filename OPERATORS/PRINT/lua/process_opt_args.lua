@@ -37,6 +37,7 @@ local function process_opt_args(
       lenV = v:num_elements()
     else
       assert(lenV == v:num_elements())
+    end
   end
   return outV, opfile, filter, lenV
 end

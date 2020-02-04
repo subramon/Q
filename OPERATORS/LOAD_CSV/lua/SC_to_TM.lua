@@ -1,7 +1,7 @@
-local Q           = require 'Q/q_export'
-local qc          = require 'Q/UTILS/lua/q_core'
+local Q           = require 'Q/q_export' -- TODO need this?
 local ffi         = require 'ffi'
 local cmem        = require 'libcmem'
+local cVector     = require 'libvctr'
 local qconsts     = require 'Q/UTILS/lua/q_consts'
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
@@ -18,27 +18,28 @@ local function SC_to_TM(
   assert(type(format) == "string")
   assert(#format > 0)
   
+  local chunk_size = cVector.chunk_size()
   local out_qtype = "TM"
   local out_ctype = qconsts.qtypes[out_qtype].ctype
   local out_width = qconsts.qtypes[out_qtype].width
   local out_buf 
   local cst_out_buf
-  local chunk_idx = 0
+  local l_chunk_num = 0
   local first_call = true
   local function gen(chunk_num)
-    assert(chunk_num == chunk_idx)
+    assert(chunk_num == l_chunk_num)
     if ( first_call ) then 
       out_buf = cmem.new(qconsts.chunk_size * out_width, out_qtype)
       cst_out_buf = ffi.cast(out_ctype .. "  *", get_ptr(out_buf))
       first_call = false
     end
-    local len, base_data = inv:chunk(chunk_idx)
+    local len, base_data = inv:chunk(l_chunk_num)
     if ( len > 0 ) then 
       local ptr_to_chars = ffi.cast("char *", get_ptr(base_data))
       local status = qc["SC_to_TM"](
         ptr_to_chars, in_width, len, format, cst_out_buf)
       assert(status == 0)
-      chunk_idx = chunk_idx + 1
+      l_chunk_num = l_chunk_num + 1
     end
     return len, out_buf
   end

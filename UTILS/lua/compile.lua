@@ -29,12 +29,17 @@ local function compile(
   assert(type(hfile ) == "string", "need a valid hfile")
   assert(type(sofile) == "string", "need a valid sofile")
   --===============================
-  local tmp_c = string.format("%s/src/_%s.c", qconsts.Q_BUILD_DIR, func_name)
-  local tmp_h = string.format("%s/include/_%s.h", qconsts.Q_BUILD_DIR, func_name)
+  -- Note the difference in the prefix of underscore for tmp_c, tmp_h
+  -- depending on whether the files are generated or exist
+  local tmp_c, tmp_h
   if ( type_doth_dotc == "strings" ) then 
+    tmp_c = string.format("%s/src/_%s.c", qconsts.Q_BUILD_DIR, func_name)
+    tmp_h = string.format("%s/include/_%s.h", qconsts.Q_BUILD_DIR,func_name)
     cutils.write(tmp_c, dotc)
     cutils.write(tmp_h, doth)
   elseif ( type_doth_dotc == "files" ) then 
+    tmp_c = string.format("%s/src/%s.c", qconsts.Q_BUILD_DIR, func_name)
+    tmp_h = string.format("%s/include/%s.h", qconsts.Q_BUILD_DIR, func_name)
     cutils.copyfile(dotc, tmp_c)
     cutils.copyfile(doth, tmp_h)
   else

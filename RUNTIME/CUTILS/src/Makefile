@@ -22,4 +22,5 @@ libcutils.so:   cutils.c \
 	../../../UTILS/src/isfile.c \
 	../../../UTILS/src/rs_mmap.c \
 	../../../UTILS/src/rdtsc.c \
+	../../../UTILS/src/get_file_size.c \
 	${Q_LINK_FLAGS} -shared -o libcutils.so

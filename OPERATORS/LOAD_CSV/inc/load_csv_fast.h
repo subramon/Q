@@ -11,7 +11,7 @@
 #define SC 8 
 #define BUFSZ 2047 
 extern int
-new_load_csv_fast(
+load_csv_fast(
     const char * const infile,
     uint32_t nC,
     char *str_fld_sep,

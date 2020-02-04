@@ -10,7 +10,7 @@ tests.t1 = function()
   local O = { is_hdr = true }
   M[1] = { name = "day", qtype = "SC", width = 10, has_nulls = false }
   local datafile = "SC_to_XX_1.csv"
-  local T = Q.new_load_csv(datafile, M, O)
+  local T = Q.load_csv(datafile, M, O)
   assert(type(converter) == "function")
   assert(type(T.day) == "lVector")
   d = Q.SC_to_XX(T.day, converter, "I4")

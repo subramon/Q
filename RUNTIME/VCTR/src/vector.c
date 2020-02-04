@@ -108,7 +108,7 @@ BYE:
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_chunk_size( lua_State *L) {
   if ( g_chunk_size == 0 ) {  
-    // set default values
+    printf("Setting default values \n");
     g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
     g_chunk_size = Q_DEFAULT_CHUNK_SIZE;
     memset(g_q_data_dir, '\0', Q_MAX_LEN_DIR+1);

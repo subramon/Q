@@ -34,14 +34,14 @@ clean :
 
 ../src/get_cell.c : ../inc/get_cell.h
 
-../src/new_load_csv_fast.c : ../inc/new_load_csv_fast.h
+../src/load_csv_fast.c : ../inc/load_csv_fast.h
 
 SRC_FILES =  \
 	../src/SC_to_TM.c  \
 	../src/TM_to_SC.c  \
 	../src/TM_to_I8.c  \
 	../src/get_cell.c  \
-	../src/new_load_csv_fast.c \
+	../src/load_csv_fast.c \
 
 AUX_FILES = \
 	../../../UTILS/src/is_valid_chars_for_num.c 
@@ -72,7 +72,7 @@ libload_csv.so : ${SRC_FILES} ${GEN_FILES} ${AUX_FILES}
 	cp ../inc/TM_to_SC.h ${Q_BUILD_DIR}/include/
 	cp ../inc/get_cell.h ${Q_BUILD_DIR}/include/
 	cp ../inc/TM_to_I8.h ${Q_BUILD_DIR}/include/
-	cp ../inc/new_load_csv_fast.h ${Q_BUILD_DIR}/include/
+	cp ../inc/load_csv_fast.h ${Q_BUILD_DIR}/include/
 
 test_q : libload_csv.so
 	echo "TODO"

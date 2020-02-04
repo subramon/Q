@@ -1,5 +1,4 @@
 -- FUNCTIONAL
-local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
 
 local log = require 'Q/UTILS/lua/log'
@@ -33,7 +32,6 @@ tests.t1 = function ()
   local status, ret = pcall(load_csv, csv_file_path, M, { use_accelerator = false } )
   assert( status == true, "Error: " .. tostring(ret) .. "   : Loading Aborted ") 
 
-  log.info("All is well")
 end
 
 return tests
