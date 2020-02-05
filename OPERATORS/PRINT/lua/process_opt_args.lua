@@ -8,11 +8,9 @@ local function process_opt_args(
   assert(type(inV) == "table")
   local opfile
   local filter
-  local print_order
-  local outV
   local lenV
   
-  outV = inV
+  local outV = inV
   if opt_args then
     assert(type(opt_args) == "table")
     if opt_args.opfile ~= nil then
@@ -21,12 +19,6 @@ local function process_opt_args(
     end
     if opt_args.filter then
       filter = opt_args.filter
-    end
-    if opt_args.print_order then
-      print_order = opt_args.print_order
-      assert(type(print_order) == "table")
-      -- sort inV according to given print_order
-      outV = utils.sort_table(vec_list, print_order)
     end
   end
 
