@@ -154,15 +154,42 @@ static int l_cutils_write(
     lua_State *L
     )
 {
-  int status = 0;
   FILE *fp = NULL;
   const char *const file_name = luaL_checkstring(L, 1);
   const char *const contents = luaL_checkstring(L, 2);
   fp = fopen(file_name, "w");
-  return_if_fopen_failed(fp, file_name, "w");
+  if ( fp == NULL ) { WHEREAMI; goto BYE; }
   fprintf(fp, "%s",contents);
   fclose(fp);
   lua_pushboolean(L, true);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
+static int l_cutils_quote_str( 
+    lua_State *L
+    )
+{
+  char *outstr = NULL;
+  const char *const instr = luaL_checkstring(L, 1);
+  int len = 2 + 2 * (strlen(instr) + 1);
+  outstr = malloc(len);
+  if ( outstr == NULL ) { WHEREAMI; goto BYE; }
+  memset(outstr, '\0', len);
+  int outidx = 0;
+  outstr[outidx++] = '"';
+  for ( const char *cptr = instr; *cptr != '\0'; cptr++ ) { 
+    if ( ( *cptr == '"' ) ||  ( *cptr == '\\' ) ) { 
+      outstr[outidx++] = '\\';
+    }
+    outstr[outidx++] = *cptr;
+  }
+  outstr[outidx++] = '"';
+  lua_pushstring(L, outstr);
+  free(outstr); 
   return 1; 
 BYE:
   lua_pushnil(L);
@@ -370,6 +397,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },
+    { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
     { "write",       l_cutils_write },
@@ -386,6 +414,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },
+    { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
     { "write",       l_cutils_write },

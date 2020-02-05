@@ -1,4 +1,5 @@
 local ffi       = require 'ffi'
+local Scalar    = require 'libsclr'
 local cVector   = require 'libvctr'
 local cutils    = require 'libcutils'
 local qconsts	= require 'Q/UTILS/lua/q_consts'
@@ -14,20 +15,6 @@ local print_csv = function (
   inV,  --- table of lVectors to be printed
   opt_args
   )
-local doc_string = [[ Signature: Q.print_csv({T}, opt_args)
-  -- Q.print_csv prints the Columns contents where specified to.(default is stdout)
-  opt_args: table of 3 arguments { opfile, <filter>, print_order }
-  1) opfile: where to print the columns
-            -- "file_name" : will print to file
-            --  ""         : will return a string
-            --  nil        : will print to stdout
-  2) <filter> 
-]]
-  -- this call has been just done for docstring
-  if vec_list and vec_list == "help" then
-      return doc_string
-  end
-
   -- processing opt_args of print_csv
   local V -- table of vectors to be printed in desired order
   local opfile -- file to write output to 
@@ -35,8 +22,7 @@ local doc_string = [[ Signature: Q.print_csv({T}, opt_args)
   local lenV -- length of vectors
   V, opfile, filter, lenV = process_opt_args(inV, opt_args)
   local lb, ub, where = process_filter(filter, lenV)
-  local nV = #nV
-  
+  local nV = #V
   -- Output ALWAYS go to a file, to stdout if no filename given 
   local fp = nil -- file pointer
   if ( ( not opfile )  or ( opfile == "" ) ) then
@@ -49,7 +35,7 @@ local doc_string = [[ Signature: Q.print_csv({T}, opt_args)
   if ( lenV == 0 ) then io.close(fp) return true end 
   --==========================================
   local bfalse = Scalar.new(false, "B1")
-  for rowidx = lb, ub do
+  for rowidx = lb, ub-1 do -- NOTE the -1 it is important
     local to_print = true
     if ( where ) then 
       local  w = assert(where:get1(rowidx))
@@ -62,9 +48,11 @@ local doc_string = [[ Signature: Q.print_csv({T}, opt_args)
         local  s, s_nn = assert(v:get1(rowidx))
         assert(not s_nn, "To be implemented") -- TODO P2
         if ( type(s) == "Scalar" ) then 
-          -- TODO P0 Write scalar
+          assert(io.write(s:to_str()))
         elseif ( type(s) == "CMEM" ) then 
-          -- TODO P0 Write CMEM
+          -- ffi.string is necessary to convert to Lua string
+          local instr = ffi.string(get_ptr(s, "SC"))
+          assert(io.write(cutils.quote_str(instr)))
         else
           error("")
         end

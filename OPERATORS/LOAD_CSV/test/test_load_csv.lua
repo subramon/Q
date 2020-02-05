@@ -5,9 +5,12 @@ local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 cVector.init_globals({})
 local Q = require 'Q'
+local qconsts = require 'Q/UTILS/lua/q_consts'
 local tests = {}
 local plfile = require 'pl.file'
 local plpath = require 'pl.path'
+local plutils= require 'pl.utils'
+local test_print  = true -- turn false if you want only load_csv tested
 --=======================================================
 tests.t1 = function()
   local M = {}
@@ -49,6 +52,16 @@ tests.t1 = function()
     assert(math.ceil( T.f4:get1(i-1):to_num()) == i+1)
     assert(math.floor(T.f4:get1(i-1):to_num()) == i  )
   end
+  --===================
+  local opfile = "/tmp/_x"
+  if ( test_print ) then
+    local U = {}
+    U[1] = T.i4
+    U[2] = T.f4
+    Q.print_csv(U, { opfile = opfile } )
+  end
+  local expected = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/chk_in1.csv"
+  assert(plutils.readfile(expected) == plutils.readfile(opfile))
   --===================
   print("Test t1 succeeded")
 end
@@ -92,6 +105,15 @@ tests.t2 = function()
   assert(ffi.string(get_ptr(T.s1:get1(1))) == "DEFX")
   assert(ffi.string(get_ptr(T.s1:get1(2))) == "GHIYZ")
   --===================
+  local opfile = "/tmp/_x"
+  if ( test_print ) then
+    local U = {}
+    U[1] = T.i1
+    U[2] = T.s1
+    Q.print_csv(U, { opfile = opfile } )
+  end
+  local expected = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/chk_in2.csv"
+  assert(plutils.readfile(expected) == plutils.readfile(opfile))
   print("Test t2 succeeded")
 end
 --=======================================================
@@ -116,6 +138,13 @@ tests.t3 = function()
     end
     chunk_idx = chunk_idx + 1
   until n == 0 
+  --==============
+  if ( test_print ) then 
+    local U = {}
+    local i = 1
+    for _, v in pairs(T) do U[i] = v; i = i + 1 end 
+    Q.print_csv(U, {opfile = "/tmp/_x"})
+  end
   print("Test t3 succeeded")
 end
 tests.t4 = function()
@@ -128,8 +157,15 @@ tests.t4 = function()
   local T = Q.load_csv(datafile, M, O)
   local x = Q.SC_to_TM(T.datetime, format)
   local y = Q.TM_to_SC(x:eval(), format)
-  -- Q.print_csv({T.datetime, y})
   -- TODO P3 verify that x and T.datetime are the same
+  --===================
+  local opfile = "/tmp/_x"
+  if ( test_print ) then
+    Q.print_csv(T.datetime, { opfile = opfile } )
+  end
+  local expected = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/chk_in4.csv"
+  assert(plutils.readfile(expected) == plutils.readfile(opfile))
+  --===================
   print("Test t4 succeeded")
 end
 tests.t5 = function()
@@ -177,7 +213,9 @@ tests.t5 = function()
     chunk_idx = chunk_idx + 1 
   until n == 0 
 
-  -- Q.print_csv(out)
+  if ( test_print ) then 
+    Q.print_csv(out, {opfile = "/tmp/_x"})
+  end
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
