@@ -45,7 +45,6 @@ local function create_dot_o(
   assert(type(X) == "table")
   for k, v in pairs(X) do 
     local command = "gcc -c "  .. qconsts.QC_FLAGS .. incs .. v
-    print("command = ", command)
     status = os.execute(command)
     if ( status ~= 0 ) then print(command) end 
     assert(status == 0)

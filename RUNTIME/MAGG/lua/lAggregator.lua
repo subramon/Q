@@ -1,5 +1,6 @@
 local qconsts         = require 'Q/UTILS/lua/q_consts'
 local cmem            = require 'libcmem'
+local cVector         = require 'libvctr'
 local register_type   = require 'Q/UTILS/lua/q_types'
 local qc              = require 'Q/UTILS/lua/q_core'
 local to_scalar       = require 'Q/UTILS/lua/to_scalar'
@@ -36,7 +37,7 @@ end
 function lAggregator:bufferize()
   assert ( self._is_instantiated == true)
   assert ( self._is_bufferized == false)
-  assert(Aggregator.bufferize(self._agg, qconsts.chunk_size))
+  assert(Aggregator.bufferize(self._agg, cVector.chunk_size()))
   self._is_bufferized = true
   return self
 end
@@ -239,7 +240,7 @@ function lAggregator:consume()
 
   local k = assert(self._inkeyvec)
   assert( not k:is_eov() )
-  local klen, kchunk = k:chunk(chunk_idx)
+  local klen, kchunk = k:get_chunk(chunk_idx)
   assert(klen > 0)
   assert(kchunk)
   
@@ -249,7 +250,7 @@ function lAggregator:consume()
   local vchunks = {}
   for k, v in ipairs(vs) do 
     assert( not v:is_eov() )
-    local vlen, vchunk = v:chunk(chunk_idx)
+    local vlen, vchunk = v:get_chunk(chunk_idx)
     vlens[k]   = vlen
     vchunks[k] = vchunk
     assert(klen == vlen)
@@ -258,7 +259,7 @@ function lAggregator:consume()
 
   local status = Aggregator.putn(self._agg, kchunk, klen, num_threads, vchunks)
   self._chunk_idx = self._chunk_idx + 1
-  if ( klen < qconsts.chunk_size ) then 
+  if ( klen < cVector.chunk_size() ) then 
     self._is_eov = true
     assert(Aggregator.unbufferize(self._agg))
     self._is_bufferized = false
@@ -347,11 +348,11 @@ function lAggregator:set_produce(keyvec)
         first_call = false
         for k, v in ipairs(self._params.vals) do
           local valtype = v.valtype
-          local bufsz = qconsts.chunk_size * qconsts.qtypes[valtype].width
-          val_bufs[k] = assert(cmem.new(bufsz, valtype))
+          local bufsz = cVector.chunk_size() * qconsts.qtypes[valtype].width
+          val_bufs[k] = assert(cmem.new({size = bufsz, qtype = valtype}))
         end
       end
-      local num_keys, key_chunk, nn_key_chunk = keyvec:chunk(chunk_idx)
+      local num_keys, key_chunk, nn_key_chunk = keyvec:get_chunk(chunk_idx)
       --============================
       if ( num_keys == 0 ) then 
         for k = 1, #self._params.vals do
@@ -368,7 +369,7 @@ function lAggregator:set_produce(keyvec)
         if ( k ~= myk ) then 
           -- put the chunk for other vectors and delete their buffers
           val_vecs[k]:put_chunk(val_bufs[k], nil, num_keys) 
-          if ( num_keys < qconsts.chunk_size ) then 
+          if ( num_keys < cVector.chunk_size() ) then 
             val_vecs[k]:eov()
             val_bufs[k]:delete()
           end

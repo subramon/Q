@@ -22,7 +22,7 @@ return require 'Q/UTILS/lua/code_gen' {
 #include "_hmap_instantiate.h"
 #include "_hmap_put.h"
 #include "_hmap_putn.h"
-#include "_hmap_put_cmem.h"
+// TODO #include "_hmap_put_cmem.h"
 #include "agg_struct.h" // depends on hmap_types
 
 int luaopen_libagg${lbl} (lua_State *L);
@@ -527,7 +527,7 @@ static const struct luaL_Reg aggregator_functions[] = {
      * top of the stack. */
     lua_createtable(L, 0, 0);
     luaL_register(L, NULL, aggregator_functions);
-    return 1; -- because you are returning 1 thing - a table of functions
+    return 1; // because you are returning 1 thing - a table of functions
 }
 ]],
 }

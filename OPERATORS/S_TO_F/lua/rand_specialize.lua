@@ -42,7 +42,6 @@ return function (
     seed = cutils.rdtsc() 
     -- following is to make sure we stay as integer and not fp
     seed = seed % (128*1048576*1048576-1)
-    print("XX seed = ", seed)
   end
   assert(type(seed) == "number")
   assert(seed > 0)
