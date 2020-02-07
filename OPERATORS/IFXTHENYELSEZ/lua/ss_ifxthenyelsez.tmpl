@@ -34,9 +34,8 @@ ${fn}(
   ${ctype} sval_y = *ptr_sval_y;
   ${ctype} sval_z = *ptr_sval_z;
 
-#pragma omp parallel for schedule(static, 256)
+#pragma omp parallel for schedule(static, 1024)
   for ( uint64_t i = 0; i < n; i++ ) { 
-    
     uint64_t widx = i >> 6; // word index
     uint64_t bidx = i & 0x3F; // bit index
     uint32_t rslt = (x[widx] >> bidx) & 0x1;
