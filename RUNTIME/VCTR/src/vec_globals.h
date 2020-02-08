@@ -8,6 +8,8 @@
 #else
 #define my_extern extern 
 #endif
+
+my_extern 
 my_extern uint32_t g_chunk_size;
 my_extern CHUNK_REC_TYPE *g_chunk_dir;  // [g_sz_chunk_dir]
 my_extern uint32_t g_sz_chunk_dir; 

@@ -20,6 +20,7 @@ test_basic(
   uint32_t N = 1000000;
   uint64_t num_probes = 0;
 
+  // Create hmap
   ptr_hmap = hmap_create(0);
   if ( ptr_hmap == NULL) { go_BYE(-1); }
 
@@ -34,9 +35,6 @@ test_basic(
     inval.val_2 = (i+1) % 128;
     inval.val_3 = (i+1) % 32768;
     inval.val_4 = (i+1);
-    if ( i == 1296 ) { 
-      printf("hello world\n");
-    }
     status = hmap_put(ptr_hmap, key, inval, &oldval, &is_updated, &num_probes);
     cBYE(status);
     if ( ptr_hmap->nitems != i+1 ) { go_BYE(-1); }
@@ -83,9 +81,7 @@ test_basic(
     cBYE(status);
     if ( oldval.val_1 != 2*(i+1) ) { go_BYE(-1); }
     if ( oldval.val_2 != ((i+1) % 128) ) { go_BYE(-1); }
-    if ( oldval.val_3 != ((i+1) % 32768) ) { 
-      printf("hello world\n");
-      go_BYE(-1); }
+    if ( oldval.val_3 != ((i+1) % 32768) ) { go_BYE(-1); }
     if ( oldval.val_4 != (i+1) ) { go_BYE(-1); }
     if ( ( i % 1000 ) == 0 ) { 
       status = hmap_chk_no_holes(ptr_hmap);  cBYE(status);
@@ -95,9 +91,10 @@ test_basic(
     status = hmap_get(ptr_hmap, key, &altval, &cnt, &is_found, &num_probes);
     cBYE(status);
     if ( is_found ) { go_BYE(-1); }
+    if ( cnt != 0 ) { go_BYE(-1); }
   }
   status = hmap_chk_no_holes(ptr_hmap);  cBYE(status);
-#ifdef XXX
+
   fprintf(stderr, " Delete keys again \n");
   for ( uint32_t i = 0; i < N; i++ ) { 
     bool is_found;
@@ -107,7 +104,7 @@ test_basic(
     if ( is_found == true ) { go_BYE(-1); }
     if ( ptr_hmap->nitems != 0 ) { go_BYE(-1); }
   }
-#endif
+
   hmap_destroy(ptr_hmap); 
 BYE:
   return status;
