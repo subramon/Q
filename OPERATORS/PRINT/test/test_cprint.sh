@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
-INCS=" -I../inc/ -I../../../UTILS/inc/ "
+INCS=" -I../inc/ -I../../../UTILS/inc/ -I../../../UTILS/gen_inc/ "
+gcc -c  ${INCS} $QC_FLAGS ../src/cprint.c
+echo "premature"
+exit 0
 gcc -g ${INCS} $QC_FLAGS  \
   ../src/cprint.c \
   test_cprint.c 

@@ -7,6 +7,7 @@ local cmem	= require 'libcmem'
 local get_ptr	= require 'Q/UTILS/lua/get_ptr'
 local process_opt_args = require 'Q/OPERATORS/PRINT/lua/process_opt_args'
 local process_filter = require 'Q/OPERATORS/PRINT/lua/process_filter'
+local cprint    = require 'Q/OPERATORS/PRINT/lua/cprint'
 
 -- this implementation works but is not particularly fast - we are 
 -- crossing the Lua/C boundary much too often. a faster version would
@@ -23,6 +24,11 @@ local print_csv = function (
   V, opfile, filter, lenV = process_opt_args(inV, opt_args)
   local lb, ub, where = process_filter(filter, lenV)
   local nV = #V
+  if ( opt_args and opt_args.impl == "C" ) then 
+    assert(cprint(opfile, where, lb, ub, V))
+    return true 
+  end
+  -- Now we have a slower Lua implementation
   -- Output ALWAYS go to a file, to stdout if no filename given 
   local fp = nil -- file pointer
   if ( ( not opfile )  or ( opfile == "" ) ) then
@@ -34,6 +40,7 @@ local print_csv = function (
   end
   if ( lenV == 0 ) then io.close(fp) return true end 
   --==========================================
+  
   local bfalse = Scalar.new(false, "B1")
   for rowidx = lb, ub-1 do -- NOTE the -1 it is important
     local to_print = true
