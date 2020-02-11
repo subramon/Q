@@ -58,7 +58,7 @@ tests.t1 = function()
     local U = {}
     U[1] = T.i4
     U[2] = T.f4
-    Q.print_csv(U, { opfile = opfile } )
+    Q.print_csv(U, { impl = "C", opfile = opfile } )
   end
   local expected = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/chk_in1.csv"
   assert(plutils.readfile(expected) == plutils.readfile(opfile))
@@ -219,8 +219,9 @@ tests.t5 = function()
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
---[[
 tests.t1()
+os.exit()
+--[[
 tests.t2()
 tests.t3()
 tests.t4()

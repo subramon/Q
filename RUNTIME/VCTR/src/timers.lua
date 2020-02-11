@@ -39,10 +39,12 @@ local function gen_timers_code(
         "n_" .. v .. ", t_" .. v .. ");"
     end
     T[#T+1] = "}"
-  elseif ( mode == "define" ) then 
+  elseif ( mode == "struct" ) then 
+    T[#T+1] = " typedef struct _vec_timers_type { "
     for k, v in pairs(timers) do 
-      T[#T+1] = "my_extern uint64_t t_" .. v .."; my_extern uint32_t n_" .. v .. ";"
+      T[#T+1] = "uint64_t t_" .. v .."; uint32_t n_" .. v .. ";"
     end
+    T[#T+1] = " } VEC_TIMERS_TYPE; ";
   else
     assert(nil, "Unknown mode = [" .. mode .. "]")
   end
@@ -51,5 +53,5 @@ end
 -- return gen_timers_code
 -- gen_timers_code("reset")
 -- gen_timers_code("print")
--- gen_timers_code("define")
+-- gen_timers_code("struct")
 gen_timers_code(mode)

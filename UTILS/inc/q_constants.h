@@ -19,4 +19,15 @@
 //-----------------
 // for vector globals
 #define Q_INITIAL_SZ_CHUNK_DIR 1024
+//-------- for fldtypes as enums
+// CAUTION: Needs to be in sync with q_consts.lua
+#define QI1 1 
+#define QI2 2
+#define QI4 3
+#define QI8 4
+#define QF4 5
+#define QF8 6
+#define QSC 7
+#define QTM 8
+#define QB1 9
 #endif

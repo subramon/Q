@@ -13,9 +13,10 @@
 
 #include "txt_to_I4.h"
 #include "isdir.h"
-#define MAIN_PGM
-#include "vec_globals.h"
-#undef MAIN_PGM
+
+VEC_GLOBALS_TYPE g_S;
+#include "_struct_timers.h"
+VEC_TIMERS_TYPE g_T;
 
 // Set globals in C in main program after creating Lua state
 // but before doing anything else
@@ -40,7 +41,7 @@ static int l_vec_print_timers( lua_State *L) {
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_check_chunks( lua_State *L) {
-  g_check_chunks(g_chunk_dir, g_sz_chunk_dir, g_n_chunk_dir);
+  g_check_chunks(g_S.chunk_dir, g_S.sz_chunk_dir, g_S.n_chunk_dir);
   lua_pushboolean(L, true);
   return 1;
 }
@@ -59,8 +60,8 @@ static int l_vec_init_globals( lua_State *L) {
   else {
     called = true;
   }
-  if ( ( g_chunk_dir != NULL ) || ( g_q_data_dir[0] != '\0' ) ||
-       ( g_chunk_size > 0 ) ) {
+  if ( ( g_S.chunk_dir != NULL ) || ( g_S.q_data_dir[0] != '\0' ) ||
+       ( g_S.chunk_size > 0 ) ) {
     fprintf(stderr, "ERROR: globals have been initialized already\n");
     go_BYE(-1); 
   }
@@ -69,22 +70,22 @@ static int l_vec_init_globals( lua_State *L) {
   status = get_int_from_tbl(L, "sz_chunk_dir", &is_key, &itmp); 
   cBYE(status);
   if ( !is_key )  {
-    g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
+    g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
   }
   else {
     if ( itmp <= 8 ) { go_BYE(-1); }
-    g_sz_chunk_dir = itmp;
+    g_S.sz_chunk_dir = itmp;
   }
   //------------------- get chunk size 
   status = get_int_from_tbl(L, "chunk_size", &is_key, &itmp); 
   if ( !is_key ) { 
-    g_chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
   }
   else {
     if ( itmp < 1024 ) { go_BYE(-1); }
     // must be a multiple of 1024
     if ( ( ( itmp / 64 ) * 64 )  != itmp ) { go_BYE(-1); }
-    g_chunk_size = itmp;
+    g_S.chunk_size = itmp;
   }
   //------------------- get q_data_dir
   status = get_str_from_tbl(L, "data_dir", &is_key, &cptr);  cBYE(status);
@@ -94,7 +95,7 @@ static int l_vec_init_globals( lua_State *L) {
   }
   if ( !isdir(cptr) ) { go_BYE(-1); }
   if ( strlen(cptr) > Q_MAX_LEN_DIR ) { go_BYE(-1); }
-  strcpy(g_q_data_dir, cptr);
+  strcpy(g_S.q_data_dir, cptr);
   //-------------------
   status = init_globals(); cBYE(status);
   lua_pushboolean(L, true);
@@ -107,37 +108,37 @@ BYE:
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_chunk_size( lua_State *L) {
-  if ( g_chunk_size == 0 ) {  
+  if ( g_S.chunk_size == 0 ) {  
     printf("Setting default values \n");
-    g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
-    g_chunk_size = Q_DEFAULT_CHUNK_SIZE;
-    memset(g_q_data_dir, '\0', Q_MAX_LEN_DIR+1);
-    snprintf(g_q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
-    if ( !isdir(g_q_data_dir) ) { 
+    g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
+    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    memset(g_S.q_data_dir, '\0', Q_MAX_LEN_DIR+1);
+    snprintf(g_S.q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
+    if ( !isdir(g_S.q_data_dir) ) { 
       lua_pushnil(L);
       lua_pushstring(L, __func__);
       return 2;
     }
   }
-  lua_pushnumber(L, g_chunk_size);
+  lua_pushnumber(L, g_S.chunk_size);
   return 1;
 }
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_data_dir( lua_State *L) {
-  if ( g_q_data_dir[0] == '\0' ) {  
+  if ( g_S.q_data_dir[0] == '\0' ) {  
     // set default values
-    g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
-    g_chunk_size = Q_DEFAULT_CHUNK_SIZE;
-    memset(g_q_data_dir, '\0', Q_MAX_LEN_DIR+1);
-    snprintf(g_q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
-    if ( !isdir(g_q_data_dir) ) { 
+    g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
+    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    memset(g_S.q_data_dir, '\0', Q_MAX_LEN_DIR+1);
+    snprintf(g_S.q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
+    if ( !isdir(g_S.q_data_dir) ) { 
       lua_pushnil(L);
       lua_pushstring(L, __func__);
       return 2;
     }
   }
-  lua_pushstring(L, g_q_data_dir);
+  lua_pushstring(L, g_S.q_data_dir);
   return 1;
 }
 //-----------------------------------
@@ -220,7 +221,7 @@ static int l_vec_me( lua_State *L) {
   lua_newtable(L);
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
     int chunk_dir_idx = ptr_vec->chunks[i];
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+    CHUNK_REC_TYPE *ptr_chunk = g_S.chunk_dir + chunk_dir_idx;
     lua_pushnumber(L, i+1);
     lua_pushlightuserdata(L, ptr_chunk);
     lua_settable(L, -3);
@@ -590,9 +591,9 @@ static int l_vec_put_chunk( lua_State *L) {
     num_in_cmem = luaL_checknumber(L, 3);
   }
   else {
-    num_in_cmem = g_chunk_size; 
+    num_in_cmem = g_S.chunk_size; 
   }
-  if ( num_in_cmem < 0 ) { num_in_cmem = g_chunk_size; }
+  if ( num_in_cmem < 0 ) { num_in_cmem = g_S.chunk_size; }
   status = vec_put_chunk(ptr_vec, ptr_cmem, num_in_cmem); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
@@ -768,7 +769,7 @@ static int l_vec_rehydrate( lua_State *L)
   //------------------
   status = get_int_from_tbl(L, "chunk_size", &is_key, &itmp); cBYE(status);
   if ( !is_key )  { go_BYE(-1); }
-  if ( itmp != g_chunk_size ) { go_BYE(-1); }
+  if ( itmp != g_S.chunk_size ) { go_BYE(-1); }
   //------------------
   status = get_str_from_tbl(L, "file_name", &is_key, &file_name);  
   cBYE(status);
@@ -777,7 +778,7 @@ static int l_vec_rehydrate( lua_State *L)
     if ( *file_name == '\0' ) { go_BYE(-1); }
   }
   else {
-    num_chunks = ceil((double)num_elements / (double)g_chunk_size);
+    num_chunks = ceil((double)num_elements / (double)g_S.chunk_size);
     if ( num_chunks == 1 ) { go_BYE(-1); }
     is_single = false;
     file_names = malloc(num_chunks * sizeof(char *));

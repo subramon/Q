@@ -2,7 +2,6 @@
 #define __VEC_STRUCT_H
 #include "q_constants.h"
 
-#include "_define_timers.h"
 typedef struct _chunk_rec_type {
   // Redundant uint32_t num_in_chunk; 
   uint64_t uqid; // unique identifier across all chunks
@@ -61,11 +60,11 @@ typedef struct _vec_rec_type {
 } VEC_REC_TYPE;
 
 typedef struct _vec_globals_type { 
-  uint32_t g_chunk_size;
-  CHUNK_REC_TYPE *g_chunk_dir;  // [g_sz_chunk_dir]
-  uint32_t g_sz_chunk_dir; 
-  uint32_t g_n_chunk_dir;  // 0 <= g_n_chunk_dir <= g_sz_chunk_dir
-  char g_q_data_dir[Q_MAX_LEN_DIR];
+  uint32_t chunk_size;
+  CHUNK_REC_TYPE *chunk_dir;  // [g_sz_chunk_dir]
+  uint32_t sz_chunk_dir; 
+  uint32_t n_chunk_dir;  // 0 <= g_n_chunk_dir <= g_sz_chunk_dir
+  char q_data_dir[Q_MAX_LEN_DIR];
 } VEC_GLOBALS_TYPE;
 
 #endif

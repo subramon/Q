@@ -2,7 +2,6 @@
 #include "core_vec.h"
 #include "aux_core_vec.h"
 #include "cmem.h"
-#include "vec_globals.h"
 #include "buf_to_file.h"
 #include "copy_file.h"
 
