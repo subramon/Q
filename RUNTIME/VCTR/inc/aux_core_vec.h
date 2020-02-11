@@ -14,11 +14,13 @@ chk_field_type(
     );
 extern int
 free_chunk(
+    VEC_GLOBALS_TYPE *ptr_S,
     uint32_t chunk_dir_idx,
     bool is_persist
     );
 extern int
 load_chunk(
+    VEC_TIMERS_TYPE *ptr_T,
     const CHUNK_REC_TYPE *const ptr_chunk, 
     const VEC_REC_TYPE *const ptr_vec,
     uint64_t *ptr_t_last_get,
@@ -26,11 +28,14 @@ load_chunk(
     );
 extern int
 chk_chunk(
-      uint32_t chunk_dir_idx,
-      uint64_t vec_uqid
-      );
+    uint32_t chunk_dir_idx,
+    uint64_t vec_uqid,
+    VEC_GLOBALS_TYPE *ptr_S
+    );
 extern int
 allocate_chunk(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     size_t sz,
     uint32_t chunk_idx,
     uint64_t vec_uqid,
@@ -39,12 +44,14 @@ allocate_chunk(
     );
 extern int64_t 
 get_exp_file_size(
+    VEC_GLOBALS_TYPE *ptr_S,
     uint64_t num_elements,
     uint32_t field_width,
     const char * const fldtype
     );
 extern int32_t
 get_chunk_size_in_bytes(
+    VEC_GLOBALS_TYPE *ptr_S,
     uint32_t field_width, 
     const char * const field_type
     );
@@ -52,17 +59,13 @@ extern void
 l_memcpy(
     void *dest,
     const void *src,
-    size_t n
-    );
-extern void 
-l_memset(
-    void *s, 
-    int c, 
-    size_t n
+    size_t n,
+    VEC_TIMERS_TYPE *ptr_T
     );
 extern void *
 l_malloc(
-    size_t n
+    size_t n,
+    VEC_TIMERS_TYPE *ptr_T
     );
 extern int
 as_hex(
@@ -82,12 +85,14 @@ initial_case(
     );
 extern int 
 chunk_dir_idx_for_read(
+    VEC_GLOBALS_TYPE *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
     uint32_t *ptr_chunk_dir_idx
     );
 extern int
 get_chunk_num_for_write(
+    VEC_GLOBALS_TYPE *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t *ptr_chunk_num
     );
@@ -98,6 +103,8 @@ init_chunk_dir(
     );
 extern int 
 get_chunk_dir_idx(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_idx,
     uint32_t *chunks,
@@ -107,6 +114,8 @@ get_chunk_dir_idx(
     );
 extern int
 vec_new_common(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
     uint32_t field_width
@@ -124,12 +133,15 @@ delete_chunk_file(
     );
 extern int
 reincarnate(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_v,
     char **ptr_x
     );
 extern int
 init_globals(
-    void
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T
     );
 extern bool
 is_multiple(

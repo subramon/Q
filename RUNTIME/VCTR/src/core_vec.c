@@ -16,7 +16,7 @@
 #include "lauxlib.h"
 
 #define chk_chunk_idx(x) { \
-  if ( ( x <= 0 ) || ( (uint32_t)x >= g_sz_chunk_dir ) ) { go_BYE(-1); } \
+  if ( ( x <= 0 ) || ( (uint32_t)x >= ptr_S->sz_chunk_dir ) ) { go_BYE(-1); } \
 }
 #include "_reset_timers.c"
 #include "_print_timers.c"
@@ -132,11 +132,13 @@ BYE:
 
 int
 vec_free(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_free++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_free++;
   // printf("vec_free: Freeing vector\n");
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
   if ( ptr_vec->is_dead ) {  
@@ -156,7 +158,7 @@ vec_free(
   cBYE(status);
   //-- Free all chunks that you own
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
-    status = free_chunk(ptr_vec->chunks[i], ptr_vec->is_persist);  
+    status = free_chunk(ptr_S, ptr_vec->chunks[i], ptr_vec->is_persist);  
     cBYE(status);
   }
   memset(ptr_vec->fldtype, '\0', sizeof(Q_MAX_LEN_QTYPE_NAME+1));
@@ -164,40 +166,47 @@ vec_free(
   ptr_vec->is_dead = true;
   // Don't do this in C. Lua will do it: free(ptr_vec);
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_free += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_free += delta; }
   return status;
 }
 // vec_delete is *almost* identical as vec_free but hard delete of files
 int
 vec_delete(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T, 
     VEC_REC_TYPE *ptr_vec
     )
 {
   int status = 0;
   ptr_vec->is_persist = false; // IMPORTANT 
-  status = vec_free(ptr_vec); cBYE(status);
+  status = vec_free(ptr_S, ptr_T, ptr_vec); cBYE(status);
 BYE:
   return status;
 }
 
 int 
 vec_new(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
     uint32_t field_width
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_new++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_new++;
 
-  status = vec_new_common(ptr_vec, field_type, field_width); cBYE(status);
+  status = vec_new_common(ptr_S, ptr_T, ptr_vec, field_type, field_width); 
+  cBYE(status);
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_new += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_new += delta; }
   return status;
 }
 
 int 
 vec_rehydrate_multi(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
     uint32_t field_width,
@@ -207,9 +216,10 @@ vec_rehydrate_multi(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_rehydrate_multi++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_rehydrate_multi++;
 
-  status = vec_new_common(ptr_vec, field_type, field_width); cBYE(status);
+  status = vec_new_common(ptr_S, ptr_T, ptr_vec, field_type, field_width);
+  cBYE(status);
 
   ptr_vec->is_eov     = true;
   ptr_vec->is_persist = true;
@@ -219,10 +229,11 @@ vec_rehydrate_multi(
   ptr_vec->num_chunks   = num_chunks;
   for ( int i = 0; i < num_chunks; i++ ) {
     uint32_t chunk_idx;
-    status = allocate_chunk(0, i, ptr_vec->uqid, &chunk_idx, false); 
+    status = allocate_chunk(ptr_S, ptr_T, 0, i, ptr_vec->uqid, 
+        &chunk_idx, false); 
     cBYE(status); chk_chunk_idx(chunk_idx); 
     ptr_vec->chunks[i] = chunk_idx;
-    CHUNK_REC_TYPE *ptr_c = g_chunk_dir + chunk_idx;
+    CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
     // IMPORTANT: File gets renamed
     char new_file_name[Q_MAX_LEN_FILE_NAME+1];
     status = mk_file_name(ptr_c->uqid, new_file_name, Q_MAX_LEN_FILE_NAME);
@@ -232,12 +243,14 @@ vec_rehydrate_multi(
   }
 
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_rehydrate_multi += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_rehydrate_multi += delta; }
   return status;
 }
 
 int 
 vec_rehydrate_single(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
     uint32_t field_width,
@@ -246,19 +259,21 @@ vec_rehydrate_single(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_rehydrate_single++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_rehydrate_single++;
 
-  status = vec_new_common(ptr_vec, field_type, field_width); cBYE(status);
-  uint32_t num_chunks = ceil((double)num_elements / (double)g_chunk_size);
+  status = vec_new_common(ptr_S, ptr_T, ptr_vec, field_type, field_width);
+  cBYE(status);
+  uint32_t num_chunks = ceil((double)num_elements / (double)ptr_S->chunk_size);
   status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
   ptr_vec->num_elements = num_elements; // after init_chunk_dir()
   ptr_vec->num_chunks   = num_chunks;
   for ( uint32_t i = 0; i < num_chunks; i++ ) {
     uint32_t chunk_idx;
-    status = allocate_chunk(0, i, ptr_vec->uqid, &chunk_idx, false); 
+    status = allocate_chunk(ptr_S, ptr_T, 0, i, ptr_vec->uqid, 
+        &chunk_idx, false); 
     cBYE(status); chk_chunk_idx(chunk_idx); 
     ptr_vec->chunks[i] = chunk_idx;
-    CHUNK_REC_TYPE *ptr_c = g_chunk_dir + chunk_idx;
+    CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
     ptr_c->vec_uqid = ptr_vec->uqid;
     ptr_c->chunk_num = i;
   }
@@ -266,7 +281,7 @@ vec_rehydrate_single(
   // Note that we just accept the file (after some checking)
   // we do not "load" it into memory. We delay that until needed
   if ( !isfile(file_name) ) { go_BYE(-1); }
-  int64_t expected_file_size = get_exp_file_size(num_elements,
+  int64_t expected_file_size = get_exp_file_size(ptr_S, num_elements,
       ptr_vec->field_width, ptr_vec->fldtype);
   int64_t actual_file_size = get_file_size(file_name);
   if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
@@ -284,18 +299,19 @@ vec_rehydrate_single(
   ptr_vec->is_file    = true;
   //------------
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_rehydrate_single += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_rehydrate_single += delta; }
   return status;
 }
 //-------------------------------------------------
 int
-g_check_chunks(
-    CHUNK_REC_TYPE *chunk_dir,
-    uint32_t sz,
-    uint32_t n
+check_chunks(
+    VEC_GLOBALS_TYPE *ptr_S
     )
 {
   int status = 0;
+  CHUNK_REC_TYPE *chunk_dir = ptr_S->chunk_dir;
+  uint32_t sz  = ptr_S->sz_chunk_dir;
+  uint32_t n   = ptr_S->n_chunk_dir;
   if ( n == 0 ) { return status;  }
   if ( n > sz ) { go_BYE(-1); }
   VEC_UQID_CHUNK_NUM_REC_TYPE *buf1 = NULL;
@@ -346,11 +362,13 @@ BYE:
 //-------------------------------------------------
 int
 vec_check(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *v
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_check++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_check++;
   if ( v->num_elements == 0 ) {
     if ( v->chunks      != NULL ) { go_BYE(-1); }
     if ( v->num_chunks  != 0    ) { go_BYE(-1); }
@@ -424,17 +442,17 @@ vec_check(
   }
   //-------------------------------------------
   for ( uint32_t i = 0; i < v->num_chunks; i++ ) {
-    status = chk_chunk(v->chunks[i], v->uqid);
+    status = chk_chunk(v->chunks[i], v->uqid, ptr_S);
     cBYE(status);
     if (  v->chunks[i] == 0 ) { go_BYE(-1); }
-    if (  v->chunks[i] >= g_sz_chunk_dir ) { go_BYE(-1); }
+    if (  v->chunks[i] >= ptr_S->sz_chunk_dir ) { go_BYE(-1); }
     for ( uint32_t j = i+1; j  < v->num_chunks; j++ ) {
       if (  v->chunks[i] == v->chunks[j] ) { go_BYE(-1); }
     }
   }
   //-------------------------------------------
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_check += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_check += delta; }
   return status;
 }
 
@@ -463,21 +481,23 @@ BYE:
 
 int
 vec_get1(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
     char **ptr_data
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_get1++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_get1++;
   uint32_t chunk_dir_idx, in_chunk_idx;
 
-  status = chunk_dir_idx_for_read(ptr_vec, idx, &chunk_dir_idx);
+  status = chunk_dir_idx_for_read(ptr_S, ptr_vec, idx, &chunk_dir_idx);
   cBYE(status);
-  in_chunk_idx = idx % g_chunk_size; // identifies element within chunk
+  in_chunk_idx = idx % ptr_S->chunk_size; // identifies element within chunk
 
-  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
-  status = load_chunk(ptr_chunk, ptr_vec, &(ptr_chunk->t_last_get), 
+  CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_dir_idx;
+  status = load_chunk(ptr_T, ptr_chunk, ptr_vec, &(ptr_chunk->t_last_get), 
       &(ptr_chunk->data)); 
   cBYE(status);
   if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { 
@@ -489,12 +509,14 @@ vec_get1(
   }
 
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_get1 += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_get1 += delta; }
   return status;
 }
 //--------------------------------------------------
 int
 vec_start_read(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     char **ptr_data,
     uint64_t *ptr_num_elements,
@@ -502,7 +524,7 @@ vec_start_read(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_start_read++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_start_read++;
   if ( !ptr_vec->is_eov         ) { go_BYE(-1); }
   if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
   if ( *ptr_num_elements == 0   ) { go_BYE(-1); }
@@ -513,9 +535,9 @@ vec_start_read(
     // handle special case where everything fits in one chunk
     uint32_t chunk_idx = ptr_vec->chunks[0];
     chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
-    status = load_chunk(ptr_chunk, ptr_vec, &(ptr_chunk->t_last_get), 
-        &(ptr_chunk->data)); 
+    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
+    status = load_chunk(ptr_T, ptr_chunk, ptr_vec, 
+        &(ptr_chunk->t_last_get), &(ptr_chunk->data)); 
     cBYE(status);
     // TODO Not sure about this one ptr_chunk->num_readers++;
     ptr_cmem->data = ptr_chunk->data;
@@ -536,7 +558,7 @@ vec_start_read(
   strncpy(ptr_cmem->fldtype, ptr_vec->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_cmem->is_foreign = true;
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_start_read += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_start_read += delta; }
   return status;
 }
 //--------------------------------------------------
@@ -562,6 +584,8 @@ BYE:
 //--------------------------------------------------
 int
 vec_get_chunk(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     uint32_t chunk_num,
     CMEM_REC_TYPE *ptr_cmem,
@@ -569,13 +593,13 @@ vec_get_chunk(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_get_chunk++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_get_chunk++;
   if ( !ptr_vec->is_memo ) { chunk_num = 0; } // Important
   if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); } 
   uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
   chk_chunk_idx(chunk_idx);
-  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
-  status = load_chunk(ptr_chunk, ptr_vec, &(ptr_chunk->t_last_get), 
+  CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
+  status = load_chunk(ptr_T, ptr_chunk, ptr_vec, &(ptr_chunk->t_last_get), 
       &(ptr_chunk->data)); 
   cBYE(status);
   if ( ptr_chunk->num_writers  > 0 ) { go_BYE(-1); }
@@ -589,34 +613,37 @@ vec_get_chunk(
 
   // set chunk size
   if ( chunk_num < ptr_vec->num_chunks - 1 ) {
-    *ptr_num_in_chunk = g_chunk_size;
+    *ptr_num_in_chunk = ptr_S->chunk_size;
   }
   else {
-    *ptr_num_in_chunk = ptr_vec->num_elements % g_chunk_size;
+    *ptr_num_in_chunk = ptr_vec->num_elements % ptr_S->chunk_size;
     if ( *ptr_num_in_chunk == 0 ) { 
-      *ptr_num_in_chunk = g_chunk_size;
+      *ptr_num_in_chunk = ptr_S->chunk_size;
     }
   }
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_get_chunk += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_get_chunk += delta; }
   return status;
 }
 //------------------------------------------------
 int
 vec_shutdown(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     char **ptr_str_to_reincarnate
     )
 {
   int status = 0;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_shutdown++;
   *ptr_str_to_reincarnate = NULL;
 
-  if (( !ptr_vec->is_memo )  && ( ptr_vec->num_elements > g_chunk_size )){ 
+  if (( !ptr_vec->is_memo )  && ( ptr_vec->num_elements > ptr_S->chunk_size )){ 
       // We have lost data and there is no hope of recovering it
       go_BYE(-1); 
   }
   if ( !ptr_vec->is_eov )  {
-    status = vec_delete(ptr_vec); cBYE(status);
+    status = vec_delete(ptr_S, ptr_T, ptr_vec); cBYE(status);
     return status;
   }
   // check if anybody is using it 
@@ -625,23 +652,27 @@ vec_shutdown(
   }
   for ( uint32_t i = 0; i < ptr_vec->num_chunks; i++ ) { 
     uint32_t chunk_idx = ptr_vec->chunks[i];
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
     if ( ( ptr_chunk->num_readers > 0 )||( ptr_chunk->num_writers > 0 ) ) {
       go_BYE(-1);
     }
   }
   //------------------------------------------
-  status = vec_backup(ptr_vec); cBYE(status);
+  status = vec_backup(ptr_S, ptr_T, ptr_vec); cBYE(status);
   if ( ptr_vec->is_persist ) { 
-    status = reincarnate(ptr_vec, ptr_str_to_reincarnate);  cBYE(status);
+    status = reincarnate(ptr_S, ptr_T, ptr_vec, ptr_str_to_reincarnate);  
+    cBYE(status);
   }
-  status = vec_free(ptr_vec); cBYE(status);
+  status = vec_free(ptr_S, ptr_T, ptr_vec); cBYE(status);
 BYE:
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_shutdown += delta; }
   return status;
 }
 //------------------------------------------------
 int
 vec_backup(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -649,17 +680,19 @@ vec_backup(
   if ( !ptr_vec->is_eov  ) { go_BYE(-1); }
   if ( ptr_vec->is_file ) { return status; }
   if ( !ptr_vec->is_memo ) {  
-    status = vec_flush_chunk(ptr_vec, false, 0); cBYE(status);
+    status = vec_flush_chunk(ptr_S, ptr_T, ptr_vec, false, 0); 
   }
   else {
-    status = vec_flush_chunk(ptr_vec, false, -1); cBYE(status);
+    status = vec_flush_chunk(ptr_S, ptr_T, ptr_vec, false, -1); 
   }
+  cBYE(status);
 BYE:
   return status;
 }
 //------------------------------------------------
 int
 vec_unget_chunk(
+    VEC_GLOBALS_TYPE *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t chunk_num
     )
@@ -668,7 +701,7 @@ vec_unget_chunk(
   if ( !ptr_vec->is_memo ) { chunk_num = 0; } // Important
   if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
   uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
-  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+  CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
   if ( ptr_chunk->data     == NULL ) { go_BYE(-1); }
   if ( ptr_chunk->num_writers  > 0 ) { go_BYE(-1); }
   if ( ptr_chunk->num_readers == 0 ) { go_BYE(-1); }
@@ -681,12 +714,13 @@ BYE:
 
 int
 vec_start_write(
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_start_write++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_start_write++;
   char *X = NULL; size_t nX = 0;
   if ( !ptr_vec->is_eov ) { go_BYE(-1); }
   if ( ptr_vec->num_writers != 0 ) { go_BYE(-1); }
@@ -707,7 +741,7 @@ vec_start_write(
 
   ptr_vec->num_writers = 1;
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_start_write += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_start_write += delta; }
   return status;
 }
 
@@ -730,13 +764,15 @@ BYE:
 
 int
 vec_kill(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     )
 {
   int status = 0;
   if ( ptr_vec->is_dead ) { go_BYE(-1); }
   if ( !ptr_vec->is_killable ) { return status; } // ignore if necessary
-  status = vec_delete(ptr_vec); cBYE(status);
+  status = vec_delete(ptr_S, ptr_T, ptr_vec); cBYE(status);
 BYE:
   return status;
 }
@@ -810,21 +846,23 @@ BYE:
 
 int
 vec_put_chunk(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem,
     uint32_t num_elements
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_put_chunk++;
-  if ( g_chunk_size == 0 ) { go_BYE(-1); }
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_put_chunk++;
+  if ( ptr_S->chunk_size == 0 ) { go_BYE(-1); }
   if ( ptr_vec  == NULL ) { go_BYE(-1); }
   if ( ptr_cmem == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_dead ) { go_BYE(-1); }
   if ( ptr_vec->is_eov ) { go_BYE(-1); }
 
-  if ( num_elements == 0 ) { num_elements = g_chunk_size; }
-  if ( num_elements > g_chunk_size ) { go_BYE(-1); }
+  if ( num_elements == 0 ) { num_elements = ptr_S->chunk_size; }
+  if ( num_elements > ptr_S->chunk_size ) { go_BYE(-1); }
   const char * const data = ptr_cmem->data;
   if ( data == NULL ) { go_BYE(-1); }
 
@@ -837,19 +875,21 @@ vec_put_chunk(
   }
   //-----------------------------------------
   status = init_chunk_dir(ptr_vec, -1); cBYE(status);
-  // number of elements must be a multiple of g_chunk_size
-  if ( !is_multiple(ptr_vec->num_elements, g_chunk_size) ) { go_BYE(-1); }
+  // number of elements must be a multiple of ptr_S->chunk_size
+  if ( !is_multiple(ptr_vec->num_elements, ptr_S->chunk_size) ) { 
+    go_BYE(-1); 
+  }
   uint32_t chunk_num, chunk_idx;
   if ( !ptr_vec->is_memo ) {
     chunk_num = 0;
     if ( ptr_vec->num_chunks == 0 ) { // indicating no allocation done 
-      status = allocate_chunk(ptr_vec->chunk_size_in_bytes, chunk_num, 
-          ptr_vec->uqid, &chunk_idx, is_malloc); 
+      status = allocate_chunk(ptr_S, ptr_T, ptr_vec->chunk_size_in_bytes, 
+          chunk_num, ptr_vec->uqid, &chunk_idx, is_malloc); 
       cBYE(status);
-      if ( chunk_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
+      if ( chunk_idx >= ptr_S->sz_chunk_dir ) { go_BYE(-1); }
       if ( !is_malloc ) {
         ptr_cmem->is_foreign   = true;
-        g_chunk_dir[chunk_idx].data = ptr_cmem->data;
+        ptr_S->chunk_dir[chunk_idx].data = ptr_cmem->data;
       }
       ptr_vec->chunks[chunk_num] = chunk_idx;
       ptr_vec->num_chunks = 1;
@@ -866,16 +906,17 @@ vec_put_chunk(
     }
   }
   else {
-    status = get_chunk_num_for_write(ptr_vec, &chunk_num); cBYE(status);
-    status = get_chunk_dir_idx(ptr_vec, chunk_num, ptr_vec->chunks, 
-        &(ptr_vec->num_chunks), &chunk_idx, is_malloc); 
+    status = get_chunk_num_for_write(ptr_S, ptr_vec, &chunk_num); 
+    cBYE(status);
+    status = get_chunk_dir_idx(ptr_S, ptr_T, ptr_vec, chunk_num, 
+        ptr_vec->chunks, &(ptr_vec->num_chunks), &chunk_idx, is_malloc); 
     cBYE(status);
     // if NOT memo and stealable, then you have stolen CMEM by now
     // This means that Vector took the CMEM from the generator
     // as the data for its chunk and there is nothing more to do 
     if ( !is_malloc ) { 
       ptr_cmem->is_foreign   = true;
-      g_chunk_dir[chunk_idx].data = ptr_cmem->data;
+      ptr_S->chunk_dir[chunk_idx].data = ptr_cmem->data;
       ptr_cmem->data = NULL;
       ptr_cmem->size = 0;
       // following to tell cmem that it is okay for data to be NULL
@@ -888,48 +929,51 @@ vec_put_chunk(
     }
   }
   chk_chunk_idx(chunk_idx);
-  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+  CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
 
   size_t sz = num_elements * ptr_vec->field_width;
   // handle special case for B1
   if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { 
     sz = ceil((double)num_elements / 8.0); 
   }
-  memcpy(ptr_chunk->data, data, sz);
+  l_memcpy(ptr_chunk->data, data, sz, ptr_T);
 
   ptr_vec->num_elements += num_elements;
   ptr_vec->chunks[chunk_num] = chunk_idx;
 
 BYE:
-  delta = RDTSC()-t_start; if ( delta > 0 ) { t_put_chunk += delta; }
+  delta = RDTSC()-t_start; if ( delta > 0 ) { ptr_T->t_put_chunk += delta; }
   return status;
 }
 
 
 int
 vec_put1(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     const char * const data
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_put1++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_put1++;
   // START: Do some basic checks
-  if ( g_chunk_size == 0 ) { go_BYE(-1); }
+  if ( ptr_S->chunk_size == 0 ) { go_BYE(-1); }
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( data == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov ) { go_BYE(-1); }
   //---------------------------------------
   status = init_chunk_dir(ptr_vec, -1); cBYE(status);
   uint32_t chunk_num, chunk_idx;
-  status = get_chunk_num_for_write(ptr_vec, &chunk_num); cBYE(status);
-  status = get_chunk_dir_idx(ptr_vec, chunk_num, ptr_vec->chunks, 
-      &(ptr_vec->num_chunks), &chunk_idx, true); 
+  status = get_chunk_num_for_write(ptr_S, ptr_vec, &chunk_num); 
   cBYE(status);
-  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+  status = get_chunk_dir_idx(ptr_S, ptr_T, ptr_vec, chunk_num, 
+      ptr_vec->chunks, &(ptr_vec->num_chunks), &chunk_idx, true); 
+  cBYE(status);
+  CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
   if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) {
     // Unfortunately, need to handle B1 as a special case
-    uint32_t num_in_chunk = ptr_vec->num_elements % g_chunk_size;
+    uint32_t num_in_chunk = ptr_vec->num_elements % ptr_S->chunk_size;
     uint64_t *in_bdata = (uint64_t *)data;
     uint64_t *out_bdata = (uint64_t *)ptr_chunk->data;
     uint64_t word_idx = num_in_chunk / 64;
@@ -955,25 +999,27 @@ vec_put1(
     }
   }
   else {
-    uint32_t in_chunk_idx = ptr_vec->num_elements % g_chunk_size;
+    uint32_t in_chunk_idx = ptr_vec->num_elements % ptr_S->chunk_size;
     char *data_ptr = ptr_chunk->data + (in_chunk_idx*ptr_vec->field_width);
-    memcpy(data_ptr, data, ptr_vec->field_width);
+    l_memcpy(data_ptr, data, ptr_vec->field_width, ptr_T);
   }
   ptr_vec->num_elements++;
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_put1 += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_put1 += delta; }
   return status;
 }
 //------------------------------------------------------
 int
 vec_flush_chunk(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     const VEC_REC_TYPE *const ptr_vec,
     bool is_free_mem,
     int chunk_num
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); n_flush++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_flush++;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
   uint32_t lb, ub;
@@ -990,7 +1036,7 @@ vec_flush_chunk(
     char file_name[Q_MAX_LEN_FILE_NAME+1];
     uint32_t chunk_idx = ptr_vec->chunks[i];
     chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
     memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
     status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
     cBYE(status);
@@ -1008,18 +1054,20 @@ vec_flush_chunk(
     }
   }
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_flush += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_flush += delta; }
   return status;
 }
 
 int
 vec_flush_all(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     )
 {
   int status = 0;
   FILE *fp = NULL;
-  uint64_t delta = 0, t_start = RDTSC(); n_flush++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_flush++;
 
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
@@ -1034,7 +1082,7 @@ vec_flush_all(
     char chnk_file_name[Q_MAX_LEN_FILE_NAME+1];
     uint32_t chunk_idx = ptr_vec->chunks[i];
     chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
     if ( ptr_chunk->data == NULL ) {
       char *X = NULL; size_t nX = 0;
       memset(chnk_file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
@@ -1056,12 +1104,13 @@ vec_flush_all(
   ptr_vec->file_size = file_size;
 BYE:
   fclose_if_non_null(fp);
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_flush += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_flush += delta; }
   return status;
 }
 
 int
 vec_file_name(
+    VEC_GLOBALS_TYPE *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     int32_t chunk_num,
     char *file_name,
@@ -1078,7 +1127,7 @@ vec_file_name(
     if ( (uint32_t)chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
     uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
     chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
     status = mk_file_name(ptr_chunk->uqid, file_name, len_file_name); 
     cBYE(status);
   }
@@ -1091,16 +1140,19 @@ BYE:
 
 int
 vec_delete_master_file(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     )
 {
   int status = 0;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_delete_master_file++;
   if  ( !ptr_vec->is_file ) { go_BYE(-1); }
   // can delete file only if data can be restored from elsewhere
   bool can_delete = true;
   for ( uint32_t i = 0; i < ptr_vec->num_chunks; i++ ) { 
     uint32_t chunk_idx = ptr_vec->chunks[i];
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
     if ( ( ptr_chunk->is_file ) || ( ptr_chunk->data != NULL ) ) {
       /* all is well */
     }
@@ -1120,10 +1172,13 @@ vec_delete_master_file(
     go_BYE(-1);
   }
 BYE:
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_delete_master_file += delta; }
   return status;
 }
 int
 vec_delete_chunk_file(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     int chunk_num
     )
@@ -1141,7 +1196,7 @@ vec_delete_chunk_file(
   }
   for ( uint32_t i = lb; i < ub; i++ ) { 
     uint32_t chunk_idx = ptr_vec->chunks[i];
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_idx;
+    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
     if ( !ptr_chunk->is_file ) { continue; }
     // can delete either if data in memory or msater file exists
     if  ( ( ptr_vec->is_file ) || ( ptr_chunk->data != NULL ) ) {

@@ -1,59 +1,49 @@
 #include "q_incs.h"
 #include "core_vec_struct.h"
-
+#include "_struct_timers.h"
 #include "aux_core_vec.h"
+
 #include "_get_file_size.h"
 #include "_isfile.h"
 #include "_isdir.h"
 #include "_rdtsc.h"
 #include "_rs_mmap.h"
-#include "vec_globals.h"
 
 #define INITIAL_NUM_CHUNKS_PER_VECTOR 32
 #define NUM_HEX_DIGITS_IN_UINT64 31 
 
 // TODO P4 Following macro duplicated. Eliminate that.
 #define chk_chunk_dir_idx(x) { \
-  if ( ( x <= 0 ) || ( (uint32_t)x >= g_sz_chunk_dir ) ) { go_BYE(-1); } \
+  if ( ( x <= 0 ) || ( (uint32_t)x >= ptr_S->sz_chunk_dir ) ) { go_BYE(-1); } \
 }
 void 
 l_memcpy(
     void *dest,
     const void *src,
-    size_t n
+    size_t n,
+    VEC_TIMERS_TYPE *ptr_T
     )
 {
-  uint64_t delta = 0, t_start = RDTSC(); n_memcpy++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_memcpy++;
   memcpy(dest, src, n);
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_memcpy += delta; }
-}
-
-void 
-l_memset(
-    void *s, 
-    int c, 
-    size_t n
-    )
-{
-  uint64_t delta = 0, t_start = RDTSC(); n_memset++;
-  memset(s, c, n);
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_memset += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_memcpy += delta; }
 }
 
 void *
 l_malloc(
-    size_t n
+    size_t n,
+    VEC_TIMERS_TYPE *ptr_T
     )
 {
   int status = 0;
   void  *x = NULL;
-  uint64_t delta = 0, t_start = RDTSC(); n_malloc++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_malloc++;
 
   status = posix_memalign(&x, Q_CORE_VEC_ALIGNMENT, n); 
   if ( status < 0 ) { WHEREAMI; return NULL; }
   if ( x == NULL ) { WHEREAMI; return NULL; }
   if ( status < 0 ) { WHEREAMI; return NULL; }
-  delta = RDTSC() - t_start; if ( delta > 0 ) { t_malloc += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_malloc += delta; }
 
   return x;
 }
@@ -130,6 +120,7 @@ BYE:
 
 int
 free_chunk(
+    VEC_GLOBALS_TYPE *ptr_S,
     uint32_t chunk_dir_idx,
     bool is_persist
     )
@@ -137,7 +128,7 @@ free_chunk(
   int status = 0;
   chk_chunk_dir_idx(chunk_dir_idx); 
 
-  CHUNK_REC_TYPE *ptr_chunk =  g_chunk_dir+chunk_dir_idx;
+  CHUNK_REC_TYPE *ptr_chunk =  ptr_S->chunk_dir+chunk_dir_idx;
   if ( ptr_chunk->num_readers > 0 ) { go_BYE(-1); }
   if ( ptr_chunk->num_writers > 0 ) { go_BYE(-1); }
   free_if_non_null(ptr_chunk->data);
@@ -146,7 +137,7 @@ free_chunk(
   }
   ptr_chunk->is_file = false;
   cBYE(status);
-  g_n_chunk_dir--;
+  ptr_S->n_chunk_dir--;
   memset(ptr_chunk, '\0', sizeof(CHUNK_REC_TYPE));
 BYE:
   return status;
@@ -155,6 +146,7 @@ BYE:
 
 int
 load_chunk(
+    VEC_TIMERS_TYPE *ptr_T,
     const CHUNK_REC_TYPE *const ptr_chunk, 
     const VEC_REC_TYPE *const ptr_vec,
     uint64_t *ptr_t_last_get,
@@ -176,7 +168,7 @@ load_chunk(
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
   char *X = NULL; size_t nX = 0;
-  data = l_malloc(ptr_vec->chunk_size_in_bytes);
+  data = l_malloc(ptr_vec->chunk_size_in_bytes, ptr_T);
   return_if_malloc_failed(data);
   memset(data, '\0', ptr_vec->chunk_size_in_bytes);
 
@@ -210,13 +202,14 @@ BYE:
 
 int
 chk_chunk(
-      uint32_t chunk_dir_idx,
-      uint64_t vec_uqid
-      )
+    uint32_t chunk_dir_idx,
+    uint64_t vec_uqid,
+    VEC_GLOBALS_TYPE *ptr_S
+    )
 {
   int status = 0;
-  if ( chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
-  CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+  if ( chunk_dir_idx >= ptr_S->sz_chunk_dir ) { go_BYE(-1); }
+  CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_dir_idx;
   /* What checks on these guys?
   if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
   if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
@@ -249,7 +242,8 @@ BYE:
 
 int
 init_globals(
-    void
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T
     )
 {
   int status = 0;
@@ -259,13 +253,17 @@ init_globals(
     fprintf(stderr, "Cannot initialize globals twice\n"); go_BYE(-1);
   }
   else {
-    if ( g_chunk_size    ==   0  ) { go_BYE(-1); }
-    if ( g_q_data_dir[0] == '\0' ) { go_BYE(-1); }
-    if ( g_sz_chunk_dir  ==   0  )  { go_BYE(-1); }
+    if ( ptr_S->chunk_size    ==   0  ) { go_BYE(-1); }
+    if ( ptr_S->q_data_dir[0] == '\0' ) { go_BYE(-1); }
+    if ( ptr_S->sz_chunk_dir  ==   0  )  { go_BYE(-1); }
 
-    g_chunk_dir = calloc(g_sz_chunk_dir, sizeof(CHUNK_REC_TYPE));
-    return_if_malloc_failed(g_chunk_dir);
-    g_n_chunk_dir = 0;
+    size_t sz = ptr_S->sz_chunk_dir*sizeof(CHUNK_REC_TYPE);
+    ptr_S->chunk_dir = l_malloc(sz, ptr_T);
+    return_if_malloc_failed(ptr_S->chunk_dir);
+    for ( unsigned int i = 0; i < ptr_S->sz_chunk_dir; i++ ) { 
+      memset(&(ptr_S->chunk_dir[i]), '\0', sizeof(CHUNK_REC_TYPE));
+    }
+    ptr_S->n_chunk_dir = 0;
     globals_initialized = true;
   }
 BYE:
@@ -274,15 +272,18 @@ BYE:
 
 static int
 chk_space_in_chunk_dir(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T
     )
 {
   int status = 0;
-  if ( g_chunk_dir == NULL ) { 
-    status = init_globals(); 
+  if ( ptr_S->chunk_dir == NULL ) { 
+    status = init_globals(ptr_S, ptr_T ); 
     cBYE(status);
   }
   else {
-    if ( g_n_chunk_dir >= g_sz_chunk_dir ) { 
+    if ( ptr_S->n_chunk_dir >= ptr_S->sz_chunk_dir ) { 
+      // TODO P2
       fprintf(stderr, "TO BE IMPLEMENTED: allocate space\n"); go_BYE(-1);
     }
   }
@@ -292,6 +293,8 @@ BYE:
 
 int
 allocate_chunk(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     size_t sz,
     uint32_t chunk_num,
     uint64_t vec_uqid,
@@ -301,33 +304,33 @@ allocate_chunk(
 {
   int status = 0;
   static unsigned int start_search = 1;
-  status = chk_space_in_chunk_dir();  cBYE(status); 
+  status = chk_space_in_chunk_dir(ptr_S, ptr_T);  cBYE(status); 
   // NOTE: we do not allocate 0th entry
   for ( int iter = 0; iter < 2; iter++ ) { 
     unsigned int lb, ub;
     if ( iter == 0 ) { 
       lb = start_search; // note not 0
-      ub = g_sz_chunk_dir;
+      ub = ptr_S->sz_chunk_dir;
     }
     else {
       lb = 1; 
       ub = start_search; // note not 0
     }
     for ( unsigned int i = lb ; i < ub; i++ ) { 
-      if ( g_chunk_dir[i].uqid == 0 ) {
-        g_chunk_dir[i].uqid = RDTSC(); 
-        g_chunk_dir[i].chunk_num = chunk_num;
-        g_chunk_dir[i].is_file = false;
-        g_chunk_dir[i].vec_uqid = vec_uqid;
+      if ( ptr_S->chunk_dir[i].uqid == 0 ) {
+        ptr_S->chunk_dir[i].uqid = RDTSC(); 
+        ptr_S->chunk_dir[i].chunk_num = chunk_num;
+        ptr_S->chunk_dir[i].is_file = false;
+        ptr_S->chunk_dir[i].vec_uqid = vec_uqid;
         if ( is_malloc ) { 
           if ( sz == 0 ) { go_BYE(-1); }
-          g_chunk_dir[i].data = malloc(sz);
-          return_if_malloc_failed(g_chunk_dir[i].data);
+          ptr_S->chunk_dir[i].data = l_malloc(sz, ptr_T);
+          return_if_malloc_failed(ptr_S->chunk_dir[i].data);
         }
         *ptr_chunk_dir_idx = i; 
-        g_n_chunk_dir++;
+        ptr_S->n_chunk_dir++;
         start_search = i+1;
-        if ( start_search >= g_sz_chunk_dir ) { start_search = 1; }
+        if ( start_search >= ptr_S->sz_chunk_dir ) { start_search = 1; }
         return status;
       }
     }
@@ -340,13 +343,14 @@ BYE:
 
 int64_t 
 get_exp_file_size(
+    VEC_GLOBALS_TYPE *ptr_S,
     uint64_t num_elements,
     uint32_t field_width,
     const char * const fldtype
     )
 {
   // TODO: Currently we write entire chunk even if partially used
-  num_elements = ceil((double)num_elements / g_chunk_size) * g_chunk_size;
+  num_elements = ceil((double)num_elements / ptr_S->chunk_size) * ptr_S->chunk_size;
   int64_t expected_file_size = num_elements * field_width;
   if ( strcmp(fldtype, "B1") == 0 ) {
     uint64_t num_words = num_elements / 64;
@@ -358,15 +362,16 @@ get_exp_file_size(
 
 int32_t
 get_chunk_size_in_bytes(
+    VEC_GLOBALS_TYPE *ptr_S,
       uint32_t field_width, 
       const char * const field_type
       )
 {
-  int32_t chunk_size_in_bytes = g_chunk_size * field_width;
-  if ( g_chunk_size == 0 ) { WHEREAMI; return -1; }
+  int32_t chunk_size_in_bytes = ptr_S->chunk_size * field_width;
+  if ( ptr_S->chunk_size == 0 ) { WHEREAMI; return -1; }
   if ( strcmp(field_type, "B1") == 0 ) {  // SPECIAL CASE
-    chunk_size_in_bytes = g_chunk_size / 8;
-    if ( ( ( g_chunk_size / 64 ) * 64 ) != g_chunk_size ) { 
+    chunk_size_in_bytes = ptr_S->chunk_size / 8;
+    if ( ( ( ptr_S->chunk_size / 64 ) * 64 ) != ptr_S->chunk_size ) { 
       WHEREAMI; return -1; 
     }
   }
@@ -464,6 +469,7 @@ BYE:
 // tells us which chunk to read this element from
 int 
 chunk_dir_idx_for_read(
+    VEC_GLOBALS_TYPE *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
     uint32_t *ptr_chunk_dir_idx
@@ -477,17 +483,18 @@ chunk_dir_idx_for_read(
     chunk_num = 0; 
   }
   else {
-    chunk_num = idx / g_chunk_size;
+    chunk_num = idx / ptr_S->chunk_size;
   }
   if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
   *ptr_chunk_dir_idx = ptr_vec->chunks[chunk_num];
-  if ( *ptr_chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
+  if ( *ptr_chunk_dir_idx >= ptr_S->sz_chunk_dir ) { go_BYE(-1); }
 BYE:
   return status;
 }
 // tells us which chunk to write this element into
 int 
 get_chunk_num_for_write(
+    VEC_GLOBALS_TYPE *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t *ptr_chunk_num
     )
@@ -499,7 +506,7 @@ get_chunk_num_for_write(
   // this means that when you want to write, you write to chunk 0
   // let us say chunk size = 64 and num elements = 64
   // this means that when you want to write, you write to chunk 1
-  uint32_t chunk_num =  (ptr_vec->num_elements / g_chunk_size);
+  uint32_t chunk_num =  (ptr_vec->num_elements / ptr_S->chunk_size);
   uint32_t sz = ptr_vec->sz_chunks;
   if ( chunk_num >= sz ) { // need to reallocate space
     new = calloc(2*sz, sizeof(uint32_t));
@@ -518,6 +525,8 @@ BYE:
 
 int 
 get_chunk_dir_idx(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_num,
     uint32_t *chunks,
@@ -530,13 +539,13 @@ get_chunk_dir_idx(
   if ( chunk_num >= ptr_vec->sz_chunks )  { go_BYE(-1); }
   uint32_t chunk_dir_idx = ptr_vec->chunks[chunk_num];
   if ( chunk_dir_idx == 0 ) { // we need to set it 
-    status = allocate_chunk(ptr_vec->chunk_size_in_bytes, chunk_num, 
-        ptr_vec->uqid, &chunk_dir_idx, is_malloc); 
+    status = allocate_chunk(ptr_S, ptr_T, ptr_vec->chunk_size_in_bytes, 
+        chunk_num, ptr_vec->uqid, &chunk_dir_idx, is_malloc); 
     cBYE(status);
     *ptr_num_chunks = *ptr_num_chunks + 1;
   }
   *ptr_chunk_dir_idx = chunk_dir_idx;
-  if ( chunk_dir_idx >= g_sz_chunk_dir ) { go_BYE(-1); }
+  if ( chunk_dir_idx >= ptr_S->sz_chunk_dir ) { go_BYE(-1); }
   ptr_vec->chunks[chunk_num] = chunk_dir_idx;
 BYE:
   return status;
@@ -544,6 +553,8 @@ BYE:
 
 int
 vec_new_common(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     const char * const field_type,
     uint32_t field_width
@@ -557,7 +568,8 @@ vec_new_common(
 
   strncpy(ptr_vec->fldtype, field_type, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_vec->field_width = field_width;
-  ptr_vec->chunk_size_in_bytes = get_chunk_size_in_bytes(field_width, field_type);
+  ptr_vec->chunk_size_in_bytes = get_chunk_size_in_bytes(
+      ptr_S, field_width, field_type);
   ptr_vec->uqid = RDTSC();
   ptr_vec->is_memo = true; // default behavior
 BYE:
@@ -608,6 +620,8 @@ BYE:
 
 int
 reincarnate(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_v,
     char **ptr_x
     )
@@ -615,7 +629,7 @@ reincarnate(
   int status = 0;
   char buf[65536]; // TODO P3 Undo this hard code; 
   char *x = NULL;
-  x = malloc(65536); // TODO P3 Undo this hard code
+  x = l_malloc(65536, ptr_T); // TODO P3 Undo this hard code
   memset(x, '\0', 65536);
   strcpy(x, " return { ");
 
@@ -625,7 +639,7 @@ reincarnate(
   sprintf(buf, "num_elements = %" PRIu64 ", ", ptr_v->num_elements); 
   strcat(x, buf);
 
-  sprintf(buf, "chunk_size = %d, ", g_chunk_size);
+  sprintf(buf, "chunk_size = %d, ", ptr_S->chunk_size);
   strcat(x, buf);
 
   sprintf(buf, "width = %u, ", ptr_v->field_width); 
@@ -649,7 +663,7 @@ reincarnate(
       char file_name[Q_MAX_LEN_FILE_NAME+1];
       uint32_t chunk_idx = ptr_v->chunks[i];
       chk_chunk_dir_idx(chunk_idx);
-      CHUNK_REC_TYPE *ptr_c = g_chunk_dir + chunk_idx;
+      CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
       if ( !ptr_c->is_file ) { go_BYE(-1); }
       status = mk_file_name(ptr_c->uqid,file_name,Q_MAX_LEN_FILE_NAME); 
       cBYE(status);
