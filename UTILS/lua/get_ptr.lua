@@ -2,6 +2,14 @@ local ffi = require 'ffi'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_func_decl = require 'Q/UTILS/build/get_func_decl'
 
+local function ends_with(str, ending)
+   return ending == "" or str:sub(-#ending) == ending
+end
+
+function trim(s)
+   return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
 -- TODO P2 Do we still need thislocal is_cdef = false
 local function get_ptr(
   x, 
@@ -25,15 +33,17 @@ local function get_ptr(
   
   -- Made qtype optional
   if qtype then
-    if ( qtype == "uint8_t" ) then 
-      ret_ptr = ffi.cast(qtype .. " *", y[0].data)
-    else
-      assert(qconsts.qtypes[qtype])
+    assert(type(qtype) == "string")
+    if ( qconsts.qtypes[qtype] ) then 
       local ctype = assert(qconsts.qtypes[qtype].ctype)
       ret_ptr = ffi.cast(ctype .. " *", y[0].data)
+    else
+      local cast_as = qtype 
+      assert(ends_with(trim(qtype), "*"))
+      ret_ptr = ffi.cast(cast_as, y[0].data)
     end
   else
-    ret_ptr = y[0].data
+    ret_ptr = ffi.cast("char *", y[0].data)
   end
   return ret_ptr
 end

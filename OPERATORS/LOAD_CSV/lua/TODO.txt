@@ -1,4 +1,4 @@
-2 bugs to fix. See below
+Test the newer varioants like TM_to_SC etc 
 
 Currently load does not handle "" in a string.
 What this means is that if a field is of the form

@@ -44,10 +44,10 @@ local function SC_to_TM(
         { size = chunk_size * out_width, qtype = out_qtype}))
       buf:stealable(true)
     end
-    local cst_buf = ffi.cast(out_ctype .. "  *", get_ptr(buf))
+    local cst_buf = get_ptr(buf, out_ctype .. "  *")
     local len, base_data = invec:get_chunk(l_chunk_num)
     if ( len > 0 ) then 
-      local ptr_to_chars = ffi.cast("char *", get_ptr(base_data))
+      local ptr_to_chars = get_ptr(base_data, "char *")
       local status = cfunc(ptr_to_chars, in_width, len, format, cst_buf)
       assert(status == 0)
       l_chunk_num = l_chunk_num + 1

@@ -238,6 +238,13 @@ static int set_default(
   return 0;
 }
 
+static int l_cmem_nop( lua_State *L) // just for debugging 
+{
+  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
+  lua_pushboolean(L, true);
+  return 1;
+}
+
 static int l_cmem_set_default( lua_State *L)
 {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
@@ -755,6 +762,7 @@ static const struct luaL_Reg cmem_methods[] = {
     { "me",         l_cmem_me },
     { "name",       l_cmem_name },
     { "new",        l_cmem_new },
+    { "nop",        l_cmem_nop },
     { "prbuf",      l_cmem_prbuf },
     { "set",        l_cmem_set               },
     { "set_default", l_cmem_set_default },
@@ -780,6 +788,7 @@ static const struct luaL_Reg cmem_functions[] = {
     { "me",         l_cmem_me },
     { "name",       l_cmem_name },
     { "new",        l_cmem_new },
+    { "nop",        l_cmem_nop },
     { "prbuf",      l_cmem_prbuf },
     { "set",        l_cmem_set               },
     { "set_default", l_cmem_set_default },

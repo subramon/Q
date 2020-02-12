@@ -35,24 +35,22 @@ local function corr_mat(X)
   -- END: verify inputs
 
   -- malloc space for the variance covariance matrix A 
-  local c_Aptr = assert(get_ptr(cmem.new(ffi.sizeof("double *") * m)), 
-    "malloc failed")
-  c_Aptr = ffi.cast("double **", c_Aptr)
+  local c_Aptr = assert(cmem.new(ffi.sizeof("double *") * m))
+  c_Aptr = get_ptr(c_Aptr, "double **")
   local q_Aptr = {}
   for i = 1, m do
-    q_Aptr[i-1] = cmem.new(ffi.sizeof("double") * m)
-    c_Aptr[i-1] = ffi.cast("double *", get_ptr(q_Aptr[i-1]))
+    q_Aptr[i-1] = assert(cmem.new(ffi.sizeof("double") * m))
+    c_Aptr[i-1] = get_ptr(q_Aptr[i-1], "double *")
   end
 
-  local Xptr = assert(get_ptr(cmem.new(ffi.sizeof(ctype .. " *") * m)), 
-    "malloc failed")
-  local Xptr = ffi.cast(ctype .. " **", Xptr)
+  local Xptr = assert(cmem.new(ffi.sizeof(ctype .. " *") * m))
+  local Xptr = get_ptr(Xptr, ctype .. " **")
   c_Aptr[0][0] = 1
   for xidx = 1, m do
     local x_len, xptr, nn_xptr = X[xidx]:get_all()
     assert(x_len > 0)
     assert(nn_xptr == nil, "Null vector should not exist")
-    Xptr[xidx-1] = ffi.cast("float *", get_ptr(xptr))
+    Xptr[xidx-1] = get_ptr(xptr, "float *")
   end
   
   assert(qc["corr_mat"], "Symbol not found corr_mat")

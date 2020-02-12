@@ -34,9 +34,9 @@ local function SC_to_XX(
         { size = chunk_size * out_width, qtype = out_qtype})
       buf:stealable(true)
     end
-    local cst_buf = ffi.cast(out_ctype .. " *", get_ptr(buf))
+    local cst_buf = get_ptr(buf, out_ctype .. " *")
     local len, base_data = invec:get_chunk(chunk_idx)
-    local ptr_to_chars = ffi.cast("char *", get_ptr(base_data))
+    local ptr_to_chars = get_ptr(base_data, "char *")
     local out_len = 0
     for i = 1, len do
       local in_str = ffi.string(ptr_to_chars) -- , in_width)

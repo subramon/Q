@@ -4,27 +4,27 @@
 
 int
 cprint(
-    const char * const opfile,
-    const uint64_t * const cfld,
-    const void **const data, // [nC][nR] 
+    char * opfile,
+    uint64_t * cfld, // TODO 
+    void **data, // [nC][nR] 
     int nC,
     uint64_t lb,
     uint64_t ub,
-    const int * const enum_fldtypes,  
-    const int *const widths // [nC]
+    int * enum_fldtypes,  
+    int * widths // [nC]
     )
 {
   int status = 0;
+  FILE *fp = NULL;
   //----------
   if ( data == NULL ) { go_BYE(-1); }
   if ( nC <= 0 ) { go_BYE(-1); }
-  for ( int i = 0; i < nC; i++ ) { if ( data[i] == NULL ) { go_BYE(-1); } }
+  for ( int j = 0; j < nC; j++ ) { if ( data[j] == NULL ) { go_BYE(-1); } }
   if ( ub <= lb ) { go_BYE(-1); }
   if ( enum_fldtypes == NULL ) { go_BYE(-1); }
   if ( widths == NULL ) { go_BYE(-1); }
 
   //----------
-  FILE *fp = NULL;
   if ( ( opfile != NULL ) && ( *opfile != '\0' ) ) {
     fp = fopen(opfile, "a");
     return_if_fopen_failed(fp, opfile, "a");

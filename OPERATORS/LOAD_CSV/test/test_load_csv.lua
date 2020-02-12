@@ -59,9 +59,16 @@ tests.t1 = function()
     U[1] = T.i4
     U[2] = T.f4
     Q.print_csv(U, { impl = "C", opfile = opfile } )
+    
+    local expected = qconsts.Q_SRC_ROOT .. 
+      "/OPERATORS/LOAD_CSV/test/chk_in1.csv"
+    -- TODO assert(plutils.readfile(expected) == plutils.readfile(opfile))
   end
-  local expected = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/chk_in1.csv"
-  assert(plutils.readfile(expected) == plutils.readfile(opfile))
+  print("about to delete")
+  T.i4:delete()
+  T.f4:delete()
+  error("bogus")
+  print("deleted")
   --===================
   print("Test t1 succeeded")
 end

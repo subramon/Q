@@ -20,7 +20,6 @@ local function TM_to_SC(
   assert(#format > 0)
   assert(#format < 64) -- some sanity check 
 
-  
   local in_ctype = qconsts.qtypes[in_qtype].ctype
   local cst_in_as = in_ctype .. " *"
   local out_width = 32 -- TODO P3 Undo hard code
@@ -33,12 +32,12 @@ local function TM_to_SC(
     assert(chunk_num == chunk_idx)
     if ( first_call ) then 
       out_buf = cmem.new(qconsts.chunk_size * out_width)
-      cst_out_buf = ffi.cast("char  * const ", get_ptr(out_buf))
+      cst_out_buf = get_ptr(out_buf, "char  * ")
       first_call = false
     end
     local len, base_data = inv:chunk(chunk_idx)
     if ( len > 0 ) then 
-      local in_ptr = ffi.cast(cst_in_as, get_ptr(base_data))
+      local in_ptr = get_ptr(base_data, cst_in_a)
       local status = qc["TM_to_SC"](in_ptr, len, format,
         cst_out_buf, out_width)
       assert(status == 0)

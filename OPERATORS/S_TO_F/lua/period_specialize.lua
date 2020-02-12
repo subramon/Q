@@ -43,7 +43,7 @@ return function (
   local args_ctype = "PERIOD_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(args_ctype)
   local cargs = cmem.new({size = sz}); 
-  local args = ffi.cast(args_ctype .. " *", get_ptr(cargs))
+  local args = get_ptr(cargs, args_ctype .. " *")
 
   args[0]["start"]  =  sstart[0].cdata["val" .. qtype]
   args[0]["by"]     =     sby[0].cdata["val" .. qtype]

@@ -46,7 +46,7 @@ return function (a, args)
     end
     if ( num_elements <= 0 ) then return 0, nil end
     --=============================
-    local cbuf   = ffi.cast(cast_as, get_ptr(buf))
+    local cbuf   = get_ptr(buf, cast_as)
     local start_time = qc.RDTSC()
     qc[func_name](cbuf, num_elements, subs.args, lb)
     record_time(start_time, func_name)
