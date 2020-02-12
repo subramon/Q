@@ -64,11 +64,6 @@ tests.t1 = function()
       "/OPERATORS/LOAD_CSV/test/chk_in1.csv"
     -- TODO assert(plutils.readfile(expected) == plutils.readfile(opfile))
   end
-  print("about to delete")
-  T.i4:delete()
-  T.f4:delete()
-  error("bogus")
-  print("deleted")
   --===================
   print("Test t1 succeeded")
 end
