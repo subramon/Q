@@ -53,16 +53,18 @@ tests.t1 = function()
     assert(math.floor(T.f4:get1(i-1):to_num()) == i  )
   end
   --===================
-  local opfile = "/tmp/_x"
   if ( test_print ) then
-    local U = {}
-    U[1] = T.i4
-    U[2] = T.f4
-    Q.print_csv(U, { impl = "C", opfile = opfile } )
-    
-    local expected = qconsts.Q_SRC_ROOT .. 
-      "/OPERATORS/LOAD_CSV/test/chk_in1.csv"
-    -- TODO assert(plutils.readfile(expected) == plutils.readfile(opfile))
+    local opfile = "/tmp/_x"
+    for _, impl in ipairs({"C", "L"}) do 
+      local U = {}
+      U[1] = T.i4
+      U[2] = T.f4
+      Q.print_csv(U, { impl = impl, opfile = opfile } )
+      local expected = qconsts.Q_SRC_ROOT .. 
+        "/OPERATORS/LOAD_CSV/test/chk_in1.csv"
+      assert(plutils.readfile(expected) == plutils.readfile(opfile))
+      print("Tested print with impl = ", impl)
+    end
   end
   --===================
   print("Test t1 succeeded")
@@ -107,15 +109,17 @@ tests.t2 = function()
   assert(ffi.string(get_ptr(T.s1:get1(1))) == "DEFX")
   assert(ffi.string(get_ptr(T.s1:get1(2))) == "GHIYZ")
   --===================
-  local opfile = "/tmp/_x"
   if ( test_print ) then
-    local U = {}
-    U[1] = T.i1
-    U[2] = T.s1
-    Q.print_csv(U, { opfile = opfile } )
+    local opfile = "/tmp/_x"
+    for _, impl in ipairs({"C", "L"}) do 
+      local U = {}
+      U[1] = T.i1
+      U[2] = T.s1
+      Q.print_csv(U, { impl = impl, opfile = opfile } )
+      local expected = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/chk_in2.csv"
+      assert(plutils.readfile(expected) == plutils.readfile(opfile))
+    end
   end
-  local expected = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/chk_in2.csv"
-  assert(plutils.readfile(expected) == plutils.readfile(opfile))
   print("Test t2 succeeded")
 end
 --=======================================================
@@ -221,10 +225,10 @@ tests.t5 = function()
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
-tests.t1()
+tests.t2()
 os.exit()
 --[[
-tests.t2()
+tests.t1()
 tests.t3()
 tests.t4()
 tests.t5()

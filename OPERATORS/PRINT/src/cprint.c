@@ -11,7 +11,7 @@ cprint(
     uint64_t lb,
     uint64_t ub,
     int * enum_fldtypes,  
-    int * widths // [nC]
+    int * width // [nC]
     )
 {
   int status = 0;
@@ -22,7 +22,7 @@ cprint(
   for ( int j = 0; j < nC; j++ ) { if ( data[j] == NULL ) { go_BYE(-1); } }
   if ( ub <= lb ) { go_BYE(-1); }
   if ( enum_fldtypes == NULL ) { go_BYE(-1); }
-  if ( widths == NULL ) { go_BYE(-1); }
+  if ( width == NULL ) { go_BYE(-1); }
 
   //----------
   if ( ( opfile != NULL ) && ( *opfile != '\0' ) ) {
@@ -53,11 +53,11 @@ cprint(
       }
       else if ( enum_fldtypes[j] == QF4 ) { 
         float *X = (float *)data[j];
-        fprintf(fp, "%lf", X[i]);
+        fprintf(fp, "%f", X[i]);
       }
       else if ( enum_fldtypes[j] == QF8 ) { 
         double *X = (double *)data[j];
-        fprintf(fp, "%lf", X[i]);
+        fprintf(fp, "%e", X[i]);
       }
       else if ( enum_fldtypes[j] == QB1 ) { 
         uint64_t *X = (uint64_t *)data[j];
@@ -65,8 +65,19 @@ cprint(
         fprintf(fp, "%d", bval);
       }
       else if ( enum_fldtypes[j] == QSC ) { 
-        // TODO 
-        go_BYE(-1); 
+        if ( width[j] <= 1 ) { go_BYE(-1); }
+        char *X = (char *)data[j];
+        X += (i * width[j]);
+        fprintf(fp, "\"");
+        for ( int k = 0; k < width[j]; k++ ) { 
+          if ( *X == '\0' ) { break; } 
+          if ( ( *X == '\\' ) || ( *X == '"' ) ) {
+            fprintf(fp, "\\");
+          }
+          fprintf(fp, "%c", *X);
+          X++;
+        }
+        fprintf(fp, "\"");
       }
       else if ( enum_fldtypes[j] == QTM ) { 
         // TODO 
