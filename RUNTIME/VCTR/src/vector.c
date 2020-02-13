@@ -15,7 +15,7 @@
 #include "isdir.h"
 
 VEC_GLOBALS_TYPE g_S;
-#include "_struct_timers.h"
+#include "struct_timers.h"
 VEC_TIMERS_TYPE g_T;
 
 // Set globals in C in main program after creating Lua state

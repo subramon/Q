@@ -125,7 +125,7 @@ end
 --=======================================================
 tests.t3 = function()
   local M = {}
-  local O = { is_hdr = true, fld_sep = "comma" }
+  local O = { is_hdr = true, fld_sep = "comma", is_memo = true  }
   M[#M+1] = { is_memo = false, name = "datetime", qtype = "SC", width=20}
   M[#M+1] = { is_memo = false, name = "store_id", qtype = "I4", }
   M[#M+1] = { is_memo = false, name = "customer_id", qtype = "I8", }
@@ -133,6 +133,7 @@ tests.t3 = function()
   M[#M+1] = { is_memo = true, name = "price", qtype = "F4", has_nulls = false}
   local datafile = "in3.csv"
   local T = Q.load_csv(datafile, M, O)
+  for _, v in pairs(T) do assert(v:is_memo()) end 
   local chunk_idx = 0
   repeat 
     local n 
@@ -146,13 +147,17 @@ tests.t3 = function()
   until n == 0 
   --==============
   if ( test_print ) then 
-    local U = {}
-    local i = 1
-    for _, v in pairs(T) do U[i] = v; i = i + 1 end 
-    Q.print_csv(U, {opfile = "/tmp/_x"})
+    local opfile = "/tmp/_x"
+    for _, impl in ipairs({"C", "L"}) do 
+      local U = {}
+      local i = 1
+      for _, v in pairs(T) do U[i] = v; i = i + 1 end 
+      Q.print_csv(U, {opfile = opfile, impl = impl})
+    end
   end
   print("Test t3 succeeded")
 end
+--==============================================================
 tests.t4 = function()
   local M = {}
   local O = { is_hdr = true }
@@ -165,18 +170,21 @@ tests.t4 = function()
   local y = Q.TM_to_SC(x:eval(), format)
   -- TODO P3 verify that x and T.datetime are the same
   --===================
-  local opfile = "/tmp/_x"
   if ( test_print ) then
-    Q.print_csv(T.datetime, { opfile = opfile } )
+    for _, impl in ipairs({"C", "L"}) do 
+      local opfile = "/tmp/_x" .. impl
+      Q.print_csv(T.datetime, { opfile = opfile, impl = impl } )
+      local expected = qconsts.Q_SRC_ROOT .. 
+      "/OPERATORS/LOAD_CSV/test/chk_in4.csv"
+      assert(plutils.readfile(expected) == plutils.readfile(opfile))
+    end
   end
-  local expected = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/chk_in4.csv"
-  assert(plutils.readfile(expected) == plutils.readfile(opfile))
   --===================
   print("Test t4 succeeded")
 end
 tests.t5 = function()
   local M = {}
-  local O = { is_hdr = true }
+  local O = { is_hdr = true, memo = true  }
   M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
   M[#M+1] = { is_load = false, name = "store_id", qtype = "I4", has_nulls = false}
   M[#M+1] = { is_load = false, name = "customer_id", qtype = "I8", has_nulls = false}
@@ -186,7 +194,6 @@ tests.t5 = function()
 
   local format = "%Y-%m-%d %H:%M:%S"
   local T = Q.load_csv(datafile, M, O)
-  for k, v in pairs(T) do print(k, v) end 
   assert(T.datetime) 
   local x = Q.SC_to_TM(T.datetime, format)
 
@@ -203,35 +210,41 @@ tests.t5 = function()
   }
   local out = {}
   for i, tm_fld in ipairs(tm_flds) do 
-    out[i] = Q.TM_to_I2(x, tm_fld)
+    out[i] = Q.TM_to_I2(x, tm_fld):memo(true)
     assert(type(out[i]) ==  "lVector")
+    assert(out[i]:is_memo())
   end
   local chunk_idx = 0
   local n
   repeat 
-    for i, tm_fld in ipairs(tm_flds) do 
-      n = out[i]:get_chunk(chunk_idx)
+    for _, v in ipairs(out) do 
+      n = v:get_chunk(chunk_idx)
       if ( n > 0 ) then 
-        out[i]:unget_chunk(chunk_idx)
+        v:unget_chunk(chunk_idx)
       end
     end
-    print("Chunk", chunk_idx)
     chunk_idx = chunk_idx + 1 
   until n == 0 
 
   if ( test_print ) then 
-    Q.print_csv(out, {opfile = "/tmp/_x"})
+    for _, impl in ipairs({"C", "L"}) do 
+      local opfile = "/tmp/_x" .. impl
+      Q.print_csv(out, {opfile = opfile, impl = impl})
+      local expected = qconsts.Q_SRC_ROOT .. 
+      "/OPERATORS/LOAD_CSV/test/chk_in5.csv"
+      assert(plutils.readfile(expected) == plutils.readfile(opfile))
+    end
   end
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
-tests.t2()
-os.exit()
---[[
-tests.t1()
 tests.t3()
+os.exit()
 tests.t4()
 tests.t5()
 os.exit()
---]]
+--[[
+tests.t1()
+tests.t2()
 return tests
+--]]

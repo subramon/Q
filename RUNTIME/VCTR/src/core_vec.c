@@ -18,8 +18,8 @@
 #define chk_chunk_idx(x) { \
   if ( ( x <= 0 ) || ( (uint32_t)x >= ptr_S->sz_chunk_dir ) ) { go_BYE(-1); } \
 }
-#include "_reset_timers.c"
-#include "_print_timers.c"
+#include "reset_timers.c"
+#include "print_timers.c"
 
 typedef struct _vec_uqid_chunk_num_rec_type {
   uint64_t vec_uqid;

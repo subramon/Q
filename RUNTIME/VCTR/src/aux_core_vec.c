@@ -1,6 +1,6 @@
 #include "q_incs.h"
 #include "core_vec_struct.h"
-#include "_struct_timers.h"
+#include "struct_timers.h"
 #include "aux_core_vec.h"
 
 #include "_get_file_size.h"

@@ -84,7 +84,7 @@ local function cprint(
       C[i-1] = get_ptr(chnk, "void *")
     end
     if ( wlen ) then assert( chk_len == wlen) end 
-    local status = qc[func_name](c_opfile, cfld, C, nC, xlb -lb, 
+    local status = qc[func_name](c_opfile, cfld, C, nC, xlb - clb, 
       xub - xlb, F, W)
     assert(status == 0)
     -- release chunks 

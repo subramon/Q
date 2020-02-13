@@ -11,14 +11,14 @@ all: libvctr.so
 	cp libvctr.so ${Q_ROOT}/lib/
 	echo "done"
 
-../inc/_struct_timers.h : timers.lua
-	lua timers.lua "struct" > ../inc/_struct_timers.h
+../inc/struct_timers.h : timers.lua
+	lua timers.lua "struct" > ../inc/struct_timers.h
 
-_reset_timers.c : timers.lua
-	lua timers.lua "reset" > _reset_timers.c
+reset_timers.c : timers.lua
+	lua timers.lua "reset" > reset_timers.c
 
-_print_timers.c : timers.lua
-	lua timers.lua "print" > _print_timers.c 
+print_timers.c : timers.lua
+	lua timers.lua "print" > print_timers.c 
 
 clean:
 	rm -f *.so *.o _*
@@ -30,11 +30,11 @@ clean:
 	make -C ../../OPERATORS/PRINT/lua/
 
 vector.o : vector.c ../inc/core_vec_struct.h \
-  	../inc/_struct_timers.h 
+  	../inc/struct_timers.h 
 	gcc -c $(INCS) ${QC_FLAGS} vector.c -o vector.o
 
 core_vec.o : core_vec.c ../inc/core_vec_struct.h ../inc/core_vec.h \
-  	../inc/_struct_timers.h _reset_timers.c _print_timers.c 
+  	../inc/struct_timers.h reset_timers.c print_timers.c 
 	gcc -c $(INCS) ${QC_FLAGS} core_vec.c -o core_vec.o
 
 aux_core_vec.o : aux_core_vec.c ../inc/core_vec_struct.h ../inc/aux_core_vec.h
@@ -69,12 +69,15 @@ libvctr.so: vector.o core_vec.o aux_core_vec.o
 		../../../UTILS/gen_src/_F8_to_txt.c \
 		-shared -o libvctr.so
 	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
-	cp ../inc/aux_core_vec.h ${Q_BUILD_DIR}/include/
-	cp ../inc/buf_to_file.h ${Q_BUILD_DIR}/include/
-	cp ../inc/copy_file.h ${Q_BUILD_DIR}/include/
-	cp ../inc/core_vec.h ${Q_BUILD_DIR}/include/
-	cp aux_core_vec.c ${Q_BUILD_DIR}/src/
-	cp buf_to_file.c ${Q_BUILD_DIR}/src/
-	cp copy_file.c ${Q_BUILD_DIR}/src/
-	cp core_vec.c ${Q_BUILD_DIR}/src/
-	cp test_globals.h ${Q_BUILD_DIR}/include/vec_globals.h
+#	cp ../inc/aux_core_vec.h ${Q_BUILD_DIR}/include/
+#	cp ../inc/buf_to_file.h ${Q_BUILD_DIR}/include/
+#	cp ../inc/copy_file.h ${Q_BUILD_DIR}/include/
+#	cp ../inc/core_vec.h ${Q_BUILD_DIR}/include/
+#	cp ../inc/struct_timers.h ${Q_BUILD_DIR}/include/
+#	cp aux_core_vec.c ${Q_BUILD_DIR}/src/
+#	cp buf_to_file.c ${Q_BUILD_DIR}/src/
+#	cp copy_file.c ${Q_BUILD_DIR}/src/
+#	cp core_vec.c ${Q_BUILD_DIR}/src/
+#	cp reset_timers.c ${Q_BUILD_DIR}/src/
+#	cp print_timers.c ${Q_BUILD_DIR}/src/
+#	cp test_globals.h ${Q_BUILD_DIR}/include/vec_globals.h

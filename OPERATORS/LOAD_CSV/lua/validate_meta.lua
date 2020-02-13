@@ -22,11 +22,13 @@ local function validate_meta(
     assert(type(qtype) == "string")
     assert(qconsts.qtypes[qtype])
     --===========================================
+    print("memo for " .. name .. " = " .. tostring(fld_M.is_memo))
     if fld_M.is_memo ~= nil then 
       assert(type(fld_M.is_memo) == "boolean")
     else
       fld_M.is_memo = true
     end
+    print("memo for " .. name .. " = " .. tostring(fld_M.is_memo))
     --===========================================
     -- Default assumption is that fields do NOT have null values
     if fld_M.has_nulls ~= nil then 
