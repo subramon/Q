@@ -6,13 +6,13 @@
 #include "buf_to_file.h"
 #include "copy_file.h"
 
-#include "file_exists.h"
-#include "get_file_size.h"
-#include "isfile.h"
-#include "isdir.h"
-#include "rdtsc.h"
-#include "rs_mmap.h"
-#include "txt_to_I4.h"
+#include "_file_exists.h"
+#include "_get_file_size.h"
+#include "_isfile.h"
+#include "_isdir.h"
+#include "_rdtsc.h"
+#include "_rs_mmap.h"
+#include "_txt_to_I4.h"
 
 #include "lauxlib.h"
 

@@ -69,3 +69,12 @@ libvctr.so: vector.o core_vec.o aux_core_vec.o
 		../../../UTILS/gen_src/_F8_to_txt.c \
 		-shared -o libvctr.so
 	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
+	cp ../inc/aux_core_vec.h ${Q_BUILD_DIR}/include/
+	cp ../inc/buf_to_file.h ${Q_BUILD_DIR}/include/
+	cp ../inc/copy_file.h ${Q_BUILD_DIR}/include/
+	cp ../inc/core_vec.h ${Q_BUILD_DIR}/include/
+	cp aux_core_vec.c ${Q_BUILD_DIR}/src/
+	cp buf_to_file.c ${Q_BUILD_DIR}/src/
+	cp copy_file.c ${Q_BUILD_DIR}/src/
+	cp core_vec.c ${Q_BUILD_DIR}/src/
+	cp test_globals.h ${Q_BUILD_DIR}/include/vec_globals.h
