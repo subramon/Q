@@ -238,13 +238,12 @@ tests.t5 = function()
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
+tests.t1()
+tests.t2()
 tests.t3()
-os.exit()
+--[[
 tests.t4()
 tests.t5()
 os.exit()
---[[
-tests.t1()
-tests.t2()
-return tests
 --]]
+return tests

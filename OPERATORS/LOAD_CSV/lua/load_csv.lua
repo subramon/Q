@@ -68,10 +68,17 @@ local function load_csv(
   M,  -- metadata (table)
   opt_args
   )
+  local chunk_size = cVector.chunk_size()
   assert(chk_file(infile))
   assert(validate_meta(M))
-  local is_hdr, fld_sep = process_opt_args(opt_args)
-  local chunk_size = cVector.chunk_size()
+  local is_hdr, fld_sep, global_is_memo = process_opt_args(opt_args)
+  -- see if you need to over ride per field is_memo with global
+  if ( global_is_memo ~= nil ) then 
+    assert(type(global_is_memo == "boolean"))
+    for k, v in pairs(M) do 
+      v.is_memo = global_is_memo
+    end
+  end
   --=======================================
   local databuf, nn_databuf, cdata, nn_cdata = malloc_buffers_for_data(M)
 
