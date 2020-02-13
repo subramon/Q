@@ -22,14 +22,14 @@ local function mem_initialize(subs)
   local cst_as = rec_type .. " *"
   local sz_c_mem = ffi.sizeof(rec_type)
   local c_mem = assert(cmem.new(sz_c_mem), "malloc failed")
-  local c_mem_ptr = ffi.cast(cst_as, get_ptr(c_mem))
+  local c_mem_ptr = get_ptr(c_mem, cst_as)
   c_mem_ptr.min_val  = qconsts.qtypes[subs.qtype].max
   c_mem_ptr.num = 0
   c_mem_ptr.min_index = -1
 
   --TODO: is it a right place for getter? check with Ramesh
   local getter = function (x)
-    local y = ffi.cast(cst_as, get_ptr(c_mem))
+    local y = get_ptr(c_mem, cst_as)
     return Scalar.new(x, subs.reduce_qtype),
       Scalar.new(tonumber(y[0].num), "I8"), Scalar.new(tonumber(y[0].min_index), "I8")
   end

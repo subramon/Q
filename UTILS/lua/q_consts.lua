@@ -95,6 +95,7 @@ local qconsts = {}
   qconsts.iorf = iorf
   --===========================
 
+  -- CAUTION: cenum Needs to be in sync with q_constants.h
   local qtypes = {}
   qtypes.I1 = { 
     min = -128,
@@ -102,9 +103,8 @@ local qconsts = {}
     max_txt_width  = 32,
     width = 1,
     ctype = "int8_t",
-    txt_to_ctype = "txt_to_I1",
-    ctype_to_txt = "I1_to_txt",
-    max_length="6"
+    max_length="6",
+    cenum = 1, -- used to pass qtype to C 
   }
   qtypes.I2 = { 
     min = -32768,
@@ -112,9 +112,8 @@ local qconsts = {}
     max_txt_width  = 32,
     width = 2,
     ctype = "int16_t",
-    txt_to_ctype = "txt_to_I2",
-    ctype_to_txt = "I2_to_txt",
-    max_length="8" 
+    max_length="8",
+    cenum = 2, -- used to pass qtype to C 
   }
   qtypes.I4 = { 
     min = -2147483648,
@@ -122,9 +121,8 @@ local qconsts = {}
     max_txt_width = 32,
     width = 4,
     ctype = "int32_t",
-    txt_to_ctype = "txt_to_I4",
-    ctype_to_txt = "I4_to_txt",
-    max_length="13" 
+    max_length="13", 
+    cenum = 3, -- used to pass qtype to C 
   }
   qtypes.I8 = { 
     min = -9223372036854775808,
@@ -132,9 +130,8 @@ local qconsts = {}
     max_txt_width = 32,
     width = 8,
     ctype = "int64_t",
-    txt_to_ctype = "txt_to_I8",
-    ctype_to_txt = "I8_to_txt",
-    max_length="22" 
+    max_length="22" ,
+    cenum = 4, -- used to pass qtype to C 
   }
   qtypes.F4 = { 
     min = -3.4 * math.pow(10,38),
@@ -142,9 +139,8 @@ local qconsts = {}
     max_txt_width = 32,
     width = 4,
     ctype = "float",
-    txt_to_ctype = "txt_to_F4",
-    ctype_to_txt = "F4_to_txt",
-    max_length="33" 
+    max_length="33", 
+    cenum = 5, -- used to pass qtype to C 
   }
   qtypes.F8 = { 
     min = -1.7 * math.pow(10,308),
@@ -152,15 +148,13 @@ local qconsts = {}
     max_txt_width = 32,
     width = 8,
     ctype = "double",
-    txt_to_ctype = "txt_to_F8",
-    ctype_to_txt = "F8_to_txt",
-    max_length="65" 
+    max_length="65" ,
+    cenum = 6, -- used to pass qtype to C 
   }
   qtypes.SC = { 
     -- I don't think we need this TODO P4 width = 8,
     ctype = "char",
-    txt_to_ctype = "txt_to_SC",
-    ctype_to_txt = "SC_to_txt" 
+    cenum = 7, -- used to pass qtype to C 
   }
   qtypes.TM = { 
     -- no min
@@ -168,8 +162,7 @@ local qconsts = {}
     max_txt_width = 64,
     width = ffi.sizeof("TM"),
     ctype = "struct tm",
-    -- txt_to_ctype = "txt_to_TM",
-    -- ctype_to_txt = "TBD" 
+    cenum = 8, -- used to pass qtype to C 
   }
   qtypes.B1 = { 
     min = 0,
@@ -177,8 +170,7 @@ local qconsts = {}
     max_txt_width = 2,
     width = 1, -- This has to be handled as a special case
     ctype = "uint64_t",
-    txt_to_ctype = "",
-    ctype_to_txt = "TBD" 
+    cenum = 9, -- used to pass qtype to C 
   }
 
   qconsts.qtypes = qtypes

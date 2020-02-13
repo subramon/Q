@@ -37,11 +37,11 @@ local function SC_to_I4(
     assert(chunk_num == chunk_idx)
     if ( first_call ) then 
       out_buf = cmem.new(qconsts.chunk_size * out_width, out_qtype, "test")
-      cst_out_buf = ffi.cast(out_ctype .. "  *", get_ptr(out_buf))
+      cst_out_buf = get_ptr(out_buf, out_ctype .. "  *")
       first_call = false
     end
     local len, base_data = inv:chunk(chunk_idx)
-    local ptr_to_chars = ffi.cast("char *", get_ptr(base_data))
+    local ptr_to_chars = get_ptr(base_data, "char *")
     local out_len = 0
     for i = 1, len do
       local in_str = ffi.string(ptr_to_chars) -- , in_width)

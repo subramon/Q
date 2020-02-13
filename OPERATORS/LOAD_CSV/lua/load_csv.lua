@@ -29,8 +29,8 @@ local function setup_ptrs(M, databuf, nn_databuf, cdata, nn_cdata)
     end
   end
 
-  local ptr_cdata    = ffi.cast("char     **", get_ptr(   cdata))
-  local ptr_nn_cdata = ffi.cast("uint64_t **", get_ptr(nn_cdata))
+  local ptr_cdata    = get_ptr(cdata, "char     **")
+  local ptr_nn_cdata = get_ptr(nn_cdata, "uint64_t **")
   assert(ptr_cdata)
   assert(ptr_nn_cdata)
   for i, v in ipairs(M) do

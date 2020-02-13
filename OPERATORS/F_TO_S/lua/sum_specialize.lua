@@ -36,7 +36,7 @@ return function (in_qtype)
   subs.reduce_ctype = qconsts.qtypes[subs.reduce_qtype].ctype
   local args = cmem.new({size = ffi.sizeof(subs.args_ctype)})
   args:zero()
-  subs.args = ffi.cast(subs.args_ctype .. " *", get_ptr(args))
+  subs.args = get_ptr(args, subs.args_ctype .. " *")
   --==========
   local getter = function (x)
     assert(x) -- this contains the value into which reduction happens

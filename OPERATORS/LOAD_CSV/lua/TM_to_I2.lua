@@ -47,10 +47,10 @@ local function TM_to_I2(
       buf = cmem.new(chunk_size * out_width)
       buf:stealable(true)
     end
-    local cst_buf = ffi.cast(cst_out_as, get_ptr(buf))
+    local cst_buf = get_ptr(buf, cst_out_as)
     local len, base_data = invec:get_chunk(l_chunk_num)
     if ( len > 0 ) then 
-      local in_ptr = ffi.cast(cst_in_as, get_ptr(base_data))
+      local in_ptr = get_ptr(base_data, cst_in_as)
       local status = qc[func_name](in_ptr, len, cst_buf)
       assert(status == 0)
       l_chunk_num = l_chunk_num + 1

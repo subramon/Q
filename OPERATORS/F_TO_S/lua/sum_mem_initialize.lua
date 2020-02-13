@@ -20,13 +20,13 @@ local function mem_initialize(subs)
   local cst_as = rec_type .. " *"
   local sz_c_mem = ffi.sizeof(rec_type)
   local c_mem = assert(cmem.new(sz_c_mem), "malloc failed")
-  local c_mem_ptr = ffi.cast(cst_as, get_ptr(c_mem))
+  local c_mem_ptr = get_ptr(c_mem, cst_as)
   c_mem_ptr.sum_val  = 0
   c_mem_ptr.num = 0
 
   --TODO: is it a right place for getter? check with Ramesh
   local getter = function (x)
-    local y = ffi.cast(cst_as, get_ptr(c_mem))
+    local y = get_ptr(c_mem, cst_as)
     local z = ffi.cast("void *", y[0].num);
     -- TODO P2 I do not like the fact that I cannot send
     -- &(x[0].num) to Scalar.new for second Scalar call

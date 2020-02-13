@@ -13,9 +13,10 @@
 
 #include "txt_to_I4.h"
 #include "isdir.h"
-#define MAIN_PGM
-#include "vec_globals.h"
-#undef MAIN_PGM
+
+VEC_GLOBALS_TYPE g_S;
+#include "_struct_timers.h"
+VEC_TIMERS_TYPE g_T;
 
 // Set globals in C in main program after creating Lua state
 // but before doing anything else
@@ -26,23 +27,31 @@ int luaopen_libvctr (lua_State *L);
 //----------------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_reset_timers( lua_State *L) {
-  g_reset_timers();
+  reset_timers(&g_T);
   lua_pushboolean(L, true);
   return 1;
 }
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_print_timers( lua_State *L) {
-  g_print_timers();
+  print_timers(&g_T);
   lua_pushboolean(L, true);
   return 1;
 }
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_check_chunks( lua_State *L) {
-  g_check_chunks(g_chunk_dir, g_sz_chunk_dir, g_n_chunk_dir);
-  lua_pushboolean(L, true);
-  return 1;
+  int status = check_chunks(&g_S); 
+  if ( status != 0 ) {
+    WHEREAMI;
+    lua_pushnil(L);
+    lua_pushstring(L, __func__);
+    return 2;
+  }
+  else {
+    lua_pushboolean(L, true);
+    return 1;
+  }
 }
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
@@ -59,8 +68,8 @@ static int l_vec_init_globals( lua_State *L) {
   else {
     called = true;
   }
-  if ( ( g_chunk_dir != NULL ) || ( g_q_data_dir[0] != '\0' ) ||
-       ( g_chunk_size > 0 ) ) {
+  if ( ( g_S.chunk_dir != NULL ) || ( g_S.q_data_dir[0] != '\0' ) ||
+       ( g_S.chunk_size > 0 ) ) {
     fprintf(stderr, "ERROR: globals have been initialized already\n");
     go_BYE(-1); 
   }
@@ -69,22 +78,22 @@ static int l_vec_init_globals( lua_State *L) {
   status = get_int_from_tbl(L, "sz_chunk_dir", &is_key, &itmp); 
   cBYE(status);
   if ( !is_key )  {
-    g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
+    g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
   }
   else {
     if ( itmp <= 8 ) { go_BYE(-1); }
-    g_sz_chunk_dir = itmp;
+    g_S.sz_chunk_dir = itmp;
   }
   //------------------- get chunk size 
   status = get_int_from_tbl(L, "chunk_size", &is_key, &itmp); 
   if ( !is_key ) { 
-    g_chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
   }
   else {
     if ( itmp < 1024 ) { go_BYE(-1); }
     // must be a multiple of 1024
     if ( ( ( itmp / 64 ) * 64 )  != itmp ) { go_BYE(-1); }
-    g_chunk_size = itmp;
+    g_S.chunk_size = itmp;
   }
   //------------------- get q_data_dir
   status = get_str_from_tbl(L, "data_dir", &is_key, &cptr);  cBYE(status);
@@ -94,9 +103,9 @@ static int l_vec_init_globals( lua_State *L) {
   }
   if ( !isdir(cptr) ) { go_BYE(-1); }
   if ( strlen(cptr) > Q_MAX_LEN_DIR ) { go_BYE(-1); }
-  strcpy(g_q_data_dir, cptr);
+  strcpy(g_S.q_data_dir, cptr);
   //-------------------
-  status = init_globals(); cBYE(status);
+  status = init_globals(&g_S, &g_T); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -107,37 +116,37 @@ BYE:
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_chunk_size( lua_State *L) {
-  if ( g_chunk_size == 0 ) {  
+  if ( g_S.chunk_size == 0 ) {  
     printf("Setting default values \n");
-    g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
-    g_chunk_size = Q_DEFAULT_CHUNK_SIZE;
-    memset(g_q_data_dir, '\0', Q_MAX_LEN_DIR+1);
-    snprintf(g_q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
-    if ( !isdir(g_q_data_dir) ) { 
+    g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
+    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    memset(g_S.q_data_dir, '\0', Q_MAX_LEN_DIR+1);
+    snprintf(g_S.q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
+    if ( !isdir(g_S.q_data_dir) ) { 
       lua_pushnil(L);
       lua_pushstring(L, __func__);
       return 2;
     }
   }
-  lua_pushnumber(L, g_chunk_size);
+  lua_pushnumber(L, g_S.chunk_size);
   return 1;
 }
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_data_dir( lua_State *L) {
-  if ( g_q_data_dir[0] == '\0' ) {  
+  if ( g_S.q_data_dir[0] == '\0' ) {  
     // set default values
-    g_sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
-    g_chunk_size = Q_DEFAULT_CHUNK_SIZE;
-    memset(g_q_data_dir, '\0', Q_MAX_LEN_DIR+1);
-    snprintf(g_q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
-    if ( !isdir(g_q_data_dir) ) { 
+    g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
+    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    memset(g_S.q_data_dir, '\0', Q_MAX_LEN_DIR+1);
+    snprintf(g_S.q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
+    if ( !isdir(g_S.q_data_dir) ) { 
       lua_pushnil(L);
       lua_pushstring(L, __func__);
       return 2;
     }
   }
-  lua_pushstring(L, g_q_data_dir);
+  lua_pushstring(L, g_S.q_data_dir);
   return 1;
 }
 //-----------------------------------
@@ -146,7 +155,7 @@ static int l_vec_shutdown( lua_State *L) {
   char *X = NULL;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vec_shutdown(ptr_vec, &X); 
+  status = vec_shutdown(&g_S, &g_T, ptr_vec, &X); 
   if ( status < 0 ) { free_if_non_null(X); } cBYE(status);
   lua_pushstring(L, X);
   free_if_non_null(X); 
@@ -202,7 +211,8 @@ static int l_vec_file_name( lua_State *L) {
   else {
     go_BYE(-1);
   }
-  status = vec_file_name(ptr_vec, chunk_number, file_name, Q_MAX_LEN_FILE_NAME); 
+  status = vec_file_name(&g_S, ptr_vec, chunk_number, file_name, 
+      Q_MAX_LEN_FILE_NAME); 
   cBYE(status);
   lua_pushstring(L, file_name);
   return 1;
@@ -220,7 +230,7 @@ static int l_vec_me( lua_State *L) {
   lua_newtable(L);
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
     int chunk_dir_idx = ptr_vec->chunks[i];
-    CHUNK_REC_TYPE *ptr_chunk = g_chunk_dir + chunk_dir_idx;
+    CHUNK_REC_TYPE *ptr_chunk = g_S.chunk_dir + chunk_dir_idx;
     lua_pushnumber(L, i+1);
     lua_pushlightuserdata(L, ptr_chunk);
     lua_settable(L, -3);
@@ -246,7 +256,7 @@ BYE:
 static int l_vec_kill( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_kill(ptr_vec); cBYE(status);
+  int status = vec_kill(&g_S, &g_T, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -381,7 +391,7 @@ static int l_vec_get1( lua_State *L) {
   int64_t idx = luaL_checknumber(L, 2);
   char *data = NULL; int width = ptr_vec->field_width;
 
-  status = vec_get1(ptr_vec, idx, &data); cBYE(status);
+  status = vec_get1(&g_S, &g_T, ptr_vec, idx, &data); cBYE(status);
 
   if ( strcmp(ptr_vec->fldtype, "SC") == 0 ) { 
     // set up mechanics for return 
@@ -449,7 +459,8 @@ static int l_vec_start_read( lua_State *L)
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
   cmem_undef(ptr_cmem);
 
-  status = vec_start_read(ptr_vec, &data, &num_elements, ptr_cmem); 
+  status = vec_start_read(&g_S, &g_T, ptr_vec, &data, &num_elements, 
+      ptr_cmem); 
   cBYE(status);
   lua_pushinteger(L, num_elements);
   return 2;
@@ -467,7 +478,7 @@ static int l_vec_unget_chunk( lua_State *L)
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t chunk_num = luaL_checknumber(L, 2);
 
-  status = vec_unget_chunk(ptr_vec, chunk_num); cBYE(status);
+  status = vec_unget_chunk(&g_S, ptr_vec, chunk_num); cBYE(status);
   lua_pushboolean(L, 1);
   return 1;
 BYE:
@@ -494,7 +505,8 @@ static int l_vec_get_chunk( lua_State *L)
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
   cmem_undef(ptr_cmem);
 
-  status = vec_get_chunk(ptr_vec, chunk_num, ptr_cmem, &num_in_chunk);
+  status = vec_get_chunk(&g_S, &g_T, ptr_vec, chunk_num, ptr_cmem, 
+      &num_in_chunk);
   cBYE(status);
   lua_pushinteger(L, num_in_chunk);
   return 2;
@@ -519,7 +531,7 @@ static int l_vec_put1( lua_State *L) {
     }
     addr = (void *)(&ptr_sclr->cdata);
   }
-  status = vec_put1(ptr_vec, addr); cBYE(status);
+  status = vec_put1(&g_S, &g_T, ptr_vec, addr); cBYE(status);
   lua_pushinteger(L, status);
   return 1;
 BYE:
@@ -538,7 +550,7 @@ static int l_vec_start_write( lua_State *L) {
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
-  status = vec_start_write(ptr_vec, ptr_cmem); cBYE(status);
+  status = vec_start_write(&g_T, ptr_vec, ptr_cmem); cBYE(status);
   lua_pushinteger(L, ptr_vec->num_elements);
   return 2;
 BYE:
@@ -590,10 +602,10 @@ static int l_vec_put_chunk( lua_State *L) {
     num_in_cmem = luaL_checknumber(L, 3);
   }
   else {
-    num_in_cmem = g_chunk_size; 
+    num_in_cmem = g_S.chunk_size; 
   }
-  if ( num_in_cmem < 0 ) { num_in_cmem = g_chunk_size; }
-  status = vec_put_chunk(ptr_vec, ptr_cmem, num_in_cmem); cBYE(status);
+  if ( num_in_cmem < 0 ) { num_in_cmem = g_S.chunk_size; }
+  status = vec_put_chunk(&g_S, &g_T, ptr_vec, ptr_cmem, num_in_cmem); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -621,7 +633,7 @@ static int l_vec_meta( lua_State *L) {
 //----------------------------------------
 static int l_vec_backup( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_backup(ptr_vec); cBYE(status);
+  int status = vec_backup(&g_S, &g_T, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -632,7 +644,7 @@ BYE:
 //----------------------------------------
 static int l_vec_check( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_check(ptr_vec);
+  int status = vec_check(&g_S, &g_T, ptr_vec);
   if ( status == 0) { 
     lua_pushboolean(L, 1);
     return 1;
@@ -647,7 +659,7 @@ static int l_vec_check( lua_State *L) {
 static int l_vec_free( lua_State *L) {
   // printf("l_vec_free: Freeing vector\n");
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_free(ptr_vec); cBYE(status);
+  int status = vec_free(&g_S, &g_T, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -663,7 +675,7 @@ BYE:
 // (2) munmaps stuff that has been mmapped
 static int l_vec_delete( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_delete(ptr_vec); cBYE(status);
+  int status = vec_delete(&g_S, &g_T, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -679,7 +691,8 @@ static int l_vec_delete_chunk_file( lua_State *L) {
   if ( num_args == 2 ) { 
     chunk_num = lua_tonumber(L, 2);
   }
-  int status = vec_delete_chunk_file(ptr_vec, chunk_num); cBYE(status);
+  int status = vec_delete_chunk_file(&g_S, &g_T, ptr_vec, chunk_num); 
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -690,7 +703,7 @@ BYE:
 //----------------------------------------
 static int l_vec_delete_master_file( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_delete_master_file(ptr_vec); cBYE(status);
+  int status = vec_delete_master_file(&g_S, &g_T, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -727,7 +740,7 @@ static int l_vec_new( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vec_new(ptr_vec, qtype, field_width);
+  status = vec_new(&g_S, &g_T, ptr_vec, qtype, field_width);
   cBYE(status);
 
   return 1; 
@@ -768,7 +781,7 @@ static int l_vec_rehydrate( lua_State *L)
   //------------------
   status = get_int_from_tbl(L, "chunk_size", &is_key, &itmp); cBYE(status);
   if ( !is_key )  { go_BYE(-1); }
-  if ( itmp != g_chunk_size ) { go_BYE(-1); }
+  if ( itmp != g_S.chunk_size ) { go_BYE(-1); }
   //------------------
   status = get_str_from_tbl(L, "file_name", &is_key, &file_name);  
   cBYE(status);
@@ -777,7 +790,7 @@ static int l_vec_rehydrate( lua_State *L)
     if ( *file_name == '\0' ) { go_BYE(-1); }
   }
   else {
-    num_chunks = ceil((double)num_elements / (double)g_chunk_size);
+    num_chunks = ceil((double)num_elements / (double)g_S.chunk_size);
     if ( num_chunks == 1 ) { go_BYE(-1); }
     is_single = false;
     file_names = malloc(num_chunks * sizeof(char *));
@@ -796,11 +809,11 @@ static int l_vec_rehydrate( lua_State *L)
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
   if ( is_single ) { 
-    status = vec_rehydrate_single(ptr_vec, qtype, field_width, 
+    status = vec_rehydrate_single(&g_S, &g_T, ptr_vec, qtype, field_width, 
       num_elements, file_name);
   }
   else {
-    status = vec_rehydrate_multi(ptr_vec, qtype, field_width, 
+    status = vec_rehydrate_multi(&g_S, &g_T, ptr_vec, qtype, field_width, 
       num_elements, num_chunks, file_names);
   }
   cBYE(status);
@@ -827,7 +840,8 @@ static int l_vec_flush_chunk( lua_State *L)
   if ( num_args >= 3 ) {
     free_mem = lua_toboolean(L, 3); 
   }
-  status = vec_flush_chunk(ptr_vec, free_mem, chunk_idx); cBYE(status);
+  status = vec_flush_chunk(&g_S, &g_T, ptr_vec, free_mem, chunk_idx); 
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1; 
 BYE:
@@ -841,7 +855,7 @@ static int l_vec_flush_all( lua_State *L)
   int num_args = lua_gettop(L);
   if ( num_args < 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vec_flush_all(ptr_vec); cBYE(status);
+  status = vec_flush_all(&g_S, &g_T, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1; 
 BYE:

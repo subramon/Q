@@ -31,6 +31,7 @@ extern int ${fn}(
   int status = 0;
   uint32_t hash = murmurhash3(&key, sizeof(${ckeytype}), ptr_hmap->hashkey);
   *ptr_is_found = false;
+  *ptr_cnt = 0;
   register uint64_t num_probes = 0;
 
   /*

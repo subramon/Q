@@ -11,8 +11,8 @@ all: libvctr.so
 	cp libvctr.so ${Q_ROOT}/lib/
 	echo "done"
 
-_define_timers.h : timers.lua
-	lua timers.lua "define" > _define_timers.h
+../inc/_struct_timers.h : timers.lua
+	lua timers.lua "struct" > ../inc/_struct_timers.h
 
 _reset_timers.c : timers.lua
 	lua timers.lua "reset" > _reset_timers.c
@@ -30,11 +30,11 @@ clean:
 	make -C ../../OPERATORS/PRINT/lua/
 
 vector.o : vector.c ../inc/core_vec_struct.h \
-  	_define_timers.h _reset_timers.c _print_timers.c 
+  	../inc/_struct_timers.h 
 	gcc -c $(INCS) ${QC_FLAGS} vector.c -o vector.o
 
 core_vec.o : core_vec.c ../inc/core_vec_struct.h ../inc/core_vec.h \
-  	_define_timers.h _reset_timers.c _print_timers.c 
+  	../inc/_struct_timers.h _reset_timers.c _print_timers.c 
 	gcc -c $(INCS) ${QC_FLAGS} core_vec.c -o core_vec.o
 
 aux_core_vec.o : aux_core_vec.c ../inc/core_vec_struct.h ../inc/aux_core_vec.h

@@ -446,6 +446,7 @@ end
 
 function lVector:unget_chunk(chunk_num)
   local s1, s2
+  print("Ungetting ")
   s1 = assert(cVector.unget_chunk(self._base_vec, chunk_num))
   if ( self._nn_vec ) then 
     s2 = assert(cVector.unget_chunk(self._nn_vec, chunk_num))
@@ -575,7 +576,7 @@ function lVector:qtype()
 end
 
 function lVector:width()
-  return lVector:field_width()
+  return H.extract_field(self._base_vec, self._nn_vec, "field_width", "number")
 end
 --====================
 

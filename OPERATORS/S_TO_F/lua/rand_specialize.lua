@@ -31,7 +31,7 @@ return function (
   local args_ctype = "RAND_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(args_ctype)
   local cargs = cmem.new({size = sz}); 
-  local args = ffi.cast(args_ctype .. " *", get_ptr(cargs))
+  local args = get_ptr(cargs, args_ctype .. " *")
 
   -- set seed
   local seed

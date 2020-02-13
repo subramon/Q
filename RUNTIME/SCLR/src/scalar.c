@@ -209,7 +209,7 @@ static int l_sclr_to_str( lua_State *L) {
     nw = snprintf(buf, BUFLEN, "%" PRId64, ptr_sclr->cdata.valI8);
   }
   else if ( strcmp(field_type, "F4" ) == 0 ) { 
-    nw = snprintf(buf, BUFLEN, "%e", ptr_sclr->cdata.valF4);
+    nw = snprintf(buf, BUFLEN, "%f", ptr_sclr->cdata.valF4);
   }
   else if ( strcmp(field_type, "F8" ) == 0 ) { 
     nw = snprintf(buf, BUFLEN, "%e", ptr_sclr->cdata.valF8);

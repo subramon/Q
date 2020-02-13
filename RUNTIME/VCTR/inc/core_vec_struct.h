@@ -59,4 +59,12 @@ typedef struct _vec_rec_type {
   // i <= j and chunk[i] == 0 => chunk[j] = 0
 } VEC_REC_TYPE;
 
+typedef struct _vec_globals_type { 
+  uint32_t chunk_size;
+  CHUNK_REC_TYPE *chunk_dir;  // [g_sz_chunk_dir]
+  uint32_t sz_chunk_dir; 
+  uint32_t n_chunk_dir;  // 0 <= g_n_chunk_dir <= g_sz_chunk_dir
+  char q_data_dir[Q_MAX_LEN_DIR];
+} VEC_GLOBALS_TYPE;
+
 #endif

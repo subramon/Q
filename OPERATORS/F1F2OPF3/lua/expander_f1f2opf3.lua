@@ -55,9 +55,9 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
     local f3_cast_as = subs.out_ctype .. "*"
     assert(f1_len == f2_len)
     if f1_len > 0 then
-      local chunk1 = ffi.cast(f1_cast_as,  get_ptr(f1_chunk))
-      local chunk2 = ffi.cast(f2_cast_as,  get_ptr(f2_chunk))
-      local chunk3 = ffi.cast(f3_cast_as,  get_ptr(buf))
+      local chunk1 = get_ptr(f1_chunk, f1_cast_as)
+      local chunk2 = get_ptr(f2_chunk, f2_cast_as)
+      local chunk3 = get_ptr(f3_chunk, f3_cast_as)
       local start_time = qc.RDTSC()
       qc[func_name](chunk1, chunk2, f1_len, chunk3)
       record_time(start_time, func_name)

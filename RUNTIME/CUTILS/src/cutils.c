@@ -228,8 +228,13 @@ static int l_cutils_delete(
   if ( ( file_name == NULL ) || ( *file_name == '\0' ) )  {
     WHEREAMI; goto BYE;
   }
+  bool exists = isfile(file_name);
+  if ( !exists ) { lua_pushboolean(L, true); return 1; }
+  //---------------
   int status = remove(file_name);
-  if ( status != 0 ) { WHEREAMI; goto BYE; }
+  if ( status != 0 ) { 
+    fprintf(stderr, "Could not delete %s \n", file_name); 
+    WHEREAMI; goto BYE; }
   lua_pushboolean(L, true);
   return 1;
 BYE:

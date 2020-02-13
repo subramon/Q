@@ -53,7 +53,7 @@ return function (a, x)
     local offset = l_chunk_num * chunk_size
     local x_len, x_chunk, nn_x_chunk = x:get_chunk(l_chunk_num)
     if ( ( not x_len ) or ( x_len == 0 ) ) then return nil end 
-    local inx = ffi.cast(cast_x_as, get_ptr(x_chunk))
+    local inx = get_ptr(x_chunk, cast_x_as)
     local start_time = qc.RDTSC()
     qc[func_name](inx, x_len, reduce_struct, offset)
     record_time(start_time, func_name)
