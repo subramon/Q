@@ -118,7 +118,7 @@ status: takes values -1 or 0
   int b = aqrt->b;
   uint64_t k = aqrt->k; 
   
-  int NUM_THREADS; 
+  int NUM_THREADS = sysconf(_SC_NPROCESSORS_ONLN);
   /* explained in the next section, mainly to allow parallelizable computations to be done in parallel */
 
    if (*ptr_estimate_is_good == 1) {

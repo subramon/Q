@@ -28,5 +28,6 @@ main()
   }
 
 BYE:
+  free_if_non_null(Y);
   return status;
 }

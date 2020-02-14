@@ -35,6 +35,7 @@ BYE:
   return status;
 }
 
+#ifdef STAND_ALONE
 int main() {
   int status = 0;
   int size = 10;
@@ -42,10 +43,10 @@ int main() {
   uint64_t *num_in_out, *aidx;
 
   // Allocate memory for in_buf & out_buf
-  in_buf = malloc(size * sizeof("int32_t"));
-  out_buf = malloc(size * sizeof("int32_t"));
-  num_in_out = malloc(sizeof("uint64_t"));
-  aidx = malloc(sizeof("uint64_t"));
+  in_buf = malloc(size * sizeof(int32_t));
+  out_buf = malloc(size * sizeof(int32_t));
+  num_in_out = malloc(sizeof(uint64_t));
+  aidx = malloc(sizeof(uint64_t));
   aidx[0] = 0;
   
   // Initialize in_buf
@@ -68,5 +69,11 @@ int main() {
   for ( int i = 0; i < *num_in_out; i++ ) {
     printf("%d\n", out_buf[i]);
   }
+BYE:
+  free_if_non_null(in_buf);
+  free_if_non_null(out_buf);
+  free_if_non_null(num_in_out);
+  free_if_non_null(aidx);
   return status;
 }
+#endif

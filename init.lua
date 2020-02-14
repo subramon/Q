@@ -35,7 +35,6 @@ require "Q/OPERATORS/IDX_SORT/lua/idx_sort"
 require "Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez"
 require 'Q/OPERATORS/INDEX/lua/indexing'
 
-require 'Q/OPERATORS/JOIN/lua/join'
 
 require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"

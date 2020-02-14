@@ -40,6 +40,8 @@ main(void)
   fprintf(stdout, "fastdiv = %" PRIu64 "\n", (t1 - t0));
   fprintf(stdout, "regular = %" PRIu64 "\n", (t2 - t1));
 BYE:
+  free_if_non_null(in);
+  free_if_non_null(out);
   return status;
 }
 

@@ -1,14 +1,9 @@
 Verify that extra bits are zeroed out for vveq and vseq and so on
 
-Should be able to compare a Lua number with a scalar
-
 Delete get_hdr.lua -- used in MDB
 
-Replace lVector with new_lVector once all tests pass
-
 ======================================
-For all vec_start_read, need to do a vec_end_read
-
+For following: all vec_start_read, need to do a vec_end_read
 AINB/lua/get_idx_by_val.lua:  local f2_len, f2_ptr = y:get_all()
 AINB/lua/expander_ainb.lua:  local blen, bptr, nn_bptr = b:get_all()
 APPROX/FREQUENT/test/test_approx_frequent.lua:  local _, y_c, _ = y:get_all()
