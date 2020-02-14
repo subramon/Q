@@ -1,7 +1,0 @@
-{
-  "OP" : [ "UnConcat" ],
-  "UnConcat" : {
-    "F1Type" : [ "I8" ],
-    "I8" : { "F2Type" : "I4", "F3Type" : "I8" }
-  }
-}

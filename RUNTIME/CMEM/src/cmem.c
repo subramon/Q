@@ -482,7 +482,7 @@ static int l_cmem_free( lua_State *L)
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
   if ( ptr_cmem->data == NULL ) { 
     // explicit free will cause control to come here
-    bool ok1, ok2;
+    bool ok1 = false, ok2 = false;
     if ( ( ptr_cmem->size == 0 ) &&
          ( *ptr_cmem->fldtype == '\0' ) &&
          ( *ptr_cmem->cell_name == '\0' ) ) {

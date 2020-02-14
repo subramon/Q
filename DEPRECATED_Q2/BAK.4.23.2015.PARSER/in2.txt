@@ -1,1 +1,0 @@
-add_tbl table_name 1000
