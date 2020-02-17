@@ -1,18 +1,19 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/f1opf2.tmpl"
+local is_in   = require 'Q/UTILS/lua/is_in'
+local tmpl    = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/f1opf2.tmpl"
+local ok_qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
 return function (
   in_qtype
   )
-  assert(is_base_qtype(in_qtype), "Valid only for base qtypes")
-  --preamble
+  assert(is_in(in_qtype, ok_qtypes))
+  --preamble -- DO NOT DELETE THIS LINE!! Needed in Makefile 
   local subs = {}; 
-  subs.fn = "<<operator>>_" .. in_qtype 
-  subs.in_ctype = qconsts.qtypes[in_qtype].ctype
-  subs.c_code_for_operator = "<<c_code_for_operator>>"
-  subs.in_qtype = in_qtype
+  subs.fn        = "<<operator>>_" .. in_qtype 
+  subs.in_ctype  = qconsts.qtypes[in_qtype].ctype
+  subs.in_qtype  = in_qtype
   subs.out_qtype = <<out_qtype>>
   subs.out_ctype = qconsts.qtypes[subs.out_qtype].ctype
-  subs.tmpl = tmpl
+  subs.tmpl      = tmpl
+  subs.c_code_for_operator = "<<c_code_for_operator>>"
   return subs
 end

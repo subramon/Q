@@ -144,13 +144,3 @@ y = string.gsub(y, "<<c_code_for_operator>>",
 y = string.gsub(y, "<<out_qtype>>", '"F8"')
 plfile.write("logit2_specialize.lua", y)
 --=======================
-local tbl = 'local funcs = {I1 = "abs", I2 = "abs", I4 = "abs", I8 = "abs", F4 = "fabsf", F8 = "fabs"}\n'
-local tbl2 = 'local cast = {I1 = "(int8_t)", I2 = "(int16_t)", I4 = "(int32_t)", I8 = "(int64_t)", F4 = "", F8 = ""}\n'
-local z = x
-local w = "\n" .. tbl .. tbl2
-y = string.gsub(z, "--preamble", w)
-y = string.gsub(y, "<<operator>>", "abs")
-y = string.gsub(y, "<<c_code_for_operator>>", "c = ".. '".. cast[in_qtype] .. funcs[in_qtype] .."'.."(a);")
-y = string.gsub(y, "<<out_qtype>>", "in_qtype")
-plfile.write("abs_specialize.lua", y)
---=======================

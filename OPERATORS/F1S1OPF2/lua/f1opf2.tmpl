@@ -1,17 +1,12 @@
 return require 'Q/UTILS/lua/code_gen' {
-
    declaration = [[
-
 #include "q_incs.h"
-
 extern int
 ${fn}(  
-      const ${in_ctype} * restrict in,  
-      uint64_t *nn_in,
+      const ${in_ctype} * const in,  
       uint64_t nR,
-      void *dummy,
-      ${out_ctype} * out,
-      uint64_t *nn_out
+      void *unused,
+      ${out_ctype} * restrict out
       ) 
 ;
 
@@ -32,12 +27,10 @@ static inline void __operation(
 
 int
 ${fn}(  
-      const ${in_ctype} * restrict in,
-      uint64_t *nn_in,
+      const ${in_ctype} * const in,
       uint64_t nR,  
-      void *dummy,
-      ${out_ctype} * out,
-      uint64_t *nn_out
+      void *unused,
+      ${out_ctype} * restrict out
       )
 
 {

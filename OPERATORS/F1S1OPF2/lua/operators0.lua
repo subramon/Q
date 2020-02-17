@@ -1,12 +1,11 @@
 return { 
-  "exp", 
-  "sqrt",
-  "log", 
-  "incr", 
   "decr", 
+  "exp", 
+  "incr", 
+  "log", 
   "logit", 
   "logit2",
   "reciprocal",
-  "abs",
   "sqr",
+  "sqrt",
 }
