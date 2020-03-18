@@ -48,7 +48,6 @@ clean:
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1OPF2F3/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2_VAL/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/GET/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/GETK/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/GROUPBY/lua clean
@@ -56,7 +55,6 @@ clean:
 	make -C ${Q_SRC_ROOT}/OPERATORS/IDX_SORT/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/IFXTHENYELSEZ/lua/ clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/INDEX/lua clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/JOIN/lua clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/LOAD_CSV/lua/ clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/MDB/lua/ clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/MM/lua/ clean
@@ -165,10 +163,6 @@ _f1s1opf2: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua ${BUILD_TYPE}
 	touch _f1s1opf2
 
-_f1s1opf2_val: _q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2_VAL/lua ${BUILD_TYPE}
-	touch _f1s1opf2_val
-
 _get: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/GET/lua ${BUILD_TYPE}
 	touch _get
@@ -188,10 +182,6 @@ _index: _q_basic
 _ifxthenyelsez: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/IFXTHENYELSEZ/lua/ ${BUILD_TYPE}
 	touch _ifxthenyelsez
-
-_join: _q_basic
-	make  -C ${Q_SRC_ROOT}/OPERATORS/JOIN/lua/ ${BUILD_TYPE}
-	touch _join
 
 _idx_sort: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/IDX_SORT/lua ${BUILD_TYPE}

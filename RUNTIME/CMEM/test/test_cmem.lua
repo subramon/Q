@@ -70,14 +70,14 @@ tests.t3 = function()
   -- setting data using ffi and verifying using to_str()
   local buf = cmem.new( {size = ffi.sizeof("int32_t"), qtype = "I4"})
   local cbuf = ffi.cast("CMEM_REC_TYPE *", buf)
-  ffi.C.strncpy(cbuf[0].fldtype, "I4", 2)
+  ffi.C.strncpy(cbuf[0].qtype, "I4", 2)
   ffi.C.strncpy(cbuf[0].cell_name, "some bogus name", 15)
   local iptr = assert(get_ptr(buf, "I4"))
   iptr[0] = 123456789;
   assert(type(buf) == "CMEM")
   local y = buf:to_str("I4")
   assert(y == "123456789")
-  assert(buf:fldtype() == "I4")
+  assert(buf:qtype() == "I4")
   assert(buf:name() == "some bogus name")
   print("test 3 passed")
 end
@@ -88,7 +88,7 @@ tests.t4 = function()
   buf:set(123456789)
   local y = buf:to_str("I4")
   assert(y == "123456789")
-  assert(buf:fldtype() == "I4")
+  assert(buf:qtype() == "I4")
   print("test t4 passed")
 end
 
@@ -121,7 +121,7 @@ tests.t6 = function()
   local name = "some bogus name"
   local c1 = assert(cmem.new({ size = size, qtype = qtype, name = name}))
   assert(c1:size() == size)
-  assert(c1:fldtype() == qtype)
+  assert(c1:qtype() == qtype)
   assert(c1:name() == name)
   assert(c1:is_foreign() == false)
   print("test t6 passed")
@@ -278,7 +278,7 @@ tests.t15 = function()
   assert(x.size == size)
   assert(x.cell_name == "hello world")
   -- assert(x.is_stealable ==false)TODO Why is this failing?
-  assert(x.fldtype == qtype)
+  assert(x.qtype == qtype)
   print("test t15 passed")
 end
 tests.t16 = function()
@@ -303,6 +303,7 @@ tests.t16 = function()
 
   print("test t16 passed")
 end
-return tests
+tests.t3()
+-- return tests
 -- tests.t13()
 -- tests.t16()

@@ -8,29 +8,18 @@
 #include <math.h>
 typedef struct _approx_unique_state_t {
   int m;
-  char *buffer; // malloc n_buffer * sizeof_key
-  int sizeof_key;
-  int n_buffer; 
-  int *max_rho ;
+  int *max_rho ; // [m] 
   uint64_t seed;
 } approx_unique_state_t;
 
 extern int 
 approx_unique_make(
     approx_unique_state_t *ptr_state,
-    int m,
-    int n_buffer,
-    int sizeof_key
+    int m
     );
 extern int 
 approx_unique_free(
     approx_unique_state_t *ptr_state
-    );
-extern int 
-approx_unique_add(
-    approx_unique_state_t *ptr_state,
-    char *x,
-    int sz_x
     );
 extern int 
 approx_unique_exec(

@@ -4,7 +4,7 @@
 #include "rdtsc.h"
 #include "approx_unique.h"
 
-static int 
+static inline int 
 determine_rho_loc(
     uint64_t hash_val,
     int m,
@@ -44,7 +44,7 @@ ptr_loc: Location where the loc value is stored. If m bins are used, this value 
 
   /* First 20 bits of hashval's binary representation are used to calculate loc. */
 
-  unsigned int uint_hash_val = (unsigned int) (hash_val >> (64-20));
+  uint32_t uint_hash_val = (uint32_t) (hash_val >> (64-20));
   int loc = (int) (uint_hash_val & (m-1));
 
   /* Sanity checking: A rho value of greater than (64 - 20) would imply one of the two things:
@@ -61,12 +61,11 @@ ptr_loc: Location where the loc value is stored. If m bins are used, this value 
 BYE:
   return (status);
 }
+
 int 
 approx_unique_make(
     approx_unique_state_t *ptr_state,
-    int m,
-    int n_buffer,
-    int sizeof_key
+    int m
     )
 {
   int status = 0;
@@ -82,13 +81,6 @@ approx_unique_make(
   memset(ptr_state->max_rho, 0, m * sizeof(int) );
   ptr_state->seed = RDTSC();
 
-  if ( n_buffer <  0 ) { go_BYE(-1); }
-  if ( n_buffer == 0 ) { n_buffer = 65536;      }
-  if ( sizeof_key <= 0 ) { go_BYE(-1); }
-
-  ptr_state->buffer = malloc(n_buffer * sizeof_key);
-  return_if_malloc_failed(ptr_state->buffer);
-  memset(ptr_state->buffer, 0, n_buffer * sizeof_key);
 BYE:
   return status;
 }
@@ -138,6 +130,31 @@ approx_unique_exec(
     max_rho[loc] = rho;
   }
 
+BYE:
+  return status;
+}
+
+int 
+approx_unique_final(
+    approx_unique_state_t *ptr_state,
+    int *ptr_estimate,
+    double *ptr_accuracy,
+    int *ptr_estimate_is_good 
+    )
+{
+  int status = 0;
+  int *max_rho = ptr_state->max_rho;
+  int m        = ptr_state->m;
+
+  /* Check inputs */
+  if ( ptr_estimate == NULL ) { go_BYE(-1); }
+  if ( ptr_accuracy == NULL ) { go_BYE(-1); }
+  if ( ptr_estimate_is_good == NULL ) { go_BYE(-1); }
+  *ptr_estimate = -1;
+  *ptr_accuracy = 100;
+  *ptr_estimate_is_good = -1; /* default */
+
+
   /* If some max_rho's are zero, it means that all bins were not used sufficiently and hence stochastic averaging (law of large numbers, assumed by hyperloglog) was not done properly (due to using too many bins for too few data). In such a situation, bins will be merged here. */
 
   /* Bin merging rule (change only if you know what you are doing):
@@ -171,35 +188,6 @@ approx_unique_exec(
       if ( max_rho[ii] == 0 ) { cnt_zero++; }
     }
 
-  }
-BYE:
-  return status;
-}
-
-int 
-approx_unique_final(
-    approx_unique_state_t *ptr_state,
-    int *ptr_estimate,
-    double *ptr_accuracy,
-    int *ptr_estimate_is_good 
-    )
-{
-  int status = 0;
-  int cnt_zero = 0;
-  int *max_rho = ptr_state->max_rho;
-  int m        = ptr_state->m;
-
-  /* Check inputs */
-  if ( ptr_estimate == NULL ) { go_BYE(-1); }
-  if ( ptr_accuracy == NULL ) { go_BYE(-1); }
-  if ( ptr_estimate_is_good == NULL ) { go_BYE(-1); }
-  *ptr_estimate = -1;
-  *ptr_accuracy = 100;
-  *ptr_estimate_is_good = -1; /* default */
-
-  
-  for ( int ii = 0; ii < m; ii++ ) { 
-    if ( max_rho[ii] == 0 ) { cnt_zero++; }
   }
   if ( cnt_zero < m/100 ) {
     *ptr_estimate_is_good = 1;

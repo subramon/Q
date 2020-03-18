@@ -14,20 +14,42 @@ main(
 
   int status = 0;
   approx_unique_state_t state;
-  int sizeof_key = sizeof(int);
   double accuracy; int estimate; int is_good;
-  /* Case 1: All unique values */
   int n = 1048576;
-  status = approx_unique_make(&state, 0, 0, sizeof_key); cBYE(status);
-  for ( int i = 0; i < n; i++ ) { 
-    status = approx_unique_add(&state, (char *)&i); cBYE(status);
-    if ( ( i % 1024 ) == 0 ) {  printf("i = %d \n", i); }
+  int niters = 2;
+  int val;
+  for ( int iter = 0; iter < niters; iter++ ) { 
+  status = approx_unique_make(&state, 0); cBYE(status);
+  switch ( iter ) { 
+    case 0 : /* all distinct values */
+      val = 0;
+      for ( int i = 0; i < n; i++ ) { 
+        status = approx_unique_exec(&state, (char *)&val, sizeof(int)); 
+        cBYE(status);
+        val++;
+      }
+      break;
+    case 1 : 
+      //-- Case 2: half are unique values */
+      val = 0;
+      for ( int i = 0; i < n; i++ ) { 
+        status = approx_unique_exec(&state, (char *)&val, sizeof(int)); 
+        cBYE(status);
+        val++;
+        if ( val == n/2 ) { val = 0; }
+      }
+      break;
+    default : 
+      go_BYE(-1);
+      break;
   }
+
   status = approx_unique_final(&state, &estimate, &accuracy, &is_good);
   printf("estimate = %d \n", estimate);
   printf("accuracy = %f \n", accuracy);
   printf("is_good  = %d \n", is_good);
   status = approx_unique_free(&state); cBYE(status);
+  }
 BYE:
   return status;
 }
