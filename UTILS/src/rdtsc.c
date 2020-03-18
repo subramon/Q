@@ -1,15 +1,11 @@
-//START_INCLUDES
 #include "q_incs.h"
-#include "_get_time_usec.h"
-//STOP_INCLUDES
-#include "_rdtsc.h"
+#include "get_time_usec.h"
+#include "rdtsc.h"
 
-//START_FUNC_DECL
 uint64_t
 RDTSC(
     void
     )
-//STOP_FUNC_DECL  
 {
 #ifdef RASPBERRY_PI
   return get_time_usec();
