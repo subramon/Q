@@ -20,5 +20,8 @@ testSpookyHash: $(SRCOBJS) bin/testSpookyHash.o
 	$(CC) $(SRCOBJS) bin/testSpookyHash.o \
 	-o testSpookyHash.exe -lm
 
+test_unique : test_approx_unique
+	./test_approx_unique
+
 clean:
 	rm -f *.o test_approx_unique
