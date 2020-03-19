@@ -22,10 +22,6 @@
 #include "Collapse.h"
 #include "Output.h"
 
-#ifdef IPP
-#include "ipp.h"
-#include "ippi.h"
-#endif
 
 #define MAX_SZ 200*1048576
 /* Will not use more than (4*200) MB of RAM, can change if you want */
@@ -34,7 +30,6 @@
 int 
 approx_quantile(
 		int * x,
-		char * cfld,
 		long long siz,
 		long long num_quantiles,
 		double eps,
@@ -46,7 +41,7 @@ approx_quantile(
 //----------------------------------------------------------------------------
 /* README:
 
-status = approx_quantile(x,cfld, siz,num_quantiles,eps,y,y_siz,ptr_estimate_is_good): Calculates the approximate quantiles of an integer set using very little memory. 
+status = approx_quantile(x, siz,num_quantiles,eps,y,y_siz,ptr_estimate_is_good): Calculates the approximate quantiles of an integer set using very little memory. 
 
 For example: If you request for 10 quantiles with eps of 0.001: {10%, 20%,...90%, 100% } quantiles will be answered with an error of +/0.1% i.e., 10% quantile will be definitely between 9.9% and 10.1%, 90% quantile will definitely be between 89.9% and 90.1%.
 
@@ -57,9 +52,6 @@ Algorithm: Munro-Patterson Algorithm by G.S.Manku ("Approximate Medians and othe
 INPUTS: 
 
 x: Array containing the input data to be processed.
-
-cfld: two options - (1) NULL: All elements of x are processed.
-(2) non-NULL: Array of same size as x. Acts as a select vector (only those elements with non-zero values in cfld are processed). ex: If x has 10 elements and cfld is {0,0,1,0,0,0,1,0,1,0}, then only the 3rd, 7th and 9th element are chosen for processing.
 
 siz: Number of elements in the input array x. 
 
@@ -103,20 +95,8 @@ status: takes values -1 or 0
   if ( siz <= 0 ) { go_BYE(-1); }
   if ( y_siz < num_quantiles ) { go_BYE(-1); } /* insufficient memory to write output */
 
-  long long eff_siz = 0; /* number of entries to be considered */
-  if ( cfld == NULL ) { eff_siz = siz; }
-  else {
-
-    for ( long long ii = 0; ii < siz; ii++ ) {
-      if ( cfld[ii] == 0 ) { continue; }
-      eff_siz++;
-    }
-
-    if ( eff_siz == 0 ) { go_BYE(-1); } /* cfld has all 0 entries */
-
-  }
-
-  //-------------------------------------------------------------------------
+  long long eff_siz = siz; /* number of entries to be considered */
+  //----------------------------------------------------------------------
 
   /* "buffer" is a 2d array containing b buffers, each of size k. Each of these b buffers have a weight assigned to them, which will be stored in "weight" array of size b. Consider the following way of viewing the 2d buffer array: each element in a buffer "effectively" occurs as many times as it's corresponding weight in the weight array. The algorithm  compresses the whole input data into these buffers by using "approximate" entries instead of actual entries so that the total number of distinct entries comes down significantly (uses a total memory of ~ b*k, which is typically << eff_siz, the price paid being approximation). This approximation is done intelligently so that very good and useful theoretical quantile guarantees can be provided */
 
@@ -126,7 +106,6 @@ status: takes values -1 or 0
   status = determine_b_k(eps, eff_siz, &b, &k);  cBYE(status);
   /* estimates b and k for the given eps and eff_siz */
   
-  int NUM_THREADS; 
   /* explained in the next section, mainly to allow parallelizable computations to be done in parallel */
 
   if ( b <= 0 || k <= 0 ) {
@@ -145,11 +124,6 @@ status: takes values -1 or 0
   } 
   else {
     *ptr_estimate_is_good = 1;
-
-    NUM_THREADS = 128;
-    while ( (b+NUM_THREADS+10)*k > MAX_SZ ) { NUM_THREADS = NUM_THREADS/2; }
-    /* adapting NUM_THREADS to meet memory requirements */
-    
   }
 
   int **buffer = NULL;         
@@ -164,27 +138,16 @@ status: takes values -1 or 0
 
   weight      = malloc( b * sizeof(int) ); 
   return_if_malloc_failed(weight);
-#ifdef IPP
-  ippsZero_32s((int *)weight,b);
-#else
-  assign_const_I4(weight,b,0);
-#endif
+  memset(weight, 0, b * sizeof(int) ); 
 
   for ( int ii = 0; ii < b; ii++ ) {
     buffer[ii] = (int *) malloc( k * sizeof(int) );
+    return_if_malloc_failed(buffer[ii]);
+    memset(buffer[i], 0, k * sizeof(int) );
   }
 
   flag = 2; /* buffer[ii] defined for ii = 0 to b-1 */
   
-  for ( int ii = 0; ii < b; ii++ ) {
-    return_if_malloc_failed(buffer[ii]);
-#ifdef IPP
-    ippsZero_32s((int *)buffer[ii], k);
-#else
-    assign_const_I4(buffer[ii], k, 0); 
-#endif
-
-  } 
 
   //--------------------------------------------------------------------------
 
@@ -248,7 +211,7 @@ status: takes values -1 or 0
     */
 
     if ( cfld == NULL || eff_siz == siz ) {
-      //---------------------------------------------------------------------
+      //--------------------------------------------------------
       /* considering all input data */
 
       for ( long long ii = 0; ii < NUM_THREADS; ii++) {
@@ -288,43 +251,6 @@ status: takes values -1 or 0
       }
       current_loc_in_x += lastPacketUsedSiz;
       //---------------------------------------------------------------------
-    }
-
-    else {
-      //--------------------------------------------------------------------
-      /* NOTE: if cfld input is non-null, it means we are not interested in all the elements. In every iteration, we keep filling inputPackets buffer with only those data we are interested in using the helper variable "current_loc_in_x". */
-      
-      int tid = 0;
-      for ( long long ii = 0; ii < NUM_THREADS; ii++ ) {
-	inputPacketsUsedSiz[ii] = 0;
-      }
-      
-      while ( current_loc_in_x < siz  && tid < NUM_THREADS ) {
-
-	if ( cfld[current_loc_in_x] == 0 ) { current_loc_in_x++; }
-	else {
-	  inputPackets[tid][inputPacketsUsedSiz[tid]]=x[current_loc_in_x];
-	  current_loc_in_x++; inputPacketsUsedSiz[tid]++;
-	  if ( inputPacketsUsedSiz[tid] == k ) { tid++; }
-	}
-
-      }
-
-      if ( current_loc_in_x == siz ) {
-	
-	for ( int ii = 0; ii <= NUM_THREADS; ii++ ) {
-	  if ( inputPacketsUsedSiz[tid]!=0 && inputPacketsUsedSiz[tid]!=k ) { 
-	    last_packet_incomplete = 1; 
-	    memcpy(lastPacket, inputPackets[tid], inputPacketsUsedSiz[tid]*sizeof(int));
-	    lastPacketUsedSiz = inputPacketsUsedSiz[tid];
-	    inputPacketsUsedSiz[tid] = 0;
-	    break; 
-	  }
-	}
-
-      }
-
-      //--------------------------------------------------------------------
     }
 
     /* Step (1) done here in parallel using cilkfor */
@@ -415,30 +341,16 @@ status: takes values -1 or 0
   //--------------------------------------------------------------------------
 
  BYE:
-  
-  if ( flag >= 4 ) {
-    for ( int ii = 0; ii < NUM_THREADS; ii++ ) {
-      free_if_non_null(inputPackets[ii]);
-    }
-  }
+  free_if_non_null(inputPackets);
+  free_if_non_null(lastPacket);
+  free_if_non_null(inputPacketsUsedSiz);
 
-  if ( flag >= 3 ) {
-    free_if_non_null(inputPackets);
-    free_if_non_null(lastPacket);
-    free_if_non_null(inputPacketsUsedSiz);
-  }
-
-  if ( flag >= 2 ) {    
+  if ( buffer != NULL ) { 
     for ( int ii = 0; ii < b; ii++ ) {
       free_if_non_null(buffer[ii]);
     }
   }
-
-  if ( flag >= 1) {
-    free_if_non_null(buffer);
-    free_if_non_null(weight);
-  }
- 
-  return(status);
-
+  free_if_non_null(buffer);
+  free_if_non_null(weight);
+  return status;
 }
