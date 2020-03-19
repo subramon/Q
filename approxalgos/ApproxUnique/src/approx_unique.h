@@ -6,12 +6,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <math.h>
-typedef struct _approx_unique_state_t {
-  int m;
-  int *max_rho ; // [m] 
-  uint64_t seed;
-} approx_unique_state_t;
-
+#include "approx_unique_struct.h"
 extern int 
 approx_unique_make(
     approx_unique_state_t *ptr_state,
@@ -31,7 +26,7 @@ extern int
 approx_unique_final(
     approx_unique_state_t *ptr_state,
     int *ptr_estimate,
-    double *ptr_estimate_accuracy_percent,
+    double *ptr_accuracy,
     int *ptr_estimate_is_good 
     );
 #endif
