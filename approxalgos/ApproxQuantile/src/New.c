@@ -10,13 +10,13 @@
 
 // START FUNC DECL
 int New(
-	int *src_buf, 
-	int *dst_buf,  
+	double *src_buf, 
+	double *dst_buf,  
 	int *ptr_weight,  
 	int initial_weight, 
 	int bufidx,  
 	int b,  
-	long long k 
+	int k 
 	)
 // STOP FUNC DECL
 //---------------------------------------------------------------------------

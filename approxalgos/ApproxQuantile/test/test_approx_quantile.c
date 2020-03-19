@@ -1,54 +1,26 @@
-#include <stdio.h>
-#include <time.h>
-#include <stdbool.h>
+#include "q_incs.h"
 #include "approx_quantile.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include "string.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <assert.h>
-#include <fcntl.h>
-#include "constants.h"
-#include "macros.h"
-#include "mmap.h"
-#include <malloc.h>
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-int main (
-	  int argc,
-	  char **argv
-	  )
+int 
+main(
+    int argc,
+    char **argv
+    )
 {
-
+#ifdef XXX
   int status = 0;
 
   int *x = NULL;
   char *X = NULL; size_t nX = 0;
-  char *cfld = NULL; size_t nY = 0;
 
   int * y = NULL;
   double *quantile_percent = NULL;
 
-  if ( argc != 2 && argc != 3 ) { go_BYE(-1); }
-  /* argc == 2 would mean just having the input binary file ( cfld will be assumed to be NULL, argc == 3 would mean that a corresponding cfld binary file is also included */
-
-  char * infile = argv[1];
-  status = rs_mmap(infile, &X, &nX, 0); cBYE(status);
-  long long siz = nX / sizeof(int);	   
-  x = (int *)X;
-  if ( x == NULL ) { go_BYE(-1); }
-  
-  if ( argc == 3 ) { 
-    char * cfldfile = argv[2];
-    status = rs_mmap(cfldfile, &cfld, &nY, 0); cBYE(status);
-    if ( cfld == NULL ) { go_BYE(-1); }
-  }
-
+  // Generate data 
   //----------------------------------------------------------------------
 
   long long num_quantile = 1000; 
@@ -87,13 +59,8 @@ int main (
   }
   
 BYE:
-  rs_munmap(X, nX);
-  if ( cfld != NULL ) {
-    rs_munmap(cfld, nY);
-  }
-
   free_if_non_null(y);
   free_if_non_null(quantile_percent);
-
   return(status);
+#endif
 }

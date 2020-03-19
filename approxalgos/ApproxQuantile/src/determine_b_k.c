@@ -11,21 +11,21 @@
 int
 determine_b_k(
 	      double eps,  
-	      long long siz, 
+	      uint64_t n_input_vals_estimate, 
 	      int *ptr_b,  
-	      long long *ptr_k  
+	      int *ptr_k  
 	      )
 // STOP FUNC DECL
 //---------------------------------------------------------------------------
 /* README:
 
-determine_b_k (err,siz,ptr_b,ptr_k): This function calculates b and k values for a given data size and acceptable error percentage. b is the number of buffers and k is the size of each buffer in the 2d buffer array.
+determine_b_k (err,n_input_vals_estimate,ptr_b,ptr_k): This function calculates b and k values for a given data size and acceptable error percentage. b is the number of buffers and k is the size of each buffer in the 2d buffer array.
 
 INPUTS: 
 
 err: Acceptable error percentage in the quantile calculations. ex: 0.001 implies +/- 0.1% and so on.
 
-siz: Size of the input data
+n_input_vals_estimate: estimate of size of the input data
 
 OUTPUTS:
 

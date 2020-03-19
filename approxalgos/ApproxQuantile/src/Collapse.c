@@ -9,13 +9,13 @@
 // START FUNC DECL
 int 
 Collapse(
-	 int *buf1,   
-	 int *buf2,  
+	 double *buf1,   
+	 double *buf2,  
 	 int *ptr_weight, 
 	 int bufidx1,
 	 int bufidx2,  
 	 int b,        
-	 long long k  
+	 int k  
 	 )
 // STOP FUNC DECL
 //---------------------------------------------------------------------------
