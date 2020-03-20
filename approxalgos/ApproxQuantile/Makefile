@@ -11,7 +11,8 @@ test_approx_quantile: ./src/approx_quantile.c  \
 	  ./src/approx_quantile.c  \
 	  ./src/Collapse.c  \
 	  ./src/New.c  \
-	  ./src/Output.c  \
+	  ./src/fast_output.c  \
+	  ./src/slow_output.c  \
 	  ./src/determine_b_k.c  \
 	  ./src/qsort_asc_F8.c  \
 	  ./test/test_approx_quantile.c  \

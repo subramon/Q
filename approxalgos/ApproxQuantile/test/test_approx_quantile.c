@@ -20,9 +20,12 @@ main(
 
   cBYE(status);
   for ( int denom = 1; denom <= 1024; denom *= 2 ) { 
+    double val = 0;
     status = approx_quantile_make( nQ, n, &state, eps, &error_code);
     for ( int i = 0; i < 1048576; i++ ) { 
-      status = approx_quantile_add(&state, (double)i); cBYE(status);
+      status = approx_quantile_add(&state, val); cBYE(status);
+      val++;
+      if ( val == n / denom ) { val = 0; }
     }
     status = approx_quantile_final(&state); cBYE(status);
     for ( int i = 0; i < state.num_quantiles; i++ ) { 

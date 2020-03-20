@@ -43,8 +43,8 @@ k: Size of each buffer in the 2d buffer array (produced by determine_b_k)
 {
 
   int status = 0;
-
-  int flag = 0; /* used to assist freeing of mallocs */
+  int* tempBuffer = NULL;
+  int* tempWeight = NULL;
 
   /* check inputs: something fundamentally wrong if it exits here  */ 
   if ( buf1 == NULL ) { go_BYE(-1); } 
@@ -58,14 +58,10 @@ k: Size of each buffer in the 2d buffer array (produced by determine_b_k)
 
      For example: if k=5, buf1 = {1,3,5,7,9} with corresponding weight = 1 and buf2= {2,4,6,8,10} with corresponding weight = 2. tempBuffer will be {1,2,3,4,5,6,7,8,9,10} with tempWeight being {1,2,1,2,1,2,1,2,1,2} */
 
-  int* tempBuffer = NULL;
-  int* tempWeight = NULL;
 
-  flag = 1; /* tempWeight and tempBuffer have been defined */
-
-  tempBuffer = malloc( 2*k * sizeof(int) ); 
+  tempBuffer = malloc(2*k * sizeof(int)); 
   return_if_malloc_failed(tempBuffer);
-  tempWeight = malloc( 2*k * sizeof(int) ); 
+  tempWeight = malloc(2*k * sizeof(int)); 
   return_if_malloc_failed(tempWeight);
 
   long long ii = 0, jj = 0, kk = 0; 
@@ -134,12 +130,7 @@ k: Size of each buffer in the 2d buffer array (produced by determine_b_k)
 
   
  BYE:
-
-  if ( flag == 1 ) {
-    free_if_non_null(tempBuffer);
-    free_if_non_null(tempWeight);
-  }
-
-  return(status);
-
+  free_if_non_null(tempBuffer);
+  free_if_non_null(tempWeight);
+  return status;
 }

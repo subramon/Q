@@ -1,8 +1,10 @@
+// Some bug in output which caused invalid write per Valgrind
+// Need to debug it. In interim, wrote slow_output()
 #include "q_incs.h"
-#include "Output.h"
+#include "fast_output.h"
 
 int
-Output(
+fast_output(
        double **buffer,      
        int *weight, 
        double *last_packet,
@@ -122,7 +124,7 @@ NOTE: all arrays considered here are presorted */
      i.e., how many "effective" elements have been processed */
 
   int jj = 0; 
-  /* keeps track of estimated number of quantiles, iterates from 0 to
+  /* jj keeps track of estimated number of quantiles, iterates from 0 to
      num_quantile-1 */
   int next_quantile_rank = (int)ceil((jj+1)*(double)n/num_quantiles); 
   /* keeps track of the next quantile's rank to be estimated. ex: if

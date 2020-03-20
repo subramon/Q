@@ -3,10 +3,10 @@ Output(
        double **buffer,      
        int *weight, 
        double *last_packet,
-       int last_packet_siz, 
+       int n_last_packet, 
        double *quantiles,
        int num_quantiles,
-       int n,
+       int n, // actual number of input values 
        int b,         
        int k
        );

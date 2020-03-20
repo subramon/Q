@@ -4,7 +4,7 @@
 #include "determine_b_k.h"
 #include "New.h"
 #include "Collapse.h"
-#include "Output.h"
+#include "slow_output.h"
 
 int 
 approx_quantile_make(
@@ -61,6 +61,7 @@ approx_quantile_make(
        that computations can be done within RAM
        */
   } 
+  ptr_state->n_input_vals = 0;
   ptr_state->n_input_vals_estimate = n_input_vals_estimate;
   ptr_state->is_final = false;
   ptr_state->b = b;
@@ -72,20 +73,20 @@ approx_quantile_make(
   ptr_state->quantiles = NULL;
   ptr_state->num_empty_buffers = b;
 
-  ptr_state->buffer      = malloc(b * sizeof(double *) ); 
-  return_if_malloc_failed(ptr_state->buffer);
-  memset(ptr_state->buffer, 0, b * sizeof(double *) ); 
-
   ptr_state->weight      = malloc( b * sizeof(int) ); 
   return_if_malloc_failed(ptr_state->weight);
   memset(ptr_state->weight, 0, b * sizeof(int) ); 
 
-  ptr_state->quantiles      = malloc( b * sizeof(int) ); 
+  ptr_state->quantiles      = malloc( num_quantiles * sizeof(double) ); 
   return_if_malloc_failed(ptr_state->quantiles);
-  memset(ptr_state->quantiles, 0, b * sizeof(int) ); 
+  memset(ptr_state->quantiles, 0, num_quantiles * sizeof(double) ); 
+
+  ptr_state->buffer      = malloc(b * sizeof(double *) ); 
+  return_if_malloc_failed(ptr_state->buffer);
+  memset(ptr_state->buffer, 0, b * sizeof(double *) ); 
 
   for ( int ii = 0; ii < b; ii++ ) {
-    ptr_state->buffer[ii] = (double *) malloc( k * sizeof(double) );
+    ptr_state->buffer[ii] = malloc( k * sizeof(double) );
     return_if_malloc_failed(ptr_state->buffer[ii]);
     memset(ptr_state->buffer[ii], 0, k * sizeof(double) );
   }
@@ -228,7 +229,8 @@ approx_quantile_final(
   /* Final quantile computations using data from 2d buffer array,
      weight array and last packet (if it exists) */
 
-  status = Output(buffer, weight, in_buffer, n_in_buffer, quantiles, 
+  printf("n = %d \n", n);
+  status = slow_output(buffer, weight, in_buffer, n_in_buffer, quantiles, 
       num_quantiles, n, b, k); 
   cBYE(status);
   //---------------------------------------------------------------------
