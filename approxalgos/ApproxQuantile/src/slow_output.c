@@ -140,7 +140,6 @@ take into consideration the last packet
   for ( int i = 0; i < n_final; i++ ) { 
     chk_wt += final[i].wt;
   }
-  printf("chk_wt = %lf \n", chk_wt);
   for ( int i = 0; i < n_final; i++ ) { 
     cum_wt += final[i].wt;
     if ( cum_wt >= (qidx+1) * n_per_quantile ) { 

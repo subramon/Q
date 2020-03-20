@@ -18,20 +18,25 @@ main(
   double eps = 0.1;
   int error_code;
 
-  cBYE(status);
-  for ( int denom = 1; denom <= 1024; denom *= 2 ) { 
-    double val = 0;
-    status = approx_quantile_make( nQ, n, &state, eps, &error_code);
-    for ( int i = 0; i < 1048576; i++ ) { 
-      status = approx_quantile_add(&state, val); cBYE(status);
-      val++;
-      if ( val == n / denom ) { val = 0; }
+  for ( int nQ = 10; nQ >= 1; nQ -= 2 ) { 
+    int m = n;
+    for ( int iter = 0; iter < 10; iter++ ) { 
+      double val = 0;
+      status = approx_quantile_make( nQ, n, &state, eps, &error_code);
+      for ( int i = 0; i < 1048576; i++ ) { 
+        status = approx_quantile_add(&state, val); cBYE(status);
+        val++;
+        if ( val == m ) { val = 0; }
+      }
+      status = approx_quantile_final(&state); cBYE(status);
+      double x = m / (nQ+1);
+      for ( int i = 0; i < state.num_quantiles; i++ ) { 
+        fprintf(stdout, "%4d\t%d\t%lf\t%lf\n", 
+            m, i, (i+1)*x, state.quantiles[i]);
+      }
+      status = approx_quantile_free(&state); cBYE(status);
+      m = m / 2;
     }
-    status = approx_quantile_final(&state); cBYE(status);
-    for ( int i = 0; i < state.num_quantiles; i++ ) { 
-      fprintf(stdout, "%4d:%d:%lf\n", denom, i, state.quantiles[i]);
-    }
-    status = approx_quantile_free(&state); cBYE(status);
   }
 BYE:
   return status;
