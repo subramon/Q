@@ -55,8 +55,8 @@ k: Size of each buffer in the 2d buffer array (produced by determine_b_k)
   if ( buf1 == NULL ) { go_BYE(-1); } 
   if ( buf2 == NULL ) { go_BYE(-1); }
   if ( ptr_weight == NULL ) { go_BYE(-1); }
-  if ( bufidx1 < 0 || bufidx1 >= b ) { go_BYE(-1); } /* out of range id */
-  if ( bufidx2 < 0 || bufidx2 >= b ) { go_BYE(-1); }
+  if ( ( bufidx1 < 0 ) || ( bufidx1 >= b ) ) { go_BYE(-1); } 
+  if ( ( bufidx2 < 0 ) || ( bufidx2 >= b ) ) { go_BYE(-1); }
   if ( ptr_weight[bufidx1] <= 0 || ptr_weight[bufidx2] <= 0 ) { go_BYE(-1); }
 
   /* Step (1): "tempBuffer" of size 2*k will be used to merge the two sorted arrays buf1 and buf2 of size k into a single sorted array. The weight information of each element in tempBuffer will be stored in tempWeight.

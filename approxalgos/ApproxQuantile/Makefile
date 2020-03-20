@@ -12,6 +12,7 @@ test_approx_quantile: ./src/approx_quantile.c  \
 	  ./src/Collapse.c  \
 	  ./src/New.c  \
 	  ./src/Output.c  \
+	  ./src/determine_b_k.c  \
 	  ./test/test_approx_quantile.c  \
 	  ../../UTILS/src/rdtsc.c \
 	  ../../UTILS/src/spooky_hash.c \

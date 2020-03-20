@@ -25,10 +25,11 @@ main(
       status = approx_quantile_add(&state, (double)i); cBYE(status);
     }
     status = approx_quantile_final(&state); cBYE(status);
-    for ( int i = 0; i < state.nQ; i++ ) { 
-      fprintf(stdout, "%4d:%d:%ld\n", denom, i, state.quantiles[i]);
+    for ( int i = 0; i < state.num_quantiles; i++ ) { 
+      fprintf(stdout, "%4d:%d:%lf\n", denom, i, state.quantiles[i]);
     }
     status = approx_quantile_free(&state); cBYE(status);
   }
 BYE:
   return status;
+}

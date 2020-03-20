@@ -6,6 +6,7 @@ Output(
        int last_packet_siz, 
        double *quantiles,
        int num_quantiles,
+       int n,
        int b,         
        int k
        );

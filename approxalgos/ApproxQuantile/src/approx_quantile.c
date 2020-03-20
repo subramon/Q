@@ -97,25 +97,7 @@ BYE:
   return status;
 }
 //----------------------------------------------------------------------
-int 
-approx_quantile_add(
-    approx_quantile_state_t *ptr_state,
-    double val
-    )
-{
-  int status = 0;
-  if ( ptr_state->is_final) { go_BYE(-1); }
-  if ( ptr_state->n_in_buffer < ptr_state->k ) {
-    ptr_state->in_buffer[ptr_state->n_in_buffer] = val;
-    ptr_state->n_in_buffer++;
-  }
-  if ( ptr_state->n_in_buffer < ptr_state->k ) { return status; }
-  status = approx_quantile_exec(ptr_state); cBYE(status);
-BYE:
-  return status;
-}
-//----------------------------------------------------------------------
-int 
+static int 
 approx_quantile_exec(
     approx_quantile_state_t *ptr_state
     )
@@ -167,6 +149,7 @@ approx_quantile_exec(
       }
       if ( found == true ) { break; }
     } 
+    if ( !found ) { go_BYE(-1); }
     /* Merge buffer numbers [bufidx1] and [bufidx2] */
     status = Collapse(buffer[bufidx1], buffer[bufidx2], weight, 
         bufidx1, bufidx2, b, k);  
@@ -193,7 +176,26 @@ approx_quantile_exec(
 BYE:
   return status;
 }
-//--------------------------------------
+//-----------------------------------------------
+int 
+approx_quantile_add(
+    approx_quantile_state_t *ptr_state,
+    double val
+    )
+{
+  int status = 0;
+  if ( ptr_state->is_final) { go_BYE(-1); }
+  ptr_state->n_input_vals++;
+  if ( ptr_state->n_in_buffer < ptr_state->k ) {
+    ptr_state->in_buffer[ptr_state->n_in_buffer] = val;
+    ptr_state->n_in_buffer++;
+  }
+  if ( ptr_state->n_in_buffer < ptr_state->k ) { return status; }
+  status = approx_quantile_exec(ptr_state); cBYE(status);
+BYE:
+  return status;
+}
+//----------------------------------------------------------------------
 int 
 approx_quantile_free(
     approx_quantile_state_t *ptr_state
@@ -211,7 +213,7 @@ approx_quantile_free(
   }
   return status;
 }
-//--------------------------------------
+//-------------------------------------------------------
 int 
 approx_quantile_final(
     approx_quantile_state_t *ptr_state
@@ -226,6 +228,7 @@ approx_quantile_final(
   int *weight       = ptr_state->weight;
   double *quantiles = ptr_state->quantiles;
   int num_quantiles = ptr_state->num_quantiles;
+  int n             = ptr_state->n_input_vals;
 
   if ( n_in_buffer < k ) {
     // qsort_asc_F8(in_buffer, n_in_buffer, sizeof(double), NULL);
@@ -235,7 +238,7 @@ approx_quantile_final(
      weight array and last packet (if it exists) */
 
   status = Output(buffer, weight, in_buffer, n_in_buffer, quantiles, 
-      num_quantiles, b, k); 
+      num_quantiles, n, b, k); 
   cBYE(status);
   //---------------------------------------------------------------------
 
