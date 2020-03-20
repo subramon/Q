@@ -6,13 +6,14 @@ INCS = -I./src/ -I./inc/ -I../../UTILS/inc/
 all: test_approx_quantile 
 
 test_approx_quantile: ./src/approx_quantile.c  \
-	  ./test/test_approx_quantile.c  
+	  ./test/test_approx_quantile.c  inc/*.h src/*.c
 	gcc ${QC_FLAGS} ${INCS} \
 	  ./src/approx_quantile.c  \
 	  ./src/Collapse.c  \
 	  ./src/New.c  \
 	  ./src/Output.c  \
 	  ./src/determine_b_k.c  \
+	  ./src/qsort_asc_F8.c  \
 	  ./test/test_approx_quantile.c  \
 	  ../../UTILS/src/rdtsc.c \
 	  ../../UTILS/src/spooky_hash.c \

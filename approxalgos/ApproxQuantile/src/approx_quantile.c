@@ -1,5 +1,5 @@
 #include "q_incs.h"
-// TODO #include "qsort_asc_F8.h"
+#include "qsort_asc_F8.h"
 #include "approx_quantile.h"
 #include "determine_b_k.h"
 #include "New.h"
@@ -107,11 +107,7 @@ approx_quantile_exec(
   int k = ptr_state->k;
   int *weight = ptr_state->weight;
   double **buffer = ptr_state->buffer;
-  if ( ptr_state->is_final ) { go_BYE(-1); }
-  if ( ptr_state->n_in_buffer != ptr_state->k ) { 
-    ptr_state->is_final = true;
-    return status; 
-  }
+  if ( ptr_state->k != ptr_state->n_in_buffer ) { go_BYE(-1); }
   //---------------------------------------------------------------------
 
   /* The Munro-Patterson algorithm assumes that the incoming data is
@@ -130,49 +126,43 @@ approx_quantile_exec(
      in the process (and copy the packet to that buffer)
      */
 
-  // qsort_asc_F8(in_buffer, k, sizeof(double), NULL);
+  qsort_asc_F8(ptr_state->in_buffer, k); // Step 1 of above
 
-  /* Steps (2) and (3) of the algorithm done here */
+  // Steps (2) + 3(b)
 
+  /* if no free buffer available in the 2d buffer array , merge data in 2 buffers having same weight into one of them using Collapse() and free up other */
   if ( ptr_state->num_empty_buffers == 0 ) {
-    /* if no free buffer available in the 2d buffer array , merge data in 2 buffers having same weight into one of them using Collapse() and free up other */
-    bool found = false;
     int bufidx1 = -1, bufidx2 = -1; 
     /* find 2 buffers with same corresponding weight in the weight array */
     for ( int ii = 0; ii < b-1; ii++ ) { 
+      if ( weight[ii] <= 0 ) { go_BYE(-1); } // 'cos no free buffers
       for ( int jj = ii+1; jj < b; jj++ ) {
-        if ( ( weight[ii] == weight[jj] ) && ( weight[ii] > 0 ) ) { 
-          bufidx1 = ii; bufidx2 = jj;
-          found = true;
-          break;
-        }
+        if ( weight[ii] == weight[jj] ) { bufidx1 = ii; bufidx2 = jj; break; }
       }
-      if ( found == true ) { break; }
+      if ( bufidx1 >= 0 ) { break; }
     } 
-    if ( !found ) { go_BYE(-1); }
+    if ( ( bufidx1 < 0 ) ||  ( bufidx2 < 0 ) ) { go_BYE(-1); }
     /* Merge buffer numbers [bufidx1] and [bufidx2] */
     status = Collapse(buffer[bufidx1], buffer[bufidx2], weight, 
         bufidx1, bufidx2, b, k);  
     cBYE(status);
     ptr_state->num_empty_buffers = 1;
   }
-
+  // Step 2 + 3(a) 
+  if ( ptr_state->num_empty_buffers == 0 ) { go_BYE(-1); }
   /* find a free buffer (corresponding weight = 0 in the weight array) */
-  bool found = false;
   int bufidx1 = -1;
   for ( int ii = 0; ii < b; ii++ ) {
-    if ( weight[ii] == 0 ) {
-      ptr_state->num_empty_buffers--;
-      found = true;
-      bufidx1 = ii;
-      break;
-    }
+    if ( weight[ii] == 0 ) { bufidx1 = ii; break; }
   } 
-  if ( !found ) { go_BYE(-1); }
+  if ( bufidx1 < 0 ) { go_BYE(-1); }
   /* Copy current input packet into a free buffer in the 2d buffer array*/
   status = New(ptr_state->in_buffer, buffer[bufidx1], weight, 1,
       bufidx1, b, k);
   cBYE(status);
+  ptr_state->num_empty_buffers--; // one less free buffer
+
+  ptr_state->n_in_buffer = 0; // flushed the in buffer
 BYE:
   return status;
 }
@@ -230,8 +220,9 @@ approx_quantile_final(
   int num_quantiles = ptr_state->num_quantiles;
   int n             = ptr_state->n_input_vals;
 
+  ptr_state->is_final = true;
   if ( n_in_buffer < k ) {
-    // qsort_asc_F8(in_buffer, n_in_buffer, sizeof(double), NULL);
+    qsort_asc_F8(in_buffer, n_in_buffer);
   }
   //----------------------------------------------------------------------
   /* Final quantile computations using data from 2d buffer array,

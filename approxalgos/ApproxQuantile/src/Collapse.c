@@ -1,10 +1,5 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include <inttypes.h>
-#include "constants.h"
-#include "macros.h"
+#include "q_incs.h"
 #include "Collapse.h"
-#include <malloc.h>
 
 // START FUNC DECL
 int 
