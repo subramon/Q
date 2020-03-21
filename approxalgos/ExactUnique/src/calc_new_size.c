@@ -1,5 +1,4 @@
 #include "hmap_common.h"
-#include "hmap_types.h"
 #include "calc_new_size.h"
 /* Checks whether resize is needed. If so, calculates newsize */
 /* Resize needed when occupancy is too high */

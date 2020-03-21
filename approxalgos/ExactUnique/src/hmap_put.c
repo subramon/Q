@@ -5,7 +5,6 @@
  * => Otherwise, on successful insert, return the given value.
  */
  #include "hmap_common.h"
- #include "hmap_types.h"
  #include "hmap_put.h"
  #include "calc_new_size.h"
  #include "hmap_resize.h"

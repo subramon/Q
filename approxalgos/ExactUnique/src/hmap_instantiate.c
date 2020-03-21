@@ -1,6 +1,4 @@
-#include "hmap_utils.h"
 #include "hmap_common.h"
-#include "hmap_types.h"
 #include "hmap_instantiate.h"
 int 
 hmap_instantiate(

@@ -10,6 +10,8 @@
 
 #include "q_incs.h"
 #include "fastdiv.h"
+#include "hmap_struct.h"
+#include "hmap_utils.h"
 
 #define	Q_RHM_SET  1
 #define	Q_RHM_ADD 2

@@ -1,4 +1,3 @@
-#include "hmap_utils.h"
 #include "hmap_common.h"
 #include "hmap_create.h"
 // hmap_create: construct a new hash table.

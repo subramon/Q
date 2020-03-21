@@ -15,9 +15,9 @@ main(
   int maxsize = 8192;
   hmap_t hmap;
   status = hmap_instantiate(&hmap, minsize, maxsize); cBYE(status);
-  for ( int i = 0; i < (maxsize *  0.75); i++ ) {
+  for ( uint32_t i = 0; i < (maxsize *  0.75); i++ ) {
     status = hmap_put(&hmap, i, 0); cBYE(status);
-    if ( hmap.nitems != i ) { go_BYE(-1); }
+    if ( hmap.nitems != (i+1) ) { go_BYE(-1); }
   }
   printf("occupancy = %d \n", hmap.nitems);
   hmap_destroy(&hmap);

@@ -1,5 +1,5 @@
-#ifndef __HMAP_TYPE_H
-#define __HMAP_TYPE_H
+#ifndef __HMAP_STRUCT_H
+#define __HMAP_STRUCT_H
 
 typedef struct _bkt_t { 
   uint64_t key; // keys

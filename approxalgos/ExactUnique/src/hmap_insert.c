@@ -1,5 +1,4 @@
 #include "hmap_common.h"
-#include "hmap_types.h"
 #include "hmap_insert.h"
 int
 hmap_insert(
