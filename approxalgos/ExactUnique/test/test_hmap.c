@@ -34,11 +34,31 @@ main(
     if ( iter == 0 ) { 
       occupancy = hmap.nitems;
     }
-    printf("iter = %d \n", iter);
   }
   printf("occupancy = %d \n", hmap.nitems);
   printf("maxsize = %d \n", maxsize);
   hmap_destroy(&hmap);
+  //--------------------------
+  status = hmap_instantiate(&hmap, minsize, maxsize); cBYE(status);
+  nitems = 2 * maxsize;
+  uint32_t chk, prev_chk; bool chk_is_approx;
+  bool maxed_out = false;
+  for ( int i = 0; i < nitems; i++ ) {
+    status = hmap_put(&hmap, i, 0); 
+    if ( i == 6143 ) {
+    }
+    if ( status < 0 ) { 
+      maxed_out = true;
+    }
+    status = hmap_nitems(&hmap, &chk, &chk_is_approx); cBYE(status);
+    if ( maxed_out ) { 
+      if ( prev_chk != chk ) { go_BYE(-1); }
+    }
+    prev_chk = chk;
+  }
+  hmap_destroy(&hmap);
+  //--------------------------
+  fprintf(stderr, "Unit test succeeded\n");
 BYE:
   return status;
 }
