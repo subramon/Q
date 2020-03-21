@@ -12,14 +12,14 @@ main(
     )
 {
   int status = 0;
-  int minsize = 1024;
-  int maxsize = 8192;
+  uint32_t minsize = 1024;
+  uint32_t maxsize = 8192;
   hmap_t hmap;
-  int occupancy = 0;
-  int nitems = maxsize * 0.75;
+  uint32_t occupancy = 0;
+  uint32_t nitems = maxsize * 0.75;
   status = hmap_instantiate(&hmap, minsize, maxsize); cBYE(status);
   for ( int iter = 0; iter < 10; iter++ ) { 
-    for ( int i = 0; i < nitems; i++ ) {
+    for ( uint32_t i = 0; i < nitems; i++ ) {
       status = hmap_put(&hmap, i, 0); cBYE(status);
       if ( iter == 0 ) { 
         uint32_t chk; bool chk_is_approx;
@@ -43,7 +43,7 @@ main(
   nitems = 2 * maxsize;
   uint32_t chk, prev_chk; bool chk_is_approx;
   bool maxed_out = false;
-  for ( int i = 0; i < nitems; i++ ) {
+  for ( uint32_t i = 0; i < nitems; i++ ) {
     status = hmap_put(&hmap, i, 0); 
     if ( i == 6143 ) {
     }
