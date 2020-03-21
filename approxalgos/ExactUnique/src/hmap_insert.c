@@ -9,6 +9,10 @@ hmap_insert(
     )
 {
   int status = 0;
+  if ( key == 0 ) { // key of 0 treated as special case
+    ptr_hmap->has_zero = true;
+    return status;
+  }
   if ( hash == 0 ) { 
     hash = murmurhash3(&key, sizeof(uint64_t), ptr_hmap->hashkey);
   }

@@ -4,7 +4,7 @@
 
 
 INCS = -I ./src/ -I../../UTILS/inc/ -I./inc/
-all: test_hmap 
+all: hmap.so
 
 hmap.so: ./src/*.c  ./inc/*.h 
 	gcc ${QC_FLAGS} ${INCS} \
@@ -12,6 +12,7 @@ hmap.so: ./src/*.c  ./inc/*.h
 	  ./src/hmap_instantiate.c  \
 	  ./src/hmap_insert.c  \
 	  ./src/hmap_put.c  \
+	  ./src/hmap_nitems.c  \
 	  ./src/hmap_destroy.c  \
 	  ./src/hmap_resize.c  \
 	  ./src/calc_new_size.c  \
