@@ -32,8 +32,9 @@ calc_new_size(
       threshold = (uint64_t)(0.85 * (double)newsize);
     }
   }
-  if ( newsize > maxsize ) { go_BYE(-1); }
-  if ( newsize > UINT_MAX ) { go_BYE(-1); }
+  double max_newsize = UINT_MAX * 0.85;
+  if ( newsize > max_newsize ) { go_BYE(-1); }
+  if ( newsize > maxsize ) { status = -1; goto BYE; }
   *ptr_newsize = newsize;
 BYE:
   return status;

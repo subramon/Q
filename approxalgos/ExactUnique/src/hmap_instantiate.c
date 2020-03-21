@@ -9,8 +9,9 @@ hmap_instantiate(
 {
   int status = 0;
 
+  memset(ptr_hmap, 0, sizeof(hmap_t));
   ptr_hmap->size = ptr_hmap->minsize = MAX(minsize, HASH_INIT_SIZE);
-  ptr_hmap->maxsize = MAX(maxsize, HASH_INIT_SIZE);
+  ptr_hmap->maxsize = MAX(maxsize, ptr_hmap->size);
 
   ptr_hmap->bkts = calloc(ptr_hmap->size, sizeof(bkt_t)); 
   return_if_malloc_failed(ptr_hmap->bkts);

@@ -16,7 +16,7 @@
 #define	Q_RHM_SET  1
 #define	Q_RHM_ADD 2
 
-#define	HASH_INIT_SIZE		(65536)
+#define	HASH_INIT_SIZE		(1024)
 #define	MAX_GROWTH_STEP		(1024U * 1024)
 
 #define	LOW_WATER_MARK 0.4

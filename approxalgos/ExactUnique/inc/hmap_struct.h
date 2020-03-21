@@ -15,6 +15,7 @@ typedef struct _hmap_t {
   uint64_t hashkey;
   uint32_t minsize;
   uint32_t maxsize;
+  bool has_zero; // we do not like zero as a key - messes up the logic. Hence, we keep a special flag to indicate whether we have seen a zero or not
   bool is_approx; // default false. If we cannot fit an item because resize requires maxsize to be violated, then this becomes true 
 } hmap_t;
 
