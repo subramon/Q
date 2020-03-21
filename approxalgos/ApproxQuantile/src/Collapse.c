@@ -1,10 +1,5 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include <inttypes.h>
-#include "constants.h"
-#include "macros.h"
+#include "q_incs.h"
 #include "Collapse.h"
-#include <malloc.h>
 
 // START FUNC DECL
 int 
@@ -48,29 +43,25 @@ k: Size of each buffer in the 2d buffer array (produced by determine_b_k)
 {
 
   int status = 0;
-
-  int flag = 0; /* used to assist freeing of mallocs */
+  int* tempBuffer = NULL;
+  int* tempWeight = NULL;
 
   /* check inputs: something fundamentally wrong if it exits here  */ 
   if ( buf1 == NULL ) { go_BYE(-1); } 
   if ( buf2 == NULL ) { go_BYE(-1); }
   if ( ptr_weight == NULL ) { go_BYE(-1); }
-  if ( bufidx1 < 0 || bufidx1 >= b ) { go_BYE(-1); } /* out of range id */
-  if ( bufidx2 < 0 || bufidx2 >= b ) { go_BYE(-1); }
+  if ( ( bufidx1 < 0 ) || ( bufidx1 >= b ) ) { go_BYE(-1); } 
+  if ( ( bufidx2 < 0 ) || ( bufidx2 >= b ) ) { go_BYE(-1); }
   if ( ptr_weight[bufidx1] <= 0 || ptr_weight[bufidx2] <= 0 ) { go_BYE(-1); }
 
   /* Step (1): "tempBuffer" of size 2*k will be used to merge the two sorted arrays buf1 and buf2 of size k into a single sorted array. The weight information of each element in tempBuffer will be stored in tempWeight.
 
      For example: if k=5, buf1 = {1,3,5,7,9} with corresponding weight = 1 and buf2= {2,4,6,8,10} with corresponding weight = 2. tempBuffer will be {1,2,3,4,5,6,7,8,9,10} with tempWeight being {1,2,1,2,1,2,1,2,1,2} */
 
-  int* tempBuffer = NULL;
-  int* tempWeight = NULL;
 
-  flag = 1; /* tempWeight and tempBuffer have been defined */
-
-  tempBuffer = malloc( 2*k * sizeof(int) ); 
+  tempBuffer = malloc(2*k * sizeof(int)); 
   return_if_malloc_failed(tempBuffer);
-  tempWeight = malloc( 2*k * sizeof(int) ); 
+  tempWeight = malloc(2*k * sizeof(int)); 
   return_if_malloc_failed(tempWeight);
 
   long long ii = 0, jj = 0, kk = 0; 
@@ -139,12 +130,7 @@ k: Size of each buffer in the 2d buffer array (produced by determine_b_k)
 
   
  BYE:
-
-  if ( flag == 1 ) {
-    free_if_non_null(tempBuffer);
-    free_if_non_null(tempWeight);
-  }
-
-  return(status);
-
+  free_if_non_null(tempBuffer);
+  free_if_non_null(tempWeight);
+  return status;
 }

@@ -1,21 +1,23 @@
+// Some bug in output which caused invalid write per Valgrind
+// Need to debug it. In interim, wrote slow_output()
 #include "q_incs.h"
-#include "Output.h"
+#include "fast_output.h"
 
 int
-Output(
+fast_output(
        double **buffer,      
        int *weight, 
        double *last_packet,
        int last_packet_size, 
        double *quantiles,
        int num_quantiles,
+       int n, // actual number of input values 
        int b,         
        int k
        )
 //-------------------------------------------------------------------------
 /* README: 
 
-Output(buffer,weight,last_packet,last_packet_size,siz,num_quantiles,quantiles,b,k): 
 
 This function takes as input the 2d buffer array, the weight array and
 the last packet and answers quantile queries.
@@ -26,7 +28,7 @@ NOTE: Consider the following way of viewing the buffer array: each
 element in a buffer occurs as many times as it's corresponding weight
 in the weight array. When calling this function, the total number of
 "effective" entries in the 2d buffer array and the last packet put
-together is exactly siz.
+together is exactly n.
 
 For example: Consider the Munro-Patterson algorithm. New() adds k
 "effective" elements to the 2d buffer array for every k elements in
@@ -47,12 +49,12 @@ last_packet: Array containing the last packet
 last_packet_incomplete: if the last packet buffer is non-null, then
 this will be 1. if the last packet in the input data is handled by
 inputBuffer itself (this will happen when k (or the number of non-zero
-entries in cfld) divides siz), this parameter will be 0, meaning
+entries in cfld) divides n), this parameter will be 0, meaning
 last_packet buffer is not necessary.
 
 last_packet_size: Size of the last packet (less than or equal to k)
 
-siz: Size of the total data passed to the approx_quantile function
+n: number of elements seen by he approx_quantile function
 
 num_quantiles: Total number of quantiles requested. For ex:
 num_quantiles = 100 implies you need quantile queries every 1% from 0%
@@ -75,7 +77,7 @@ take into consideration the last packet
 //--------------------------------------
 {
   int status = 0;
-  int * current_loc_buf = NULL;
+  int *current_loc_buf = NULL;
 
   int last_packet_incomplete;
   if ( last_packet_size == 0 ) {  // TODO THINK
@@ -122,13 +124,13 @@ NOTE: all arrays considered here are presorted */
      i.e., how many "effective" elements have been processed */
 
   int jj = 0; 
-  /* keeps track of estimated number of quantiles, iterates from 0 to
+  /* jj keeps track of estimated number of quantiles, iterates from 0 to
      num_quantile-1 */
-  int next_quantile_rank = (long long)ceil((jj+1)*(double)siz/num_quantiles); 
+  int next_quantile_rank = (int)ceil((jj+1)*(double)n/num_quantiles); 
   /* keeps track of the next quantile's rank to be estimated. ex: if
-     next quantile to be estimated is 50%, then it would be siz/2 (it
-     iterates from 1*siz/num_quantile to siz in steps of
-     siz/num_quantile basically) */
+     next quantile to be estimated is 50%, then it would be n/2 (it
+     iterates from 1*n/num_quantile to n in steps of
+     n/num_quantile basically) */
 
 
   while ( true ) {
@@ -174,7 +176,7 @@ NOTE: all arrays considered here are presorted */
 
     while ( current_proc_element_rank >=  next_quantile_rank  && jj < num_quantiles ) {
       quantiles[jj++] = min_unproc_val;  
-      next_quantile_rank = (long long) ceil((jj+1)*(double)siz/num_quantiles);
+      next_quantile_rank = (long long) ceil((jj+1)*(double)n/num_quantiles);
     }
   }
 BYE:

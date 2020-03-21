@@ -6,7 +6,8 @@
 #define MAX_SZ 1048576
 
 typedef struct _approx_quantile_state_t { 
-  uint64_t n_input_vals_estimate;
+  uint64_t n_input_vals_estimate; // estimated
+  uint64_t n_input_vals; // actual 
   bool is_final;
   int b;
   int k;

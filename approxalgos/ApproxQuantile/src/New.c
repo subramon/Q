@@ -1,14 +1,6 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include <inttypes.h>
-#include "constants.h"
-#include "macros.h"
+#include "q_incs.h"
 #include "New.h"
-#include <malloc.h>
-#include <fcntl.h>
-#include <string.h>
 
-// START FUNC DECL
 int New(
 	double *src_buf, 
 	double *dst_buf,  
@@ -18,8 +10,7 @@ int New(
 	int b,  
 	int k 
 	)
-// STOP FUNC DECL
-//---------------------------------------------------------------------------
+//----------------------------------------------------------------------
 /* README:
 
 New(src_buf, dst_buf, ptr_weight,initial_weight,bufidx,b,k): This function takes an input packet of size k with sorted data and stores it in one of the unused buffers in the 2d buffer array 
