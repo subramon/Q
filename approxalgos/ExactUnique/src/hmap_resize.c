@@ -31,7 +31,6 @@ hmap_resize(
   for ( uint32_t i = 0; i < oldsize; i++) {
     bool updated = false;
     if ( bkts[i].key == 0 ) { continue; } // skip empty slots
-    val_t oldval; // just for function signature match 
     hmap_insert(ptr_hmap, bkts[i].key, 0); 
     if ( updated ) { go_BYE(-1); }
   }
