@@ -21,10 +21,10 @@ libapprox_quantile.so: ${SRCS}  ./inc/*.h
 	../../UTILS/src/spooky_hash.c \
 	-shared -o libapprox_quantile.so
 
-test_approx_quantile: $(SRCS) test/*.c 
-	gcc ${QC_FLAGS} ${INCS} \
-	  test/test_approx_quantile.c libapprox_quantile.so -lm \
-	  -o test_approx_quantile
+test_approx_quantile: $(SRCS) test/*.c libapprox_quantile.so
+	gcc ${QC_FLAGS} ${INCS} test/test_approx_quantile.c \
+	-o test_approx_quantile \
+	./libapprox_quantile.so -lm 
 	./test_approx_quantile
 
 clean:
