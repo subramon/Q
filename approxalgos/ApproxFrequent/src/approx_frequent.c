@@ -6,6 +6,7 @@
 #include "update_counter.h"
 
 #define MAX_SZ 1048576 /* use no more than sizeof(double) * 1 MB */
+#define BUF_SZ 1024 /* size of buffer in which we accumulate */
 
 int 
 approx_frequent_make(
@@ -16,15 +17,16 @@ approx_frequent_make(
   )
 {
   int status = 0;
-BYE:
-  return status;
+  cntrs_t *cntrs = NULL;
+  double *buffer = NULL;
   /* Check inputs */
-  if ( x == NULL ) { go_BYE(-1); }
   if ( n_estimate <= 0 ) { go_BYE(-1); }
   if ( err <= 0 ) { go_BYE(-1); } 
   if ( min_freq <= 0 ) { go_BYE(-1); }
   if ( min_freq - err <= 0 ) { go_BYE(-1); }
+  if ( ptr_state == NULL ) { go_BYE(-1); }
 
+  memset(ptr_state, 0, sizeof(approx_frequent_state_t));
   double eps = (double)err/(double)n_estimate; 
   /* parameter of FREQUENT algorithm, decides the error in approximation */
   if ( eps < pow(2,-50) ) { go_BYE(-2); } /* need too much memory */
@@ -36,7 +38,6 @@ BYE:
   /* The algorithm will be using n_cntrs = (1/eps)+1 counters: 
    * These are stored in cntrs which is a struct of (cntr_id, cntr_freq) */
 
-  cntrs_t *cntrs = NULL;
   uint32_t n_cntrs = (uint32_t ) (1/eps)+1;
   if ( ( n_cntrs*(1+2+6) ) > MAX_SZ ) { go_BYE(-4); }
  /* Quitting if too much memory needed. Retry by doing one of the following:
@@ -44,20 +45,49 @@ BYE:
     (ii) Increase eps (the approximation percentage) so that 
     computations can be done within RAM
      */
-  cntrs = malloc(n_cntrs * sizeof(cntr_t));
+  cntrs = malloc(n_cntrs * sizeof(cntrs_t));
   return_if_malloc_failed(cntrs);
-  memset(cntrs, 0,  n_cntrs * sizeof(cntr_t));
+  memset(cntrs, 0,  n_cntrs * sizeof(cntrs_t));
   
-
+  buffer = malloc(BUF_SZ * sizeof(double));
+  return_if_malloc_failed(buffer);
+  memset(buffer, 0,  BUF_SZ * sizeof(double));
+  
   ptr_state->cntrs = cntrs;
-  ptr_state->cntrs = n_cntrs;
+  ptr_state->n_cntrs = n_cntrs;
   ptr_state->n_active_cntrs = 0; /* num counters with non-zero frequencies */
   ptr_state->err = err;
   ptr_state->min_freq = min_freq;
   ptr_state->n_estimate = n_estimate;
+
+  ptr_state->n_buffer  = 0;
+  ptr_state->sz_buffer = BUF_SZ;
+  ptr_state->buffer    = buffer;
+
+  ptr_state->is_final = false;
 BYE:
   return status;
 }
+//-----------------------------------------------
+int 
+approx_frequent_add(
+    approx_frequent_state_t *ptr_state,
+    double val
+    )
+{
+  int status = 0;
+  if ( ptr_state->is_final) { go_BYE(-1); }
+  ptr_state->n_input_vals++;
+  if ( ptr_state->n_in_buffer < ptr_state->k ) {
+    ptr_state->in_buffer[ptr_state->n_in_buffer] = val;
+    ptr_state->n_in_buffer++;
+  }
+  if ( ptr_state->n_in_buffer < ptr_state->k ) { return status; }
+  status = approx_frequent_exec(ptr_state); cBYE(status);
+BYE:
+  return status;
+}
+
   //---------------------------------------------------------------------
 
   /* We will look at the incoming data as packets of size cntr_siz with sorted data (this would help speed up the update process a lot, this step is not mentioned in the paper - it's my improvization). Since the sorting has to be done within each packet separately, we can parallelize this step as follows: we divide the incoming data into blocks of size  = NUM_THREADS*cntr_siz (so that NUM_THREADS threads can be generated for each block and sorted separately in parallel using cilkfor) */
