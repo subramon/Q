@@ -10,7 +10,7 @@
 
 int 
 approx_frequent_make(
-  uint32_t n_estimate,
+  uint32_t n_input_vals_estimate,
   uint32_t err,
   uint32_t min_freq,
   approx_frequent_state_t *ptr_state
@@ -20,18 +20,18 @@ approx_frequent_make(
   cntrs_t *cntrs = NULL;
   double *buffer = NULL;
   /* Check inputs */
-  if ( n_estimate <= 0 ) { go_BYE(-1); }
+  if ( n_input_vals_estimate <= 0 ) { go_BYE(-1); }
   if ( err <= 0 ) { go_BYE(-1); } 
   if ( min_freq <= 0 ) { go_BYE(-1); }
   if ( min_freq - err <= 0 ) { go_BYE(-1); }
   if ( ptr_state == NULL ) { go_BYE(-1); }
 
   memset(ptr_state, 0, sizeof(approx_frequent_state_t));
-  double eps = (double)err/(double)n_estimate; 
+  double eps = (double)err/(double)n_input_vals_estimate; 
   /* parameter of FREQUENT algorithm, decides the error in approximation */
   if ( eps < pow(2,-50) ) { go_BYE(-2); } /* need too much memory */
 #ifdef XXX
-  if ( out_siz < n_estimate/(min_freq - err) ) { go_BYE(-3); }
+  if ( out_siz < n_input_vals_estimate/(min_freq - err) ) { go_BYE(-3); }
     /* insufficient memory allocated to the outputs y and f */
   //-----------------------------------------------------------------
 #endif
@@ -58,13 +58,14 @@ approx_frequent_make(
   ptr_state->n_active_cntrs = 0; /* num counters with non-zero frequencies */
   ptr_state->err = err;
   ptr_state->min_freq = min_freq;
-  ptr_state->n_estimate = n_estimate;
+  ptr_state->n_input_vals_estimate = n_input_vals_estimate;
 
   ptr_state->n_buffer  = 0;
   ptr_state->sz_buffer = BUF_SZ;
   ptr_state->buffer    = buffer;
 
   ptr_state->is_final = false;
+  ptr_state->n_input_vals = 0;
 BYE:
   return status;
 }
@@ -78,58 +79,31 @@ approx_frequent_add(
   int status = 0;
   if ( ptr_state->is_final) { go_BYE(-1); }
   ptr_state->n_input_vals++;
-  if ( ptr_state->n_in_buffer < ptr_state->k ) {
-    ptr_state->in_buffer[ptr_state->n_in_buffer] = val;
-    ptr_state->n_in_buffer++;
+  if ( ptr_state->n_in_buffer < ptr_state->sz_buffer ) {
+    ptr_state->buffer[ptr_state->n_buffer] = val;
+    ptr_state->n_buffer++;
   }
-  if ( ptr_state->n_in_buffer < ptr_state->k ) { return status; }
+  if ( ptr_state->n_buffer < ptr_state->sz_buffer ) { return status; }
   status = approx_frequent_exec(ptr_state); cBYE(status);
 BYE:
   return status;
 }
 
+static int approx_frequent_t(
+    approx_frequent_state_t *ptr_state
+)
+{
+  int status = 0;
   //---------------------------------------------------------------------
 
   /* We will look at the incoming data as packets of size cntr_siz with sorted data (this would help speed up the update process a lot, this step is not mentioned in the paper - it's my improvization). Since the sorting has to be done within each packet separately, we can parallelize this step as follows: we divide the incoming data into blocks of size  = NUM_THREADS*cntr_siz (so that NUM_THREADS threads can be generated for each block and sorted separately in parallel using cilkfor) */
 
   /* "inputPacket" is a 2d array of size NUM_THREADS *cntr_siz: stores and sortes packets belonging to the same block in parallel using cilkfor. */
 
-  int ** inputPackets = NULL;
-  long long * inputPacketsUsedSiz = NULL;
-
-  flag = 2;  /* inputPackets and inputPacketsUsedSiz are defined */
-
-  inputPackets = malloc ( NUM_THREADS * sizeof(int*) );
-  return_if_malloc_failed(inputPackets); 
-
-  inputPacketsUsedSiz = malloc ( NUM_THREADS * sizeof(long long) );
-  return_if_malloc_failed(inputPacketsUsedSiz);
-
-  for ( long long ii = 0; ii < NUM_THREADS; ii++) {
-    inputPacketsUsedSiz[ii] = 0;
-  }
-
-  for ( int ii = 0; ii < NUM_THREADS; ii++ ) {
-    inputPackets[ii] =  (int *) malloc( cntr_siz * sizeof(int) );
-  }
-
-  flag = 3; /* inputPackets[ii] defined for ii = 0 to NUM_THREADS-1 */
-
-  for ( int ii = 0; ii < NUM_THREADS; ii++ ) {
-    return_if_malloc_failed(inputPackets[ii]);
-#ifdef IPP
-    ippsZero_32s((int *)inputPackets[ii],cntr_siz);
-#else
-    assign_const_I4(inputPackets[ii],cntr_siz,0);
-#endif
-  }
-
   //------------------------------------------------------------------------
   
   int * bf_id = NULL;
   int * bf_freq = NULL; /* temporary counters for processing */
-
-  flag = 4;  /* bf_id and bf_freq are defined */
 
   bf_id = (int *)malloc( cntr_siz * sizeof(int) );
   return_if_malloc_failed(bf_id);
@@ -230,7 +204,19 @@ BYE:
 
 
   }
+BYE:
+  return status;
+}
 
+int 
+approx_frequent_final(
+    approx_frequent_state_t *ptr_state
+    )
+{
+  int status = 0;
+BYE:
+  return status;
+}
   //----------------------------------------------------------------------
   /* Post-processing, writing the outputs */
   
