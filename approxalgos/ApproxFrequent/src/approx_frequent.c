@@ -69,27 +69,7 @@ approx_frequent_make(
 BYE:
   return status;
 }
-//-----------------------------------------------
-int 
-approx_frequent_add(
-    approx_frequent_state_t *ptr_state,
-    double val
-    )
-{
-  int status = 0;
-  if ( ptr_state->is_final) { go_BYE(-1); }
-  ptr_state->n_input_vals++;
-  if ( ptr_state->n_in_buffer < ptr_state->sz_buffer ) {
-    ptr_state->buffer[ptr_state->n_buffer] = val;
-    ptr_state->n_buffer++;
-  }
-  if ( ptr_state->n_buffer < ptr_state->sz_buffer ) { return status; }
-  status = approx_frequent_exec(ptr_state); cBYE(status);
-BYE:
-  return status;
-}
-
-static int approx_frequent_t(
+static int approx_frequent_exec(
     approx_frequent_state_t *ptr_state
 )
 {
@@ -207,17 +187,31 @@ static int approx_frequent_t(
 BYE:
   return status;
 }
-
+//-----------------------------------------------
+int 
+approx_frequent_add(
+    approx_frequent_state_t *ptr_state,
+    double val
+    )
+{
+  int status = 0;
+  if ( ptr_state->is_final) { go_BYE(-1); }
+  ptr_state->n_input_vals++;
+  if ( ptr_state->n_buffer < ptr_state->sz_buffer ) {
+    ptr_state->buffer[ptr_state->n_buffer] = val;
+    ptr_state->n_buffer++;
+  }
+  if ( ptr_state->n_buffer < ptr_state->sz_buffer ) { return status; }
+  status = approx_frequent_exec(ptr_state); cBYE(status);
+BYE:
+  return status;
+}
 int 
 approx_frequent_final(
     approx_frequent_state_t *ptr_state
     )
 {
   int status = 0;
-BYE:
-  return status;
-}
-  //----------------------------------------------------------------------
   /* Post-processing, writing the outputs */
   
   long long jj = 0;

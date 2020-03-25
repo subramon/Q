@@ -6,3 +6,8 @@ approx_frequent_make(
   uint32_t min_freq,
   approx_frequent_state_t *ptr_state
   );
+extern int 
+approx_frequent_add(
+    approx_frequent_state_t *ptr_state,
+    double val
+    );
