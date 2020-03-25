@@ -19,6 +19,7 @@ approx_frequent_make(
   int status = 0;
   cntrs_t *cntrs = NULL;
   double *buffer = NULL;
+  cntrs_t *cnt_buffer = NULL;
   /* Check inputs */
   if ( n_input_vals_estimate <= 0 ) { go_BYE(-1); }
   if ( err <= 0 ) { go_BYE(-1); } 
@@ -53,6 +54,10 @@ approx_frequent_make(
   return_if_malloc_failed(buffer);
   memset(buffer, 0,  BUF_SZ * sizeof(double));
   
+  cnt_buffer = malloc(BUF_SZ * sizeof(cntrs_t));
+  return_if_malloc_failed(cnt_buffer);
+  memset(cnt_buffer, 0,  BUF_SZ * sizeof(cntrs_t));
+  
   ptr_state->cntrs = cntrs;
   ptr_state->n_cntrs = n_cntrs;
   ptr_state->n_active_cntrs = 0; /* num counters with non-zero frequencies */
@@ -63,6 +68,10 @@ approx_frequent_make(
   ptr_state->n_buffer  = 0;
   ptr_state->sz_buffer = BUF_SZ;
   ptr_state->buffer    = buffer;
+
+  ptr_state->n_cnt_buffer  = 0;
+  ptr_state->cnt_buffer    = cnt_buffer;
+
 
   ptr_state->is_final = false;
   ptr_state->n_input_vals = 0;
@@ -76,114 +85,18 @@ static int approx_frequent_exec(
   int status = 0;
   //---------------------------------------------------------------------
 
-  /* We will look at the incoming data as packets of size cntr_siz with sorted data (this would help speed up the update process a lot, this step is not mentioned in the paper - it's my improvization). Since the sorting has to be done within each packet separately, we can parallelize this step as follows: we divide the incoming data into blocks of size  = NUM_THREADS*cntr_siz (so that NUM_THREADS threads can be generated for each block and sorted separately in parallel using cilkfor) */
+  double *buffer = ptr_state->buffer;
+  uint32_t n_buffer = ptr_state->n_buffer;
+  cntrs_t *cnt_buffer = ptr_state->cnt_buffer;
+  uint32_t sz_buffer = ptr_state->sz_buffer;
 
-  /* "inputPacket" is a 2d array of size NUM_THREADS *cntr_siz: stores and sortes packets belonging to the same block in parallel using cilkfor. */
+  qsort_asc_F8(buffer, n_buffer);
+  status = sorted_array_to_id_freq(buffer, n_buffer, 
+      cnt_buffer, sz_buffer, &(ptr_state->n_cnt_buffer));
+  cBYE(status);
 
-  //------------------------------------------------------------------------
-  
-  int * bf_id = NULL;
-  int * bf_freq = NULL; /* temporary counters for processing */
-
-  bf_id = (int *)malloc( cntr_siz * sizeof(int) );
-  return_if_malloc_failed(bf_id);
-
-  bf_freq = (int *)malloc( cntr_siz * sizeof(int) );
-  return_if_malloc_failed(bf_freq);
-
-  long long current_loc_in_x = 0; /* start of input data */
-
-  /* Do the following for each block, till you reach the end of input */
-  while ( current_loc_in_x < siz ) { 
-
-    /* A block of data ( containing NUM_THREADS packets, i.e NUM_THREADS * cntr_siz integers ) is processed inside this loop. For each packet, the following operations are done: 
-     (1): Sort the packet (can be done in parallel using cilkfor)
-     (2): Convert each sorted packet into (id, freq) i.e (key, count) format using sorted_array_to_id_freq(). 
-     (3): Update the counter array using update_counter()
-     
-     Steps (1) and (2) can be done in parallel, but for some reason trying to do (2) in parallel is slowing down the code. So doing only (1) in parallel. */
-
-    /* Copying input data into "inputPackets" buffers */
-
-    if ( cfld == NULL || n_estimate == siz ) {
-
-      //------------------------------------------------------------------
-      for ( long long ii = 0; ii < NUM_THREADS; ii++) {
-	inputPacketsUsedSiz[ii] = 0;
-      }
-
-      cilkfor ( int tid = 0; tid < NUM_THREADS; tid++ ) {
-
-	long long lb = current_loc_in_x + tid * cntr_siz; 
-	long long ub = lb + cntr_siz;
-	if ( lb >= siz ) { continue; }
-	if ( ub >= siz ) { ub = siz; }
-
-	memcpy(inputPackets[tid], x+lb, (ub-lb)*sizeof(int));
-	inputPacketsUsedSiz[tid] = (ub-lb);
-
-      }
-
-      for ( int tid = 0; tid < NUM_THREADS; tid++ ) {
-	current_loc_in_x += inputPacketsUsedSiz[tid];
-      }
-      //------------------------------------------------------------------
-
-    }
-    else {
-
-      //------------------------------------------------------------------
-      /* NOTE: if cfld input is non-null, it means we are not interested in all the elements. In every iteration, we keep filling inputPackets buffer with only those data we are interested in using the helper variable "current_loc_in_x". */
-
-      for ( long long ii = 0; ii < NUM_THREADS; ii++) {
-	inputPacketsUsedSiz[ii] = 0;
-      }
-      int tid = 0;
-      
-      while ( current_loc_in_x < siz  && tid < NUM_THREADS ) {
-
-	if ( cfld[current_loc_in_x] == 0 ) { current_loc_in_x++; }
-	else {
-	  inputPackets[tid][inputPacketsUsedSiz[tid]] = x[current_loc_in_x];
-	  current_loc_in_x++; inputPacketsUsedSiz[tid]++;
-	  if ( inputPacketsUsedSiz[tid] == cntr_siz ) { tid++; }
-	}
-
-      }
-      //------------------------------------------------------------------
-
-    }
-
-
-    /* Step (1) can be done here in parallel using cilkfor */
-    cilkfor ( int tid = 0; tid < NUM_THREADS; tid++ ) {
-    
-      if ( inputPacketsUsedSiz[tid] == 0 ) { continue; }
-
-#ifdef IPP
-      ippsSortAscend_32s_I(inputPackets[tid], inputPacketsUsedSiz[tid]);
-#else
-      qsort_asc_I4(inputPackets[tid], inputPacketsUsedSiz[tid], sizeof(int), NULL);
-#endif
-
-    }
-
-    /* Steps (2) and (3) done here */
-
-    for ( int tid = 0; tid < NUM_THREADS; tid++ ) {
-    
-      if ( inputPacketsUsedSiz[tid] == 0 ) { break; }
-    
-      long long bf_siz = 0;
-      status = sorted_array_to_id_freq(inputPackets[tid],inputPacketsUsedSiz[tid],bf_id,bf_freq,&bf_siz); cBYE(status);
-
-      status = update_counter(cntr_id,cntr_freq,cntr_siz,&n_active_cntrs,bf_id,bf_freq,bf_siz);
-      cBYE(status);
-
-    }
-
-
-  }
+  status = update_counter(cntr_id,cntr_freq,cntr_siz,&n_active_cntrs,bf_id,bf_freq,bf_siz);
+  cBYE(status);
 BYE:
   return status;
 }
@@ -213,7 +126,7 @@ approx_frequent_final(
 {
   int status = 0;
   /* Post-processing, writing the outputs */
-  
+
   long long jj = 0;
   for ( long long ii = 0; ii < n_active_cntrs; ii++ ) {
 
@@ -227,27 +140,19 @@ approx_frequent_final(
   *ptr_len = jj;
   *ptr_estimate_is_good = 1;
 
- BYE:
+BYE:
+  return status;
+}
 
-  if ( flag >= 4 ) {
-    free_if_non_null(bf_id);
-    free_if_non_null(bf_freq);
-  }
-  if ( flag >= 3 ) {
-    for ( int ii = 0; ii < NUM_THREADS; ii++ ) {
-      free_if_non_null(inputPackets[ii]);
-    }
-  }
-  if ( flag >= 2 ) {
-    free_if_non_null(inputPackets);
-    free_if_non_null(inputPacketsUsedSiz);
-  }
-  if ( flag >= 1 ) {
-    free_if_non_null(cntr_id);
-    free_if_non_null(cntr_freq);
-  }
-
-  return(status);
+void
+approx_frequent_free(
+    approx_frequent_state_t *ptr_state
+    )
+{
+  free_if_non_null(ptr_state->buffer);
+  free_if_non_null(ptr_state->cnt_buffer);
+  free_if_non_null(ptr_state->cntrs);
+  free_if_non_null(ptr_state->high_rollers);
 }
 //-----------------------------------------------------------------------
 /* README: 

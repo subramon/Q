@@ -11,3 +11,7 @@ approx_frequent_add(
     approx_frequent_state_t *ptr_state,
     double val
     );
+extern void
+approx_frequent_free(
+    approx_frequent_state_t *ptr_state
+    );
