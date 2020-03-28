@@ -1,5 +1,5 @@
 extern int
-Output(
+slow_output(
        double **buffer,      
        int *weight, 
        double *last_packet,

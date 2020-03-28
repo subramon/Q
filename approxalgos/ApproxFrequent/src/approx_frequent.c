@@ -73,7 +73,6 @@ approx_frequent_make(
   ptr_state->cnt_buffer    = cnt_buffer;
 
 
-  ptr_state->is_final = false;
   ptr_state->n_input_vals = 0;
 BYE:
   return status;
@@ -108,7 +107,6 @@ approx_frequent_add(
     )
 {
   int status = 0;
-  if ( ptr_state->is_final) { go_BYE(-1); }
   ptr_state->n_input_vals++;
   if ( ptr_state->n_buffer < ptr_state->sz_buffer ) {
     ptr_state->buffer[ptr_state->n_buffer] = val;
@@ -120,7 +118,7 @@ BYE:
   return status;
 }
 int 
-approx_frequent_final(
+approx_frequent_read(
     approx_frequent_state_t *ptr_state
     )
 {

@@ -28,7 +28,7 @@ main(
         val++;
         if ( val == m ) { val = 0; }
       }
-      status = approx_quantile_final(&state); cBYE(status);
+      status = approx_quantile_read(&state); cBYE(status);
       double x = m / (nQ+1);
       for ( int i = 0; i < state.num_quantiles; i++ ) { 
         fprintf(stdout, "%4d\t%d\t%lf\t%lf\n", 

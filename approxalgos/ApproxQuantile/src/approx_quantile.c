@@ -63,7 +63,6 @@ approx_quantile_make(
   } 
   ptr_state->n_input_vals = 0;
   ptr_state->n_input_vals_estimate = n_input_vals_estimate;
-  ptr_state->is_final = false;
   ptr_state->b = b;
   ptr_state->k = k;
   ptr_state->eps = eps;
@@ -175,7 +174,6 @@ approx_quantile_add(
     )
 {
   int status = 0;
-  if ( ptr_state->is_final) { go_BYE(-1); }
   ptr_state->n_input_vals++;
   if ( ptr_state->n_in_buffer < ptr_state->k ) {
     ptr_state->in_buffer[ptr_state->n_in_buffer] = val;
@@ -206,7 +204,7 @@ approx_quantile_free(
 }
 //-------------------------------------------------------
 int 
-approx_quantile_final(
+approx_quantile_read(
     approx_quantile_state_t *ptr_state
     )
 {
@@ -221,7 +219,6 @@ approx_quantile_final(
   int num_quantiles = ptr_state->num_quantiles;
   int n             = ptr_state->n_input_vals;
 
-  ptr_state->is_final = true;
   if ( n_in_buffer < k ) {
     qsort_asc_F8(in_buffer, n_in_buffer);
   }
