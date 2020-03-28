@@ -6,8 +6,7 @@
 INCS = -I ./src/ -I../../UTILS/inc/ -I./inc/
 all: hmap.so
 
-hmap.so: ./src/*.c  ./inc/*.h 
-	gcc ${QC_FLAGS} ${INCS} \
+SRCS = \
 	  ./src/hmap_create.c  \
 	  ./src/hmap_instantiate.c  \
 	  ./src/hmap_insert.c  \
@@ -17,6 +16,9 @@ hmap.so: ./src/*.c  ./inc/*.h
 	  ./src/hmap_resize.c  \
 	  ./src/calc_new_size.c  \
 	  ./src/murmurhash.c  \
+
+hmap.so: ./src/*.c  ./inc/*.h 
+	gcc ${QC_FLAGS} ${SRCS} ${INCS} \
 	  -shared -o hmap.so 
 
 test_hmap : hmap.so ./test/*.c 
