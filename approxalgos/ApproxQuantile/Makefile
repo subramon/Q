@@ -12,7 +12,6 @@ SRCS = \
 	src/fast_output.c \
 	src/New.c \
 	src/qsort_asc_F8.c \
-	src/qsort_asc_I4.c \
 	src/slow_output.c 
 
 

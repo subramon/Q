@@ -6,13 +6,13 @@
 #include "update_counter.h"
 
 #define MAX_SZ 1048576 /* use no more than sizeof(double) * 1 MB */
-#define BUF_SZ 1024 /* size of buffer in which we accumulate */
 
 int 
 approx_frequent_make(
-  uint32_t n_input_vals_estimate,
-  uint32_t err,
-  uint32_t min_freq,
+  uint32_t n_input_vals_estimate, // TODO User provided value 
+  uint32_t err, // TODO User provided value 
+  uint32_t min_freq, // TODO User provided value 
+  uint32_t max_output, // TODO User provided value 
   approx_frequent_state_t *ptr_state
   )
 {
@@ -20,6 +20,7 @@ approx_frequent_make(
   cntrs_t *cntrs = NULL;
   double *buffer = NULL;
   cntrs_t *cnt_buffer = NULL;
+  cntrs_t *merged_cntrs = NULL;
   /* Check inputs */
   if ( n_input_vals_estimate <= 0 ) { go_BYE(-1); }
   if ( err <= 0 ) { go_BYE(-1); } 
@@ -28,7 +29,7 @@ approx_frequent_make(
   if ( ptr_state == NULL ) { go_BYE(-1); }
 
   memset(ptr_state, 0, sizeof(approx_frequent_state_t));
-  double eps = (double)err/(double)n_input_vals_estimate; 
+  double eps = (double)err/(double)n_input_vals_estimate;  
   /* parameter of FREQUENT algorithm, decides the error in approximation */
   if ( eps < pow(2,-50) ) { go_BYE(-2); } /* need too much memory */
 #ifdef XXX
@@ -36,47 +37,59 @@ approx_frequent_make(
     /* insufficient memory allocated to the outputs y and f */
   //-----------------------------------------------------------------
 #endif
-  /* The algorithm will be using n_cntrs = (1/eps)+1 counters: 
+  /* The algorithm will be using sz_cntrs = (1/eps)+1 counters: 
    * These are stored in cntrs which is a struct of (cntr_id, cntr_freq) */
 
-  uint32_t n_cntrs = (uint32_t ) (1/eps)+1;
-  if ( ( n_cntrs*(1+2+6) ) > MAX_SZ ) { go_BYE(-4); }
+  uint32_t sz_cntrs = (uint32_t ) (1/eps)+1;
+  if ( ( sz_cntrs*(1+2+6) ) > MAX_SZ ) { go_BYE(-4); }
  /* Quitting if too much memory needed. Retry by doing one of the following:
     (i) Increase MAX_SZ if you think you have more RAM
     (ii) Increase eps (the approximation percentage) so that 
     computations can be done within RAM
      */
-  cntrs = malloc(n_cntrs * sizeof(cntrs_t));
+  cntrs = malloc(sz_cntrs * sizeof(cntrs_t));
   return_if_malloc_failed(cntrs);
-  memset(cntrs, 0,  n_cntrs * sizeof(cntrs_t));
+  memset(cntrs, 0,  sz_cntrs * sizeof(cntrs_t));
   
-  buffer = malloc(BUF_SZ * sizeof(double));
+  merged_cntrs = malloc(2*sz_cntrs * sizeof(cntrs_t));
+  return_if_malloc_failed(cntrs);
+  memset(cntrs, 0, 2*sz_cntrs * sizeof(cntrs_t));
+  
+  buffer = malloc(sz_cntrs * sizeof(double));
   return_if_malloc_failed(buffer);
-  memset(buffer, 0,  BUF_SZ * sizeof(double));
+  memset(buffer, 0,  sz_cntrs * sizeof(double));
   
-  cnt_buffer = malloc(BUF_SZ * sizeof(cntrs_t));
+  cnt_buffer = malloc(sz_cntrs * sizeof(cntrs_t));
   return_if_malloc_failed(cnt_buffer);
-  memset(cnt_buffer, 0,  BUF_SZ * sizeof(cntrs_t));
+  memset(cnt_buffer, 0,  sz_cntrs * sizeof(cntrs_t));
   
   ptr_state->cntrs = cntrs;
-  ptr_state->n_cntrs = n_cntrs;
-  ptr_state->n_active_cntrs = 0; /* num counters with non-zero frequencies */
-  ptr_state->err = err;
-  ptr_state->min_freq = min_freq;
-  ptr_state->n_input_vals_estimate = n_input_vals_estimate;
+  ptr_state->n_cntrs = 0;/* num counters with non-zero frequencies */
+  ptr_state->sz_cntrs = sz_cntrs;
 
   ptr_state->n_buffer  = 0;
-  ptr_state->sz_buffer = BUF_SZ;
+  ptr_state->sz_cntrs = sz_cntrs;
   ptr_state->buffer    = buffer;
 
   ptr_state->n_cnt_buffer  = 0;
-  ptr_state->cnt_buffer    = cnt_buffer;
 
+  ptr_state->merged_cntrs    = merged_cntrs;
+  ptr_state->output = NULL;
+  ptr_state->n_output = 0;
+  ptr_state->max_output = max_output; 
 
   ptr_state->n_input_vals = 0;
+
+  // Save the input 
+  ptr_state->n_input_vals_estimate = n_input_vals_estimate;
+  ptr_state->err = err;
+  ptr_state->min_freq = min_freq;
+  ptr_state->max_output = max_output;
+
 BYE:
   return status;
 }
+
 static int approx_frequent_exec(
     approx_frequent_state_t *ptr_state
 )
@@ -87,14 +100,17 @@ static int approx_frequent_exec(
   double *buffer = ptr_state->buffer;
   uint32_t n_buffer = ptr_state->n_buffer;
   cntrs_t *cnt_buffer = ptr_state->cnt_buffer;
-  uint32_t sz_buffer = ptr_state->sz_buffer;
 
   qsort_asc_F8(buffer, n_buffer);
+  memset(buffer, 0, n_buffer * sizeof(double)); // Not really needed
   status = sorted_array_to_id_freq(buffer, n_buffer, 
-      cnt_buffer, sz_buffer, &(ptr_state->n_cnt_buffer));
+      cnt_buffer, &(ptr_state->n_cnt_buffer));
   cBYE(status);
+  ptr_state->n_buffer = 0; // we have consumed this information
 
-  status = update_counter(cntr_id,cntr_freq,cntr_siz,&n_active_cntrs,bf_id,bf_freq,bf_siz);
+  status = update_counter(ptr_state->cntrs, ptr_state->sz_cntrs,
+      ptr_state->cnt_buffer, ptr_state->n_cnt_buffer, 
+      ptr_state->merged_cntrs, &(ptr_state->n_cntrs));
   cBYE(status);
 BYE:
   return status;
@@ -108,36 +124,43 @@ approx_frequent_add(
 {
   int status = 0;
   ptr_state->n_input_vals++;
-  if ( ptr_state->n_buffer < ptr_state->sz_buffer ) {
+  if ( ptr_state->n_buffer < ptr_state->sz_cntrs ) {
     ptr_state->buffer[ptr_state->n_buffer] = val;
     ptr_state->n_buffer++;
   }
-  if ( ptr_state->n_buffer < ptr_state->sz_buffer ) { return status; }
+  if ( ptr_state->n_buffer < ptr_state->sz_cntrs ) { return status; }
+  // buffer is full but we have to compress it down 
   status = approx_frequent_exec(ptr_state); cBYE(status);
+  ptr_state->n_buffer = 0; // indicate buffer is empty
+  memset(ptr_state->buffer, 0, ptr_state->sz_cntrs * sizeof(cntrs_t));
 BYE:
   return status;
 }
+//-----------------------------------------------
 int 
 approx_frequent_read(
     approx_frequent_state_t *ptr_state
     )
 {
   int status = 0;
-  /* Post-processing, writing the outputs */
-
-  long long jj = 0;
-  for ( long long ii = 0; ii < n_active_cntrs; ii++ ) {
-
-    if ( cntr_freq[ii] >= (min_freq-err) ) {
-      y[jj] = cntr_id[ii]; f[jj] = cntr_freq[ii];
-      jj++;
+  /* Count number of outputs */
+  uint32_t oidx = 0;
+  for ( uint32_t ii = 0; ii < ptr_state->n_cntrs; ii++ ) {
+    uint32_t threshold = ptr_state->min_freq - ptr_state->err;
+    if ( ptr_state->cntrs[ii].freq >= threshold ) { 
+      // y[jj] = cntr_id[ii]; f[jj] = cntr_freq[ii];
+      oidx++;
     }
-
   }
-
-  *ptr_len = jj;
-  *ptr_estimate_is_good = 1;
-
+  // malloc output 
+  uint32_t n_output = oidx;
+  if ( n_output > ptr_state->max_output ) { 
+    n_output =  ptr_state->max_output;
+  }
+  ptr_state->output = malloc(n_output * sizeof(cntrs_t));
+  return_if_malloc_failed(ptr_state->output);
+  ptr_state->n_output = oidx;
+  //---------------------
 BYE:
   return status;
 }
@@ -150,7 +173,7 @@ approx_frequent_free(
   free_if_non_null(ptr_state->buffer);
   free_if_non_null(ptr_state->cnt_buffer);
   free_if_non_null(ptr_state->cntrs);
-  free_if_non_null(ptr_state->high_rollers);
+  free_if_non_null(ptr_state->output);
 }
 //-----------------------------------------------------------------------
 /* README: 
