@@ -1,8 +1,7 @@
-int
+extern int
 sorted_array_to_id_freq (
-		   int * buf,          
-		   long long num_buf,  
-		   int * bf_id,        
-		   int * bf_freq,      
-		   long long * ptr_bf_siz 
-			 );
+    double * in_buf, // [n_in_buf]          // input 
+    uint32_t n_in_buf, // input 
+    cntrs_t *out_buf, // [sz_out_buf]  // answers written here
+    uint32_t *ptr_n_out_buf // output 
+    );

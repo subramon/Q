@@ -8,7 +8,6 @@
 typedef struct _approx_quantile_state_t { 
   uint64_t n_input_vals_estimate; // estimated
   uint64_t n_input_vals; // actual 
-  bool is_final;
   int b;
   int k;
   int num_empty_buffers;

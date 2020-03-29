@@ -1,31 +1,43 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
-#include "macros.h"
+#include "q_incs.h"
+#include "approx_frequent_struct.h"
+#include "update_counter.h"
 
 // START FUNC DECL
 int 
 update_counter (
-		int * cntr_id,   
-		int * cntr_freq, 
-		long long cntr_siz, 
-		long long *ptr_active_cntr_siz,  
-		int * bf_id,      
-		int * bf_freq,      
-		long long bf_siz   
-		)
+    cntrs_t *cntrs,
+    uint32_t sz_cntrs,
+    cntrs_t *cnt_buffer, // [sz_cntrs] 
+    uint32_t n_cnt_buffer,
+    cntrs_t *merged_cntrs, // [2*sz_cntrs] 
+    uint32_t *ptr_n_cntrs
+    )
 // STOP FUNC DECL
 //-------------------------------------------------------------------------
 /* README:
 
 update_counter(cntr_id,cntr_freq,cntr_siz,ptr_active_cntr_siz,bf_id,bf_freq,bf_siz) : This function updates the counter array (cntr_id, cntr_freq) by adding new id and freq data specified by (bf_id, bf_freq).
 
-NOTE: Both (cntr_id,cntr_freq) and (bf_id,bf_freq) are assumed to be sorted in their id's (this has to be done beforehand). Active_cntr_siz is the total number of counters being used in the counter array by some ids (i.e., number of distinct elements whose approximate counts are remembered by the algorithm at this stage). bf_siz is the total number of distinct elements (ids) in the incoming packet. A temporary counter array (temp_cntr_id, temp_cntr_freq) of size active_cntr_siz + bf_siz (max possible distinct elements after merging) will be used to merge the two id arrays. If same id's exist in both the arrays, their counts will be added. 
+NOTE: Both (cntr_id,cntr_freq) and (bf_id,bf_freq) are assumed to be
+sorted in their id's (this has to be done beforehand). Active_cntr_siz
+is the total number of counters being used in the counter array by
+some ids (i.e., number of distinct elements whose approximate counts
+are remembered by the algorithm at this stage). bf_siz is the total
+number of distinct elements (ids) in the incoming packet. A temporary
+counter array (temp_cntr_id, temp_cntr_freq) of size active_cntr_siz +
+bf_siz (max possible distinct elements after merging) will be used to
+merge the two id arrays. If same id's exist in both the arrays, their
+counts will be added.
 
-If the size of (temp_cntr_id,temp_cntr_freq) is higher than cntr_siz (the number of counters available to the algorithm), some elements will be dropped (the ids with low counts) till the size becomes less than or equal to cntr_siz. The contents will be copied to the (cntr_id,cntr_freq) once this criterion is met.
+If the size of (temp_cntr_id,temp_cntr_freq) is higher than cntr_siz
+(the number of counters available to the algorithm), some elements
+will be dropped (the ids with low counts) till the size becomes less
+than or equal to cntr_siz. The contents will be copied to the
+(cntr_id,cntr_freq) once this criterion is met.
 
-Algorithm: FREQUENT algorithm (Cormode's paper: Finding Frequent Items in Data Streams). A modified implementation is used to promote parallel processing.
+Algorithm: FREQUENT algorithm (Cormode's paper: Finding Frequent Items
+in Data Streams). A modified implementation is used to promote
+parallel processing.
 
 INPUTS: 
 
@@ -46,70 +58,67 @@ bf_siz: Size of the new input (bf_id, bf_freq) data
  */
 //--------------------------------------------------------------------------
 {
-
   int status = 0;
+  if ( cntrs == NULL ) { go_BYE(-1); }
+  if ( sz_cntrs == 0 ) {go_BYE(-1); }
+  if ( cnt_buffer == NULL ) { go_BYE(-1); }
+  if ( n_cnt_buffer == 0 ) { go_BYE(-1); }
+  if ( merged_cntrs == NULL ) { go_BYE(-1); }
 
-  int * temp_cntr_id = NULL;
-  int * temp_cntr_freq = NULL; 
+  //---------------------------------------------------------------------
+  // We merge cntrs and cnt_buffer into merge_cntr so that the result
+  // is sorted on the val field
 
-  /* check inputs */
-
-  if ( cntr_id == NULL ) { go_BYE(-1); }
-  if ( cntr_freq == NULL ) { go_BYE(-1); }
-  if ( ptr_active_cntr_siz == NULL ) { go_BYE(-1); }
-  if ( bf_id == NULL ) { go_BYE(-1); }
-  if ( bf_freq == NULL ) { go_BYE(-1); }
-
-  //------------------------------------------------------------------------
-
-  /* (temp_cntr_id,temp_cntr_freq) stores the merged and sorted (sorted in id) data of the counters (cntr_id,cntr_freq) and (bf_id, bf_freq) */
-
-  long long ii = 0, jj = 0, kk = 0; 
-
-  temp_cntr_id = (int *)malloc( ((*ptr_active_cntr_siz)+bf_siz)*sizeof(int) );
-  temp_cntr_freq = (int *)malloc( ((*ptr_active_cntr_siz)+bf_siz)*sizeof(int) );
-
-  
-  while (1) {
-
-    if ( ii < (*ptr_active_cntr_siz) && jj < bf_siz ) {
-      
-      if ( cntr_id[ii] < bf_id[jj] ) {
-	temp_cntr_id[kk] = cntr_id[ii];
-	temp_cntr_freq[kk++] = cntr_freq[ii++];
-      }
-      else if ( bf_id[jj] < cntr_id[ii] ) {
-	temp_cntr_id[kk] = bf_id[jj];
-	temp_cntr_freq[kk++] = bf_freq[jj++];
-      }
-      else {
-	temp_cntr_id[kk] = bf_id[jj];
-	temp_cntr_freq[kk++] = bf_freq[jj++] + cntr_freq[ii++];
-      }
-
+  uint32_t idx1 = 0; // for cntrs
+  uint32_t idx2 = 0; // for cnt_buffer
+  uint32_t oidx = 0; // for merged_cntrs
+  while ( ( idx1 < sz_cntrs ) && ( idx2 < n_cnt_buffer ) ) { 
+    double val1 = cntrs[idx1].val;
+    double val2 = cntrs[idx2].val;
+    if ( val1 < val2 ) { 
+      merged_cntrs[oidx] = cntrs[idx1];
+      idx1++;
+      oidx++;
     }
-    else if ( ii < (*ptr_active_cntr_siz) && jj == bf_siz ) {
-      temp_cntr_id[kk] = cntr_id[ii];
-      temp_cntr_freq[kk++] = cntr_freq[ii++];
-    }
-    else if ( ii == (*ptr_active_cntr_siz) && jj < bf_siz ) {
-      temp_cntr_id[kk] = bf_id[jj];
-      temp_cntr_freq[kk++] = bf_freq[jj++];
+    else if ( val1 == val2 ) { 
+      merged_cntrs[oidx].val   = cntrs[idx1].val;
+      merged_cntrs[oidx].freq += cnt_buffer[idx1].freq;
+      idx1++;
+      idx2++;
+      oidx++;
     }
     else {
-      break;
+      merged_cntrs[oidx] = cnt_buffer[idx2];
+      idx2++;
+      oidx++;
+    }
+    if ( oidx > 0 ) {
+      if ( merged_cntrs[oidx].val == merged_cntrs[oidx-1].val ) { 
+        merged_cntrs[oidx-1].freq += merged_cntrs[oidx].freq;
+        oidx--;
+      }
     }
   }
-  
-  *ptr_active_cntr_siz = kk;
+  // We expect the val field to be *strictly* increasing in the output
+  for ( uint32_t i = 1; i < oidx; i++ ) { 
+    if ( merged_cntrs[i].val <= merged_cntrs[i-1].val ) { go_BYE(-1); }
+    if ( merged_cntrs[i].freq == 0 ) { go_BYE(-1); }
+  }
 
   //------------------------------------------------------------------------
-  
-  /* If the size of (temp_cntr_id,temp_cntr_freq) is less than cntr_siz (i.e., teh total number of counters available for use) then we just copy the data to (cntr_id, cntr_freq) (overwriting). Else, keep dropping elements with low frequencies (according to FREQUENT algorithm's rules so that theoretical guarantees hold)till the size of (temp_cntr_id,temp_cntr_freq) becomes less than cntr_siz and then copy the data to (cntr_id, cntr_freq). */
+
+  /* If the size of (temp_cntr_id,temp_cntr_freq) is less than
+     cntr_siz (i.e., teh total number of counters available for use)
+     then we just copy the data to (cntr_id, cntr_freq)
+     (overwriting). Else, keep dropping elements with low frequencies
+     (according to FREQUENT algorithm's rules so that theoretical
+     guarantees hold)till the size of (temp_cntr_id,temp_cntr_freq)
+     becomes less than cntr_siz and then copy the data to (cntr_id,
+     cntr_freq). */
 
 
-  while ( *ptr_active_cntr_siz > cntr_siz ) { 
-     
+  while ( oidx > sz_cntrs ) { 
+
     for ( long long kk = 0; kk < *ptr_active_cntr_siz; kk++ ) {
       temp_cntr_freq[kk]--;
     }
@@ -117,21 +126,15 @@ bf_siz: Size of the new input (bf_id, bf_freq) data
     jj = 0;
     for ( long long kk = 0; kk < *ptr_active_cntr_siz; kk++ ) {
       if ( temp_cntr_freq[kk] > 0 ) {
-	temp_cntr_freq[jj] = temp_cntr_freq[kk];
-	temp_cntr_id[jj++] = temp_cntr_id[kk];
+        temp_cntr_freq[jj] = temp_cntr_freq[kk];
+        temp_cntr_id[jj++] = temp_cntr_id[kk];
       }
     } 
     *ptr_active_cntr_siz = jj;
 
   }
-
-  memcpy(cntr_id, temp_cntr_id, *ptr_active_cntr_siz*sizeof(int));
-  memcpy(cntr_freq, temp_cntr_freq, *ptr_active_cntr_siz*sizeof(int));
-
- BYE:
-  free_if_non_null(temp_cntr_id);
-  free_if_non_null(temp_cntr_freq);
-
+  memcpy(cntrs, merged_cntrs, oidx*sizeof(cntrs_t));
+  *ptr_n_cntrs = oidx;
+BYE:
   return(status);
-
 }

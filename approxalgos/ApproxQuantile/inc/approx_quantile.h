@@ -19,7 +19,7 @@ extern int approx_quantile_free(
     approx_quantile_state_t *ptr_state
     );
 extern int 
-approx_quantile_final(
+approx_quantile_read(
     approx_quantile_state_t *ptr_state
     );
 #endif

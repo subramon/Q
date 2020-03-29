@@ -6,19 +6,21 @@
 #include "update_counter.h"
 
 #define MAX_SZ 1048576 /* use no more than sizeof(double) * 1 MB */
-#define BUF_SZ 1024 /* size of buffer in which we accumulate */
 
 int 
 approx_frequent_make(
-  uint32_t n_input_vals_estimate,
-  uint32_t err,
-  uint32_t min_freq,
+  uint32_t n_input_vals_estimate, // TODO User provided value 
+  uint32_t err, // TODO User provided value 
+  uint32_t min_freq, // TODO User provided value 
+  uint32_t max_output, // TODO User provided value 
   approx_frequent_state_t *ptr_state
   )
 {
   int status = 0;
   cntrs_t *cntrs = NULL;
   double *buffer = NULL;
+  cntrs_t *cnt_buffer = NULL;
+  cntrs_t *merged_cntrs = NULL;
   /* Check inputs */
   if ( n_input_vals_estimate <= 0 ) { go_BYE(-1); }
   if ( err <= 0 ) { go_BYE(-1); } 
@@ -27,7 +29,7 @@ approx_frequent_make(
   if ( ptr_state == NULL ) { go_BYE(-1); }
 
   memset(ptr_state, 0, sizeof(approx_frequent_state_t));
-  double eps = (double)err/(double)n_input_vals_estimate; 
+  double eps = (double)err/(double)n_input_vals_estimate;  
   /* parameter of FREQUENT algorithm, decides the error in approximation */
   if ( eps < pow(2,-50) ) { go_BYE(-2); } /* need too much memory */
 #ifdef XXX
@@ -35,40 +37,59 @@ approx_frequent_make(
     /* insufficient memory allocated to the outputs y and f */
   //-----------------------------------------------------------------
 #endif
-  /* The algorithm will be using n_cntrs = (1/eps)+1 counters: 
+  /* The algorithm will be using sz_cntrs = (1/eps)+1 counters: 
    * These are stored in cntrs which is a struct of (cntr_id, cntr_freq) */
 
-  uint32_t n_cntrs = (uint32_t ) (1/eps)+1;
-  if ( ( n_cntrs*(1+2+6) ) > MAX_SZ ) { go_BYE(-4); }
+  uint32_t sz_cntrs = (uint32_t ) (1/eps)+1;
+  if ( ( sz_cntrs*(1+2+6) ) > MAX_SZ ) { go_BYE(-4); }
  /* Quitting if too much memory needed. Retry by doing one of the following:
     (i) Increase MAX_SZ if you think you have more RAM
     (ii) Increase eps (the approximation percentage) so that 
     computations can be done within RAM
      */
-  cntrs = malloc(n_cntrs * sizeof(cntrs_t));
+  cntrs = malloc(sz_cntrs * sizeof(cntrs_t));
   return_if_malloc_failed(cntrs);
-  memset(cntrs, 0,  n_cntrs * sizeof(cntrs_t));
+  memset(cntrs, 0,  sz_cntrs * sizeof(cntrs_t));
   
-  buffer = malloc(BUF_SZ * sizeof(double));
+  merged_cntrs = malloc(2*sz_cntrs * sizeof(cntrs_t));
+  return_if_malloc_failed(cntrs);
+  memset(cntrs, 0, 2*sz_cntrs * sizeof(cntrs_t));
+  
+  buffer = malloc(sz_cntrs * sizeof(double));
   return_if_malloc_failed(buffer);
-  memset(buffer, 0,  BUF_SZ * sizeof(double));
+  memset(buffer, 0,  sz_cntrs * sizeof(double));
+  
+  cnt_buffer = malloc(sz_cntrs * sizeof(cntrs_t));
+  return_if_malloc_failed(cnt_buffer);
+  memset(cnt_buffer, 0,  sz_cntrs * sizeof(cntrs_t));
   
   ptr_state->cntrs = cntrs;
-  ptr_state->n_cntrs = n_cntrs;
-  ptr_state->n_active_cntrs = 0; /* num counters with non-zero frequencies */
-  ptr_state->err = err;
-  ptr_state->min_freq = min_freq;
-  ptr_state->n_input_vals_estimate = n_input_vals_estimate;
+  ptr_state->n_cntrs = 0;/* num counters with non-zero frequencies */
+  ptr_state->sz_cntrs = sz_cntrs;
 
   ptr_state->n_buffer  = 0;
-  ptr_state->sz_buffer = BUF_SZ;
+  ptr_state->sz_cntrs = sz_cntrs;
   ptr_state->buffer    = buffer;
 
-  ptr_state->is_final = false;
+  ptr_state->n_cnt_buffer  = 0;
+
+  ptr_state->merged_cntrs    = merged_cntrs;
+  ptr_state->output = NULL;
+  ptr_state->n_output = 0;
+  ptr_state->max_output = max_output; 
+
   ptr_state->n_input_vals = 0;
+
+  // Save the input 
+  ptr_state->n_input_vals_estimate = n_input_vals_estimate;
+  ptr_state->err = err;
+  ptr_state->min_freq = min_freq;
+  ptr_state->max_output = max_output;
+
 BYE:
   return status;
 }
+
 static int approx_frequent_exec(
     approx_frequent_state_t *ptr_state
 )
@@ -76,114 +97,21 @@ static int approx_frequent_exec(
   int status = 0;
   //---------------------------------------------------------------------
 
-  /* We will look at the incoming data as packets of size cntr_siz with sorted data (this would help speed up the update process a lot, this step is not mentioned in the paper - it's my improvization). Since the sorting has to be done within each packet separately, we can parallelize this step as follows: we divide the incoming data into blocks of size  = NUM_THREADS*cntr_siz (so that NUM_THREADS threads can be generated for each block and sorted separately in parallel using cilkfor) */
+  double *buffer = ptr_state->buffer;
+  uint32_t n_buffer = ptr_state->n_buffer;
+  cntrs_t *cnt_buffer = ptr_state->cnt_buffer;
 
-  /* "inputPacket" is a 2d array of size NUM_THREADS *cntr_siz: stores and sortes packets belonging to the same block in parallel using cilkfor. */
+  qsort_asc_F8(buffer, n_buffer);
+  memset(buffer, 0, n_buffer * sizeof(double)); // Not really needed
+  status = sorted_array_to_id_freq(buffer, n_buffer, 
+      cnt_buffer, &(ptr_state->n_cnt_buffer));
+  cBYE(status);
+  ptr_state->n_buffer = 0; // we have consumed this information
 
-  //------------------------------------------------------------------------
-  
-  int * bf_id = NULL;
-  int * bf_freq = NULL; /* temporary counters for processing */
-
-  bf_id = (int *)malloc( cntr_siz * sizeof(int) );
-  return_if_malloc_failed(bf_id);
-
-  bf_freq = (int *)malloc( cntr_siz * sizeof(int) );
-  return_if_malloc_failed(bf_freq);
-
-  long long current_loc_in_x = 0; /* start of input data */
-
-  /* Do the following for each block, till you reach the end of input */
-  while ( current_loc_in_x < siz ) { 
-
-    /* A block of data ( containing NUM_THREADS packets, i.e NUM_THREADS * cntr_siz integers ) is processed inside this loop. For each packet, the following operations are done: 
-     (1): Sort the packet (can be done in parallel using cilkfor)
-     (2): Convert each sorted packet into (id, freq) i.e (key, count) format using sorted_array_to_id_freq(). 
-     (3): Update the counter array using update_counter()
-     
-     Steps (1) and (2) can be done in parallel, but for some reason trying to do (2) in parallel is slowing down the code. So doing only (1) in parallel. */
-
-    /* Copying input data into "inputPackets" buffers */
-
-    if ( cfld == NULL || n_estimate == siz ) {
-
-      //------------------------------------------------------------------
-      for ( long long ii = 0; ii < NUM_THREADS; ii++) {
-	inputPacketsUsedSiz[ii] = 0;
-      }
-
-      cilkfor ( int tid = 0; tid < NUM_THREADS; tid++ ) {
-
-	long long lb = current_loc_in_x + tid * cntr_siz; 
-	long long ub = lb + cntr_siz;
-	if ( lb >= siz ) { continue; }
-	if ( ub >= siz ) { ub = siz; }
-
-	memcpy(inputPackets[tid], x+lb, (ub-lb)*sizeof(int));
-	inputPacketsUsedSiz[tid] = (ub-lb);
-
-      }
-
-      for ( int tid = 0; tid < NUM_THREADS; tid++ ) {
-	current_loc_in_x += inputPacketsUsedSiz[tid];
-      }
-      //------------------------------------------------------------------
-
-    }
-    else {
-
-      //------------------------------------------------------------------
-      /* NOTE: if cfld input is non-null, it means we are not interested in all the elements. In every iteration, we keep filling inputPackets buffer with only those data we are interested in using the helper variable "current_loc_in_x". */
-
-      for ( long long ii = 0; ii < NUM_THREADS; ii++) {
-	inputPacketsUsedSiz[ii] = 0;
-      }
-      int tid = 0;
-      
-      while ( current_loc_in_x < siz  && tid < NUM_THREADS ) {
-
-	if ( cfld[current_loc_in_x] == 0 ) { current_loc_in_x++; }
-	else {
-	  inputPackets[tid][inputPacketsUsedSiz[tid]] = x[current_loc_in_x];
-	  current_loc_in_x++; inputPacketsUsedSiz[tid]++;
-	  if ( inputPacketsUsedSiz[tid] == cntr_siz ) { tid++; }
-	}
-
-      }
-      //------------------------------------------------------------------
-
-    }
-
-
-    /* Step (1) can be done here in parallel using cilkfor */
-    cilkfor ( int tid = 0; tid < NUM_THREADS; tid++ ) {
-    
-      if ( inputPacketsUsedSiz[tid] == 0 ) { continue; }
-
-#ifdef IPP
-      ippsSortAscend_32s_I(inputPackets[tid], inputPacketsUsedSiz[tid]);
-#else
-      qsort_asc_I4(inputPackets[tid], inputPacketsUsedSiz[tid], sizeof(int), NULL);
-#endif
-
-    }
-
-    /* Steps (2) and (3) done here */
-
-    for ( int tid = 0; tid < NUM_THREADS; tid++ ) {
-    
-      if ( inputPacketsUsedSiz[tid] == 0 ) { break; }
-    
-      long long bf_siz = 0;
-      status = sorted_array_to_id_freq(inputPackets[tid],inputPacketsUsedSiz[tid],bf_id,bf_freq,&bf_siz); cBYE(status);
-
-      status = update_counter(cntr_id,cntr_freq,cntr_siz,&n_active_cntrs,bf_id,bf_freq,bf_siz);
-      cBYE(status);
-
-    }
-
-
-  }
+  status = update_counter(ptr_state->cntrs, ptr_state->sz_cntrs,
+      ptr_state->cnt_buffer, ptr_state->n_cnt_buffer, 
+      ptr_state->merged_cntrs, &(ptr_state->n_cntrs));
+  cBYE(status);
 BYE:
   return status;
 }
@@ -195,59 +123,57 @@ approx_frequent_add(
     )
 {
   int status = 0;
-  if ( ptr_state->is_final) { go_BYE(-1); }
   ptr_state->n_input_vals++;
-  if ( ptr_state->n_buffer < ptr_state->sz_buffer ) {
+  if ( ptr_state->n_buffer < ptr_state->sz_cntrs ) {
     ptr_state->buffer[ptr_state->n_buffer] = val;
     ptr_state->n_buffer++;
   }
-  if ( ptr_state->n_buffer < ptr_state->sz_buffer ) { return status; }
+  if ( ptr_state->n_buffer < ptr_state->sz_cntrs ) { return status; }
+  // buffer is full but we have to compress it down 
   status = approx_frequent_exec(ptr_state); cBYE(status);
+  ptr_state->n_buffer = 0; // indicate buffer is empty
+  memset(ptr_state->buffer, 0, ptr_state->sz_cntrs * sizeof(cntrs_t));
 BYE:
   return status;
 }
+//-----------------------------------------------
 int 
-approx_frequent_final(
+approx_frequent_read(
     approx_frequent_state_t *ptr_state
     )
 {
   int status = 0;
-  /* Post-processing, writing the outputs */
-  
-  long long jj = 0;
-  for ( long long ii = 0; ii < n_active_cntrs; ii++ ) {
-
-    if ( cntr_freq[ii] >= (min_freq-err) ) {
-      y[jj] = cntr_id[ii]; f[jj] = cntr_freq[ii];
-      jj++;
-    }
-
-  }
-
-  *ptr_len = jj;
-  *ptr_estimate_is_good = 1;
-
- BYE:
-
-  if ( flag >= 4 ) {
-    free_if_non_null(bf_id);
-    free_if_non_null(bf_freq);
-  }
-  if ( flag >= 3 ) {
-    for ( int ii = 0; ii < NUM_THREADS; ii++ ) {
-      free_if_non_null(inputPackets[ii]);
+  /* Count number of outputs */
+  uint32_t oidx = 0;
+  for ( uint32_t ii = 0; ii < ptr_state->n_cntrs; ii++ ) {
+    uint32_t threshold = ptr_state->min_freq - ptr_state->err;
+    if ( ptr_state->cntrs[ii].freq >= threshold ) { 
+      // y[jj] = cntr_id[ii]; f[jj] = cntr_freq[ii];
+      oidx++;
     }
   }
-  if ( flag >= 2 ) {
-    free_if_non_null(inputPackets);
-    free_if_non_null(inputPacketsUsedSiz);
+  // malloc output 
+  uint32_t n_output = oidx;
+  if ( n_output > ptr_state->max_output ) { 
+    n_output =  ptr_state->max_output;
   }
-  if ( flag >= 1 ) {
-    free_if_non_null(cntr_id);
-    free_if_non_null(cntr_freq);
-  }
+  ptr_state->output = malloc(n_output * sizeof(cntrs_t));
+  return_if_malloc_failed(ptr_state->output);
+  ptr_state->n_output = oidx;
+  //---------------------
+BYE:
+  return status;
+}
 
-  return(status);
+void
+approx_frequent_free(
+    approx_frequent_state_t *ptr_state
+    )
+{
+  free_if_non_null(ptr_state->buffer);
+  free_if_non_null(ptr_state->cnt_buffer);
+  free_if_non_null(ptr_state->cntrs);
+  free_if_non_null(ptr_state->output);
 }
 //-----------------------------------------------------------------------
 /* README: 

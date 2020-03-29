@@ -1,12 +1,9 @@
-#include <inttypes.h>
-
-int 
+extern int 
 update_counter (
-		int * cntr_id,   
-		int * cntr_freq, 
-		long long cntr_siz, 
-		long long *ptr_active_cntr_siz,  
-		int * bf_id,      
-		int * bf_freq,      
-		long long bf_siz   
-		);
+    cntrs_t *cntrs,
+    uint32_t sz_cntrs,
+    cntrs_t *cnt_buffer, // [sz_cntrs] 
+    uint32_t n_cnt_buffer,
+    cntrs_t *merged_cntrs, // [2*sz_cntrs] 
+    uint32_t *ptr_n_cntrs
+    );
