@@ -1,3 +1,5 @@
+local cVector = require 'libvctr'
+cVector.init_globals({})
 local plpath  = require 'pl.path'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local Scalar  = require 'libsclr'
