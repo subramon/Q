@@ -28,7 +28,7 @@ local function expander_ifxthenyelsez(variation, x, y, z)
 
   -- allocate buffer for output
   local chunk_size = cVector.chunk_size() 
-  local wbufsz = cVector.chunk_size() * ffi.sizeof(subs.ctype)
+  local wbufsz = chunk_size * ffi.sizeof(subs.ctype)
   local wbuf = cmem.new(0)
   local l_chunk_num = 0
   local cst_x_as = qconsts.qtypes[x:fldtype()].ctype .. "*"

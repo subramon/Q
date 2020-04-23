@@ -1,3 +1,5 @@
+local cVector = require 'libvctr'
+cVector.init_globals({})
 local plpath  = require 'pl.path'
 local cVector = require 'libvctr'
 local chunk_size = cVector.chunk_size()
