@@ -241,7 +241,6 @@ _q_operators: \
 	_f1f2opf3 \
   	_f1opf2f3 \
 	_f1s1opf2 \
-	_f1s1opf2_val \
 	_get \
 	_getk \
 	_hash \

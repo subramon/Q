@@ -7,8 +7,9 @@ local so_from_o      = require 'Q/UTILS/build/so_from_o'
 --=== Copy gen files 
 -- from .../gen_src/*.c to /tmp/q/src/
 -- from .../gen_inc/*.h to /tmp/q/include/
-local numc, numh = copy_gen_files()
-print(" num C files gen/ num .h files = ", numc, numh)
+local numc, numc2, numh, numh2 = copy_gen_files()
+print("Copied  num .c files num .h files = ", numc, numh)
+print("Skipped num .c files num .h files = ", numc2, numh2)
 ----------Create tgt_h = q_core.h
 assert(mk_q_core_h())
 --======= Create .o files from .c files
