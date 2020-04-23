@@ -248,7 +248,6 @@ _q_operators: \
 	_ifxthenyelsez \
 	_index \
 	_load_csv \
-	_join \
 	_mdb \
 	_s_to_f \
 	_sort \

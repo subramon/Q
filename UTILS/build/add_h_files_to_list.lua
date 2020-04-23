@@ -25,8 +25,7 @@ local q_files =  {
 local function add_h_files_to_list(
   h_files
   )
-  assert(h_files and ( type(h_files) == "table" ) ) 
-
+  assert(type(h_files) == "table" )
   local cleaned_defs = {}
   local hash_defines = {}
   -- assemble files to be excluded in x_files
@@ -35,14 +34,18 @@ local function add_h_files_to_list(
     local full_file_name = qconsts.Q_BUILD_DIR .. "/include/" .. file
     x_files[full_file_name] = true 
   end
+  --==============================================
   for k, file in pairs(q_files) do 
     local full_file_name = qconsts.Q_BUILD_DIR .. "/include/" .. file
     x_files[full_file_name] = true 
   end
-  --===============
+  --==============================================
   -- add struct files first
   for _, file in ipairs(struct_files) do
     local full_file_name = qconsts.Q_BUILD_DIR .. "/include/" .. file
+    -- Some struct files are created by operators and hence not
+    -- vital to building q_core for dynamic compilation. 
+    -- Hence, their absence is noted but NOT an error
     if ( not plpath.isfile(full_file_name) ) then 
       print("Not adding struct file " .. file .. " " .. full_file_name)
     else

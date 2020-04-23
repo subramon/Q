@@ -11,6 +11,8 @@ local function mk_q_core_h()
   -- assemble all .h files  in table h_files
   local h_files = cutils.getfiles(hdir, ".*.h$")
   assert(#h_files > 0)
+  -- Sort only to force consistency across runs. Helps with debugging
+  table.sort(h_files)
   --[[
   local q_h_files = {}      
   for _, h_file in pairs(h_files) do 
@@ -33,7 +35,8 @@ local function mk_q_core_h()
   --]]
   cutils.write(tmp_h, hash_defines .. cleaned_defs)
   assert(cutils.isfile(tmp_h))
-  cmd = string.format("cpp %s > %s ", tmp_h, tgt_h)
+  assert(cutils.isfile(tmp_h))
+  cmd = string.format('cpp %s | grep -v "#" > %s ', tmp_h, tgt_h)
   assert(os.execute(cmd))
   assert(cutils.isfile(tgt_h))
   assert(cutils.delete(tmp_h))
