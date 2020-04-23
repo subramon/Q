@@ -19,16 +19,15 @@ local function copy_gen_files()
   --==========================
   local cdir = build_dir .. "/src/"
   if ( not cutils.isdir(cdir) ) then cutils.makepath(cdir) end
-  numc = recursive_copy("*.c", "/gen_src", rootdir, cdir)
+  numc, numc2 = recursive_copy("*.c", "/gen_src", rootdir, cdir)
   --==========================
   local hdir = build_dir .. "/include/"
   if ( not cutils.isdir(hdir) ) then cutils.makepath(hdir) end
-  numh = recursive_copy("*.h", "/gen_inc", rootdir, hdir)
+  numh, numh2 = recursive_copy("*.h", "/gen_inc", rootdir, hdir)
   --==========================
-  print("Copied " .. numc .. " .c files ")
-  print("Copied " .. numh .. " .h files ")
-  -- TODO P1 Should we do assert(numc == numh) ?
-  return numc, numh
+  -- print("Copied/Skipped " .. numc .. ", " .. numc2 .. " .c files ")
+  -- print("Copied/Skipped " .. numh .. ", " .. numh2 .. " .h files ")
+  return numc, numc2, numh, numh2
 end
 return  copy_gen_files
 -- copy_gen_files()

@@ -863,11 +863,3 @@ int luaopen_libcmem (lua_State *L) {
   
   return 1;
 }
-#ifdef OLD
-  /* Register the object.func functions into the table that is at the
-   * top of the stack. */
-  lua_createtable(L, 0, 0);
-  luaL_register(L, NULL, cmem_functions);
-
-  return 1;
-#endif

@@ -22,6 +22,10 @@ filetype indent plugin on
 
 " Enable syntax highlighting
 syntax on
+" colorscheme monokai
+colorscheme molokai
+" colorscheme default
+hi Comment ctermfg=2
 
 
 "------------------------------------------------------------
@@ -131,7 +135,7 @@ set pastetoggle=<F11>
 "
 " Indentation settings according to personal preference.
 
-" Indentation settings for using 2 spaces instead of tabs.
+" Indentation settings for using 3 spaces instead of tabs.
 " Do not change 'tabstop' from its default value of 8 with this setup.
 set shiftwidth=2
 set softtabstop=2
@@ -165,8 +169,4 @@ if has("autocmd")
   au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 endif
 
-set textwidth=80
-set wrapmargin=2
 "------------------------------------------------------------
-" set comment sto something more readable
-hi Comment ctermfg=255

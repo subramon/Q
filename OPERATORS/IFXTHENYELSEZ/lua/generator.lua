@@ -1,6 +1,8 @@
 local cVector = require 'libvctr'
 cVector.init_globals({})
 local plpath  = require 'pl.path'
+local cVector = require 'libvctr'
+local chunk_size = cVector.chunk_size()
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local Scalar  = require 'libsclr'
 local srcdir = "../gen_src/"
@@ -22,20 +24,21 @@ local x = lVector({qtype = "B1"})
 variations = { "vv", "vs", "sv", "ss" }
 for _, variation in ipairs(variations) do 
   for _, qtype in ipairs(qtypes) do 
+    local y, z
     if ( variation == "vv" ) then 
-      local y = lVector({qtype = qtype})
-      local z = lVector({qtype = qtype})
+      y = assert(lVector({qtype = qtype}))
+      z = assert(lVector({qtype = qtype}))
     elseif ( variation == "vs" ) then 
-      local y = lVector({qtype = qtype})
-      local z = Scalar.new({val = 0, qtype = qtype})
+      y = assert(lVector({qtype = qtype}))
+      z = assert(Scalar.new(0, qtype))
     elseif ( variation == "sv" ) then 
-      local y = Scalar.new({val = 0, qtype = qtype})
-      local z = lVector({qtype = qtype})
+      y = assert(Scalar.new(0, qtype))
+      z = assert(lVector({qtype = qtype}))
     elseif ( variation == "ss" ) then 
-      local y = Scalar.new({val = 0, qtype = qtype})
-      local z = Scalar.new({val = 0, qtype = qtype})
+      y = assert(Scalar.new(0, qtype))
+      z = assert(Scalar.new(0, qtype))
     else
-      error("")
+      error("variaton  = " .. vv)
     end
     local sp_fn_name = 'ifxthenyelsez_specialize'
     local sp_fn = require(sp_fn_name)
