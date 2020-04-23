@@ -11,6 +11,7 @@ all: libcutils.so
 
 ../../UTILS/gen_inc/isdir.h :
 	make -C ../../../UTILS/src/
+
 clean:
 	rm -f *.so *.o _*
 		

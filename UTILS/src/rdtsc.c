@@ -1,6 +1,6 @@
 #include "q_incs.h"
-#include "get_time_usec.h"
-#include "rdtsc.h"
+#include "_get_time_usec.h"
+#include "_rdtsc.h"
 
 //START_FUNC_DECL
 uint64_t

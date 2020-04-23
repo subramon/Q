@@ -11,8 +11,8 @@
 #include "aux_core_vec.h"
 #include "aux_lua_to_c.h"
 
-#include "txt_to_I4.h"
-#include "isdir.h"
+#include "_txt_to_I4.h"
+#include "_isdir.h"
 
 VEC_GLOBALS_TYPE g_S;
 #include "struct_timers.h"

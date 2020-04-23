@@ -174,9 +174,7 @@ libutils.so : ${hdr_files} ${src_files}
 	cp ../inc/q_macros.h       ${Q_BUILD_DIR}/include/
 	cp ../inc/spooky_struct.h  ${Q_BUILD_DIR}/include/
 	cp ../inc/spooky_hash.h    ${Q_BUILD_DIR}/include/
-	# copy all generated files so that Lua not needed
-	bash copy.sh ../gen_src/ ../src/
-	bash copy.sh ../gen_inc/ ../inc/
+	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
 
 clean :
 	rm -f ../gen_src/*
