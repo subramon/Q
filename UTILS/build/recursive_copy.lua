@@ -23,7 +23,7 @@ directory that matches dir_pattern
   assert(plpath.isdir(destdir))
   assert(currdir ~= destdir)
   if string.find(currdir, dir_pattern)  then 
-    -- print("Searching in ", currdir)
+    print("Searching in ", currdir)
     local files = pldir.getfiles(currdir, file_pattern)
     if  ( #files == 0 ) then
       print( "No files like " .. file_pattern .. " in " .. currdir)

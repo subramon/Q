@@ -25,8 +25,8 @@ local function copy_gen_files()
   if ( not cutils.isdir(hdir) ) then cutils.makepath(hdir) end
   numh = recursive_copy("*.h", "/gen_inc", rootdir, hdir)
   --==========================
-  print("Copied gen files " .. numc .. " .c files ")
-  print("Copied gen files " .. numh .. " .h files ")
+  print("Copied " .. numc .. " .c files ")
+  print("Copied " .. numh .. " .h files ")
   -- TODO P1 Should we do assert(numc == numh) ?
   return numc, numh
 end
