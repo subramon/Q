@@ -1,0 +1,103 @@
+version: '3.7'
+
+services:
+  zoo1:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zoo1
+    ports:
+      - "2181:2181"
+    networks : 
+      - "ramesh-dev-net"
+    environment:
+        ZOO_MY_ID: 1
+        ZOO_PORT: 2181
+        ZOO_SERVERS: server.1=zoo1:2888:3888
+        ZOOKEEPER_CLIENT_PORT: 2181
+
+# LUA_PATH: /home/scrabble/WORK/?.lua;/home/scrabble/WORK/?/init.lua;;
+  q1 : 
+    image: qdev
+    hostname: qbox
+    ports:
+      - "8000:8000"  # for CLI
+    networks : 
+      - "ramesh-dev-net"
+    volumes:
+      - type: bind
+        source: .
+        target: /Q
+    environment:
+      LD_LIBRARY_PATH: /Q/:/usr/local/lib/
+      LUA_PATH: /?.lua;;
+      LUA_CPATH: /local/Q/lib/?.so;;
+      Q_SRC_ROOT: /Q/
+      Q_ROOT: /local/Q/
+      Q_DATA_DIR: /local/Q/data/
+      QC_FLAGS:  -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wno-unused-parameter -pedantic -fopenmp -mavx2 -mfma -Wno-implicit-fallthrough
+      Q_LINK_FLAGS:  -llapacke -llapack -lblas -lm -shared -lgomp
+      Q_BUILD_DIR: /tmp/q/
+
+  dev1 : 
+    image: ramesh_dev
+    hostname: devbox
+    ports:
+      - "8080:8080"  # for web server 
+      - "8084:8084"  # for socket testing
+    networks : 
+      - "ramesh-dev-net"
+    volumes:
+      - type: bind
+        source: .
+        target: /filters
+    environment:
+      LD_LIBRARY_PATH: /filters/:/usr/local/lib/
+      LUA_PATH: /filters/src/lua/?.lua;;
+      PATH: ${PATH}:/filters/
+      CONFIG_ROOT: /filters/test/ # where configs are kept for testing
+      SRC_ROOT: /filters/
+      SILENT: "true" # unset if you want Lua print messages in parser
+
+
+  kafka1:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka1
+    ports:
+      - "9092:9092"
+      - "5001:5001"
+    networks : 
+      - "ramesh-dev-net"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ZOOKEEPER_CONNECT: "zoo1:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_MAX_REQUEST_SIZE: 5242880
+      KAFKA_PRODUCER_MAX_REQUEST_SIZE: 5242880
+      KAFKA_JMX_PORT: 5001
+      KAFKA_JMX_HOSTNAME: 127.0.0.1
+      KAFKA_METRIC_REPORTERS: "org.apache.kafka.common.metrics.JmxReporter"
+    depends_on:
+      - zoo1
+
+#  schema-registry:
+#    image: confluentinc/cp-schema-registry:latest
+#    hostname: schema-registry
+#    depends_on:
+#      - zoo1
+#      - kafka1
+#    ports:
+#      - '8081:8081'
+#    environment:
+#      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+#      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zoo1:2181
+
+
+volumes:
+  certs:
+    driver: local
+
+networks:
+  ramesh-dev-net: 
