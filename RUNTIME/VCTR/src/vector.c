@@ -121,7 +121,7 @@ static int l_vec_chunk_size( lua_State *L) {
     g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
     g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
     memset(g_S.q_data_dir, '\0', Q_MAX_LEN_DIR+1);
-    snprintf(g_S.q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
+    snprintf(g_S.q_data_dir, Q_MAX_LEN_DIR, "%s", getenv("Q_DATA_DIR"));
     if ( !isdir(g_S.q_data_dir) ) { 
       lua_pushnil(L);
       lua_pushstring(L, __func__);

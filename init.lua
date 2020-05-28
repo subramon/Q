@@ -21,7 +21,6 @@ require "Q/OPERATORS/F1F2OPF3/lua/_f1f2opf3"
 require "Q/OPERATORS/F1OPF2F3/lua/f1opf2f3"
 require "Q/OPERATORS/F1S1OPF2/lua/_f1s1opf2"
 require "Q/OPERATORS/F1S1OPF2/lua/is_prev"
-require "Q/OPERATORS/F1S1OPF2_VAL/lua/f1s1opf2_val"
 
 require "Q/OPERATORS/GET/lua/get_val_by_idx"
 require "Q/OPERATORS/GET/lua/set_sclr_val_by_idx"

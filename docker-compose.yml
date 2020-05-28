@@ -27,8 +27,8 @@ services:
         source: .
         target: /Q
     environment:
-      LD_LIBRARY_PATH: /Q/:/usr/local/lib/
-      LUA_PATH: /?.lua;;
+      LD_LIBRARY_PATH: /Q/:/usr/local/lib/:/local/Q/lib/
+      LUA_PATH: /?.lua;/?/init.lua;;
       LUA_CPATH: /local/Q/lib/?.so;;
       Q_SRC_ROOT: /Q/
       Q_ROOT: /local/Q/

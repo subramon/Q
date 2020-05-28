@@ -27,7 +27,11 @@ local function cprint(
   -- STOP : Dynamic compilation
   assert(qc[func_name], "Symbol not available" .. func_name)
 
-  cutils.delete(opfile) -- clean out any existing file
+  if ( opfile ) then 
+    cutils.delete(opfile) -- clean out any existing file
+  else
+    -- printing to stdout 
+  end
   local function min(x, y) if x < y then return x else return y end end
   local function max(x, y) if x > y then return x else return y end end
   local nC = #V -- determine number of columns to be printed
@@ -56,9 +60,12 @@ local function cprint(
     F[i-1] = qtype
     W[i-1] = width
   end
-  local c_opfile = cmem.new({ size = #opfile+1, qtype = "SC", name='fname'})
-  c_opfile:set(opfile)
-  c_opfile = get_ptr(c_opfile, "char *")
+  local c_opfile = ffi.NULL
+  if ( opfile ) then 
+    c_opfile = cmem.new({ size = #opfile+1, qtype = "SC", name='fname'})
+    c_opfile:set(opfile)
+    c_opfile = get_ptr(c_opfile, "char *")
+  end
   --======================
   while true do 
     local clb = chunk_num * chunk_size
