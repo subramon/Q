@@ -73,7 +73,7 @@ local print_csv = function (
       end
     end
   end
-  io.close(fp) 
+  if ( fp ) then io.close(fp)  end 
   return true
 end
 return require('Q/q_export').export('print_csv', print_csv)

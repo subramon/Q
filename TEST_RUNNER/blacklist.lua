@@ -1,6 +1,7 @@
 -- This file contains list of tests which you want to exclude
 -- Provide relative path from q_src_root along with the test-case file name
 
+--[[
 local blacklist_files = {
   "TEST_RUNNER/test_test1.lua",
   "TEST_RUNNER/test_test2.lua",
@@ -28,3 +29,5 @@ local blacklist_files = {
 }
 
 return blacklist_files
+--]]
+return {}

@@ -18,46 +18,38 @@ local ignore_dirs = {
   doc = true,
 }
 
-local function is_dir_exception(dir)
-  local sub_dir = string.match(dir, "[^/]*$")
-  return ignore_dirs[sub_dir] == true or ignore_dirs[dir] == true
+local function is_dir_exception(d)
+  assert(type(d) == "string")
+  local sd = string.match(d, "[^/]*$")
+  print(d, sd) -- TODO DELETE LATER 
+  return ignore_dirs[sd] == true or ignore_dirs[d] == true
 end
 
-local function is_file_exception(file)
-  local sub_filename = string.match(file, "[^/]*$")
-  return ignore_files[sub_filename] == true or ignore_files[file] == true
+local function is_file_exception(f)
+  assert(type(f) == "string")
+  local sf = string.match(f, "[^/]*$")
+  return ignore_files[sf] == true or ignore_files[f] == true
 end
 
-local function exclude_non_test_files(files, tests_pattern)
+local function exclude_non_test_files(files)
+  -- Given a list of files, return only those files that
+  -- start with the start_pattern and end with the stop_pattern
   local xfiles = {}
-  tests_pattern = tests_pattern or "test_"
-  if ( files and #files > 0 ) then
-    for _, full_name in ipairs(files) do
-      local is_excl = false
-      local reason
-      local base_name = plpath.basename(full_name)
-      start, stop = string.find(base_name, tests_pattern)
-      -- print(base_name, start, stop)
-      if ( ( start == nil ) or ( start ~= 1 ) ) then
-        is_excl = true
-        reason = 1
-      end
-      start, stop = string.find(base_name, ".lua")
-      -- print(base_name, start, stop)
-      if ( stop == nil ) or ( stop ~= string.len(base_name) ) then
-        is_excl = true
-        reason = 2
-      end
-      if ( is_excl == false ) then
-        xfiles[#xfiles+1] = full_name
-      end
-      --[[
-      if ( is_excl ) then
-      print(reason, "Excluding ", full_name, base_name)
-      else
-      print(reason, "NOT Excluding ", full_name, base_name)
-      end
-      --]]
+  start_pattern = "test_"
+  stop_pattern  = ".lua"
+  for _, full_name in ipairs(files) do
+    local is_excl = false
+    local base_name = plpath.basename(full_name)
+    start, stop = string.find(base_name, start_pattern)
+    if ( ( start == nil ) or ( start ~= 1 ) ) then
+      is_excl = true
+    end
+    start, stop = string.find(base_name, stop_pattern)
+    if ( stop == nil ) or ( stop ~= string.len(base_name) ) then
+      is_excl = true
+    end
+    if ( not is_excl ) then
+      xfiles[#xfiles+1] = full_name
     end
   end
   return xfiles
@@ -89,7 +81,7 @@ local function find_test_files(directory,  tests_pattern)
       end
       if ( not exclude ) then
         local files = pldir.getfiles(dir, pattern)
-        local xfiles = exclude_non_test_files(files, tests_pattern)
+        local xfiles = exclude_non_test_files(files)
         local dirs = pldir.getdirectories(dir)
         next_iter_list = append_dirs(next_iter_list, dirs)
         for j=1,#xfiles do
