@@ -24,13 +24,14 @@ cVector.init_globals(params)
 local tests = {}
 -- testing put1 and get1 
 
-tests.t0 = function(incr)
-  if ( not  incr ) then incr = 0 end 
+tests.t0 = function(delta)
+  -- delta allows us to test more than just multiple of chunk size 
+  if ( not  delta ) then delta = 0 end 
   local qtype = "SC"
-  local width = 4 -- remember 1 byte for nullc
+  local width = 4 -- remember 1 byte reserved for nullc
   local v = cVector.new( { qtype = qtype, width = width} )
   --=============
-  local n = chunk_size + incr
+  local n = chunk_size + delta 
   local exp_num_chunks = 0
   local exp_num_elements = 0
   -- put elements as 1, 2, 3, ...
@@ -38,8 +39,11 @@ tests.t0 = function(incr)
   s:zero()
   ffi.cdef("char *strcpy(char *dest, const char *src);");
   local sp = ffi.cast("char *", get_ptr(s))
-  ffi.C.strcpy(sp, "ABC")
   for i = 1, n do 
+        if ( ( i % 3 ) == 0 ) then ffi.C.strcpy(sp, "ABC") 
+    elseif ( ( i % 3 ) == 1 ) then ffi.C.strcpy(sp, "DEF") 
+    elseif ( ( i % 3 ) == 2 ) then ffi.C.strcpy(sp, "GHI") 
+    else error("") end 
     assert(v:put1(s))
   end
   --================
@@ -50,7 +54,10 @@ tests.t0 = function(incr)
     local sp = ffi.cast("CMEM_REC_TYPE *", s)
     assert(sp.width == width)
     assert(ffi.string(sp.fldtype) == "SC")
-    assert(ffi.string(sp.data) == "ABC")
+        if ( ( i % 3 ) == 0 ) then assert(ffi.string(sp.data) == "ABC")
+    elseif ( ( i % 3 ) == 1 ) then assert(ffi.string(sp.data) == "DEF")
+    elseif ( ( i % 3 ) == 2 ) then assert(ffi.string(sp.data) == "GHI")
+    else error("") end 
     assert(s:fldtype() == "SC")
     -- TODO assert(s:to_num() == i, i)
   end

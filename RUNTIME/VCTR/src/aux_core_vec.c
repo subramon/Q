@@ -82,36 +82,36 @@ BYE:
 }
 
 int
-chk_field_type(
-    const char * const field_type,
+chk_fldtype(
+    const char * const fldtype,
     uint32_t field_width
     )
 {
   int status = 0;
-  if ( field_type == NULL ) { go_BYE(-1); }
+  if ( fldtype == NULL ) { go_BYE(-1); }
   // TODO P3: SYNC with qtypes in q_consts.lua
-  if ( ( strcmp(field_type, "B1") == 0 ) || 
-       ( strcmp(field_type, "I1") == 0 ) || 
-       ( strcmp(field_type, "I2") == 0 ) || 
-       ( strcmp(field_type, "I4") == 0 ) || 
-       ( strcmp(field_type, "I8") == 0 ) || 
-       ( strcmp(field_type, "F4") == 0 ) || 
-       ( strcmp(field_type, "F8") == 0 ) || 
-       ( strcmp(field_type, "SC") == 0 ) || 
-       ( strcmp(field_type, "TM") == 0 ) ) {
+  if ( ( strcmp(fldtype, "B1") == 0 ) || 
+       ( strcmp(fldtype, "I1") == 0 ) || 
+       ( strcmp(fldtype, "I2") == 0 ) || 
+       ( strcmp(fldtype, "I4") == 0 ) || 
+       ( strcmp(fldtype, "I8") == 0 ) || 
+       ( strcmp(fldtype, "F4") == 0 ) || 
+       ( strcmp(fldtype, "F8") == 0 ) || 
+       ( strcmp(fldtype, "SC") == 0 ) || 
+       ( strcmp(fldtype, "TM") == 0 ) ) {
     /* all is well */
   }
   else {
-    fprintf(stderr, "Bad field type = [%s] \n", field_type);
+    fprintf(stderr, "Bad field type = [%s] \n", fldtype);
     go_BYE(-1);
   }
-  if ( strcmp(field_type, "B1") == 0 )  {
+  if ( strcmp(fldtype, "B1") == 0 )  {
     if ( field_width != 1 ) { go_BYE(-1); }
   }
   else {
     if ( field_width == 0 ) { go_BYE(-1); }
   }
-  if ( strcmp(field_type, "SC") == 0 )  {
+  if ( strcmp(fldtype, "SC") == 0 )  {
     if ( field_width < 2 ) { go_BYE(-1); }
   }
 BYE:
@@ -130,7 +130,6 @@ free_chunk(
 
   CHUNK_REC_TYPE *ptr_chunk =  ptr_S->chunk_dir+chunk_dir_idx;
   if ( ptr_chunk->num_readers > 0 ) { go_BYE(-1); }
-  if ( ptr_chunk->num_writers > 0 ) { go_BYE(-1); }
   free_if_non_null(ptr_chunk->data);
   if ( !is_persist ) { 
     status = delete_chunk_file(ptr_chunk, &(ptr_chunk->is_file));
@@ -160,7 +159,6 @@ load_chunk(
   // double check that this chunk is yours
   if ( ptr_chunk->vec_uqid != ptr_vec->uqid ) { go_BYE(-1); }
   if ( ptr_chunk->num_readers != 0 ) { go_BYE(-1); }
-  if ( ptr_chunk->num_writers != 0 ) { go_BYE(-1); }
 
   // must be able to backup data from chunk file or vector file 
   if ( ( !ptr_chunk->is_file ) && ( !ptr_vec->is_file ) ) { go_BYE(-1); }
@@ -212,7 +210,6 @@ chk_chunk(
   CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_dir_idx;
   /* What checks on these guys?
   if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
-  if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
   */
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
@@ -364,12 +361,12 @@ int32_t
 get_chunk_size_in_bytes(
     VEC_GLOBALS_TYPE *ptr_S,
       uint32_t field_width, 
-      const char * const field_type
+      const char * const fldtype
       )
 {
   int32_t chunk_size_in_bytes = ptr_S->chunk_size * field_width;
   if ( ptr_S->chunk_size == 0 ) { WHEREAMI; return -1; }
-  if ( strcmp(field_type, "B1") == 0 ) {  // SPECIAL CASE
+  if ( strcmp(fldtype, "B1") == 0 ) {  // SPECIAL CASE
     chunk_size_in_bytes = ptr_S->chunk_size / 8;
     if ( ( ( ptr_S->chunk_size / 64 ) * 64 ) != ptr_S->chunk_size ) { 
       WHEREAMI; return -1; 
@@ -556,20 +553,20 @@ vec_new_common(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
-    const char * const field_type,
+    const char * const fldtype,
     uint32_t field_width
     )
 {
   int status = 0;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
-  status = chk_field_type(field_type, field_width); cBYE(status);
+  status = chk_fldtype(fldtype, field_width); cBYE(status);
 
   memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
 
-  strncpy(ptr_vec->fldtype, field_type, Q_MAX_LEN_QTYPE_NAME-1);
+  strncpy(ptr_vec->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_vec->field_width = field_width;
   ptr_vec->chunk_size_in_bytes = get_chunk_size_in_bytes(
-      ptr_S, field_width, field_type);
+      ptr_S, field_width, fldtype);
   ptr_vec->uqid = RDTSC();
   ptr_vec->is_memo = true; // default behavior
 BYE:
@@ -578,16 +575,17 @@ BYE:
 
 int
 delete_vec_file(
-    const VEC_REC_TYPE *ptr_vec,
+    uint64_t uqid,
+    bool is_persist,
     bool *ptr_is_file, 
     uint64_t *ptr_file_size
     )
 {
   int status = 0;
-  if ( ptr_vec->is_file ) { 
-    if ( !ptr_vec->is_persist ) {
+  if ( *ptr_is_file ) { 
+    if ( !is_persist ) {
       char file_name[Q_MAX_LEN_FILE_NAME+1];
-      status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+      status = mk_file_name(uqid, file_name, Q_MAX_LEN_FILE_NAME); 
       cBYE(status);
       if ( !isfile(file_name) ) { go_BYE(-1); }
       status = remove(file_name); cBYE(status);

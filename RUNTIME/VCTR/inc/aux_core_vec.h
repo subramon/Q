@@ -8,8 +8,8 @@ chk_name(
     const char * const name
     );
 extern int
-chk_field_type(
-    const char * const field_type,
+chk_fldtype(
+    const char * const fldtype,
     uint32_t field_width
     );
 extern int
@@ -53,7 +53,7 @@ extern int32_t
 get_chunk_size_in_bytes(
     VEC_GLOBALS_TYPE *ptr_S,
     uint32_t field_width, 
-    const char * const field_type
+    const char * const fldtype
     );
 extern void 
 l_memcpy(
@@ -117,12 +117,13 @@ vec_new_common(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
-    const char * const field_type,
+    const char * const fldtype,
     uint32_t field_width
     );
 extern int
 delete_vec_file(
-    const VEC_REC_TYPE *ptr_vec,
+    uint64_t uqid,
+    bool is_persist,
     bool *ptr_is_file, 
     uint64_t *ptr_file_size
     );

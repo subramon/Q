@@ -14,8 +14,8 @@ typedef struct _chunk_rec_type {
   bool is_file;  // has chunk been backed up to a file?
   // name of file is derived using mk_file_name()
   char *data; 
+  // Invariant: (is_file == true) or (data != NULL) 
   int num_readers;
-  int num_writers;
 } CHUNK_REC_TYPE;
 
 typedef struct _vec_rec_type {
@@ -60,11 +60,12 @@ typedef struct _vec_rec_type {
 } VEC_REC_TYPE;
 
 typedef struct _vec_globals_type { 
+  // TODO P3 Remember to free stuff when system shuts down 
   uint32_t chunk_size;
   CHUNK_REC_TYPE *chunk_dir;  // [g_sz_chunk_dir]
   uint32_t sz_chunk_dir; 
   uint32_t n_chunk_dir;  // 0 <= g_n_chunk_dir <= g_sz_chunk_dir
-  char q_data_dir[Q_MAX_LEN_DIR];
+  char *q_data_dir;  
 } VEC_GLOBALS_TYPE;
 
 #endif

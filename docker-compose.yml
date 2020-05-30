@@ -26,6 +26,9 @@ services:
       - type: bind
         source: .
         target: /Q
+      - type: bind
+        source: ./local/
+        target: /Q/local/
     environment:
       LD_LIBRARY_PATH: /Q/:/usr/local/lib/:/local/Q/lib/
       LUA_PATH: /?.lua;/?/init.lua;;

@@ -54,7 +54,7 @@ local function summary(t_results)
   end
 end
 
-local function run_tests(suite_name)
+local function run_tests(suite_name, test_name)
   -- progress indicator 
   calls = calls + 1
   if calls == 20 then print("") calls = 0 end -- force eoln
@@ -79,6 +79,15 @@ local function run_tests(suite_name)
   --===========================================
   local pass = {}
   local fail = {}
+  if ( test_name ) then 
+    local x_tests = {}
+    for k, v in pairs(tests) do
+      if ( k == test_name ) then
+        x_tests[k] = v
+      end
+    end
+    tests = x_tests
+  end
   for k, v in pairs(tests) do
     local base_cmd
     if ( type(k) == "number" ) then 
@@ -100,17 +109,20 @@ end
 
 
 local path      = assert(arg[1], "Error: provide file or directory")
+local test_name 
+-- test_name allows us to focus on just one test in a suite
 local t_results = {}
 local files = {}
 if ( plpath.isfile(path) ) then
   files[#files+1] = path
+  if ( arg[2] ) then test_name = arg[2] end 
 else
   recursive_lister(files, path)
 end
 --- Now we have a list of files that need to be executed
 for _,f in pairs(files) do
   t_results[f] = {}
-  t_results[f].pass, t_results[f].fail = run_tests(f)
+  t_results[f].pass, t_results[f].fail = run_tests(f, test_name)
 end
 print(plpretty.write(t_results))
 

@@ -143,7 +143,7 @@ vec_free(
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
   if ( ptr_vec->is_dead ) {  
     fprintf(stderr, "Freeing Vector that is already dead\n");
-    return status; // TODO Should this be an error?
+    return status; // TODO P4 Should this be an error?
   }
   if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
   if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
@@ -154,7 +154,8 @@ vec_free(
     ptr_vec->mmap_len  = 0;
   }
   // delete file created for entire access
-  status = delete_vec_file(ptr_vec, &(ptr_vec->is_file), &(ptr_vec->file_size));
+  status = delete_vec_file(ptr_vec->uqid, ptr_vec->is_persist,
+      &(ptr_vec->is_file), &(ptr_vec->file_size));
   cBYE(status);
   //-- Free all chunks that you own
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
@@ -189,14 +190,14 @@ vec_new(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
-    const char * const field_type,
+    const char * const fldtype,
     uint32_t field_width
     )
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_new++;
 
-  status = vec_new_common(ptr_S, ptr_T, ptr_vec, field_type, field_width); 
+  status = vec_new_common(ptr_S, ptr_T, ptr_vec, fldtype, field_width); 
   cBYE(status);
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_new += delta; }
@@ -208,7 +209,7 @@ vec_rehydrate_multi(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
-    const char * const field_type,
+    const char * const fldtype,
     uint32_t field_width,
     int64_t num_elements,
     int num_chunks,
@@ -218,7 +219,7 @@ vec_rehydrate_multi(
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_rehydrate_multi++;
 
-  status = vec_new_common(ptr_S, ptr_T, ptr_vec, field_type, field_width);
+  status = vec_new_common(ptr_S, ptr_T, ptr_vec, fldtype, field_width);
   cBYE(status);
 
   ptr_vec->is_eov     = true;
@@ -252,7 +253,7 @@ vec_rehydrate_single(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
-    const char * const field_type,
+    const char * const fldtype,
     uint32_t field_width,
     int64_t num_elements,
     const char *const file_name
@@ -261,7 +262,7 @@ vec_rehydrate_single(
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_rehydrate_single++;
 
-  status = vec_new_common(ptr_S, ptr_T, ptr_vec, field_type, field_width);
+  status = vec_new_common(ptr_S, ptr_T, ptr_vec, fldtype, field_width);
   cBYE(status);
   uint32_t num_chunks = ceil((double)num_elements / (double)ptr_S->chunk_size);
   status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
@@ -333,11 +334,6 @@ check_chunks(
     alt_n++;
     // other checks 
     if ( chunk_dir[i].num_readers < 0 ) { go_BYE(-1); }
-    if ( chunk_dir[i].num_writers < 0 ) { go_BYE(-1); }
-    if ( ( chunk_dir[i].num_readers > 0 ) && 
-         ( chunk_dir[i].num_writers > 0 ) ) { 
-      go_BYE(-1); 
-    }
   }
   if ( alt_n != n ) { go_BYE(-1); }
   // check uniqueness of (vec_uqid, chunk_num);
@@ -378,8 +374,11 @@ vec_check(
     if ( v->mmap_len    != 0    ) { go_BYE(-1); }
     if ( v->num_readers != 0    ) { go_BYE(-1); }
     if ( v->num_writers != 0    ) { go_BYE(-1); }
+
+    if ( v->is_dead             ) { go_BYE(-1); }
     if ( v->is_eov              ) { go_BYE(-1); }
     if ( v->is_file             ) { go_BYE(-1); }
+    return status;
   }
   //------------------------------------------
   if ( v->is_file ) { 
@@ -451,6 +450,13 @@ vec_check(
     }
   }
   //-------------------------------------------
+  if ( strcmp(v->fldtype, "B1") == 0 ) { 
+    // TODO P1: How do we handle field_width for B1?
+  }
+  else {
+    if  ( v->field_width == 0 ) { go_BYE(-1); }
+    status = chk_fldtype(v->fldtype, v->field_width); cBYE(status);
+  }
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_check += delta; }
   return status;
@@ -518,8 +524,6 @@ vec_start_read(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
-    char **ptr_data,
-    uint64_t *ptr_num_elements,
     CMEM_REC_TYPE *ptr_cmem
     )
 {
@@ -527,10 +531,11 @@ vec_start_read(
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_start_read++;
   if ( !ptr_vec->is_eov         ) { go_BYE(-1); }
   if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
-  if ( *ptr_num_elements == 0   ) { go_BYE(-1); }
 
   ptr_vec->num_readers++; 
-  *ptr_num_elements = ptr_vec->num_elements;
+  if ( !ptr_vec->is_file  ) {  // make the master file 
+  }
+
   if ( ptr_vec->num_chunks == 1 ) { 
     // handle special case where everything fits in one chunk
     uint32_t chunk_idx = ptr_vec->chunks[0];
@@ -602,7 +607,6 @@ vec_get_chunk(
   status = load_chunk(ptr_T, ptr_chunk, ptr_vec, &(ptr_chunk->t_last_get), 
       &(ptr_chunk->data)); 
   cBYE(status);
-  if ( ptr_chunk->num_writers  > 0 ) { go_BYE(-1); }
   if ( ptr_chunk->num_readers  < 0 ) { go_BYE(-1); }
   ptr_chunk->num_readers++;
 
@@ -653,9 +657,7 @@ vec_shutdown(
   for ( uint32_t i = 0; i < ptr_vec->num_chunks; i++ ) { 
     uint32_t chunk_idx = ptr_vec->chunks[i];
     CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    if ( ( ptr_chunk->num_readers > 0 )||( ptr_chunk->num_writers > 0 ) ) {
-      go_BYE(-1);
-    }
+    if ( ptr_chunk->num_readers > 0 ) { go_BYE(-1); }
   }
   //------------------------------------------
   status = vec_backup(ptr_S, ptr_T, ptr_vec); cBYE(status);
@@ -665,7 +667,8 @@ vec_shutdown(
   }
   status = vec_free(ptr_S, ptr_T, ptr_vec); cBYE(status);
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_shutdown += delta; }
+  delta = RDTSC() - t_start; 
+  if ( delta > 0 ) { ptr_T->t_shutdown += delta; }
   return status;
 }
 //------------------------------------------------
@@ -678,12 +681,14 @@ vec_backup(
 {
   int status = 0;
   if ( !ptr_vec->is_eov  ) { go_BYE(-1); }
-  if ( ptr_vec->is_file ) { return status; }
-  if ( !ptr_vec->is_memo ) {  
-    status = vec_flush_chunk(ptr_S, ptr_T, ptr_vec, false, 0); 
+  if ( ptr_vec->is_file ) { 
+    if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
   }
-  else {
+  if ( ptr_vec->is_memo ) {   // flush all chunks
     status = vec_flush_chunk(ptr_S, ptr_T, ptr_vec, false, -1); 
+  }
+  else { // memo = false => only one chunk
+    status = vec_flush_chunk(ptr_S, ptr_T, ptr_vec, false, 0); 
   }
   cBYE(status);
 BYE:
@@ -703,7 +708,6 @@ vec_unget_chunk(
   uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
   CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
   if ( ptr_chunk->data     == NULL ) { go_BYE(-1); }
-  if ( ptr_chunk->num_writers  > 0 ) { go_BYE(-1); }
   if ( ptr_chunk->num_readers == 0 ) { go_BYE(-1); }
   ptr_chunk->num_readers--;
 BYE:
@@ -722,6 +726,7 @@ vec_start_write(
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_start_write++;
   char *X = NULL; size_t nX = 0;
+  if ( ptr_vec->is_dead ) { go_BYE(-1); }
   if ( !ptr_vec->is_eov ) { go_BYE(-1); }
   if ( ptr_vec->num_writers != 0 ) { go_BYE(-1); }
   if ( ptr_vec->num_readers != 0 ) { go_BYE(-1); }
@@ -729,17 +734,18 @@ vec_start_write(
     fprintf(stderr, "TO BE IMPLEMENTED\n"); go_BYE(-1); 
   }
   if ( !ptr_vec->is_file  ) { go_BYE(-1); }
+  ptr_vec->num_writers = 1;
 
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
   cBYE(status);
   rs_mmap(file_name, &X, &nX, 1); cBYE(status);
+  // Set the CMEM that will be consumed by caller
   ptr_vec->mmap_addr = ptr_cmem->data     = X;
   ptr_vec->mmap_len  = ptr_cmem->size     = nX;
   ptr_cmem->is_foreign = true;
   strncpy(ptr_cmem->fldtype, ptr_vec->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
 
-  ptr_vec->num_writers = 1;
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_start_write += delta; }
   return status;
@@ -835,10 +841,7 @@ vec_eov(
 {
   int status = 0;
   if ( ptr_vec->is_dead ) { go_BYE(-1); }
-  if ( ptr_vec->is_eov ) { 
-    // fprintf(stderr, "Already eov, nothing to do\n"); 
-    return status; 
-  } 
+  if ( ptr_vec->is_eov ) { return status; }
   ptr_vec->is_eov = true;
 BYE:
   return status;
@@ -1040,8 +1043,7 @@ vec_flush_chunk(
     memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
     status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
     cBYE(status);
-    if ( !ptr_chunk->is_file ) { 
-      // flush buffer only if backup exists
+    if ( !ptr_chunk->is_file ) { // flush buffer only if NO backup 
       FILE *fp = fopen(file_name, "wb");
       return_if_fopen_failed(fp, file_name, "wb");
       fwrite(ptr_chunk->data, ptr_vec->chunk_size_in_bytes, 1, fp);
@@ -1147,6 +1149,8 @@ vec_delete_master_file(
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_delete_master_file++;
+  if  ( !ptr_vec->is_dead ) { go_BYE(-1); }
+  if  ( !ptr_vec->is_memo ) { go_BYE(-1); }
   if  ( !ptr_vec->is_file ) { go_BYE(-1); }
   // can delete file only if data can be restored from elsewhere
   bool can_delete = true;
@@ -1185,12 +1189,14 @@ vec_delete_chunk_file(
 {
   int status = 0;
   uint32_t lb, ub;
-  if ( (uint32_t)chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
-  if ( chunk_num < 0 ) { 
+  if  ( !ptr_vec->is_dead ) { go_BYE(-1); }
+  if  ( !ptr_vec->is_memo ) { go_BYE(-1); }
+  if ( (uint32_t)chunk_num > ptr_vec->num_chunks ) { go_BYE(-1); }
+  if ( chunk_num < 0 ) { // delete ALL chunks 
     lb = 0;
     ub = ptr_vec->num_chunks;
   }
-  else {
+  else { // delete specified chunk
     lb = chunk_num;
     ub = lb + 1;
   }
@@ -1198,13 +1204,16 @@ vec_delete_chunk_file(
     uint32_t chunk_idx = ptr_vec->chunks[i];
     CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
     if ( !ptr_chunk->is_file ) { continue; }
-    // can delete either if data in memory or msater file exists
+    // can delete either if data in memory or master file exists
     if  ( ( ptr_vec->is_file ) || ( ptr_chunk->data != NULL ) ) {
       char file_name[Q_MAX_LEN_FILE_NAME+1];
       status = mk_file_name(ptr_chunk->uqid,file_name,Q_MAX_LEN_FILE_NAME); 
       cBYE(status);
       status = remove(file_name); cBYE(status);
       ptr_chunk->is_file = false;
+    }
+    else { // cannot delete the file; will cause loss of data 
+      go_BYE(-1);
     }
   }
 BYE:

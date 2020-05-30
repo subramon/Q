@@ -1,0 +1,4 @@
+Need to document exactly what setting is_memo == false entails
+For example, I am going with the following (may have to pull back)
+1) No file backups for vectors where memo == false
+This is true for both chunk and master files 

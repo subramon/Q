@@ -102,7 +102,8 @@ static int l_vec_init_globals( lua_State *L) {
     if ( ( cptr == NULL ) || ( *cptr == '\0' ) ) { go_BYE(-1); }
   }
   if ( !isdir(cptr) ) { go_BYE(-1); }
-  if ( strlen(cptr) > Q_MAX_LEN_DIR ) { go_BYE(-1); }
+  g_S.q_data_dir = malloc(strlen(cptr)+1); 
+  return_if_malloc_failed(g_S.q_data_dir);
   strcpy(g_S.q_data_dir, cptr);
   //-------------------
   status = init_globals(&g_S, &g_T); cBYE(status);
@@ -116,20 +117,27 @@ BYE:
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_chunk_size( lua_State *L) {
+  int status = 0; 
   if ( g_S.chunk_size == 0 ) {  
     printf("Setting default values \n");
     g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
     g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
-    memset(g_S.q_data_dir, '\0', Q_MAX_LEN_DIR+1);
-    snprintf(g_S.q_data_dir, Q_MAX_LEN_DIR, "%s", getenv("Q_DATA_DIR"));
-    if ( !isdir(g_S.q_data_dir) ) { 
-      lua_pushnil(L);
-      lua_pushstring(L, __func__);
-      return 2;
-    }
+    //----------------------------------
+    char *cptr = getenv("Q_DATA_DIR");
+    if ( ( cptr == NULL ) || ( *cptr == '\0' ) ) { go_BYE(-1); }
+    if ( !isdir(cptr) ) { go_BYE(1); }
+    g_S.q_data_dir = malloc(strlen(cptr)+1); 
+    return_if_malloc_failed(g_S.q_data_dir);
+    strcpy(g_S.q_data_dir, cptr);
+    //----------------------------------
   }
   lua_pushnumber(L, g_S.chunk_size);
   return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
 }
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
@@ -447,8 +455,6 @@ static int l_vec_start_read( lua_State *L)
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = NULL;
-  uint64_t num_elements;
-  char *data = NULL;
 
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
 
@@ -459,10 +465,8 @@ static int l_vec_start_read( lua_State *L)
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
   cmem_undef(ptr_cmem);
 
-  status = vec_start_read(&g_S, &g_T, ptr_vec, &data, &num_elements, 
-      ptr_cmem); 
-  cBYE(status);
-  lua_pushinteger(L, num_elements);
+  status = vec_start_read(&g_S, &g_T, ptr_vec, ptr_cmem); cBYE(status);
+  lua_pushinteger(L, ptr_vec->num_elements);
   return 2;
 BYE:
   lua_pushnil(L); 

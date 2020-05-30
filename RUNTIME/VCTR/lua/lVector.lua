@@ -6,7 +6,6 @@ local cmem		= require 'libcmem'
 local Scalar		= require 'libsclr'
 local cVector		= require 'libvctr'
 local register_type	= require 'Q/UTILS/lua/q_types'
-local is_base_qtype	= require 'Q/UTILS/lua/is_base_qtype'
 local qc		= require 'Q/UTILS/lua/q_core'
 local H                 = require 'Q/RUNTIME/VCTR/lua/helpers'
 --====================================
@@ -21,12 +20,19 @@ setmetatable(lVector, {
 
 register_type(lVector, "lVector")
 
+-- not from Lua. Use cVector:print_timers()
+-- not from Lua. Use cVector:check_chunks()
+-- not from Lua. Use cVector:init_globals()
+-- not from Lua. Use cVector:reset_timers()
+-- not from Lua. Use lVector:same_state()
+--
+-- Flush contents of Vector to disk. 
 function lVector:backup()
   return H.on_both(self, cVector.backup)
 end
 
 function lVector:check()
-  -- cannot use on_both here because check called from within
+  -- cannot use function on_both here because check called from within
   assert(cVector.check(self._base_vec))
   if ( self._nn_vec ) then 
     assert(cVector.check(self._nn_vec))
@@ -34,11 +40,58 @@ function lVector:check()
   return true
 end
 
--- not from Lua. Use cVector:check_chunks()
+function lVector:num_chunks()
+  return H.extract_field(self._base_vec, self._nn_vec, "num_chunks", "number")
+end
+
+-- Earlier, we would return nil if eov == false, have changed that
+function lVector:num_elements()
+  return H.extract_field(self._base_vec, self._nn_vec, "num_elements", "number")
+end
+
+function lVector:get_name()
+  return H.extract_field(self._base_vec, self._nn_vec, "name", "string")
+end
+
+--
+function lVector:is_dead()
+  return H.extract_field(self._base_vec, self._nn_vec, "is_dead", "boolean")
+end
+
+function lVector:is_eov()
+  return H.extract_field(self._base_vec, self._nn_vec, "is_eov", "boolean")
+end
+
+function lVector:is_memo()
+  return H.extract_field(self._base_vec, self._nn_vec, "is_memo", "boolean")
+end
+
+function lVector:fldtype()
+  return H.extract_field(self._base_vec, self._nn_vec, "fldtype", "string")
+end
+function lVector:field_width()
+  return H.extract_field(self._base_vec, self._nn_vec, "field_width", "number")
+
 function lVector:chunk_size_in_bytes()
   return extract_field(self.base_vec, self._nn_vec, "chunk_size_in_bytes", "number")
 end
 
+function lVector:length()
+  -- TODO P2 Why does following not work 
+  -- return lVector:num_elements()
+  return H.extract_field(self._base_vec, self._nn_vec, "num_elements", "number")
+end
+
+function lVector:qtype()
+  -- TODO P2 Why does following not work 
+  -- return lVector:fldtype()
+  return H.extract_field(self._base_vec, self._nn_vec, "fldtype", "string")
+end
+
+function lVector:width()
+  return H.extract_field(self._base_vec, self._nn_vec, "field_width", "number")
+end
+--====================
 function lVector:delete()
   local status = cVector.delete(self._base_vec) 
   if ( not status ) then print("Likely you are deleting dead vector") end
@@ -49,10 +102,12 @@ function lVector:delete()
   return true
 end
 
+-- Mainly used for testing. Not really needed by Q programmer
 function lVector:delete_chunk_file(chunk_num)
   return H.on_both(self, cVector.delete_chunk_file, chunk_num)
 end
 
+-- Mainly used for testing. Not really needed by Q programmer
 function lVector:delete_master_file()
   return H.on_both(self, cVector.delete_master_file)
 end
@@ -87,12 +142,12 @@ function lVector:eval()
   local base_len, base_addr, nn_addr 
   repeat
     base_len, base_addr, nn_addr = self:get_chunk(chunk_num)
-
     -- this unget needed because get_chunk increments num readers 
     -- and he eval doesn't actually get the chunk for itself
     cVector.unget_chunk(self._base_vec, chunk_num)
-    if ( self._nn_vec ) then cVector.unget_chunk(self._nn_vec, chunk_num) end
-
+    if ( self._nn_vec ) then 
+      cVector.unget_chunk(self._nn_vec, chunk_num) 
+    end
     chunk_num = chunk_num + 1 
   until ( base_len ~= csz ) 
   assert(self:is_eov())
@@ -112,8 +167,6 @@ function lVector:eval()
   return self
 end
 
-function lVector:field_width()
-  return H.extract_field(self._base_vec, self._nn_vec, "field_width", "number")
 end
 
 function lVector:file_name(chunk_num)
@@ -133,9 +186,6 @@ function lVector:file_name(chunk_num)
   return f1, f2
 end
 
-function lVector:fldtype()
-  return H.extract_field(self._base_vec, self._nn_vec, "fldtype", "string")
-end
 
 function lVector:flush_all()
   return H.on_both(self, cVector.flush_all)
@@ -251,24 +301,6 @@ function lVector:get_chunk(chunk_num)
   return base_len, base_addr,  nn_addr
 end
 
-function lVector:get_name()
-  return H.extract_field(self._base_vec, self._nn_vec, "name", "string")
-end
-
--- not from Lua. Use cVector:init_globals()
---
-function lVector:is_dead()
-  return H.extract_field(self._base_vec, self._nn_vec, "is_dead", "boolean")
-end
-
-function lVector:is_eov()
-  return H.extract_field(self._base_vec, self._nn_vec, "is_eov", "boolean")
-end
-
-function lVector:is_memo()
-  return H.extract_field(self._base_vec, self._nn_vec, "is_memo", "boolean")
-end
-
 function lVector:me()
   local M1, C1, M2, C2
   M1, C1 = cVector.me(self._base_vec)
@@ -336,15 +368,6 @@ function lVector.new(args)
   return vector
 end
 
-function lVector:num_chunks()
-  return H.extract_field(self._base_vec, self._nn_vec, "num_chunks", "number")
-end
-
--- Earlier, we would return nil if eov == false, have changed that
-function lVector:num_elements()
-  return H.extract_field(self._base_vec, self._nn_vec, "num_elements", "number")
-end
-
 function lVector:persist(is_persist)
   local is_persist = H.mk_boolean(is_persist, true)
   assert(H.on_both(self, cVector.persist, is_persist))
@@ -352,7 +375,6 @@ function lVector:persist(is_persist)
   return self
 end
 
--- not from Lua function lVector:print_timers()
 
 function lVector:put1(s, nn_s)
   assert ( not self._gen ) -- if you have a generator, cannot apply put*
@@ -401,9 +423,7 @@ function lVector:put_chunk(base_addr, nn_addr, len)
   return true
 end
 --
--- not from Lua function lVector:reset_timers()
 
--- not from Lua function lVector:same_state()
 function lVector:set_name(vname)
   -- the name of an lVector is the name of its base Vector
   if ( type(vname) == nil ) then vname = "" end 
@@ -558,26 +578,9 @@ function lVector:unget_chunk(chunk_num)
   assert(H.on_both(self, cVector.unget_chunk, chunk_num))
   return self
 end
---====================
-function lVector:length()
-  -- TODO P2 Why does following not work 
-  -- return lVector:num_elements()
-  return H.extract_field(self._base_vec, self._nn_vec, "num_elements", "number")
-end
 
 function lVector:get_all()
   return lVector:get_read()
 end
-
-function lVector:qtype()
-  -- TODO P2 Why does following not work 
-  -- return lVector:fldtype()
-  return H.extract_field(self._base_vec, self._nn_vec, "fldtype", "string")
-end
-
-function lVector:width()
-  return H.extract_field(self._base_vec, self._nn_vec, "field_width", "number")
-end
---====================
 
 return lVector

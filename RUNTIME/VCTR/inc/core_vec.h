@@ -17,8 +17,8 @@ vec_print_mem(
    void 
     );
 extern int
-chk_field_type(
-    const char * const field_type,
+chk_fldtype(
+    const char * const fldtype,
     uint32_t field_width
     );
 extern int
@@ -36,7 +36,7 @@ update_file_name(
     );
 extern int
 get_qtype_and_field_width(
-    const char * const field_type,
+    const char * const fldtype,
     char * res_qtype,
     int * res_field_width
     );
@@ -45,7 +45,7 @@ vec_rehydrate_single(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
-    const char * const field_type,
+    const char * const fldtype,
     uint32_t field_width,
     int64_t num_elements,
     const char *const file_name
@@ -55,7 +55,7 @@ vec_rehydrate_multi(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
-    const char * const field_type,
+    const char * const fldtype,
     uint32_t field_width,
     int64_t num_elements,
     int num_chunks,
@@ -66,14 +66,14 @@ vec_new(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
-    const char * const field_type,
+    const char * const fldtype,
     uint32_t field_width
     );
 extern int
 vec_new_virtual(
     VEC_REC_TYPE *ptr_vec,
     char * map_addr,
-    const char * const field_type,
+    const char * const fldtype,
     uint32_t chunk_size,
     int64_t num_elements
     );
@@ -111,15 +111,6 @@ vec_persist(
     bool is_persist
     );
 extern int
-vec_start_read(
-    VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
-    VEC_REC_TYPE *ptr_vec,
-    char **ptr_data,
-    uint64_t *ptr_num_elements,
-    CMEM_REC_TYPE *ptr_cmem
-    );
-extern int
 vec_get1(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
@@ -152,6 +143,13 @@ vec_memo(
     const VEC_REC_TYPE *const ptr_vec,
     bool *ptr_is_memo,
     bool is_memo
+    );
+extern int
+vec_start_read(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
+    VEC_REC_TYPE *ptr_vec,
+    CMEM_REC_TYPE *ptr_cmem
     );
 extern int
 vec_start_write(

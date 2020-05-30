@@ -241,6 +241,10 @@ static int set_default(
 static int l_cmem_nop( lua_State *L) // just for debugging 
 {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
+  if ( ptr_cmem == NULL ) {  // to stop gcc from complaining
+    lua_pushnil(L);
+    return 1;
+  }
   lua_pushboolean(L, true);
   return 1;
 }
