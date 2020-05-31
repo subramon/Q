@@ -139,6 +139,9 @@ function lVector:kill()
   assert(H.on_both(self, cVector.kill))
 end
 
+-- evaluates the vector using a provided generator function
+-- when done, is_eov() will be true for this vector
+-- if is_eov() at time of call, nothing is done 
 function lVector:eval()
   if ( self:is_eov() ) then return self end 
   assert(H.is_multiple_of_chunk_size(self:num_elements()))
@@ -213,6 +216,8 @@ function lVector:free()
   return true
 end
 
+-- gets the value of the element whose index is specified by idx
+-- if you ask for more than what has been generated, error 
 function lVector:get1(idx)
   -- notice that get1 will not invoke generator
   local s1, s2
@@ -309,11 +314,25 @@ function lVector:get_chunk(chunk_num)
   return base_len, base_addr,  nn_addr
 end
 
+-- Provides meta-data at a low-level by returning
+-- struct for the vector an array of structs for chunks
 function lVector:me()
   local M1, C1, M2, C2
   M1, C1 = cVector.me(self._base_vec)
+  assert(type(M1) == "userdata")
+  assert(type(C1) == "table")
+  assert(#C1 > 0)
+  for _, v in ipairs(C1) do 
+    assert(type(v) == "userdata")
+  end
   if ( self._nn_vec ) then 
     M2, C2 = cVector.me(self._nn_vec)
+    assert(type(M2) == "userdata")
+    assert(type(C2) == "table")
+    assert(#C2 > 0)
+    for _, v in ipairs(C2) do 
+      assert(type(v) == "userdata")
+    end
   end
   return M1, C1, M2, C2
 end
@@ -384,6 +403,8 @@ function lVector:persist(is_persist)
 end
 
 
+-- Puts one element at a time into Vector
+-- eov cannot be true for the Vector
 function lVector:put1(s, nn_s)
   assert ( not self._gen ) -- if you have a generator, cannot apply put*
   if ( self:fldtype() == "SC" ) then 
@@ -408,8 +429,8 @@ function lVector:put_chunk(base_addr, nn_addr, len)
   -- assert ( not self._gen ) -- if you have a generator, cannot apply put*
   -- But I realized that it is too aggressive. To see why this is the case,
   -- look at any expander that returns 2 Vectors. When the generator of
-  -- Vector 1 is called, we have to put_chunk on Vector 2.  When the 
-  -- generator of Vector 2 is called, we have to put_chunk on Vector 1.
+  -- Vector 1 is called, we have to call put_chunk() on Vector 2.  When the 
+  -- generator of Vector 2 is called, we have to put_chunk() on Vector 1.
   -- So both Vectors have generators and both must allow put chunk to be
   -- called on them
   --]]
@@ -487,10 +508,8 @@ function lVector:unget_chunk(chunk_num)
   return s1, s2
 end
 
-
---=== These are without any help from C 
-
 function lVector:drop_nulls() 
+  if (not self._nn_vec) then return self end 
   assert(self:is_eov())
   assert(cVector.delete(self._nn_vec))
   self._nn_vec = nil
@@ -498,6 +517,7 @@ function lVector:drop_nulls()
   return self
 end
 
+-- No help from C needed for this function
 function lVector:get_meta(k)
   if ( qconsts.debug ) then self:check() end
   assert(k)
@@ -505,17 +525,23 @@ function lVector:get_meta(k)
   return self._meta[k]
 end
 
+-- No help from C needed for this function
 function lVector:has_nulls()
   if ( self._nn_vec ) then return true else return false end
 end
 
+-- Make bvec the nn vector for this Vector 
+-- current vector must be "memoized" and in eov state
 function lVector:make_nulls(bvec)
   assert(self:is_eov())
+  assert(self:is_memo())
   assert(self._nn_vec == nil) 
+
   assert(type(bvec) == "lVector")
   assert(bvec:fldtype() == "B1")
-  assert(cVector.same_state(self._base_vec, bvec))
   assert(bvec:has_nulls() == false)
+
+  assert(cVector.same_state(self._base_vec, bvec))
   self._nn_vec = bvec._base_vec
   if ( qconsts.debug ) then self:check() end
   return self
@@ -573,8 +599,13 @@ function lVector:set_meta(k, v)
   end
 end
 
+-- add x as one of the siblings of current Vector
+-- can do so only when all Vectors involved are in nascent state
 function lVector:set_sibling(x)
   assert(type(x) == "lVector")
+  assert(x:num_elements() == 0)
+  assert(self:num_elements() == 0)
+  -- make sure that x is not already a sibling
   local exists = false
   for k, v in ipairs(self.siblings) do
     if ( x == v ) then
@@ -592,6 +623,7 @@ function lVector:unget_chunk(chunk_num)
   return self
 end
 
+-- for backward compatibility
 function lVector:get_all()
   return lVector:get_read()
 end

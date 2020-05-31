@@ -107,7 +107,7 @@ get_chunk_dir_idx(
     VEC_TIMERS_TYPE *ptr_T,
     const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_idx,
-    uint32_t *chunks,
+    const uint32_t *const chunks,
     uint32_t *ptr_num_chunks,
     uint32_t *ptr_chunk_dir_idx,
     bool is_malloc

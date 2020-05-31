@@ -440,6 +440,7 @@ init_chunk_dir(
   int status = 0;
   // if elements exist, you would have initialized directory
   if ( ptr_vec->num_elements != 0 ) { return status; }
+  //-----------------------------------------
   if ( ptr_vec->chunks     != NULL ) { go_BYE(-1); }
   if ( ptr_vec->sz_chunks  != 0    ) { go_BYE(-1); }
   if ( ptr_vec->num_chunks != 0    ) { go_BYE(-1); }
@@ -521,7 +522,7 @@ get_chunk_dir_idx(
     VEC_TIMERS_TYPE *ptr_T,
     const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_num,
-    uint32_t *chunks,
+    const uint32_t *const chunks,
     uint32_t *ptr_num_chunks,
     uint32_t *ptr_chunk_dir_idx,
     bool is_malloc

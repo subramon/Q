@@ -1,3 +1,9 @@
+Review get_chunk()
+Review new()
+Review reincarnate()
+Write tests for set_sibling and joint evaluation
+
+
 When does vec_free() get used and when does vec_delete()
 Settle on a convenient width for B1
 

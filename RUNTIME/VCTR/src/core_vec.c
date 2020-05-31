@@ -496,6 +496,7 @@ vec_get1(
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_get1++;
   uint32_t chunk_dir_idx, in_chunk_idx;
 
+  if ( ptr_vec->is_dead ) { go_BYE(-1); }
   status = chunk_dir_idx_for_read(ptr_S, ptr_vec, idx, &chunk_dir_idx);
   cBYE(status);
   in_chunk_idx = idx % ptr_S->chunk_size; // identifies element within chunk
@@ -944,6 +945,7 @@ vec_put1(
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_put1++;
   // START: Do some basic checks
+  if ( ptr_vec->is_dead ) { go_BYE(-1); }
   if ( ptr_S->chunk_size == 0 ) { go_BYE(-1); }
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( data == NULL ) { go_BYE(-1); }
@@ -986,7 +988,8 @@ vec_put1(
   }
   else {
     uint32_t in_chunk_idx = ptr_vec->num_elements % ptr_S->chunk_size;
-    char *data_ptr = ptr_chunk->data + (in_chunk_idx*ptr_vec->field_width);
+    uint32_t offset = (in_chunk_idx*ptr_vec->field_width);
+    char *data_ptr = ptr_chunk->data + offset;
     l_memcpy(data_ptr, data, ptr_vec->field_width, ptr_T);
   }
   ptr_vec->num_elements++;

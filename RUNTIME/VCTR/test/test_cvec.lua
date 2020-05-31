@@ -65,7 +65,6 @@ tests.t1 = function()
     assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == false)
     assert(v:memo(true))
     assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == true)
-    print(M[0].chunk_size_in_bytes,  chunk_size, width)
     assert(M[0].chunk_size_in_bytes == (chunk_size * width))
     --=============
   
@@ -248,7 +247,8 @@ tests.t3 = function()
     else
       error("base case")
     end
-    for i = 1, 1000000 do 
+    local n = 1000000
+    for i = 1, n do 
       local bval
       if ( ( i % 2 ) == 0 ) then bval = 1 else bval = 0 end 
       local s = Scalar.new(bval, "B1")
@@ -257,7 +257,7 @@ tests.t3 = function()
       M = ffi.cast("VEC_REC_TYPE *", M)
       assert(M[0].num_elements == i, "failed at " .. i)
     end
-    for i = 1, 1000000 do 
+    for i = 1, n do 
       local bval
       if ( ( i % 2 ) == 0 ) then bval = 1 else bval = 0 end 
       local s = v:get1(i-1)
@@ -265,6 +265,22 @@ tests.t3 = function()
       assert(s:fldtype() == "B1")
       assert(s:to_num() == bval, "Entry " .. i .. " expected " .. bval .. " got " .. s:to_num())
     end
+    -- ask for one more than exists. Should error
+    print(">>> start deliberate error")
+    if ( mode == "cVector" ) then 
+      local x, y, z = v:get1(n)
+      assert(not x) assert(y == "l_vec_get1")
+      --== ask for less than 0 
+      local x, y, z = v:get1(-1)
+      assert(not x) assert(y == "l_vec_get1")
+    elseif ( mode == "lVector" ) then 
+      local x, y, z = pcall(v.get1, v, n)
+      assert(not x) 
+      --== ask for less than 0 
+      local x, y, z = pcall(v.get1, v, -1)
+      assert(not x) 
+    end
+    print("<<<  stop deliberate error")
   end
   print("Successfully completed test t3")
 end
@@ -717,11 +733,46 @@ tests.t9 = function()
   --=====================
   print("Successfully completed test t9")
 end
-tests.t2() -- PASSES
-os.exit()
---[[
+-- t10 tests drop_nulls, make_nulls
+tests.t10 = function()
+  local status
+  -- make the base vector 
+  local qtype = "F8"
+  local v = lVector.new( { qtype = qtype} )
+  local n = 2 * cVector.chunk_size() + 17 
+  for i = 1, n do 
+    local s = Scalar.new(i, qtype)
+    v:put1(s)
+  end
+  for iter = 1, 3 do 
+    -- make the nn vector 
+    local qtype = "B1"
+    local nn_v = lVector.new( { qtype = qtype} )
+    local n = 2 * cVector.chunk_size() + 17 
+    for i = 1, n do 
+      local s 
+      if ( ( i % 2 ) == 0 ) then 
+        s = Scalar.new(true, qtype)
+      else
+        s = Scalar.new(false, qtype)
+      end
+      nn_v:put1(s)
+    end
+    assert(v:drop_nulls())
+    v:eov()
+    assert(v:drop_nulls())
+    assert(v:make_nulls(nn_v))
+    assert(v:has_nulls())
+    assert(v:drop_nulls())
+    assert(not v:has_nulls())
+  end
+  print("Successfully completed test t10")
+end
+  --===========================
 return tests
+--[[
 tests.t1() -- PASSES
+tests.t2() -- PASSES
 tests.t3() -- PASSES
 tests.t4() -- PASSES 
 tests.t5() -- PASSES
@@ -729,4 +780,5 @@ tests.t6() -- PASSES
 tests.t7() -- PASSES
 tests.t8() -- PASSES
 tests.t9() -- PASSES
+os.exit()
 --]]

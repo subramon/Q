@@ -27,10 +27,6 @@ vec_meta(
     char *opbuf
     );
 extern int
-vec_nascent(
-    VEC_REC_TYPE *ptr_vec
-    );
-extern int
 update_file_name(
     VEC_REC_TYPE *ptr_vec
     );

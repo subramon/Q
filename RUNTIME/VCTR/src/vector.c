@@ -190,7 +190,7 @@ BYE:
 //-----------------------------------
 static int l_vec_same_state( lua_State *L) {
   int status = 0;
-  if (  lua_gettop(L) != 3 ) { go_BYE(-1); }
+  if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_v1 = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   VEC_REC_TYPE *ptr_v2 = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   status = vec_same_state(ptr_v1, ptr_v2); cBYE(status);
