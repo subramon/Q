@@ -113,14 +113,17 @@ function lVector:delete_master_file()
   return H.on_both(self, cVector.delete_master_file)
 end
 
+-- Relinquish read access to the entire vector 
 function lVector:end_read()
   return H.on_both(self, cVector.end_read)
 end
 
+-- Relinquish write access to the entire vector 
 function lVector:end_write()
   return H.on_both(self, cVector.end_write)
 end
 
+-- Indicates that no more data will be supplied to this vector
 function lVector:eov()
   assert(H.on_both(self, cVector.eov))
 -- destroy generator (if any) and thereby 
@@ -131,6 +134,7 @@ function lVector:eov()
   return self
 end
 
+-- will delete the vector *ONLY* if marked as is_killable; else, NOP
 function lVector:kill()
   assert(H.on_both(self, cVector.kill))
 end
@@ -144,7 +148,7 @@ function lVector:eval()
   repeat
     base_len, base_addr, nn_addr = self:get_chunk(chunk_num)
     -- this unget needed because get_chunk increments num readers 
-    -- and he eval doesn't actually get the chunk for itself
+    -- and the eval doesn't actually get the chunk for itself
     cVector.unget_chunk(self._base_vec, chunk_num)
     if ( self._nn_vec ) then 
       cVector.unget_chunk(self._nn_vec, chunk_num) 
@@ -163,11 +167,16 @@ function lVector:eval()
   if ( type(self._gen) == "function" ) then 
     if (    base_addr ) then    base_addr:delete() end 
     if ( nn_base_addr ) then nn_base_addr:delete() end 
+    self._gen = nil -- generation all done => no generator needed
   end
   if ( qconsts.debug ) then self:check() end
   return self
 end
 
+-- If chunk_num not defined, return name of master file 
+-- If chunk_num IS  defined, return name of file in which chunk data is 
+-- Note that these files may not exist. If you want them to exist, 
+-- then you must call flush_all()
 function lVector:file_name(chunk_num)
   local f1, f2
   if ( chunk_num) then 
@@ -432,8 +441,8 @@ function lVector:set_name(vname)
   return self
 end
 
+-- Get read access to the entire vector in a single liner address space
 function lVector:start_read()
-  assert(self:is_eov())
   local nn_X, nn_nX 
   local X, nX = cVector.start_read(self._base_vec)
   assert(type(X) == "CMEM")
@@ -450,9 +459,8 @@ function lVector:start_read()
   return nX, X, nn_X
 end
 
-
+-- Get write access to the entire vector in a single liner address space
 function lVector:start_write()
-  assert(self:is_eov())
   local nn_X, nn_nX 
   local X, nX = cVector.start_write(self._base_vec)
   assert(type(X) == "CMEM")

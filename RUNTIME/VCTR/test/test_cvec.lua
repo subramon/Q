@@ -142,6 +142,8 @@ tests.t1 = function()
 end
 -- testing start_read/end_read, start_write, end_write
 -- testing writing the vector after open wih start_write
+-- a few simple tests for flush_all()
+-- a few simple tests for delete_master_file and delete_chunk_file
 tests.t2 = function()
   local status
   local qtype = "I8"
@@ -195,6 +197,35 @@ tests.t2 = function()
     assert(lptr[i-1] == 2*i)
   end
   assert(v:end_read())
+  -- Checking flush_all and delete_master_file and delete_chunk_file
+  for iter = 1, 3 do 
+    for i = 1, 5 do 
+      v:flush_all()
+    end
+    local num_chunks = 3 -- TODO P4 do not hard code 
+    local full_fsz = 0
+    for i = 1, num_chunks do
+      local f1, f2 = v:file_name(i-1)
+      local fsz = plpath.getsize(f1)
+      assert(fsz == cVector:chunk_size() * qconsts.qtypes[qtype].width)
+      full_fsz = full_fsz + fsz
+    end
+    local f1, f2 = v:file_name()
+    local fsz = plpath.getsize(f1)
+    assert(fsz == full_fsz)
+    --== Now delete the files and then check that they do not exist
+    for i = 1, num_chunks do
+      v:delete_chunk_file(i-1)
+    end
+    v:delete_master_file()
+    -- Check that they no longer exist
+    for i = 1, num_chunks do
+      local f1, f2 = v:file_name(i-1)
+      assert(not plpath.isfile(f1))
+    end
+    local f1, f2 = v:file_name()
+    assert(not plpath.isfile(f1))
+  end
 
   print("Successfully completed test t2")
 end

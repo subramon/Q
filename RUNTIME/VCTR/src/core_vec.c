@@ -1051,42 +1051,29 @@ vec_flush_all(
     )
 {
   int status = 0;
-  FILE *fp = NULL;
+  FILE *fp = NULL; 
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_flush++;
 
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
-  char file_name[Q_MAX_LEN_FILE_NAME+1];
-  memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
-  cBYE(status);
-  fp = fopen(file_name, "wb");
-  return_if_fopen_failed(fp, file_name, "wb");
-  uint64_t file_size = 0;
+  if ( ptr_vec->is_dead ) { go_BYE(-1); }
+
+  status = make_master_file(ptr_S, ptr_T, ptr_vec); cBYE(status);
+
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
-    char chnk_file_name[Q_MAX_LEN_FILE_NAME+1];
     uint32_t chunk_idx = ptr_vec->chunks[i];
     chk_chunk_idx(chunk_idx);
     CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    if ( ptr_chunk->data == NULL ) {
-      char *X = NULL; size_t nX = 0;
-      memset(chnk_file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
+    if ( !ptr_chunk->is_file ) { 
+      char chnk_file_name[Q_MAX_LEN_FILE_NAME+1];
       status = mk_file_name(ptr_chunk->uqid, chnk_file_name, Q_MAX_LEN_FILE_NAME); 
-      cBYE(status);
-      status = rs_mmap(chnk_file_name, &X, &nX, 0); cBYE(status);
-      fwrite(X, nX, 1, fp);
-      file_size += nX;
-      munmap(X, nX);
-
-    }
-    else {
-      fwrite(ptr_chunk->data, ptr_vec->chunk_size_in_bytes, 1, fp);
-      file_size += ptr_vec->chunk_size_in_bytes;
-      fflush(fp);
+      fp = fopen(chnk_file_name, "wb");
+      int nw = fwrite(ptr_chunk->data, ptr_vec->chunk_size_in_bytes, 1,fp);
+      if ( nw != 1 ) { go_BYE(-1); }
+      fclose_if_non_null(fp);
+      ptr_chunk->is_file = true;
     }
   }
-  ptr_vec->is_file = true;
-  ptr_vec->file_size = file_size;
 BYE:
   fclose_if_non_null(fp);
   delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_flush += delta; }
@@ -1132,7 +1119,7 @@ vec_delete_master_file(
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_delete_master_file++;
-  if  ( !ptr_vec->is_dead ) { go_BYE(-1); }
+  if  (  ptr_vec->is_dead ) { go_BYE(-1); }
   if  ( !ptr_vec->is_memo ) { go_BYE(-1); }
   if  ( !ptr_vec->is_file ) { go_BYE(-1); }
   // can delete file only if data can be restored from elsewhere
@@ -1172,7 +1159,7 @@ vec_delete_chunk_file(
 {
   int status = 0;
   uint32_t lb, ub;
-  if  ( !ptr_vec->is_dead ) { go_BYE(-1); }
+  if  ( ptr_vec->is_dead ) { go_BYE(-1); }
   if  ( !ptr_vec->is_memo ) { go_BYE(-1); }
   if ( (uint32_t)chunk_num > ptr_vec->num_chunks ) { go_BYE(-1); }
   if ( chunk_num < 0 ) { // delete ALL chunks 
