@@ -8,8 +8,10 @@ local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
+local tests = {}
+
 local lVector 
-  local modes
+local modes
 local test_without_q = false
 if test_without_q then 
   -- following only because we are testing. 
@@ -29,7 +31,6 @@ local params = { chunk_size = chunk_size, sz_chunk_dir = 4096,
 cVector.init_globals(params)
 assert(cVector.chunk_size() == chunk_size)
 --=================================
-local tests = {}
 -- testing put1 and get1 
 tests.t1 = function()
   local qtype = "F4"
@@ -139,6 +140,65 @@ tests.t1 = function()
   cVector:reset_timers()
   print("Successfully completed test t1")
 end
+-- testing start_read/end_read, start_write, end_write
+-- testing writing the vector after open wih start_write
+tests.t2 = function()
+  local status
+  local qtype = "I8"
+  local width = qconsts.qtypes[qtype].width
+  local v = lVector.new( { qtype = qtype, width = width} )
+  
+  local n = 2 * cVector.chunk_size() + 17 
+  for i = 1, n do 
+    local s = Scalar.new(i, qtype)
+    v:put1(s)
+  end
+--  print(">>> start deliberate error")
+  status = pcall(v.start_read) assert(not status)
+  status = pcall(v.start_write) assert(not status)
+  status = pcall(v.end_read) assert(not status)
+  status = pcall(v.end_write) assert(not status)
+--  print("<<< stop  deliberate error")
+  v:eov()
+  local X = {}
+  local Y = {} 
+  local Z = {}
+  for i = 1, 10 do 
+    local x, y, z = v:start_read()
+    X[#X+1] = x
+    Y[#Y+1] = y
+    Z[#Z+1] = x
+  end
+  status = pcall(v.start_write) assert(not status)
+  status = pcall(v.end_write) assert(not status)
+  for i = 1, 10 do 
+    assert(v:end_read())
+  end
+  status = pcall(v.end_read) assert(not status)
+  local m, cmem, nn_cmem = v:start_write()
+  assert(type(cmem) == "CMEM")
+  assert(m == n)
+  assert(v:end_write())
+  status = pcall(v.end_write) assert(not status)
+  -- testing writing the vector after open wih start_write
+  -- open vector for writing and write some new values
+  local m, cmem, nn_cmem = v:start_write()
+  local lptr = ffi.cast("int64_t *", get_ptr(cmem, qtype))
+  for i = 1, n do 
+    lptr[i-1] = 2*i 
+  end
+  assert(v:end_write())
+  -- open vector for reading and test new values took effect
+  local m, cmem, nn_cmem = v:start_read()
+  local lptr = ffi.cast("int64_t *", get_ptr(cmem, qtype))
+  for i = 1, n do 
+    assert(lptr[i-1] == 2*i)
+  end
+  assert(v:end_read())
+
+  print("Successfully completed test t2")
+end
+  --===========================
 -- testing put1 and get1 for B1
 tests.t3 = function()
   for _, mode in pairs(modes) do 
@@ -626,8 +686,10 @@ tests.t9 = function()
   --=====================
   print("Successfully completed test t9")
 end
-return tests
+tests.t2() -- PASSES
+os.exit()
 --[[
+return tests
 tests.t1() -- PASSES
 tests.t3() -- PASSES
 tests.t4() -- PASSES 
@@ -636,5 +698,4 @@ tests.t6() -- PASSES
 tests.t7() -- PASSES
 tests.t8() -- PASSES
 tests.t9() -- PASSES
-os.exit()
 --]]

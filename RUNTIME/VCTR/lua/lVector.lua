@@ -71,6 +71,7 @@ function lVector:fldtype()
 end
 function lVector:field_width()
   return H.extract_field(self._base_vec, self._nn_vec, "field_width", "number")
+end
 
 function lVector:chunk_size_in_bytes()
   return extract_field(self.base_vec, self._nn_vec, "chunk_size_in_bytes", "number")
@@ -165,8 +166,6 @@ function lVector:eval()
   end
   if ( qconsts.debug ) then self:check() end
   return self
-end
-
 end
 
 function lVector:file_name(chunk_num)
@@ -435,20 +434,26 @@ end
 
 function lVector:start_read()
   assert(self:is_eov())
-  local nn_addr, nn_len
-  local base_addr, base_len = cVector.get(self._base_vec, 0, 0)
-  assert(H.chk_addr_len(base_addr, base_len))
+  local nn_X, nn_nX 
+  local X, nX = cVector.start_read(self._base_vec)
+  assert(type(X) == "CMEM")
+  assert(type(nX) == "number")
+  assert(nX > 0)
   if ( self._nn_vec ) then
-    nn_addr, nn_len = cVector.get(self._nn_vec, 0, 0)
-    assert(H.chk_addr_len(nn_addr, nn_len, base_len))
-    assert(nn_len == base_len)
+    nn_X, nn_nX = cVector.start_read(self._nn_vec)
+    assert(type(nn_X) == "CMEM")
+    assert(type(nn_nX) == "number")
+    assert(nn_nX > 0)
+    assert(nX == nn_nX)
   end
   if ( qconsts.debug ) then self:check() end
-  return base_len, base_addr, nn_addr
+  return nX, X, nn_X
 end
 
 
 function lVector:start_write()
+  assert(self:is_eov())
+  local nn_X, nn_nX 
   local X, nX = cVector.start_write(self._base_vec)
   assert(type(X) == "CMEM")
   assert(type(nX) == "number")

@@ -149,3 +149,9 @@ is_multiple(
     uint64_t x, 
     uint32_t y
     );
+extern int 
+make_master_file(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
+    VEC_REC_TYPE *ptr_v
+    );

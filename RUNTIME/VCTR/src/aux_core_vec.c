@@ -1,4 +1,5 @@
 #include "q_incs.h"
+#include "vec_macros.h"
 #include "core_vec_struct.h"
 #include "struct_timers.h"
 #include "aux_core_vec.h"
@@ -9,13 +10,7 @@
 #include "_rdtsc.h"
 #include "_rs_mmap.h"
 
-#define INITIAL_NUM_CHUNKS_PER_VECTOR 32
-#define NUM_HEX_DIGITS_IN_UINT64 31 
 
-// TODO P4 Following macro duplicated. Eliminate that.
-#define chk_chunk_dir_idx(x) { \
-  if ( ( x <= 0 ) || ( (uint32_t)x >= ptr_S->sz_chunk_dir ) ) { go_BYE(-1); } \
-}
 void 
 l_memcpy(
     void *dest,
@@ -613,6 +608,52 @@ delete_chunk_file(
   }
 BYE:
   *ptr_is_file = false;
+  return status;
+}
+
+int 
+make_master_file(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
+    VEC_REC_TYPE *ptr_v
+    )
+{
+  int status = 0; 
+  FILE *vfp = NULL; 
+  size_t file_size = 0; // number of bytes in file 
+  char *X = NULL; size_t nX = 0;
+  char vfile_name[Q_MAX_LEN_FILE_NAME+1];
+  if ( ptr_v->is_file ) { return status; }
+
+  status = mk_file_name(ptr_v->uqid, vfile_name, Q_MAX_LEN_FILE_NAME); 
+  cBYE(status);
+  vfp = fopen(vfile_name, "wb"); 
+  return_if_fopen_failed(vfp, vfile_name, "wb"); 
+  for ( unsigned int i = 0; i < ptr_v->num_chunks; i++ ) { 
+    int nw;
+    char cfile_name[Q_MAX_LEN_FILE_NAME+1];
+    uint32_t chunk_idx = ptr_v->chunks[i];
+    chk_chunk_idx(chunk_idx);
+    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
+    if ( ptr_chunk->data ) { 
+      nw = fwrite(ptr_chunk->data, ptr_v->chunk_size_in_bytes, 1, vfp);
+      if ( nw != 1 ) { go_BYE(-1); }
+    }
+    else {
+      status = mk_file_name(ptr_chunk->uqid, cfile_name, Q_MAX_LEN_FILE_NAME);
+      cBYE(status);
+      if ( nX != ptr_v->chunk_size_in_bytes ) { go_BYE(-1); }
+      status = rs_mmap(cfile_name, &X, &nX, 0); cBYE(status);
+      nw = fwrite(X, nX, 1, vfp);
+      if ( nw != 1 ) { go_BYE(-1); }
+      munmap(X, nX); X = NULL; nX = 0;
+    }
+    file_size += ptr_v->chunk_size_in_bytes;
+  }
+  ptr_v->is_file = true;
+  ptr_v->file_size = file_size;
+BYE:
+  fclose_if_non_null(vfp);
   return status;
 }
 

@@ -68,7 +68,7 @@ static int l_vec_init_globals( lua_State *L) {
   else {
     called = true;
   }
-  if ( ( g_S.chunk_dir != NULL ) || ( g_S.q_data_dir[0] != '\0' ) ||
+  if ( ( g_S.chunk_dir != NULL ) || ( g_S.q_data_dir != NULL ) ||
        ( g_S.chunk_size > 0 ) ) {
     fprintf(stderr, "ERROR: globals have been initialized already\n");
     go_BYE(-1); 
@@ -619,7 +619,7 @@ BYE:
 }
 //----------------------------------------
 static int l_vec_meta( lua_State *L) {
-  char opbuf[4096]; // TODO P3 try not to hard code bound
+  char opbuf[4096]; // TODO P4 try not to hard code bound
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
 
   memset(opbuf, '\0', 4096);

@@ -1,4 +1,5 @@
 #include "q_incs.h"
+#include "vec_macros.h"
 #include "core_vec.h"
 #include "aux_core_vec.h"
 #include "cmem.h"
@@ -15,9 +16,6 @@
 
 #include "lauxlib.h"
 
-#define chk_chunk_idx(x) { \
-  if ( ( x <= 0 ) || ( (uint32_t)x >= ptr_S->sz_chunk_dir ) ) { go_BYE(-1); } \
-}
 #include "reset_timers.c"
 #include "print_timers.c"
 
@@ -76,7 +74,7 @@ vec_meta(
   int status = 0;
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); cBYE(status);
-  char  buf[4096]; // TODO P3 Need to avoid static allocation
+  char  buf[4096]; // TODO P4 Need to avoid static allocation
   memset(buf, '\0', 4096);
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
   strcpy(opbuf, "return { ");
@@ -533,33 +531,18 @@ vec_start_read(
   if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
 
   ptr_vec->num_readers++; 
-  if ( !ptr_vec->is_file  ) {  // make the master file 
+  if ( ptr_vec->mmap_addr == NULL ) { 
+    status = make_master_file(ptr_S, ptr_T, ptr_vec); cBYE(status);
+    if ( !ptr_vec->is_file ) { go_BYE(-1); }
+    char *X = NULL; size_t nX = 0;
+    char file_name[Q_MAX_LEN_FILE_NAME+1];
+    status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+    status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
+    ptr_vec->mmap_addr = X;
+    ptr_vec->mmap_len  = nX;
   }
-
-  if ( ptr_vec->num_chunks == 1 ) { 
-    // handle special case where everything fits in one chunk
-    uint32_t chunk_idx = ptr_vec->chunks[0];
-    chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    status = load_chunk(ptr_T, ptr_chunk, ptr_vec, 
-        &(ptr_chunk->t_last_get), &(ptr_chunk->data)); 
-    cBYE(status);
-    // TODO Not sure about this one ptr_chunk->num_readers++;
-    ptr_cmem->data = ptr_chunk->data;
-    ptr_cmem->size = ptr_vec->chunk_size_in_bytes;
-  }
-  else {
-    if ( ptr_vec->mmap_addr == NULL ) { 
-      char *X = NULL; size_t nX = 0;
-      char file_name[Q_MAX_LEN_FILE_NAME+1];
-      status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-      status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
-      ptr_vec->mmap_addr = X;
-      ptr_vec->mmap_len  = nX;
-    }
-    ptr_cmem->data = ptr_vec->mmap_addr;
-    ptr_cmem->size = ptr_vec->mmap_len;
-  }
+  ptr_cmem->data = ptr_vec->mmap_addr;
+  ptr_cmem->size = ptr_vec->mmap_len;
   strncpy(ptr_cmem->fldtype, ptr_vec->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_cmem->is_foreign = true;
 BYE:
