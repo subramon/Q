@@ -203,65 +203,24 @@ BYE:
 }
 
 int 
-vec_rehydrate_multi(
+vec_rehydrate(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width,
     int64_t num_elements,
-    int num_chunks,
-    const char **const file_names /* [num_chunks] */
+    int64_t vec_uqid,
+    int64_t *chunk_uqids
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_rehydrate_multi++;
+  char file_name[Q_MAX_LEN_FILE_NAME+1];
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_rehydrate++;
 
   status = vec_new_common(ptr_S, ptr_T, ptr_vec, fldtype, field_width);
   cBYE(status);
-
-  ptr_vec->is_eov     = true;
-  ptr_vec->is_persist = true;
-
-  status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
-  ptr_vec->num_elements = num_elements; // after init_chunk_dir()
-  ptr_vec->num_chunks   = num_chunks;
-  for ( int i = 0; i < num_chunks; i++ ) {
-    uint32_t chunk_idx;
-    status = allocate_chunk(ptr_S, ptr_T, 0, i, ptr_vec->uqid, 
-        &chunk_idx, false); 
-    cBYE(status); chk_chunk_idx(chunk_idx); 
-    ptr_vec->chunks[i] = chunk_idx;
-    CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
-    // IMPORTANT: File gets renamed
-    char new_file_name[Q_MAX_LEN_FILE_NAME+1];
-    status = mk_file_name(ptr_c->uqid, new_file_name, Q_MAX_LEN_FILE_NAME);
-    status = rename(file_names[i], new_file_name); cBYE(status);
-    ptr_c->is_file = true;
-    //--------------------
-  }
-
-BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_rehydrate_multi += delta; }
-  return status;
-}
-
-int 
-vec_rehydrate_single(
-    VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
-    VEC_REC_TYPE *ptr_vec,
-    const char * const fldtype,
-    uint32_t field_width,
-    int64_t num_elements,
-    const char *const file_name
-    )
-{
-  int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_rehydrate_single++;
-
-  status = vec_new_common(ptr_S, ptr_T, ptr_vec, fldtype, field_width);
-  cBYE(status);
+  ptr_vec->uqid = vec_uqid; // Important: over-write
   uint32_t num_chunks = ceil((double)num_elements / (double)ptr_S->chunk_size);
   status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
   ptr_vec->num_elements = num_elements; // after init_chunk_dir()
@@ -274,12 +233,21 @@ vec_rehydrate_single(
     ptr_vec->chunks[i] = chunk_idx;
     CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
     ptr_c->vec_uqid = ptr_vec->uqid;
+    ptr_c->uqid = chunk_uqids[i]; // Important: over-write
     ptr_c->chunk_num = i;
+    status = mk_file_name(ptr_c->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+    if ( isfile(file_name) ) { ptr_c->is_file = true; }
+    int64_t expected_file_size = get_exp_file_size(ptr_S, 
+        ptr_S->chunk_size, ptr_vec->field_width, ptr_vec->fldtype);
+    int64_t actual_file_size = get_file_size(file_name);
+    if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
   }
   //
   // Note that we just accept the file (after some checking)
   // we do not "load" it into memory. We delay that until needed
-  if ( !isfile(file_name) ) { go_BYE(-1); }
+  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+  if ( isfile(file_name) ) { ptr_vec->is_file = true; }
+
   int64_t expected_file_size = get_exp_file_size(ptr_S, num_elements,
       ptr_vec->field_width, ptr_vec->fldtype);
   int64_t actual_file_size = get_file_size(file_name);
@@ -287,18 +255,12 @@ vec_rehydrate_single(
   ptr_vec->file_size = actual_file_size;
   ptr_vec->num_elements = num_elements;
   //------------
-  // IMPORTANT: File gets renamed
-  char new_file_name[Q_MAX_LEN_FILE_NAME+1];
-  status = mk_file_name(ptr_vec->uqid, new_file_name, Q_MAX_LEN_FILE_NAME);
-  cBYE(status);
-  status = rename(file_name, new_file_name); cBYE(status);
-  //--------------------
   ptr_vec->is_eov     = true;
   ptr_vec->is_persist = true;
   ptr_vec->is_file    = true;
   //------------
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_rehydrate_single += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_rehydrate+= delta; }
   return status;
 }
 //-------------------------------------------------
@@ -626,10 +588,13 @@ vec_shutdown(
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_shutdown++;
   *ptr_str_to_reincarnate = NULL;
 
-  if (( !ptr_vec->is_memo )  && ( ptr_vec->num_elements > ptr_S->chunk_size )){ 
+  if ( ( !ptr_vec->is_memo )  && 
+       ( ptr_vec->num_elements > ptr_S->chunk_size ) ) { 
       // We have lost data and there is no hope of recovering it
       go_BYE(-1); 
   }
+  // if not eov, then delete the vector
+  // In other words, only eov vectors get to be saved
   if ( !ptr_vec->is_eov )  {
     status = vec_delete(ptr_S, ptr_T, ptr_vec); cBYE(status);
     return status;
@@ -644,8 +609,14 @@ vec_shutdown(
     if ( ptr_chunk->num_readers > 0 ) { go_BYE(-1); }
   }
   //------------------------------------------
-  status = vec_backup(ptr_S, ptr_T, ptr_vec); cBYE(status);
   if ( ptr_vec->is_persist ) { 
+    if ( ptr_vec->is_file ) { 
+      // master file exists, no need to flush chunks individually
+    }
+    else {
+      status = vec_flush_chunk(ptr_S, ptr_T, ptr_vec, true, -1); 
+      cBYE(status);
+    }
     status = reincarnate(ptr_S, ptr_T, ptr_vec, ptr_str_to_reincarnate);  
     cBYE(status);
   }
@@ -655,30 +626,6 @@ BYE:
   if ( delta > 0 ) { ptr_T->t_shutdown += delta; }
   return status;
 }
-//------------------------------------------------
-int
-vec_backup(
-    VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
-    VEC_REC_TYPE *ptr_vec
-    )
-{
-  int status = 0;
-  if ( !ptr_vec->is_eov  ) { go_BYE(-1); }
-  if ( ptr_vec->is_file ) { 
-    if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
-  }
-  if ( ptr_vec->is_memo ) {   // flush all chunks
-    status = vec_flush_chunk(ptr_S, ptr_T, ptr_vec, false, -1); 
-  }
-  else { // memo = false => only one chunk
-    status = vec_flush_chunk(ptr_S, ptr_T, ptr_vec, false, 0); 
-  }
-  cBYE(status);
-BYE:
-  return status;
-}
-//------------------------------------------------
 int
 vec_unget_chunk(
     VEC_GLOBALS_TYPE *ptr_S,

@@ -1,6 +1,6 @@
+Make sure to call cVector:free_globals()
 Review get_chunk()
 Review new()
-Review reincarnate()
 Write tests for set_sibling and joint evaluation
 
 

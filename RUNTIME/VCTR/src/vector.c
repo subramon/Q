@@ -4,6 +4,7 @@
 #include "lualib.h"
 
 #include "q_incs.h"
+#include "vec_macros.h"
 #include "core_vec.h"
 #include "scalar_struct.h"
 #include "cmem_struct.h"
@@ -57,6 +58,7 @@ static int l_vec_check_chunks( lua_State *L) {
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_init_globals( lua_State *L) {
   int status = 0;
+  FILE *fp = NULL;
   bool is_key; int64_t itmp;
   const char * cptr = NULL;
   //-------------------------------
@@ -106,13 +108,23 @@ static int l_vec_init_globals( lua_State *L) {
   return_if_malloc_failed(g_S.q_data_dir);
   strcpy(g_S.q_data_dir, cptr);
   //-------------------
+  g_S.max_file_num = 0;
+  //-------------------
   status = init_globals(&g_S, &g_T); cBYE(status);
+  fclose_if_non_null(fp);
   lua_pushboolean(L, true);
   return 1;
 BYE:
+  fclose_if_non_null(fp);
   lua_pushnil(L);
   lua_pushstring(L, __func__);
   return 2;
+}
+static int l_vec_free_globals( lua_State *L) {
+  free_if_non_null(g_S.chunk_dir);
+  free_if_non_null(g_S.q_data_dir);
+  lua_pushboolean(L, true);
+  return 1;
 }
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
@@ -635,17 +647,6 @@ static int l_vec_meta( lua_State *L) {
   }
 }
 //----------------------------------------
-static int l_vec_backup( lua_State *L) {
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_backup(&g_S, &g_T, ptr_vec); cBYE(status);
-  lua_pushboolean(L, true);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//----------------------------------------
 static int l_vec_check( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int status = vec_check(&g_S, &g_T, ptr_vec);
@@ -758,10 +759,10 @@ static int l_vec_rehydrate( lua_State *L)
 {
   int status = 0;
   VEC_REC_TYPE *ptr_vec = NULL;
-  bool is_key; int64_t itmp;  int num_chunks; bool is_single;
+  bool is_key; int64_t itmp;  int num_chunks; 
   const char * qtype = NULL;
-  const char *file_name = NULL; 
-  const char **file_names = NULL;  /* [num_chunks] */
+  int64_t vec_uqid;
+  int64_t *chunk_uqids = NULL;
   uint64_t num_elements;
   uint32_t field_width;
   //------------------- get qtype
@@ -787,44 +788,33 @@ static int l_vec_rehydrate( lua_State *L)
   if ( !is_key )  { go_BYE(-1); }
   if ( itmp != g_S.chunk_size ) { go_BYE(-1); }
   //------------------
-  status = get_str_from_tbl(L, "file_name", &is_key, &file_name);  
+  status = get_int_from_tbl(L, "vec_uqid", &is_key, &vec_uqid);  
   cBYE(status);
-  if ( is_key ) { 
-    is_single = true;
-    if ( *file_name == '\0' ) { go_BYE(-1); }
-  }
-  else {
-    num_chunks = ceil((double)num_elements / (double)g_S.chunk_size);
-    if ( num_chunks == 1 ) { go_BYE(-1); }
-    is_single = false;
-    file_names = malloc(num_chunks * sizeof(char *));
-    return_if_malloc_failed(file_names);
-    memset(file_names, '\0',  (num_chunks * sizeof(char *)));
-    status = get_array_of_strings_from_tbl(
-        L, "file_names", &is_key, file_names, num_chunks);
-    cBYE(status);
-  }
+  if ( !is_key ) { go_BYE(-1); }
   //------------------
-
+  num_chunks = ceil((double)num_elements / (double)g_S.chunk_size);
+  if ( num_chunks == 1 ) { go_BYE(-1); }
+  chunk_uqids = malloc(num_chunks * sizeof(uint64_t));
+  return_if_malloc_failed(chunk_uqids);
+  memset(chunk_uqids, 0,  num_chunks * sizeof(uint64_t));
+  status = get_array_of_ints_from_tbl(L, "chunk_uqids", &is_key, 
+        chunk_uqids, num_chunks);
+  cBYE(status);
+  if ( !is_key ) { go_BYE(-1); }
+  //------------------
   ptr_vec = (VEC_REC_TYPE *)lua_newuserdata(L, sizeof(VEC_REC_TYPE));
   return_if_malloc_failed(ptr_vec);
   memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  if ( is_single ) { 
-    status = vec_rehydrate_single(&g_S, &g_T, ptr_vec, qtype, field_width, 
-      num_elements, file_name);
-  }
-  else {
-    status = vec_rehydrate_multi(&g_S, &g_T, ptr_vec, qtype, field_width, 
-      num_elements, num_chunks, file_names);
-  }
+  status = vec_rehydrate(&g_S, &g_T, ptr_vec, qtype, field_width, 
+      num_elements, vec_uqid, chunk_uqids);
   cBYE(status);
-  free_if_non_null(file_names);
+  free_if_non_null(chunk_uqids);
   return 1; 
 BYE:
-  free_if_non_null(file_names);
+  free_if_non_null(chunk_uqids);
   lua_pushnil(L);
   lua_pushstring(L, __func__);
   return 2;
@@ -870,7 +860,6 @@ BYE:
 //-----------------------
 static const struct luaL_Reg vector_methods[] = {
     { "__gc",    l_vec_free   },
-    { "backup", l_vec_backup },
     { "check", l_vec_check },
     { "check_chunks", l_vec_check_chunks }, 
     { "chunk_size", l_vec_chunk_size }, 
@@ -885,6 +874,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "flush_all", l_vec_flush_all },
     { "flush_chunk", l_vec_flush_chunk },
     { "free", l_vec_free },
+    { "free_globals", l_vec_free_globals },
     { "get1", l_vec_get1 },
     { "get_chunk", l_vec_get_chunk },
     { "init_globals", l_vec_init_globals },
@@ -913,7 +903,6 @@ static const struct luaL_Reg vector_methods[] = {
 };
  
 static const struct luaL_Reg vector_functions[] = {
-    { "backup", l_vec_backup },
     { "check", l_vec_check },
     { "check_chunks", l_vec_check_chunks }, 
     { "chunk_size", l_vec_chunk_size }, 

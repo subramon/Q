@@ -60,12 +60,12 @@ typedef struct _vec_rec_type {
 } VEC_REC_TYPE;
 
 typedef struct _vec_globals_type { 
-  // TODO P3 Remember to free stuff when system shuts down 
   uint32_t chunk_size;
   CHUNK_REC_TYPE *chunk_dir;  // [g_sz_chunk_dir]
   uint32_t sz_chunk_dir; 
   uint32_t n_chunk_dir;  // 0 <= g_n_chunk_dir <= g_sz_chunk_dir
   char *q_data_dir;  
+  uint64_t max_file_num;
 } VEC_GLOBALS_TYPE;
 
 #endif

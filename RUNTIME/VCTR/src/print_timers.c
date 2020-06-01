@@ -12,8 +12,7 @@ fprintf(stdout, "0,check,%u,%" PRIu64 "\n", ptr_T->n_get_chunk , ptr_T->t_get_ch
 fprintf(stdout, "0,check,%u,%" PRIu64 "\n", ptr_T->n_new , ptr_T->t_new );
 fprintf(stdout, "0,check,%u,%" PRIu64 "\n", ptr_T->n_put1 , ptr_T->t_put1 );
 fprintf(stdout, "0,check,%u,%" PRIu64 "\n", ptr_T->n_put_chunk , ptr_T->t_put_chunk );
-fprintf(stdout, "0,check,%u,%" PRIu64 "\n", ptr_T->n_rehydrate_single , ptr_T->t_rehydrate_single );
-fprintf(stdout, "0,check,%u,%" PRIu64 "\n", ptr_T->n_rehydrate_multi , ptr_T->t_rehydrate_multi );
+fprintf(stdout, "0,check,%u,%" PRIu64 "\n", ptr_T->n_rehydrate, ptr_T->t_rehydrate);
 fprintf(stdout, "0,check,%u,%" PRIu64 "\n", ptr_T->n_shutdown , ptr_T->t_shutdown );
 fprintf(stdout, "0,check,%u,%" PRIu64 "\n", ptr_T->n_start_write , ptr_T->t_start_write );
 fprintf(stdout, "0,check,%u,%" PRIu64 "\n", ptr_T->n_malloc , ptr_T->t_malloc );

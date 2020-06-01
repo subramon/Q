@@ -10,6 +10,42 @@
 #include "_rdtsc.h"
 #include "_rs_mmap.h"
 
+uint64_t
+mk_uqid(
+    VEC_GLOBALS_TYPE *ptr_S
+    )
+{
+  return ++ptr_S->max_file_num;
+}
+
+int
+safe_strcat(
+    char **ptr_X,
+    size_t *ptr_nX,
+    const char * const buf
+    )
+{
+  int status = 0;
+  char *X = *ptr_X;
+  size_t nX = *ptr_nX;
+  size_t buflen = strlen(buf);
+  size_t Xlen   = strlen(X);
+  if ( Xlen + buflen + 2 >= nX ) { 
+    while ( (Xlen + buflen + 2) >= nX ) { 
+      nX *= 2;
+    }
+    X = malloc(nX);
+    return_if_malloc_failed(X);
+    memset(X, 0, nX);
+    strcpy(X, *ptr_X);
+  }
+  strcat(X, buf);
+  *ptr_X = X;
+  *ptr_nX = nX;
+BYE:
+  return status;
+}
+
 
 void 
 l_memcpy(
@@ -310,7 +346,7 @@ allocate_chunk(
     }
     for ( unsigned int i = lb ; i < ub; i++ ) { 
       if ( ptr_S->chunk_dir[i].uqid == 0 ) {
-        ptr_S->chunk_dir[i].uqid = RDTSC(); 
+        ptr_S->chunk_dir[i].uqid = mk_uqid(ptr_S);
         ptr_S->chunk_dir[i].chunk_num = chunk_num;
         ptr_S->chunk_dir[i].is_file = false;
         ptr_S->chunk_dir[i].vec_uqid = vec_uqid;
@@ -563,7 +599,7 @@ vec_new_common(
   ptr_vec->field_width = field_width;
   ptr_vec->chunk_size_in_bytes = get_chunk_size_in_bytes(
       ptr_S, field_width, fldtype);
-  ptr_vec->uqid = RDTSC();
+  ptr_vec->uqid = mk_uqid(ptr_S);
   ptr_vec->is_memo = true; // default behavior
 BYE:
   return status;
@@ -663,61 +699,54 @@ reincarnate(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_v,
-    char **ptr_x
+    char **ptr_X
     )
 {
   int status = 0;
-  char buf[65536]; // TODO P3 Undo this hard code; 
-  char *x = NULL;
-  x = l_malloc(65536, ptr_T); // TODO P3 Undo this hard code
-  memset(x, '\0', 65536);
-  strcpy(x, " return { ");
+  size_t nX = 65536;
+#define BUFLEN 65535
+  char *buf = NULL;
+  char *X = NULL;
+
+  buf = malloc(BUFLEN+1);
+  return_if_malloc_failed(buf);
+  memset(buf, '\0', BUFLEN+1);
+
+  X = malloc(nX);
+  return_if_malloc_failed(X);
+  memset(X, '\0', nX);
+
+  strcpy(buf, " return { ");
+  safe_strcat(&X, &nX, buf);
 
   sprintf(buf, "qtype = \"%s\", ", ptr_v->fldtype); 
-  strcat(x, buf);
+  safe_strcat(&X, &nX, buf);
 
   sprintf(buf, "num_elements = %" PRIu64 ", ", ptr_v->num_elements); 
-  strcat(x, buf);
+  safe_strcat(&X, &nX, buf);
 
   sprintf(buf, "chunk_size = %d, ", ptr_S->chunk_size);
-  strcat(x, buf);
+  safe_strcat(&X, &nX, buf);
 
   sprintf(buf, "width = %u, ", ptr_v->field_width); 
-  strcat(x, buf);
+  safe_strcat(&X, &nX, buf);
 
-  if ( ptr_v->is_file ) { 
-    char file_name[Q_MAX_LEN_FILE_NAME+1];
-    status = mk_file_name(ptr_v->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-    cBYE(status);
-    sprintf(buf, "file_name = \"%s\", ",  file_name);
-    strcat(x, buf);
+  sprintf(buf, "vec_uqid = %" PRIu64 ",",  ptr_v->uqid);
+  safe_strcat(&X, &nX, buf);
+  safe_strcat(&X, &nX, "chunk_uqids = { ");
+  for ( unsigned int i = 0; i < ptr_v->num_chunks; i++ ) { 
+    uint32_t chunk_idx = ptr_v->chunks[i];
+    chk_chunk_dir_idx(chunk_idx);
+    CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
+    sprintf(buf, "%" PRIu64 ",",  ptr_c->uqid);
+    safe_strcat(&X, &nX, buf);
   }
-  else {
-    if ( ptr_v->num_chunks == 1 ) { 
-      strcat(x, "file_name = ");
-    }
-    else {
-      strcat(x, "file_names = { ");
-    }
-    for ( unsigned int i = 0; i < ptr_v->num_chunks; i++ ) { 
-      char file_name[Q_MAX_LEN_FILE_NAME+1];
-      uint32_t chunk_idx = ptr_v->chunks[i];
-      chk_chunk_dir_idx(chunk_idx);
-      CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
-      if ( !ptr_c->is_file ) { go_BYE(-1); }
-      status = mk_file_name(ptr_c->uqid,file_name,Q_MAX_LEN_FILE_NAME); 
-      cBYE(status);
-      sprintf(buf, "\"%s\", ",  file_name);
-      strcat(x, buf);
-    }
-    if ( ptr_v->num_chunks > 1 ) { 
-      strcat(x, " }, ");
-    }
-  }
-  strcat(x, " }  ");
-  *ptr_x = x;
+  safe_strcat(&X, &nX, " }  ");
+  safe_strcat(&X, &nX, " }  ");
+  *ptr_X = X;
 BYE:
-  if ( status < 0 ) { free_if_non_null(x); }
+  free_if_non_null(buf);
+  if ( status < 0 ) { free_if_non_null(X); }
   return status;
 }
 

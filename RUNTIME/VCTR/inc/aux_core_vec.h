@@ -155,3 +155,13 @@ make_master_file(
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_v
     );
+extern int
+safe_strcat(
+    char **ptr_X,
+    size_t *ptr_nX,
+    const char * const buf
+    );
+extern uint64_t
+mk_uqid(
+    VEC_GLOBALS_TYPE *ptr_S
+    );

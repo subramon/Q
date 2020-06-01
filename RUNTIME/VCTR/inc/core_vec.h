@@ -37,25 +37,15 @@ get_qtype_and_field_width(
     int * res_field_width
     );
 extern int 
-vec_rehydrate_single(
+vec_rehydrate(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width,
     int64_t num_elements,
-    const char *const file_name
-    );
-extern int 
-vec_rehydrate_multi(
-    VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
-    VEC_REC_TYPE *ptr_vec,
-    const char * const fldtype,
-    uint32_t field_width,
-    int64_t num_elements,
-    int num_chunks,
-    const char **const file_names /* [num_chunks] */
+    int64_t vec_uqid,
+    int64_t *chunk_uqids
     );
 extern int 
 vec_new(
@@ -257,12 +247,6 @@ reset_timers(
 extern void 
 print_timers(
     VEC_TIMERS_TYPE *ptr_T
-    );
-extern int
-vec_backup(
-    VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
-    VEC_REC_TYPE *ptr_vec
     );
 extern int
 vec_shutdown(

@@ -8,6 +8,14 @@ local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
+local function delete_data_files()
+  -- check no files in data directory
+  local ddir = os.getenv("Q_DATA_DIR")
+  local pldir = require 'pl.dir'
+  pldir.rmtree(ddir)
+  pldir.makepath(ddir)
+end
+
 local tests = {}
 
 local lVector 
@@ -289,11 +297,7 @@ end
 tests.t4 = function()
   local modes = { "cVector", "lVector" }
   for _, mode in pairs(modes) do 
-    -- check no files in data directory
-    local ddir = os.getenv("Q_DATA_DIR")
-    local pldir = require 'pl.dir'
-    pldir.rmtree(ddir)
-    pldir.makepath(ddir)
+    delete_data_files()
     local x = pldir.getfiles(ddir, "_*.bin")
     assert( x == nil or #x == 0 )
     local qtype = "F4"
@@ -398,7 +402,7 @@ tests.t5 = function()
     else
       error("")
     end
-    local n = 1000000
+    local n = 2 * cVector.chunk_size() + 17 
     for i = 1, n do 
       local s = Scalar.new(i, "F4")
       v:put1(s)
@@ -447,6 +451,7 @@ tests.t6 = function()
   local width = qconsts.qtypes[qtype].width
   local v 
   for _, mode in pairs(modes) do 
+    delete_data_files()
     if ( mode == "cVector" ) then 
       v = cVector.new( { qtype = qtype, width = width} )
     elseif ( mode == "lVector" ) then 
@@ -474,10 +479,19 @@ tests.t6 = function()
       err("")
     end
     print(">>>  stop deliberate error")
+    -- now terminate the vector 
+    v:eov() 
     -- master file not created until requested
-    v:eov()
     assert(not plpath.isfile(v:file_name()))
-    -- create master file, then delete it and verify its gone
+    --============ check that chunks do not have files 
+    local V, C = assert(v:me())
+    for i = 1, #C do
+      local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
+      assert(not chunk[0].is_file)
+    end
+    --=============================
+    -- create master file, check it exists, 
+    -- then delete it and verify its gone
     assert(v:flush_all())
     local M = v:me()
     M = ffi.cast("VEC_REC_TYPE *", M)
@@ -490,13 +504,6 @@ tests.t6 = function()
     local M = v:me()
     M = ffi.cast("VEC_REC_TYPE *", M)
     assert(M[0].is_file == false)
-    --============ Now check that chunks do not have files 
-    local V, C = assert(v:me())
-    for i = 1, #C do
-      local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
-      assert(not chunk[0].is_file)
-    end
-    --=============================
     --= flush all chunks and then verify that they have files 
     for i = 1, #C do
       v:flush_chunk(i-1)
@@ -633,19 +640,17 @@ tests.t8 = function()
   
       assert(y.width == qconsts.qtypes[qtype].width)
       assert(y.qtype == qtype)
-      if ( iter == 1 ) then 
-        assert(not y.file_name)
-        assert(type(y.file_names) == "table")
-        assert(#y.file_names == num_chunks)
-        for k, v in pairs(y.file_names) do 
-          assert(plpath.isfile(v)) 
+      assert(type(y.vec_uqid) == "number")
+      assert(type(y.chunk_uqids) == "table")
+      assert(#y.chunk_uqids == num_chunks)
+      for k, v in pairs(y.chunk_uqids) do 
+        assert(type(v) == "number")
+      end
+      for k1, v1 in pairs(y.chunk_uqids) do 
+        for k2, v2 in pairs(y.chunk_uqids) do 
+          if ( k1 ~= k2 ) then assert(v1 ~= v2) end
         end
       end
-      if ( iter == 2 ) then 
-        assert(not y.file_names)
-        assert(type(y.file_name) == "string")
-        assert(plpath.isfile(y.file_name)) 
-      end 
       -- clean up after yourself
       local ddir = cVector.data_dir()
       local pldir = require 'pl.dir'

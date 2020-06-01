@@ -26,10 +26,6 @@ register_type(lVector, "lVector")
 -- not from Lua. Use cVector:reset_timers()
 -- not from Lua. Use lVector:same_state()
 --
--- Flush contents of Vector to disk. 
-function lVector:backup()
-  return H.on_both(self, cVector.backup)
-end
 
 function lVector:check()
   -- cannot use function on_both here because check called from within
@@ -198,6 +194,9 @@ function lVector:file_name(chunk_num)
 end
 
 
+-- flushes contents of vector to disk
+-- creates a master file if one does not exist
+-- Mainly used for testing. Not really needed by Q programmer
 function lVector:flush_all()
   return H.on_both(self, cVector.flush_all)
 end
@@ -321,7 +320,7 @@ function lVector:me()
   M1, C1 = cVector.me(self._base_vec)
   assert(type(M1) == "userdata")
   assert(type(C1) == "table")
-  assert(#C1 > 0)
+  -- Commented to handle case of just-born Vectors. assert(#C1 > 0)
   for _, v in ipairs(C1) do 
     assert(type(v) == "userdata")
   end

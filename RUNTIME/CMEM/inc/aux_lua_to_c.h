@@ -3,6 +3,14 @@ check_args_is_table(
     lua_State *L
     );
 extern int 
+get_array_of_ints_from_tbl(
+      lua_State *L,
+      const char * const key,
+      bool *ptr_is_key,
+      int64_t *out, // allocated before call 
+      int n
+      );
+extern int 
 get_array_of_strings_from_tbl(
       lua_State *L,
       const char * const key,
