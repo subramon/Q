@@ -1,5 +1,5 @@
 local cutils  = require 'libcutils'
-local qc      = require 'Q/UTILS/lua/q_core'
+-- TO DELETE local qc      = require 'Q/UTILS/lua/q_core'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local function restore(file_to_restore)

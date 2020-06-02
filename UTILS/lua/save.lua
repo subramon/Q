@@ -1,7 +1,7 @@
-local ffi     = require 'ffi'
 local cutils  = require 'libcutils'
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local qc = ffi.load('libq_core')
+-- TO DELETE local ffi     = require 'ffi'
+-- TO DELETE local qc = ffi.load('libq_core')
 
 local basic_serialize = require 'Q/UTILS/lua/basic_serialize'
 local should_save = require 'Q/UTILS/lua/should_save'
@@ -14,6 +14,7 @@ local function internal_save(
   Tsaved, 
   fp
   )
+  if not should_save(name, value) then return end 
   assert(type(Tsaved) == "table")
   if ( ( type(value) == "number" ) or 
        ( type(value) == "string" ) or 
@@ -75,7 +76,7 @@ local function save(outfile)
   local fp = assert(io.open(metadata_file, "w+"), 
     "Unable to open file for writing" .. metadata_file)
   --================================================
-  fp:write("local lVector = require 'Q/RUNTIME/VCTRlua/lVector'\n")
+  fp:write("local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'\n")
   fp:write("local cVector = require 'libvctr'\n")
   fp:write("local Scalar  = require 'libsclr'\n")
   fp:write("local cmem    = require 'libcmem'\n")
@@ -87,9 +88,7 @@ local function save(outfile)
   local Tsaved = {}
   -- For all globals,
   for k, v in pairs(_G) do
-    if should_save(k, v) then
-      internal_save(k, v, Tsaved, fp); -- print("Saving ", k, v)
-    end
+    internal_save(k, v, Tsaved, fp); -- print("Saving ", k, v)
   end
   fp:close()
   print("Saved to " .. metadata_file)

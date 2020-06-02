@@ -35,6 +35,7 @@ RUN apt-get update -y \
     telnet \
     valgrind \
     unzip \
+    vim \
     wget \
     && apt-get clean all
 
