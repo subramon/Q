@@ -7,13 +7,16 @@ local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local pldir   = require 'pl.dir'
 
 local function delete_data_files()
-  -- check no files in data directory
   local ddir = os.getenv("Q_DATA_DIR")
-  local pldir = require 'pl.dir'
   pldir.rmtree(ddir)
   pldir.makepath(ddir)
+end
+local function get_data_files()
+  local ddir = os.getenv("Q_DATA_DIR")
+  return pldir.getfiles(ddir, "_*.bin")
 end
 
 local tests = {}
@@ -298,7 +301,7 @@ tests.t4 = function()
   local modes = { "cVector", "lVector" }
   for _, mode in pairs(modes) do 
     delete_data_files()
-    local x = pldir.getfiles(ddir, "_*.bin")
+    local x = get_data_files()
     assert( x == nil or #x == 0 )
     local qtype = "F4"
     local width = qconsts.qtypes[qtype].width
@@ -369,7 +372,7 @@ tests.t4 = function()
     end
     assert(v:check())
     assert(cVector.check_chunks())
-    local x = pldir.getfiles(ddir, "_*.bin")
+    local x = get_data_files()
     print(#x, num_chunks)
     assert(#x == num_chunks + 1 ) -- +1 for whole file
     local r = cutils.rdtsc() % 3
@@ -382,7 +385,7 @@ tests.t4 = function()
       -- do nothing
     end 
     if ( ( r == 0 ) or ( r == 1 ) ) then 
-      local x = pldir.getfiles(ddir, "_*.bin")
+      local x = get_data_files()
       for k, v in pairs(x) do print(k, v) end 
       assert(x == nil or #x == 0 )
     end
