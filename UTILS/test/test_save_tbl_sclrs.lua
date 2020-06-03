@@ -11,10 +11,10 @@ tests.t1 = function()
   for i, qtype in pairs(qtypes) do 
     S1[#S1+1] = Scalar.new(1,  qtype) -- creating global scalar
   end
-  Q.save("/tmp/saving_sclrs.lua")
+  Q.save()
   S2 = S1
   S1 = nil -- nullifying S1 before restoring
-  local status, ret = pcall(Q.restore, "/tmp/saving_sclrs.lua")
+  local status, ret = pcall(Q.restore)
   assert(status, ret)
   for i, s2 in pairs(S2) do
     assert(S1[i] == s2)

@@ -74,7 +74,6 @@ require 'Q/QTILS/lua/vvseq'
 --============= TODO P4 Document usage of  these routines
 require "Q/UTILS/lua/pack"
 require "Q/UTILS/lua/restore"
-require "Q/UTILS/lua/q_shutdown"
 require "Q/UTILS/lua/save" 
 require "Q/UTILS/lua/set_memo"
 require "Q/UTILS/lua/unpack"
@@ -83,7 +82,16 @@ require "Q/UTILS/lua/view_meta"
 _G['g_time'] = {}
 _G['g_ctr']  = {}
 
+--=== Stuff to do at first load time 
 local cVector = require 'libvctr'
 cVector.init_globals({})
-
+local reset = os.getenv("Q_RESET")
+if ( reset == "true" ) then 
+  local reset_fn = require 'Q/UTILS/lua/reset'
+  reset_fn()
+else
+  local restore_fn = require 'Q/UTILS/lua/restore'
+  restore_fn()
+end
+--======================
 return require 'Q/q_export'

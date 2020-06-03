@@ -120,6 +120,54 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
+//-----------------------------------
+// TODO P3 Should not be part of vector code, this deals with globals
+static int l_vec_set_globals( lua_State *L) {
+  int status = 0;
+  int num_args = lua_gettop(L); 
+  if ( num_args != 2 ) { go_BYE(-1); }
+  const char *key = luaL_checkstring(L, 1); 
+  const char *val = luaL_checkstring(L, 2); 
+  if ( strcmp(key, "max_file_num") == 0 ) { 
+    int itmp = atoi(val);
+    if ( itmp < 0 ) { go_BYE(-1); }
+    g_S.max_file_num = itmp;
+  }
+  else {
+    go_BYE(-1);
+  }
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//------------------------------------------------
+// TODO P3 Should not be part of vector code, this deals with globals
+static int l_vec_get_globals( lua_State *L) {
+  int status = 0;
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  const char *key = luaL_checkstring(L, 1); 
+  if ( strcmp(key, "max_file_num") == 0 ) { 
+    lua_pushnumber(L, g_S.max_file_num);
+  }
+  else if ( strcmp(key, "data_dir") == 0 ) { 
+    lua_pushstring(L, g_S.q_data_dir);
+  }
+  else {
+    go_BYE(-1);
+  }
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//------------------------------------------------
 static int l_vec_free_globals( lua_State *L) {
   free_if_non_null(g_S.chunk_dir);
   free_if_non_null(g_S.q_data_dir);
@@ -874,6 +922,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "flush_chunk", l_vec_flush_chunk },
     { "free", l_vec_free },
     { "free_globals", l_vec_free_globals },
+    { "get_globals", l_vec_get_globals },
     { "get1", l_vec_get1 },
     { "get_chunk", l_vec_get_chunk },
     { "init_globals", l_vec_init_globals },
@@ -893,6 +942,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "rehydrate", l_vec_rehydrate},
     { "reset_timers", l_vec_reset_timers },
     { "same_state", l_vec_same_state },
+    { "set_globals", l_vec_set_globals },
     { "set_name", l_vec_set_name },
     { "shutdown", l_vec_shutdown },
     { "start_read", l_vec_start_read },
@@ -918,6 +968,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "free", l_vec_free },
     { "get1", l_vec_get1 },
     { "get_chunk", l_vec_get_chunk },
+    { "get_globals", l_vec_get_globals },
     { "init_globals", l_vec_init_globals },
     { "is_dead", l_vec_is_dead },
     { "is_eov", l_vec_is_eov },
@@ -937,6 +988,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "rehydrate", l_vec_rehydrate},
     { "reset_timers", l_vec_reset_timers },
     { "same_state", l_vec_same_state },
+    { "set_globals", l_vec_set_globals },
     { "set_name", l_vec_set_name },
     { "shutdown", l_vec_shutdown },
     { "start_read", l_vec_start_read },

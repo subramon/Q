@@ -1,8 +1,6 @@
 local cutils  = require 'libcutils'
+local cVector = require 'libvctr'
 local qconsts = require 'Q/UTILS/lua/q_consts'
--- TO DELETE local ffi     = require 'ffi'
--- TO DELETE local qc = ffi.load('libq_core')
-
 local basic_serialize = require 'Q/UTILS/lua/basic_serialize'
 local should_save = require 'Q/UTILS/lua/should_save'
 
@@ -68,21 +66,28 @@ local function internal_save(
   end
 end
 
-local function save(outfile)
-  -- Decide on where you are going to write the output
-  local metadata_file
-  if ( outfile ) then 
-    metadata_file = outfile
-  else
-    metadata_file = qconsts.Q_META_FILE
+local function save()
+  local data_dir = cVector.get_globals("data_dir") 
+  assert(cutils.isdir(data_dir))
+  meta_file = data_dir .. "/q_meta.lua" -- note .lua suffix
+  aux_file  = data_dir .. "/q_aux.lua" 
+
+  if  cutils.isfile(meta_file) or  cutils.isfile(aux_file) then 
+    print("Warning! Over-writing meta data file ", meta_file)
+    print("Warning! Over-writing aux data file ", aux_file)
+    cutils.delete(meta_file)
+    cutils.delete(aux_file)
   end
-  assert(type(metadata_file) == "string")
-  if  cutils.isfile(metadata_file) then 
-    print("Warning! Over-writing meta data file ", metadata_file)
-  end
-  local fp = assert(io.open(metadata_file, "w+"), 
-    "Unable to open file for writing" .. metadata_file)
   --================================================
+  local fp = assert(io.open(aux_file, "w+"))
+  local str = string.format(
+    "local T = {}; T.max_file_num = %s; return T", 
+    cVector.get_globals("max_file_num"))
+  fp:write(str)
+  fp:close()
+  fp = nil
+  --================================================
+  local fp = assert(io.open(meta_file, "w+"))
   fp:write("local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'\n")
   fp:write("local cVector = require 'libvctr'\n")
   fp:write("local Scalar  = require 'libsclr'\n")
@@ -98,7 +103,7 @@ local function save(outfile)
     internal_save(k, v, Tsaved, fp); -- print("Saving ", k, v)
   end
   fp:close()
-  print("Saved to " .. metadata_file)
-  return metadata_file
+  print("Saved to " .. meta_file)
+  return meta_file
 end
 return require('Q/q_export').export('save', save)

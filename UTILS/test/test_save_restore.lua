@@ -8,8 +8,6 @@ local tests = {}
 
 tests.t1 = function()
   -- Simple test to check save() & restore() functionality  
-  -- Two iterations: in order to call save with and without argument
-  for i = 1, 2 do 
     local qtype = "F4"
     local n = 10
     vec = lVector({qtype = qtype})
@@ -18,22 +16,10 @@ tests.t1 = function()
     end
     local meta_file = "/tmp/saving_it.lua"
     vec:persist()
-    if ( i == 1 ) then 
-      Q.save(meta_file)
-    elseif ( i == 2 ) then 
-      Q.save()
-    else
-      error("")
-    end
+    Q.save()
     vec = nil -- nullifying vec before restoring
     local status, ret
-    if ( i == 1 ) then 
-      status, ret = pcall(Q.restore, meta_file)
-    elseif ( i == 2 ) then 
-      status, ret = pcall(Q.restore)
-    else
-      error("")
-    end
+    status, ret = pcall(Q.restore)
     assert(status, ret)
     assert(vec:num_elements() == n)
     assert(vec:qtype() == qtype)
@@ -42,35 +28,21 @@ tests.t1 = function()
       local s = vec:get1(i-1)
       assert(s == Scalar.new(i, qtype))
     end
-    end
   print("Successfully executed test t1")
 end
 
 
-tests.t3 = function()
-  print("TODO test t3 needs to be fixed")
+tests.t2 = function()
+  print("TODO test t2 needs to be fixed")
   --[[
   -- Test to check whether aux metadata is restored after calling restore()
-  col1 = Q.mk_col({10,20,30,40,50}, "I4")
-  col1:set_meta("key1", "value1")
-  Q.save("/tmp/saving_it.lua")
-  
-  -- nullifying col1 before restoring
-  col1 = nil
-
-  -- restore operation
-  local status, ret = pcall(Q.restore, "/tmp/saving_it.lua")
-  assert(status, ret)
-  assert(col1:meta().aux.key1)
-  assert(col1:meta().aux.key1 == "value1")
-  assert(col1:meta().base.is_persist == true)
-  print("Successfully executed test t3")
+  print("Successfully executed test t2")
   --]]
 end
 
 -- Q.save() should not try to persist global Vectors that have been 
 -- marked as memo = false and whose size exceeds chunk size
-tests.t4 = function()
+tests.t3 = function()
   local qtype = "F4"
   local n = cVector.chunk_size() + 1 
   vec = lVector({qtype = qtype}):memo(false)
@@ -79,12 +51,12 @@ tests.t4 = function()
   end
   vec:persist()
   print(">>> START deliberate error")
-  Q.save("/tmp/saving_it.lua")
+  Q.save()
   print("<<< STOP  deliberate error")
   vec = nil -- nullifying vec before restoring
-  local status, ret = pcall(Q.restore, "/tmp/saving_it.lua")
+  local status, ret = pcall(Q.restore)
   assert(status, ret)
   assert(not vec)
 end
-
 return tests
+-- tests.t1()

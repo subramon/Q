@@ -72,6 +72,7 @@ local function run_tests(suite_name, test_name)
   assert(subs == 1, suite_name .. " should end with .lua")
   local status, tests = pcall(require, suite_name_mod)
   if not status then
+    print(tests) -- this is the error message on failure
     return {}, { msg = "Failed to load suite\n" .. tostring(suite_name) }
   end
   assert(type(tests) == "table")
