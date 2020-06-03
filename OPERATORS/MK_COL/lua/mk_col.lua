@@ -56,7 +56,7 @@ local mk_col = function (
     --=====================
     col = lVector({ qtype=qtype, width = width, has_nulls = false})
     for k, v in pairs(input) do 
-      local sval = cmem.new(width, "SC")
+      local sval = cmem.new( { size = width, qtype = "SC"})
       assert(sval:set(v))
       col:put1(sval)
     end

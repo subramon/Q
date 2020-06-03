@@ -553,7 +553,7 @@ end
 function lVector:shutdown()
   if ( qconsts.debug ) then self:check() end
   local status, msg = cVector.shutdown(self._base_vec)
-  assert(status, msg)
+  if ( not status ) then print("Unable to shutdown"); print(msg) end 
   -- TODO P1 What about nn_vec?
   return status 
 end

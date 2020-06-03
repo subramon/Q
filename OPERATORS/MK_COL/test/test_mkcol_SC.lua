@@ -1,19 +1,21 @@
-local plfile = require 'pl.file'
-local Q = require 'Q'
-local tmpfile = "/tmp/_xxx"
+-- FUNCTIONAL
+require 'Q/UTILS/lua/strict'
+local cVector = require 'libvctr'
+cVector.init_globals({})
+local Scalar = require 'libsclr'
+local mk_col = require 'Q/OPERATORS/MK_COL/lua/mk_col'
 
 local tests = {}
 tests.t1 = function()
-  local x = Q.mk_col({"abc", "defg", "hijkl"}, "SC")
-  Q.print_csv(x, { opfile = tmpfile } )
-  local y = plfile.read(tmpfile)
-  z = [[
-abc
-defg
-hijkl
-]]
-  assert(y == z)
-  assert(x:field_width() == 6)
-  plfile.delete(tmpfile)
+  local ys = {"abc", "defg", "hijkl"}
+  local x = mk_col(ys, "SC")
+  assert(x:length() == #ys)
+  for i, y in pairs(ys) do 
+    local s = x:get1(i-1)
+    assert(type(s) == "CMEM")
+    assert(s:to_str("SC") == y)
+  end
+  print("Test t1 succeeded")
 end
 return tests
+-- tests.t1()

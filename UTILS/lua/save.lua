@@ -39,8 +39,8 @@ local function internal_save(
     vec:eov() -- Debatable whether we should do this or not
     vec:flush_all()
     local x = vec:shutdown()
-    assert(type(x) == "string")
     if ( x ) then 
+      assert(type(x) == "string")
       local y = loadstring(x)()
       assert(type(y) == "table")
       y = string.gsub(x, "return ", "" )
@@ -74,7 +74,7 @@ local function save(outfile)
   if ( outfile ) then 
     metadata_file = outfile
   else
-    metadata_file = qconsts.Q_METADATA_FILE
+    metadata_file = qconsts.Q_META_FILE
   end
   assert(type(metadata_file) == "string")
   if  cutils.isfile(metadata_file) then 

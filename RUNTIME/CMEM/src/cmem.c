@@ -746,6 +746,10 @@ static int l_cmem_prbuf( lua_State *L) {
     if ( num_bytes < (num_to_pr * fldsz) ) { WHEREAMI; goto BYE; }
     for ( int i = 0; i < num_to_pr; i++ ) { printf("%" PRF8 ":", Y[i]); }
   }
+  else if ( strcmp(qtype, "SC") == 0 ) { 
+    char *Y = (char  *)X; 
+    printf("%s", Y);
+  }
   else {
     WHEREAMI; goto BYE; 
   }

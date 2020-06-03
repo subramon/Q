@@ -3,8 +3,8 @@ local Scalar = require 'libsclr'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local tests = {}
 
-local qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
-local values = {127, 32767, 2147483647, 2147483650, 100.45, 1000.45}
+local qtypes = { "B1", "I1", "I2", "I4", "I8", "F4", "F8" }
+local values = {1, 127, 32767, 2147483647, 2147483650, 100.45, 1000.45}
 
 -- scalar testcase for I1 qtype
 for i, qtype in pairs(qtypes) do 

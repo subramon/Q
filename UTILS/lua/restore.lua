@@ -7,7 +7,7 @@ local function restore(file_to_restore)
   if ( file_to_restore ) then 
     metadata_file = file_to_restore
   else
-    metadata_file = qconsts.Q_METADATA_FILE
+    metadata_file = qconsts.Q_META_FILE
   end
   assert(type(metadata_file) == "string", "metadata file is not provided")
   assert(cutils.isfile(metadata_file), -- checking isfile present

@@ -104,7 +104,7 @@ RUN mkdir -p /local/Q/
 RUN mkdir -p /local/Q/data/
 RUN mkdir -p /local/Q/include
 RUN mkdir -p /local/Q/lib/
-RUN mkdir -p /local/Q/meta
+RUN mkdir -p /local/Q/meta/
 
 ENV TERM vt100
 
