@@ -346,7 +346,7 @@ end
 function lVector.new(args)
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector
-  local is_rehydrate, is_single = H.determine_kind_of_new(args)
+  local is_rehydrate = H.determine_kind_of_new(args)
 
   if ( not is_rehydrate ) then 
     if args.gen then 
@@ -373,20 +373,10 @@ function lVector.new(args)
       end 
     end
   else -- materialized vector
+    vector._base_vec = assert(cVector.rehydrate(args))
     if ( args.has_nulls ) then
-      if ( is_single ) then 
-        vector._base_vec = assert(cVector.rehydrate_single(args[1]))
-        vector._nn_vec = assert(cVector.rehydrate_single(args[2]))
-      else
-        vector._base_vec = assert(cVector.rehydrate_multi(args[1]))
-        vector._nn_vec = assert(cVector.rehydrate_multi(args[2]))
-      end
-    else
-      if ( is_single ) then 
-        vector._base_vec = assert(cVector.rehydrate_single(args))
-      else
-        vector._base_vec = assert(cVector.rehydrate_multi(args))
-      end
+      error("NOT IMPLEMENTED") -- TODO P1
+      vector._nn_vec   = assert(cVector.rehydrate(args[2]))
     end
   end
   --=============================================
@@ -562,9 +552,10 @@ end
 
 function lVector:shutdown()
   if ( qconsts.debug ) then self:check() end
-  local x = assert(cVector.shutdown(self._base_vec))
+  local status, msg = cVector.shutdown(self._base_vec)
+  assert(status, msg)
   -- TODO P1 What about nn_vec?
-  return x 
+  return status 
 end
 
 function lVector:set_meta(k, v)

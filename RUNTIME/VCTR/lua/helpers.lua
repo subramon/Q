@@ -27,11 +27,8 @@ helpers.determine_kind_of_new = function (args)
       end
     end
   else
-    if ( args.file_name ) then 
-      is_rehydrate = true; is_single = true
-    end
-    if ( args.file_names ) then 
-      is_rehydrate = true; is_single = false
+    if ( args.vec_uqid ) then 
+      is_rehydrate = true; 
     end
   end
    --=============================
@@ -49,7 +46,7 @@ helpers.determine_kind_of_new = function (args)
    --=============================
   end
    --=============================
-  return is_rehydrate, is_single
+  return is_rehydrate
 end
 
 helpers.on_both = function(

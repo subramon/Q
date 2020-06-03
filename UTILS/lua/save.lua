@@ -35,20 +35,27 @@ local function internal_save(
       end
     end
   elseif ( type(value) == "lVector" ) then 
-    local vector_str = value:reincarnate()
-    if ( vector_str ) then 
-      fp:write(name, " = ")
-      fp:write(vector_str)
+    local vec = value
+    vec:eov() -- Debatable whether we should do this or not
+    vec:flush_all()
+    local x = vec:shutdown()
+    assert(type(x) == "string")
+    if ( x ) then 
+      local y = loadstring(x)()
+      assert(type(y) == "table")
+      y = string.gsub(x, "return ", "" )
+      fp:write(name, " = lVector ( ", y, " ) " )
       fp:write("\n")
       --===========================
-      internal_save(name .. "._meta", value._meta, saved, fp)
+      --TODO internal_save(name .. "._meta", vec._meta, Tsaved, fp)
       fp:write(name .. ":persist(true)")
       fp:write("\n")
     else
       print("Not saving lVector because eov=false or is_memo=false ", name)
     end
   elseif ( type(value) == "Scalar" ) then
-    local scalar_str = value:reincarnate()
+    local sclr = value
+    local scalar_str = sclr:reincarnate()
     assert(type(scalar_str) == "string")
     fp:write(name .. " = " .. scalar_str)
     fp:write("\n")

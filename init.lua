@@ -83,4 +83,7 @@ require "Q/UTILS/lua/view_meta"
 _G['g_time'] = {}
 _G['g_ctr']  = {}
 
+local cVector = require 'libvctr'
+cVector.init_globals({})
+
 return require 'Q/q_export'

@@ -638,7 +638,9 @@ tests.t8 = function()
       local x = v:shutdown() 
       assert(type(x) == "string") 
       assert(#x > 0)
+      print(x)
       local y = loadstring(x)()
+      assert(type(y) == "table")
       assert(y.num_elements == num_chunks * chunk_size)
   
       assert(y.width == qconsts.qtypes[qtype].width)
@@ -653,6 +655,11 @@ tests.t8 = function()
         for k2, v2 in pairs(y.chunk_uqids) do 
           if ( k1 ~= k2 ) then assert(v1 ~= v2) end
         end
+      end
+      if ( mode == "lVector" ) then 
+        -- Create a vector with the information in y
+        local z = lVector(y)
+        assert(type(z) == "lVector")
       end
       -- clean up after yourself
       local ddir = cVector.data_dir()

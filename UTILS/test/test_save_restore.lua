@@ -1,20 +1,32 @@
 local Q = require 'Q'
 local Scalar = require 'libsclr'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+local cVector = require 'libvctr'
+local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local tests = {}
-local qconsts = require 'Q/UTILS/lua/q_consts'
 
 tests.t1 = function()
   -- Simple test to check save() & restore() functionality  
-  col1 = Q.mk_col({10,20,30,40,50}, "I4")
+  local qtype = "F4"
+  local n = 10
+  col1 = lVector({qtype = qtype})
+  for i = 1, n do 
+    col1:put1(Scalar.new(i, qtype))
+  end
+  col1:persist()
   Q.save("/tmp/saving_it.lua")
-
-  -- nullifying col1 before restoring
-  col1 = nil
-
+  local col2 = col1
+  col1 = nil -- nullifying col1 before restoring
   local status, ret = pcall(Q.restore, "/tmp/saving_it.lua")
   assert(status, ret)
-  assert(col1:num_elements() == 5)
+  assert(col1:num_elements() == n)
+  assert(col1:qtype() == qtype)
+  assert(col1:is_eov())
+  for i = 1, n do 
+    local s = col1:get1(i-1)
+    assert(s == Scalar.new(i, qtype))
+  end
   print("Successfully executed test t1")
 end
 
@@ -76,23 +88,7 @@ tests.t5 = function()
   print("Successfully executed test t5")
 end
 
--- commenting this testcase as luaposix is removed from q_installation process
---[[
--- negative testcase
-tests.t6 = function()
-  -- Usecase note: within same lua environment, modification in environment variables(for eg here: Q_METADATA_FILE) would not modify 
-  -- the Q environment variables as they are now treated as constants (refer Q/UTILS/lua/q_consts/lua)
-  local posix = require 'posix.stdlib'
-  col1 = Q.mk_col({10,20,30,40,50}, "I4")
-  -- setting the Q_METADATA_FILE environment variable
-  posix.setenv('Q_METADATA_FILE', '/tmp/saved.meta')
-  -- Call save() without argument
-  local status, reason = pcall(Q.save)
-  assert(status == false)
-  print("Successfully executed test t6")
-end
-]]
-
-return tests
+-- return tests
+tests.t1()
 
 

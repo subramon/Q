@@ -793,7 +793,6 @@ static int l_vec_rehydrate( lua_State *L)
   if ( !is_key ) { go_BYE(-1); }
   //------------------
   num_chunks = ceil((double)num_elements / (double)g_S.chunk_size);
-  if ( num_chunks == 1 ) { go_BYE(-1); }
   chunk_uqids = malloc(num_chunks * sizeof(uint64_t));
   return_if_malloc_failed(chunk_uqids);
   memset(chunk_uqids, 0,  num_chunks * sizeof(uint64_t));
