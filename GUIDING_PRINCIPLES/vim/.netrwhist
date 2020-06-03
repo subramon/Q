@@ -1,0 +1,9 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =7
+let g:netrw_dirhist_1='/home/subramon/TEMP/zzzjson/sample/c'
+let g:netrw_dirhist_2='/home/subramon/WORK/filters/kv/src'
+let g:netrw_dirhist_3='/home/subramon/WORK/filters/kv'
+let g:netrw_dirhist_4='/home/subramon/WORK/filters'
+let g:netrw_dirhist_5='/Users/z003zfg/.vim'
+let g:netrw_dirhist_6='/Users/z003zfg/WORK/filters/rhashmap/pkg/debian'
+let g:netrw_dirhist_7='/Users/z003zfg/WORK/Q/GUIDING_PRINCIPLES/vim'

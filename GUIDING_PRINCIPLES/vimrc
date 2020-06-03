@@ -161,6 +161,7 @@ map Y y$
 nnoremap <C-L> :nohl<CR><C-L>
 
 
+set textwidth=80
 set columns=80
 set viminfo='10,\"100,:20,%,n~/.viminfo
 " Uncomment the following to have Vim jump to the last position when
