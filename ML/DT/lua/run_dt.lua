@@ -10,14 +10,11 @@ local eval_mdl = require 'Q/ML/DT/lua/eval_mdl'['eval_mdl']
 local init_metrics = require 'Q/ML/DT/lua/eval_mdl'['init_metrics']
 local calc_avg_metrics = require 'Q/ML/DT/lua/eval_mdl'['calc_avg_metrics']
 
-local function parse_args(args)
-  local parsed_args = {}
+local function check_args(args)
 
-  parsed_args.meta_data_file	= assert(args.meta_data_file)
-  parsed_args.data_file	= args.data_file
-  parsed_args.train_csv	= args.train_csv
-  parsed_args.test_csv	= args.test_csv
-  parsed_args.goal	= assert(args.goal)
+  assert(args.M)
+  assert(args.O)
+  assert(args.goal)
   if ( not args.data_file ) then
     assert(args.train_csv)
     assert(args.test_csv)
@@ -26,100 +23,70 @@ local function parse_args(args)
     assert(args.test_csv == nil)
   end
 
-  local alpha, min_alpha, max_alpha, step_alpha
-  if args.alpha then
-    alpha = args.alpha
-    if type(alpha) ~= "Scalar" then
-      alpha = Scalar.new(alpha, "F4")
-    end
-    min_alpha = alpha
-    max_alpha = alpha
-    step_alpha = Scalar.new(1.0, "F4")
-  else
-    min_alpha   = assert(args.min_alpha)
-    max_alpha   = assert(args.max_alpha)
-    step_alpha  = assert(args.step_alpha)
-    if type(min_alpha) ~= "Scalar" then
-      min_alpha = Scalar.new(min_alpha, "F4")
-    end
-    if type(max_alpha) ~= "Scalar" then
-      max_alpha = Scalar.new(max_alpha, "F4")
-    end
-    if type(step_alpha) ~= "Scalar" then
-      step_alpha = Scalar.new(step_alpha, "F4")
-    end
-  end
-  parsed_args.min_alpha = min_alpha
-  parsed_args.max_alpha = max_alpha
-  parsed_args.step_alpha = step_alpha
+  assert(type(args.min_alpha) == "number")
+  assert(type(args.max_alpha) == "number")
+  assert(type(args.step_alpha) == "number")
+  assert(args.min_alpha <= args.max_alpha)
 
-  local iterations = 1
-  if args.iterations then
-    assert(type(args.iterations == "number"))
-    iterations = args.iterations
+  assert(args.step_alpha >= 0)
+  if ( args.min_alpha < args.max_alpha ) then
+    assert(args.step_alpha > 0)
   end
-  assert(iterations > 0)
-  parsed_args.iterations = iterations
 
-  local split_ratio = 0.7
-  if args.split_ratio then
-    split_ratio = args.split_ratio
-  end
-  assert(type(split_ratio) == "number")
-  assert(split_ratio < 1 and split_ratio > 0)
-  parsed_args.split_ratio = split_ratio
+  assert(type(args.iterations) == "number")
+  assert(args.iterations >= 1)
 
-  local feature_of_interest
-  if args.feature_of_interest then
-    assert(type(args.feature_of_interest) == "table")
-    feature_of_interest = args.feature_of_interest
-  end
-  parsed_args.feature_of_interest = feature_of_interest
+  assert(type(args.split_ratio) == "number")
+  assert(args.split_ratio < 1 and args.split_ratio > 0)
 
-  return parsed_args
+  return true
 end
 
 local function run_dt(args)
-  local parsed_args 	= parse_args(args)
+  check_args(args)
 
-  local meta_data_file  = parsed_args.meta_data_file
-  local data_file       = parsed_args.data_file
-  local train_csv	= parsed_args.train_csv
-  local test_csv	= parsed_args.test_csv
-  local goal		= parsed_args.goal
-  local min_alpha	= parsed_args.min_alpha
-  local max_alpha	= parsed_args.max_alpha
-  local step_alpha	= parsed_args.step_alpha
-  local iterations	= parsed_args.iterations
-  local split_ratio	= parsed_args.split_ratio
-  local feature_of_interest = parsed_args.feature_of_interest
+  local M  = args.M -- meta data 
+  local O  = args.O -- optional global meta data 
+  local data_file       = args.data_file
+  local train_csv	= args.train_csv
+  local test_csv	= args.test_csv
+  local goal		= args.goal
+  local min_alpha	= args.min_alpha
+  local max_alpha	= args.max_alpha
+  local step_alpha	= args.step_alpha
+  local iterations	= args.iterations
+  local split_ratio	= args.split_ratio
 
   -- load the data
   local T
   if data_file then
-    T = Q.load_csv(data_file, dofile(meta_data_file), { is_hdr = args.is_hdr })
+    print(data_file)
+    T = Q.load_csv(data_file, M, O)
   end
+  -- eval the vectors
+  for k, v in pairs(T) do v:eval() break end
+  -- test print 
+  -- S = {} for k, v in pairs(T) do S[#S+1] = v end Q.print_csv(S)
 
   -- start iterating over range of alpha values
   local results = {}
-  while min_alpha <= max_alpha do
+  local alpha = min_alpha
+  while alpha <= max_alpha do
     -- convert scalar to number for alpha value, avoid extra decimals
-    local cur_alpha = utils.round_num(min_alpha:to_num(), 2)
+    print(alpha)
     local metrics = init_metrics()
     for iter = 1, iterations do
       -- break into a training set and a testing set
       local Train, Test
       if T then
         local seed = iter * 100
-        Train, Test = split_train_test(T, split_ratio, 
-          feature_of_interest, seed)
+        Train, Test = split_train_test(T, split_ratio, seed)
       else
         -- load data from train & test csv file
-        Train = Q.load_csv(train_csv, dofile(meta_data_file),
-          { is_hdr = args.is_hdr })
-        Test = Q.load_csv(test_csv, dofile(meta_data_file),
-          { is_hdr = args.is_hdr })
+        Train = Q.load_csv(train_csv, M, O)
+        Test = Q.load_csv(test_csv, M, O)
       end
+      error("premature")
 
       local train, g_train, m_train, n_train, train_col_name = 
         extract_goal(Train, goal)
@@ -145,7 +112,7 @@ local function run_dt(args)
     end
     local avg_metrics = calc_avg_metrics(metrics)
     results[cur_alpha] = avg_metrics
-    min_alpha = min_alpha + step_alpha
+    alpha = alpha + step_alpha
   end
   return results
 end

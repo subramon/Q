@@ -71,12 +71,18 @@ local function load_csv(
   local chunk_size = cVector.chunk_size()
   assert(chk_file(infile))
   assert(validate_meta(M))
-  local is_hdr, fld_sep, global_is_memo = process_opt_args(opt_args)
+  local is_hdr, fld_sep, global_is_memo, global_is_persist = 
+  process_opt_args(opt_args)
   -- see if you need to over ride per field is_memo with global
-  if ( global_is_memo ~= nil ) then 
-    assert(type(global_is_memo == "boolean"))
+  if ( type(global_is_memo) == "boolean" ) then
     for k, v in pairs(M) do 
       v.is_memo = global_is_memo
+    end
+  end
+  -- see if you need to over ride per field is_persist with global
+  if ( type(global_is_persist) == "boolean" ) then
+    for k, v in pairs(M) do 
+      v.is_persist = global_is_persist
     end
   end
   --=======================================
@@ -151,6 +157,7 @@ local function load_csv(
         V:set_meta("__meaning", M[i].meaning)
       end
       V:memo(v.is_memo)
+      V:persist(v.is_persist)
       vectors[v.name] = V
     end
   end

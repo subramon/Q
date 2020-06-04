@@ -1,29 +1,34 @@
 local Q = require 'Q'
-local Vector = require 'libvec'
-local Scalar = require 'libsclr'
-local run_dt = require 'Q/ML/DT/lua/run_dt'
+local cVector = require 'libvctr'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+local Scalar  = require 'libsclr'
+local run_dt  = require 'Q/ML/DT/lua/run_dt'
 local write_to_csv = require 'Q/ML/DT/lua/write_to_csv'
+local qconsts = require 'Q/UTILS/lua/q_consts'
 
-
-local Q_SRC_ROOT = os.getenv("Q_SRC_ROOT")
-local qc = require 'Q/UTILS/lua/q_core'
+local qc       = require 'Q/UTILS/lua/q_core'
+local src_root = qconsts.Q_SRC_ROOT
 
 local tests = {}
 tests.t1 = function()
-  local data_file = Q_SRC_ROOT .. "/ML/KNN/data/occupancy/occupancy.csv"
-  local metadata_file = Q_SRC_ROOT .. "/ML/KNN/data/occupancy/occupancy_meta.lua"
-  local alpha = 0.2
+  local dfile = src_root .. "/ML/KNN/data/occupancy/occupancy.csv"
+  local mfile = src_root .. "/ML/KNN/data/occupancy/occupancy_meta"
+  local ofile = src_root .. "/ML/KNN/data/occupancy/occupancy_opt"
 
   local args = {}
-  args.meta_data_file = metadata_file
-  args.data_file = data_file
-  args.is_hdr = true
+  args.M = require(mfile); assert(type(args.M) == "table")
+
+  args.O = require(ofile); assert(type(args.O) == "table")
+  args.data_file = dfile
   args.goal = "occupy_status"
-  args.alpha = alpha
+  args.min_alpha = 0.2
+  args.max_alpha = 0.2
+  args.step_alpha = 0
   args.iterations = 2
+  args.split_ratio = 0.7
   args.print_graphviz = true
 
-  Vector.reset_timers()
+  cVector.reset_timers()
   start_time = qc.RDTSC()
   local results = run_dt(args)
   for alpha, v in pairs(results) do
@@ -35,8 +40,7 @@ tests.t1 = function()
   end
   stop_time = qc.RDTSC()
   write_to_csv(results, "room_occupancy_sample.csv")
-
-  --Vector.print_timers()
+  cVector.print_timers()
   print("================================================")
   print("total execution time : " .. tostring(tonumber(stop_time-start_time)))
   print("================================================")
@@ -288,4 +292,5 @@ tests.t6 = function()
   print("================================================")
 end
 
-return tests
+-- return tests
+tests.t1()

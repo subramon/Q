@@ -8,6 +8,8 @@ local cmem     = require 'libcmem'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local record_time = require 'Q/UTILS/lua/record_time'
+local is_in    = require 'Q/UTILS/lua/is_in'
+-- TODO Implement chk_subs
 
 local no_scalar_ops = { "incr", "decr", "exp", "log", "sqrt" }
 
@@ -34,7 +36,7 @@ local function expander_f1s1opf2(a, f1, y, optargs )
   --========================
   local status, subs, tmpl = pcall(spfn, f1:fldtype(), y, optargs)
   if ( not status ) then error(subs) end 
-  assert(chk_subs(subs))
+  -- assert(chk_subs(subs))
   local func_name = assert(subs.fn)
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
@@ -56,14 +58,15 @@ local function expander_f1s1opf2(a, f1, y, optargs )
   local f2_gen = function(chunk_num)
     assert(chunk_num == l_chunk_num)
     if ( not f2_buf:is_data() ) then 
-      f2_buf = assert(cmem.new(buf_sz, f2_qtype))
-      f2_buf:is_stealable(true)
+      f2_buf = assert(cmem.new( { size = buf_sz, qtype = f2_qtype}))
+      f2_buf:stealable(true)
     end
-    local f1_len, f1_chunk, nn_f1_chunk = f1:chunk(l_chunk_num)
+    local f1_len, f1_chunk, nn_f1_chunk = f1:get_chunk(l_chunk_num)
     if ( f1_len == 0 ) then return 0 end 
     local cst_f1_chunk    = get_ptr(f1_chunk, cst_f1_as)
     local cst_f2_buf      = get_ptr(f2_chunk, cst_f2_as)
-    local start_time = cutils.RDTSC()
+    local start_time = cutils.rdtsc()
+    print(func_name)
     qc[func_name](cst_f1_chunk, f1_len, cstruct, cst_f2_buf)
     record_time(start_time, func_name)
     l_chunk_num = l_chunk_num + 1

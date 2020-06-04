@@ -69,8 +69,8 @@ end
 local function save()
   local data_dir = cVector.get_globals("data_dir") 
   assert(cutils.isdir(data_dir))
-  meta_file = data_dir .. "/q_meta.lua" -- note .lua suffix
-  aux_file  = data_dir .. "/q_aux.lua" 
+  local meta_file = data_dir .. "/q_meta.lua" -- note .lua suffix
+  local aux_file  = data_dir .. "/q_aux.lua" 
 
   if  cutils.isfile(meta_file) or  cutils.isfile(aux_file) then 
     print("Warning! Over-writing meta data file ", meta_file)

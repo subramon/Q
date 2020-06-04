@@ -86,12 +86,16 @@ _G['g_ctr']  = {}
 local cVector = require 'libvctr'
 cVector.init_globals({})
 local reset = os.getenv("Q_RESET")
+local reset_fn = require 'Q/UTILS/lua/reset'
+local restore_fn = require 'Q/UTILS/lua/restore'
 if ( reset == "true" ) then 
-  local reset_fn = require 'Q/UTILS/lua/reset'
   reset_fn()
 else
-  local restore_fn = require 'Q/UTILS/lua/restore'
-  restore_fn()
+  status, msg = pcall(restore_fn)
+  if ( not status ) then 
+    print("WARNING!!! Restore failed. Wiping things out...")
+    reset_fn()
+  end
 end
 --======================
 return require 'Q/q_export'

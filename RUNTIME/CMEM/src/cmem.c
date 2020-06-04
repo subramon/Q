@@ -177,9 +177,17 @@ BYE:
 }
 
 static int l_cmem_name( lua_State *L) {
+  int status = 0;
+  int num_args = lua_gettop(L);
+  if ( num_args != 1 ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   lua_pushstring(L, ptr_cmem->cell_name);
   return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
 }
 
 
@@ -471,18 +479,28 @@ static int l_cmem_me( lua_State *L) {
 
 static int l_cmem_stealable( lua_State *L) 
 {
+  int status = 0;
+  int num_args = lua_gettop(L);
+  if ( ( num_args < 1 ) || ( num_args > 2 ) )  { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
   bool stealable = false;
-  int num_args = lua_gettop(L);
   if ( num_args == 2 ) { 
     stealable = lua_toboolean(L, 2);
   }
   ptr_cmem->is_stealable = stealable;
   lua_pushboolean(L, true);
   return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
 }
 static int l_cmem_free( lua_State *L) 
 {
+  int status = 0;
+  int num_args = lua_gettop(L);
+  if ( num_args != 1 ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
   if ( ptr_cmem->data == NULL ) { 
     // explicit free will cause control to come here
@@ -529,7 +547,8 @@ static int l_cmem_free( lua_State *L)
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 
 // Following only for debugging 

@@ -1,0 +1,12 @@
+Question = how to maximize the percent of profitable transactions (y = 1), with subset n having a minimum 500 samples?
+
+Variables are all float, x1, x2, ... x14. Predicted variable is y
+
+Best single query: 
+x14 > 488. 
+This results in 500 samples where 265/500, or 53%, are profitable (y = 1)
+
+The best compound query is:
+(x14 > 362) and (x13 < 1,090,000,000)
+This results in 507 samples where 274/500, or 54%, are profitable.  
+

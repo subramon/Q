@@ -19,6 +19,7 @@ return function (
     subs.in_ctype = qconsts.qtypes[in_qtype].ctype
     subs.in_qtype = in_qtype 
     subs.out_qtype = "B1"
+    subs.out_ctype = "uint64_t"
     subs.comparison = ' <<comparison>>  '
     subs.args = scalar:to_cmem()
     subs.args_ctype = subs.in_ctype

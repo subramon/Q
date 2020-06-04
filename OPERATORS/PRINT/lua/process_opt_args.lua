@@ -31,6 +31,8 @@ local function process_opt_args(
       assert(lenV == v:num_elements())
     end
   end
+  assert(type(lenV) == "number")
+  assert(lenV > 0)
   return outV, opfile, filter, lenV
 end
 return  process_opt_args

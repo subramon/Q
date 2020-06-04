@@ -23,6 +23,7 @@ local print_csv = function (
   local lenV -- length of vectors
   V, opfile, filter, lenV = process_opt_args(inV, opt_args)
   local lb, ub, where = process_filter(filter, lenV)
+  print( lb, ub, where )
   local nV = #V
   if ( opt_args and opt_args.impl == "C" ) then 
     print("Using C print implementation")

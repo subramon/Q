@@ -30,14 +30,15 @@ local function is_prev(f1, cmp, optargs )
   local chunk_idx = 0
   local f1_cast_as = subs.ctype .. "*" 
   local f2_cast_as = "uint64_t *"
-  local last_val = cmem.new(ffi.sizeof(subs.ctype))
+  local last_val = assert(cmem.new({ size = ffi.sizeof(subs.ctype)}))
   local first_call = true
   --============================================
   local f2_gen = function(chunk_num)
     -- Adding assert on chunk_idx to have sync between expected chunk_num and generator's chunk_idx state
     assert(chunk_num == chunk_idx)
     if ( first_call ) then 
-      f2_buf = cmem.new(qconsts.chunk_size) -- over-allocated but okay
+      f2_buf = assert(cmem.new({ size = qconsts.chunk_size}))
+      -- over-allocated but okay
     end
     ffi.memset(get_ptr(f2_buf), 0, qconsts.chunk_size)
     local f1_len, f1_chunk, nn_f1_chunk = f1:chunk(chunk_idx)

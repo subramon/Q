@@ -22,6 +22,13 @@ local function validate_meta(
     assert(type(qtype) == "string")
     assert(qconsts.qtypes[qtype])
     --===========================================
+    if fld_M.is_persist ~= nil then 
+      assert(type(fld_M.is_persist) == "boolean")
+    else
+      fld_M.is_persist = false
+    end
+    --===========================================
+    --===========================================
     if fld_M.is_memo ~= nil then 
       assert(type(fld_M.is_memo) == "boolean")
     else

@@ -7,11 +7,9 @@ return require 'Q/UTILS/lua/code_gen' {
 extern int
 ${fn}(  
       const ${in_ctype} * restrict in,  
-      uint64_t *nn_in,
       uint64_t nR,  
       ${in_ctype} *ptr_sval,
-      uint64_t *restrict out,
-      uint64_t *restrict nn_out 
+      uint64_t *restrict out
       ) 
 ;
    ]],
@@ -20,11 +18,9 @@ ${fn}(
 int
 ${fn}(  
       const ${in_ctype} * restrict in,  
-      uint64_t *nn_in,
       uint64_t nR,  
       ${in_ctype} *ptr_sval,
-      uint64_t * restrict out,
-      uint64_t *restrict nn_out 
+      uint64_t * restrict out
       )
 {
   int status = 0;

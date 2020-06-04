@@ -71,7 +71,7 @@ typedef struct _cum_cnt_<<val_qtype>>_<<cnt_qtype>>_args {
   -- Set args 
   local args_ctype = "CUM_CNT_" .. val_qtype .. "_" .. cnt_qtype .. "_ARGS"
   local sz_args = ffi.sizeof(args_ctype)
-  local args = assert(cmem.new(sz_args), "malloc failed")
+  local args = assert(cmem.new( { size = sz_args}))
   local args_ptr = ffi.cast(args_ctype .. " *", get_ptr(args))
   args_ptr.prev_cnt  = -1;
   args_ptr.prev_val  = 0;

@@ -140,7 +140,7 @@ vec_free(
   // printf("vec_free: Freeing vector\n");
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
   if ( ptr_vec->is_dead ) {  
-    fprintf(stderr, "Freeing Vector that is already dead\n");
+    // fprintf(stderr, "Freeing Vector that is already dead\n");
     return status; // TODO P4 Should this be an error?
   }
   if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
