@@ -23,14 +23,13 @@ extern int luaopen_libsclr (lua_State *L);
 
 static int l_sclr_to_cmem( lua_State *L) 
 {
+  int status = 0;
   SCLR_REC_TYPE *ptr_sclr = NULL;
   CMEM_REC_TYPE *ptr_cmem = NULL;
-  // Note that we return a copy of the data, not the original data
-  bool is_foreign = false;
 
-  if ( lua_gettop(L) < 1 ) { WHEREAMI; goto BYE; }
+  if ( lua_gettop(L) < 1 ) { go_BYE(-1); }
   ptr_sclr = (SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
-  if ( ptr_sclr == NULL ) { WHEREAMI; goto BYE; }
+  if ( ptr_sclr == NULL ) { go_BYE(-1); }
 /*
   if ( lua_isstring(L, 2) ) {
     const char *x = luaL_checkstring(L, 2);
@@ -51,21 +50,15 @@ static int l_sclr_to_cmem( lua_State *L)
   ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
   if ( ptr_cmem == NULL ) { WHEREAMI; goto BYE; }
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
-  int status = 0;
-  if ( ! is_foreign ) {
-    status = cmem_malloc(ptr_cmem,  ptr_sclr->field_width, 
-        ptr_sclr->field_type, "");
-    memcpy(ptr_cmem->data, &(ptr_sclr->cdata), ptr_sclr->field_width);
-  }
-  else { 
-    // Control should not come here, not just yet
-    WHEREAMI; goto BYE;
-    status = cmem_dupe(ptr_cmem,  &(ptr_sclr->cdata), ptr_sclr->field_width,
-        ptr_sclr->field_type, "");
-  }
-  if ( status < 0 ) { WHEREAMI; goto BYE; }
+
+  size_t size = sizeof(CDATA_TYPE);
+  status = cmem_malloc(ptr_cmem, size, ptr_sclr->field_type, "");
+
+  ptr_cmem->is_foreign = true; 
+  memcpy(ptr_cmem->data, &(ptr_sclr->cdata), size);
   strncpy(ptr_cmem->fldtype, ptr_sclr->field_type, 4-1);
-  ptr_cmem->size = ptr_sclr->field_width;
+  // TODO P3 Avoid hard coding of length above 
+  ptr_cmem->width = ptr_sclr->field_width;
 
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
@@ -73,7 +66,8 @@ static int l_sclr_to_cmem( lua_State *L)
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 
 #define OP_BUF_LEN 4095

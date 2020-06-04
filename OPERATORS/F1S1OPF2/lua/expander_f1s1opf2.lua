@@ -11,7 +11,7 @@ local record_time = require 'Q/UTILS/lua/record_time'
 local is_in    = require 'Q/UTILS/lua/is_in'
 -- TODO Implement chk_subs
 
-local no_scalar_ops = { "incr", "decr", "exp", "log", "sqrt" }
+local no_scalar_ops = { "vnot", "incr", "decr", "exp", "log", "sqrt" }
 
 local function expander_f1s1opf2(a, f1, y, optargs )
   local sp_fn_name = "Q/OPERATORS/F1S1OPF2/lua/" .. a .. "_specialize"
@@ -45,7 +45,11 @@ local function expander_f1s1opf2(a, f1, y, optargs )
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Missing symbol " .. func_name)
 
-  local cstruct   = assert(subs.args)
+  local ptr_sclr 
+  if ( y ) then 
+    local cstruct   = assert(subs.args)
+    ptr_sclr = get_ptr(cstruct, subs.in_qtype)
+  end
   local f2_qtype  = assert(subs.out_qtype)
   local f2_width  = qconsts.qtypes[f2_qtype].width
   local buf_sz    = cVector.chunk_size() * f2_width
@@ -64,10 +68,11 @@ local function expander_f1s1opf2(a, f1, y, optargs )
     local f1_len, f1_chunk, nn_f1_chunk = f1:get_chunk(l_chunk_num)
     if ( f1_len == 0 ) then return 0 end 
     local cst_f1_chunk    = get_ptr(f1_chunk, cst_f1_as)
-    local cst_f2_buf      = get_ptr(f2_chunk, cst_f2_as)
+    local cst_f2_buf      = get_ptr(f2_buf,   cst_f2_as)
     local start_time = cutils.rdtsc()
-    print(func_name)
-    qc[func_name](cst_f1_chunk, f1_len, cstruct, cst_f2_buf)
+    status = qc[func_name](cst_f1_chunk, f1_len, ptr_sclr, cst_f2_buf)
+    assert(status)
+    f1:unget_chunk(l_chunk_num)
     record_time(start_time, func_name)
     l_chunk_num = l_chunk_num + 1
     return f1_len, f2_buf

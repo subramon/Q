@@ -1,9 +1,10 @@
 -- given a table T of lVectors and a string identifying the goal attribute
 -- return
--- 1) a goal lvector g
--- 2) a table t of lVectors = T - g
--- 3) m = number of columns of t 
--- 4) n = length of lVectors
+-- 1) a table t of lVectors = T - g
+-- 2) a goal lvector g
+-- 3) a table t_names of strings, with names of Vectors
+local is_in = require 'Q/UTILS/lua/is_in'
+local valid_goal_types = { "I1", "I2", "I4", "I8" }
 local function extract_goal(
   T, 
   goal
@@ -11,15 +12,17 @@ local function extract_goal(
   assert(type(T) == "table")
   assert(type(goal) == "string")
   local t = {}
-  local t_name = {}
+  local t_names = {}
   local g = nil
   local qtype = nil
   local m = 0
   local n = 0
   for k, v in pairs(T) do 
     assert(type(v) == "lVector")
+    assert(v:is_eov())
     if ( k == goal ) then 
       g = v
+      assert(is_in(g:qtype(), valid_goal_types))
     else
       if ( not qtype ) then
         qtype = v:fldtype()
@@ -30,7 +33,7 @@ local function extract_goal(
         assert(n     == v:length())
       end
       t[#t+1] = v
-      t_name[#t_name+1] = k
+      t_names[#t_names+1] = k
       m = m + 1
     end
   end
@@ -40,6 +43,6 @@ local function extract_goal(
   assert(qtype)
   assert(type(g) == "lVector")
   assert(type(t) == "table")
-  return t, g, m, n, t_name
+  return t, g, t_names
 end
 return extract_goal

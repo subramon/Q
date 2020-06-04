@@ -6,10 +6,10 @@
 #include "q_incs.h"
 #include "vec_macros.h"
 #include "core_vec.h"
+#include "aux_core_vec.h"
 #include "scalar_struct.h"
 #include "cmem_struct.h"
 #include "cmem.h"
-#include "aux_core_vec.h"
 #include "aux_lua_to_c.h"
 
 #include "_txt_to_I4.h"
@@ -216,6 +216,29 @@ static int l_vec_data_dir( lua_State *L) {
   }
   lua_pushstring(L, g_S.q_data_dir);
   return 1;
+}
+//-----------------------------------
+static int l_vec_reincarnate( lua_State *L) {
+  int status = 0;
+  bool is_clone = true;
+  char *X = NULL;
+  int nargs = lua_gettop(L);
+  if ( nargs != 1 ) { go_BYE(-1); }
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  // check status of vector 
+  if ( ptr_vec->is_dead ) { go_BYE(-1); }
+  if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
+  if ( !ptr_vec->is_eov ) { go_BYE(-1); }
+  //--------------
+  status = reincarnate(&g_S, &g_T, ptr_vec, &X, is_clone);
+  if ( status < 0 ) { free_if_non_null(X); } cBYE(status);
+  lua_pushstring(L, X);
+  free_if_non_null(X); 
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
 }
 //-----------------------------------
 static int l_vec_shutdown( lua_State *L) {
@@ -659,7 +682,7 @@ static int l_vec_put_chunk( lua_State *L) {
   // You (generator) need to give me (Vector) a buffer whose size 
   // is *at least* as the size of my chunk
   if ( ptr_cmem->size < ptr_vec->chunk_size_in_bytes ) { 
-    printf("hello\n"); go_BYE(-1); 
+    go_BYE(-1); 
   }
   int64_t num_in_cmem;
   if ( num_args == 3 ) { 
@@ -940,6 +963,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "put1", l_vec_put1 },
     { "put_chunk", l_vec_put_chunk },
     { "rehydrate", l_vec_rehydrate},
+    { "reincarnate", l_vec_reincarnate},
     { "reset_timers", l_vec_reset_timers },
     { "same_state", l_vec_same_state },
     { "set_globals", l_vec_set_globals },
@@ -986,6 +1010,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "put1", l_vec_put1 },
     { "put_chunk", l_vec_put_chunk },
     { "rehydrate", l_vec_rehydrate},
+    { "reincarnate", l_vec_reincarnate},
     { "reset_timers", l_vec_reset_timers },
     { "same_state", l_vec_same_state },
     { "set_globals", l_vec_set_globals },

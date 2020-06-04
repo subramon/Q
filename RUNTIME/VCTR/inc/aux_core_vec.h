@@ -137,7 +137,8 @@ reincarnate(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_v,
-    char **ptr_x
+    char **ptr_x,
+    bool is_clone 
     );
 extern int
 init_globals(

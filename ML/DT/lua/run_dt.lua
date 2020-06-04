@@ -86,10 +86,10 @@ local function run_dt(args)
         Train = Q.load_csv(train_csv, M, O)
         Test = Q.load_csv(test_csv, M, O)
       end
-      error("premature")
+      for k, v in pairs(Train) do v:eval() end 
+      for k, v in pairs(Test)  do v:eval() end 
 
-      local train, g_train, m_train, n_train, train_col_name = 
-        extract_goal(Train, goal)
+      local train, g_train, train_col_names = extract_goal(Train, goal)
 
       -- Current implementation assumes 2 values of goal as 0, 1
       local min_g, _ = Q.min(g_train):eval()
@@ -99,7 +99,7 @@ local function run_dt(args)
 
       -- prepare decision tree model
       local tree = assert(make_dt(train, g_train, min_alpha, 
-        args.min_to_split, train_col_name, args.wt_prior))
+        args.min_to_split, train_col_names, args.wt_prior))
 
       -- evaluate model for test samples
       metrics = eval_mdl(tree, Test, goal, metrics)

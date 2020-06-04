@@ -46,16 +46,15 @@ local function prepare_dt(
     min_to_split = 10 
   else
     assert(type(min_to_split) == "number")
-    assert(min_to_split > 2)
   end
+  assert(min_to_split >= 8)
 
-  assert(col_names)
   assert(type(col_names) == "table")
 
   local cnts = Q.numby(g, ng):eval()
   local n_T, n_H
-  n_T = cnts:get_one(0):to_num()
-  n_H = cnts:get_one(1):to_num()
+  n_T = cnts:get1(0):to_num()
+  n_H = cnts:get1(1):to_num()
 
   D.n_T = n_T
   D.n_H = n_H
@@ -85,6 +84,7 @@ local function prepare_dt(
       del_f = k
     end
   end
+  error("premature")
   -- delete feature which is not important
   -- TODO: facing some weird behavior if I delete feature so commenting for now
   --[[

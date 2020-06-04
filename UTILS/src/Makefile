@@ -128,6 +128,7 @@ hdr_files = \
 
 #--------
 src_files =  \
+	copy_file.c \
 	bits_to_bytes.c \
 	bytes_to_bits.c \
 	B1_to_txt.c \

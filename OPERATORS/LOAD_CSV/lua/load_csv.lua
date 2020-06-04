@@ -53,7 +53,7 @@ local function free_buffers(M, databuf, nn_databuf, my_name)
       -- Note subtlety of above if condition.  You can't delete 
       -- buffer for vector whose chunk you are returning
       if ( v.is_load ) then
-        print("Freeing buffer for ", v.name)
+        -- print("Freeing buffer for ", v.name)
         databuf[v.name]:delete() 
         if ( v.has_nulls ) then 
           nn_databuf[v.name]:delete() 

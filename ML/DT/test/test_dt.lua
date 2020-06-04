@@ -1,3 +1,4 @@
+require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local cVector = require 'libvctr'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
@@ -29,7 +30,7 @@ tests.t1 = function()
   args.print_graphviz = true
 
   cVector.reset_timers()
-  start_time = qc.RDTSC()
+  local start_time = qc.RDTSC()
   local results = run_dt(args)
   for alpha, v in pairs(results) do
     for k2, v2 in pairs(v) do
@@ -38,7 +39,7 @@ tests.t1 = function()
       end
     end
   end
-  stop_time = qc.RDTSC()
+  local stop_time = qc.RDTSC()
   write_to_csv(results, "room_occupancy_sample.csv")
   cVector.print_timers()
   print("================================================")

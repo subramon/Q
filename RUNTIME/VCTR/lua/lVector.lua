@@ -255,15 +255,15 @@ function lVector:get_chunk(chunk_num)
   -- If we have created n chunks, then you can ask for chunk n+1 but not
   -- for n+2, n+3, ...
   if ( chunk_num * csz > num_elements ) then 
-    print("asking for data too far away from where we are")
+    -- print("asking for data too far away from where we are")
     return 0
   end
   --=======
   -- if Vector has NOT been memo-ized, then you can only get recent chunk
   if ( num_elements > 0 ) then 
     local most_recent_chunk = math.floor((num_elements-1)/ csz)
-    if ( ( self:is_memo() == false ) and ( chunk_num < most_recent_chunk ) ) then 
-      print(chunk_num, most_recent_chunk, num_elements)
+    if ( ( self:is_memo() == false ) and 
+         ( chunk_num < most_recent_chunk ) ) then 
       error("Cannot serve earlier chunks")
     end
   end
@@ -336,6 +336,22 @@ function lVector:me()
   return M1, C1, M2, C2
 end
 
+function lVector:clone()
+  local v2, nn_v2
+  local v1 = self._base_vec
+  assert(v1:is_eov())
+  cVector.flush_all(v1)
+  local x = cVector.reincarnate(v1)
+  assert(type(x) == "string")
+  local y = loadstring(x)()
+  assert(type(y) == "table")
+  local v2 = lVector.new(y)
+  assert(type(v2) == "lVector")
+  if ( self._nn_vec ) then
+    error("TODO P1 Not implemented as yet")
+  end
+  return v2, nn_v2
+end
 
 function lVector:memo(is_memo)
   local is_memo = H.mk_boolean(is_memo, true)

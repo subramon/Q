@@ -3,9 +3,8 @@
 #include "core_vec.h"
 #include "aux_core_vec.h"
 #include "cmem.h"
-#include "buf_to_file.h"
-#include "copy_file.h"
 
+#include "copy_file.h"
 #include "_file_exists.h"
 #include "_get_file_size.h"
 #include "_isfile.h"
@@ -581,12 +580,12 @@ vec_shutdown(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
-    char **ptr_str_to_reincarnate
+    char **ptr_str
     )
 {
   int status = 0;
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_shutdown++;
-  *ptr_str_to_reincarnate = NULL;
+  *ptr_str = NULL;
 
   if ( ( !ptr_vec->is_memo )  && 
        ( ptr_vec->num_elements > ptr_S->chunk_size ) ) { 
@@ -617,7 +616,7 @@ vec_shutdown(
       status = vec_flush_chunk(ptr_S, ptr_T, ptr_vec, true, -1); 
       cBYE(status);
     }
-    status = reincarnate(ptr_S, ptr_T, ptr_vec, ptr_str_to_reincarnate);  
+    status = reincarnate(ptr_S, ptr_T, ptr_vec, ptr_str, false);
     cBYE(status);
   }
   status = vec_free(ptr_S, ptr_T, ptr_vec); cBYE(status);

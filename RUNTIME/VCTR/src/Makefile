@@ -48,14 +48,13 @@ libvctr.so: vector.o core_vec.o aux_core_vec.o
 		../../CMEM/src/aux_lua_to_c.c \
 		core_vec.c \
 		aux_core_vec.c \
-		buf_to_file.c \
-		copy_file.c \
 		../../../UTILS/src/rdtsc.c \
 		../../../UTILS/src/rs_mmap.c \
 		../../../UTILS/gen_src/_txt_to_I4.c \
 		../../../UTILS/src/is_valid_chars_for_num.c \
 		../../../UTILS/src/rand_file_name.c \
 		../../../UTILS/src/get_file_size.c \
+		../../../UTILS/src/copy_file.c \
 		../../../UTILS/src/file_exists.c \
 		../../../UTILS/src/isfile.c \
 		../../../UTILS/src/isdir.c \
@@ -70,12 +69,9 @@ libvctr.so: vector.o core_vec.o aux_core_vec.o
 		-shared -o libvctr.so
 	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
 #	cp ../inc/aux_core_vec.h ${Q_BUILD_DIR}/include/
-#	cp ../inc/buf_to_file.h ${Q_BUILD_DIR}/include/
-#	cp ../inc/copy_file.h ${Q_BUILD_DIR}/include/
 #	cp ../inc/core_vec.h ${Q_BUILD_DIR}/include/
 #	cp ../inc/struct_timers.h ${Q_BUILD_DIR}/include/
 #	cp aux_core_vec.c ${Q_BUILD_DIR}/src/
-#	cp buf_to_file.c ${Q_BUILD_DIR}/src/
 #	cp copy_file.c ${Q_BUILD_DIR}/src/
 #	cp core_vec.c ${Q_BUILD_DIR}/src/
 #	cp reset_timers.c ${Q_BUILD_DIR}/src/
