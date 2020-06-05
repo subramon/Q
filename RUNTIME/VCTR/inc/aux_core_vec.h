@@ -136,7 +136,7 @@ extern int
 reincarnate(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
-    VEC_REC_TYPE *ptr_v,
+    const VEC_REC_TYPE *const ptr_v,
     char **ptr_x,
     bool is_clone 
     );

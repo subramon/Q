@@ -73,6 +73,7 @@ local function prepare_dt(
     local maxval = Q.max(f):eval():to_num()
     local minval = Q.min(f):eval():to_num()
     if (maxval > minval) then
+      -- print("Calculating benefit for ", col_names[k])
       local bf, sf = calc_benefit(f, g, n_T, n_H, wt_prior)
       if ( best_bf == nil ) or ( bf > best_bf ) then
         best_bf = bf
@@ -84,6 +85,7 @@ local function prepare_dt(
       del_f = k
     end
   end
+  print(best_bf, best_sf, best_k)
   error("premature")
   -- delete feature which is not important
   -- TODO: facing some weird behavior if I delete feature so commenting for now

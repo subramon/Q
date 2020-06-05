@@ -170,6 +170,7 @@ libutils.so : ${hdr_files} ${src_files}
 	mkdir -p ${Q_BUILD_DIR}/include/
 	mkdir -p ${Q_BUILD_DIR}/src/
 	cp ${src_files}            ${Q_BUILD_DIR}/src/
+	cp ../inc/copy_file.h      ${Q_BUILD_DIR}/include/
 	cp ../inc/q_incs.h         ${Q_BUILD_DIR}/include/
 	cp ../inc/q_constants.h    ${Q_BUILD_DIR}/include/
 	cp ../inc/q_macros.h       ${Q_BUILD_DIR}/include/

@@ -661,7 +661,9 @@ make_master_file(
   size_t file_size = 0; // number of bytes in file 
   char *X = NULL; size_t nX = 0;
   char vfile_name[Q_MAX_LEN_FILE_NAME+1];
-  if ( ptr_v->is_file ) { return status; }
+  if ( ptr_v->is_file ) { 
+    return status; 
+  }
 
   status = mk_file_name(ptr_v->uqid, vfile_name, Q_MAX_LEN_FILE_NAME); 
   cBYE(status);
@@ -699,7 +701,7 @@ int
 reincarnate(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
-    VEC_REC_TYPE *ptr_v,
+    const VEC_REC_TYPE *const ptr_v,
     char **ptr_X,
     bool is_clone
     )
@@ -738,14 +740,18 @@ reincarnate(
     char old_file_name[Q_MAX_LEN_FILE_NAME+1];
     status = mk_file_name(old_vec_uqid, old_file_name,Q_MAX_LEN_FILE_NAME); 
     cBYE(status);
-    if ( !isfile(old_file_name) ) { go_BYE(-1); }
+    if ( !isfile(old_file_name) ) { 
+      go_BYE(-1); 
+    }
     uint64_t new_vec_uqid = mk_uqid(ptr_S);
     char new_file_name[Q_MAX_LEN_FILE_NAME+1];
     status = mk_file_name(new_vec_uqid, new_file_name,Q_MAX_LEN_FILE_NAME); 
     status = copy_file(old_file_name, new_file_name); cBYE(status);
-    ptr_v->uqid = new_vec_uqid;
+    sprintf(buf, "vec_uqid = %" PRIu64 ",",  new_vec_uqid);
   }
-  sprintf(buf, "vec_uqid = %" PRIu64 ",",  ptr_v->uqid);
+  else {
+    sprintf(buf, "vec_uqid = %" PRIu64 ",",  ptr_v->uqid);
+  }
   safe_strcat(&X, &nX, buf);
 
   safe_strcat(&X, &nX, "chunk_uqids = { ");
@@ -763,9 +769,11 @@ reincarnate(
       char new_file_name[Q_MAX_LEN_FILE_NAME+1];
       status = mk_file_name(new_uqid, new_file_name,Q_MAX_LEN_FILE_NAME); 
       status = copy_file(old_file_name, new_file_name); cBYE(status);
-      ptr_c->uqid = new_uqid;
+      sprintf(buf, "%" PRIu64 ",",  new_uqid);
     }
-    sprintf(buf, "%" PRIu64 ",",  ptr_c->uqid);
+    else {
+      sprintf(buf, "%" PRIu64 ",",  ptr_c->uqid);
+    }
     safe_strcat(&X, &nX, buf);
   }
   safe_strcat(&X, &nX, " }  ");

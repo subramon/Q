@@ -1,0 +1,91 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include "_get_bit_u64.h"
+extern int
+${fn}(
+      bool is_first,
+      const ${f_ctype} * restrict f, // [n_in]
+      const ${g_ctype} * restrict g, // [n_in]
+      int ng,
+      uint64_t *ptr_aidx,
+      uint64_t n_in,
+      ${v_ctype} *V, // [..]
+      ${c_ctype} **cnts, // [ng][..]
+      uint64_t nV,
+      uint64_t *ptr_num_in_V
+      );
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+int
+${fn}(
+      bool is_first,
+      const ${f_ctype} * restrict f, // [n_in]
+      const ${g_ctype} * restrict g, // [n_in]
+      int ng,
+      uint64_t *ptr_aidx,
+      uint64_t n_in,
+      ${v_ctype} *V, // [..]
+      ${c_ctype} **cnts, // [ng][..]
+      uint64_t nV,
+      uint64_t *ptr_num_in_V
+      )
+{
+  int status = 0;
+  
+  // START: Basic checks on input parameters
+  if ( f == NULL ) { go_BYE(-1); }
+  if ( g == NULL ) { go_BYE(-1); }
+  if ( ng <= 1 )   { go_BYE(-1); }
+  if ( V == NULL ) { go_BYE(-1); }
+  if ( cnts == NULL ) { go_BYE(-1); }
+  if ( n_in == 0 ) { go_BYE(-1); }
+  if ( ptr_num_in_V == NULL ) { go_BYE(-1); }
+  if ( ptr_aidx == NULL ) { go_BYE(-1); }
+  uint64_t num_in_V = *ptr_num_in_V;
+  uint64_t aidx = *ptr_aidx;
+  if ( num_in_V > nV ) { go_BYE(-1); }
+  if ( aidx >= n_in ) { go_BYE(-1); }
+  //-------------------------------
+  if ( is_first ) {
+    ${f_ctype} fval = f[0];
+    ${g_ctype} gval = g[0];
+    if ( ( gval < 0 ) || ( gval >= ng ) ) { go_BYE(-1); }
+    num_in_V = 1;
+    V[num_in_V-1] = fval;
+    cnts[gval][num_in_V-1] = 1;
+    aidx = 1;
+  }
+
+  for ( ; aidx < n_in; aidx++ ) { 
+    ${f_ctype} fval = f[aidx];
+    ${g_ctype} gval = g[aidx];
+    if ( ( gval < 0 ) || ( gval >= ng ) ) { status = -1; continue; }
+    if ( fval == V[num_in_V-1] ) {
+      cnts[gval][num_in_V-1]++;
+    }
+    else {
+      if ( 0 ) {  // if there is space
+        num_in_V++;
+        V[num_in_V-1] = fval;
+        cnts[gval][num_in_V-1] = 1;
+      }
+      else { // else we need to get back and call again
+        // pretend like we never saw this item. We will come back for it
+        break;
+      }
+    }
+  }
+  *ptr_num_in_V = num_in_V;
+  *ptr_aidx     = aidx;
+  //-------------------------------
+BYE:
+  return status;
+}
+   ]]
+}

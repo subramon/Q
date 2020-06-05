@@ -52,13 +52,13 @@ local function calc_benefit(
   local i = 0
 
   while i < n do
-    local f_val = f_clone:get_one(i):to_num()
-    local g_val = g_clone:get_one(i):to_num()
+    local f_val = f_clone:get1(i):to_num()
+    local g_val = g_clone:get1(i):to_num()
     C[g_val] = C[g_val] + 1
     i = i + 1
     while i < n  do
-      local fi_val = f_clone:get_one(i):to_num()
-      local gi_val = g_clone:get_one(i):to_num()
+      local fi_val = f_clone:get1(i):to_num()
+      local gi_val = g_clone:get1(i):to_num()
       if fi_val ~= f_val then
         break
       end
