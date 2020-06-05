@@ -40,6 +40,10 @@ main(
     }
     if ( fidx >= nF ) { break; }
   }
+  // confirmt that F is sorted ascending
+  for ( int i = 1; i < nF; i++ ) { 
+    if ( F[i] < F[i-1] ) { go_BYE(-1); }
+  }
   // for ( int i = 0; i < nF; i++ ) { printf("%f,%d\n", F[i], G[i]); }
   int num_blocks = nF / chunk_size;
   if ( num_blocks * chunk_size < nF ) {
@@ -59,6 +63,22 @@ main(
         V, cnts, nV, &num_in_V);
     cBYE(status);
   }
+  fval = 1;
+  int vidx = 0;
+  int exp_total = min_repeat;
+  for ( ; ; vidx++ ) {
+    if ( V[vidx] != fval ) { go_BYE(-1); }
+    int total = 0;
+    for ( int i = 0; i < ng; i++ ) { 
+      total += cnts[i][vidx];
+    }
+    if ( total != exp_total ) { go_BYE(-1); }
+    exp_total++;
+    if ( exp_total > max_repeat ) { exp_total = min_repeat; }
+    if ( V[vidx] == F[nF-1] ) { break; }
+    fval++;
+  }
+
 BYE:
   free_if_non_null(F);
   free_if_non_null(V);

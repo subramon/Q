@@ -70,7 +70,7 @@ ${fn}(
       cnts[gval][num_in_V-1]++;
     }
     else {
-      if ( 0 ) {  // if there is space
+      if ( num_in_V < nV ) {  // if there is space
         num_in_V++;
         V[num_in_V-1] = fval;
         cnts[gval][num_in_V-1] = 1;

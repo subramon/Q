@@ -1,8 +1,8 @@
 #!/bibn/bash
 set -e 
 make -C ../../../UTILS/src/
-# TODO make -C ../lua/ clean
-# TODO make -C ../lua/
+make -C ../lua/ clean
+make -C ../lua/
 gcc -g -std=gnu99 \
   test_cum_for_dt.c \
   -I../gen_inc  \
