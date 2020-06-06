@@ -2,8 +2,8 @@ require 'Q/UTILS/lua/strict'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
-local foo     = require 'Q/ML/DT/lua/expander_cum_for_dt'
-local pr      = require 'Q/OPERATORS/PRINT/lua/print_csv'
+local cum_for_dt = require 'Q/ML/DT/lua/cum_for_dt'
+local pr         = require 'Q/OPERATORS/PRINT/lua/print_csv'
 
 _G['g_time']  = {}
 _G['g_ctr']  = {}
@@ -40,10 +40,34 @@ tests.t1 = function()
   assert(F:length() >= nF)
   assert(G:length() >= nF)
   -- pr({F, G})
-  local H = foo(F, G, ng)
-  H:eval()
-  assert(H:length() == fval)
-  -- pr(H)  
+  local V, C = cum_for_dt(F, G, ng)
+  assert(type(C) == "table")
+  assert(#C == ng)
+  for k, v in ipairs(C) do 
+    assert(type(v) == "lVector")
+  end
+  V:eval()
+  assert(V:length() == fval)
+  -- pr(V)  
+  for i = 1, fval do 
+    assert(V:get1(i-1) == Scalar.new(i-1, "F4"))
+  end
+  local idx = 0
+  while true do 
+    if ( idx >= fval ) then break end 
+    for to_repeat = min_repeat, max_repeat do 
+      if ( idx >= fval ) then break end 
+      local cnt = 0
+      for k, v in ipairs(C) do 
+        local x = v:get1(idx)
+        assert(type(x) == "Scalar")
+        cnt = cnt + x:to_num()
+      end
+      assert(cnt == to_repeat)
+      idx = idx + 1
+    end
+  end
+  print("Test t1 succeeded")
 end
--- return tests
-tests.t1()
+return tests
+-- tests.t1()

@@ -401,6 +401,14 @@ function lVector.new(args)
   return vector
 end
 
+-- sometimes we may want to set generator a bit after we create the Vector
+function lVector:set_gen(gen)
+  assert(self:length() == 0)
+  assert(type(gen) == "function")
+  self._gen = gen
+end
+
+
 function lVector:persist(is_persist)
   local is_persist = H.mk_boolean(is_persist, true)
   assert(H.on_both(self, cVector.persist, is_persist))
