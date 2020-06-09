@@ -139,6 +139,7 @@ vec_start_read(
     );
 extern int
 vec_start_write(
+    VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem
@@ -270,5 +271,11 @@ vec_kill(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
+    );
+extern int
+vec_clean_chunks(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
+    const VEC_REC_TYPE *const ptr_vec
     );
 #endif

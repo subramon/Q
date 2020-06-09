@@ -1,10 +1,12 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
+local cVector = require 'libvctr'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local q_src_root = os.getenv("Q_SRC_ROOT")
 local so_dir_path = q_src_root .. "/OPERATORS/SORT2/src/"
+local chunk_size = cVector.chunk_size()
 
 local tests = {}
 
@@ -18,12 +20,13 @@ tests.t1 = function ()
   local input_drag_col = Q.mk_col({100, 90, 80, 70, 60, 50, 10, 20, 30, 40}, "F4")
 
   local status = Q.sort2(input_col, input_drag_col, "asc")
+  -- Q.print_csv({input_col, input_drag_col}, { impl = 'C' })
 
   -- Validate the result
   for i = 1, input_drag_col:length() do
-    print(input_col:get_one(i-1):to_num(), input_drag_col:get_one(i-1):to_num())
-    assert(input_drag_col:get_one(i-1):to_num() == expected_drag_result[i])
-    assert(input_col:get_one(i-1):to_num() == expected_input_col[i])
+    -- print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
+    assert(input_drag_col:get1(i-1):to_num() == expected_drag_result[i])
+    assert(input_col:get1(i-1):to_num() == expected_input_col[i])
   end
   
   print("Test t1 succeeded")
@@ -42,9 +45,9 @@ tests.t2 = function ()
 
   -- Validate the result
   for i = 1, input_drag_col:length() do
-    print(input_col:get_one(i-1):to_num(), input_drag_col:get_one(i-1):to_num())
-    assert(input_drag_col:get_one(i-1):to_num() == expected_drag_result[i])
-    assert(input_col:get_one(i-1):to_num() == expected_input_col[i])
+    print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
+    assert(input_drag_col:get1(i-1):to_num() == expected_drag_result[i])
+    assert(input_col:get1(i-1):to_num() == expected_input_col[i])
   end
 
   print("Test t2 succeeded")
@@ -64,9 +67,9 @@ tests.t3 = function ()
   assert(input_drag_col:qtype() == "I4")
   -- Validate the result
   for i = 1, input_drag_col:length() do
-    print(input_col:get_one(i-1):to_num(), input_drag_col:get_one(i-1):to_num())
-    assert(input_col:get_one(i-1):to_num() == expected_input_col[i])
-    assert(input_drag_col:get_one(i-1):to_num() == expected_drag_result[i])
+    print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
+    assert(input_col:get1(i-1):to_num() == expected_input_col[i])
+    assert(input_drag_col:get1(i-1):to_num() == expected_drag_result[i])
   end
 
   print("Test t3 succeeded")
@@ -81,7 +84,7 @@ tests.t4 = function ()
   
   local input_tbl_1 = {}
   local input_tbl_2 = {}
-  for i = 1, qconsts.chunk_size + 100 do
+  for i = 1, chunk_size + 100 do
     input_tbl_1[#input_tbl_1 +1] = i
     input_tbl_2[#input_tbl_2 +1] = i + 7
   end
@@ -93,8 +96,8 @@ tests.t4 = function ()
   assert(input_col:qtype() == "I4" and input_drag_col:qtype() == "I8")
   -- Validate the result
   for i = 1, input_drag_col:length() do
-    --print(input_col:get_one(i-1):to_num(), input_drag_col:get_one(i-1):to_num())
-    assert(input_drag_col:get_one(i-1):to_num() == input_col:get_one(i-1):to_num() +7 )
+    --print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
+    assert(input_drag_col:get1(i-1):to_num() == input_col:get1(i-1):to_num() +7 )
   end
   
   print("Test t4 succeeded")
@@ -106,7 +109,7 @@ tests.t5 = function ()
   
   local input_tbl_1 = {}
   local input_tbl_2 = {}
-  for i = 1, qconsts.chunk_size - 100 do
+  for i = 1, chunk_size - 100 do
     input_tbl_1[#input_tbl_1 +1] = i
     input_tbl_2[#input_tbl_2 +1] = i + 7
   end
@@ -118,8 +121,8 @@ tests.t5 = function ()
   assert(input_col:qtype() == "I8" and input_drag_col:qtype() == "I4")
   -- Validate the result
   for i = 1, input_drag_col:length() do
-    --print(input_col:get_one(i-1):to_num(), input_drag_col:get_one(i-1):to_num())
-    assert(input_drag_col:get_one(i-1):to_num() == input_col:get_one(i-1):to_num() +7 )
+    --print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
+    assert(input_drag_col:get1(i-1):to_num() == input_col:get1(i-1):to_num() +7 )
   end
   
   print("Test t5 succeeded")
@@ -131,7 +134,7 @@ tests.t6 = function ()
   
   local input_tbl_1 = {}
   local input_tbl_2 = {}
-  for i = 1, qconsts.chunk_size do
+  for i = 1, chunk_size do
     input_tbl_1[#input_tbl_1 +1] = i
     input_tbl_2[#input_tbl_2 +1] = i + 7
   end
@@ -143,11 +146,11 @@ tests.t6 = function ()
   assert(input_col:qtype() == "I8" and input_drag_col:qtype() == "F8")
   -- Validate the result
   for i = 1, input_drag_col:length() do
-    --print(input_col:get_one(i-1):to_num(), input_drag_col:get_one(i-1):to_num())
-    assert(input_drag_col:get_one(i-1):to_num() == input_col:get_one(i-1):to_num() +7 )
+    --print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
+    assert(input_drag_col:get1(i-1):to_num() == input_col:get1(i-1):to_num() +7 )
   end
   
   print("Test t6 succeeded")
 end
-
 return tests
+-- tests.t1()

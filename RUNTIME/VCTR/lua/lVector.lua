@@ -462,6 +462,13 @@ function lVector:put_chunk(base_addr, nn_addr, len)
     status = cVector.put_chunk(self._nn_vec, nn_addr, len)
     assert(status)
   end
+  if ( len < cVector.chunk_size() ) then 
+    assert(cVector.eov(self._base_vec))
+    if ( self._nn_vec ) then
+      assert(cVector.eov(self._nn_vec))
+    end
+  end
+    
   if ( qconsts.debug ) then self:check() end
   return true
 end

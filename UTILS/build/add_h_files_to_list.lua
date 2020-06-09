@@ -14,6 +14,7 @@ local struct_files = {
   "period_struct.h", -- from OPERATORS/S_TO_F/
   "minmax_struct.h", -- from OPERATORS/F_TO_S/
   "sum_struct.h", -- from OPERATORS/F_TO_S/
+  "dt_benefit_struct.h", -- from ML/DT/inc/
 }
 
 local q_files =  { 

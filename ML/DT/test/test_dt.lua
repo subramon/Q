@@ -24,6 +24,7 @@ tests.t1 = function()
   args.goal = "occupy_status"
   args.min_alpha = 0.2
   args.max_alpha = 0.2
+  args.wt_prior = 10
   args.step_alpha = 0
   args.iterations = 2
   args.split_ratio = 0.7

@@ -234,6 +234,7 @@ int
 chk_chunk(
     uint32_t chunk_dir_idx,
     uint64_t vec_uqid,
+    const VEC_REC_TYPE *const ptr_vec,
     VEC_GLOBALS_TYPE *ptr_S
     )
 {
@@ -256,8 +257,11 @@ chk_chunk(
     if ( ptr_chunk->data != NULL ) { go_BYE(-1); }
   }
   else {
-    if ( ptr_chunk->data == NULL ) { 
-      if ( !ptr_chunk->is_file ) { go_BYE(-1); }
+    if ( !ptr_vec->is_file ) { 
+      // this check is valid only when there is no master file 
+      if ( ptr_chunk->data == NULL ) { 
+        if ( !ptr_chunk->is_file ) { go_BYE(-1); }
+      }
     }
     if ( ptr_chunk->is_file ) { 
       if ( !isfile(file_name) ) { 
@@ -611,7 +615,7 @@ delete_vec_file(
     uint64_t uqid,
     bool is_persist,
     bool *ptr_is_file, 
-    uint64_t *ptr_file_size
+    size_t *ptr_file_size
     )
 {
   int status = 0;

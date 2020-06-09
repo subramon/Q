@@ -637,7 +637,7 @@ static int l_vec_start_write( lua_State *L) {
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
-  status = vec_start_write(&g_T, ptr_vec, ptr_cmem); cBYE(status);
+  status = vec_start_write(&g_S, &g_T, ptr_vec, ptr_cmem); cBYE(status);
   lua_pushinteger(L, ptr_vec->num_elements);
   return 2;
 BYE:

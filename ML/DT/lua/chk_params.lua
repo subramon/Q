@@ -1,7 +1,6 @@
 local Q = require 'Q'
 local Scalar = require 'libsclr'
 local utils = require 'Q/UTILS/lua/utils'
-local to_scalar = require 'Q/UTILS/lua/to_scalar'
 
 local function chk_params(
   T, -- table of m lvectors of length n
@@ -28,9 +27,8 @@ local function chk_params(
   end
   assert(utils.table_length(T) == nT)
   --=====================================
-  alpha = assert(to_scalar(alpha, "F4"))
-  assert(type(alpha) == "Scalar")
-  assert(alpha:to_num() > 0)
+  assert(type(alpha) == "number")
+  assert(alpha > 0)
   --=====================================
   assert(g:length() == n, tostring(g:length()) .. ", " .. tostring(n))
   assert(g:fldtype() == "I4")

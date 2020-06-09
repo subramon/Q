@@ -1,5 +1,6 @@
 local Q = require 'Q'
-local wt_benefit = require 'Q/ML/DT/lua/wt_benefit'
+local cum_for_dt = require 'Q/ML/DT/lua/cum_for_dt'
+local dt_benefit = require 'Q/ML/DT/lua/dt_benefit'
 
 --[[
 variable explanation
@@ -11,6 +12,7 @@ n_H     - number of instances classified as positive (heads) in goal/target vect
 local function calc_benefit(
   f,
   g,
+  ng,
   n_T,
   n_H,
   wt_prior
@@ -22,6 +24,8 @@ local function calc_benefit(
   assert(n_H > 0) -- changed check from >= 0 to > 0
   assert(type(g) == "lVector")
   assert(type(f) == "lVector")
+  assert(type(ng) == "number")
+  assert(ng > 1)
   -- STOP: Check parameters
 
   --[[
@@ -41,10 +45,39 @@ local function calc_benefit(
   local f_clone = f:clone()
   local g_clone = g:clone()
   Q.sort2(f_clone, g_clone, 'asc')
+  Q.print_csv({f_clone, g_clone})
+  error("premature")
   assert(f_clone:length() == n_T + n_H)
   assert(g_clone:length() == n_T + n_H)
-
-  -- counters for goal values
+  local V, C = cum_for_dt(f_clone, g_clone, ng)
+  V:eval()
+  Q.print_csv({V, C[1], C[2]})
+  error("premature")
+  --=======================================
+  assert(type(V) == "lVector")
+  assert(type(C) == "table")
+  assert(#C == ng)
+  for k, v in ipairs(C) do 
+    assert(type(v) == "lVector")
+  end
+  --=======================================
+  local min_size = 500 -- TODO P1 
+  local b = dt_benefit(V, C[1], C[2], "gambling", 
+    min_size, wt_prior, n_T, n_H)
+  assert(type(b) == "Reducer")
+  local benefit, split_point = b:eval()
+  print("XXX", benefit, split_point)
+  
+  f_clone:delete() -- explicit deletion
+  g_clone:delete() -- explicit deletion
+  return benefit, split_point
+end
+return calc_benefit
+--
+  --=======================================
+  --[[
+  --OLD CODE 
+  counters for goal values
   local C = {}
   C[0] = 0
   C[1] = 0
@@ -74,8 +107,4 @@ local function calc_benefit(
   end
   assert(split_point) -- should be defined by now
   assert(benefit ~= -math.huge) -- should be defined by now
-  f_clone:delete() -- explicit deletion
-  g_clone:delete() -- explicit deletion
-  return benefit, split_point
-end
-return calc_benefit
+  --]]

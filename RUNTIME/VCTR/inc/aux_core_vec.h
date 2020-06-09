@@ -30,6 +30,7 @@ extern int
 chk_chunk(
     uint32_t chunk_dir_idx,
     uint64_t vec_uqid,
+    const VEC_REC_TYPE *const ptr_vec,
     VEC_GLOBALS_TYPE *ptr_S
     );
 extern int
@@ -125,7 +126,7 @@ delete_vec_file(
     uint64_t uqid,
     bool is_persist,
     bool *ptr_is_file, 
-    uint64_t *ptr_file_size
+    size_t *ptr_file_size
     );
 extern int
 delete_chunk_file(

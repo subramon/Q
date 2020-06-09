@@ -8,14 +8,15 @@ local function sort2(x, y, ordr)
   assert(type(x) == "lVector", "error")
   assert(type(y) == "lVector", "error")
   -- Check the vector x for eval(), if not then call eval()
-  if not x:is_eov() then
-    x:eval()
-  end
-  if not y:is_eov() then
-    y:eval()
-  end
+  assert(x:is_eov())
+  assert(y:is_eov())
+  assert(not x:has_nulls())
+  assert(not y:has_nulls())
+  x:flush_all() -- TODO P3 Delete later
+  y:flush_all() -- TODO P3 Delete later
+  -- Flush needed because start_write assumes file exists
   assert(type(ordr) == "string")
-  if ( ordr == "ascending" ) then ordr = "asc" end 
+  if ( ordr == "ascending" )  then ordr = "asc" end 
   if ( ordr == "descending" ) then ordr = "dsc" end
   local spfn = require("Q/OPERATORS/SORT2/lua/sort2_specialize" )
   local status, subs = pcall(spfn, x:fldtype(), y:fldtype(), ordr)
@@ -29,22 +30,21 @@ local function sort2(x, y, ordr)
   end
   -- STOP: Dynamic compilation
 
-  -- TODO Check is already sorted correct way and don't repeat
+  local cst_x_as = qconsts.qtypes[x:qtype()].ctype .. "*"
+  local cst_y_as = qconsts.qtypes[x:qtype()].ctype .. "*"
   local x_len, x_chunk, nn_x_chunk = x:start_write()
   local y_len, y_chunk, nn_y_chunk = y:start_write()
-  assert(x_len > 0, "Cannot sort null vector")
-  assert(y_len > 0, "Cannot sort null vector")
-  assert(not nn_x_chunk, "Cannot sort with null values")
-  assert(not nn_y_chunk, "Cannot sort with null values")
+  assert(x_len == y_len)
+  assert(y_len > 0)
   assert(qc[func_name], "Unknown function " .. func_name)
-  local casted_x_chunk = ffi.cast(qconsts.qtypes[x:qtype()].ctype .. "*", get_ptr(x_chunk))
-  local casted_y_chunk = ffi.cast(qconsts.qtypes[y:qtype()].ctype .. "*", get_ptr(y_chunk)) 
-  qc[func_name](casted_x_chunk,casted_y_chunk, x_len)
+  local cst_x_chunk = get_ptr(x_chunk, x:qtype())
+  local cst_y_chunk = get_ptr(y_chunk, y:qtype())
+  qc[func_name](cst_x_chunk,cst_y_chunk, x_len)
   x:end_write()
   y:end_write()
-  x:set_meta("sort_order", ordr)
-  --TODO for y sort_order???
+  x:start_write()
+  x:end_write()
+  -- TODO P2 Set meta data for x, not for y
   return x, y
-
 end
 return require('Q/q_export').export('sort2', sort2)

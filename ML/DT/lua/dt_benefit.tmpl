@@ -1,0 +1,60 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+declaration = [[
+#include "q_incs.h"
+#include "calc_benefit.h"
+#include "dt_benefit_struct.h"
+${includes}
+extern int
+${fn}(  
+      const ${f_ctype} * restrict v,  
+      const ${g_ctype} * restrict gT,  
+      const ${g_ctype} * restrict gH,  
+      uint64_t n,
+      uint64_t min_size, 
+      double wt_prior,
+      ${reduce_struct_ctype}  *ptr_args
+      ) 
+;
+]],
+definition = [[
+#include "_${fn}.h"
+int
+${fn}(  
+      const ${f_ctype} * restrict v,  
+      const ${g_ctype} * restrict gT,  
+      const ${g_ctype} * restrict gH,  
+      uint64_t n,
+      uint64_t min_size, 
+      double wt_prior,
+      ${reduce_struct_ctype}  *ptr_args
+      )
+
+{
+  int status = 0;
+  uint64_t  n_T_L = ptr_args->n_T_L;
+  uint64_t  n_H_L = ptr_args->n_H_L;
+  uint64_t  n_T   = ptr_args->n_T;
+  uint64_t  n_H   = ptr_args->n_H;
+
+  double benefit;
+  for ( uint32_t i = 0; i < n; i++ ) { 
+    ${f_ctype} val = v[i];
+    n_T_L += gT[i];
+    n_H_L += gH[i];
+    status = calc_benefit(n_T_L, n_H_L, n_T, n_H, ptr_args->min_size,
+    wt_prior, &benefit);
+    if ( benefit > ptr_args->benefit ) { 
+      ptr_args->benefit = benefit;
+      ptr_args->val     = val;
+      // printf("benefit/val = %lf, %lf \n", benefit, (double)val);
+    }
+  }
+  ptr_args->n_T_L = n_T_L;
+  ptr_args->n_H_L = n_H_L;
+  ptr_args->num += n;
+// BYE:
+  return status;
+}
+]]
+}

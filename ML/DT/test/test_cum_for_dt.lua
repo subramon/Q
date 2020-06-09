@@ -41,13 +41,20 @@ tests.t1 = function()
   assert(G:length() >= nF)
   -- pr({F, G})
   local V, C = cum_for_dt(F, G, ng)
+  assert(type(V) == "lVector")
   assert(type(C) == "table")
   assert(#C == ng)
+  assert(not V:is_eov())
   for k, v in ipairs(C) do 
     assert(type(v) == "lVector")
+    assert(not v:is_eov())
   end
   V:eval()
+  assert(V:is_eov())
   assert(V:length() == fval)
+  for k, v in ipairs(C) do 
+    assert(v:is_eov())
+  end
   -- pr(V)  
   for i = 1, fval do 
     assert(V:get1(i-1) == Scalar.new(i-1, "F4"))
@@ -69,5 +76,5 @@ tests.t1 = function()
   end
   print("Test t1 succeeded")
 end
-return tests
--- tests.t1()
+-- return tests
+tests.t1()

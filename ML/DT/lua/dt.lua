@@ -33,8 +33,8 @@ local node_idx = 0 -- node indexing
 local function prepare_dt(
   T, -- table of m lvectors of length n
   g, -- lVector of length n
-  alpha, -- Scalar, minimum benefit
-  min_to_split,
+  alpha, -- number, minimum benefit
+  min_to_split, -- number, do not split if leaf size smaller than thi
   col_names,
   wt_prior
   )
@@ -74,7 +74,7 @@ local function prepare_dt(
     local minval = Q.min(f):eval():to_num()
     if (maxval > minval) then
       -- print("Calculating benefit for ", col_names[k])
-      local bf, sf = calc_benefit(f, g, n_T, n_H, wt_prior)
+      local bf, sf = calc_benefit(f, g, ng, n_T, n_H, wt_prior)
       if ( best_bf == nil ) or ( bf > best_bf ) then
         best_bf = bf
         best_sf = sf

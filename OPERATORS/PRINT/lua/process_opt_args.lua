@@ -24,7 +24,7 @@ local function process_opt_args(
 
   for i, v in ipairs(outV) do 
     assert(type(v) == "lVector")
-    assert(v:is_eov())
+    assert(v:is_eov(), i)
     if ( i == 1 ) then
       lenV = v:num_elements()
     else

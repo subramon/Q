@@ -40,6 +40,8 @@ clean:
 	#---
 	#-- make -C ${Q_SRC_ROOT}/OPERATORS/AINB/lua/ clean
 	#-- make -C ${Q_SRC_ROOT}/OPERATORS/APPROX/QUANTILE/lua  clean
+	make -C ${Q_SRC_ROOT}/ML/DT/lua  clean
+	#
 	make -C ${Q_SRC_ROOT}/OPERATORS/APPROX/FREQUENT  clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/AX_EQUALS_B/ clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/COUNT/lua clean
@@ -87,11 +89,12 @@ _q_basic: _utils _cutils _cmem _sclr _vctr _dnn
 	luajit mk_so.lua
 	touch _q_basic
 
-_pre_req_for_dynamic : _utils _cutils
+_pre_req_for_dynamic : _utils _cutils _dt
 	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua all_for_dc
 	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua all_for_dc
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua all_for_dc
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua all_for_dc
+	make -C ${Q_SRC_ROOT}/ML/DT/lua all_for_dc
 	touch _pre_req_for_dynamic
 
 _utils:
@@ -119,6 +122,10 @@ _dnn: _utils _cutils _cmem _sclr _vctr
 	touch _dnn
 
 #-----------------------------------
+_dt: _q_basic
+	make  -C ${Q_SRC_ROOT}/ML/DT/lua ${BUILD_TYPE}
+	touch _dt
+
 _approx_quantile: _q_basic
 	make  -C ${Q_SRC_ROOT}/OPERATORS/APPROX/QUANTILE/lua ${BUILD_TYPE}
 	touch _approx_quantile
@@ -237,6 +244,7 @@ _q_operators: \
 	_ax_equals_b \
 	_corrm \
 	_drop_nulls \
+	_dt \
 	_f_to_s \
 	_f1f2opf3 \
   	_f1opf2f3 \
