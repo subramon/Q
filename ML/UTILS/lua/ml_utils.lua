@@ -84,6 +84,10 @@ local matthews_corrcoef = function(actual_val, predicted_val, conf_matrix)
 end
 
 local classification_report = function(actual_val, predicted_val)
+  assert(type(actual_val) == "table")
+  assert(type(predicted_val) == "table")
+  assert(#actual_val > 0)
+  assert(#actual_val == #predicted_val)
   local accuracy = accuracy_score(actual_val, predicted_val)
   local conf_matrix = confusion_matrix(actual_val, predicted_val)
   local precision = precision_score(actual_val, predicted_val, conf_matrix)

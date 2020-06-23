@@ -156,7 +156,7 @@ end
 -- round the number to specified precision
 fns.round_num = function(num, precision)
   local mult = 10^(precision or 0)
-  result = math.floor( num * mult + 0.5 ) / mult
+  local result = math.floor( num * mult + 0.5 ) / mult
   return result
 end
 

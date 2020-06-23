@@ -1,5 +1,4 @@
 local Q = require 'Q'
-local Scalar = require 'libsclr'
 local utils = require 'Q/UTILS/lua/utils'
 local calc_benefit = require 'Q/ML/DT/lua/calc_benefit'
 local make_dt = require 'Q/ML/DT/lua/make_dt'
@@ -9,7 +8,7 @@ local dt = {}
 variable description
 T	- table of m lVectors of length n, representing m features
 g	- goal/target lVector of length n
-alpha	- minimum benefit value of type Scalar 
+alpha	- minimum benefit value of type number
 n_T	- number of instances classified as negative (tails) in goal/target vector
 n_H	- number of instances classified as positive (heads) in goal/target vector
 best_k	- index of the feature f' in T for which maximum benefit is observed
@@ -31,18 +30,18 @@ D	- Decision Tree Table having below fields
 ]]
 
 -- n_H1 is the number of heads in test data set at a given leaf
--- n_T1 is the number of tails in test data set at a given leaf
--- set n_H1 and n_T1 at each leaf node to zero
+-- n_T_test is the number of tails in test data set at a given leaf
+-- set n_H1 and n_T_test at each leaf node to zero
 -- TODO P1 Where should this be called from?
 local function init_leaf_heads_tails(
   D
   )
   if D.left or D.right then -- interior node
-    if ( D.left ) then preprocess_dt(D.left, col_names) end 
-    if ( D.right) then preprocess_dt(D.right, col_names) end
+    if ( D.left ) then init_leaf_heads_tails(D.left) end 
+    if ( D.right) then init_leaf_heads_tails(D.right) end
   else
-    D.n_H1 = 0
-    D.n_T1 = 0
+    D.n_H_test = 0
+    D.n_T_test = 0
   end
 end
 
@@ -61,49 +60,47 @@ local function node_count(
 end
 
 
+-- Verify the decision tree
 local function check_dt(
-  D	-- prepared decision tree
+  D	
   )
-  -- Verify the decision tree
-  local status = true
-  if not D then
-    return status
+  if not D then return true end
+
+  if D.left or D.right then 
+    -- TODO P2: Add check for max val feature 
+    assert(type(D.feature) == "number")
+    assert(D.feature >= 1)
+    assert(type(D.threshold) == "number")
+    assert(type(D.n_T) == "number")
+    assert(type(D.n_H) == "number")
   end
 
-  -- either both left and right are defined or neither
-  if D.left then assert(D.right) end
-  if D.right then assert(D.left) end
-
-  if D.left == nil and D.right == nil then
-    assert(D.feature == nil)
-    assert(D.threshold == nil)
-    assert(D.n_T ~= nil)
-    assert(D.n_H ~= nil)
+  local chk_n_T = 0
+  local chk_n_H = 0
+  if D.left then 
+    chk_n_T = chk_n_T + D.left.n_T
+    chk_n_H = chk_n_H + D.left.n_H
   end
-
-  if D.left and D.right then
-    if (D.n_T ~= D.left.n_T + D.right.n_T ) then 
-      print("XXX", D.n_T, D.left.n_T, D.right.n_T)
+  if D.right then 
+    chk_n_T = chk_n_T + D.right.n_T
+    chk_n_H = chk_n_H + D.right.n_H
+  end
+  if ( D.left or D.right ) then -- this check is only for interior nodes
+    if (D.n_T ~= chk_n_T) then
     end
-    if (D.n_H ~= D.left.n_H + D.right.n_H ) then 
-      print("YYY", D.n_H, D.left.n_H, D.right.n_H)
-    end
-    -- assert(D.n_T == D.left.n_T + D.right.n_T)
-    -- assert(D.n_H == D.left.n_H + D.right.n_H)
+    assert(D.n_T == chk_n_T)
+    assert(D.n_H == chk_n_H)
   end
-
-  -- TODO: Add more checks
-
   check_dt(D.left)
   check_dt(D.right)
+  return true
 end
-
 
 -- This function does the following:
 -- It finds the leaf to which the instance, x, is assigned.
--- It updates n_H1 and n_T1 for that leaf
+-- It updates n_H_test and n_T_test for that leaf
 -- It returns n_H/n_T for that leaf
-local function predict(
+local function find_leaf_stats(
   D,    -- prepared decision tree
   x,    -- a table of numbers, indexed by feature
   g_val -- a number, representing goal value 
@@ -114,9 +111,9 @@ local function predict(
   while true do
     if D.left == nil and D.right == nil then
       if g_val == 0 then -- tails
-        D.n_T1 = D.n_T1 + 1
+        D.n_T_test = D.n_T_test + 1
       else
-        D.n_H1 = D.n_H1 + 1
+        D.n_H_test = D.n_H_test + 1
       end
       return D.n_H, D.n_T
     else
@@ -132,7 +129,7 @@ local function predict(
   end
 end
 
-dt.predict = predict
+dt.find_leaf_stats = find_leaf_stats
 dt.check_dt = check_dt
 dt.node_count = node_count
 dt.init_leaf_heads_tails = init_leaf_heads_tails

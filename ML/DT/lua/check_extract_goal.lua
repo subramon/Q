@@ -27,6 +27,6 @@ local function check_extract_goal(
   -- of the  goal. in that case, we should NOT assert. Instead, just
   -- warn the user and try another split 
 
-  return ncols, nrows
+  return true
 end
 return check_extract_goal

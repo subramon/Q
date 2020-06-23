@@ -1,14 +1,14 @@
 local Q = require 'Q'
-local Scalar = require 'libsclr'
 local utils = require 'Q/UTILS/lua/utils'
 local make_dt = require 'Q/ML/DT/lua/make_dt'
 local ml_utils = require 'Q/ML/UTILS/lua/ml_utils'
+local JSON = require 'Q/ML/UTILS/lua/JSON'
 local extract_goal = require 'Q/ML/UTILS/lua/extract_goal'
 local check_extract_goal = require 'Q/ML/DT/lua/check_extract_goal'
 local split_train_test = require 'Q/ML/UTILS/lua/split_train_test'
 local export_to_graphviz = require 'Q/ML/DT/lua/export_to_graphviz'
-local eval_mdl = require 'Q/ML/DT/lua/eval_mdl'['eval_mdl']
-local calc_avg_metrics = require 'Q/ML/DT/lua/eval_mdl'['calc_avg_metrics']
+local eval_dt = require 'Q/ML/DT/lua/eval_dt'['eval_dt']
+local calc_avg_metrics = require 'Q/ML/DT/lua/eval_dt'['calc_avg_metrics']
 
 local function check_args(args)
 
@@ -28,10 +28,7 @@ local function check_args(args)
   assert(type(args.step_alpha) == "number")
   assert(args.min_alpha <= args.max_alpha)
 
-  assert(args.step_alpha >= 0)
-  if ( args.min_alpha < args.max_alpha ) then
-    assert(args.step_alpha > 0)
-  end
+  assert(args.step_alpha > 0)
 
   assert(type(args.min_to_split) == "number")
   assert(args.min_to_split >= 10)
@@ -96,6 +93,7 @@ local function run_dt(args)
   -- start iterating over range of alpha values
   local results = {}
   local alpha = min_alpha
+  local metrics
   while alpha <= max_alpha do
     -- convert scalar to number for alpha value, avoid extra decimals
     for iter = 1, iterations do
@@ -112,24 +110,24 @@ local function run_dt(args)
       -- train is indexed as 1, 2, 3
       -- Train is indexed as foo, bar, ...
       local train, g_train, train_col_names = extract_goal(Train, goal)
-      local ncols, nrows = check_extract_goal( train, g_train, 
-        ng, train_col_names)
+      assert(check_extract_goal( train, g_train, ng, train_col_names))
       -- prepare decision tree model
-      local tree = assert(make_dt(train, g_train, ng, alpha, 
+      local D = assert(make_dt(train, g_train, ng, alpha, 
         min_to_split, train_col_names, wt_prior))
+      -- print(JSON:encode(D))
   
       -- evaluate model for test samples
-      metrics = eval_mdl(tree, Test, goal)
+      metrics = eval_dt(D, Test, goal, ng)
 
       -- print graphviz
       if args.print_graphviz and iter == 1 then
         local file_name = 
           "graphviz_" .. tostring(alpha) .. "_" .. tostring(iter) .. ".txt"
-        export_to_graphviz(file_name, tree)
+        export_to_graphviz(file_name, D)
       end
     end
     local avg_metrics = calc_avg_metrics(metrics)
-    results[cur_alpha] = avg_metrics
+    results[alpha] = avg_metrics
     alpha = alpha + step_alpha
   end
   return results

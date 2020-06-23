@@ -16,12 +16,12 @@ local function calc_payout(
   assert(not D.right)
   local n_H_train = D.n_H
   local n_T_train = D.n_T
-  local n_H_test  = D.n_H1
-  local n_T_test  = D.n_T1
+  local n_H_test  = D.n_H_test
+  local n_T_test  = D.n_T_test
   local n_test   = n_H_test + n_T_test
   local n_train  = n_H_train + n_T_train
-  p_H = n_H_train / n_train
-  p_T = n_T_train / n_train
+  local p_H = n_H_train / n_train
+  local p_T = n_T_train / n_train
 
   local payout = (n_H_test * (p_H - p_T)) + (n_T_test * (p_T - p_H))
   --[[
@@ -32,16 +32,16 @@ local function calc_payout(
   l_payout[#l_payout+1] = payout
   l_weight[#l_weight+1] = n_test
 
-  D.payout = payout
-  D.weight = weight
+  D.payout = l_payout
+  D.weight = l_weight
 end
 
 
-local function evaluate_dt(
+local function payout_for_dt(
   D	-- decision tree
   )
 
-  local l_payout = {}   -- payout at each leaf node (using testing data)
+  local l_payout = {} -- payout at each leaf node (using testing data)
   local l_weight = {} -- weight at each leaf node (using testing data)
   calc_payout(D, l_payout, l_weight)
 
@@ -61,7 +61,6 @@ local function evaluate_dt(
 end
 
 
-fns.evaluate_dt = evaluate_dt
 local function old_calc_gain_and_cost(
   D,		-- decision tree
   l_gain,	-- table containing gain value at each leaf node
@@ -122,4 +121,4 @@ local function old_calc_gain_and_cost(
   D.gain = g
 end
 
-return fns
+return payout_for_dt

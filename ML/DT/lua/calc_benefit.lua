@@ -18,8 +18,8 @@ local function calc_benefit(
   wt_prior
   )
   -- START: Check parameters
-  assert(( type(n_T) == "Scalar") or ( type(n_T) == "number"))
-  assert(( type(n_H) == "Scalar") or ( type(n_H) == "number"))
+  assert(type(n_T) == "number")
+  assert(type(n_H) == "number")
   assert(n_T > 0) -- changed check from >= 0 to > 0
   assert(n_H > 0) -- changed check from >= 0 to > 0
   assert(type(g) == "lVector")
