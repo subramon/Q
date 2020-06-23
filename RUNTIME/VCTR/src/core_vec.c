@@ -99,7 +99,7 @@ vec_meta(
   sprintf(buf, "file_name    = \"%s\", ", file_name);
   strcat(opbuf, buf);
 //  sprintf(buf, "file_size    = %" PRIu64 ", ", ptr_vec->file_size);
-  sprintf(buf, "file_size    = %zu",  ptr_vec->file_size);
+  sprintf(buf, "file_size    = %zu,",  ptr_vec->file_size);
   strcat(opbuf, buf);
   sprintf(buf, "num_readers   = %d, ", ptr_vec->num_readers);
   strcat(opbuf, buf);
@@ -336,7 +336,7 @@ vec_check(
     if ( v->num_writers != 0    ) { go_BYE(-1); }
 
     if ( v->is_dead             ) { go_BYE(-1); }
-    if ( v->is_eov              ) { go_BYE(-1); }
+    // TODO P2 THINK if ( v->is_eov              ) { go_BYE(-1); }
     if ( v->is_file             ) { go_BYE(-1); }
     return status;
   }

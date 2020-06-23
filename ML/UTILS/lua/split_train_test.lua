@@ -29,10 +29,9 @@ local function split_train_test (
     end
   end
   --==============================
-  local random_vec = Q.rand({lb = 0, ub = 1, qtype = "F4", len = n, seed = seed})
-  local is_train = Q.vsleq(random_vec, split_ratio):eval()
+  local randvec=Q.rand({lb = 0, ub = 1, qtype = "F4", len = n, seed = seed})
+  local is_train = Q.vsleq(randvec, split_ratio):eval()
   local n1, n2 = Q.sum(is_train):eval()
-  print(n1, n2)
   -- split cannot be such that all go to test or all go to train
   assert(n1:to_num() > 0)
   assert(n1 ~= n2)

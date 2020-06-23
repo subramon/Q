@@ -22,13 +22,16 @@ tests.t1 = function()
   args.O = require(ofile); assert(type(args.O) == "table")
   args.data_file = dfile
   args.goal = "occupy_status"
+  args.ng = 2 -- => values taken on by goal = 0, 1, ... ng-1
   args.min_alpha = 0.2
   args.max_alpha = 0.2
   args.wt_prior = 10
   args.step_alpha = 0
   args.iterations = 2
   args.split_ratio = 0.7
+  args.min_to_split = 10
   args.print_graphviz = true
+  args.cautious = true -- turn off for performance evaluation
 
   cVector.reset_timers()
   local start_time = qc.RDTSC()

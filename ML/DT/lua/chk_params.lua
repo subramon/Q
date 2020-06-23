@@ -1,45 +1,39 @@
 local Q = require 'Q'
 local Scalar = require 'libsclr'
 local utils = require 'Q/UTILS/lua/utils'
+local is_in = require 'Q/UTILS/lua/is_in'
 
 local function chk_params(
-  T, -- table of m lvectors of length n
+  T, -- table of m lvectors of length n, indexed as 1, 2, 3...
   g, -- lVector of length n
-  alpha -- Scalar
+  ng
   )
-  -- START: Checking
-  local nT = 0
-  local n
-
-  local sone = Scalar.new(1, "F4")
+  local ncols = 0
+  local nrows
   --==============================================
   assert(type(T) == "table")
-  -- Here, it's not sure that T is integer indexed table
-  for k, v in pairs(T) do
-    if ( not n ) then 
-      n = v:length()
+  for k, v in ipairs(T) do
+    if ( not nrows ) then 
+      nrows = v:length()
     else
-      assert(n == v:length())
+      assert(nrows == v:length())
     end
     assert(type(v) == "lVector")
     assert(v:fldtype() == "F4")
-    nT = nT + 1
+    ncols = ncols + 1
   end
-  assert(utils.table_length(T) == nT)
+  assert(#T == ncols)
   --=====================================
-  assert(type(alpha) == "number")
-  assert(alpha > 0)
-  --=====================================
-  assert(g:length() == n, tostring(g:length()) .. ", " .. tostring(n))
-  assert(g:fldtype() == "I4")
+  assert(g:length() == nrows)
+  assert(is_in(g:fldtype(), {"I1", "I2","I4", "I8"}))
   -- LIMITATION: currently assuming g values to be 0 and 1
   local maxval = Q.max(g):eval():to_num()
   local minval = Q.min(g):eval():to_num()
   assert(minval >= 0)
-  assert(maxval <= 1)
-  local ng = 2
+  assert(maxval < ng)
+  assert(minval ~= maxval)
   
-  return nT, n, ng
+  return ncols, nrows
 end
 
 return chk_params

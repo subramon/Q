@@ -42,8 +42,15 @@ ${fn}(
     ${f_ctype} val = v[i];
     n_T_L += gT[i];
     n_H_L += gH[i];
+    if ( n_T_L > n_T ) { 
+    go_BYE(-1); 
+    }
+    if ( n_H_L > n_H ) { 
+    go_BYE(-1); 
+    }
     status = calc_benefit(n_T_L, n_H_L, n_T, n_H, ptr_args->min_size,
     wt_prior, &benefit);
+    cBYE(status);
     if ( benefit > ptr_args->benefit ) { 
       ptr_args->benefit = benefit;
       ptr_args->val     = val;
@@ -53,7 +60,7 @@ ${fn}(
   ptr_args->n_T_L = n_T_L;
   ptr_args->n_H_L = n_H_L;
   ptr_args->num += n;
-// BYE:
+BYE:
   return status;
 }
 ]]

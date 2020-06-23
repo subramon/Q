@@ -45,14 +45,14 @@ local function calc_benefit(
   local f_clone = f:clone()
   local g_clone = g:clone()
   Q.sort2(f_clone, g_clone, 'asc')
-  Q.print_csv({f_clone, g_clone})
-  error("premature")
+  -- TODO P1 Comment out below 
+  -- Q.print_csv({f_clone, g_clone}, { opfile = "_1.csv" } )
   assert(f_clone:length() == n_T + n_H)
   assert(g_clone:length() == n_T + n_H)
   local V, C = cum_for_dt(f_clone, g_clone, ng)
   V:eval()
-  Q.print_csv({V, C[1], C[2]})
-  error("premature")
+  -- TODO P1 Comment out below 
+  -- Q.print_csv({V, C[1], C[2]}, { opfile = "_2.csv" } )
   --=======================================
   assert(type(V) == "lVector")
   assert(type(C) == "table")
@@ -66,7 +66,6 @@ local function calc_benefit(
     min_size, wt_prior, n_T, n_H)
   assert(type(b) == "Reducer")
   local benefit, split_point = b:eval()
-  print("XXX", benefit, split_point)
   
   f_clone:delete() -- explicit deletion
   g_clone:delete() -- explicit deletion

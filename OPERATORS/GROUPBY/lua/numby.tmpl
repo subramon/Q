@@ -25,6 +25,7 @@ int ${fn}(
 {
   int status = 0;
 
+  if ( nZ == 0 ) { WHEREAMI; return -1; }
   for ( uint64_t i = 0; i < nX; i++ ) {
     ${in_ctype} x = X[i];
     if ( is_safe ) {

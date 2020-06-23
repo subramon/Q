@@ -206,7 +206,7 @@ static int l_sclr_to_str( lua_State *L) {
     nw = snprintf(buf, BUFLEN, "%f", ptr_sclr->cdata.valF4);
   }
   else if ( strcmp(field_type, "F8" ) == 0 ) { 
-    nw = snprintf(buf, BUFLEN, "%e", ptr_sclr->cdata.valF8);
+    nw = snprintf(buf, BUFLEN, "%lf", ptr_sclr->cdata.valF8);
   }
   else {
     go_BYE(-1);

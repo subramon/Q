@@ -1,6 +1,6 @@
 -- given a table T of lVectors and a string identifying the goal attribute
 -- return
--- 1) a table t of lVectors = T - g
+-- 1) a table t of lVectors = T - g, indexed as foo, bar,... 
 -- 2) a goal lvector g
 -- 3) a table t_names of strings, with names of Vectors
 local is_in = require 'Q/UTILS/lua/is_in'
@@ -13,8 +13,8 @@ local function extract_goal(
   assert(type(goal) == "string")
   local t = {}
   local t_names = {}
-  local g = nil
-  local qtype = nil
+  local g 
+  local qtype 
   local m = 0
   local n = 0
   for k, v in pairs(T) do 

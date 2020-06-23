@@ -573,7 +573,11 @@ function lVector:meta()
   -- TODO THINK
   -- with lua interpreter, load() is not supported with strings so using loadstring() 
   -- earlier with luajit interpreter, load() supported strings 
-  local base_meta = loadstring(cVector.meta(self._base_vec))()
+  local x = cVector.meta(self._base_vec)
+  assert(type(x) == "string")
+  local y = assert(loadstring(x))
+  assert(type(y) == "function")
+  local base_meta = y()
   local nn_meta = nil
   if ( self._nn_vec ) then 
     nn_meta = loadstring(cVector.meta(self._nn_vec))()

@@ -59,26 +59,19 @@ typedef struct _dt_benefit_args {
 
   local reduce_struct = cmem.new({size = ffi.sizeof("DT_BENEFIT_ARGS")})
   reduce_struct:zero()
-  print("calling get_ptr")
   subs.reduce_struct = get_ptr(reduce_struct, "DT_BENEFIT_ARGS *")
   subs.reduce_struct_ctype = "DT_BENEFIT_ARGS"
 
   local getter = function (x)
     assert(x) -- this contains the value into which reduction happens
 
-    print("val = ", x[0].val)
-    print("num = ", x[0].num)
-    print("min_size = ", x[0].min_size)
-    print("wt_prior = ", x[0].wt_prior)
-    print("benefit = ", x[0].benefit)
-
     local sval = Scalar.new(0, "F8")
     local s = ffi.cast("SCLR_REC_TYPE *", sval)
-    s[0].cdata["valF8"] = x[0].val
+    s[0].cdata.valF8 = x[0].val
     -------------------
     local sbenefit = Scalar.new(0, "F8")
     local s = ffi.cast("SCLR_REC_TYPE *", sbenefit)
-    s[0].cdata["valF8"] = x[0].benefit
+    s[0].cdata.valF8 = x[0].benefit
     -------------------
     return sval, sbenefit
   end

@@ -14,7 +14,6 @@ local function put_others(my_name, vectors, outbufs, num_rows)
   assert(num_rows >= 0)
   for k, v in pairs(vectors) do
     if ( v.name ~= my_name ) then
-      print("Calling put_chunk on " .. v.name .. " for " .. num_rows)
       v:put_chunk(outbufs[v.name], nil, num_rows)
     end
   end
@@ -122,6 +121,7 @@ local function cum_for_dt(f, g, ng)
             outbufs[k] = assert(cmem.new({size=c_buf_sz,qtype=c_qtype}))
             outbufs[k]:stealable(true)
           end
+          outbufs[k]:zero() -- important initialization
         end
       end
       repeat
