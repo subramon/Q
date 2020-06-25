@@ -129,9 +129,20 @@ local function find_leaf_stats(
   end
 end
 
+local function print_dt_results(results)
+  for alpha, v in pairs(results) do
+    for k2, v2 in pairs(v) do
+      for k3, v3 in pairs(v2) do
+        print(alpha, k2, k3, v3)
+      end
+    end
+  end
+end
+
 dt.find_leaf_stats = find_leaf_stats
 dt.check_dt = check_dt
 dt.node_count = node_count
 dt.init_leaf_heads_tails = init_leaf_heads_tails
+dt.print_dt_results = print_dt_results
 
 return dt

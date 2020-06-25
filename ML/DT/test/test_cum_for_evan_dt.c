@@ -1,8 +1,10 @@
 #include "q_incs.h"
 #include <strings.h>
 #include <math.h>
-#include "_cum_for_dt_F4_I4.h"
+#include "_cum_for_evan_dt_F4_I4.h"
 
+#define FTYPE float
+#define GTYPE int32_t
 int
 main(
     int argc,
@@ -12,14 +14,11 @@ main(
   int status = 0;
   int nF = 1024;
   int chunk_size = 64;
-  int ng = 2;
-  float *F = malloc(nF * sizeof(float));
-  int   *G = malloc(nF * sizeof(int));
-  float *V = malloc(nF * sizeof(float));
-  int32_t **cnts = malloc(ng * sizeof(int32_t *));
-  for ( int i = 0; i < ng; i++ ) { 
-    cnts[i] = malloc(nF * sizeof(int32_t));
-  }
+  FTYPE *F = malloc(nF * sizeof(FTYPE)); // input 
+  GTYPE   *G = malloc(nF * sizeof(GTYPE)); // input 
+  FTYPE *V = malloc(nF * sizeof(FTYPE)); // output 
+  double *S = malloc(nF * sizeof(double)); // output 
+  uint32_t *N = malloc(nF * sizeof(uint32_t)); // output 
 
   int min_repeat = 1;
   int max_repeat = 8;
@@ -31,7 +30,7 @@ main(
     for ( int repeat = min_repeat; repeat < max_repeat; repeat++ ) { 
       for ( int i = 0; i < repeat; i++ ) { 
         F[fidx] = fval;
-        G[fidx] = random() % ng;
+        G[fidx] = (int32_t)fval;
         fidx++;
         if ( fidx >= nF ) { break; }
       }
@@ -59,13 +58,14 @@ main(
     if ( ub > nF ) { ub = nF; }
     uint64_t n_in = ub - lb;
     if ( b == 0 ) { is_first = true; } else { is_first = false; }
-    status = cum_for_dt_F4_I4(is_first, F+lb, G+lb, ng,  &aidx, n_in,
-        V, cnts, nV, &num_in_V);
+    status = cum_for_evan_dt_F4_I4(is_first, F+lb, G+lb, &aidx, n_in,
+        V, S, N, nV, &num_in_V);
     cBYE(status);
     if ( aidx == n_in ) { aidx = 0; }
     // TODO: Need to test case of input and output not being 
     // consumed/produced evenly
   }
+  /*
   fval = 1;
   int vidx = 0;
   int exp_total = min_repeat;
@@ -81,15 +81,12 @@ main(
     if ( V[vidx] == F[nF-1] ) { break; }
     fval++;
   }
+  */
 
 BYE:
   free_if_non_null(F);
-  free_if_non_null(V);
   free_if_non_null(G);
-  if ( cnts != NULL ) { 
-    for ( int i = 0; i < ng; i++ ) { 
-      free_if_non_null(cnts[i]);
-    }
-    free_if_non_null(cnts);
-  }
+  free_if_non_null(V);
+  free_if_non_null(S);
+  free_if_non_null(N);
 }

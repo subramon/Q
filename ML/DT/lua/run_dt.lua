@@ -16,11 +16,11 @@ local function check_args(args)
   assert(args.O)
   assert(args.goal)
   if ( not args.data_file ) then
-    assert(args.train_csv)
-    assert(args.test_csv)
+    assert(args.train_file)
+    assert(args.test_file)
   else
-    assert(args.train_csv == nil)
-    assert(args.test_csv == nil)
+    assert(args.train_file == nil)
+    assert(args.test_file == nil)
   end
 
   assert(type(args.min_alpha) == "number")
@@ -33,8 +33,15 @@ local function check_args(args)
   assert(type(args.min_to_split) == "number")
   assert(args.min_to_split >= 10)
 
-  assert(type(args.ng) == "number")
-  assert(args.ng == 2) --- TODO P4 LIMITATION FOR NOW 
+  if ( args.is_goal_real == nil ) then 
+    args.is_goal_real = false
+  end
+  assert(type(args.is_goal_real == "boolean"))
+
+  if ( args.is_goal_real == false ) then 
+    assert(type(args.ng) == "number")
+    assert(args.ng == 2) --- TODO P4 LIMITATION FOR NOW 
+  end
 
   assert(type(args.iterations) == "number")
   assert(args.iterations >= 1)
@@ -45,8 +52,6 @@ local function check_args(args)
   if ( args.is_cautious ) then 
     assert(type(args.is_cautious) == "boolean")
   end
-  assert(type(args.ng == "number"))
-  assert(args.ng == 2) -- TODO P4 Hard coded for now 
   return true
 end
 
@@ -57,6 +62,7 @@ local function run_dt(args)
   local O  = args.O -- optional global meta data 
   local data_file       = args.data_file
   local goal		= args.goal
+  local is_goal_real    = args.is_goal_real
   local iterations	= args.iterations
   local min_alpha	= args.min_alpha
   local min_to_split    = args.min_to_split
@@ -64,8 +70,8 @@ local function run_dt(args)
   local ng              = args.ng
   local split_ratio	= args.split_ratio
   local step_alpha	= args.step_alpha
-  local test_csv	= args.test_csv
-  local train_csv	= args.train_csv
+  local test_file	= args.test_file
+  local train_file	= args.train_file
   local wt_prior        = args.wt_prior    
 
   -- load the data
@@ -81,8 +87,8 @@ local function run_dt(args)
     -- Hence, it does not make sense to do more than one iteration
     -- When there is more than 1 iteration, in each iteration we use
     -- a random number generator to create different train/test data sets
-    Train = Q.load_csv(train_csv, M, O)
-    Test = Q.load_csv(test_csv, M, O)
+    Train = Q.load_csv(train_file, M, O)
+    Test = Q.load_csv(test_file, M, O)
     for k, v in pairs(Train) do v:eval() break end 
     for k, v in pairs(Test)  do v:eval() break end 
     iterations = 1
@@ -98,7 +104,6 @@ local function run_dt(args)
     -- convert scalar to number for alpha value, avoid extra decimals
     for iter = 1, iterations do
       -- break into a training set and a testing set
-      local Train, Test
       if T then
         local seed = iter * 100
         Train, Test = split_train_test(T, split_ratio, seed)
@@ -110,8 +115,10 @@ local function run_dt(args)
       -- train is indexed as 1, 2, 3
       -- Train is indexed as foo, bar, ...
       local train, g_train, train_col_names = extract_goal(Train, goal)
-      assert(check_extract_goal( train, g_train, ng, train_col_names))
+      assert(check_extract_goal( train, g_train, ng, is_goal_real, 
+        train_col_names))
       -- prepare decision tree model
+      error("prematur")
       local D = assert(make_dt(train, g_train, ng, alpha, 
         min_to_split, train_col_names, wt_prior))
       -- print(JSON:encode(D))

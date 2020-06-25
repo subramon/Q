@@ -51,7 +51,6 @@ local function calc_benefit(
   assert(g_clone:length() == n_T + n_H)
   local V, C = cum_for_dt(f_clone, g_clone, ng)
   V:eval()
-  -- TODO P1 Comment out below 
   -- Q.print_csv({V, C[1], C[2]}, { opfile = "_2.csv" } )
   --=======================================
   assert(type(V) == "lVector")
@@ -65,7 +64,7 @@ local function calc_benefit(
   local b = dt_benefit(V, C[1], C[2], "gambling", 
     min_size, wt_prior, n_T, n_H)
   assert(type(b) == "Reducer")
-  local benefit, split_point = b:eval()
+  local split_point, benefit = b:eval()
   
   f_clone:delete() -- explicit deletion
   g_clone:delete() -- explicit deletion

@@ -19,7 +19,6 @@ local function make_dt(
   n_T = cnts:get1(0):to_num()
   n_H = cnts:get1(1):to_num()
 
-
   D.n_T = n_T
   D.n_H = n_H
   D.node_idx = node_idx
@@ -51,10 +50,10 @@ local function make_dt(
       local minval = Q.min(f):eval():to_num()
       if ( maxval > minval ) then
         my_is_col_alive[k] = true
-        -- print("Calculating benefit for ", col_names[k])
         local bf, sf = calc_benefit(f, g, ng, n_T, n_H, wt_prior)
         if ( type(bf) == "Scalar" ) then bf = bf:to_num() end
         if ( type(sf) == "Scalar" ) then sf = sf:to_num() end
+        -- print("Feature " .. col_names[k] .. " split at " .. sf)
         if ( best_benefit == nil ) or ( bf > best_benefit ) then
           best_benefit = bf
           best_split = sf
@@ -63,7 +62,7 @@ local function make_dt(
       end
     end
   end
-  print("BEST", best_benefit, best_split, col_names[best_k])
+  print("BEST Split = " .. col_names[best_k] .. " <= " .. best_split)
   if ( best_benefit > alpha ) then 
     D.feature   = best_k
     D.feature_name = col_names[best_k]

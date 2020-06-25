@@ -95,6 +95,8 @@ else
   if ( not status ) then 
     print("WARNING!!! Restore failed. Wiping things out...")
     reset_fn()
+  else
+    print("Restored data")
   end
 end
 --======================

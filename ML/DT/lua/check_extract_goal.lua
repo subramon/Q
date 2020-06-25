@@ -6,9 +6,10 @@ local function check_extract_goal(
   T, -- table of m lvectors of length n, indexed as 1, 2, 3, ...
   g, -- lVector of length n
   ng,
+  is_goal_real,
   col_names
   )
-  local ncols, nrows = chk_params(T, g, ng)
+  local ncols, nrows = chk_params(T, g, ng, is_goal_real)
   local D = {}
   assert(type(col_names) == "table")
   for k1, v1 in ipairs(col_names) do

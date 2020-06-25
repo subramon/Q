@@ -30,7 +30,8 @@ clean :
 
 libcum_for_dt.so : ${GEN_FILES} \
 	cum_for_dt.tmpl
-	luajit generator.lua
+	luajit cum_for_dt_generator.lua
+	luajit cum_for_evan_dt_generator.lua
 	luajit generator_dt_benefit.lua
 	gcc ${GEN_FILES} ${AUX_FILES} ${CFLAGS} ${INCS} ${Q_LINK_FLAGS} -o libcum_for_dt.so
 	test -d ${Q_BUILD_DIR}
@@ -82,3 +83,41 @@ GEN_FILES = \
 	../gen_src/_dt_benefit_I8_I4.c \
 	../gen_src/_dt_benefit_F4_I4.c \
 	../gen_src/_dt_benefit_F8_I4.c \
+	\
+	../gen_src/_cum_for_evan_dt_F4_F4.c \
+	../gen_src/_cum_for_evan_dt_F4_F8.c \
+	../gen_src/_cum_for_evan_dt_F4_I1.c \
+	../gen_src/_cum_for_evan_dt_F4_I2.c \
+	../gen_src/_cum_for_evan_dt_F4_I4.c \
+	../gen_src/_cum_for_evan_dt_F4_I8.c \
+	../gen_src/_cum_for_evan_dt_F8_F4.c \
+	../gen_src/_cum_for_evan_dt_F8_F8.c \
+	../gen_src/_cum_for_evan_dt_F8_I1.c \
+	../gen_src/_cum_for_evan_dt_F8_I2.c \
+	../gen_src/_cum_for_evan_dt_F8_I4.c \
+	../gen_src/_cum_for_evan_dt_F8_I8.c \
+	../gen_src/_cum_for_evan_dt_I1_F4.c \
+	../gen_src/_cum_for_evan_dt_I1_F8.c \
+	../gen_src/_cum_for_evan_dt_I1_I1.c \
+	../gen_src/_cum_for_evan_dt_I1_I2.c \
+	../gen_src/_cum_for_evan_dt_I1_I4.c \
+	../gen_src/_cum_for_evan_dt_I1_I8.c \
+	../gen_src/_cum_for_evan_dt_I2_F4.c \
+	../gen_src/_cum_for_evan_dt_I2_F8.c \
+	../gen_src/_cum_for_evan_dt_I2_I1.c \
+	../gen_src/_cum_for_evan_dt_I2_I2.c \
+	../gen_src/_cum_for_evan_dt_I2_I4.c \
+	../gen_src/_cum_for_evan_dt_I2_I8.c \
+	../gen_src/_cum_for_evan_dt_I4_F4.c \
+	../gen_src/_cum_for_evan_dt_I4_F8.c \
+	../gen_src/_cum_for_evan_dt_I4_I1.c \
+	../gen_src/_cum_for_evan_dt_I4_I2.c \
+	../gen_src/_cum_for_evan_dt_I4_I4.c \
+	../gen_src/_cum_for_evan_dt_I4_I8.c \
+	../gen_src/_cum_for_evan_dt_I8_F4.c \
+	../gen_src/_cum_for_evan_dt_I8_F8.c \
+	../gen_src/_cum_for_evan_dt_I8_I1.c \
+	../gen_src/_cum_for_evan_dt_I8_I2.c \
+	../gen_src/_cum_for_evan_dt_I8_I4.c \
+	../gen_src/_cum_for_evan_dt_I8_I8.c \
+

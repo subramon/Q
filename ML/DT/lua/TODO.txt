@@ -1,1 +1,22 @@
 1) Be able to turn off all debugging when performance is measured
+2) I think splitter is not working properly and causing problems such as
+Line  28 of File /tmp/q//src/_where_F4.c
+Line 164 of File aux_core_vec.c
+Line 161 of File core_vec.c
+Line 738 of File vector.c
+Line 164 of File aux_core_vec.c
+Line 161 of File core_vec.c
+Line 738 of File vector.c
+luajit: /Q/OPERATORS/WHERE/lua/expander_where.lua:84: assertion failed!
+stack traceback:
+	[C]: in function 'assert'
+	/Q/OPERATORS/WHERE/lua/expander_where.lua:84: in function '_gen'
+
+Line 802 of File core_vec.c
+Line 695 of File vector.c
+luajit: /Q/RUNTIME/VCTR/lua/lVector.lua:283: l_vec_put_chunk
+stack traceback:
+	[C]: in function 'assert'
+	/Q/RUNTIME/VCTR/lua/lVector.lua:283: in function 'get_chunk'
+	/Q/RUNTIME/VCTR/lua/lVector.lua:148: in function 'eval'
+	/Q/ML/DT/lua/run_dt.lua:107: in function 'run_dt'

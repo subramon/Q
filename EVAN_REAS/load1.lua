@@ -8,14 +8,8 @@ assert(plpath.isfile(infile))
 assert(type(threshold) == "number")
 assert(threshold >= 10)
 -- define meta data
-local M = {}
-local O = { is_hdr = true }
-local num_cols = 14
-for i = 1, num_cols do 
-  local name = "x" .. tostring(i)
-  M[i] = { name = name, qtype = "F4", is_memo= true, is_persist = true }
-end
-M[#M+1] = { name = "goal", qtype = "I4", is_memo= true, is_persist = true }
+local M = require 'Q/EVAN_REAS/data/meta1'
+local O = require 'Q/EVAN_REAS/data/opt'
 T = Q.load_csv(infile, M, O)
 T.goal:eval()
 print("All done")

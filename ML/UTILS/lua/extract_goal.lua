@@ -25,11 +25,8 @@ local function extract_goal(
       assert(is_in(g:qtype(), valid_goal_types))
     else
       if ( not qtype ) then
-        qtype = v:fldtype()
-        assert((qtype == "F4" ) or ( qtype == "F8"))
         n = v:length()
       else
-        assert(qtype == v:fldtype())
         assert(n     == v:length())
       end
       t[#t+1] = v

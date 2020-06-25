@@ -6,22 +6,41 @@ local Scalar  = require 'libsclr'
 local run_dt  = require 'Q/ML/DT/lua/run_dt'
 local write_to_csv = require 'Q/ML/DT/lua/write_to_csv'
 local qconsts = require 'Q/UTILS/lua/q_consts'
+local print_dt_results = require 'Q/ML/DT/lua/dt'["print_dt_results"]
 
 local qc       = require 'Q/UTILS/lua/q_core'
 local src_root = qconsts.Q_SRC_ROOT
 
 local tests = {}
-tests.t1 = function()
-  local dfile = src_root .. "/ML/KNN/data/occupancy/occupancy.csv"
-  local mfile = src_root .. "/ML/KNN/data/occupancy/occupancy_meta"
-  local ofile = src_root .. "/ML/KNN/data/occupancy/occupancy_opt"
-
+tests.t1 = function(n)
   local args = {}
-  args.M = require(mfile); assert(type(args.M) == "table")
+  local n = n or 1
+  local dfile, mfile, ofile, rfile 
+  if ( n == 1 ) then 
+    dfile = src_root .. "/ML/KNN/data/occupancy/occupancy.csv"
+    mfile = src_root .. "/ML/KNN/data/occupancy/occupancy_meta"
+    ofile = src_root .. "/ML/KNN/data/occupancy/occupancy_opt"
+    rfile = src_root .. "/ML/DT/test/occupancy_results.csv"
+    args.goal = "occupy_status"
+    args.min_to_split = 10
+    args.data_file = dfile
+    args.is_goal_real = false
+  elseif ( n == 2 ) then 
+    dfile = src_root .. "/EVAN_REAS/data/private_data2.csv"
+    mfile = src_root .. "/EVAN_REAS/data/meta2"
+    ofile = src_root .. "/EVAN_REAS/data/opt"
+    rfile = src_root .. "/EVAN_REAS/data/results.csv"
+    args.goal = "highAvgBPCombo"
+    args.min_to_split = 500
+    args.train_file = dfile
+    args.test_file = dfile
+    args.is_goal_real = true
+  else
+    error("")
+  end
 
+  args.M = require(mfile); assert(type(args.M) == "table")
   args.O = require(ofile); assert(type(args.O) == "table")
-  args.data_file = dfile
-  args.goal = "occupy_status"
   args.ng = 2 -- => values taken on by goal = 0, 1, ... ng-1
   args.min_alpha = 0.2
   args.max_alpha = 0.2
@@ -29,36 +48,19 @@ tests.t1 = function()
   args.step_alpha = 0.1
   args.iterations = 2
   args.split_ratio = 0.7
-  args.min_to_split = 10
   args.print_graphviz = true
   args.cautious = true -- turn off for performance evaluation
 
   cVector.reset_timers()
   local start_time = qc.RDTSC()
   local results = run_dt(args)
-  for alpha, v in pairs(results) do
-    for k2, v2 in pairs(v) do
-      for k3, v3 in pairs(v2) do
-        print(alpha, k2, k3, v3)
-      end
-    end
-  end
   local stop_time = qc.RDTSC()
-  write_to_csv(results, "room_occupancy_sample.csv")
+  print_dt_results(results)
+  write_to_csv(results, rfile)
   cVector.print_timers()
   print("================================================")
   print("total execution time : " .. tostring(tonumber(stop_time-start_time)))
   print("================================================")
-  --[[
-  if _G['g_time'] then
-    for k, v in pairs(_G['g_time']) do
-      local niters  = _G['g_ctr'][k] or "unknown"
-      local ncycles = tonumber(v)
-      print("0," .. k .. "," .. niters .. "," .. ncycles)
-    end
-  end
-  print("================================================")
-  ]]
 end
 
 tests.t2 = function()
@@ -298,4 +300,14 @@ tests.t6 = function()
 end
 
 -- return tests
-tests.t1()
+tests.t1(2)
+  --[[
+  if _G['g_time'] then
+    for k, v in pairs(_G['g_time']) do
+      local niters  = _G['g_ctr'][k] or "unknown"
+      local ncycles = tonumber(v)
+      print("0," .. k .. "," .. niters .. "," .. ncycles)
+    end
+  end
+  print("================================================")
+  ]]

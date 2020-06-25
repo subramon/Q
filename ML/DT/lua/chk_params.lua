@@ -28,6 +28,7 @@ local function chk_params(
   assert(is_in(g:fldtype(), {"I1", "I2","I4", "I8"}))
   -- LIMITATION: currently assuming g values to be 0 and 1
   local maxval = Q.max(g):eval():to_num()
+  print("ZZZZZZZZZZZ")
   local minval = Q.min(g):eval():to_num()
   assert(minval >= 0)
   assert(maxval < ng)
