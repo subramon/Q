@@ -1,0 +1,94 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include "_get_bit_u64.h"
+extern int
+${fn}(
+      bool is_first,
+      const ${f_ctype} * restrict f, // [n_in]
+      const ${g_ctype} * restrict g, // [n_in]
+      uint64_t *ptr_aidx,
+      uint64_t n_in,
+      ${f_ctype} *V, // [..]
+      double *S,
+      uint32_t *N,
+      uint64_t nV,
+      uint64_t *ptr_num_in_V
+      );
+   ]],
+   definition = [[
+
+#include "_${fn}.h"
+
+// When this completes, it means that there were N[i] entries in f
+// with value V[i] and the sum of the corresponding g's was S[i]
+int
+${fn}(
+      bool is_first,
+      const ${f_ctype} * restrict f, // [n_in]
+      const ${g_ctype} * restrict g, // [n_in]
+      uint64_t *ptr_aidx,
+      uint64_t n_in,
+      ${f_ctype} *V, // [..]
+      double *S,
+      uint32_t *N,
+      uint64_t nV,
+      uint64_t *ptr_num_in_V
+      )
+{
+  int status = 0;
+  
+  // START: Basic checks on input parameters
+  if ( f == NULL ) { go_BYE(-1); }
+  if ( g == NULL ) { go_BYE(-1); }
+  if ( V == NULL ) { go_BYE(-1); }
+  if ( N == NULL ) { go_BYE(-1); }
+  if ( S == NULL ) { go_BYE(-1); }
+  if ( n_in == 0 ) { go_BYE(-1); }
+  if ( ptr_num_in_V == NULL ) { go_BYE(-1); }
+  if ( ptr_aidx == NULL ) { go_BYE(-1); }
+  uint64_t num_in_V = *ptr_num_in_V;
+  uint64_t aidx = *ptr_aidx;
+  if ( num_in_V > nV ) { go_BYE(-1); }
+  if ( aidx >= n_in ) { go_BYE(-1); }
+  //-------------------------------
+  if ( is_first ) {
+    ${f_ctype} fval = f[0];
+    ${g_ctype} gval = g[0];
+    num_in_V = 1;
+    V[num_in_V-1] = fval;
+    N[num_in_V-1] = 1;
+    S[num_in_V-1] = gval;
+    aidx = 1;
+  }
+
+  for ( ; aidx < n_in; aidx++ ) { 
+    ${f_ctype} fval = f[aidx];
+    ${g_ctype} gval = g[aidx];
+    if ( fval == V[num_in_V-1] ) {
+      N[num_in_V-1] += 1;
+      S[num_in_V-1] += gval;
+    }
+    else {
+      if ( num_in_V < nV ) {  // if there is space
+        num_in_V++;
+        V[num_in_V-1] = fval;
+        N[num_in_V-1] = 1;
+        S[num_in_V-1] = gval;
+      }
+      else { // else we need to get back and call again
+        // pretend like we never saw this item. We will come back for it
+        break;
+      }
+    }
+  }
+  *ptr_num_in_V = num_in_V;
+  *ptr_aidx     = aidx;
+  //-------------------------------
+BYE:
+  return status;
+}
+   ]]
+}

@@ -1,0 +1,70 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+declaration = [[
+#include "q_incs.h"
+#include "evan_dt_benefit_struct.h"
+${includes}
+extern int
+${fn}(  
+      const ${V_ctype} * restrict V,  
+      const double     * restrict S,  
+      const uint32_t   * restrict C,  
+      uint32_t n,
+      ${reduce_struct_ctype}  *ptr_args
+      ) 
+;
+]],
+definition = [[
+#include "_${fn}.h"
+int
+${fn}(  
+      const ${V_ctype} * restrict V,  
+      const double     * restrict S,  
+      const uint32_t   * restrict C,  
+      uint32_t n,
+      ${reduce_struct_ctype}  *ptr_args
+      )
+
+{
+  int status = 0;
+  if ( V == NULL ) { go_BYE(-1); }
+  if ( S == NULL ) { go_BYE(-1); }
+  if ( C == NULL ) { go_BYE(-1); }
+  if ( n == 0    ) { go_BYE(-1); }
+  uint32_t min_size = ptr_args->min_size;
+  double benefit    = ptr_args->benefit;
+  double l_sum      = ptr_args->l_sum;
+  uint64_t l_cnt    = ptr_args->l_cnt;
+  double r_sum      = ptr_args->r_sum;
+  uint64_t r_cnt    = ptr_args->r_cnt;
+  for ( uint32_t i = 0; i < n; i++ ) { 
+    ${V_ctype} xval = V[i];
+    double     xsum = S[i];
+    uint32_t   xcnt = C[i];
+
+    l_sum += xsum;
+    l_cnt += xcnt;
+    double l_benefit = l_sum / l_cnt;
+
+    r_sum -= xsum;
+    r_cnt -= xcnt;
+    double r_benefit = r_sum / r_cnt;
+
+    if ( ( l_cnt >= min_size ) && ( l_benefit > ptr_args->benefit ) ) { 
+      ptr_args->benefit = l_benefit; 
+      ptr_args->val = xval;
+    }
+    if ( (r_cnt >= min_size ) && ( r_benefit > ptr_args->benefit ) ) { 
+      ptr_args->benefit = r_benefit; 
+      ptr_args->val = xval;
+    }
+  }
+  ptr_args->l_sum = l_sum;
+  ptr_args->l_cnt = l_cnt;
+  ptr_args->r_sum = r_sum;
+  ptr_args->r_cnt = r_cnt;
+BYE:
+  return status;
+}
+]]
+}
