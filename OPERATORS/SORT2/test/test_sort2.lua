@@ -15,18 +15,21 @@ tests.t1 = function ()
   local expected_drag_result = {40, 30, 20, 10, 50 ,60, 70, 80, 90, 100}
   local expected_input_col = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
   
-  local qtype = "I4"
-  local input_col = Q.mk_col({10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, "I4")
-  local input_drag_col = Q.mk_col({100, 90, 80, 70, 60, 50, 10, 20, 30, 40}, "F4")
-
-  local status = Q.sort2(input_col, input_drag_col, "asc")
-  -- Q.print_csv({input_col, input_drag_col}, { impl = 'C' })
-
-  -- Validate the result
-  for i = 1, input_drag_col:length() do
-    -- print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
-    assert(input_drag_col:get1(i-1):to_num() == expected_drag_result[i])
-    assert(input_col:get1(i-1):to_num() == expected_input_col[i])
+  local qtype = { "I1", "I2", "I4", "I8", "F4", "F8" }
+  for _, qtype in ipairs(qtypes) do 
+    local qtype = "I4"
+    local input_col = Q.mk_col({10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, "I4")
+    local input_drag_col = Q.mk_col({100, 90, 80, 70, 60, 50, 10, 20, 30, 40}, "F4")
+  
+    local status = Q.sort2(input_col, input_drag_col, "asc")
+    -- Q.print_csv({input_col, input_drag_col}, { impl = 'C' })
+  
+    -- Validate the result
+    for i = 1, input_drag_col:length() do
+      -- print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
+      assert(input_drag_col:get1(i-1):to_num() == expected_drag_result[i])
+      assert(input_col:get1(i-1):to_num() == expected_input_col[i])
+    end
   end
   
   print("Test t1 succeeded")

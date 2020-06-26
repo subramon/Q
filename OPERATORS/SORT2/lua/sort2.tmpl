@@ -109,7 +109,7 @@ ${fn} (
   int status = 0;
   register char *base_ptr = (char *) pbase;
   uint64_t aidx, bidx;
-  uint64_t aval, bval;
+  ${F2_FLDTYPE} aval, bval;
 
   int size = sizeof(${F1_FLDTYPE});
   const size_t max_thresh = MAX_THRESH * size; 
@@ -256,7 +256,8 @@ ${fn} (
 
     run_ptr = base_ptr + size;
     while ((run_ptr += size) <= end_ptr) {
-      int pos, pos_hi, pos_lo, sve_idx;
+      int pos, pos_hi, pos_lo; 
+      ${F2_FLDTYPE} sve_idx;
       tmp_ptr = run_ptr - size;
       pos = ( ( (char *)tmp_ptr - (char *)base_ptr) / size ) + 1;
       sve_idx = drag[pos];

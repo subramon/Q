@@ -1,26 +1,38 @@
 local Q = require 'Q'
 local calc_benefit = require 'Q/ML/DT/lua/calc_benefit'
+local calc_evan_benefit = require 'Q/ML/DT/lua/calc_evan_benefit'
 
 local default_min_to_split = 8
 local node_idx = 0 -- node indexing
 local function make_dt(
   T, -- table of m lvectors of length n, indexed as 1, 2, 3, ...
   g, -- lVector of length n
-  ng,
-  alpha, -- number, minimum benefit
-  min_to_split, -- number, do not split if leaf size smaller than this
   col_names,
-  wt_prior,
+  dt_args,
   is_col_alive
   )
+  assert(type(dt_args) == "table")
+  local ng           = dt_args.ng 
+  local is_goal_real = dt_args.is_goal_real
+  local alpha        = dt_args.alpha 
+  local min_to_split = dt_args.min_to_split
+  local wt_prior     = dt_args.wt_prior 
   local D = {}
-  local cnts = Q.numby(g, ng):eval()
+  local sum, cnt
   local n_T, n_H
-  n_T = cnts:get1(0):to_num()
-  n_H = cnts:get1(1):to_num()
-
-  D.n_T = n_T
-  D.n_H = n_H
+  if ( is_goal_real ) then 
+    sum, cnt = Q.sum(g):eval()
+    sum = sum:to_num()
+    cnt = cnt:to_num()
+    D.sum = sum
+    D.cnt = cnt
+  else
+    local cnts = Q.numby(g, ng):eval()
+    n_T = cnts:get1(0):to_num()
+    n_H = cnts:get1(1):to_num()
+    D.n_T = n_T
+    D.n_H = n_H
+  end
   D.node_idx = node_idx
   node_idx = node_idx + 1
 
@@ -32,10 +44,15 @@ local function make_dt(
     end
   end
   -- stop expansion if following conditions met 
-  if ( ( n_T == 0 ) or ( n_H == 0 ) ) then return D end
-  if ( n_T + n_H < min_to_split )     then return D end 
-  -- TODO P1 if ( n_T < min_to_split )     then return D end 
-  -- TODO P1 if ( n_H < min_to_split )     then return D end 
+  if ( is_goal_real ) then 
+    if ( cnt < min_to_split ) then return D end 
+  else
+    if ( n_T <= 0 )     then return D end 
+    if ( n_H <= 0 )     then return D end 
+    if ( n_T + n_H < min_to_split )     then return D end 
+    -- TODO P1 if ( n_T < min_to_split )     then return D end 
+    -- TODO P1 if ( n_H < min_to_split )     then return D end 
+  end
 
   local best_benefit --- best benefit
   local best_split --- split point that yielded best benefit 
@@ -50,10 +67,15 @@ local function make_dt(
       local minval = Q.min(f):eval():to_num()
       if ( maxval > minval ) then
         my_is_col_alive[k] = true
-        local bf, sf = calc_benefit(f, g, ng, n_T, n_H, wt_prior)
+        local bf, sf
+        if ( is_goal_real ) then 
+          bf, sf = calc_evan_benefit(f, g, sum, cnt, min_to_split)
+        else
+          bf, sf = calc_benefit(f, g, ng, n_T, n_H, wt_prior)
+        end
         if ( type(bf) == "Scalar" ) then bf = bf:to_num() end
         if ( type(sf) == "Scalar" ) then sf = sf:to_num() end
-        -- print("Feature " .. col_names[k] .. " split at " .. sf)
+        -- print(col_names[k] .. " split at " .. sf ..  " has benefit " .. bf)
         if ( best_benefit == nil ) or ( bf > best_benefit ) then
           best_benefit = bf
           best_split = sf
@@ -82,8 +104,7 @@ local function make_dt(
         T_L[k]  = Q.where(f, x_L):eval()
       end
       local g_L = Q.where(g, x_L):eval()
-      D.left = make_dt(T_L, g_L, ng, alpha, min_to_split, col_names, 
-        wt_prior, my_is_col_alive)
+      D.left = make_dt(T_L, g_L, col_names, dt_args, my_is_col_alive)
     end
     --===========================
     local x_R = Q.vnot(x_L):eval()
@@ -94,8 +115,7 @@ local function make_dt(
         T_R[k]  = Q.where(f, x_R):eval()
       end
       local g_R = Q.where(g, x_R):eval()
-      D.right = make_dt(T_R, g_R, ng, alpha, min_to_split, col_names, 
-        wt_prior, my_is_col_alive)
+      D.right = make_dt(T_R, g_R, col_names, dt_args, my_is_col_alive)
     end
     --===========================
   end

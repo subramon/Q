@@ -2,6 +2,8 @@
 #define __CMEM_STRUCT_H
 #include "q_constants.h"
 
+// Note: if you change this, do a grep to make sure this is not
+// hard coded anywhere else
 typedef struct _cmem_rec_type {
   void *data;
   int64_t size;

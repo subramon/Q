@@ -3,8 +3,6 @@
 -- 1) a table t of lVectors = T - g, indexed as foo, bar,... 
 -- 2) a goal lvector g
 -- 3) a table t_names of strings, with names of Vectors
-local is_in = require 'Q/UTILS/lua/is_in'
-local valid_goal_types = { "I1", "I2", "I4", "I8" }
 local function extract_goal(
   T, 
   goal
@@ -22,7 +20,6 @@ local function extract_goal(
     assert(v:is_eov())
     if ( k == goal ) then 
       g = v
-      assert(is_in(g:qtype(), valid_goal_types))
     else
       if ( not qtype ) then
         n = v:length()
@@ -37,7 +34,6 @@ local function extract_goal(
   assert(m > 0)
   assert(n > 0)
   assert(g)
-  assert(qtype)
   assert(type(g) == "lVector")
   assert(type(t) == "table")
   return t, g, t_names

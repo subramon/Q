@@ -14,7 +14,7 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
-all : libcum_for_dt.so
+all : libdt.so
 
 all_for_dc:
 	cp ../src/*.c ${Q_BUILD_DIR}/src/
@@ -28,22 +28,23 @@ clean :
 	rm -f _*
 	rm -f *.so
 
-libcum_for_dt.so : ${GEN_FILES} \
+libdt.so : ${GEN_FILES} \
 	cum_for_dt.tmpl
 	luajit cum_for_dt_generator.lua
 	luajit cum_for_evan_dt_generator.lua
 	luajit generator_dt_benefit.lua
-	gcc ${GEN_FILES} ${AUX_FILES} ${CFLAGS} ${INCS} ${Q_LINK_FLAGS} -o libcum_for_dt.so
+	luajit generator_evan_dt_benefit.lua
+	gcc ${GEN_FILES} ${AUX_FILES} ${CFLAGS} ${INCS} ${Q_LINK_FLAGS} -o libdt.so
 	test -d ${Q_BUILD_DIR}
 	cp ../gen_src/*.c ${Q_BUILD_DIR}/src/
 	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
 	cp ../src/*.c ${Q_BUILD_DIR}/src/
 	cp ../inc/*.h ${Q_BUILD_DIR}/include/
 
-test_q : libcum_for_dt.so
+test_q : libdt.so
 	echo "TODO"
 
-test_c :  libcum_for_dt.so
+test_c :  libdt.so
 	echo "TODO"
 
 test : test_q test_c
@@ -120,4 +121,10 @@ GEN_FILES = \
 	../gen_src/_cum_for_evan_dt_I8_I2.c \
 	../gen_src/_cum_for_evan_dt_I8_I4.c \
 	../gen_src/_cum_for_evan_dt_I8_I8.c \
-
+	\
+	../gen_src/_evan_dt_benefit_F4.c \
+	../gen_src/_evan_dt_benefit_F8.c \
+	../gen_src/_evan_dt_benefit_I1.c \
+	../gen_src/_evan_dt_benefit_I2.c \
+	../gen_src/_evan_dt_benefit_I4.c \
+	../gen_src/_evan_dt_benefit_I8.c \

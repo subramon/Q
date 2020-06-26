@@ -45,7 +45,6 @@ local function calc_benefit(
   local f_clone = f:clone()
   local g_clone = g:clone()
   Q.sort2(f_clone, g_clone, 'asc')
-  -- TODO P1 Comment out below 
   -- Q.print_csv({f_clone, g_clone}, { opfile = "_1.csv" } )
   assert(f_clone:length() == n_T + n_H)
   assert(g_clone:length() == n_T + n_H)
@@ -68,6 +67,8 @@ local function calc_benefit(
   
   f_clone:delete() -- explicit deletion
   g_clone:delete() -- explicit deletion
+  V:delete() -- explicit deletion
+  for k, v in pairs(C) do v:delete() end -- explicit deletion
   return benefit, split_point
 end
 return calc_benefit

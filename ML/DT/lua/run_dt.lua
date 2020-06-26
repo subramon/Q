@@ -118,13 +118,17 @@ local function run_dt(args)
       assert(check_extract_goal( train, g_train, ng, is_goal_real, 
         train_col_names))
       -- prepare decision tree model
-      error("prematur")
-      local D = assert(make_dt(train, g_train, ng, alpha, 
-        min_to_split, train_col_names, wt_prior))
+      local dt_args = {}
+      dt_args.ng = ng
+      dt_args.is_goal_real = is_goal_real
+      dt_args.alpha = alpha 
+      dt_args.min_to_split = min_to_split
+      dt_args.wt_prior =  wt_prior
+      local D = assert(make_dt(train, g_train, train_col_names, dt_args))
       -- print(JSON:encode(D))
   
       -- evaluate model for test samples
-      metrics = eval_dt(D, Test, goal, ng)
+      -- TODO P1 metrics = eval_dt(D, Test, goal, ng)
 
       -- print graphviz
       if args.print_graphviz and iter == 1 then
@@ -133,7 +137,7 @@ local function run_dt(args)
         export_to_graphviz(file_name, D)
       end
     end
-    local avg_metrics = calc_avg_metrics(metrics)
+    -- TODO P1 local avg_metrics = calc_avg_metrics(metrics)
     results[alpha] = avg_metrics
     alpha = alpha + step_alpha
   end

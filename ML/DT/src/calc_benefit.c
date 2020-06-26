@@ -22,7 +22,7 @@ calc_benefit(
   if ( n_T_L > n_T ) { 
     go_BYE(-1); }
   uint64_t n_H_R = n_H - n_H_L;
-  uint64_t n_T_R = n_H - n_T_L;
+  uint64_t n_T_R = n_T - n_T_L;
   uint64_t n_L = n_H_L + n_T_L;
   uint64_t n_R = n - n_L;
   if ( n_L < min_size ) { return status; }
