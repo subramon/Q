@@ -85,7 +85,7 @@ uninstall:
 	rm -f /usr/lib/libq_core.so;\
 	echo "Q uninstalled"
 
-_q_basic: _utils _cutils _cmem _sclr _vctr _dnn 
+_q_basic: _utils _cutils _cmem _sclr _vctr 
 	luajit mk_so.lua
 	touch _q_basic
 

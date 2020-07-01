@@ -11,10 +11,13 @@ local function copy_gen_files()
   local numh = 0 
   --==========================
   local rootdir = qconsts.Q_SRC_ROOT
-  assert(rootdir, "Do export Q_SRC_ROOT=/home/subramon/WORK/Q or some such")
+  assert(type(rootdir) == "string", 
+    "Do export Q_SRC_ROOT=/home/subramon/WORK/Q or some such")
   assert(cutils.isdir(rootdir))
   --==========================
   local build_dir = qconsts.Q_BUILD_DIR
+  assert(type(build_dir) == "string", 
+    "Do export Q_BUILD_DIR=/tmp/q/ or some such")
   if ( not cutils.isdir(build_dir) ) then cutils.makepath(build_dir) end
   --==========================
   local cdir = build_dir .. "/src/"

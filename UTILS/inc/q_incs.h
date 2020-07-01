@@ -6,10 +6,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <float.h>
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_linalg.h>
+// #include <gsl/gsl_vector.h>
+// #include <gsl/gsl_matrix.h>
+// #include <gsl/gsl_blas.h>
+// #include <gsl/gsl_linalg.h>
 #include <inttypes.h>
 #include <limits.h>
 // TODO P4 do not think this is needed:#include <malloc.h>

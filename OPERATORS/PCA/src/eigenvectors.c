@@ -1,8 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+#include "q_incs.h"
 #include <lapacke.h>
-#include "q_macros.h"
 #include "eigenvectors.h"
 
 int

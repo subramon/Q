@@ -1,12 +1,16 @@
+//START_INCLUDES
 #include "q_incs.h"
 #include "_rs_mmap.h"
 #include "copy_file.h"
+//STOP_INCLUDES
 
+//START_FUNC_DECL
 int
 copy_file(
     const char * const src_file,
     const char * const dst_file
     )
+//STOP_FUNC_DECL
 {
   int status = 0;
   char *X = NULL; size_t nX = 0;

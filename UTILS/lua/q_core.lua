@@ -1,7 +1,3 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
-
-local Q_ROOT      = qconsts.Q_ROOT 
-
 local assertx  = require 'Q/UTILS/lua/assertx'
 local compile  = require 'Q/UTILS/lua/compile'
 local ffi      = require 'ffi'
@@ -13,41 +9,12 @@ local cutils  = require 'libcutils'
 local cmem    = require 'libcmem'
 local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
-local Dnn     = require 'libdnn'
 --==================
+local Q_ROOT   = qconsts.Q_ROOT 
 local sofile   = Q_ROOT .. "/lib/libq_core.so"
 local incfile  = Q_ROOT .. "/include/q_core.h"
 local inc_dir  = Q_ROOT .. "/include/"
 local lib_dir  = Q_ROOT .. "/lib/"
-
--- START: Put in a bunch of cdefs that we will need later
--- TODO P1 Do we still need FILE? 
-ffi.cdef([[
-typedef struct {
-   char *fpos;
-   void *base;
-   unsigned short handle;
-   short flags;
-   short unget;
-   unsigned long alloc;
-   unsigned short buffincrement;
-} FILE;
-  struct drand48_data
-  {
-    unsigned short int __x[3];	/* Current state.  */
-    unsigned short int __old_x[3]; /* Old state.  */
-    unsigned short int __c;	/* Additive const. in congruential formula.  */
-    unsigned short int __init;	/* Flag for initializing.  */
-    __extension__ unsigned long long int __a;	/* Factor in congruential
-						   formula.  */
-  };
-   ]])
-   -- Note that struct tm done in q_consts.lua
-   --[[
-   --NOTE: I gave a name TM to the struct tm because LuaFFI complained
---]]
-
--- STOP: Put in a bunch of cdefs that we will need later
 
 -- The first thing we do is to make sure that we can access functionality
 -- provided by C from Lua. This assumes that 2 files have been created
@@ -75,21 +42,23 @@ assert(#str > 0)
 ffi.cdef(str)
 
 assertx(cutils.isfile(sofile), "File not found ", sofile)
-local q_static = ffi.load(sofile) -- statically compiled library
+local q_static = assert(ffi.load(sofile)) -- statically compiled library
 -- had we done no dynamic compilation, we would have
 -- returned q_static and we would be done
 --=========================================================
 
-local known_functions = {}  -- this is to make sure that we do not dynamically compile the same function twice 
-local qc              = {}  -- what we will return
-local libs            = {}  -- Subtle but important reason why we have this here. Explained further down.
-
+-- to make sure we do not dynamically compile the same function twice 
+local known_functions = {}  
+-- what we will return
+local qc              = {}  
+-- Subtle but important reason why we have this here. Explained later
+local libs            = {}  
 
 local function get_val_in_q_static(val)
   return q_static[val]
 end
 
--- Important: Note that there are 2 places where load_liob is called from
+-- Important: Note that there are 2 places where load_lib is called from
 -- 1) add_lib -> this is done whenever Q restarts
 -- 2) q_add   -> this is dynamic compilation
 local function load_lib(
@@ -266,4 +235,17 @@ end
 2 cases 
 -- (1) qcjfoo refers to some known C function and we return it
 -- (2) 
+--]]
+--
+--[[ TODO P3 Delete this later I don't think we need i any more
+ffi.cdef([[
+typedef struct {
+   char *fpos;
+   void *base;
+   unsigned short handle;
+   short flags;
+   short unget;
+   unsigned long alloc;
+   unsigned short buffincrement;
+} FILE;
 --]]

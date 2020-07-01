@@ -1,18 +1,29 @@
 \startreport{Documenting the Build Process}
 \reportauthor{Ramesh Subramonian}
 
+\section{Using external packages}
+Q should {\bf not} depend on external packages, such as penlight, except when
+the core of Q is built and during testing. In particular, dynamic compilation
+should not be dependent on third party libraries. Needless to say, we can use
+{\tt cpp} and {\tt gcc} and the like.
+
 \section{Relevant Environment Variables}
 \be
-\item Q\_BUILD\_DIR e.g., \verb+/tmp/q/+
-\item Q\_SRC\_ROOT e.g., \verb+/home/subramon/Q/+
+\item Q\_BUILD\_DIR e.g., \verb+/tmp/q/+ a temporary directory used 
+to assemble source files before build 
+\item Q\_SRC\_ROOT e.g., \verb+/home/subramon/Q/+ the directory where Q has been
+checked out 
 \item Q\_ROOT e.g., \verb+/home/subramon/local/Q/+
 \ee
 
 \subsection{Derived Environment Variables}
 \be
-\item CDIR e.g., \verb+/tmp/q/src/+ (from Q\_BUILD\_DIR)
+\item CDIR e.g., \verb+/tmp/q/src/+ (from Q\_BUILD\_DIR) 
+-- where all {\tt .c} files will be copied
 \item HDIR e.g., \verb+/tmp/q/include/+ (from Q\_BUILD\_DIR)
+-- where all {\tt .h} files will be copied
 \item ODIR e.g., \verb+/tmp/q/obj/+ (from Q\_BUILD\_DIR)
+-- where all {\tt .o} files will be created
 \ee
 
 \section{Make so}
@@ -105,6 +116,22 @@ It assumes that Section~\ref{copy_generated_files} has taken care of placing
 \subsection{so from}
 \label{so_from_o}
 \TBC
+
+\section{Pre-requisites}
+The first call to mk\_so is to create the target {\tt basic} which depends on
+the following. These are considered {\tt core} to the functioning of Q.
+Everything else is optional, although without the functionality provided
+therein, Q would be crippled.
+\be
+\item utils
+\item cutils
+\item cmem
+\item sclr
+\item vctr
+\ee
+
+In order to the basic q
+
 
 \section{Makefile}
 

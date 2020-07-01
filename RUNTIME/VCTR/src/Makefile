@@ -9,19 +9,25 @@ INCS=-I. -I../inc/ \
 
 all: libvctr.so 
 	cp libvctr.so ${Q_ROOT}/lib/
-	echo "done"
 
-../inc/struct_timers.h : timers.lua
-	lua timers.lua "struct" > ../inc/struct_timers.h
+all_for_dc : 
+	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
 
-reset_timers.c : timers.lua
-	lua timers.lua "reset" > reset_timers.c
+../inc/_struct_timers.h : timers.lua
+	lua timers.lua "struct" > ../inc/_struct_timers.h
 
-print_timers.c : timers.lua
-	lua timers.lua "print" > print_timers.c 
+_reset_timers.c : timers.lua
+	lua timers.lua "reset" > _reset_timers.c
+
+_print_timers.c : timers.lua
+	lua timers.lua "print" > _print_timers.c 
 
 clean:
 	rm -f *.so *.o _*
+	rm -f ../inc/struct_timers.h 
+	rm -f reset_timers.c
+	rm -f print_timers.c
+
 		
 ../../../UTILS/src/is_valid_chars_for_num.c :
 	make -C ../../../UTILS/src/

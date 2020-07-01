@@ -1,15 +1,16 @@
 #include "q_incs.h"
 #include "vec_macros.h"
 #include "core_vec_struct.h"
-#include "struct_timers.h"
-#include "aux_core_vec.h"
+#include "_struct_timers.h"
 
 #include "_get_file_size.h"
-#include "copy_file.h"
+#include "_copy_file.h"
 #include "_isfile.h"
 #include "_isdir.h"
 #include "_rdtsc.h"
 #include "_rs_mmap.h"
+
+#include "aux_core_vec.h"
 
 uint64_t
 mk_uqid(

@@ -6,14 +6,15 @@ local qconsts      = require 'Q/UTILS/lua/q_consts'
 local struct_files = {
   "core_vec_struct.h",
   "scalar_struct.h",
-  "spooky_struct.h",
   "cmem_struct.h",
-  "const_struct.h", -- from OPERATORS/S_TO_F/
-  "seq_struct.h", -- from OPERATORS/S_TO_F/
-  "rand_struct.h", -- from OPERATORS/S_TO_F/
+  "spooky_struct.h",  -- UTILS/inc/
+  "drand_struct.h",   -- UTILS/inc/
+  "const_struct.h",  -- from OPERATORS/S_TO_F/
+  "seq_struct.h",    -- from OPERATORS/S_TO_F/
+  "rand_struct.h",   -- from OPERATORS/S_TO_F/
   "period_struct.h", -- from OPERATORS/S_TO_F/
   "minmax_struct.h", -- from OPERATORS/F_TO_S/
-  "sum_struct.h", -- from OPERATORS/F_TO_S/
+  "sum_struct.h",    -- from OPERATORS/F_TO_S/
   "dt_benefit_struct.h", -- from ML/DT/inc/
   "evan_dt_benefit_struct.h", -- from ML/DT/inc/
 }

@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "_vseq_F4.h"
 int
 main(

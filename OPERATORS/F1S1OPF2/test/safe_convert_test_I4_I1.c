@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "_safe_convert_I4_I1.h"
-#include <math.h>
 
 int
 main(

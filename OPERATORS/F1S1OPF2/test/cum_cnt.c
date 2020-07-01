@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "_cum_cnt_I8_I2.h"
-#include <math.h>
 int
 main(
     )

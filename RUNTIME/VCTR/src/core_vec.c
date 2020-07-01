@@ -4,7 +4,7 @@
 #include "aux_core_vec.h"
 #include "cmem.h"
 
-#include "copy_file.h"
+#include "_copy_file.h"
 #include "_file_exists.h"
 #include "_get_file_size.h"
 #include "_isfile.h"
@@ -15,8 +15,8 @@
 
 #include "lauxlib.h"
 
-#include "reset_timers.c"
-#include "print_timers.c"
+#include "_reset_timers.c"
+#include "_print_timers.c"
 
 typedef struct _vec_uqid_chunk_num_rec_type {
   uint64_t vec_uqid;

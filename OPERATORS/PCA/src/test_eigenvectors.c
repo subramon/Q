@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <inttypes.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "eigenvectors.h"
 
 int 

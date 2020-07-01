@@ -7,17 +7,13 @@ all : libutils.so ${hdr_files}
 
 $(INCDIR) :
 	mkdir -p ../gen_inc/
-#--- START FOR LOAD 
+
 ../gen_inc/_txt_to_B1.h : $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua txt_to_B1.c ${INCDIR}
-
 ../gen_inc/_txt_to_SC.h : $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua txt_to_SC.c ${INCDIR}
-
 txt_to_B1.c : ../gen_inc/_txt_to_B1.h
-
 txt_to_SC.c : ../gen_inc/_txt_to_SC.h
-#----------------------------------
 #----------------------------------
 ../gen_src/_txt_to_I1.c : $(INCDIR)
 	lua gen_code_I.lua 
@@ -32,16 +28,11 @@ txt_to_SC.c : ../gen_inc/_txt_to_SC.h
 ../gen_src/_txt_to_F8.c : $(INCDIR)
 	lua gen_code_F.lua 
 #----------------------------------
-#----------------------------------
-#--======= START FOR PRINT 0
 ../gen_inc/_B1_to_txt.h :  $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua B1_to_txt.c ${INCDIR}
-
 ../gen_inc/_SC_to_txt.h :  $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua SC_to_txt.c ${INCDIR}
-
 B1_to_txt.c : ../gen_inc/_B1_to_txt.h
-
 SC_to_txt.c : ../gen_inc/_SC_to_txt.h
 #----------------------------------
 ../gen_src/_I1_to_txt.c : $(INCDIR)
@@ -56,22 +47,18 @@ SC_to_txt.c : ../gen_inc/_SC_to_txt.h
 	luajit print_generator.lua F4
 ../gen_src/_F8_to_txt.c : $(INCDIR)
 	luajit print_generator.lua F8
-#--======= STOP FOR PRINT 0
+
+../gen_inc/_copy_file.h :  $(INCDIR)
+	lua ../src/cli_extract_func_decl.lua copy_file.c ${INCDIR}
 
 ../gen_inc/_file_exists.h :  $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua file_exists.c ${INCDIR}
-
-../gen_inc/_generate_bin.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua generate_bin.c ${INCDIR}
 
 ../gen_inc/_isfile.h : $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua isfile.c ${INCDIR}
 
 ../gen_inc/_isdir.h : $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua isdir.c ${INCDIR}
-
-../gen_inc/_trim.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua trim.c ${INCDIR}
 
 ../gen_inc/_rand_file_name.h :  $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua rand_file_name.c ${INCDIR}
@@ -82,12 +69,6 @@ SC_to_txt.c : ../gen_inc/_SC_to_txt.h
 ../gen_inc/_get_time_usec.h :  $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua get_time_usec.c ${INCDIR}
   
-../gen_inc/_bits_to_bytes.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua bits_to_bytes.c ${INCDIR}
-
-../gen_inc/_bytes_to_bits.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua bytes_to_bits.c ${INCDIR}
-
 ../gen_inc/_get_bit_u64.h : $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua get_bit_u64.c ${INCDIR}
 
@@ -106,12 +87,12 @@ SC_to_txt.c : ../gen_inc/_SC_to_txt.h
 ../gen_inc/_set_bit_u64.h : $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua set_bit_u64.c ${INCDIR}
 
+../gen_inc/_trim.h :  $(INCDIR)
+	lua ../src/cli_extract_func_decl.lua trim.c ${INCDIR}
+
 hdr_files = \
-	../gen_inc/_bytes_to_bits.h   \
-	../gen_inc/_bits_to_bytes.h   \
 	../gen_inc/_B1_to_txt.h   \
 	../gen_inc/_file_exists.h  \
-	../gen_inc/_generate_bin.h  \
 	../gen_inc/_get_bit_u64.h \
 	../gen_inc/_get_file_size.h  \
 	../gen_inc/_get_time_usec.h \
@@ -129,11 +110,8 @@ hdr_files = \
 #--------
 src_files =  \
 	copy_file.c \
-	bits_to_bytes.c \
-	bytes_to_bits.c \
 	B1_to_txt.c \
 	file_exists.c \
-	generate_bin.c \
 	get_bit_u64.c  \
 	get_file_size.c \
 	get_time_usec.c \
@@ -175,6 +153,7 @@ libutils.so : ${hdr_files} ${src_files}
 	cp ../inc/q_constants.h    ${Q_BUILD_DIR}/include/
 	cp ../inc/q_macros.h       ${Q_BUILD_DIR}/include/
 	cp ../inc/spooky_struct.h  ${Q_BUILD_DIR}/include/
+	cp ../inc/drand_struct.h   ${Q_BUILD_DIR}/include/
 	cp ../inc/spooky_hash.h    ${Q_BUILD_DIR}/include/
 	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
 

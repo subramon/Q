@@ -1,10 +1,8 @@
 local copy_gen_files     = require 'Q/UTILS/build/copy_gen_files'
 local mk_q_core_h     = require 'Q/UTILS/build/mk_q_core_h'
 local o_from_c       = require 'Q/UTILS/build/o_from_c'
-local qconsts        = require 'Q/UTILS/lua/q_consts'
 local so_from_o      = require 'Q/UTILS/build/so_from_o'
-
---=== Copy gen files 
+--=== Copy generated files 
 -- from .../gen_src/*.c to /tmp/q/src/
 -- from .../gen_inc/*.h to /tmp/q/include/
 local numc, numc2, numh, numh2 = copy_gen_files()
@@ -16,4 +14,3 @@ assert(mk_q_core_h())
 assert(o_from_c(true))
 --===== Combine .o files into single .so file
 assert(so_from_o(true))
-

@@ -1,10 +1,8 @@
-#include <stdio.h>
-#include "q_macros.h"
+#include "q_incs.h"
 #include "_exp_F8.h"
 #include "_log_F8.h"
 #include "_logit_F8.h"
 #include "_logit2_F8.h"
-#include <math.h>
 int
 main(
     )

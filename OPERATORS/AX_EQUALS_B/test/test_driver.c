@@ -1,14 +1,8 @@
 /* To execute:
  * ./driver <n> # for some positive integer n
  * */
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <inttypes.h>
-#include <time.h>
+#include "q_incs.h"
 #include <lapacke.h>
-#include "q_macros.h"
 #include "matrix_helpers.h"
 #include "positive_solver.h"
 
