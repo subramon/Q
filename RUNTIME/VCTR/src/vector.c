@@ -15,6 +15,8 @@
 #include "_txt_to_I4.h"
 #include "_isdir.h"
 
+#define Q_INITIAL_SZ_CHUNK_DIR 1024
+
 VEC_GLOBALS_TYPE g_S;
 #include "_struct_timers.h"
 VEC_TIMERS_TYPE g_T;

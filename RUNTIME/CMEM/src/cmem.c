@@ -20,6 +20,7 @@
 #include "aux_lua_to_c.h"
 #include "cmem.h"
 
+#define CMEM_ALIGNMENT 64 
 #define MIN_VAL 1
 #define MAX_VAL 2
 #define BUFLEN 2047 // TODO P4: Should not be hard coded. See max txt length
@@ -72,9 +73,9 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
   void *data = NULL;
   if ( size < 0 ) { go_BYE(-1); } // we allow size == 0 
   if ( size > 0 ) { 
-    // Always allocate a multiple of Q_CMEM_ALIGNMENT
-    size = (size_t)ceil((double)size / Q_CMEM_ALIGNMENT) * Q_CMEM_ALIGNMENT;
-    status = posix_memalign(&data, Q_CMEM_ALIGNMENT, size);
+    // Always allocate a multiple of CMEM_ALIGNMENT
+    size = (size_t)ceil((double)size / CMEM_ALIGNMENT) * CMEM_ALIGNMENT;
+    status = posix_memalign(&data, CMEM_ALIGNMENT, size);
     cBYE(status);
     // TODO P4: make sure that posix_memalign is not causing any problems
     return_if_malloc_failed(data);
@@ -89,7 +90,7 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
   }
   ptr_cmem->is_foreign = false;
 BYE:
-  return status;
+  return status;_
 }
 static int l_cmem_dupe( lua_State *L)  // ONLY FOR TESTING
 {

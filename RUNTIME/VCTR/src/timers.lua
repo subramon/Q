@@ -15,8 +15,7 @@ local timers = {
   "new ",
   "put1 ",
   "put_chunk ",
-  "rehydrate_single ",
-  "rehydrate_multi ",
+  "rehydrate",
   "shutdown ",
   "start_write ",
 
@@ -30,14 +29,14 @@ local function gen_timers_code(
   )
   local T = {}
   if ( mode == "reset" ) then 
-    T[#T+1] = "#include \"struct_timers.h\"";
+    T[#T+1] = "#include \"_struct_timers.h\"";
     T[#T+1] = "void reset_timers( VEC_TIMERS_TYPE *ptr_T) { "
     for k, v in pairs(timers) do 
       T[#T+1] = "ptr_T->t_" .. v .. " = 0 ; "  ..  "ptr_T->n_" .. v .. " = 0 ; "
     end
     T[#T+1] = "}"
   elseif ( mode == "print" ) then 
-    T[#T+1] = "#include \"struct_timers.h\"";
+    T[#T+1] = "#include \"_struct_timers.h\"";
     T[#T+1] = "void print_timers( VEC_TIMERS_TYPE *ptr_T) { "
     for k, v in pairs(timers) do 
       T[#T+1] = "fprintf(stdout, \"0,check,%u,%\" PRIu64 \"\\n\", " ..

@@ -9,16 +9,6 @@
 #define Q_MAX_LEN_BASE_FILE 63
 #define Q_MAX_LEN_FILE_NAME  Q_MAX_LEN_DIR+Q_MAX_LEN_BASE_FILE+1
 
-#define Q_CORE_VEC_ALIGNMENT  64
-#define Q_CMEM_ALIGNMENT  64 
-
-//- for spooky hash 
-#define SC_NUMVARS 12 
-#define SC_BLOCKSIZE (8 * SC_NUMVARS)
-#define SC_BUFSIZE (2 * SC_BLOCKSIZE)
-//-----------------
-// for vector globals
-#define Q_INITIAL_SZ_CHUNK_DIR 1024
 //-------- for fldtypes as enums
 // CAUTION: Needs to be in sync with q_consts.lua
 #define QI1 1 

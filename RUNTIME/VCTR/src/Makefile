@@ -24,62 +24,186 @@ _print_timers.c : timers.lua
 
 clean:
 	rm -f *.so *.o _*
-	rm -f ../inc/struct_timers.h 
+	rm -f ../inc/_struct_timers.h 
 	rm -f reset_timers.c
 	rm -f print_timers.c
 
-		
-../../../UTILS/src/is_valid_chars_for_num.c :
-	make -C ../../../UTILS/src/
+GEN_INC_FILES =  \
+	../../../UTILS/gen_inc/_I1_to_txt.h  \
+	../../../UTILS/gen_inc/_I2_to_txt.h  \
+	../../../UTILS/gen_inc/_I4_to_txt.h  \
+	../../../UTILS/gen_inc/_I8_to_txt.h  \
+	../../../UTILS/gen_inc/_F4_to_txt.h  \
+	../../../UTILS/gen_inc/_F8_to_txt.h  \
+	../../../UTILS/gen_inc/_txt_to_I1.h  \
+	../../../UTILS/gen_inc/_txt_to_I2.h  \
+	../../../UTILS/gen_inc/_txt_to_I4.h  \
+	../../../UTILS/gen_inc/_txt_to_I8.h  \
+	../../../UTILS/gen_inc/_txt_to_F4.h  \
+	../../../UTILS/gen_inc/_txt_to_F8.h  \
 
-../../OPERATORS/PRINT/gen_src/_I1_to_txt.c :
-	make -C ../../OPERATORS/PRINT/lua/
+GEN_SRC_FILES = \
+	../../../UTILS/gen_src/_I1_to_txt.c \
+	../../../UTILS/gen_src/_I2_to_txt.c \
+	../../../UTILS/gen_src/_I4_to_txt.c \
+	../../../UTILS/gen_src/_I8_to_txt.c \
+	../../../UTILS/gen_src/_F4_to_txt.c \
+	../../../UTILS/gen_src/_F8_to_txt.c \
+	../../../UTILS/gen_src/_txt_to_I1.c  \
+	../../../UTILS/gen_src/_txt_to_I2.c  \
+	../../../UTILS/gen_src/_txt_to_I4.c  \
+	../../../UTILS/gen_src/_txt_to_I8.c  \
+	../../../UTILS/gen_src/_txt_to_F4.c  \
+	../../../UTILS/gen_src/_txt_to_F8.c  \
 
-vector.o : vector.c ../inc/core_vec_struct.h \
-  	../inc/struct_timers.h 
+UTILS_INC_FILES = \
+	../../../UTILS/gen_inc/_B1_to_txt.h \
+	../../../UTILS/gen_inc/_copy_file.h \
+	../../../UTILS/gen_inc/_file_exists.h \
+	../../../UTILS/gen_inc/_get_file_size.h \
+	../../../UTILS/gen_inc/_get_time_usec.h \
+	../../../UTILS/gen_inc/_is_valid_chars_for_num.h \
+	../../../UTILS/gen_inc/_isdir.h \
+	../../../UTILS/gen_inc/_isfile.h \
+	../../../UTILS/gen_inc/_rdtsc.h \
+	../../../UTILS/gen_inc/_rs_mmap.h \
+
+UTILS_SRC_FILES = \
+	../../../UTILS/src/copy_file.c \
+	../../../UTILS/src/file_exists.c \
+	../../../UTILS/src/get_file_size.c \
+	../../../UTILS/src/get_time_usec.c \
+	../../../UTILS/src/isdir.c \
+	../../../UTILS/src/isfile.c \
+	../../../UTILS/src/rdtsc.c \
+	../../../UTILS/src/rs_mmap.c \
+
+vector.o : vector.c \
+	../inc/core_vec_struct.h \
+  	../inc/_struct_timers.h  \
+	../../../UTILS/gen_inc/_txt_to_I4.h \
+	${UTILS_INC_FILES}
 	gcc -c $(INCS) ${QC_FLAGS} vector.c -o vector.o
 
-core_vec.o : core_vec.c ../inc/core_vec_struct.h ../inc/core_vec.h \
-  	../inc/struct_timers.h reset_timers.c print_timers.c 
+core_vec.o : core_vec.c \
+  	../inc/core_vec_struct.h \
+	../inc/core_vec.h \
+  	../inc/_struct_timers.h \
+	_reset_timers.c \
+	_print_timers.c \
+	${UTILS_INC_FILES}
 	gcc -c $(INCS) ${QC_FLAGS} core_vec.c -o core_vec.o
 
-aux_core_vec.o : aux_core_vec.c ../inc/core_vec_struct.h ../inc/aux_core_vec.h
+aux_core_vec.o : aux_core_vec.c \
+	../inc/core_vec_struct.h \
+	../inc/aux_core_vec.h \
+  	../inc/_struct_timers.h \
+	${UTILS_INC_FILES} 
 	gcc -c $(INCS) ${QC_FLAGS} aux_core_vec.c -o aux_core_vec.o
 
-libvctr.so: vector.o core_vec.o aux_core_vec.o
-	make -C ../../../UTILS/src/
+libvctr.so: vector.o core_vec.o aux_core_vec.o \
+	${GEN_INC_FILES} \
+	${GEN_SRC_FILES} \
+	${UTILS_SRC_FILES} \
+	${UTILS_INC_FILES} 
 	gcc ${QC_FLAGS} $(INCS) \
+	  	${GEN_SRC_FILES} \
+	  	${UTILS_SRC_FILES} \
 		vector.c \
 		../../CMEM/src/cmem.c \
 		../../CMEM/src/aux_lua_to_c.c \
 		core_vec.c \
 		aux_core_vec.c \
-		../../../UTILS/src/rdtsc.c \
-		../../../UTILS/src/rs_mmap.c \
-		../../../UTILS/gen_src/_txt_to_I4.c \
-		../../../UTILS/src/is_valid_chars_for_num.c \
-		../../../UTILS/src/rand_file_name.c \
-		../../../UTILS/src/get_file_size.c \
-		../../../UTILS/src/copy_file.c \
-		../../../UTILS/src/file_exists.c \
-		../../../UTILS/src/isfile.c \
-		../../../UTILS/src/isdir.c \
-		../../../UTILS/src/get_time_usec.c \
-		../../../UTILS/src/B1_to_txt.c \
-		../../../UTILS/gen_src/_I1_to_txt.c \
-		../../../UTILS/gen_src/_I2_to_txt.c \
-		../../../UTILS/gen_src/_I4_to_txt.c \
-		../../../UTILS/gen_src/_I8_to_txt.c \
-		../../../UTILS/gen_src/_F4_to_txt.c \
-		../../../UTILS/gen_src/_F8_to_txt.c \
 		-shared -o libvctr.so
 	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
-#	cp ../inc/aux_core_vec.h ${Q_BUILD_DIR}/include/
-#	cp ../inc/core_vec.h ${Q_BUILD_DIR}/include/
-#	cp ../inc/struct_timers.h ${Q_BUILD_DIR}/include/
-#	cp aux_core_vec.c ${Q_BUILD_DIR}/src/
-#	cp copy_file.c ${Q_BUILD_DIR}/src/
-#	cp core_vec.c ${Q_BUILD_DIR}/src/
-#	cp reset_timers.c ${Q_BUILD_DIR}/src/
-#	cp print_timers.c ${Q_BUILD_DIR}/src/
-#	cp test_globals.h ${Q_BUILD_DIR}/include/vec_globals.h
+
+#------------------------------------------------------
+../../../UTILS/gen_inc/_txt_to_I4.h : 
+	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_I4.h
+../../../UTILS/gen_src/_txt_to_I4.c : 
+	make -C ../../../UTILS/src/ ../gen_src/_txt_to_I4.c
+#------------------------------------------------------
+_eval_arith.c: gen_arith.lua
+	luajit gen_arith.lua
+_outer_eval_arith.c: gen_arith.lua
+	luajit gen_arith.lua
+_eval_cmp.c: gen_cmp.lua
+	luajit gen_cmp.lua
+_outer_eval_cmp.c: gen_cmp.lua
+	luajit gen_cmp.lua
+
+#----------
+../../../UTILS/gen_inc/_B1_to_txt.h  : 
+	make -C ../../../UTILS/src/ ../gen_inc/_B1_to_txt.h
+../../../UTILS/gen_inc/_copy_file.h  : 
+	make -C ../../../UTILS/src/ ../gen_inc/_copy_file.h
+../../../UTILS/gen_inc/_file_exists.h  : 
+	make -C ../../../UTILS/src/ ../gen_inc/_file_exists.h
+../../../UTILS/gen_inc/_get_file_size.h  : 
+	make -C ../../../UTILS/src/ ../gen_inc/_get_file_size.h
+../../../UTILS/gen_inc/_get_time_usec.h  : 
+	make -C ../../../UTILS/src/ ../gen_inc/_get_time_usec.h
+../../../UTILS/gen_inc/_is_valid_chars_for_num.h  : 
+	make -C ../../../UTILS/src/ ../gen_inc/_is_valid_chars_for_num.h
+../../../UTILS/gen_inc/_isdir.h  : 
+	make -C ../../../UTILS/src/ ../gen_inc/_isdir.h
+../../../UTILS/gen_inc/_isfile.h  : 
+	make -C ../../../UTILS/src/ ../gen_inc/_isfile.h
+../../../UTILS/gen_inc/_rdtsc.h  : 
+	make -C ../../../UTILS/src/ ../gen_inc/_rdtsc.h
+../../../UTILS/gen_inc/_rs_mmap.h  : 
+	make -C ../../../UTILS/src/ ../gen_inc/_rs_mmap.h
+#-------------------
+../../../UTILS/gen_inc/_I1_to_txt.h :
+	make -C ../../../UTILS/src ../gen_inc/_I1_to_txt.h
+../../../UTILS/gen_inc/_I2_to_txt.h :
+	make -C ../../../UTILS/src ../gen_inc/_I2_to_txt.h
+../../../UTILS/gen_inc/_I4_to_txt.h :
+	make -C ../../../UTILS/src ../gen_inc/_I4_to_txt.h
+../../../UTILS/gen_inc/_I8_to_txt.h :
+	make -C ../../../UTILS/src ../gen_inc/_I8_to_txt.h
+../../../UTILS/gen_inc/_F4_to_txt.h :
+	make -C ../../../UTILS/src ../gen_inc/_F4_to_txt.h
+../../../UTILS/gen_inc/_F8_to_txt.h :
+	make -C ../../../UTILS/src ../gen_inc/_F8_to_txt.h
+#----------------------------------
+../../../UTILS/gen_src/_I1_to_txt.c :
+	make -C ../../../UTILS/src ../gen_src/_I1_to_txt.c
+../../../UTILS/gen_src/_I2_to_txt.c :
+	make -C ../../../UTILS/src ../gen_src/_I2_to_txt.c
+../../../UTILS/gen_src/_I4_to_txt.c :
+	make -C ../../../UTILS/src ../gen_src/_I4_to_txt.c
+../../../UTILS/gen_src/_I8_to_txt.c :
+	make -C ../../../UTILS/src ../gen_src/_I8_to_txt.c
+../../../UTILS/gen_src/_F4_to_txt.c :
+	make -C ../../../UTILS/src ../gen_src/_F4_to_txt.c
+../../../UTILS/gen_src/_F8_to_txt.c :
+	make -C ../../../UTILS/src ../gen_src/_F8_to_txt.c
+#----------------------------------
+#----------------------------------
+../../../UTILS/gen_inc/_txt_to_I1.h :
+	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_I1.h
+../../../UTILS/gen_inc/_txt_to_I2.h :
+	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_I2.h
+../../../UTILS/gen_inc/_txt_to_I4.h :
+	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_I4.h
+../../../UTILS/gen_inc/_txt_to_I8.h :
+	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_I8.h
+../../../UTILS/gen_inc/_txt_to_F4.h :
+	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_F4.h
+../../../UTILS/gen_inc/_txt_to_F8.h :
+	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_F8.h
+#----------------------------------
+../../../UTILS/gen_src/_txt_to_I1.c :
+	make -C ../../../UTILS/src/ ../gen_src/_txt_to_I1.c
+../../../UTILS/gen_src/_txt_to_I2.c :
+	make -C ../../../UTILS/src/ ../gen_src/_txt_to_I2.c
+../../../UTILS/gen_src/_txt_to_I4.c :
+	make -C ../../../UTILS/src/ ../gen_src/_txt_to_I4.c
+../../../UTILS/gen_src/_txt_to_I8.c :
+	make -C ../../../UTILS/src/ ../gen_src/_txt_to_I8.c
+../../../UTILS/gen_src/_txt_to_F4.c :
+	make -C ../../../UTILS/src/ ../gen_src/_txt_to_F4.c
+../../../UTILS/gen_src/_txt_to_F8.c :
+	make -C ../../../UTILS/src/ ../gen_src/_txt_to_F8.c
+#----------------------------------

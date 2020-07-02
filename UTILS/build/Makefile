@@ -16,7 +16,7 @@ static: _q_basic _q_operators
 	luajit mk_so.lua
 	echo "Q statically compiled"
 
-dynamic: _q_basic _pre_req_for_dynamic 
+dynamic: _utils _cutils _cmem _sclr _vctr _pre_req_for_dynamic 
 	luajit mk_so.lua 
 	echo "Q dynamically compiled"
 
@@ -85,11 +85,7 @@ uninstall:
 	rm -f /usr/lib/libq_core.so;\
 	echo "Q uninstalled"
 
-_q_basic: _utils _cutils _cmem _sclr _vctr 
-	luajit mk_so.lua
-	touch _q_basic
-
-_pre_req_for_dynamic : _utils _cutils _dt
+_pre_req_for_dynamic : _utils _cutils _cmem _sclr _vctr
 	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua all_for_dc
 	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua all_for_dc
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua all_for_dc

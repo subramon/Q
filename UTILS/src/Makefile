@@ -15,6 +15,19 @@ $(INCDIR) :
 txt_to_B1.c : ../gen_inc/_txt_to_B1.h
 txt_to_SC.c : ../gen_inc/_txt_to_SC.h
 #----------------------------------
+../gen_inc/_txt_to_I1.h : $(INCDIR)
+	lua gen_code_I.lua 
+../gen_inc/_txt_to_I2.h : $(INCDIR)
+	lua gen_code_I.lua 
+../gen_inc/_txt_to_I4.h : $(INCDIR)
+	lua gen_code_I.lua 
+../gen_inc/_txt_to_I8.h : $(INCDIR)
+	lua gen_code_I.lua 
+../gen_inc/_txt_to_F4.h : $(INCDIR)
+	lua gen_code_F.lua 
+../gen_inc/_txt_to_F8.h : $(INCDIR)
+	lua gen_code_F.lua 
+#----------------------------------
 ../gen_src/_txt_to_I1.c : $(INCDIR)
 	lua gen_code_I.lua 
 ../gen_src/_txt_to_I2.c : $(INCDIR)
@@ -34,6 +47,19 @@ txt_to_SC.c : ../gen_inc/_txt_to_SC.h
 	lua ../src/cli_extract_func_decl.lua SC_to_txt.c ${INCDIR}
 B1_to_txt.c : ../gen_inc/_B1_to_txt.h
 SC_to_txt.c : ../gen_inc/_SC_to_txt.h
+#----------------------------------
+../gen_inc/_I1_to_txt.h : $(INCDIR)
+	luajit print_generator.lua I1
+../gen_inc/_I2_to_txt.h : $(INCDIR)
+	luajit print_generator.lua I2
+../gen_inc/_I4_to_txt.h : $(INCDIR)
+	luajit print_generator.lua I4
+../gen_inc/_I8_to_txt.h : $(INCDIR)
+	luajit print_generator.lua I8
+../gen_inc/_F4_to_txt.h : $(INCDIR)
+	luajit print_generator.lua F4
+../gen_inc/_F8_to_txt.h : $(INCDIR)
+	luajit print_generator.lua F8
 #----------------------------------
 ../gen_src/_I1_to_txt.c : $(INCDIR)
 	luajit print_generator.lua I1

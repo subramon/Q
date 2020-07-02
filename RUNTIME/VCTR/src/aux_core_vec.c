@@ -10,6 +10,7 @@
 #include "_rdtsc.h"
 #include "_rs_mmap.h"
 
+#define CORE_VEC_ALIGNMENT 64
 #include "aux_core_vec.h"
 
 uint64_t
@@ -72,7 +73,7 @@ l_malloc(
   void  *x = NULL;
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_malloc++;
 
-  status = posix_memalign(&x, Q_CORE_VEC_ALIGNMENT, n); 
+  status = posix_memalign(&x, CORE_VEC_ALIGNMENT, n); 
   if ( status < 0 ) { WHEREAMI; return NULL; }
   if ( x == NULL ) { WHEREAMI; return NULL; }
   if ( status < 0 ) { WHEREAMI; return NULL; }
