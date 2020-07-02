@@ -39,11 +39,11 @@ GEN_INC_FILES =  \
 	../../../UTILS/gen_inc/_txt_to_F8.h  \
 
 SRC_FILES = \
+	../../../UTILS/src/is_valid_chars_for_num.c \
 	../../../UTILS/src/txt_to_B1.c \
 	../../../UTILS/src/B1_to_txt.c \
 	../../../UTILS/src/SC_to_txt.c \
 	../../../UTILS/src/txt_to_SC.c \
-	../../../UTILS/src/is_valid_chars_for_num.c \
 
 GEN_SRC_FILES = \
 	../../../UTILS/gen_src/_txt_to_I1.c \
@@ -75,6 +75,8 @@ libsclr.so:  \
  	../../CMEM/src/libcmem.so
 	gcc ${QC_FLAGS} ${INCS} \
 	scalar.c \
+   	${SRC_FILES} \
+   	${GEN_SRC_FILES} \
 	../../CMEM/src/cmem.c \
 	../../CMEM/src/aux_lua_to_c.c \
 	-shared -o libsclr.so

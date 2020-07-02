@@ -90,7 +90,7 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
   }
   ptr_cmem->is_foreign = false;
 BYE:
-  return status;_
+  return status;
 }
 static int l_cmem_dupe( lua_State *L)  // ONLY FOR TESTING
 {

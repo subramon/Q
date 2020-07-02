@@ -69,9 +69,11 @@ UTILS_INC_FILES = \
 	../../../UTILS/gen_inc/_rs_mmap.h \
 
 UTILS_SRC_FILES = \
+	../../../UTILS/src/B1_to_txt.c \
 	../../../UTILS/src/copy_file.c \
 	../../../UTILS/src/file_exists.c \
 	../../../UTILS/src/get_file_size.c \
+	../../../UTILS/src/is_valid_chars_for_num.c \
 	../../../UTILS/src/get_time_usec.c \
 	../../../UTILS/src/isdir.c \
 	../../../UTILS/src/isfile.c \
@@ -117,11 +119,6 @@ libvctr.so: vector.o core_vec.o aux_core_vec.o \
 		-shared -o libvctr.so
 	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
 
-#------------------------------------------------------
-../../../UTILS/gen_inc/_txt_to_I4.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_I4.h
-../../../UTILS/gen_src/_txt_to_I4.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_txt_to_I4.c
 #------------------------------------------------------
 _eval_arith.c: gen_arith.lua
 	luajit gen_arith.lua

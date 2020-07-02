@@ -94,7 +94,7 @@ local qconsts = {}
   qconsts.iorf = iorf
   --===========================
 
-  -- CAUTION: cenum Needs to be in sync with q_constants.h
+  -- CAUTION: cenum Needs to be in sync with OPERATORS/PRINT/src/cprint.c
   local qtypes = {}
   qtypes.I1 = { 
     min = -128,

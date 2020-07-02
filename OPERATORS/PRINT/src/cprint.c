@@ -2,6 +2,17 @@
 #include "cprint.h"
 #include "_get_bit_u64.h"
 
+//-------- for fldtypes as enums
+// CAUTION: Needs to be in sync with Q/UTILS/lua/q_consts.lua
+#define QI1 1 
+#define QI2 2
+#define QI4 3
+#define QI8 4
+#define QF4 5
+#define QF8 6
+#define QSC 7
+#define QTM 8
+#define QB1 9
 int
 cprint(
     char * opfile,
