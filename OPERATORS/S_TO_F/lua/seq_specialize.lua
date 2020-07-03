@@ -46,5 +46,7 @@ return function (
 
   subs.args       = args
   subs.args_ctype = args_ctype
+  subs.incdir = "OPERATORS/S_TO_F/gen_inc/"
+  subs.srcdir = "OPERATORS/S_TO_F/gen_src/"
   return subs
 end

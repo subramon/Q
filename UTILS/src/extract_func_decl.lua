@@ -6,6 +6,9 @@ local function extract_func_decl(
   )
   local opdir = plstr.strip(opdir)
   assert(plpath.isfile(infile), "Input file not found" .. infile)
+  if ( not plpath.isdir(opdir) ) then
+    makepath(opdir)
+  end
   assert(plpath.isdir(opdir), "Output directory not found" .. opdir)
   io.input(infile)
   code = io.read("*all")

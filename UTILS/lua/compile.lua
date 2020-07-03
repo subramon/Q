@@ -2,6 +2,7 @@ local cutils        = require 'libcutils'
 local qconsts       = require 'Q/UTILS/lua/q_consts'
 local assertx       = require 'Q/UTILS/lua/assertx'
 local clean_h_file  = require 'Q/UTILS/lua/clean_h_file'
+local exec          = require 'Q/UTILS/lua/exec_and_capture_stdout'
 
 local QC_FLAGS     = qconsts.QC_FLAGS
 local Q_ROOT       = qconsts.Q_ROOT 
@@ -9,67 +10,56 @@ local Q_SRC_ROOT   = qconsts.Q_SRC_ROOT
 local Q_BUILD_DIR  = qconsts.Q_BUILD_DIR
 local Q_LINK_FLAGS = qconsts.Q_LINK_FLAGS
 
-local lib_link_path = string.format(" -L%s/lib", Q_ROOT)
-local inc_dir = Q_ROOT .. "/include/"
+local lib_prefix = Q_ROOT .. "/lib/lib"
 
 -- some basic checks
 assert(cutils.isdir(Q_SRC_ROOT))
 --================================================
 local function compile(
-  doth,  -- INPUT 
   dotc,  -- INPUT 
-  type_doth_dotc, -- INPUT
-  func_name, -- INPUT
-  hfile, --  created by this function
-  sofile --  created by this function
+  srcs, -- INPUT, any other files to be compiled 
+  incs, -- INPUT, where to look for include files 
+  libs, -- INPUT, any libraries that need to be linked
+  fn -- INPUT
   )
-  -- START: Error checking on inputs
-  assert(type(doth  ) == "string", "need a valid string for .h file")
-  assert(type(dotc  ) == "string", "need a valid string for .c file")
-  assert(type(hfile ) == "string", "need a valid hfile")
-  assert(type(sofile) == "string", "need a valid sofile")
-  --===============================
-  -- Note the difference in the prefix of underscore for tmp_c, tmp_h
-  -- depending on whether the files are generated or exist
-  local tmp_c, tmp_h
-  if ( type_doth_dotc == "strings" ) then 
-    tmp_c = string.format("%s/src/_%s.c", qconsts.Q_BUILD_DIR, func_name)
-    tmp_h = string.format("%s/include/_%s.h", qconsts.Q_BUILD_DIR,func_name)
-    cutils.write(tmp_c, dotc)
-    cutils.write(tmp_h, doth)
-  elseif ( type_doth_dotc == "files" ) then 
-    tmp_c = string.format("%s/src/%s.c", qconsts.Q_BUILD_DIR, func_name)
-    tmp_h = string.format("%s/include/%s.h", qconsts.Q_BUILD_DIR, func_name)
-    cutils.copyfile(dotc, tmp_c)
-    cutils.copyfile(doth, tmp_h)
-  else
-    error("bad type_doth_dotc")
+  local sofile = lib_prefix .. fn .. ".so" -- to be created 
+  if ( cutils.isfile(sofile) ) then 
+    print("File exists: No need to create " .. sofile)
+    return sofile
   end
-  -- Following means that in dynamically generated code, you can only 
-  -- include "_foo.h" in _foo.c and in _foo.h, you can only include things
-  -- that will be found in UTILS/inc or UTILS/gen_inc/
-  -- As an example, you CANNOT include "cmem.h"
-  local incs = {}
-  incs[#incs+1] = "-I" .. qconsts.Q_BUILD_DIR .. "/include/"
-  incs[#incs+1] = "-I" .. qconsts.Q_SRC_ROOT  .. "/UTILS/inc/"
-  incs[#incs+1] = "-I" .. qconsts.Q_SRC_ROOT  .. "/UTILS/gen_inc/"
-  incs = table.concat(incs, " ")
-
-  -- Note that in a dynamically generated function, the only functions you 
-  -- can call are those that are part of static compilation i.e.,
-  -- the .h file will exit in UTILS/inc or UTILS/gen_inc/ and 
-  -- the symbol will be available in the minimal libq_core.so
-  -- Other assumptions
-  -- (1) You will not refer to any constants from another file e.g.
-  -- Do not use Q_MAX_LEN_FILE_NAME which is in q_constants.h
-  -- On the other hand, you can do
-  -- #define MY_MAX_LEN_FILE_NAME 63
-  -- (2) Any structs you create and any functions you create have
-  -- unique names
-  local q_cmd = string.format("gcc %s %s %s %s %s %s -o %s", 
-       QC_FLAGS, lib_link_path, tmp_c, incs, Q_LINK_FLAGS, "-lq_core",  sofile)
-  local status = os.execute(q_cmd)
-  assertx(status == 0, "gcc failed for command: ", q_cmd)
+  -- START: Error checking on inputs
+  assert(cutils.isfile(dotc))
+  if ( structs ) then 
+    assert(type(structs) == "table")
+    for k, v in ipairs(structs) do 
+      assert(cutils.isfile(v))
+    end
+  end
+  --===============================
+  local str_incs = {}
+  for _, v in ipairs(incs) do 
+    local incdir = qconsts.Q_SRC_ROOT .. v
+    assert(cutils.isdir(incdir))
+    str_incs[#str_incs+1] = "-I" .. incdir
+  end
+  str_incs = table.concat(str_incs, " ")
+  --===============================
+  local str_srcs = {}
+  for k, v in ipairs(srcs) do 
+    local srcfile = qconsts.Q_SRC_ROOT .. v
+    assert(cutils.isfile(srcfile))
+    str_srcs[#str_srcs+1] = srcfile 
+  end
+  str_srcs = table.concat(str_srcs, " ")
+  --===============================
+  local str_libs = ""
+  if ( libs ) then 
+    str_libs = table.concat(libs, " ")
+  end
+  --===============================
+  local q_cmd = string.format("gcc -shared %s %s %s %s -o %s %s", 
+       QC_FLAGS, str_incs, dotc, str_srcs, sofile, str_libs)
+  assert(exec(q_cmd), q_cmd)
   assertx(cutils.isfile(sofile), "Target " ..  sofile .. " not created")
   -- Now, we need to make sure .h file is in place so that when server
   -- restarts, we can pick up the .h file and .so file are present
@@ -77,8 +67,10 @@ local function compile(
   -- No need for get_func_decl(), clean_h_file is enough because
   -- we do not need to run through cpp because (for now) no constants 
   -- to worry about
+  --[[ TODO P1
   local h_file = clean_h_file(tmp_h) 
   cutils.write(hfile, h_file)
+  --]]
+  return sofile 
 end
-
 return compile

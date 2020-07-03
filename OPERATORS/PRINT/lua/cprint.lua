@@ -16,13 +16,18 @@ local function cprint(
   -- START: Dynamic compilation
   local func_name = "cprint"
   if ( not qc[func_name] ) then 
-    local root = assert(qconsts.Q_SRC_ROOT)
-    assert(cutils.isdir(root))
+    print("Dynamic compilation kicking in... ")
     local subs = {}
     subs.fn = func_name
-    subs.dotc = root .. "/OPERATORS/PRINT/src/cprint.c"
-    subs.doth = root .. "/OPERATORS/PRINT/inc/cprint.h"
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
+    -- IMPORTANT: In specifying files, Do not start with a backslash
+    subs.dotc = "OPERATORS/PRINT/src/cprint.c"
+    subs.doth = "OPERATORS/PRINT/inc/cprint.h"
+    subs.srcs = { "UTILS/src/get_bit_u64.c" }
+    subs.incs = { "OPERATORS/PRINT/inc/", "UTILS/inc/", "UTILS/gen_inc/"}
+    subs.structs = nil -- no structs need to be cdef'd
+    subs.structs = { "UTILS/inc/spooky_struct.h" } -- FOR TESTING TODO P0
+    subs.libs = nil -- no libaries need to be linked
+    qc.q_add(subs); 
   end 
   -- STOP : Dynamic compilation
   assert(qc[func_name], "Symbol not available" .. func_name)

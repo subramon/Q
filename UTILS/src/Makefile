@@ -1,13 +1,84 @@
 #!/bin/bash
 INCS=-I../inc/ -I../gen_inc/
 INCDIR=../gen_inc/
+SRCDIR=../gen_src/
 
 
-all : libutils.so ${hdr_files} 
+all : gen_src_files gen_inc_files src_files
 
-$(INCDIR) :
-	mkdir -p ../gen_inc/
 
+gen_inc_files : \
+	../gen_inc/_txt_to_B1.h \
+	../gen_inc/_txt_to_SC.h \
+	../gen_inc/_txt_to_I1.h \
+	../gen_inc/_txt_to_I2.h \
+	../gen_inc/_txt_to_I4.h \
+	../gen_inc/_txt_to_I8.h \
+	../gen_inc/_txt_to_F4.h \
+	../gen_inc/_txt_to_F8.h \
+	../gen_inc/_B1_to_txt.h \
+	../gen_inc/_SC_to_txt.h \
+	../gen_inc/_I1_to_txt.h \
+	../gen_inc/_I2_to_txt.h \
+	../gen_inc/_I4_to_txt.h \
+	../gen_inc/_I8_to_txt.h \
+	../gen_inc/_F4_to_txt.h \
+	../gen_inc/_F8_to_txt.h \
+	../gen_inc/_copy_file.h \
+	../gen_inc/_file_exists.h \
+	../gen_inc/_isfile.h \
+	../gen_inc/_isdir.h \
+	../gen_inc/_rand_file_name.h \
+	../gen_inc/_get_file_size.h \
+	../gen_inc/_get_time_usec.h \
+	../gen_inc/_get_bit_u64.h \
+	../gen_inc/_is_valid_chars_for_num.h \
+	../gen_inc/_q_omp_get_num_procs.h \
+	../gen_inc/_rdtsc.h \
+	../gen_inc/_rs_mmap.h \
+	../gen_inc/_set_bit_u64.h \
+	../gen_inc/_trim.h 
+
+
+src_files :  \
+	copy_file.c \
+	B1_to_txt.c \
+	file_exists.c \
+	get_bit_u64.c  \
+	get_file_size.c \
+	get_time_usec.c \
+	is_valid_chars_for_num.c \
+	isfile.c \
+	isdir.c \
+	q_omp_get_num_procs.c  \
+	rand_file_name.c \
+	rdtsc.c \
+	rs_mmap.c \
+	SC_to_txt.c \
+	set_bit_u64.c  \
+	spooky_hash.c \
+	trim.c \
+	txt_to_B1.c \
+	txt_to_SC.c 
+
+gen_src_files : \
+	../gen_src/_I1_to_txt.c  \
+	../gen_src/_I2_to_txt.c  \
+	../gen_src/_I4_to_txt.c  \
+	../gen_src/_I8_to_txt.c  \
+	../gen_src/_F4_to_txt.c  \
+	../gen_src/_F8_to_txt.c \
+	../gen_src/_txt_to_I1.c \
+	../gen_src/_txt_to_I2.c \
+	../gen_src/_txt_to_I4.c \
+	../gen_src/_txt_to_I8.c \
+	../gen_src/_txt_to_F4.c \
+	../gen_src/_txt_to_F8.c \
+#----------------------------------
+
+# the purpose of test is to run a quick test on *all* the code here
+test : libutils.so 
+	
 ../gen_inc/_txt_to_B1.h : $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua txt_to_B1.c ${INCDIR}
 ../gen_inc/_txt_to_SC.h : $(INCDIR)
@@ -116,7 +187,7 @@ SC_to_txt.c : ../gen_inc/_SC_to_txt.h
 ../gen_inc/_trim.h :  $(INCDIR)
 	lua ../src/cli_extract_func_decl.lua trim.c ${INCDIR}
 
-hdr_files = \
+gen_inc_files = \
 	../gen_inc/_B1_to_txt.h   \
 	../gen_inc/_file_exists.h  \
 	../gen_inc/_get_bit_u64.h \
@@ -154,6 +225,8 @@ src_files =  \
 	trim.c \
 	txt_to_B1.c \
 	txt_to_SC.c \
+
+gen_src_files = \
 	../gen_src/_I1_to_txt.c  \
 	../gen_src/_I2_to_txt.c  \
 	../gen_src/_I4_to_txt.c  \
@@ -169,19 +242,10 @@ src_files =  \
 #----------------------------------
 
 
-libutils.so : ${hdr_files} ${src_files} 
-	gcc ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} ${src_files} -o libutils.so
-	mkdir -p ${Q_BUILD_DIR}/include/
-	mkdir -p ${Q_BUILD_DIR}/src/
-	cp ${src_files}            ${Q_BUILD_DIR}/src/
-	cp ../inc/copy_file.h      ${Q_BUILD_DIR}/include/
-	cp ../inc/q_incs.h         ${Q_BUILD_DIR}/include/
-	cp ../inc/q_constants.h    ${Q_BUILD_DIR}/include/
-	cp ../inc/q_macros.h       ${Q_BUILD_DIR}/include/
-	cp ../inc/spooky_struct.h  ${Q_BUILD_DIR}/include/
-	cp ../inc/drand_struct.h   ${Q_BUILD_DIR}/include/
-	cp ../inc/spooky_hash.h    ${Q_BUILD_DIR}/include/
-	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
+libutils.so : ${src_files} ${gen_src_files} ${gen_inc_files}
+	gcc ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} \
+		${gen_src_files} \
+		${src_files} -o libutils.so
 
 clean :
 	rm -f ../gen_src/*

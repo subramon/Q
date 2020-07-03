@@ -15,7 +15,6 @@
 #include "_txt_to_I4.h"
 #include "_isdir.h"
 
-#define Q_INITIAL_SZ_CHUNK_DIR 1024
 
 VEC_GLOBALS_TYPE g_S;
 #include "_struct_timers.h"
@@ -27,6 +26,28 @@ VEC_TIMERS_TYPE g_T;
 
 LUALIB_API void *luaL_testudata (lua_State *L, int ud, const char *tname);
 int luaopen_libvctr (lua_State *L);
+
+
+static int
+set_default_values(
+    VEC_GLOBALS_TYPE *ptr_g_S
+    )
+{
+  int status = 0;
+  ptr_g_S->sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; 
+  ptr_g_S->chunk_size   = Q_DEFAULT_CHUNK_SIZE;
+  //----------------------------------
+  char *cptr = getenv("Q_DATA_DIR");
+  if ( ( cptr == NULL ) || ( *cptr == '\0' ) ) { go_BYE(-1); }
+  if ( !isdir(cptr) ) { go_BYE(1); }
+  free_if_non_null(ptr_g_S->q_data_dir); 
+  ptr_g_S->q_data_dir = malloc(strlen(cptr)+1); 
+  return_if_malloc_failed(ptr_g_S->q_data_dir);
+  strcpy(ptr_g_S->q_data_dir, cptr);
+  //----------------------------------
+BYE:
+  return status;
+}
 //----------------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_reset_timers( lua_State *L) {
@@ -182,16 +203,7 @@ static int l_vec_chunk_size( lua_State *L) {
   int status = 0; 
   if ( g_S.chunk_size == 0 ) {  
     printf("Setting default values \n");
-    g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
-    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
-    //----------------------------------
-    char *cptr = getenv("Q_DATA_DIR");
-    if ( ( cptr == NULL ) || ( *cptr == '\0' ) ) { go_BYE(-1); }
-    if ( !isdir(cptr) ) { go_BYE(1); }
-    g_S.q_data_dir = malloc(strlen(cptr)+1); 
-    return_if_malloc_failed(g_S.q_data_dir);
-    strcpy(g_S.q_data_dir, cptr);
-    //----------------------------------
+    status = set_default_values(&g_S); cBYE(status);
   }
   lua_pushnumber(L, g_S.chunk_size);
   return 1;
@@ -204,20 +216,17 @@ BYE:
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_data_dir( lua_State *L) {
+  int status = 0;
   if ( g_S.q_data_dir[0] == '\0' ) {  
-    // set default values
-    g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
-    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
-    memset(g_S.q_data_dir, '\0', Q_MAX_LEN_DIR+1);
-    snprintf(g_S.q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
-    if ( !isdir(g_S.q_data_dir) ) { 
-      lua_pushnil(L);
-      lua_pushstring(L, __func__);
-      return 2;
-    }
+    status = set_default_values(&g_S); cBYE(status);
   }
+  if ( !isdir(g_S.q_data_dir) ) { go_BYE(-1); }
   lua_pushstring(L, g_S.q_data_dir);
   return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
 }
 //-----------------------------------
 static int l_vec_reincarnate( lua_State *L) {

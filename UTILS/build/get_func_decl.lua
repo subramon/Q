@@ -23,11 +23,12 @@ local function get_func_decl(
   local cmd
   if ( incs ) then
     assert(type(incs) == "string")
-    cmd = string.format( "cat %s | grep -v q_incs | grep -v q_macros | cpp %s -I/%s|grep -v '^#'",
+    cmd = string.format( "cat %s | grep -v q_incs | grep -v q_macros | cpp %s -I%s|grep -v '^#'",
       infile, infile, incs)
   else
     cmd = string.format( "cat %s | grep -v q_incs | grep -v q_macros | grep -v '^#'", infile)
   end
+  print(cmd)
   local  rslt = exec(cmd)
   -- check that you do not get back empty string 
   local chk = string.gsub(rslt, "%s", "")
@@ -38,6 +39,6 @@ local function get_func_decl(
   --==============
   return rslt, defines
 end
-return get_func_decl
--- x = clean_defs("/home/subramon/WORK/Q/RUNTIME/VCTR/inc/core_vec_struct.h", "-I../../../UTILS/inc/")
--- print(x)
+-- return get_func_decl
+x = get_func_decl("/Q/RUNTIME/VCTR/inc/core_vec_struct.h", "../inc/")
+print(x)

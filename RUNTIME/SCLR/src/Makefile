@@ -6,7 +6,6 @@ INCS=-I. -I../inc/ \
 
 all: libsclr.so 
 	cp libsclr.so ${Q_ROOT}/lib/
-	echo "done"
 
 all_for_dc : 
 	cp ../inc/scalar_struct.h ${Q_BUILD_DIR}/include/
@@ -80,7 +79,6 @@ libsclr.so:  \
 	../../CMEM/src/cmem.c \
 	../../CMEM/src/aux_lua_to_c.c \
 	-shared -o libsclr.so
-	cp ../inc/scalar_struct.h ${Q_BUILD_DIR}/include/
 
 ../../../UTILS/gen_inc/_B1_to_txt.h : 
 	make -C ../../../UTILS/src/ ../gen_inc/_B1_to_txt.h

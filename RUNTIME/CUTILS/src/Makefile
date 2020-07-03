@@ -9,6 +9,7 @@ all: libcutils.so
 	cp libcutils.so ${Q_ROOT}/lib/
 
 UTILS_INC_FILES = \
+	../../../UTILS/gen_inc/_get_bit_u64.h \
 	../../../UTILS/gen_inc/_get_file_size.h \
 	../../../UTILS/gen_inc/_get_time_usec.h \
 	../../../UTILS/gen_inc/_isdir.h \
@@ -17,6 +18,7 @@ UTILS_INC_FILES = \
 	../../../UTILS/gen_inc/_rs_mmap.h \
 
 UTILS_SRC_FILES = \
+	../../../UTILS/src/get_bit_u64.c \
 	../../../UTILS/src/get_file_size.c \
 	../../../UTILS/src/get_time_usec.c \
 	../../../UTILS/src/isdir.c \
@@ -34,6 +36,7 @@ libcutils.so:   cutils.c \
 	cutils.c \
 	${UTILS_SRC_FILES} \
 	${Q_LINK_FLAGS} -shared -o libcutils.so
+	test -d ${Q_ROOT}/lib/
 
 ../../../UTILS/gen_inc/_get_file_size.h  : 
 	make -C ../../../UTILS/src/ ../gen_inc/_get_file_size.h

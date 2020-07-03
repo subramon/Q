@@ -5,6 +5,15 @@
   require 'Q/UTILS/lua/q_consts'
 ]]
 
+local function add_trailing_bslash(x)
+  assert(type(x) == "string")
+  assert(#x > 1)
+  if ( string.sub(x, #x, #x) ~= "/" ) then
+    x = x .. "/"
+  end
+  return x
+end
+
 local ffi = require 'ffi'
 ffi.cdef([[
 typedef struct tm
@@ -28,9 +37,27 @@ local qconsts = {}
   -- Initialize environment variable constants
   -- Note: These are Environment variable constants, if modified in same lua environment
   -- would not modify the value of these environment variable constants
-  qconsts.Q_SRC_ROOT	= os.getenv("Q_SRC_ROOT")
-  qconsts.Q_ROOT	= os.getenv("Q_ROOT")
-  qconsts.QC_FLAGS	= os.getenv("QC_FLAGS")
+  qconsts.Q_SRC_ROOT	= add_trailing_bslash(os.getenv("Q_SRC_ROOT"))
+  qconsts.Q_ROOT	= add_trailing_bslash(os.getenv("Q_ROOT"))
+  if ( not os.getenv("QC_FLAGS") ) then 
+    qconsts.QC_FLAGS = [[
+-g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align 
+-Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings 
+-Wunused-variable -Wunused-parameter -Wno-pedantic 
+-fopenmp -mavx2 -mfma -Wno-unused-label 
+-fsanitize=address -fno-omit-frame-pointer 
+-fsanitize=undefined
+-Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith
+-Wmissing-declarations -Wredundant-decls -Wnested-externs
+-Wshadow -Wcast-qual -Wcast-align -Wwrite-strings
+-Wold-style-definition
+-Wsuggest-attribute=noreturn 
+-Wduplicated-cond -Wmisleading-indentation -Wnull-dereference
+-Wduplicated-branches -Wrestrict
+    ]]
+  else
+    qconsts.QC_FLAGS	= os.getenv("QC_FLAGS")
+  end
   qconsts.Q_TRACE_DIR	= os.getenv("Q_TRACE_DIR")
   qconsts.Q_BUILD_DIR	= os.getenv("Q_BUILD_DIR")
   qconsts.Q_LINK_FLAGS	= os.getenv("Q_LINK_FLAGS")

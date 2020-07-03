@@ -1,11 +1,12 @@
-local file_exists = require 'Q/UTILS/lua/file_exists'
+local cutils  = require 'libcutils'
+local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local section = { c = 'definition', h = 'declaration' }
 
 local function do_replacements(subs)
   local tmpl = subs.tmpl
   local T
-  assert(file_exists(tmpl), "File not found " .. tmpl)
+  assert(cutils.isfile(tmpl), "File not found " .. tmpl)
   T = assert(dofile(tmpl))
   for k, v in pairs(subs) do
      T[k] = v
@@ -13,33 +14,26 @@ local function do_replacements(subs)
   return T
 end
 
-
 local _dotfile = function(subs, opdir, ext)
-  if ( ( ext == "c" ) and ( subs.dotc ) ) then 
-    -- This is to catch an old  but discontinued convention
-    -- TODO P3 Delete when no longer needed
-    error("WHY WOULD WE CALL gen_code when we have .c file")
-    return subs.dotc 
+  assert(type(opdir) == "string")
+  assert(#opdir > 0)
+  if ( string.find(opdir, "/") == 1 ) then 
+    -- fully qualified path
+  else
+    opdir = qconsts.Q_SRC_ROOT .. opdir
   end
-  if ( ( ext == "h" ) and ( subs.doth ) ) then 
-    -- This is to catch an old  but discontinued convention
-    -- TODO P3 Delete when no longer needed
-    error("WHY WOULD WE CALL gen_code when we have .h file")
-    return subs.doth 
+  if ( not cutils.isdir(opdir) ) then
+    assert(cutils.makepath(opdir))
   end
+  assert(cutils.isdir(opdir))
   local T = do_replacements(subs)
   local dotfile = T(section[ext])
-
-  if ( ( not opdir ) or ( opdir == "" ) ) then
-    return dotfile
-  end
-  assert( ( opdir )  and ( type(opdir) == "string" ) ) 
   local fname = opdir .. "/_" .. subs.fn .. "." .. ext
   local f = assert(io.open(fname, "w"))
   assert(f, "Unable to open file " .. fname)
   f:write(dotfile)
   f:close()
-  return true
+  return fname
 end
 
 local fns = {}
@@ -48,7 +42,7 @@ fns.dotc = function (subs, opdir)
   return _dotfile(subs, opdir, 'c')
 end
 
-fns.doth = function (subs, opdir)
+fns.doth = function (subs, opdir )
   return _dotfile(subs, opdir, 'h')
 end
 

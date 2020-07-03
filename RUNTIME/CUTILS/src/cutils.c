@@ -1,3 +1,7 @@
+// The original inspiration for this was to replace Penlight
+// While a wonderful library, I did not want to depend on Penlight
+// for run time. For testing, it is just fine to use Penlight.
+// Hence, some of the names use here are from Penlight. 
 #define LUA_LIB
 
 #include <fcntl.h>
@@ -12,13 +16,12 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-#include "q_incs.h"
-
+#include "_get_file_size.h"
+#include "_get_bit_u64.h"
 #include "_isdir.h"
 #include "_isfile.h"
 #include "_rdtsc.h"
 #include "_rs_mmap.h"
-#include "_get_file_size.h"
 
 int luaopen_libcutils (lua_State *L);
 
@@ -30,6 +33,25 @@ static int l_cutils_rdtsc(
   double x = (double)RDTSC();
   lua_pushnumber(L, x);
   return 1;
+}
+//----------------------------------------
+static int l_cutils_get_bit_u64( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 2 ) { go_BYE(-1); }
+  uint64_t *X  = (uint64_t *)lua_topointer(L, 1);
+  uint64_t bnum = luaL_checknumber(L, 2);
+  if ( bnum >= 64 ) { go_BYE(-1); }
+  int bval = get_bit_u64(X, bnum); 
+  lua_pushnumber(L, bval);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
 }
 //----------------------------------------
 static int l_cutils_isdir( 
@@ -413,6 +435,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "copyfile",   l_cutils_copyfile },
     { "currentdir",  l_cutils_currentdir },
     { "delete",      l_cutils_delete },
+    { "get_bit_u64", l_cutils_get_bit_u64 },
     { "getfiles",    l_cutils_getfiles },
     { "getsize",     l_cutils_getsize },
     { "gettime",     l_cutils_gettime },

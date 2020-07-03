@@ -6,8 +6,9 @@ local cmem		= require 'libcmem'
 local Scalar		= require 'libsclr'
 local cVector		= require 'libvctr'
 local register_type	= require 'Q/UTILS/lua/q_types'
-local qc		= require 'Q/UTILS/lua/q_core'
 local H                 = require 'Q/RUNTIME/VCTR/lua/helpers'
+local for_cdef          = require 'Q/UTILS/build/for_cdef'
+ffi.cdef(for_cdef("RUNTIME/VCTR/inc/core_vec_struct.h",{ "UTILS/inc/" }))
 --====================================
 local lVector = {}
 lVector.__index = lVector

@@ -117,7 +117,6 @@ libvctr.so: vector.o core_vec.o aux_core_vec.o \
 		core_vec.c \
 		aux_core_vec.c \
 		-shared -o libvctr.so
-	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
 
 #------------------------------------------------------
 _eval_arith.c: gen_arith.lua

@@ -1,5 +1,6 @@
 #ifndef _CONST_STRUCT_H
 #define _CONST_STRUCT_H
+//START_FOR_CDEF
 typedef struct _CONST_B1_rec_type {
    bool val;
    int dummy;
@@ -34,4 +35,5 @@ typedef struct _CONST_I8_rec_type {
    int64_t val;
    int dummy;
 } CONST_I8_REC_TYPE;
+//START_FOR_CDEF
 #endif

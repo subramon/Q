@@ -17,7 +17,6 @@ static: _dynamic _q_operators
 	echo "Q statically compiled"
 
 dynamic: _utils _cutils _cmem _sclr _vctr _pre_req_for_dynamic 
-	luajit mk_so.lua 
 	touch _dynamic
 	echo "Q dynamically compiled"
 

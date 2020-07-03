@@ -15,11 +15,13 @@ OPTFLAGS=
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
 all : _s_to_f.lua \
-  	$(TMPL_FILES) $(SRC_FILES) $(INCL_FILES) $(GEN_FILES) \
-	libs_to_f.so
-	luajit generator.lua operators.lua
+  	$(TMPL_FILES) \
+	$(SRC_FILES) \
+	$(INCL_FILES) \
+	GEN_SRC_FILES \
+	GEN_INC_FILES
 
-so : libs_to_f.so 
+test : libs_to_f.so 
 
 all_for_dc : \
 	_s_to_f.lua
@@ -31,12 +33,6 @@ clean :
 	rm -f _*
 	rm -f *.so
 		
-GEN_FILES = \
-	../gen_src/_const_F4.c \
-	../gen_src/_period_F4.c \
-	../gen_src/_rand_F4.c \
-	../gen_src/_seq_F4.c \
-
 SRC_FILES = \
 	../src/rand_B1.c \
 	../src/const_B1.c \
@@ -51,47 +47,108 @@ INC_FILES = \
 
 TMPL_FILES = period.tmpl rand.tmpl seq.tmpl const.tmpl
 
-../gen_src/_const_F4.c : const.tmpl const_specialize.lua
-	luajit generator.lua operators.lua
-
-libs_to_f.so : ${GEN_FILES} ${SRC_FILES} ${INC_FILES} ${TMPL_FILES}
-	luajit generator.lua operators.lua
-	gcc ../gen_src/*.c ${SRC_FILES} ${CFLAGS} ${INCS} -shared -o libs_to_f.so
-	test -d ${Q_BUILD_DIR}
-	cp ../gen_src/*.c ${Q_BUILD_DIR}/src/
-	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
-	cp ${SRC_FILES} ${Q_BUILD_DIR}/src/
-	cp ${INC_FILES} ${Q_BUILD_DIR}/include/
+libs_to_f.so : GEN_SRC_FILES GEN_INC_FILES \
+	${SRC_FILES} ${INC_FILES} ${TMPL_FILES}
+	gcc ../gen_src/*.c  ${SRC_FILES} \
+	  	${CFLAGS} ${INCS} -shared -o libs_to_f.so
 
 _s_to_f.lua : 
 	lua pkg_s_to_f.lua
-	cp ${INC_FILES} ${Q_BUILD_DIR}/include/
 
-test_q : libs_to_f.so
-	luajit ../test/test_s_to_f.lua
+GEN_SRC_FILES : \
+	../gen_src/_const_I1.c \
+	../gen_src/_const_I2.c \
+	../gen_src/_const_I4.c \
+	../gen_src/_const_I8.c \
+	../gen_src/_const_F4.c \
+	../gen_src/_const_F8.c \
+	\
+	../gen_src/_rand_I1.c \
+	../gen_src/_rand_I2.c \
+	../gen_src/_rand_I4.c \
+	../gen_src/_rand_I8.c \
+	../gen_src/_rand_F4.c \
+	../gen_src/_rand_F8.c \
+	\
+	../gen_src/_seq_I1.c \
+	../gen_src/_seq_I2.c \
+	../gen_src/_seq_I4.c \
+	../gen_src/_seq_I8.c \
+	../gen_src/_seq_F4.c \
+	../gen_src/_seq_F8.c 
 
-test_c :  libs_to_f.so
-	bash ../test/test_rand.sh
 
-test : test_q test_c
+GEN_INC_FILES : \
+	../gen_inc/_const_F4.h \
+	../gen_inc/_const_F8.h \
+	../gen_inc/_const_I1.h \
+	../gen_inc/_const_I2.h \
+	../gen_inc/_const_I4.h \
+	../gen_inc/_const_I8.h \
+	\
+	../gen_inc/_rand_F4.h \
+	../gen_inc/_rand_F8.h \
+	../gen_inc/_rand_I1.h \
+	../gen_inc/_rand_I2.h \
+	../gen_inc/_rand_I4.h \
+	../gen_inc/_rand_I8.h \
+	\
+	../gen_inc/_seq_F4.h \
+	../gen_inc/_seq_F8.h \
+	../gen_inc/_seq_I1.h \
+	../gen_inc/_seq_I2.h \
+	../gen_inc/_seq_I4.h \
+	../gen_inc/_seq_I8.h 
 
-GEN_FILES = \
-	_const_F4.c \
-	_const_F8.c \
-	_const_I1.c \
-	_const_I2.c \
-	_const_I4.c \
-	_const_I8.c \
-	_rand_F4.c \
-	_rand_F8.c \
-	_rand_I1.c \
-	_rand_I2.c \
-	_rand_I4.c \
-	_rand_I8.c \
-	_seq_F4.c \
-	_seq_F8.c \
-	_seq_I1.c \
-	_seq_I2.c \
-	_seq_I4.c \
-	_seq_I8.c \
+../gen_src/_const_I1.c : const.tmpl const_specialize.lua
+	luajit generator.lua const I1
+../gen_src/_const_I2.c : const.tmpl const_specialize.lua
+	luajit generator.lua const I2
+../gen_src/_const_I4.c : const.tmpl const_specialize.lua
+	luajit generator.lua const I4
+../gen_src/_const_I8.c : const.tmpl const_specialize.lua
+	luajit generator.lua const I8
+../gen_src/_const_F4.c : const.tmpl const_specialize.lua
+	luajit generator.lua const F4
+../gen_src/_const_F8.c : const.tmpl const_specialize.lua
+	luajit generator.lua const F8
+
+../gen_src/_seq_I1.c : seq.tmpl seq_specialize.lua
+	luajit generator.lua seq I1
+../gen_src/_seq_I2.c : seq.tmpl seq_specialize.lua
+	luajit generator.lua seq I2
+../gen_src/_seq_I4.c : seq.tmpl seq_specialize.lua
+	luajit generator.lua seq I4
+../gen_src/_seq_I8.c : seq.tmpl seq_specialize.lua
+	luajit generator.lua seq I8
+../gen_src/_seq_F4.c : seq.tmpl seq_specialize.lua
+	luajit generator.lua seq F4
+../gen_src/_seq_F8.c : seq.tmpl seq_specialize.lua
+	luajit generator.lua seq F8
+
+../gen_src/_rand_I1.c : rand.tmpl rand_specialize.lua
+	luajit generator.lua rand I1
+../gen_src/_rand_I2.c : rand.tmpl rand_specialize.lua
+	luajit generator.lua rand I2
+../gen_src/_rand_I4.c : rand.tmpl rand_specialize.lua
+	luajit generator.lua rand I4
+../gen_src/_rand_I8.c : rand.tmpl rand_specialize.lua
+	luajit generator.lua rand I8
+../gen_src/_rand_F4.c : rand.tmpl rand_specialize.lua
+	luajit generator.lua rand F4
+../gen_src/_rand_F8.c : rand.tmpl rand_specialize.lua
+	luajit generator.lua rand F8
+
+../gen_src/_period_I1.c : period.tmpl period_specialize.lua
+	luajit generator.lua period I1
+../gen_src/_period_I2.c : period.tmpl period_specialize.lua
+	luajit generator.lua period I2
+../gen_src/_period_I4.c : period.tmpl period_specialize.lua
+	luajit generator.lua period I4
+../gen_src/_period_I8.c : period.tmpl period_specialize.lua
+	luajit generator.lua period I8
+../gen_src/_period_F4.c : period.tmpl period_specialize.lua
+	luajit generator.lua period F4
+../gen_src/_period_F8.c : period.tmpl period_specialize.lua
+	luajit generator.lua period F8
 

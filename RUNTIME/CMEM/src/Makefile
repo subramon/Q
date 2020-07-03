@@ -69,6 +69,3 @@ libcmem.so:   cmem.c  \
 		${SRC_FILES} \
 		${GEN_SRC_FILES} \
 		-shared -o libcmem.so
-	cp ../inc/cmem_struct.h ${Q_BUILD_DIR}/include/
-	cp ../inc/cmem.h        ${Q_BUILD_DIR}/include/
-

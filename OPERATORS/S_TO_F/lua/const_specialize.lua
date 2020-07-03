@@ -47,6 +47,8 @@ return function (
     subs.dotc = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/src/const_B1.c"
     subs.doth = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/inc/const_B1.h"
   end
+  subs.incdir = "OPERATORS/S_TO_F/gen_inc/"
+  subs.srcdir = "OPERATORS/S_TO_F/gen_src/"
   return subs
 end
 

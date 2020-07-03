@@ -1,6 +1,7 @@
 #ifndef _SEQ_STRUCT_H
 #define _SEQ_STRUCT_H
 #include <stdint.h>
+// START_FOR_CDEF
 typedef struct _seq_F4_rec_type {
    float start;
    float by;
@@ -30,4 +31,5 @@ typedef struct _seq_I8_rec_type {
    int64_t start;
    int64_t by;
 } SEQ_I8_REC_TYPE;
+// STOP_FOR_CDEF
 #endif

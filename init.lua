@@ -1,7 +1,7 @@
--- require all the root operator files
--- TODO Krushnakant local qc = require 'libq_core'
--- TODO assert(qc["chk_env_var"]())
--- require 'libsclr' -- Took this out. Hope its okay ;-)
+require "Q/OPERATORS/MK_COL/lua/mk_col"
+require "Q/OPERATORS/PRINT/lua/print_csv"
+require "Q/OPERATORS/S_TO_F/lua/_s_to_f"
+--[[
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/get_idx_by_val"
@@ -43,14 +43,11 @@ require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
 -- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
 
-require "Q/OPERATORS/MK_COL/lua/mk_col"
 require "Q/OPERATORS/MM/lua/mv_mul"
 require "Q/OPERATORS/MDB/lua/mk_comp_key_val"
 
 require "Q/OPERATORS/PCA/lua/corr_mat"
-require "Q/OPERATORS/PRINT/lua/print_csv"
 
-require "Q/OPERATORS/S_TO_F/lua/_s_to_f"
 require "Q/OPERATORS/SORT/lua/sort"
 require "Q/OPERATORS/SORT2/lua/sort2"
 
@@ -79,6 +76,7 @@ require "Q/UTILS/lua/set_memo"
 require "Q/UTILS/lua/unpack"
 require "Q/UTILS/lua/view_meta"
 --============== UTILITY FUNCTIONS FOR Q PROGRAMMER
+--]]
 _G['g_time'] = {}
 _G['g_ctr']  = {}
 

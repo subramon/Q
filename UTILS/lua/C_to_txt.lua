@@ -1,6 +1,6 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local ffi = require 'ffi'
-local qc      = require 'Q/UTILS/lua/q_core'
+local cutils = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
 return function (col, rowidx)
@@ -21,7 +21,7 @@ return function (col, rowidx)
     local qtype = col:qtype()
     local casted = get_ptr(base_data, qtype)
     if qtype == "B1" then
-      local bit_value = tonumber( qc.get_bit_u64(casted, chunk_idx) )
+      local bit_value = cutils.get_bit_u64(casted, chunk_idx)
       if bit_value == 0 then
          val = ffi.NULL
       else
@@ -52,7 +52,7 @@ return function (col, rowidx)
     -- Check for nn vector
     if nn_data then
       local nn_casted = get_ptr(nn_data, "B1")
-      local bit_value = tonumber( qc.get_bit_u64(nn_casted, chunk_idx) )
+      local bit_value = cutils.get_bit_u64(nn_casted, chunk_idx)
       if bit_value == 0 then
          nn_val = ffi.NULL
          val = ffi.NULL
