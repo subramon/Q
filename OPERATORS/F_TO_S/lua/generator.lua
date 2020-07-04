@@ -2,7 +2,7 @@ require 'Q/UTILS/lua/strict'
 local ffi        = require 'ffi'
 local plpath     = require 'pl.path'
 local gen_code   = require "Q/UTILS/lua/gen_code"
-local for_cdef   = require "Q/UTILS/build/for_cdef"
+local for_cdef   = require "Q/UTILS/lua/for_cdef"
 local qconsts    =  require 'Q/UTILS/lua/q_consts'
 local get_hdr    = require 'Q/UTILS/lua/get_hdr'
 local check_subs = require 'Q/OPERATORS/F_TO_S/lua/check_subs'

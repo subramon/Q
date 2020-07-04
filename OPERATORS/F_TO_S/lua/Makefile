@@ -49,86 +49,86 @@ INC_FILES = \
 	    ../inc/sum_B1.h
 
 GEN_SRC_FILES : \
-	../gen_src/_sum_I1.c \
-	../gen_src/_sum_I2.c \
-	../gen_src/_sum_I4.c \
-	../gen_src/_sum_I8.c \
-	../gen_src/_sum_F4.c \
-	../gen_src/_sum_F8.c \
+	../gen_src/sum_I1.c \
+	../gen_src/sum_I2.c \
+	../gen_src/sum_I4.c \
+	../gen_src/sum_I8.c \
+	../gen_src/sum_F4.c \
+	../gen_src/sum_F8.c \
 	\
-	../gen_src/_min_I1.c \
-	../gen_src/_min_I2.c \
-	../gen_src/_min_I4.c \
-	../gen_src/_min_I8.c \
-	../gen_src/_min_F4.c \
-	../gen_src/_min_F8.c \
+	../gen_src/min_I1.c \
+	../gen_src/min_I2.c \
+	../gen_src/min_I4.c \
+	../gen_src/min_I8.c \
+	../gen_src/min_F4.c \
+	../gen_src/min_F8.c \
 	\
-	../gen_src/_max_I1.c \
-	../gen_src/_max_I2.c \
-	../gen_src/_max_I4.c \
-	../gen_src/_max_I8.c \
-	../gen_src/_max_F4.c \
-	../gen_src/_max_F8.c \
+	../gen_src/max_I1.c \
+	../gen_src/max_I2.c \
+	../gen_src/max_I4.c \
+	../gen_src/max_I8.c \
+	../gen_src/max_F4.c \
+	../gen_src/max_F8.c \
 	\
 
 GEN_INC_FILES : \
-	../gen_inc/_sum_F4.h \
-	../gen_inc/_sum_F8.h \
-	../gen_inc/_sum_I1.h \
-	../gen_inc/_sum_I2.h \
-	../gen_inc/_sum_I4.h \
-	../gen_inc/_sum_I8.h \
+	../gen_inc/sum_F4.h \
+	../gen_inc/sum_F8.h \
+	../gen_inc/sum_I1.h \
+	../gen_inc/sum_I2.h \
+	../gen_inc/sum_I4.h \
+	../gen_inc/sum_I8.h \
 	\
-	../gen_inc/_min_F4.h \
-	../gen_inc/_min_F8.h \
-	../gen_inc/_min_I1.h \
-	../gen_inc/_min_I2.h \
-	../gen_inc/_min_I4.h \
-	../gen_inc/_min_I8.h \
+	../gen_inc/min_F4.h \
+	../gen_inc/min_F8.h \
+	../gen_inc/min_I1.h \
+	../gen_inc/min_I2.h \
+	../gen_inc/min_I4.h \
+	../gen_inc/min_I8.h \
 	\
-	../gen_inc/_max_F4.h \
-	../gen_inc/_max_F8.h \
-	../gen_inc/_max_I1.h \
-	../gen_inc/_max_I2.h \
-	../gen_inc/_max_I4.h \
-	../gen_inc/_max_I8.h 
+	../gen_inc/max_F4.h \
+	../gen_inc/max_F8.h \
+	../gen_inc/max_I1.h \
+	../gen_inc/max_I2.h \
+	../gen_inc/max_I4.h \
+	../gen_inc/max_I8.h 
 
-../gen_src/_sum_I1.c : sum.tmpl sum_specialize.lua
+../gen_src/sum_I1.c : sum.tmpl sum_specialize.lua
 	luajit generator.lua sum I1
-../gen_src/_sum_I2.c : sum.tmpl sum_specialize.lua
+../gen_src/sum_I2.c : sum.tmpl sum_specialize.lua
 	luajit generator.lua sum I2
-../gen_src/_sum_I4.c : sum.tmpl sum_specialize.lua
+../gen_src/sum_I4.c : sum.tmpl sum_specialize.lua
 	luajit generator.lua sum I4
-../gen_src/_sum_I8.c : sum.tmpl sum_specialize.lua
+../gen_src/sum_I8.c : sum.tmpl sum_specialize.lua
 	luajit generator.lua sum I8
-../gen_src/_sum_F4.c : sum.tmpl sum_specialize.lua
+../gen_src/sum_F4.c : sum.tmpl sum_specialize.lua
 	luajit generator.lua sum F4
-../gen_src/_sum_F8.c : sum.tmpl sum_specialize.lua
+../gen_src/sum_F8.c : sum.tmpl sum_specialize.lua
 	luajit generator.lua sum F8
 
-../gen_src/_min_I1.c : minmax.tmpl min_specialize.lua
+../gen_src/min_I1.c : minmax.tmpl min_specialize.lua
 	luajit generator.lua min I1
-../gen_src/_min_I2.c : minmax.tmpl min_specialize.lua
+../gen_src/min_I2.c : minmax.tmpl min_specialize.lua
 	luajit generator.lua min I2
-../gen_src/_min_I4.c : minmax.tmpl min_specialize.lua
+../gen_src/min_I4.c : minmax.tmpl min_specialize.lua
 	luajit generator.lua min I4
-../gen_src/_min_I8.c : minmax.tmpl min_specialize.lua
+../gen_src/min_I8.c : minmax.tmpl min_specialize.lua
 	luajit generator.lua min I8
-../gen_src/_min_F4.c : minmax.tmpl min_specialize.lua
+../gen_src/min_F4.c : minmax.tmpl min_specialize.lua
 	luajit generator.lua min F4
-../gen_src/_min_F8.c : minmax.tmpl min_specialize.lua
+../gen_src/min_F8.c : minmax.tmpl min_specialize.lua
 	luajit generator.lua min F8
 
-../gen_src/_max_I1.c : minmax.tmpl max_specialize.lua
+../gen_src/max_I1.c : minmax.tmpl max_specialize.lua
 	luajit generator.lua max I1
-../gen_src/_max_I2.c : minmax.tmpl max_specialize.lua
+../gen_src/max_I2.c : minmax.tmpl max_specialize.lua
 	luajit generator.lua max I2
-../gen_src/_max_I4.c : minmax.tmpl max_specialize.lua
+../gen_src/max_I4.c : minmax.tmpl max_specialize.lua
 	luajit generator.lua max I4
-../gen_src/_max_I8.c : minmax.tmpl max_specialize.lua
+../gen_src/max_I8.c : minmax.tmpl max_specialize.lua
 	luajit generator.lua max I8
-../gen_src/_max_F4.c : minmax.tmpl max_specialize.lua
+../gen_src/max_F4.c : minmax.tmpl max_specialize.lua
 	luajit generator.lua max F4
-../gen_src/_max_F8.c : minmax.tmpl max_specialize.lua
+../gen_src/max_F8.c : minmax.tmpl max_specialize.lua
 	luajit generator.lua max F8
 

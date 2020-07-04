@@ -2,7 +2,7 @@ local assertx  = require 'Q/UTILS/lua/assertx'
 local compile  = require 'Q/UTILS/lua/compile'
 local ffi      = require 'ffi'
 local gen_code = require 'Q/UTILS/lua/gen_code'
-local for_cdef = require 'Q/UTILS/build/for_cdef'
+local for_cdef = require 'Q/UTILS/lua/for_cdef'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 local cutils  = require 'libcutils'
 local Q_SRC_ROOT   = qconsts.Q_SRC_ROOT .. "/"
@@ -36,11 +36,12 @@ end
 
 local function load_lib(
   fn,
-  hfile,
+  doth,
   incs,
   structs,
   sofile
   )
+  local cdefs = {}
   --=== cdef the struct files, if any
   if ( structs ) then
     for _, v in pairs(structs) do 
@@ -50,18 +51,20 @@ local function load_lib(
         print("cdef'ing " .. v)
         local y = for_cdef(v, incs)
         ffi.cdef(y)
+        cdefs[v] = y
         cdefd[v] = true 
       end
     end
   end
   -- This needs to be done AFTER the structs have been cdef'd
   -- cdef the .h file with the function declaration
-  if ( cdefd[hfile] ) then 
-    print("hfile: Skipping cdef of " .. hfile)
+  if ( cdefd[doth] ) then 
+    print("doth: Skipping cdef of " .. doth)
   else
-    local y = for_cdef(hfile, incs)
+    local y = for_cdef(doth, incs)
     ffi.cdef(y)
-    cdefd[hfile] = true
+    cdefd[doth] = true
+    cdefs[doth] = y
   end
   -- verify that function name not seen before
   assertx(not known_functions[fn], "Function already declared: ", fn)
@@ -76,7 +79,7 @@ local function load_lib(
   libs[fn] = L
   known_functions[fn] = libs[fn][fn]
   qc[fn] = libs[fn][fn]
-  return true
+  return cdefs
 end
 
 -- q_add is used by Q opertors to dynamically add a symbol that is missing
@@ -89,7 +92,7 @@ local function q_add(
     print("Nothing to do: Known function " .. fn) return true 
   end
 
-  -- EITHER provide a tmpl OR the doth and dotc 
+  -- EITHER provide a tmpl OR the doth and dotc, not both
   assert(type(subs) == "table")
   if ( subs.tmpl ) then 
     assert(not subs.doth) assert(not subs.dotc)
@@ -102,18 +105,20 @@ local function q_add(
     assert( (type(doth) == "string") and  ( #doth > 0 ) )
     dotc = subs.dotc
     assert( (type(dotc) == "string") and  ( #dotc > 0 ) )
-    doth = Q_SRC_ROOT .. doth
-    dotc = Q_SRC_ROOT .. dotc
   end
-  assert(cutils.isfile(dotc))
-  assert(cutils.isfile(doth))
   assert( (type(fn) == "string") and  ( #fn > 0 ) )
 
   assert(not known_functions[fn], "Function already registered")
   assert(not              qc[fn], "Function already registered")
   --==================================
   local sofile = assert(compile(dotc, subs.srcs, subs.incs, subs.libs, fn))
-  load_lib(fn, doth, subs.incs, subs.structs, sofile)
+  local cdefs = load_lib(fn, doth, subs.incs, subs.structs, sofile)
+  assert(type(cdefs) == "table")
+  for k, v in pairs(cdefs) do 
+    print(">>>>>>>>")
+    print(k, v) 
+    print("<<<<<<<<")
+  end
   return true
 end
 
@@ -128,25 +133,8 @@ local qc_mt = {
     -- error("you cannot redfine a function")
   end,
   __index = function(self, key)
-    -- the very fact that you came here means that this "key" was 
-    -- not a dynamically generated function
-    -- for a statically generated function, you come here only once
     if key == "q_add" then return q_add end
     if key == "q_cdef" then return q_cdef end
-    assert("error")
-    --[[ TODO P1 Delete the code commented here after more testing
-    -- get it from q_static (all statically compiled stuff)
-    -- print("getting from q_static ", key)
-    local status, func = pcall(get_val_in_q_static, key)
-    if status == true then
-      qc[key] = func 
-      return func
-    else
-      -- Returning nil is our way of telling the caller that the symbol
-      -- does not exist and they had better invoke dynamic compilation
-      return nil
-    end
-    --]]
   end
 }
 setmetatable(qc, qc_mt)

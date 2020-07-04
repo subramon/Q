@@ -1,10 +1,8 @@
 #!/usr/bin/env lua
+local qconsts = require 'Q/UTILS/lua/q_consts'
 local tmpl = dofile 'txt_to_I.tmpl'
-local plpath = require 'pl.path'
-local incdir = "../gen_inc/"
-local srcdir = "../gen_src/"
-if ( not plpath.isdir(srcdir) ) then plpath.mkdir(srcdir) end 
-if ( not plpath.isdir(incdir) ) then plpath.mkdir(incdir) end 
+local incdir = "UTILS/inc/"
+local srcdir = "UTILS/src/"
 
 local subs = {}      -- a set to collect authors
 function Entry (b) 
@@ -24,13 +22,13 @@ for k, v in pairs(subs) do
   tmpl.converter = v.converter
   -- print(tmpl 'declaration')
   doth = tmpl 'declaration'
-  local fname = incdir .. "_" .. tmpl.fn .. ".h", "w"
+  local fname = qconsts.Q_SRC_ROOT .. incdir .. tmpl.fn .. ".h", "w"
   local f = assert(io.open(fname, "w"))
   f:write(doth)
   f:close()
   -- print(tmpl 'definition')
   dotc = tmpl 'definition'
-  local fname = srcdir .. "_" .. tmpl.fn .. ".c", "w"
+  local fname = qconsts.Q_SRC_ROOT .. srcdir .. tmpl.fn .. ".c", "w"
   local f = assert(io.open(fname, "w"))
   f:write(dotc)
   f:close()

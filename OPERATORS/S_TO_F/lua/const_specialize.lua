@@ -5,7 +5,6 @@ local cVector   = require 'libvctr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
-local for_cdef  = require 'Q/UTILS/build/for_cdef'
 local qconsts   = require 'Q/UTILS/lua/q_consts'
 local tmpl      = "OPERATORS/S_TO_F/lua/const.tmpl"
 local qc        = require 'Q/UTILS/lua/q_core'

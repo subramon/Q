@@ -22,6 +22,8 @@ local function compile(
   libs, -- INPUT, any libraries that need to be linked
   fn -- INPUT
   )
+  dotc = Q_SRC_ROOT .. dotc
+  assert(cutils.isfile(dotc))
   local sofile = lib_prefix .. fn .. ".so" -- to be created 
   if ( cutils.isfile(sofile) ) then 
     print("File exists: No need to create " .. sofile)

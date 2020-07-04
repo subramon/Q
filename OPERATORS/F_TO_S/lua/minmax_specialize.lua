@@ -7,7 +7,7 @@ local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local rev_lkp   = require 'Q/UTILS/lua/rev_lkp'
 local qconsts   = require 'Q/UTILS/lua/q_consts'
 local good_qtypes = rev_lkp({ "I1", "I2", "I4", "I8", "F4", "F8"})
-local for_cdef  = require 'Q/UTILS/build/for_cdef'
+local for_cdef  = require 'Q/UTILS/lua/for_cdef'
 local qc        = require 'Q/UTILS/lua/q_core'
 
 -- cdef the necessary struct within pcall to prevent error on second call
