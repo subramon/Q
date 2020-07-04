@@ -1,6 +1,7 @@
 require "Q/OPERATORS/MK_COL/lua/mk_col"
 require "Q/OPERATORS/PRINT/lua/print_csv"
 require "Q/OPERATORS/S_TO_F/lua/_s_to_f"
+require "Q/OPERATORS/F_TO_S/lua/_f_to_s"
 --[[
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
@@ -16,7 +17,6 @@ require "Q/OPERATORS/CLONE/lua/clone"
 
 require "Q/OPERATORS/DROP_NULLS/lua/drop_nulls"
 
-require "Q/OPERATORS/F_TO_S/lua/_f_to_s"
 require "Q/OPERATORS/F1F2OPF3/lua/_f1f2opf3"
 require "Q/OPERATORS/F1OPF2F3/lua/f1opf2f3"
 require "Q/OPERATORS/F1S1OPF2/lua/_f1s1opf2"

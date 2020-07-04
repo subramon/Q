@@ -5,6 +5,11 @@ local section = { c = 'definition', h = 'declaration' }
 
 local function do_replacements(subs)
   local tmpl = subs.tmpl
+  if ( string.find(tmpl, "/") == 1 ) then 
+    -- fully qualified path
+  else
+    tmpl = qconsts.Q_SRC_ROOT .. tmpl
+  end
   local T
   assert(cutils.isfile(tmpl), "File not found " .. tmpl)
   T = assert(dofile(tmpl))

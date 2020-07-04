@@ -36,5 +36,5 @@ typedef struct _period_I8_rec_type {
    int64_t by;
    int period;
 } PERIOD_I8_REC_TYPE;
-//START_FOR_CDEF
+//STOP_FOR_CDEF
 #endif

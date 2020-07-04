@@ -4,19 +4,10 @@ local ffi      = require 'ffi'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 local for_cdef = require 'Q/UTILS/build/for_cdef'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
-
---=== From runtime
 local cutils  = require 'libcutils'
-local cmem    = require 'libcmem'
-local Scalar  = require 'libsclr'
-local cVector = require 'libvctr'
---==================
 local Q_SRC_ROOT   = qconsts.Q_SRC_ROOT .. "/"
-local Q_ROOT       = qconsts.Q_ROOT .. "/"
-local lib_dir = Q_ROOT .. "/lib/"
 assert(cutils.isdir(Q_SRC_ROOT))
-assert(cutils.isdir(Q_ROOT))
-assert(cutils.isdir(lib_dir))
+--==================
 
 -- to make sure we do not dynamically compile the same function twice 
 local known_functions = {}  
@@ -24,10 +15,23 @@ local known_functions = {}
 local qc              = {}  
 -- Subtle but important reason why we have this here. Explained later
 local libs            = {}  
+-- Keeps track of struct files that have been cdef'd
+local cdefd = {}
 
 -- TODO P1: Can we get rid of below?
 local function get_val_in_q_static(val)
   return q_static[val]
+end
+
+local function q_cdef( infile, incs)
+  if ( cdefd[infile] ) then
+    print("struct file: Skipping cdef of " .. infile)
+  else
+    print("cdef'ing " .. infile)
+    local y = for_cdef(infile, incs)
+    ffi.cdef(y)
+    cdefd[infile] = true 
+   end
 end
 
 local function load_lib(
@@ -37,27 +41,33 @@ local function load_lib(
   structs,
   sofile
   )
-  -- cdef the .h file with the function declaration
-  local y = for_cdef(hfile, incs)
-  status, msg = pcall(ffi.cdef, y)
-  assert(status, "Unable to cdef the file " .. hfile)
   --=== cdef the struct files, if any
   if ( structs ) then
     for _, v in pairs(structs) do 
-      local y = for_cdef(v, incs)
-      status, msg = pcall(ffi.cdef, y)
+      if ( cdefd[v] ) then
+        print("struct file: Skipping cdef of " .. v)
+      else
+        print("cdef'ing " .. v)
+        local y = for_cdef(v, incs)
+        ffi.cdef(y)
+        cdefd[v] = true 
+      end
     end
   end
-  --[[ TODO P1 
-  local status, _ = pcall(get_val_in_q_static, fn)
-  assert( not status)
-  --]]
-
+  -- This needs to be done AFTER the structs have been cdef'd
+  -- cdef the .h file with the function declaration
+  if ( cdefd[hfile] ) then 
+    print("hfile: Skipping cdef of " .. hfile)
+  else
+    local y = for_cdef(hfile, incs)
+    ffi.cdef(y)
+    cdefd[hfile] = true
+  end
   -- verify that function name not seen before
-  assertx(not known_functions[fn],
-    "Function already declared: ", fn)
+  assertx(not known_functions[fn], "Function already declared: ", fn)
 
-  local L = ffi.load(sofile)
+  local L = assert(ffi.load(sofile))
+  assert(L[fn])
   -- Now that cdef and load have worked, keep track of it
   -- if you don't store L outside the scope of this function, 
   -- then it gets garbage collected 
@@ -74,6 +84,11 @@ local function q_add(
   subs 
   )
   local tmpl, doth, dotc
+  local fn = assert(subs.fn)
+  if ( known_functions[fn] ) then
+    print("Nothing to do: Known function " .. fn) return true 
+  end
+
   -- EITHER provide a tmpl OR the doth and dotc 
   assert(type(subs) == "table")
   if ( subs.tmpl ) then 
@@ -92,7 +107,6 @@ local function q_add(
   end
   assert(cutils.isfile(dotc))
   assert(cutils.isfile(doth))
-  local fn = assert(subs.fn)
   assert( (type(fn) == "string") and  ( #fn > 0 ) )
 
   assert(not known_functions[fn], "Function already registered")
@@ -100,6 +114,7 @@ local function q_add(
   --==================================
   local sofile = assert(compile(dotc, subs.srcs, subs.incs, subs.libs, fn))
   load_lib(fn, doth, subs.incs, subs.structs, sofile)
+  return true
 end
 
 local qc_mt = {
@@ -117,6 +132,9 @@ local qc_mt = {
     -- not a dynamically generated function
     -- for a statically generated function, you come here only once
     if key == "q_add" then return q_add end
+    if key == "q_cdef" then return q_cdef end
+    assert("error")
+    --[[ TODO P1 Delete the code commented here after more testing
     -- get it from q_static (all statically compiled stuff)
     -- print("getting from q_static ", key)
     local status, func = pcall(get_val_in_q_static, key)
@@ -128,6 +146,7 @@ local qc_mt = {
       -- does not exist and they had better invoke dynamic compilation
       return nil
     end
+    --]]
   end
 }
 setmetatable(qc, qc_mt)

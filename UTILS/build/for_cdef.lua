@@ -20,6 +20,7 @@ local function for_cdef(
   infile,
   incs
   )
+  print("infile = ", infile)
   local src_root = qconsts.Q_SRC_ROOT
   assert(type(infile) == "string")
   if ( string.find(infile, "/") == 1 ) then 
@@ -46,31 +47,37 @@ local function for_cdef(
   local X = {}
   local fp = assert(io.open(infile))
   local is_write = true 
+  local cnt = 0
   for line in fp:lines() do
     if ( string.find(line, "START_FOR_CDEF", 1) ) then
+      assert(is_write == true) 
       is_write = false
+      cnt = cnt + 1 
     end 
     if ( not is_write ) then 
       X[#X + 1] = line
     end 
     if ( string.find(line, "STOP_FOR_CDEF", 1) ) then
+      assert(is_write == false) 
       is_write = true 
+      cnt = cnt - 1 
     end 
   end
+  assert(cnt == 0, "Mismatch between start/stop of cdef markers") 
   fp:close()
   local tmpfile = os.tmpname()
   fp = io.open(tmpfile, "w")
-  fp:write(table.concat(X, ""))
+  fp:write(table.concat(X, "\n"))
   fp:close()
   --===================
   cmd = string.format( "cpp %s %s |grep -v '^#'",
-      infile, incs)
+      tmpfile, incs)
   local  rslt = assert(exec(cmd))
   os.remove(tmpfile)
 
   -- check that you do not get back empty string 
   local chk = string.gsub(rslt, "%s", "")
-  assert(#chk > 0) 
+  assert(#chk > 0, tmpfile, infile)
   --==============
   return rslt
 end

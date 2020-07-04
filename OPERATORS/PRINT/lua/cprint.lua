@@ -25,7 +25,6 @@ local function cprint(
     subs.srcs = { "UTILS/src/get_bit_u64.c" }
     subs.incs = { "OPERATORS/PRINT/inc/", "UTILS/inc/", "UTILS/gen_inc/"}
     subs.structs = nil -- no structs need to be cdef'd
-    subs.structs = { "UTILS/inc/spooky_struct.h" } -- FOR TESTING TODO P0
     subs.libs = nil -- no libaries need to be linked
     qc.q_add(subs); 
   end 

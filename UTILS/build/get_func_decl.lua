@@ -39,6 +39,6 @@ local function get_func_decl(
   --==============
   return rslt, defines
 end
--- return get_func_decl
-x = get_func_decl("/Q/RUNTIME/VCTR/inc/core_vec_struct.h", "../inc/")
-print(x)
+return get_func_decl
+-- x = get_func_decl("/Q/RUNTIME/VCTR/inc/core_vec_struct.h", "../inc/")
+-- print(x)

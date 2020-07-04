@@ -6,8 +6,13 @@ local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local qconsts   = require 'Q/UTILS/lua/q_consts'
-local tmpl      = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/lua/period.tmpl"
+local tmpl      = "OPERATORS/S_TO_F/lua/period.tmpl"
+local qc        = require 'Q/UTILS/lua/q_core'
 
+-- cdef the necessary struct within pcall to prevent error on second call
+local incs = { "UTILS/inc/" }
+qc.q_cdef("OPERATORS/S_TO_F/inc/period_struct.h", incs)
+qc.q_cdef("RUNTIME/SCLR/inc/scalar_struct.h", incs)
 return function (
   in_args
   )

@@ -1,8 +1,10 @@
 return require 'Q/UTILS/lua/code_gen' {
 declaration = [[
-#include "q_incs.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <unistd.h>
 #include "sum_struct.h"
-${includes}
+//START_FOR_CDEF
 extern int
 ${fn}(  
       const ${in_ctype} * restrict in,  
@@ -11,6 +13,7 @@ ${fn}(
       uint64_t idx
       ) 
 ;
+//STOP_FOR_CDEF
 ]],
 definition = [[
 #include "_${fn}.h"

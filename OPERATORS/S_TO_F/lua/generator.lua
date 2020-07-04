@@ -1,8 +1,6 @@
 #!/usr/bin/env lua
 local ffi      = require 'ffi'
 local qconsts  =  require 'Q/UTILS/lua/q_consts'
-local for_cdef = require 'Q/UTILS/build/for_cdef'
-local get_hdr  = require 'Q/UTILS/lua/get_hdr'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 local check_subs = require 'Q/OPERATORS/S_TO_F/lua/check_subs'
 local plpath   = require "pl.path"
@@ -24,23 +22,9 @@ else
   qtypes = { arg[2] }
 end
 --========
--- START Some cdefs needed later 
-local incs = { "RUNTIME/SCLR/inc/", "RUNTIME/CMEM/inc/", "UTILS/inc/" }
-local x = assert(for_cdef("RUNTIME/SCLR/inc/scalar_struct.h", incs))
-ffi.cdef(x)
-local x = assert(for_cdef("RUNTIME/CMEM/inc/cmem_struct.h", incs))
-ffi.cdef(x)
-local x = assert(for_cdef("UTILS/inc/drand_struct.h", incs))
-ffi.cdef(x)
--- STOP Some cdefs needed later 
-
 local args = {}
 args.len = 100
 for i, operator in ipairs(operators) do
-  -- cdef the struct file for each operator 
-  local hfile = "OPERATORS/S_TO_F/inc/" .. operator .. "_struct.h"
-  local hstr = assert(for_cdef(hfile))
-  ffi.cdef(hstr)
   local num_produced = 0
   local sp_fn = assert(require(operator .. "_specialize"))
   for i, qtype in ipairs(qtypes) do

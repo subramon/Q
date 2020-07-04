@@ -2,14 +2,17 @@ local qconsts = require 'Q/UTILS/lua/q_consts'
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
 local Scalar    = require 'libsclr'
-local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local rev_lkp   = require 'Q/UTILS/lua/rev_lkp'
+local qc        = require 'Q/UTILS/lua/q_core'
 local qconsts   = require 'Q/UTILS/lua/q_consts'
 
 local good_qtypes = rev_lkp({ "B1", "I1", "I2", "I4", "I8", "F4", "F8"})
 local i_qtypes = rev_lkp({"B1", "I1", "I2", "I4", "I8"})
 local f_qtypes = rev_lkp({"F4", "F8"})
+
+local incs = { "UTILS/inc/" }
+qc.q_cdef("OPERATORS/F_TO_S/inc/sum_struct.h", incs)
 
 return function (in_qtype)
   assert(type(in_qtype) == "string")
@@ -19,8 +22,6 @@ return function (in_qtype)
   subs.operator = "sum"
   subs.fn = subs.operator .. "_" .. in_qtype
   subs.in_ctype = qconsts.qtypes[in_qtype].ctype
-  subs.tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/lua/sum.tmpl"
-
   --=====================================
   -- set up args for C code
   
@@ -55,6 +56,9 @@ return function (in_qtype)
   end
   subs.getter = getter
   -- handle B1 as special case 
+  subs.tmpl   = "OPERATORS/F_TO_S/lua/sum.tmpl"
+  subs.incdir = "OPERATORS/F_TO_S/gen_inc/"
+  subs.srcdir = "OPERATORS/F_TO_S/gen_src/"
   if ( in_qtype == "B1" ) then 
     subs.tmpl = nil
     subs.dotc = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/src/sum_B1.c"

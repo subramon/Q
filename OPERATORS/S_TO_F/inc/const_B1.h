@@ -1,4 +1,7 @@
-#include "q_incs.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include "q_macros.h"
 #include "const_struct.h"
 extern int
 const_B1(

@@ -1,10 +1,10 @@
+local cutils    = require 'libcutils'
 local qconsts   = require 'Q/UTILS/lua/q_consts'
 local Reducer   = require 'Q/RUNTIME/RDCR/lua/Reducer'
-local cVector   = require 'libvctr'
 local qc        = require 'Q/UTILS/lua/q_core'
-local chk_chunk = require 'Q/UTILS/lua/chk_chunk'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
+local cVector   = require 'libvctr'
 
 return function (a, x)
   assert(type(x) == "lVector", "input should be a lVector")
@@ -30,12 +30,11 @@ return function (a, x)
   end
 
   local func_name = assert(subs.fn)
-  -- START: Dynamic compilation
-  if ( not qc[func_name] ) then
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
-  end
-  -- STOP: Dynamic compilation
-  assert(qc[func_name], "Function does not exist " .. func_name)
+  subs.incs = { "OPERATORS/F_TO_S/inc/", "OPERATORS/F_TO_S/gen_inc/", }
+  subs.structs = { "OPERATORS/F_TO_S/inc/minmax_struct.h",
+                   "OPERATORS/F_TO_S/inc/sum_struct.h" }
+  qc.q_add(subs)
+
 
   local reduce_struct = assert(subs.args)
   local getter        = assert(subs.getter)
@@ -53,7 +52,7 @@ return function (a, x)
     local x_len, x_chunk, nn_x_chunk = x:get_chunk(l_chunk_num)
     if ( ( not x_len ) or ( x_len == 0 ) ) then return nil end 
     local inx = get_ptr(x_chunk, cast_x_as)
-    local start_time = qc.RDTSC()
+    local start_time = cutils.rdtsc()
     qc[func_name](inx, x_len, reduce_struct, offset)
     record_time(start_time, func_name)
     x:unget_chunk(l_chunk_num)

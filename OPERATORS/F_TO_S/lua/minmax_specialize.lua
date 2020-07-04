@@ -7,6 +7,13 @@ local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local rev_lkp   = require 'Q/UTILS/lua/rev_lkp'
 local qconsts   = require 'Q/UTILS/lua/q_consts'
 local good_qtypes = rev_lkp({ "I1", "I2", "I4", "I8", "F4", "F8"})
+local for_cdef  = require 'Q/UTILS/build/for_cdef'
+local qc        = require 'Q/UTILS/lua/q_core'
+
+-- cdef the necessary struct within pcall to prevent error on second call
+local incs = { "UTILS/inc/" }
+qc.q_cdef("OPERATORS/F_TO_S/inc/minmax_struct.h", incs)
+-- qc.q_cdef("RUNTIME/SCLR/inc/scalar_struct.h", incs)
 
 return function (in_qtype, operator)
   assert(type(operator) == "string")
@@ -26,7 +33,6 @@ return function (in_qtype, operator)
   else
     error(operator)
   end
-  subs.tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/lua/minmax.tmpl"
   subs.operator = operator -- used by check_subs()
   --=====================================
   -- set up args for C code
@@ -56,5 +62,8 @@ return function (in_qtype, operator)
     return sval, snum, sidx
   end
   subs.getter = getter
+  subs.srcdir = "OPERATORS/F_TO_S/gen_src/"
+  subs.incdir = "OPERATORS/F_TO_S/gen_inc/"
+  subs.tmpl   = "OPERATORS/F_TO_S/lua/minmax.tmpl"
   return subs
 end

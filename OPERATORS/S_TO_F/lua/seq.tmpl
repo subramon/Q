@@ -1,7 +1,11 @@
 return require 'Q/UTILS/lua/code_gen' {
    declaration = [[
-#include "q_incs.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "seq_struct.h"
+//START_FOR_CDEF
 extern int
 seq_${out_qtype}(
   ${out_ctype} *X,
@@ -9,6 +13,7 @@ seq_${out_qtype}(
   ${args_ctype} *ptr_in,
   uint64_t idx // which element of vector 
   );
+//STOP_FOR_CDEF
    ]],
 
    definition = [[

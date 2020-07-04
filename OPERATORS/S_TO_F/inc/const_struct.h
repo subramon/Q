@@ -35,5 +35,5 @@ typedef struct _CONST_I8_rec_type {
    int64_t val;
    int dummy;
 } CONST_I8_REC_TYPE;
-//START_FOR_CDEF
+//STOP_FOR_CDEF
 #endif

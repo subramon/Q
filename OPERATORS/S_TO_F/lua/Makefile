@@ -17,7 +17,7 @@ CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS}
 all : _s_to_f.lua \
   	$(TMPL_FILES) \
 	$(SRC_FILES) \
-	$(INCL_FILES) \
+	$(INC_FILES) \
 	GEN_SRC_FILES \
 	GEN_INC_FILES
 
@@ -53,7 +53,7 @@ libs_to_f.so : GEN_SRC_FILES GEN_INC_FILES \
 	  	${CFLAGS} ${INCS} -shared -o libs_to_f.so
 
 _s_to_f.lua : 
-	lua pkg_s_to_f.lua
+	luajit pkg_s_to_f.lua
 
 GEN_SRC_FILES : \
 	../gen_src/_const_I1.c \

@@ -14,8 +14,8 @@ local function get_ptr(
   x, 
   qtype -- optional 
 )
-
   if not x then return nil end
+  local ret_ptr
   assert(type(x) == "CMEM")
   local y = x:data()
   

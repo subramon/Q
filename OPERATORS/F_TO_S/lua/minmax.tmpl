@@ -1,8 +1,10 @@
 return require 'Q/UTILS/lua/code_gen' {
    declaration = [[
-#include "q_incs.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <unistd.h>
 #include "minmax_struct.h"
-${includes}
+//START_FOR_CDEF
 extern int
 ${fn}(  
       const ${in_ctype} * restrict in,  // [nR] 
@@ -11,6 +13,7 @@ ${fn}(
       uint64_t offset
       ) 
 ;
+//STOP_FOR_CDEF
 ]],
 definition = [[
 #include "_${fn}.h"

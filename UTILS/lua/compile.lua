@@ -45,12 +45,16 @@ local function compile(
   str_incs = table.concat(str_incs, " ")
   --===============================
   local str_srcs = {}
-  for k, v in ipairs(srcs) do 
-    local srcfile = qconsts.Q_SRC_ROOT .. v
-    assert(cutils.isfile(srcfile))
-    str_srcs[#str_srcs+1] = srcfile 
-  end
-  str_srcs = table.concat(str_srcs, " ")
+  if ( srcs ) then 
+    for k, v in ipairs(srcs) do 
+      local srcfile = qconsts.Q_SRC_ROOT .. v
+      assert(cutils.isfile(srcfile))
+      str_srcs[#str_srcs+1] = srcfile 
+    end
+    str_srcs = table.concat(str_srcs, " ")
+  else
+    str_srcs = "" 
+  end 
   --===============================
   local str_libs = ""
   if ( libs ) then 

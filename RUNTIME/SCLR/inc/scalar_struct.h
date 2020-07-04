@@ -1,7 +1,7 @@
 #ifndef __SCALAR_H
 #define __SCALAR_H
-#include "q_constants.h"
 //START_FOR_CDEF
+#include "q_constants.h"
 typedef union _cdata_type {
   bool    valB1;
   int8_t  valI1;
