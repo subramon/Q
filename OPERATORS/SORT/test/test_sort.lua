@@ -1,36 +1,58 @@
--- FUNCTIONAL
-require 'Q/UTILS/lua/strict'
-local Q = require 'Q'
+-- FUNCTIONAL require 'Q/UTILS/lua/strict'
+local Q      = require 'Q'
 local Scalar = require 'libsclr'
+local orders = require 'Q/OPERATORS/SORT/lua/orders'
+local qtypes = require 'Q/OPERATORS/SORT/lua/qtypes'
 local tests = {}
 tests.t1 = function()
-  local x = Q.mk_col({10, 20, 30, 40, 50, 60, 70, 80}, 'I4')
-  -- print(type(x))
-  -- print(x:length())
-  Q.sort(x, "dsc")
-  --Q.print_csv(x) 
-  local val = Q.max(x):eval()
-  for i = 1, x:length() do
-    assert(x:get_one(i-1) == val)
-    val = val - Scalar.new(10, "I4")
+  -- Set up some vals that work for all qtypes
+  for whynot = 1, 2 do -- call twice to test dynamic compilation
+    for iter = 1, 2 do
+      local vals = {}
+      local n = 0
+      local lb, ub, incr
+      if ( iter == 1 ) then
+        lb = -128
+        ub = 127
+        incr = 1
+      elseif ( iter == 2 ) then
+        lb = 127
+        ub = -128
+        incr = -1
+      else
+        error("")
+      end
+      for val = lb, ub, incr do
+        vals[#vals+1] = val
+        n = n + 1
+      end
+      for _, order in ipairs(orders) do
+        for _, qtype in ipairs(qtypes) do
+          local x = Q.mk_col(vals, qtype):eval()
+          assert(x:length() == n)
+          x:flush_all() -- TODO P3 Delete later
+          Q.sort(x, order)
+          local xlb, xub, xincr
+          if ( order == "asc" ) then
+            xlb = -128
+            xub =  127
+            xincr = 1
+          else
+            xlb =  127
+            xub = -128
+            xincr = -1
+          end
+          local i = 0
+          for xval = xlb, xub, xincr do
+            assert(x:get1(i) == Scalar.new(xval, qtype))
+            i = i + 1
+          end
+        end
+      end
+    end
   end
-  print("Test t1 succeeded")
-  -- save = require 'Q/UTILS/lua/save'
-  -- save('tmp.save')
+  print("Successfully completed test t1")
 end
-tests.t2 = function()
-  local x = Q.seq({ len = 8, start = 10, by = 10, qtype = "I4"})
-  -- print(type(x))
-  -- print(x:length())
-  Q.sort(x, "dsc")
-  -- Q.print_csv(x, { opfile = "" })
-  local val = Q.max(x):eval()
-  for i = 1, x:length() do
-    assert(x:get_one(i-1) == val)
-    val = val - Scalar.new(10, "I4")
-  end
-  print("Test t2 succeeded")
-  -- save = require 'Q/UTILS/lua/save'
-  -- save('tmp.save')
-end
-return tests
+tests.t1()
+os.exit()
+--return tests

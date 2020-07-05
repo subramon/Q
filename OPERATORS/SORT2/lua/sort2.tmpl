@@ -27,19 +27,26 @@ return require 'Q/UTILS/lua/code_gen' {
    smaller partition.  This *guarantees* no more than log (total_elems)
    stack size is needed (actually O(1) in this case)!  */
 
-#include "q_incs.h"
 
+#include <alloca.h>
+#include <limits.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "q_macros.h"
+//START_FOR_CDEF
 extern int
 ${fn} (
   void *const pbase,
   ${F2_FLDTYPE} *drag,
   uint64_t total_elems
     );
+//STOP_FOR_CDEF
 ]],
 definition = [[
 
-#include "q_incs.h"
-#include "_${fn}.h"
+#include "${fn}.h"
 #define WHEREAMI { fprintf(stderr, "Line %3d of File %s \n", __LINE__, __FILE__); }
 
 /* Byte-wise swap two items of size SIZE. */

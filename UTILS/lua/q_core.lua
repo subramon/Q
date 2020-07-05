@@ -84,7 +84,8 @@ local function q_add(
   local tmpl, doth, dotc
   local fn = assert(subs.fn)
   if ( known_functions[fn] ) then
-    -- print("Nothing to do: Known function " .. fn) return true
+    -- print("Nothing to do: Known function " .. fn) 
+    return true
   end
 
   -- EITHER provide a tmpl OR the doth and dotc, not both

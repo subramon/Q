@@ -6,6 +6,8 @@ all :
 	make -C ${Q_SRC_ROOT}/RUNTIME/VCTR/src/ 
 	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua 
 	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua 
+	make -C ${Q_SRC_ROOT}/OPERATORS/SORT/lua 
+	make -C ${Q_SRC_ROOT}/OPERATORS/SORT2/lua 
 
 #	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua all_for_dc
 #	make -C ${Q_SRC_ROOT}/OPERATORS/F1S1OPF2/lua all_for_dc

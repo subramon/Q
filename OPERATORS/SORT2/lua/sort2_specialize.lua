@@ -1,9 +1,7 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/SORT2/lua/sort2.tmpl"
 return function(f1_qtype, f2_qtype, ordr)
   assert(type(ordr) == "string", "sort order should be a string")
-  assert( ( ( ordr == "asc") or ( ordr == "dsc") ),
-  "Sort order should be asc or dsc")
+  assert(( ( ordr == "asc") or ( ordr == "dsc") ))
   local subs = {}
   subs.SORT_ORDER = ordr
   subs.F1_QTYPE = f1_qtype
@@ -13,10 +11,12 @@ return function(f1_qtype, f2_qtype, ordr)
   subs.F2_FLDTYPE = qconsts.qtypes[f2_qtype].ctype
   subs.in_qtype = f1_qtype
   -- TODO Check below is correct order/comparator combo
-  local c = ""
+  local c
   if ordr == "asc" then c = "<" end
   if ordr == "dsc" then c = ">" end
   subs.COMPARATOR = c
-  subs.tmpl = tmpl
+  subs.tmpl = "OPERATORS/SORT2/lua/sort2.tmpl"
+  subs.srcdir = "OPERATORS/SORT2/gen_src/"
+  subs.incdir = "OPERATORS/SORT2/gen_inc/"
   return subs
 end

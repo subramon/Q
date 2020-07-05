@@ -1,7 +1,9 @@
+require "Q/OPERATORS/F_TO_S/lua/_f_to_s"
 require "Q/OPERATORS/MK_COL/lua/mk_col"
 require "Q/OPERATORS/PRINT/lua/print_csv"
 require "Q/OPERATORS/S_TO_F/lua/_s_to_f"
-require "Q/OPERATORS/F_TO_S/lua/_f_to_s"
+require "Q/OPERATORS/SORT/lua/sort"
+require "Q/OPERATORS/SORT2/lua/sort2"
 --[[
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
@@ -48,8 +50,6 @@ require "Q/OPERATORS/MDB/lua/mk_comp_key_val"
 
 require "Q/OPERATORS/PCA/lua/corr_mat"
 
-require "Q/OPERATORS/SORT/lua/sort"
-require "Q/OPERATORS/SORT2/lua/sort2"
 
 require 'Q/OPERATORS/UNIQUE/lua/unique'
 

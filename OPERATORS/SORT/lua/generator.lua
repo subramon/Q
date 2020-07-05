@@ -1,24 +1,33 @@
 #!/usr/bin/env lua
-local incdir = "../gen_inc/"
-local srcdir = "../gen_src/"
 local plpath = require 'pl.path'
-if ( not plpath.isdir(srcdir) ) then plpath.mkdir(srcdir) end
-if ( not plpath.isdir(incdir) ) then plpath.mkdir(incdir) end
 local gen_code = require 'Q/UTILS/lua/gen_code'
-
-local order = { 'asc', 'dsc' }
-local qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
-
+--========
+local order_file = assert(arg[1])
+local orders 
+if plpath.isfile(order_file) then 
+  orders = dofile(order_file)
+else
+  orders = { arg[1] }
+end
+--========
+local qtypes_file = assert(arg[2])
+local qtypes
+if plpath.isfile(qtypes_file) then 
+  qtypes = dofile(qtypes_file)
+else
+  qtypes = { arg[2] }
+end
+--========
 local num_produced = 0
 local spfn = require 'sort_specialize'
-for i, o in ipairs(order) do 
-  for k, f in ipairs(qtypes) do 
-    local status, subs = pcall(spfn, f, o)
+for _, order in ipairs(orders) do 
+  for _, qtype in ipairs(qtypes) do 
+    local status, subs = pcall(spfn, qtype, order)
     if ( not status ) then print(subs) end
     assert(status)
     assert(type(subs) == "table")
-    gen_code.doth(subs, incdir)
-    gen_code.dotc(subs, srcdir)
+    gen_code.doth(subs, subs.incdir)
+    gen_code.dotc(subs, subs.srcdir)
     print("Produced ", subs.fn)
     num_produced = num_produced + 1
   end

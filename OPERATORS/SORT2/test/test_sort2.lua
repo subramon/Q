@@ -1,159 +1,62 @@
--- FUNCTIONAL
-require 'Q/UTILS/lua/strict'
-local Q = require 'Q'
-local cVector = require 'libvctr'
-local qconsts = require 'Q/UTILS/lua/q_consts'
-
-local q_src_root = os.getenv("Q_SRC_ROOT")
-local so_dir_path = q_src_root .. "/OPERATORS/SORT2/src/"
-local chunk_size = cVector.chunk_size()
-
+-- FUNCTIONAL require 'Q/UTILS/lua/strict'
+local Q      = require 'Q'
+local Scalar = require 'libsclr'
+local orders = require 'Q/OPERATORS/SORT/lua/orders'
+local qtypes = require 'Q/OPERATORS/SORT/lua/qtypes'
 local tests = {}
-
--- lua test to check the working of SORT2 in asc order
-tests.t1 = function ()
-  local expected_drag_result = {40, 30, 20, 10, 50 ,60, 70, 80, 90, 100}
-  local expected_input_col = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-  
-  local qtype = { "I1", "I2", "I4", "I8", "F4", "F8" }
-  for _, qtype in ipairs(qtypes) do 
-    local qtype = "I4"
-    local input_col = Q.mk_col({10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, "I4")
-    local input_drag_col = Q.mk_col({100, 90, 80, 70, 60, 50, 10, 20, 30, 40}, "F4")
-  
-    local status = Q.sort2(input_col, input_drag_col, "asc")
-    -- Q.print_csv({input_col, input_drag_col}, { impl = 'C' })
-  
-    -- Validate the result
-    for i = 1, input_drag_col:length() do
-      -- print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
-      assert(input_drag_col:get1(i-1):to_num() == expected_drag_result[i])
-      assert(input_col:get1(i-1):to_num() == expected_input_col[i])
+tests.t1 = function()
+  -- Set up some vals that work for all qtypes
+  for whynot = 1, 2 do -- call twice to test dynamic compilation
+    for iter = 1, 2 do
+      local vals = {}
+      local n = 0
+      local lb, ub, incr
+      if ( iter == 1 ) then
+        lb = -128
+        ub = 127
+        incr = 1
+      elseif ( iter == 2 ) then
+        lb = 127
+        ub = -128
+        incr = -1
+      else
+        error("")
+      end
+      for val = lb, ub, incr do
+        vals[#vals+1] = val
+        n = n + 1
+      end
+      for _, order in ipairs(orders) do
+        for _, qtype1 in ipairs(qtypes) do
+          for _, qtype2 in ipairs(qtypes) do
+            local x1 = Q.mk_col(vals, qtype1):eval()
+            local x2 = Q.mk_col(vals, qtype2):eval()
+            assert(x1:length() == n)
+            x1:flush_all() -- TODO P3 Delete later
+            x2:flush_all() -- TODO P3 Delete later
+            Q.sort2(x1, x2, order)
+            local xlb, xub, xincr
+            if ( order == "asc" ) then
+              xlb = -128
+              xub =  127
+              xincr = 1
+            else
+              xlb =  127
+              xub = -128
+              xincr = -1
+            end
+            local i = 0
+            for xval = xlb, xub, xincr do
+              assert(x1:get1(i) == Scalar.new(xval, qtype1))
+              i = i + 1
+            end
+          end
+        end
+      end
     end
   end
-  
-  print("Test t1 succeeded")
+  print("Successfully completed test t1")
 end
-
--- lua test to check the working of SORT2 in dsc order
-tests.t2 = function ()
-  local expected_drag_result = {30, 40, 20, 10, 60 , 50, 80, 70, 90, 100}
-  local expected_input_col = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
-
-  local qtype = "I4"
-  local input_col = Q.mk_col({1, 2, 4, 3, 6, 5, 7, 8, 10, 9}, "I4")
-  local input_drag_col = Q.mk_col({100, 90, 80, 70, 60, 50, 10, 20, 30, 40}, "I4")
-
-  local status = Q.sort2(input_col, input_drag_col, "dsc")
-
-  -- Validate the result
-  for i = 1, input_drag_col:length() do
-    print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
-    assert(input_drag_col:get1(i-1):to_num() == expected_drag_result[i])
-    assert(input_col:get1(i-1):to_num() == expected_input_col[i])
-  end
-
-  print("Test t2 succeeded")
-end
-
-
--- lua test to check the working of SORT2 in asc order
-tests.t3 = function ()
-  local expected_drag_result = {40, 30, 20, 10, 50, 60, 70, 80, 90, 100}
-  local expected_input_col = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-
-  local input_col = Q.mk_col({10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, "I1")
-  local input_drag_col = Q.mk_col({100, 90, 80, 70, 60, 50, 10, 20, 30, 40}, "I4")
-
-  local status = Q.sort2(input_col, input_drag_col, "asc")
-  assert(input_col:qtype() == "I1")
-  assert(input_drag_col:qtype() == "I4")
-  -- Validate the result
-  for i = 1, input_drag_col:length() do
-    print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
-    assert(input_col:get1(i-1):to_num() == expected_input_col[i])
-    assert(input_drag_col:get1(i-1):to_num() == expected_drag_result[i])
-  end
-
-  print("Test t3 succeeded")
-end
-
--- following testcases are:
--- different qtype of input1 and input2 should work for sort2
-
--- lua test to check the working of SORT2 in dsc order
--- test for num_elements > chunk_size 
-tests.t4 = function ()
-  
-  local input_tbl_1 = {}
-  local input_tbl_2 = {}
-  for i = 1, chunk_size + 100 do
-    input_tbl_1[#input_tbl_1 +1] = i
-    input_tbl_2[#input_tbl_2 +1] = i + 7
-  end
-  
-  local input_col = Q.mk_col(input_tbl_1, "I4")
-  local input_drag_col = Q.mk_col(input_tbl_2, "I8")
-
-  local status = Q.sort2(input_col, input_drag_col, "dsc")
-  assert(input_col:qtype() == "I4" and input_drag_col:qtype() == "I8")
-  -- Validate the result
-  for i = 1, input_drag_col:length() do
-    --print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
-    assert(input_drag_col:get1(i-1):to_num() == input_col:get1(i-1):to_num() +7 )
-  end
-  
-  print("Test t4 succeeded")
-end
-
--- lua test to check the working of SORT2 in dsc order
--- test for num_elements < chunk_size 
-tests.t5 = function ()
-  
-  local input_tbl_1 = {}
-  local input_tbl_2 = {}
-  for i = 1, chunk_size - 100 do
-    input_tbl_1[#input_tbl_1 +1] = i
-    input_tbl_2[#input_tbl_2 +1] = i + 7
-  end
-  
-  local input_col = Q.mk_col(input_tbl_1, "I8")
-  local input_drag_col = Q.mk_col(input_tbl_2, "I4")
-
-  local status = Q.sort2(input_col, input_drag_col, "dsc")
-  assert(input_col:qtype() == "I8" and input_drag_col:qtype() == "I4")
-  -- Validate the result
-  for i = 1, input_drag_col:length() do
-    --print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
-    assert(input_drag_col:get1(i-1):to_num() == input_col:get1(i-1):to_num() +7 )
-  end
-  
-  print("Test t5 succeeded")
-end
-
--- lua test to check the working of SORT2 in dsc order
--- test for num_elements == chunk_size 
-tests.t6 = function ()
-  
-  local input_tbl_1 = {}
-  local input_tbl_2 = {}
-  for i = 1, chunk_size do
-    input_tbl_1[#input_tbl_1 +1] = i
-    input_tbl_2[#input_tbl_2 +1] = i + 7
-  end
-  
-  local input_col = Q.mk_col(input_tbl_1, "I8")
-  local input_drag_col = Q.mk_col(input_tbl_2, "F8")
-
-  local status = Q.sort2(input_col, input_drag_col, "dsc")
-  assert(input_col:qtype() == "I8" and input_drag_col:qtype() == "F8")
-  -- Validate the result
-  for i = 1, input_drag_col:length() do
-    --print(input_col:get1(i-1):to_num(), input_drag_col:get1(i-1):to_num())
-    assert(input_drag_col:get1(i-1):to_num() == input_col:get1(i-1):to_num() +7 )
-  end
-  
-  print("Test t6 succeeded")
-end
-return tests
--- tests.t1()
+tests.t1()
+os.exit()
+--return tests

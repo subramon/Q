@@ -1,10 +1,7 @@
-local function sort2(x, y, ordr)
-  local Q       = require 'Q/q_export'
-  local qc = require 'Q/UTILS/lua/q_core'
-  local get_ptr = require 'Q/UTILS/lua/get_ptr'
-  local ffi = require 'ffi'
-  local qconsts = require 'Q/UTILS/lua/q_consts'
+local qc      = require 'Q/UTILS/lua/q_core'
+local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
+local function sort2(x, y, ordr)
   assert(type(x) == "lVector", "error")
   assert(type(y) == "lVector", "error")
   -- Check the vector x for eval(), if not then call eval()
@@ -16,7 +13,7 @@ local function sort2(x, y, ordr)
   y:flush_all() -- TODO P3 Delete later
   -- Flush needed because start_write assumes file exists
   assert(type(ordr) == "string")
-  if ( ordr == "ascending" )  then ordr = "asc" end 
+  if ( ordr == "ascending" )  then ordr = "asc" end
   if ( ordr == "descending" ) then ordr = "dsc" end
   local spfn = require("Q/OPERATORS/SORT2/lua/sort2_specialize" )
   local status, subs = pcall(spfn, x:fldtype(), y:fldtype(), ordr)
@@ -24,16 +21,11 @@ local function sort2(x, y, ordr)
   assert(type(subs) == "table", "error in call to sort2_asc_specialize")
   local func_name = assert(subs.fn)
 
-  -- START: Dynamic compilation
-  if ( not qc[func_name] ) then
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
-  end
-  -- STOP: Dynamic compilation
+  subs.incs = { "OPERATORS/SORT2/gen_inc/", "UTILS/inc" }
+  qc.q_add(subs)
 
-  local cst_x_as = qconsts.qtypes[x:qtype()].ctype .. "*"
-  local cst_y_as = qconsts.qtypes[x:qtype()].ctype .. "*"
-  local x_len, x_chunk, nn_x_chunk = x:start_write()
-  local y_len, y_chunk, nn_y_chunk = y:start_write()
+  local x_len, x_chunk = x:start_write()
+  local y_len, y_chunk = y:start_write()
   assert(x_len == y_len)
   assert(y_len > 0)
   assert(qc[func_name], "Unknown function " .. func_name)
