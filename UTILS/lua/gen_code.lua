@@ -1,6 +1,6 @@
--- local cutils  = require 'libcutils'
-local plpath  = require 'pl.path'
-local pldir   = require 'pl.dir'
+local cutils  = require 'libcutils'
+-- local plpath  = require 'pl.path'
+-- local pldir   = require 'pl.dir'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local section = { c = 'definition', h = 'declaration' }
@@ -13,7 +13,7 @@ local function do_replacements(subs)
     tmpl = qconsts.Q_SRC_ROOT .. tmpl
   end
   local T
-  assert(plpath.isfile(tmpl), "File not found " .. tmpl)
+  assert(cutils.isfile(tmpl), "File not found " .. tmpl)
   T = assert(dofile(tmpl))
   for k, v in pairs(subs) do
      T[k] = v
@@ -30,10 +30,10 @@ local _dotfile = function(subs, opdir, ext)
   else
     opdir = qconsts.Q_SRC_ROOT .. opdir
   end
-  if ( not plpath.isdir(opdir) ) then
-    assert(pldir.makepath(opdir))
+  if ( not cutils.isdir(opdir) ) then
+    assert(cutils.makepath(opdir))
   end
-  assert(plpath.isdir(opdir))
+  assert(cutils.isdir(opdir))
   local T = do_replacements(subs)
   local dotfile = T(section[ext])
   local fname = opdir .. "/" .. subs.fn .. "." .. ext

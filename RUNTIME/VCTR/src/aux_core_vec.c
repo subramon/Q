@@ -3,12 +3,12 @@
 #include "core_vec_struct.h"
 #include "_struct_timers.h"
 
-#include "_get_file_size.h"
-#include "_copy_file.h"
-#include "_isfile.h"
-#include "_isdir.h"
-#include "_rdtsc.h"
-#include "_rs_mmap.h"
+#include "get_file_size.h"
+#include "copy_file.h"
+#include "isfile.h"
+#include "isdir.h"
+#include "rdtsc.h"
+#include "rs_mmap.h"
 
 #define CORE_VEC_ALIGNMENT 64
 #include "aux_core_vec.h"

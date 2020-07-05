@@ -248,8 +248,12 @@ libutils.so : src_files gen_src_files gen_inc_files
 		${SRC_FILES} -o libutils.so
 
 clean :
-	rm -f ${GEN_SRC_FILES} ${GEN_INC_FILES}
 	rm -f _*
 	rm -f *.so
 	rm -f *.o
 
+
+# do not use following unless you absolutely need to
+# else, it breaks the build from UTILS/build/
+hardclean :
+	rm -f ${GEN_SRC_FILES} ${GEN_INC_FILES}

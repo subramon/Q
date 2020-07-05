@@ -2,7 +2,6 @@ all :
 	make -C ${Q_SRC_ROOT}/RUNTIME/CUTILS/src/ 
 	make -C ${Q_SRC_ROOT}/UTILS/src/ 
 	make -C ${Q_SRC_ROOT}/RUNTIME/CMEM/src/ 
-	make -C ${Q_SRC_ROOT}/RUNTIME/DNN/src/  
 	make -C ${Q_SRC_ROOT}/RUNTIME/SCLR/src/ 
 	make -C ${Q_SRC_ROOT}/RUNTIME/VCTR/src/ 
 	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua 

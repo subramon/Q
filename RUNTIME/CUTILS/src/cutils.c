@@ -16,12 +16,12 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-#include "_get_file_size.h"
-#include "_get_bit_u64.h"
-#include "_isdir.h"
-#include "_isfile.h"
-#include "_rdtsc.h"
-#include "_rs_mmap.h"
+#include "get_file_size.h"
+#include "get_bit_u64.h"
+#include "isdir.h"
+#include "isfile.h"
+#include "rdtsc.h"
+#include "rs_mmap.h"
 
 int luaopen_libcutils (lua_State *L);
 

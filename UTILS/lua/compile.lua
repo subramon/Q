@@ -1,7 +1,6 @@
 local cutils        = require 'libcutils'
 local qconsts       = require 'Q/UTILS/lua/q_consts'
 local assertx       = require 'Q/UTILS/lua/assertx'
-local clean_h_file  = require 'Q/UTILS/lua/clean_h_file'
 local exec          = require 'Q/UTILS/lua/exec_and_capture_stdout'
 
 local QC_FLAGS     = qconsts.QC_FLAGS
@@ -28,14 +27,6 @@ local function compile(
   if ( cutils.isfile(sofile) ) then 
     print("File exists: No need to create " .. sofile)
     return sofile
-  end
-  -- START: Error checking on inputs
-  assert(cutils.isfile(dotc))
-  if ( structs ) then 
-    assert(type(structs) == "table")
-    for k, v in ipairs(structs) do 
-      assert(cutils.isfile(v))
-    end
   end
   --===============================
   local str_incs = {}
@@ -67,16 +58,6 @@ local function compile(
        QC_FLAGS, str_incs, dotc, str_srcs, sofile, str_libs)
   assert(exec(q_cmd), q_cmd)
   assertx(cutils.isfile(sofile), "Target " ..  sofile .. " not created")
-  -- Now, we need to make sure .h file is in place so that when server
-  -- restarts, we can pick up the .h file and .so file are present
-  -- and can be loaded and we do not compile mid-way through execution
-  -- No need for get_func_decl(), clean_h_file is enough because
-  -- we do not need to run through cpp because (for now) no constants 
-  -- to worry about
-  --[[ TODO P1
-  local h_file = clean_h_file(tmp_h) 
-  cutils.write(hfile, h_file)
-  --]]
   return sofile 
 end
 return compile

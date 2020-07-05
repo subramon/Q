@@ -16,7 +16,7 @@ return function (a, args)
   assert(status, "Specializer failed ")
   local func_name = assert(subs.fn)
 
-  subs.incs = { "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
+  subs.incs = { "UTILS/inc", "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
   subs.structs = { "OPERATORS/S_TO_F/inc/" .. a .. "_struct.h" }
   qc.q_add(subs)
 

@@ -114,11 +114,6 @@ local function q_add(
   local sofile = assert(compile(dotc, subs.srcs, subs.incs, subs.libs, fn))
   local cdefs = load_lib(fn, doth, subs.incs, subs.structs, sofile)
   assert(type(cdefs) == "table")
-  for k, v in pairs(cdefs) do 
-    print(">>>>>>>>")
-    print(k, v) 
-    print("<<<<<<<<")
-  end
   return true
 end
 

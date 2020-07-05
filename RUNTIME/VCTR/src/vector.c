@@ -12,8 +12,8 @@
 #include "cmem.h"
 #include "aux_lua_to_c.h"
 
-#include "_txt_to_I4.h"
-#include "_isdir.h"
+#include "txt_to_I4.h"
+#include "isdir.h"
 
 
 VEC_GLOBALS_TYPE g_S;

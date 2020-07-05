@@ -17,25 +17,25 @@ LOCAL_GEN_FILES = \
 	_outer_eval_cmp.c \
 
 GEN_INC_FILES =  \
-	../../../UTILS/gen_inc/_B1_to_txt.h  \
-	../../../UTILS/gen_inc/_SC_to_txt.h  \
-	../../../UTILS/gen_inc/_txt_to_B1.h  \
-	../../../UTILS/gen_inc/_txt_to_SC.h  \
-	../../../UTILS/gen_inc/_is_valid_chars_for_num.h \
+	../../../UTILS/inc/B1_to_txt.h  \
+	../../../UTILS/inc/SC_to_txt.h  \
+	../../../UTILS/inc/txt_to_B1.h  \
+	../../../UTILS/inc/txt_to_SC.h  \
+	../../../UTILS/inc/is_valid_chars_for_num.h \
 	\
-	../../../UTILS/gen_inc/_I1_to_txt.h  \
-	../../../UTILS/gen_inc/_I2_to_txt.h  \
-	../../../UTILS/gen_inc/_I4_to_txt.h  \
-	../../../UTILS/gen_inc/_I8_to_txt.h  \
-	../../../UTILS/gen_inc/_F4_to_txt.h  \
-	../../../UTILS/gen_inc/_F8_to_txt.h  \
+	../../../UTILS/inc/I1_to_txt.h  \
+	../../../UTILS/inc/I2_to_txt.h  \
+	../../../UTILS/inc/I4_to_txt.h  \
+	../../../UTILS/inc/I8_to_txt.h  \
+	../../../UTILS/inc/F4_to_txt.h  \
+	../../../UTILS/inc/F8_to_txt.h  \
 	\
-	../../../UTILS/gen_inc/_txt_to_I1.h  \
-	../../../UTILS/gen_inc/_txt_to_I2.h  \
-	../../../UTILS/gen_inc/_txt_to_I4.h  \
-	../../../UTILS/gen_inc/_txt_to_I8.h  \
-	../../../UTILS/gen_inc/_txt_to_F4.h  \
-	../../../UTILS/gen_inc/_txt_to_F8.h  \
+	../../../UTILS/inc/txt_to_I1.h  \
+	../../../UTILS/inc/txt_to_I2.h  \
+	../../../UTILS/inc/txt_to_I4.h  \
+	../../../UTILS/inc/txt_to_I8.h  \
+	../../../UTILS/inc/txt_to_F4.h  \
+	../../../UTILS/inc/txt_to_F8.h  \
 
 SRC_FILES = \
 	../../../UTILS/src/is_valid_chars_for_num.c \
@@ -45,19 +45,19 @@ SRC_FILES = \
 	../../../UTILS/src/txt_to_SC.c \
 
 GEN_SRC_FILES = \
-	../../../UTILS/gen_src/_txt_to_I1.c \
-	../../../UTILS/gen_src/_txt_to_I2.c \
-	../../../UTILS/gen_src/_txt_to_I4.c \
-	../../../UTILS/gen_src/_txt_to_I8.c \
-	../../../UTILS/gen_src/_txt_to_F4.c \
-	../../../UTILS/gen_src/_txt_to_F8.c \
+	../../../UTILS/src/txt_to_I1.c \
+	../../../UTILS/src/txt_to_I2.c \
+	../../../UTILS/src/txt_to_I4.c \
+	../../../UTILS/src/txt_to_I8.c \
+	../../../UTILS/src/txt_to_F4.c \
+	../../../UTILS/src/txt_to_F8.c \
 	\
-	../../../UTILS/gen_src/_I1_to_txt.c \
-	../../../UTILS/gen_src/_I2_to_txt.c \
-	../../../UTILS/gen_src/_I4_to_txt.c \
-	../../../UTILS/gen_src/_I8_to_txt.c \
-	../../../UTILS/gen_src/_F4_to_txt.c \
-	../../../UTILS/gen_src/_F8_to_txt.c \
+	../../../UTILS/src/I1_to_txt.c \
+	../../../UTILS/src/I2_to_txt.c \
+	../../../UTILS/src/I4_to_txt.c \
+	../../../UTILS/src/I8_to_txt.c \
+	../../../UTILS/src/F4_to_txt.c \
+	../../../UTILS/src/F8_to_txt.c \
 
 clean:
 	rm -f *.so *.o _* _*.c
@@ -80,68 +80,6 @@ libsclr.so:  \
 	../../CMEM/src/aux_lua_to_c.c \
 	-shared -o libsclr.so
 
-../../../UTILS/gen_inc/_B1_to_txt.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_B1_to_txt.h
-../../../UTILS/gen_inc/_SC_to_txt.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_SC_to_txt.h
-../../../UTILS/gen_inc/_I1_to_txt.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_I1_to_txt.h
-../../../UTILS/gen_inc/_I2_to_txt.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_I2_to_txt.h
-../../../UTILS/gen_inc/_I4_to_txt.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_I4_to_txt.h
-../../../UTILS/gen_inc/_I8_to_txt.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_I8_to_txt.h
-../../../UTILS/gen_inc/_F4_to_txt.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_F4_to_txt.h
-../../../UTILS/gen_inc/_F8_to_txt.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_F8_to_txt.h
-#------------------------------------------------------
-../../../UTILS/gen_src/_I1_to_txt.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_I1_to_txt.c
-../../../UTILS/gen_src/_I2_to_txt.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_I2_to_txt.c
-../../../UTILS/gen_src/_I4_to_txt.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_I4_to_txt.c
-../../../UTILS/gen_src/_I8_to_txt.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_I8_to_txt.c
-../../../UTILS/gen_src/_F4_to_txt.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_F4_to_txt.c
-../../../UTILS/gen_src/_F8_to_txt.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_F8_to_txt.c
-#------------------------------------------------------
-#------------------------------------------------------
-../../../UTILS/gen_inc/_is_valid_chars_for_num.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_is_valid_chars_for_num.h
-../../../UTILS/gen_inc/_txt_to_B1.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_B1.h
-../../../UTILS/gen_inc/_txt_to_SC.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_SC.h
-../../../UTILS/gen_inc/_txt_to_I1.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_I1.h
-../../../UTILS/gen_inc/_txt_to_I2.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_I2.h
-../../../UTILS/gen_inc/_txt_to_I4.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_I4.h
-../../../UTILS/gen_inc/_txt_to_I8.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_I8.h
-../../../UTILS/gen_inc/_txt_to_F4.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_F4.h
-../../../UTILS/gen_inc/_txt_to_F8.h : 
-	make -C ../../../UTILS/src/ ../gen_inc/_txt_to_F8.h
-#------------------------------------------------------
-../../../UTILS/gen_src/_txt_to_I1.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_txt_to_I1.c
-../../../UTILS/gen_src/_txt_to_I2.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_txt_to_I2.c
-../../../UTILS/gen_src/_txt_to_I4.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_txt_to_I4.c
-../../../UTILS/gen_src/_txt_to_I8.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_txt_to_I8.c
-../../../UTILS/gen_src/_txt_to_F4.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_txt_to_F4.c
-../../../UTILS/gen_src/_txt_to_F8.c : 
-	make -C ../../../UTILS/src/ ../gen_src/_txt_to_F8.c
 #------------------------------------------------------
 _eval_arith.c: gen_arith.lua
 	luajit gen_arith.lua
