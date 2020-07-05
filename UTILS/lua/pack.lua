@@ -1,4 +1,4 @@
-local mk_col = require 'Q/OPERATORS/MK_COL/lua/mk_col'
+local mk_col     = require 'Q/OPERATORS/MK_COL/lua/mk_col'
 local base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 
 local T = {}
@@ -18,13 +18,9 @@ local function pack(tbl, qtype)
   assert(#tbl <= 1024, "max limit is upto 1024 num_elements for creating vector")
   -- for base_qtype, what if input qtype is 'B1'
   assert(type(qtype) == "string" and base_qtype(qtype))
-  
-  -- internally calling mk_col
-  local col = mk_col(tbl, qtype)
+  local col = assert(mk_col(tbl, qtype)) -- internally calling mk_col
   return col
 end
-
 T.pack = pack
 require('Q/q_export').export('pack', pack)
-
 return T

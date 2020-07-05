@@ -1,22 +1,21 @@
 local plpath = require 'pl.path'
 local plstr  = require 'pl.stringx'
 local function extract_func_decl(
-  infile, 
+  infile,
   opdir
   )
-  local opdir = plstr.strip(opdir)
   assert(plpath.isfile(infile), "Input file not found" .. infile)
   assert(plpath.isdir(opdir), "Output directory not found" .. opdir)
   io.input(infile)
-  code = io.read("*all")
+  local code = io.read("*all")
   --=========================================
-  incs = string.match(code, "//START_INCLUDES.*//STOP_INCLUDES")
-  if ( incs ) then 
+  local incs = string.match(code, "//START_INCLUDES.*//STOP_INCLUDES")
+  if ( incs ) then
     incs = string.gsub(incs, "//START_INCLUDES", "")
     incs = string.gsub(incs, "//STOP_INCLUDES", "")
-  end 
+  end
   --=========================================
-  z = string.match(code, "//START_FUNC_DECL.*//STOP_FUNC_DECL")
+  local z = string.match(code, "//START_FUNC_DECL.*//STOP_FUNC_DECL")
   assert(z ~= "", "Could not find stuff in START_FUNC_DECL .. STOP_FUNC_DECL")
   z = string.gsub(z, "//START_FUNC_DECL", "")
   z = string.gsub(z, "//STOP_FUNC_DECL", "")
@@ -24,24 +23,24 @@ local function extract_func_decl(
   --=========================================
   local fn = string.gsub(infile, "^.*/", "")
   fn = string.gsub(fn, ".c$", "")
-  if ( opdir ~= "" ) then 
-    opfile = opdir .. "/" .. fn .. ".h"
+  if ( opdir ~= "" ) then
+    local opfile = opdir .. "/" .. fn .. ".h"
     io.open(opfile, "w+")
     io.output(opfile)
   end
-  if ( incs ) then 
+  if ( incs ) then
     io.write(incs)
   end
   io.write("#ifndef __" .. fn .. "_H\n")
   io.write("#define __" .. fn .. "_H\n")
-  io.write('extern ' .. z .. ';\n') 
+  io.write('extern ' .. z .. ';\n')
   io.write("#endif\n")
   return true
 end
 return extract_func_decl
 
 --[[
-foreach 
+foreach
 z = string.match(x, "//START.*//STOP")
 > z
 //START abc def //STOP
@@ -58,4 +57,4 @@ foo bar  abc def //STOP hoo hah
 > z
  abc def //STOP
  ]]
- 
+

@@ -9,13 +9,13 @@ all: libcutils.so
 	cp libcutils.so ${Q_ROOT}/lib/
 
 UTILS_INC_FILES = \
-	../../../UTILS/inc/get_bit_u64.h \
-	../../../UTILS/inc/get_file_size.h \
-	../../../UTILS/inc/get_time_usec.h \
-	../../../UTILS/inc/isdir.h \
-	../../../UTILS/inc/isfile.h \
-	../../../UTILS/inc/rdtsc.h \
-	../../../UTILS/inc/rs_mmap.h \
+	../../../UTILS/gen_inc/get_bit_u64.h \
+	../../../UTILS/gen_inc/get_file_size.h \
+	../../../UTILS/gen_inc/get_time_usec.h \
+	../../../UTILS/gen_inc/isdir.h \
+	../../../UTILS/gen_inc/isfile.h \
+	../../../UTILS/gen_inc/rdtsc.h \
+	../../../UTILS/gen_inc/rs_mmap.h \
 
 UTILS_SRC_FILES = \
 	../../../UTILS/src/get_bit_u64.c \

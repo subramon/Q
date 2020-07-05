@@ -7,9 +7,8 @@ local section = { c = 'definition', h = 'declaration' }
 
 local function do_replacements(subs)
   local tmpl = subs.tmpl
-  if ( string.find(tmpl, "/") == 1 ) then 
-    -- fully qualified path
-  else
+  -- TODO P4: What if no forward slash in infile?
+  if ( string.find(tmpl, "/") ~= 1 ) then
     tmpl = qconsts.Q_SRC_ROOT .. tmpl
   end
   local T
@@ -25,9 +24,8 @@ local _dotfile = function(subs, opdir, ext)
   assert(type(opdir) == "string")
   assert(#opdir > 0)
   local basic_fname = opdir .. "/" .. subs.fn .. "." .. ext
-  if ( string.find(opdir, "/") == 1 ) then 
-    -- fully qualified path
-  else
+  -- TODO P4: What if no forward slash in infile?
+  if ( string.find(opdir, "/") ~= 1 ) then
     opdir = qconsts.Q_SRC_ROOT .. opdir
   end
   if ( not cutils.isdir(opdir) ) then

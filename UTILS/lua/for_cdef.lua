@@ -1,11 +1,11 @@
 -- Given an input file
--- 1) Extract portion(s) between 
--- //START_FOR_CDEF and 
--- //STOP_FOR_CDEF and 
--- 2) Write this to a temp file 
+-- 1) Extract portion(s) between
+-- //START_FOR_CDEF and
+-- //STOP_FOR_CDEF and
+-- 2) Write this to a temp file
 -- 2) If incs provided in a table, create an appropriate string e.g., -I../inc/
 -- 3) Run the temp file through the C pre-processor with a -I string if needed
--- 3)  Remove any line that starts with # This gets rid of 
+-- 3)  Remove any line that starts with # This gets rid of
 --    #ifdef
 --    #ifndef
 --    #endif
@@ -20,21 +20,20 @@ local function for_cdef(
   infile,
   incs
   )
-  print("infile = ", infile)
+  -- print("infile = ", infile)
   local src_root = qconsts.Q_SRC_ROOT
   assert(type(infile) == "string")
-  if ( string.find(infile, "/") == 1 ) then 
-    -- we already have fully qualified path
-  else
+  -- TODO P4: What if no forward slash in infile?
+  if ( string.find(infile, "/") ~= 1 ) then
+    -- we do not have fully qualified path
     infile = src_root .. "/" .. infile
   end
   assert(cutils.isfile(infile), infile)
   local cmd
-  local xincs = {}
   if ( incs ) then
     assert(type(incs) == "table")
     local str_incs = {}
-    for k, v in ipairs(incs) do 
+    for k, v in ipairs(incs) do
       local incdir = src_root .. "/" .. v
       assert(cutils.isdir(incdir))
       str_incs[k] = "-I" .. incdir
@@ -46,24 +45,24 @@ local function for_cdef(
   --===================
   local X = {}
   local fp = assert(io.open(infile))
-  local is_write = true 
+  local is_write = true
   local cnt = 0
   for line in fp:lines() do
     if ( string.find(line, "START_FOR_CDEF", 1) ) then
-      assert(is_write == true) 
+      assert(is_write == true)
       is_write = false
-      cnt = cnt + 1 
-    end 
-    if ( not is_write ) then 
+      cnt = cnt + 1
+    end
+    if ( not is_write ) then
       X[#X + 1] = line
-    end 
+    end
     if ( string.find(line, "STOP_FOR_CDEF", 1) ) then
-      assert(is_write == false) 
-      is_write = true 
-      cnt = cnt - 1 
-    end 
+      assert(is_write == false)
+      is_write = true
+      cnt = cnt - 1
+    end
   end
-  assert(cnt == 0, "Mismatch between start/stop of cdef markers") 
+  assert(cnt == 0, "Mismatch between start/stop of cdef markers")
   fp:close()
   local tmpfile = os.tmpname()
   fp = io.open(tmpfile, "w")
@@ -75,7 +74,7 @@ local function for_cdef(
   local  rslt = assert(exec(cmd))
   os.remove(tmpfile)
 
-  -- check that you do not get back empty string 
+  -- check that you do not get back empty string
   local chk = string.gsub(rslt, "%s", "")
   assert(#chk > 0, tmpfile, infile)
   --==============

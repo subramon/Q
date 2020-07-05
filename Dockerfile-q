@@ -54,6 +54,7 @@ RUN rm -r -f /tmp/curl/ \
  && make \
  && make install
 
+RUN luarocks install luacheck 
 RUN luarocks install lpeg 
 RUN luarocks install luafilesystem 
 RUN luarocks install md5 

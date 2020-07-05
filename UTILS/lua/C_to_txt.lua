@@ -6,8 +6,8 @@ local get_ptr = require 'Q/UTILS/lua/get_ptr'
 return function (col, rowidx)
   --TODO: Handle B1 case
   --TODO: Check for caching of chunk
-  local val = nil
-  local nn_val = nil
+  local val
+  local nn_val
   local chunk_num = math.floor((rowidx-1)/qconsts.chunk_size)
   local chunk_idx = (rowidx-1) % qconsts.chunk_size
   --print("Chunk Num "..tostring(chunk_num))
@@ -30,19 +30,18 @@ return function (col, rowidx)
     else
       val = casted[chunk_idx]
     end
-            
     -- to check if LL is present and then remove LL appended at end of I8 number
     if ( qtype == "I8" ) then
       val = tostring(val)
       local index1, index2 = string.find(val,"LL")
       local string_length = #val
       if index1 == string_length-1 and index2 == string_length then
-        val = string.sub(val, 1, -3) 
+        val = string.sub(val, 1, -3)
       end
       val = tonumber(val)
     elseif ( qtype == "SC" ) then
       val = ffi.string(casted + chunk_idx * col:field_width())
-    elseif ( qtype == "SV" ) then 
+    elseif ( qtype == "SV" ) then
       --print("Index: "..tostring(val))
       local dictionary = col:get_meta("dir")
       val = dictionary:get_string_by_index(tonumber(val))
@@ -58,9 +57,9 @@ return function (col, rowidx)
          val = ffi.NULL
       else
          nn_val = 1
-      end    
+      end
     end
   end
-  --print("Returning "..tostring(val).." ==== " ..tostring(nn_val))  
+  --print("Returning "..tostring(val).." ==== " ..tostring(nn_val))
   return val, nn_val
 end

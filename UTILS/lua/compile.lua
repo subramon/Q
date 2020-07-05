@@ -4,10 +4,8 @@ local assertx       = require 'Q/UTILS/lua/assertx'
 local exec          = require 'Q/UTILS/lua/exec_and_capture_stdout'
 
 local QC_FLAGS     = qconsts.QC_FLAGS
-local Q_ROOT       = qconsts.Q_ROOT 
+local Q_ROOT       = qconsts.Q_ROOT
 local Q_SRC_ROOT   = qconsts.Q_SRC_ROOT
-local Q_BUILD_DIR  = qconsts.Q_BUILD_DIR
-local Q_LINK_FLAGS = qconsts.Q_LINK_FLAGS
 
 local lib_prefix = Q_ROOT .. "/lib/lib"
 
@@ -15,22 +13,22 @@ local lib_prefix = Q_ROOT .. "/lib/lib"
 assert(cutils.isdir(Q_SRC_ROOT))
 --================================================
 local function compile(
-  dotc,  -- INPUT 
-  srcs, -- INPUT, any other files to be compiled 
-  incs, -- INPUT, where to look for include files 
+  dotc,  -- INPUT
+  srcs, -- INPUT, any other files to be compiled
+  incs, -- INPUT, where to look for include files
   libs, -- INPUT, any libraries that need to be linked
   fn -- INPUT
   )
   dotc = Q_SRC_ROOT .. dotc
   assert(cutils.isfile(dotc))
-  local sofile = lib_prefix .. fn .. ".so" -- to be created 
-  if ( cutils.isfile(sofile) ) then 
-    print("File exists: No need to create " .. sofile)
+  local sofile = lib_prefix .. fn .. ".so" -- to be created
+  if ( cutils.isfile(sofile) ) then
+    -- print("File exists: No need to create " .. sofile)
     return sofile
   end
   --===============================
   local str_incs = {}
-  for _, v in ipairs(incs) do 
+  for _, v in ipairs(incs) do
     local incdir = qconsts.Q_SRC_ROOT .. v
     assert(cutils.isdir(incdir))
     str_incs[#str_incs+1] = "-I" .. incdir
@@ -38,26 +36,26 @@ local function compile(
   str_incs = table.concat(str_incs, " ")
   --===============================
   local str_srcs = {}
-  if ( srcs ) then 
-    for k, v in ipairs(srcs) do 
+  if ( srcs ) then
+    for _, v in ipairs(srcs) do
       local srcfile = qconsts.Q_SRC_ROOT .. v
       assert(cutils.isfile(srcfile))
-      str_srcs[#str_srcs+1] = srcfile 
+      str_srcs[#str_srcs+1] = srcfile
     end
     str_srcs = table.concat(str_srcs, " ")
   else
-    str_srcs = "" 
-  end 
+    str_srcs = ""
+  end
   --===============================
   local str_libs = ""
-  if ( libs ) then 
+  if ( libs ) then
     str_libs = table.concat(libs, " ")
   end
   --===============================
-  local q_cmd = string.format("gcc -shared %s %s %s %s -o %s %s", 
+  local q_cmd = string.format("gcc -shared %s %s %s %s -o %s %s",
        QC_FLAGS, str_incs, dotc, str_srcs, sofile, str_libs)
   assert(exec(q_cmd), q_cmd)
   assertx(cutils.isfile(sofile), "Target " ..  sofile .. " not created")
-  return sofile 
+  return sofile
 end
 return compile
