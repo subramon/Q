@@ -1,7 +1,7 @@
 //START_INCLUDES
 #include "q_incs.h"
 //STOP_INCLUDES
-#include "_SC_to_txt.h"
+#include "SC_to_txt.h"
 //START_FUNC_DECL
 int
 SC_to_txt(

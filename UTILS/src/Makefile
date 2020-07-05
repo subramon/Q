@@ -28,6 +28,7 @@ gen_inc_files : \
 	../inc/isfile.h \
 	../inc/isdir.h \
 	../inc/rand_file_name.h \
+	../inc/get_bit_u64.h \
 	../inc/get_file_size.h \
 	../inc/get_time_usec.h \
 	../inc/get_bit_u64.h \
@@ -241,10 +242,10 @@ GEN_SRC_FILES = \
 #----------------------------------
 
 
-libutils.so : ${src_files} ${gen_src_files} 
+libutils.so : src_files gen_src_files gen_inc_files
 	gcc ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} \
-		${gen_src_files} \
-		${src_files} -o libutils.so
+		${GEN_SRC_FILES} \
+		${SRC_FILES} -o libutils.so
 
 clean :
 	rm -f ${GEN_SRC_FILES} ${GEN_INC_FILES}

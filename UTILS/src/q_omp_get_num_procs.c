@@ -1,7 +1,7 @@
 //START_INCLUDES
 #include "q_incs.h"
 //STOP_INCLUDES
-#include "_q_omp_get_num_procs.h"
+#include "q_omp_get_num_procs.h"
 //START_FUNC_DECL
 int // TODO inline this function
 q_omp_get_num_procs(

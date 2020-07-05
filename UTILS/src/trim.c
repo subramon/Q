@@ -1,5 +1,5 @@
 #include "q_incs.h"
-#include "_trim.h"
+#include "trim.h"
 // assumption that inbuf and outbuf have been malloc'd with n bytes
 // also, inbuf is null terminated and memset to 0 before being filled
 //START_FUNC_DECL

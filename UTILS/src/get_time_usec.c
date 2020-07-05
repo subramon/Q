@@ -1,7 +1,7 @@
 //START_INCLUDES
 #include "q_incs.h"
 //STOP_INCLUDES
-#include "_get_time_usec.h"
+#include "get_time_usec.h"
 //START_FUNC_DECL
 uint64_t 
 get_time_usec(

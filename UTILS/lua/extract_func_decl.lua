@@ -25,7 +25,7 @@ local function extract_func_decl(
   local fn = string.gsub(infile, "^.*/", "")
   fn = string.gsub(fn, ".c$", "")
   if ( opdir ~= "" ) then 
-    opfile = opdir .. "/_" .. fn .. ".h"
+    opfile = opdir .. "/" .. fn .. ".h"
     io.open(opfile, "w+")
     io.output(opfile)
   end
