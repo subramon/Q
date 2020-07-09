@@ -61,9 +61,9 @@ return function (in_qtype)
   subs.srcdir = "OPERATORS/F_TO_S/gen_src/"
   if ( in_qtype == "B1" ) then 
     subs.tmpl = nil
-    subs.dotc = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/src/sum_B1.c"
-    subs.doth = qconsts.Q_SRC_ROOT .. "/OPERATORS/F_TO_S/inc/sum_B1.h"
-    -- TODO
+    subs.dotc = "OPERATORS/F_TO_S/src/sum_B1.c"
+    subs.doth = "OPERATORS/F_TO_S/inc/sum_B1.h"
+    subs.srcs = { "UTILS/src/get_bit_u64.c" }
   end
   return subs
 end

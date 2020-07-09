@@ -19,8 +19,12 @@ local function compile(
   libs, -- INPUT, any libraries that need to be linked
   fn -- INPUT
   )
-  dotc = Q_SRC_ROOT .. dotc
-  assert(cutils.isfile(dotc))
+  -- TODO P4: What if no forward slash in dotc?
+  if ( string.find(dotc, "/") ~= 1 ) then
+    -- we do not have fully qualified path
+    dotc = Q_SRC_ROOT .. "/" .. dotc
+  end
+  assert(cutils.isfile(dotc), dotc)
   local sofile = lib_prefix .. fn .. ".so" -- to be created
   if ( cutils.isfile(sofile) ) then
     -- print("File exists: No need to create " .. sofile)
@@ -28,12 +32,16 @@ local function compile(
   end
   --===============================
   local str_incs = {}
+  if ( incs ) then 
   for _, v in ipairs(incs) do
     local incdir = qconsts.Q_SRC_ROOT .. v
     assert(cutils.isdir(incdir))
     str_incs[#str_incs+1] = "-I" .. incdir
   end
-  str_incs = table.concat(str_incs, " ")
+    str_incs = table.concat(str_incs, " ")
+  else
+    str_incs = ""
+  end
   --===============================
   local str_srcs = {}
   if ( srcs ) then

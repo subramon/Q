@@ -25,8 +25,16 @@ tests.t2 = function()
   print("Test t2 succeeded")
 end
 --=========================================
--- return tests
-tests.t1()
+tests.t3 = function()
+  local n = 1048576+17
+  local y = Q.const({val = true, qtype = "B1", len = n })
+  local z = Q.sum(y):eval():to_num()
+  assert(z == n)
+  print("Test t3 succeeded")
+end
+--=========================================
+return tests
 --[[
 tests.t2()
+tests.t3()
 --]]

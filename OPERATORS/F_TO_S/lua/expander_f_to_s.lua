@@ -28,11 +28,11 @@ return function (a, x)
       return Reducer ({value = rslt, func = extractor})
     end
   end
-
   local func_name = assert(subs.fn)
-  subs.incs = { "OPERATORS/F_TO_S/inc/", "OPERATORS/F_TO_S/gen_inc/", }
+  subs.incs = { "UTILS/inc", "OPERATORS/F_TO_S/inc/", "OPERATORS/F_TO_S/gen_inc/", }
   subs.structs = { "OPERATORS/F_TO_S/inc/minmax_struct.h",
-                   "OPERATORS/F_TO_S/inc/sum_struct.h" }
+                   "OPERATORS/F_TO_S/inc/sum_struct.h", 
+                   "RUNTIME/SCLR/inc/scalar_struct.h" }
   qc.q_add(subs)
 
 

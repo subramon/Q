@@ -1,5 +1,6 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local cVector = require 'libvctr'
+local cutils  = require 'libcutils'
 local plpath  = require 'pl.path'
 local ffi     = require 'ffi'
 local qc      = require 'Q/UTILS/lua/q_core'
@@ -20,12 +21,9 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
   local status, subs = pcall(spfn, f1:fldtype(), f2:fldtype(), optargs)
   if not status then print(subs) end
   local func_name = assert(subs.fn)
-  -- START: Dynamic compilation
-  if ( not qc[func_name] ) then 
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
-  end 
-  -- STOP : Dynamic compilation
-  assert(qc[func_name], "Symbol not available" .. func_name)
+  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}
+  qc.q_add(subs)
+
 
   local f3_qtype = assert(subs.out_qtype)
   local f3_width = qconsts.qtypes[f3_qtype].width
@@ -57,8 +55,8 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
     if f1_len > 0 then
       local chunk1 = get_ptr(f1_chunk, f1_cast_as)
       local chunk2 = get_ptr(f2_chunk, f2_cast_as)
-      local chunk3 = get_ptr(f3_chunk, f3_cast_as)
-      local start_time = qc.RDTSC()
+      local chunk3 = get_ptr(buf, f3_cast_as)
+      local start_time = cutils.rdtsc()
       qc[func_name](chunk1, chunk2, f1_len, chunk3)
       record_time(start_time, func_name)
     end

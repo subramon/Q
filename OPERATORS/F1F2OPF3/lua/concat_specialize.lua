@@ -1,5 +1,4 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1F2OPF3/lua/f1f2opf3.tmpl"
 return function (
   in1_qtype, 
   in2_qtype, 
@@ -64,6 +63,8 @@ return function (
     -- Note that we are movint int8_t to uint8_t below
     subs.c_code_for_operator = " c = ((" .. subs.out_ctype .. ")a << " .. shift .. " ) | b; "
 
-    subs.tmpl = tmpl
+    subs.tmpl = "OPERATORS/F1F2OPF3/lua/f1f2opf3.tmpl"
+    subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
+    subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
     return subs
 end

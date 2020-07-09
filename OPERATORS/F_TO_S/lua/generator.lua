@@ -4,9 +4,10 @@ local plpath     = require 'pl.path'
 local gen_code   = require "Q/UTILS/lua/gen_code"
 local for_cdef   = require "Q/UTILS/lua/for_cdef"
 local qconsts    =  require 'Q/UTILS/lua/q_consts'
-local get_hdr    = require 'Q/UTILS/lua/get_hdr'
 local check_subs = require 'Q/OPERATORS/F_TO_S/lua/check_subs'
 
+local function nop() end 
+print = nop -- Comment this out if you want print statements
 local srcdir = "../gen_src/"
 local incdir = "../gen_inc/"
 if ( not plpath.isdir(srcdir) ) then plpath.mkdir(srcdir) end

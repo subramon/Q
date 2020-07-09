@@ -1,5 +1,4 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1F2OPF3/lua/f1f2opf3_cmp.tmpl"
 return function (
   f1type, 
   f2type
@@ -15,6 +14,9 @@ return function (
   subs.out_ctype = "uint64_t"
   subs.out_qtype = "B1"
   subs.comparator = " <<comparator>> "
-  subs.tmpl = tmpl
+  subs.tmpl = "OPERATORS/F1F2OPF3/lua/f1f2opf3_cmp.tmpl"
+  subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
+  subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
+  subs.srcs = { "UTILS/src/set_bit_u64.c" }
   return subs
 end

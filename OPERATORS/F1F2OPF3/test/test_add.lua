@@ -3,7 +3,6 @@ require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
-cVector.init_globals({})
 local plpath  = require 'pl.path'
 local chunk_size = cVector.chunk_size()
 
@@ -16,7 +15,6 @@ tests.t1 = function()
 
   local c1 = Q.mk_col(x1, qtype)
   local c2 = Q.mk_col(x2, qtype)
-  print("Created input")
   assert(c1:num_elements() == len)
   assert(c2:num_elements() == len)
   local z = Q.vvadd(c1, c2):eval()
@@ -30,7 +28,7 @@ tests.t2 = function()
   local input_table1 = {}
   local input_table2 = {}
   local expected_table = {}
-  for i = 1, 65540 do
+  for i = 1, chunk_size + 7 do 
     input_table1[i] = i
     input_table2[i] = i * 10
     expected_table[i] = i + (i * 10)
@@ -49,4 +47,3 @@ tests.t2 = function()
 end
 
 return tests
--- tests.t1()

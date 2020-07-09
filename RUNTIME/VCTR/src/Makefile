@@ -9,9 +9,6 @@ INCS=-I. -I../inc/ \
 all: libvctr.so 
 	cp libvctr.so ${Q_ROOT}/lib/
 
-all_for_dc : 
-	cp ../inc/core_vec_struct.h ${Q_BUILD_DIR}/include/
-
 ../inc/_struct_timers.h : timers.lua
 	lua timers.lua "struct" > ../inc/_struct_timers.h
 

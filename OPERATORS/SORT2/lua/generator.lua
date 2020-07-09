@@ -1,6 +1,8 @@
 #!/usr/bin/env lua
 -- luajit generator.lua orders.lua  qtypes.lua  qtypes.lua
 require 'Q/UTILS/lua/strict'
+local function nop() end 
+print = nop -- Comment this out if you want print statements
 local plpath = require 'pl.path'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 --========

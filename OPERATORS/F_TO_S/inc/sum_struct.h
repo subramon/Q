@@ -1,5 +1,6 @@
 #ifndef _SUM_STRUCT_H
 #define _SUM_STRUCT_H
+#include <stdint.h>
 //START_FOR_CDEF
 typedef struct _sum_F_args {
   double   val;

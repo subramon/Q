@@ -7,9 +7,6 @@ INCS=-I. -I../inc/ \
 all: libsclr.so 
 	cp libsclr.so ${Q_ROOT}/lib/
 
-all_for_dc : 
-	cp ../inc/scalar_struct.h ${Q_BUILD_DIR}/include/
-
 LOCAL_GEN_FILES = \
 	_eval_arith.c	 \
 	_outer_eval_arith.c \

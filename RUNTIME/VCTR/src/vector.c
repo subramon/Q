@@ -202,7 +202,7 @@ static int l_vec_free_globals( lua_State *L) {
 static int l_vec_chunk_size( lua_State *L) {
   int status = 0; 
   if ( g_S.chunk_size == 0 ) {  
-    printf("Setting default values \n");
+    // printf("Setting default values \n");
     status = set_default_values(&g_S); cBYE(status);
   }
   lua_pushnumber(L, g_S.chunk_size);

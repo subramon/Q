@@ -7,9 +7,6 @@ INCS=-I. \
 all: libcmem.so 
 	cp libcmem.so ${Q_ROOT}/lib/
 
-all_for_dc : 
-	cp ../inc/cmem_struct.h ${Q_BUILD_DIR}/include/
-
 clean:
 	rm -f *.so *.o _*
 		

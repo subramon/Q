@@ -1,6 +1,8 @@
 #!/usr/bin/env lua
 local plpath = require 'pl.path'
 local gen_code = require 'Q/UTILS/lua/gen_code'
+local function nop() end 
+print = nop -- Comment this out if you want print statements
 --========
 local order_file = assert(arg[1])
 local orders 

@@ -5,6 +5,8 @@ local gen_code = require 'Q/UTILS/lua/gen_code'
 local check_subs = require 'Q/OPERATORS/S_TO_F/lua/check_subs'
 local plpath   = require "pl.path"
 
+local function nop() end 
+print = nop -- Comment this out if you want print statements
 --========
 local operator_file = assert(arg[1])
 local operators 
