@@ -1,5 +1,5 @@
 #include "rand_B1.h"
-#include "_rdtsc.h"
+#include "rdtsc.h"
 
 //START_FUNC_DECL
 int

@@ -217,7 +217,7 @@ BYE:
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_data_dir( lua_State *L) {
   int status = 0;
-  if ( g_S.q_data_dir[0] == '\0' ) {  
+  if ( ( g_S.q_data_dir == NULL ) || ( g_S.q_data_dir[0] == '\0' ) ) {  
     status = set_default_values(&g_S); cBYE(status);
   }
   if ( !isdir(g_S.q_data_dir) ) { go_BYE(-1); }

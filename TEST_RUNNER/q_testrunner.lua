@@ -22,14 +22,14 @@ package.path  = "/?.lua;" .. package.path -- TODO P4 What is this for?
 local cutils   = require 'libcutils'
 
 local qc       = require 'Q/UTILS/lua/q_core'
+local cleanup  = require 'Q/UTILS/lua/cleanup'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 local plpretty = require "pl.pretty"
 local plpath   = require "pl.path"
-
+cleanup()
 local q_root = qconsts.Q_ROOT
 local recursive_lister = require 'Q/TEST_RUNNER/recursive_lister'
 assert(cutils.isdir(q_root))
-require('Q/UTILS/lua/cleanup')() -- cleanup data files if any
 
 local calls = 0
 
@@ -115,9 +115,13 @@ local test_name
 local t_results = {}
 local files = {}
 if ( plpath.isfile(path) ) then
+  -- we have provided a file, not a directory
+  -- we can optionally restrict attention to a single test in that file
   files[#files+1] = path
   if ( arg[2] ) then test_name = arg[2] end 
 else
+  -- we have provided a directory
+  -- assemble a list of all files with name test_*.lua contained therein
   recursive_lister(files, path)
 end
 --- Now we have a list of files that need to be executed

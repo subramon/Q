@@ -60,8 +60,8 @@ tests.t3 = function() -- this is a stress test
 end
 --[[
 tests.t1()
-tests.t2()
 tests.t3()
+tests.t2()
 os.exit()
 --]]
 return tests

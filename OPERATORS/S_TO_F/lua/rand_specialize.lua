@@ -83,8 +83,9 @@ return function (
     subs.buf_size = cVector.chunk_size() / 8
     subs.tmpl = nil -- this is not generated code 
     subs.out_ctype = "uint64_t" 
-    subs.dotc = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/src/rand_B1.c"
-    subs.doth = qconsts.Q_SRC_ROOT .. "/OPERATORS/S_TO_F/inc/rand_B1.h"
+    subs.dotc = "OPERATORS/S_TO_F/src/rand_B1.c"
+    subs.doth = "OPERATORS/S_TO_F/inc/rand_B1.h"
+    subs.srcs = { "UTILS/src/rdtsc.c" }
   end
   subs.incdir = "OPERATORS/S_TO_F/gen_inc/"
   subs.srcdir = "OPERATORS/S_TO_F/gen_src/"

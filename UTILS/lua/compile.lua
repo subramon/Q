@@ -35,7 +35,7 @@ local function compile(
   if ( incs ) then 
   for _, v in ipairs(incs) do
     local incdir = qconsts.Q_SRC_ROOT .. v
-    assert(cutils.isdir(incdir))
+    assert(cutils.isdir(incdir), incdir)
     str_incs[#str_incs+1] = "-I" .. incdir
   end
     str_incs = table.concat(str_incs, " ")

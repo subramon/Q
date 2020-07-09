@@ -1,6 +1,8 @@
-local qconsts = require "Q/UTILS/lua/q_consts"
-local data_dir = qconsts.Q_DATA_DIR
+local cutils  = require 'libcutils'
+local cVector = require 'libvctr'
+local data_dir = cVector.data_dir()
+local cmd = string.format("find %s -type f -delete", data_dir)
 return function()
-   os.execute(string.format("find %s -type f -delete", data_dir))
+  os.execute(cmd)
 -- TODO P4 add rmdir functionality to  cutils and use instead of os.exec
 end
