@@ -5,6 +5,7 @@ local cutils            = require 'libcutils'
 local cmem		= require 'libcmem'
 local Scalar		= require 'libsclr'
 local cVector		= require 'libvctr'
+local chunk_size = cVector.chunk_size()
 local register_type	= require 'Q/UTILS/lua/q_types'
 local H                 = require 'Q/RUNTIME/VCTR/lua/helpers'
 local for_cdef          = require 'Q/UTILS/lua/for_cdef'
@@ -142,7 +143,7 @@ end
 function lVector:eval()
   if ( self:is_eov() ) then return self end 
   assert(H.is_multiple_of_chunk_size(self:num_elements()))
-  local csz = cVector.chunk_size()
+  local csz = chunk_size
   local chunk_num = self:num_elements() / csz
   local base_len, base_addr, nn_addr 
   repeat

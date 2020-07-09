@@ -1,6 +1,6 @@
 require 'Q/UTILS/lua/strict'
-local Q = require 'Q'
 local cVector = require 'libvctr'
+local cutils  = require 'libcutils'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local Scalar  = require 'libsclr'
 local run_dt  = require 'Q/ML/DT/lua/run_dt'
@@ -8,7 +8,6 @@ local write_to_csv = require 'Q/ML/DT/lua/write_to_csv'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local print_dt_results = require 'Q/ML/DT/lua/dt'["print_dt_results"]
 
-local qc       = require 'Q/UTILS/lua/q_core'
 local src_root = qconsts.Q_SRC_ROOT
 
 local tests = {}
@@ -52,9 +51,9 @@ tests.t1 = function(n)
   args.cautious = true -- turn off for performance evaluation
 
   cVector.reset_timers()
-  local start_time = qc.RDTSC()
+  local start_time = cutils.rdtsc()
   local results = run_dt(args)
-  local stop_time = qc.RDTSC()
+  local stop_time = cutils.rdtsc()
   print_dt_results(results)
   write_to_csv(results, rfile)
   cVector.print_timers()
@@ -86,7 +85,7 @@ tests.t2 = function()
   args.test_csv = Q_SRC_ROOT .. "/ML/KNN/data/cancer/b_cancer/b_cancer_test.csv"
   ]]
   Vector.reset_timers()
-  start_time = qc.RDTSC()
+  start_time = cutils.rdtsc()
   local results = run_dt(args)
   for alpha, v in pairs(results) do
     for k2, v2 in pairs(v) do
@@ -95,7 +94,7 @@ tests.t2 = function()
       end
     end
   end
-  stop_time = qc.RDTSC()
+  stop_time = cutils.rdtsc()
   write_to_csv(results, "cancer_sample.csv")
   --Vector.print_timers()
   print("================================================")
@@ -137,7 +136,7 @@ tests.t3 = function()
   ]]
 
   Vector.reset_timers()
-  start_time = qc.RDTSC()
+  start_time = cutils.rdtsc()
   local results = run_dt(args)
   for alpha, v in pairs(results) do
     for k2, v2 in pairs(v) do
@@ -146,7 +145,7 @@ tests.t3 = function()
       end
     end
   end
-  stop_time = qc.RDTSC()
+  stop_time = cutils.rdtsc()
   write_to_csv(results, "titanic_sample.csv")
   --Vector.print_timers()
   print("================================================")
@@ -189,7 +188,7 @@ tests.t4 = function()
   ]]
 
   Vector.reset_timers()
-  start_time = qc.RDTSC()
+  start_time = cutils.rdtsc()
   local results = run_dt(args)
   for alpha, v in pairs(results) do
     for k2, v2 in pairs(v) do
@@ -198,7 +197,7 @@ tests.t4 = function()
       end
     end
   end
-  stop_time = qc.RDTSC()
+  stop_time = cutils.rdtsc()
   write_to_csv(results, "ramesh_category1_sample.csv")
   --Vector.print_timers()
   print("================================================")
@@ -231,7 +230,7 @@ tests.t5 = function()
   args.print_graphviz = true
 
   Vector.reset_timers()
-  start_time = qc.RDTSC()
+  start_time = cutils.rdtsc()
   local results = run_dt(args)
   for alpha, v in pairs(results) do
     for k2, v2 in pairs(v) do
@@ -240,7 +239,7 @@ tests.t5 = function()
       end
     end
   end
-  stop_time = qc.RDTSC()
+  stop_time = cutils.rdtsc()
   write_to_csv(results, "habermans_sample.csv")
   --Vector.print_timers()
   print("================================================")
@@ -283,7 +282,7 @@ tests.t6 = function()
   args.print_graphviz = true
 
   Vector.reset_timers()
-  start_time = qc.RDTSC()
+  start_time = cutils.rdtsc()
   local results = run_dt(args)
   for alpha, v in pairs(results) do
     for k2, v2 in pairs(v) do
@@ -292,7 +291,7 @@ tests.t6 = function()
       end
     end
   end
-  stop_time = qc.RDTSC()
+  stop_time = cutils.rdtsc()
   --Vector.print_timers()
   print("================================================")
   print("total execution time : " .. tostring(tonumber(stop_time-start_time)))
@@ -300,7 +299,7 @@ tests.t6 = function()
 end
 
 -- return tests
-tests.t1(2)
+tests.t1(1)
   --[[
   if _G['g_time'] then
     for k, v in pairs(_G['g_time']) do

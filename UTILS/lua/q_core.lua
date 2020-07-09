@@ -72,7 +72,7 @@ local function load_lib(
   -- and when you try and invoke qc.foo, the program crashes
   -- print("Added function to qc ", fn)
   libs[fn] = L
-  known_functions[fn] = libs[fn][fn]
+  known_functions[fn] = true
   qc[fn] = libs[fn][fn]
   return cdefs
 end
@@ -83,6 +83,8 @@ local function q_add(
   )
   local tmpl, doth, dotc
   local fn = assert(subs.fn)
+  if ( known_functions[fn] ) then assert(qc[fn]) end
+  if ( not known_functions[fn] ) then assert(not qc[fn]) end
   if ( known_functions[fn] ) then
     -- print("Nothing to do: Known function " .. fn) 
     return true
@@ -103,9 +105,6 @@ local function q_add(
     assert( (type(dotc) == "string") and  ( #dotc > 0 ) )
   end
   assert( (type(fn) == "string") and  ( #fn > 0 ) )
-
-  assert(not known_functions[fn], "Function already registered")
-  assert(not              qc[fn], "Function already registered")
   --==================================
   local sofile = assert(compile(dotc, subs.srcs, subs.incs, subs.libs, fn))
   local cdefs = load_lib(fn, doth, subs.incs, subs.structs, sofile)
@@ -113,21 +112,6 @@ local function q_add(
   return true
 end
 
-local qc_mt = {
-  __newindex = function(self, key, value)
-    -- Write more details on why you might want to redfine a function
-    -- Might want to protect this with a qconsts.debug e.g.
-    -- assert(qconsts.debug)
-    rawset(self, key, value)
-    -- If you genuinely believe that you do not want to give the developer
-    -- this ability, then
-    -- error("you cannot redfine a function")
-  end,
-  -- TODO P2: luacheck says     q_core.lua:125:22: unused argument self
-  __index = function(self, key)
-    if key == "q_add" then return q_add end
-    if key == "q_cdef" then return q_cdef end
-  end
-}
-setmetatable(qc, qc_mt)
+qc.q_add  = q_add
+qc.q_cdef = q_cdef
 return qc

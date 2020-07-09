@@ -3,7 +3,6 @@ local ffi = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
-cVector.init_globals({})
 local Q = require 'Q'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local tests = {}

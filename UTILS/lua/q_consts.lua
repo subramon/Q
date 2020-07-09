@@ -64,8 +64,8 @@ local qconsts = {}
   qconsts.LUA_PATH	= os.getenv("LUA_PATH")
   qconsts.LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")
 
-  -- from cVector qconsts.Q_DATA_DIR	= os.getenv("Q_DATA_DIR")
-  -- from cVector qconsts.chunk_size = chunk_size
+  -- Use cVector qconsts.Q_DATA_DIR for data_dir
+  -- Use cVector qconsts.chunk_size for chunk_size
 --=================================
 
   qconsts.debug = true -- set to TRUE only if you want debugging

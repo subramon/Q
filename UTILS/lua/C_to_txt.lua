@@ -1,15 +1,16 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local cVector = require 'libvctr'
 local ffi = require 'ffi'
 local cutils = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local chunk_size = cVector.chunk_size()
 
 return function (col, rowidx)
   --TODO: Handle B1 case
   --TODO: Check for caching of chunk
   local val
   local nn_val
-  local chunk_num = math.floor((rowidx-1)/qconsts.chunk_size)
-  local chunk_idx = (rowidx-1) % qconsts.chunk_size
+  local chunk_num = math.floor((rowidx-1)/chunk_size)
+  local chunk_idx = (rowidx-1) % chunk_size
   --print("Chunk Num "..tostring(chunk_num))
   --print("Chunk_idx "..tostring(chunk_idx))
   local len, base_data, nn_data = col:chunk(chunk_num)

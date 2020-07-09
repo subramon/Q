@@ -14,12 +14,11 @@ all : \
 	_f1f2opf3.lua \
 	arith_specializers  \
 	cmp_specializers  \
-	bop_specializers  \
+	bop_specializers 
+	
+
+test : libf1f2opf3.so  \
 	_concat_files _arith_files _bop_files _cmp_files 
-
-test : libf1f2opf3.so 
-
-all_for_dc : \
 	
 arith_specializers: vvadd_specialize.lua vvsub_specialize.lua \
 	vvmul_specialize.lua vvdiv_specialize.lua 

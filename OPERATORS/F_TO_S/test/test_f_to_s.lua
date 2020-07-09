@@ -3,7 +3,6 @@ require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
-cVector.init_globals({})
 local tests = {}
 local qtype = "I4"
 local len = 2 * cVector.chunk_size() + 19

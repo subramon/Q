@@ -95,8 +95,9 @@ static int l_vec_init_globals( lua_State *L) {
   }
   if ( ( g_S.chunk_dir != NULL ) || ( g_S.q_data_dir != NULL ) ||
        ( g_S.chunk_size > 0 ) ) {
-    fprintf(stderr, "ERROR: globals have been initialized already\n");
-    go_BYE(-1); 
+    // fprintf(stderr, "ERROR: globals have been initialized already\n");
+    // go_BYE(-1); 
+    status = -1; goto BYE;
   }
   status = check_args_is_table(L); cBYE(status);
   //-------------------------------
