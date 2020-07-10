@@ -1,14 +1,18 @@
 //START_INCLUDES
-#include "q_incs.h"
-#include "_txt_to_I1.h"
-#include "_txt_to_I2.h"
-#include "_txt_to_I4.h"
-#include "_txt_to_I8.h"
-#include "_txt_to_F4.h"
-#include "_txt_to_F8.h"
-#include "_rs_mmap.h"
-#include "_trim.h"
-#include "_set_bit_u64.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include "q_macros.h"
+#include "txt_to_I1.h"
+#include "txt_to_I2.h"
+#include "txt_to_I4.h"
+#include "txt_to_I8.h"
+#include "txt_to_F4.h"
+#include "txt_to_F8.h"
+#include "rs_mmap.h"
+#include "trim.h"
+#include "set_bit_u64.h"
 //STOP_INCLUDES
 #include "load_csv_fast.h"
 

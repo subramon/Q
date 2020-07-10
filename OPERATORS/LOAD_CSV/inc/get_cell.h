@@ -1,3 +1,5 @@
+#include <stdbool.h>
+//START_FOR_CDEF
 extern size_t
 get_cell(
     char *X,
@@ -9,3 +11,4 @@ get_cell(
     char *lbuf,
     size_t bufsz
     );
+//STOP_FOR_CDEF

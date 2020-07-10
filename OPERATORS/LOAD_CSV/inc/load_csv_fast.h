@@ -1,3 +1,5 @@
+#ifndef __LOAD_CSV_FAST_H
+#define __LOAD_CSV_FAST_H
 // I really don't like this hard coding below especially since
 // bridge_C.lua needs to kept in sync with this. But it helped
 // work around  some strange memory corruption
@@ -10,6 +12,7 @@
 #define F8 7 
 #define SC 8 
 #define BUFSZ 2047 
+//START_FOR_CDEF
 extern int
 load_csv_fast(
     const char * const infile,
@@ -27,3 +30,5 @@ load_csv_fast(
     char **data, /* [nC][chunk_size] */
     uint64_t **nn_data /* [nC][chunk_size] */
     );
+//STOP_FOR_CDEF
+#endif

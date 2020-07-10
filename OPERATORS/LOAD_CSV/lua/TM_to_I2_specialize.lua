@@ -1,5 +1,4 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/lua/TM_to_I2.tmpl"
 local function TM_to_I2_specialize(tm_fld)
   local subs = {}
   assert(type(tm_fld) == "string")
@@ -17,7 +16,9 @@ local function TM_to_I2_specialize(tm_fld)
  assert(fn)
  subs.fn = fn
  subs.tm_fld = tm_fld
- subs.tmpl = tmpl 
+ subs.tmpl   = "OPERATORS/LOAD_CSV/lua/TM_to_I2.tmpl"
+ subs.srcdir = "OPERATORS/LOAD_CSV/gen_src/"
+ subs.incdir = "OPERATORS/LOAD_CSV/gen_inc/"
  return subs
 end
 return  TM_to_I2_specialize

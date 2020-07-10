@@ -1,16 +1,15 @@
 require 'Q/UTILS/lua/strict'
-local ffi = require 'ffi'
+local Q       = require 'Q'
+local ffi     = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
-local Q = require 'Q'
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local tests = {}
 local plfile = require 'pl.file'
 local plpath = require 'pl.path'
 local plutils= require 'pl.utils'
 local test_print  = true -- turn false if you want only load_csv tested
 --=======================================================
+local tests = {}
 tests.t1 = function()
   local M = {}
   local O = { is_hdr = true }

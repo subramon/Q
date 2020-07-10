@@ -75,8 +75,12 @@ local function run_tests(suite_name, test_name)
     print(tests) -- this is the error message on failure
     return {}, { msg = "Failed to load suite\n" .. tostring(suite_name) }
   end
-  assert(type(tests) == "table")
-  for _, t in pairs(tests) do assert(type(t) == "function") end 
+  assert(type(tests) == "table", 
+    "Script [ " .. suite_name_mod .. "] did not return table of functions")
+  for _, t in pairs(tests) do 
+    assert(type(t) == "function", 
+      "Script [ " .. suite_name_mod .. "] did not return tbl of fns")
+  end 
   --===========================================
   local pass = {}
   local fail = {}

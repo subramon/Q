@@ -5,6 +5,14 @@ require "Q/OPERATORS/S_TO_F/lua/_s_to_f"
 require "Q/OPERATORS/SORT/lua/sort"
 require "Q/OPERATORS/F1F2OPF3/lua/_f1f2opf3"
 require "Q/OPERATORS/SORT2/lua/sort2"
+
+require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
+-- require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
+require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
+require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
+require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
+require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
+-- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
 --[[
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
@@ -37,13 +45,6 @@ require "Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez"
 require 'Q/OPERATORS/INDEX/lua/indexing'
 
 
-require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
-require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
-require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
-require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
-require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
-require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
--- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
 
 require "Q/OPERATORS/MM/lua/mv_mul"
 require "Q/OPERATORS/MDB/lua/mk_comp_key_val"

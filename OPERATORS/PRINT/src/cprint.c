@@ -1,6 +1,6 @@
 #include "q_incs.h"
 #include "cprint.h"
-#include "_get_bit_u64.h"
+#include "get_bit_u64.h"
 
 //-------- for fldtypes as enums
 // CAUTION: Needs to be in sync with Q/UTILS/lua/q_consts.lua

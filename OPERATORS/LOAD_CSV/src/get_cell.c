@@ -1,6 +1,10 @@
 //START_INCLUDES
-#include "q_incs.h"
-#include "_trim.h"
+#include "stdio.h"
+#include "stdint.h"
+#include "stdlib.h"
+#include "string.h"
+#include "q_macros.h"
+#include "trim.h"
 //STOP_INCLUDES
 #include "get_cell.h"
 //START_FUNC_DECL

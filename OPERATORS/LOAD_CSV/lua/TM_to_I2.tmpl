@@ -1,17 +1,22 @@
 return require 'Q/UTILS/lua/code_gen' {
 
    declaration = [[
-#include "q_incs.h"
-
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <time.h>
+#include "q_macros.h"
+//START_FOR_CDEF
 extern int 
 ${fn}(
       struct tm *inv,
       uint64_t n_in,
       int16_t *outv
       );
+//STOP_FOR_CDEF
 ]],
 definition = [[
-#include "_${fn}.h"
+#include "${fn}.h"
 
 int ${fn}(
       struct tm *inv,
