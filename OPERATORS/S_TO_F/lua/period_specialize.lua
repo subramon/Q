@@ -58,5 +58,8 @@ return function (
   subs.args_ctype = args_ctype
   subs.incdir = "OPERATORS/S_TO_F/gen_inc/"
   subs.srcdir = "OPERATORS/S_TO_F/gen_src/"
+  subs.incs = { "UTILS/inc", "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
+  subs.structs = { "OPERATORS/S_TO_F/inc/const_struct.h" }
+  subs.cst_out_as = subs.out_ctype .. " * "
   return subs
 end

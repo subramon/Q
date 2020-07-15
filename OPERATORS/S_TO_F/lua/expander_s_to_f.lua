@@ -11,20 +11,13 @@ return function (a, args)
   -- Get name of specializer function. By convention
   local sp_fn_name     = "Q/OPERATORS/S_TO_F/lua/" .. a .. "_specialize"
   local spfn = assert(require(sp_fn_name), "Specializer not found")
-  local status, subs = pcall(spfn, args)
-  if ( not status ) then print(sp_fn_name, subs) end 
-  assert(status, "Specializer failed ")
+  local subs = assert(spfn(args))
+  -- subs should contain 
+  -- (1) out_ctype (2) len (3) out_qtype (4) buf_size (5) cst_out_as
   local func_name = assert(subs.fn)
 
-  local ffi = require 'ffi'
-  local args = ffi.cast(subs.args_ctype .. " *",  subs.args)
-
-  subs.incs = { "UTILS/inc", "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
-  subs.structs = { "OPERATORS/S_TO_F/inc/" .. a .. "_struct.h" }
   qc.q_add(subs)
 
-
-  local cast_as = subs.out_ctype .. "*"
   local l_chunk_num = 0
   local buf = assert(cmem.new(0)) -- note we don't really allocate data
   
@@ -42,14 +35,14 @@ return function (a, args)
     local lb = csz * l_chunk_num
     if ( lb >= subs.len) then return 0, nil end 
     local num_elements = subs.len - lb
-    if ( num_elements > csz ) then 
-      num_elements = csz 
-    end
+    -- generate no more than a chunk at a time 
+    if ( num_elements > csz ) then num_elements = csz end
+    -- quit if nothing more to produce 
     if ( num_elements <= 0 ) then return 0, nil end
     --=============================
-    local cbuf   = get_ptr(buf, cast_as)
+    local cbuf   = get_ptr(buf, subs.cst_out_as)
     local start_time = cutils.rdtsc()
-    qc[func_name](cbuf, num_elements, args, lb)
+    qc[func_name](cbuf, num_elements, subs.args, lb)
     record_time(start_time, func_name)
     l_chunk_num = l_chunk_num + 1 
     return num_elements, buf

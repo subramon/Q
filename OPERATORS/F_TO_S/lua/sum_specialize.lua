@@ -22,6 +22,7 @@ return function (in_qtype)
   subs.operator = "sum"
   subs.fn = subs.operator .. "_" .. in_qtype
   subs.in_ctype = qconsts.qtypes[in_qtype].ctype
+  subs.cst_in_as = subs.in_ctype .. " *"
   --=====================================
   -- set up args for C code
   
@@ -65,5 +66,8 @@ return function (in_qtype)
     subs.doth = "OPERATORS/F_TO_S/inc/sum_B1.h"
     subs.srcs = { "UTILS/src/get_bit_u64.c" }
   end
+  subs.incs = { "UTILS/inc", "OPERATORS/F_TO_S/inc/", "OPERATORS/F_TO_S/gen_inc/", }
+  subs.structs = { "OPERATORS/F_TO_S/inc/sum_struct.h", 
+                   "RUNTIME/SCLR/inc/scalar_struct.h" }
   return subs
 end

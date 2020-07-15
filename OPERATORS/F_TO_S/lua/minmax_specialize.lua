@@ -23,6 +23,7 @@ return function (in_qtype, operator)
   local subs = {}
   subs.fn = operator ..  "_" .. in_qtype 
   subs.in_ctype = qconsts.qtypes[in_qtype].ctype
+  subs.cst_in_as = subs.in_ctype .. " *"
   subs.reduce_qtype = in_qtype
   if ( operator == "min" ) then 
     subs.comparator     = " < "
@@ -65,5 +66,8 @@ return function (in_qtype, operator)
   subs.srcdir = "OPERATORS/F_TO_S/gen_src/"
   subs.incdir = "OPERATORS/F_TO_S/gen_inc/"
   subs.tmpl   = "OPERATORS/F_TO_S/lua/minmax.tmpl"
+  subs.incs = { "UTILS/inc", "OPERATORS/F_TO_S/inc/", "OPERATORS/F_TO_S/gen_inc/", }
+  subs.structs = { "OPERATORS/F_TO_S/inc/minmax_struct.h",
+                   "RUNTIME/SCLR/inc/scalar_struct.h" }
   return subs
 end

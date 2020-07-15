@@ -62,7 +62,6 @@ local function compile(
   --===============================
   local q_cmd = string.format("gcc -shared %s %s %s %s -o %s %s",
        QC_FLAGS, str_incs, dotc, str_srcs, sofile, str_libs)
-       print(q_cmd)
   assert(exec(q_cmd), q_cmd)
   assertx(cutils.isfile(sofile), "Target " ..  sofile .. " not created")
   return sofile
