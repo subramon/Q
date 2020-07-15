@@ -1,6 +1,7 @@
 local T = {} 
 local function sort(x, y)
-  local expander = assert(require 'Q/OPERATORS/F_IN_PLACE/lua/expander_f_in+place')
+  local exp_file = 'Q/OPERATORS/F_IN_PLACE/lua/expander_f_in_place'
+  local expander = assert(require(exp_file))
   local z = assert(expander("sort", x, y))
   return z
 end

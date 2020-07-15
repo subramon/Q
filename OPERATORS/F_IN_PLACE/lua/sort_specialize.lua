@@ -13,6 +13,7 @@ return function(invec, ordr)
   assert( ( ( ordr == "asc") or ( ordr == "dsc") ))
   local subs = {}
   subs.F_IN_PLACE_ORDER = ordr
+  local in_qtype = invec:qtype()
   subs.QTYPE = in_qtype
   subs.fn = "qsort_" .. ordr .. "_" .. in_qtype
   subs.FLDTYPE = qconsts.qtypes[in_qtype].ctype

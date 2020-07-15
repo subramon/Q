@@ -1,28 +1,32 @@
+local lVector  = require 'Q/RUNTIME/VCTR/lua/lVector'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 local plpath   = require "pl.path"
 
 local function nop() end 
-print = nop -- Comment this out if you want print statements
+-- print = nop -- Comment this out if you want print statements
 local operator_file = assert(arg[1])
 assert(plpath.isfile(operator_file))
 local operators = dofile(operator_file)
 local types = { 'I1', 'I2', 'I4', 'I8','F4', 'F8' }
 
 local num_produced = 0
-for i, operator in ipairs(operators) do
+for _, operator in ipairs(operators) do
   local sp_fn = assert(require((operator .. "_specialize")))
-  for i, in1_qtype in ipairs(types) do 
-    for j, in2_qtype in ipairs(types) do 
-        local status, subs = pcall(
-        sp_fn, in1_qtype, in2_qtype, optargs)
+  for _, f1_qtype in ipairs(types) do 
+    local f1 = lVector.new({ qtype = f1_qtype})
+    for _, f2_qtype in ipairs(types) do 
+      local f2 = lVector.new({ qtype = f2_qtype})
+        local status, subs = pcall( sp_fn, f1, f2, optargs)
         if ( status ) then 
           assert(type(subs) == "table")
           gen_code.doth(subs, subs.incdir)
           gen_code.dotc(subs, subs.srcdir)
           num_produced = num_produced + 1
+        else
+          print(subs)
         end
       end
   end
 end
-print("#files produced by Arith generator = ", num_produced)
 assert(num_produced > 0)
+print("#files produced by Arith generator = ", num_produced)

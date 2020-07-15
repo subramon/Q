@@ -6,13 +6,13 @@ local ffi     = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local for_cdef = require 'Q/UTILS/lua/for_cdef'
 
-local so_dir_path = os.getenv("Q_SRC_ROOT") ..  "/OPERATORS/SORT2/lua/"
+local so_dir_path = os.getenv("Q_SRC_ROOT") ..  "/OPERATORS/F1F2_IN_PLACE/lua/"
 local sofile = so_dir_path .. "libsort2.so"
 
 local qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
 for _, qtype in ipairs(qtypes) do 
   local hfile = 
-    "OPERATORS/SORT2/gen_inc/sort2_asc_" .. qtype .. "_" .. qtype .. ".h"
+    "OPERATORS/F1F2_IN_PLACE/gen_inc/sort2_asc_" .. qtype .. "_" .. qtype .. ".h"
   local x = for_cdef(hfile)
   print(x)
   ffi.cdef(x)

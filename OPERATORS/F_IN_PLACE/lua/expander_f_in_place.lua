@@ -8,6 +8,7 @@ local function expander_f_in_place(a, x, y)
   local spfn = assert(require(specializer))
   local subs = assert(spfn(x, y))
   assert(type(subs) == "table")
+  -- subs should contain (1) ordr (if a == "sort")
   local func_name = assert(subs.fn)
 
   qc.q_add(subs)

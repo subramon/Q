@@ -1,23 +1,34 @@
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local is_in   = require 'Q/UTILS/lua/is_in'
 return function (
-  f1type, 
-  f2type,
+  f1, 
+  f2,
   optargs
   )
-  local out_qtype = promote(f1type, f2type)
+  assert(type(f1) == "lVector")
+  assert(type(f2) == "lVector")
+  assert(not f1:has_nulls())
+  assert(not f2:has_nulls())
+  local f1type = f1:qtype()
+  local f2type = f2:qtype()
+  local f3_qtype = promote(f1type, f2type)
   local subs = {}; 
   if ( optargs ) then
-    out_qtype = optargs.out_qtype or out_qtype
+    f3_qtype = optargs.f3_qtype or f3_qtype
   end
-  assert(is_in(out_qtype, { "I1", "I2", "I4", "I8", "F4", "F8" }))
+  assert(is_in(f3_qtype, { "I1", "I2", "I4", "I8", "F4", "F8" }))
 
-  subs.fn = "<<operator>>_" .. f1type .. "_" .. f2type .. "_" .. out_qtype 
-  subs.in1_ctype = qconsts.qtypes[f1type].ctype
-  subs.in2_ctype = qconsts.qtypes[f2type].ctype
-  subs.out_qtype = out_qtype
-  subs.out_ctype = qconsts.qtypes[out_qtype].ctype
+  subs.fn = "<<operator>>_" .. f1type .. "_" .. f2type .. "_" .. f3_qtype 
+  subs.f1_ctype = qconsts.qtypes[f1type].ctype
+  subs.f2_ctype = qconsts.qtypes[f2type].ctype
+  subs.f3_qtype = f3_qtype
+  subs.f3_ctype = qconsts.qtypes[f3_qtype].ctype
+
+  subs.f1_cast_as = subs.f1_ctype .. "*"
+  subs.f2_cast_as = subs.f2_ctype .. "*"
+  subs.f3_cast_as = subs.f3_ctype .. "*"
 
   subs.c_code_for_operator = "c = a <<mathsymbol>> b; "
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3.tmpl"

@@ -1,8 +1,8 @@
 -- FUNCTIONAL require 'Q/UTILS/lua/strict'
 local Q      = require 'Q'
 local Scalar = require 'libsclr'
-local orders = require 'Q/OPERATORS/SORT/lua/orders'
-local qtypes = require 'Q/OPERATORS/SORT/lua/qtypes'
+local orders = require 'Q/OPERATORS/F1F2_IN_PLACE/lua/orders'
+local qtypes = require 'Q/OPERATORS/F1F2_IN_PLACE/lua/qtypes'
 local tests = {}
 tests.t1 = function()
   -- Set up some vals that work for all qtypes

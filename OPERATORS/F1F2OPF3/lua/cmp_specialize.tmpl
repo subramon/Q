@@ -1,18 +1,31 @@
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 return function (
-  f1type, 
-  f2type
+  f1, 
+  f2
   )
+  assert(type(f1) == "lVector")
+  assert(type(f2) == "lVector")
+  assert(not f1:has_nulls())
+  assert(not f2:has_nulls())
+  local f1type = f1:qtype()
+  local f2type = f2:qtype()
+
   local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
   local subs = {}
   assert(is_base_qtype(f1type), "f1type must be base type")
   assert(is_base_qtype(f2type), "f2type must be base type")
 
   subs.fn = "<<operator>>_" .. f1type .. "_" .. f2type 
-  subs.in1_ctype   = qconsts.qtypes[f1type].ctype
-  subs.in2_ctype   = qconsts.qtypes[f2type].ctype
-  subs.out_ctype = "uint64_t"
-  subs.out_qtype = "B1"
+  subs.f1_ctype   = qconsts.qtypes[f1type].ctype
+  subs.f2_ctype   = qconsts.qtypes[f2type].ctype
+  subs.f3_ctype = "uint64_t"
+  subs.f3_qtype = "B1"
+
+  subs.f1_cast_as = subs.f1_ctype .. "*"
+  subs.f2_cast_as = subs.f2_ctype .. "*"
+  subs.f3_cast_as = subs.f3_ctype .. "*"
+
   subs.comparator = " <<comparator>> "
   subs.tmpl = "OPERATORS/F1F2OPF3/lua/f1f2opf3_cmp.tmpl"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"

@@ -1,6 +1,6 @@
 #include "q_incs.h"
-#include "_qsort_asc_I4.h"
-#include "_qsort_dsc_F8.h"
+#include "qsort_asc_I4.h"
+#include "qsort_dsc_F8.h"
 int
 main(
     int argc,

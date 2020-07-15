@@ -1,8 +1,8 @@
 -- FUNCTIONAL require 'Q/UTILS/lua/strict'
 local Q      = require 'Q'
 local Scalar = require 'libsclr'
-local orders = require 'Q/OPERATORS/SORT/lua/orders'
-local qtypes = require 'Q/OPERATORS/SORT/lua/qtypes'
+local orders = require 'Q/OPERATORS/F_IN_PLACE/lua/orders'
+local qtypes = require 'Q/OPERATORS/F_IN_PLACE/lua/qtypes'
 local tests = {}
 tests.t1 = function()
   -- Set up some vals that work for all qtypes
@@ -53,6 +53,6 @@ tests.t1 = function()
   end
   print("Successfully completed test t1")
 end
-tests.t1()
-os.exit()
---return tests
+-- tests.t1()
+-- os.exit()
+return tests

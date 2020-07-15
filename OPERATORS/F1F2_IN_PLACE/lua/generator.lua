@@ -1,8 +1,9 @@
 #!/usr/bin/env lua
 -- luajit generator.lua orders.lua  qtypes.lua  qtypes.lua
 require 'Q/UTILS/lua/strict'
+local mk_col = require 'Q/OPERATORS/MK_COL/lua/mk_col'
 local function nop() end 
-print = nop -- Comment this out if you want print statements
+-- print = nop -- Comment this out if you want print statements
 local plpath = require 'pl.path'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 --========
@@ -34,8 +35,10 @@ local num_produced = 0
 local spfn = require 'sort2_specialize'
 for _, order in ipairs(orders) do
   for _, qtype1 in ipairs(qtypes1) do
+    local f1 = mk_col({1,2,3}, qtype1)
     for _, qtype2 in ipairs(qtypes2) do
-      local status, subs = pcall(spfn, qtype1, qtype2, order)
+      local f2 = mk_col({1,2,3}, qtype2)
+      local status, subs = pcall(spfn, f1, f2, order)
       if ( not status ) then print(subs) end
       assert(status)
       assert(type(subs) == "table")
