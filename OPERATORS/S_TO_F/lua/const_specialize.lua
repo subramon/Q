@@ -39,6 +39,7 @@ return function (
   local args_ctype = "CONST_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(args_ctype)
   local cargs = cmem.new({size = sz}); 
+  cargs:zero()
   local args = get_ptr(cargs, args_ctype .. " *")
 
   local s = ffi.cast("SCLR_REC_TYPE *", sval)

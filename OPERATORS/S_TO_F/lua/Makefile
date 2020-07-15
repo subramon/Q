@@ -14,7 +14,7 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
-all : _s_to_f.lua \
+all : s_to_f.lua \
   	$(TMPL_FILES) \
 	$(SRC_FILES) \
 	$(INC_FILES) \
@@ -24,10 +24,11 @@ all : _s_to_f.lua \
 test : libs_to_f.so 
 
 all_for_dc : \
-	_s_to_f.lua
+	s_to_f.lua
 
 #----------------------------------
 clean :
+	rm -f s_to_f.lua
 	rm -r -f ../gen_src; 
 	rm -r -f ../gen_inc; 
 	rm -f _*
@@ -52,7 +53,7 @@ libs_to_f.so : GEN_SRC_FILES GEN_INC_FILES \
 	gcc ../gen_src/*.c  ${SRC_FILES} \
 	  	${CFLAGS} ${INCS} -shared -o libs_to_f.so
 
-_s_to_f.lua : 
+s_to_f.lua : 
 	luajit pkg_s_to_f.lua
 
 GEN_SRC_FILES : \

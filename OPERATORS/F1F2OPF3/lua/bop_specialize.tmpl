@@ -7,14 +7,17 @@ return function (
   assert(f1type == "B1", "f1type must be B1")
   assert(f2type == "B1", "f2type must be B1")
   local subs = {} ; 
+
   subs.fn = "<<operator>>"
   subs.in1_ctype = qconsts.qtypes[f1type].ctype
   subs.in2_ctype = qconsts.qtypes[f2type].ctype
   subs.out_ctype = "uint64_t"
   subs.out_qtype = "B1"
+
   subs.c_code_for_operator = "c = (a <<mathsymbol>> b); "
   subs.tmpl = "OPERATORS/F1F2OPF3/lua/bop.tmpl"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
+  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}
   return subs
 end

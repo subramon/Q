@@ -21,13 +21,8 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
   local status, subs = pcall(spfn, f1:fldtype(), f2:fldtype(), optargs)
   if not status then print(subs) end
   local func_name = assert(subs.fn)
-  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}
   qc.q_add(subs)
-
-
-  local f3_qtype = assert(subs.out_qtype)
-  local f3_width = qconsts.qtypes[f3_qtype].width
-  f3_width = f3_width or 1 -- to account for B1 and such types
+  local f3_width = qconsts.qtypes[subs.out_qtype].width
 
   local buf_sz = chunk_size * f3_width
   local buf = assert(cmem.new(0)) -- note we don't really allocate data
@@ -70,8 +65,6 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
     l_chunk_num = l_chunk_num + 1
     return f1_len, buf
   end
-  myvec = lVector{gen=f3_gen, nn=false, qtype=f3_qtype, has_nulls=false}
-  return myvec
+  return lVector{gen=f3_gen, nn=false, qtype=subs.out_qtype, has_nulls=false}
 end
-
 return expander_f1f2opf3

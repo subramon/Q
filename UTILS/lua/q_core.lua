@@ -34,7 +34,8 @@ local function load_lib(
   doth,
   incs,
   structs,
-  sofile
+  sofile,
+  subs
   )
   local cdefs = {}
   --=== cdef the struct files, if any
@@ -56,7 +57,8 @@ local function load_lib(
   if ( cdefd[doth] ) then
     -- print("doth: Skipping cdef of " .. doth)
   else
-    local y = for_cdef(doth, incs)
+    -- print("doth: cdef'ing " .. doth)
+    local y = for_cdef(doth, incs, subs)
     ffi.cdef(y)
     cdefd[doth] = true
     cdefs[doth] = y
@@ -107,8 +109,10 @@ local function q_add(
   assert( (type(fn) == "string") and  ( #fn > 0 ) )
   --==================================
   local sofile = assert(compile(dotc, subs.srcs, subs.incs, subs.libs, fn))
-  local cdefs = load_lib(fn, doth, subs.incs, subs.structs, sofile)
+
+  local cdefs = load_lib(fn, doth, subs.incs, subs.structs, sofile,subs)
   assert(type(cdefs) == "table")
+
   return true
 end
 

@@ -13,14 +13,21 @@ for i = 1, 3 do
   assert(s == Scalar.new(i, "I4"))
 end
 --=====================================
-y = Q.const({ val = 1, len = 3, qtype = "F4"}):eval()
+local len = 3
+y = Q.const({ val = 1, len = len, qtype = "F4"}):eval()
 Q.print_csv(y)
+for i = 1, len do 
+  assert(y:get1(i-1) == Scalar.new(1, "F4"))
+end
 --=====================================
 y = Q.seq({ start = 10, by = 20, len = 3, qtype = "I2"}):eval()
 Q.print_csv(y)
 --=====================================
 y = Q.rand({ lb = 0, ub = 1, len = 3, qtype = "F8"}):eval()
 Q.print_csv(y)
+--=====================================
+z = Q.vvadd(x, y):eval()
+Q.print_csv({x, y, z})
 --=====================================
 y = Q.period({ start = 1, by = 4, period = 2, len = 5, qtype = "I8"}):eval()
 Q.print_csv(y)

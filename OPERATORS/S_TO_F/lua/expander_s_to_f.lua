@@ -16,9 +16,13 @@ return function (a, args)
   assert(status, "Specializer failed ")
   local func_name = assert(subs.fn)
 
+  local ffi = require 'ffi'
+  local args = ffi.cast(subs.args_ctype .. " *",  subs.args)
+
   subs.incs = { "UTILS/inc", "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
   subs.structs = { "OPERATORS/S_TO_F/inc/" .. a .. "_struct.h" }
   qc.q_add(subs)
+
 
   local cast_as = subs.out_ctype .. "*"
   local l_chunk_num = 0
@@ -45,7 +49,7 @@ return function (a, args)
     --=============================
     local cbuf   = get_ptr(buf, cast_as)
     local start_time = cutils.rdtsc()
-    qc[func_name](cbuf, num_elements, subs.args, lb)
+    qc[func_name](cbuf, num_elements, args, lb)
     record_time(start_time, func_name)
     l_chunk_num = l_chunk_num + 1 
     return num_elements, buf

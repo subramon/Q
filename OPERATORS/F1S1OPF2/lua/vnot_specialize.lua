@@ -1,5 +1,4 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/vnot.tmpl"
 return function (
   in_qtype
   )
@@ -11,6 +10,8 @@ return function (
   subs.in_qtype = in_qtype
   subs.out_qtype = in_qtype
   subs.out_ctype = qconsts.qtypes[subs.out_qtype].ctype
-  subs.tmpl = tmpl
+  subs.tmpl   = "OPERATORS/F1S1OPF2/lua/vnot.tmpl"
+  subs.srcdir = "OPERATORS/F1S1OPF2/gen_src/"
+  subs.incdir = "OPERATORS/F1S1OPF2/gen_inc/"
   return subs
 end

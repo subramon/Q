@@ -11,7 +11,7 @@ OPTFLAGS=
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} -Werror
 
 all : \
-	_f1f2opf3.lua \
+	f1f2opf3.lua \
 	arith_specializers  \
 	cmp_specializers  \
 	bop_specializers 
@@ -35,6 +35,8 @@ bop_specializers : vvand_specialize.lua vvor_specialize.lua  \
 
 #----------------------------------
 clean :
+	rm -f f1f2opf3.lua
+#-----------
 	rm -f vvadd_specialize.lua
 	rm -f vvsub_specialize.lua
 	rm -f vvmul_specialize.lua
@@ -104,6 +106,6 @@ _bop_files : bop_specializers
 _cmp_files : cmp_specializers
 	luajit cmp_generator.lua cmp_operators.lua
 
-_f1f2opf3.lua : 
+f1f2opf3.lua : 
 	lua pkg_f1f2opf3.lua
 

@@ -17,14 +17,17 @@ return function (
     out_qtype = f2type
   end
   local subs = {}
+
   subs.fn = "vvrem_" .. f1type .. "_" .. f2type .. "_" .. out_qtype
   subs.in1_ctype = assert(qconsts.qtypes[f1type].ctype)
   subs.in2_ctype = assert(qconsts.qtypes[f2type].ctype)
   subs.out_qtype = out_qtype
   subs.out_ctype = assert(qconsts.qtypes[out_qtype].ctype)
+
   subs.c_code_for_operator = " c = a % b ;"
   subs.tmpl = "OPERATORS/F1F2OPF3/lua/f1f2opf3.tmpl"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
+  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}
   return subs
-end
+en 

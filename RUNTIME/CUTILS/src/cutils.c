@@ -41,7 +41,7 @@ static int l_cutils_get_bit_u64(
 {
   int status = 0;
   if ( lua_gettop(L) != 2 ) { go_BYE(-1); }
-  uint64_t *X  = (uint64_t *)lua_topointer(L, 1);
+  const uint64_t *X  = (const uint64_t *)lua_topointer(L, 1);
   uint64_t bnum = luaL_checknumber(L, 2);
   if ( bnum >= 64 ) { go_BYE(-1); }
   int bval = get_bit_u64(X, bnum); 
@@ -144,10 +144,11 @@ static int l_cutils_copyfile(
   char *x_new_file = NULL; 
   if ( !isfile(old_file) ) { go_BYE(-1); }
   if ( isdir(new_file) ) {
-    int len = strlen(new_file) + strlen(old_file) + 8;
+    char *dir = new_file; // we have been given directory not file 
+    int len = strlen(dir) + strlen(old_file) + 8;
     x_new_file = malloc(len * sizeof(char));
     return_if_malloc_failed(x_new_file);
-    sprintf(x_new_file, "%s/%s", new_file, basename((char *)old_file));
+    sprintf(x_new_file, "%s/%s", dir, basename((char *)old_file));
   }
   else {
     x_new_file = strdup(new_file);

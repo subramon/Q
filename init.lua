@@ -1,9 +1,9 @@
-require "Q/OPERATORS/F_TO_S/lua/_f_to_s"
+require "Q/OPERATORS/F_TO_S/lua/f_to_s"
 require "Q/OPERATORS/MK_COL/lua/mk_col"
 require "Q/OPERATORS/PRINT/lua/print_csv"
-require "Q/OPERATORS/S_TO_F/lua/_s_to_f"
+require "Q/OPERATORS/S_TO_F/lua/s_to_f"
 require "Q/OPERATORS/SORT/lua/sort"
-require "Q/OPERATORS/F1F2OPF3/lua/_f1f2opf3"
+require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
 require "Q/OPERATORS/SORT2/lua/sort2"
 
 require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
@@ -14,6 +14,7 @@ require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
 -- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
 --[[
+require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/get_idx_by_val"
@@ -29,7 +30,6 @@ require "Q/OPERATORS/CLONE/lua/clone"
 require "Q/OPERATORS/DROP_NULLS/lua/drop_nulls"
 
 require "Q/OPERATORS/F1OPF2F3/lua/f1opf2f3"
-require "Q/OPERATORS/F1S1OPF2/lua/_f1s1opf2"
 require "Q/OPERATORS/F1S1OPF2/lua/is_prev"
 
 require "Q/OPERATORS/GET/lua/get_val_by_idx"

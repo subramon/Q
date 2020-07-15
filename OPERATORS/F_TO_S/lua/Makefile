@@ -14,7 +14,7 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
-all : _f_to_s.lua \
+all : f_to_s.lua \
   	${TMPL_FILES} \
   	${SRC_FILES} \
   	${INC_FILES} \
@@ -29,6 +29,7 @@ INC_FILES :
 
 #----------------------------------
 clean :
+	rm -f f_to_s.lua
 	rm -r -f ../gen_src; 
 	rm -r -f ../gen_inc; 
 	rm -f _*
@@ -37,7 +38,7 @@ clean :
 libf_to_s.so : GEN_SRC_FILES GEN_INC_FILES SRC_FILES INC_FILES ${TMPL_FILES}
 	gcc ../src/*.c ../gen_src/*.c ${CFLAGS} ${INCS} -shared -o libf_to_s.so 
 
-_f_to_s.lua : 
+f_to_s.lua : 
 	lua pkg_f_to_s.lua
 
 TMPL_FILES = minmax.tmpl sum.tmpl

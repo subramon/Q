@@ -1,11 +1,4 @@
 local gen_code = require("Q/UTILS/lua/gen_code")
-local Scalar = require 'libsclr'
-local plpath = require "pl.path"
-local pltable = require "pl.tablex"
-local srcdir = "../gen_src/"
-local incdir = "../gen_inc/"
-if ( not plpath.isdir(srcdir) ) then plpath.mkdir(srcdir) end
-if ( not plpath.isdir(incdir) ) then plpath.mkdir(incdir) end
 
 local operators = { 'cum_cnt' }
 local val_qtypes = { 'I1', 'I2', 'I4', 'I8', 'F4', 'F8' }
@@ -21,8 +14,8 @@ for i, operator in ipairs(operators) do
       status, subs = pcall(sp_fn, val_qtype, nil, optargs)
       if ( status ) then 
         assert(type(subs) == "table")
-        gen_code.doth(subs, incdir)
-        gen_code.dotc(subs, srcdir)
+        gen_code.doth(subs, subs.incdir)
+        gen_code.dotc(subs, subs.srcdir)
         print("Produced ", subs.fn)
         num_produced = num_produced + 1
       else

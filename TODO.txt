@@ -1,3 +1,5 @@
+Check whether we have implemented essence of F1F2OPF3/expander_f1f2opf3.txt
+
 Verify that extra bits are zeroed out for vveq and vseq and so on
 
 Delete get_hdr.lua -- used in MDB
