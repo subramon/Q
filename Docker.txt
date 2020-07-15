@@ -1,0 +1,1 @@
+docker exec -it q_q1_1 /bin/bash
