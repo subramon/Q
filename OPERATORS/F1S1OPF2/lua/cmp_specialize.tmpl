@@ -1,28 +1,31 @@
 local Scalar = require 'libsclr'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local chk_inputs    = require 'Q/OPERATORS/F1S1OPF2/lua/chk_inputs'
+local qconsts       = require 'Q/UTILS/lua/q_consts'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-local to_scalar = require 'Q/UTILS/lua/to_scalar'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1S1OPF2/lua/f1s1opf2_cmp.tmpl"
+local to_scalar     = require 'Q/UTILS/lua/to_scalar'
 
 return function (
-  in_qtype,
-  scalar
+  f1,
+  sclrs,
+  optargs
   )
+  chk_inputs(f1, sclrs, optargs)
+  local f1_qtype = f1:qtype()
+  local scalar = sclrs 
+  assert(scalar)
+  scalar = assert(to_scalar(scalar, f1_qtype))
+  assert(type(scalar) == "Scalar") 
+  assert(is_base_qtype(f1_qtype))
 
-    assert(scalar)
-    scalar = assert(to_scalar(scalar, in_qtype))
-    assert(type(scalar) == "Scalar") 
-    assert(is_base_qtype(in_qtype))
-
-    local subs = {}; 
-    subs.fn = "<<operator>>_" .. in_qtype 
-    subs.in_ctype = qconsts.qtypes[in_qtype].ctype
-    subs.in_qtype = in_qtype 
-    subs.out_qtype = "B1"
-    subs.out_ctype = "uint64_t"
-    subs.comparison = ' <<comparison>>  '
-    subs.args = scalar:to_cmem()
-    subs.args_ctype = subs.in_ctype
-    subs.tmpl = tmpl
-    return subs
+  local subs = {}; 
+  subs.fn = "<<operator>>_" .. f1_qtype 
+  subs.f1_ctype = qconsts.qtypes[f1_qtype].ctype
+  subs.f1_qtype = f1_qtype 
+  subs.f2_qtype = "B1"
+  subs.f2_ctype = "uint64_t"
+  subs.comparison = ' <<comparison>>  '
+  subs.args = scalar:to_cmem()
+  subs.args_ctype = subs.f1_ctype
+  subs.tmpl = "OPERATORS/F1S1OPF2/lua/f1s1opf2_cmp.tmpl"
+  return subs
 end

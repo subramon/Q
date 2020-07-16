@@ -30,15 +30,15 @@ local function for_cdef(
     -- we do not have fully qualified path
     infile = src_root .. "/" .. infile
   end
-  -- TODO assert(cutils.isfile(infile), infile)
-  assert(plpath.isfile(infile), infile)
+  assert(cutils.isfile(infile), infile)
+  -- assert(plpath.isfile(infile), infile)
   local cmd
   if ( incs ) then
     assert(type(incs) == "table")
     local str_incs = {}
     for k, v in ipairs(incs) do
       local incdir = src_root .. "/" .. v
-      -- TODO assert(cutils.isdir(incdir))
+      -- assert(cutils.isdir(incdir))
       assert(plpath.isdir(incdir), infile)
       str_incs[k] = "-I" .. incdir
     end

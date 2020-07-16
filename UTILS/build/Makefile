@@ -25,7 +25,7 @@ clean:
 	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua  clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua  clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F_IN_PLACE/lua  clean
-	make -C ${Q_SRC_ROOT}/OPERATORS/SORT2/lua  clean
+	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2_IN_PLACE/lua  clean
 	make -C ${Q_SRC_ROOT}/OPERATORS/F1F2OPF3/lua clean
 
 install: uninstall 

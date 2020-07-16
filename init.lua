@@ -7,6 +7,7 @@ require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
 require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
 
 require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
+require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
 -- require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
@@ -14,7 +15,6 @@ require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
 -- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
 --[[
-require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/get_idx_by_val"

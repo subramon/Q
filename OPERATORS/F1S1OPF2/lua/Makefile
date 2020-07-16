@@ -10,7 +10,8 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
-all : f1s1opf2.lua \
+all \
+  	: f1s1opf2.lua \
 	f1opf2_specializers \
 	arith_specializers \
 	cmp_specializers 
@@ -151,7 +152,7 @@ _cmp_files : cmp_specializers
 	luajit generator1.lua cmp_operators.lua
 
 _f1opf2_files : f1opf2_specializers
-	luajit generator0.lua operators0.lua
+	luajit generator_unary_ops.lua unary_ops.lua
 
 _arith_files : arith_specializers
 	luajit generator1.lua operators1.lua

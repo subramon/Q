@@ -54,6 +54,10 @@ static int l_sclr_to_cmem( lua_State *L)
   size_t size = sizeof(CDATA_TYPE);
   status = cmem_malloc(ptr_cmem, size, ptr_sclr->field_type, "");
 
+  // TODO P1 I think is_foreign should be false
+  // because we are doing a memcpy 
+  // If we were just snarfing the pointer from Scalar, then it should be true
+  // Either way works but currently we hve an inconsistency
   ptr_cmem->is_foreign = true; 
   memcpy(ptr_cmem->data, &(ptr_sclr->cdata), size);
   strncpy(ptr_cmem->fldtype, ptr_sclr->field_type, 4-1);
