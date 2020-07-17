@@ -6,14 +6,7 @@ local function chk_inputs(f1, sclrs, optargs)
   if ( optargs ) then 
     assert(type(optargs) == "table")
   end
-  if ( sclrs ) then
-    if ( type(sclrs) ~= "Scalar" ) then
-      assert(type(sclrs) == "table")
-      for _, v in pairs(sclrs) do 
-        assert(type(v) == "Scalar")
-      end
-    end
-  end
+  -- TODO P3 any checks on Scalars worth doing here?
   return true
 end
 return chk_inputs

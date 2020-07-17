@@ -2,24 +2,31 @@ return require 'Q/UTILS/lua/code_gen' {
 
    declaration = [[
 
-#include "q_incs.h"
-#include "_set_bit_u64.h"
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "q_macros.h"
+#include "set_bit_u64.h"
+//START_FOR_CDEF
 extern int
 ${fn}(  
-      const ${in_ctype} * restrict in,  
+      const ${f1_ctype} * restrict in,  
       uint64_t nR,  
-      ${in_ctype} *ptr_sval,
+      ${f1_ctype} *ptr_sval,
       uint64_t *restrict out
       ) 
 ;
+//STOP_FOR_CDEF
    ]],
    definition = [[
-#include "_${fn}.h"
+#include "${fn}.h"
 int
 ${fn}(  
-      const ${in_ctype} * restrict in,  
+      const ${f1_ctype} * restrict in,  
       uint64_t nR,  
-      ${in_ctype} *ptr_sval,
+      ${f1_ctype} *ptr_sval,
       uint64_t * restrict out
       )
 {
@@ -29,7 +36,7 @@ ${fn}(
   if ( ptr_sval == NULL ) { go_BYE(-1); }
   if ( nR == 0 ) { go_BYE(-1); }
 
-  ${in_ctype} sval = *ptr_sval;
+  ${f1_ctype} sval = *ptr_sval;
 #define VECTOR_LENGTH 4096
   /* calculate number of VECTOR_LENGTH element sized chunks to process */
   uint64_t num_blocks = nR / VECTOR_LENGTH; 
@@ -47,7 +54,7 @@ ${fn}(
     uint64_t out_idx = lb / 64;
     uint64_t oval = 0;
     for ( uint64_t iidx = lb; iidx < ub; iidx++ ) {
-      ${in_ctype} inval = in[iidx]; 
+      ${f1_ctype} inval = in[iidx]; 
       int rslt = (inval ${comparison} sval);
       /* TODO: Avoid the if condition */
       if ( rslt == 1 ) { set_bit_u64(&oval, bit_idx, 1); }
