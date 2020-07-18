@@ -29,15 +29,15 @@ ${fn}(
       )
 {
   int status = 0;
-  // Using ceil operator because this will include the last 64 bit chunk for the processing 
-  // though there might be some unused bits in last 64 bit chunk but vector code is taking care of it (not using those bits).
-  uint64_t loop_count = ceil((double)nR / 64);
   if ( in == NULL ) { go_BYE(-1); }
   if ( nR == 0 ) { go_BYE(-1); }
+  uint64_t n = nR / 64;
 
 #pragma omp parallel for schedule(static)
-  for ( uint64_t i = 0; i < loop_count; i++ ) {
-    //TODO P3: Do not modify unused bits from last 64 bits
+  for ( uint64_t i = 0; i < n; i++ ) {
+    out[i] = ~ in[i];
+  }
+  for ( uint64_t i = n; i < nR; i++ ) {
     out[i] = ~ in[i];
   }
 BYE:

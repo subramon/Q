@@ -1,3 +1,5 @@
+Need to write vnot_B1.c 
+
 - Modification in pow() operation
   User can provide qtype in optargs, use user specified qtype as qtype for out_vector.
   If not specified then use in_vector qtype for out_vector

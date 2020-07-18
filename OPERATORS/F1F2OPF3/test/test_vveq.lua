@@ -1,6 +1,7 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
 local chunk_size = cVector.chunk_size()
@@ -39,7 +40,24 @@ tests.t2 = function()
     local n1, n2 = Q.sum(c3):eval()
     assert(n1 == n2)
   end
-  print("Test t1 succeeded")
+  print("Test t2 succeeded")
+end
+tests.t2 = function()
+  local len =  2*chunk_size + 17
+  local c1 = lVector.new({ qtype = "B1" })
+  local c2 = lVector.new({ qtype = "B1" })
+  for i = 1, len do 
+    c1:put1(Scalar.new(1, "B1"))
+    c2:put1(Scalar.new(0, "B1"))
+   end
+  local c3 = Q.vveq(c1, c1)
+  local n1, n2 = Q.sum(c3):eval()
+  assert(n1 == n2)
+
+  local c3 = Q.vveq(c1, c2)
+  local n1, n2 = Q.sum(c3):eval()
+  assert(n1 == Scalar.new(0))
+  print("Test t3 succeeded")
 end
 return tests
 -- tests.t1()
