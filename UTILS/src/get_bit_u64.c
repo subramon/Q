@@ -1,4 +1,5 @@
-#include "q_incs.h"
+#include <stdint.h>
+#include "q_macros.h"
 #include "get_bit_u64.h"
 //START_FUNC_DECL
 int // TODO inline this function

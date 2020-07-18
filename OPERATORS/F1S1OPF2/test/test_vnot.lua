@@ -1,9 +1,12 @@
-local Q = require 'Q'
+require 'Q/UTILS/lua/strict'
+local cVector = require 'libvctr'
+local Q       = require 'Q'
+local csz = cVector.chunk_size()
 
 local tests = {}
 
 tests.t1 = function()
-  local len = 65675
+  local len = csz + 17
   local in_table = {}
   local exp_table = {}
   for i = 1, len do
@@ -15,16 +18,23 @@ tests.t1 = function()
       exp_table[i] = 1
     end
   end
-  local col = Q.mk_col(in_table, "B1")
-  local n_col = Q.vnot(col)
-  n_col:eval()
-
-  local val, nn_val
-  for i = 1, n_col:length() do
-    val, nn_val = n_col:get_one(i-1)
-    assert(val:to_num() == exp_table[i], "Index: " .. tostring(i) .. 
-      ", Expected: " .. tostring(exp_table[i]) .. ", Actual: " .. tostring(val:to_num()))
+  for _, qtype in ipairs({ "B1", "I1", "I2", "I4", "I8", "F4", "F8" }) do
+    local col = Q.mk_col(in_table, qtype)
+    assert(col:qtype() == "B1")
+    local n_col = Q.vnot(col):eval()
+    local nn_col = Q.vnot(n_col):eval()
+    local val, nn_val
+    for i = 1, n_col:length() do
+      val, nn_val = n_col:get1(i-1)
+      assert(val:to_num() == exp_table[i])
+    end
+    local n1, n2 = Q.sum(Q.vveq(col, n_col)):eval()
+    assert(n1 == Scalar.new(0, "I4"))
+  
+    local n1, n2 = Q.sum(Q.vveq(col, nn_col)):eval()
+    assert(n1 == n2)
   end
+
   print("Completed test t1")
 end
 
@@ -47,10 +57,10 @@ tests.t2 = function()
 
   local val, nn_val
   for i = 1, n_col:length() do
-    val, nn_val = n_col:get_one(i-1)
+    val, nn_val = n_col:get1(i-1)
     assert(val:to_num() == exp_table[i])
   end
   print("Completed test t2")
 end
-
-return tests
+tests.t1()
+-- return tests

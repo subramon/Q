@@ -1,5 +1,6 @@
 
-#include "q_incs.h"
+#include <stdint.h>
+#include "q_macros.h"
 #ifndef __set_bit_u64_H
 #define __set_bit_u64_H
 extern int // TODO inline this function

@@ -18,7 +18,7 @@ return function (
   local f1_qtype = f1:qtype()
   assert(is_base_qtype(f1_qtype))
   local subs = {}; 
-  subs.fn = "<<operator>>_" .. f1_qtype 
+  subs.fn = "vssub_" .. f1_qtype 
 
   subs.f1_qtype   = f1_qtype
   subs.f1_ctype   = assert(qconsts.qtypes[f1_qtype].ctype)
@@ -35,7 +35,7 @@ return function (
   scalar = assert(scalar:conv(f1_qtype))
   subs.args        = get_ptr(scalar:to_cmem(), subs.cst_f1_as)
 
-  subs.c_code_for_operator = "<<c_code>>;"
+  subs.c_code_for_operator = "c = a - b;"
   subs.tmpl        = "OPERATORS/F1S1OPF2/lua/arith.tmpl"
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"

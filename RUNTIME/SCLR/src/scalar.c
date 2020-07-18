@@ -467,7 +467,7 @@ static int l_sclr_new( lua_State *L) {
   // TESTING GC problems lua_gc(L, LUA_GCCOLLECT, 0);  
 
   bool found = false;
-  if ( lua_gettop(L) < 2 ) { go_BYE(-1); }
+  if ( ( lua_gettop(L) != 1) && ( lua_gettop(L) != 2 ) ) { go_BYE(-1); }
   if ( lua_isstring(L, 1) ) { 
     str_val = luaL_checkstring(L, 1);
     found = true;
@@ -489,7 +489,13 @@ static int l_sclr_new( lua_State *L) {
   else {
     go_BYE(-1);
   }
-  const char *qtype   = luaL_checkstring(L, 2);
+  const char *qtype;
+  if ( lua_gettop(L) == 2 ) {
+    qtype   = luaL_checkstring(L, 2);
+  }
+  else {
+    qtype = "I8"; // default 
+  }
   SCLR_REC_TYPE *ptr_sclr = NULL;
   ptr_sclr = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
   return_if_malloc_failed(ptr_sclr);
