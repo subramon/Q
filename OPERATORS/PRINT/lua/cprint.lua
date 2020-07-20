@@ -42,9 +42,10 @@ local function cprint(
   local chunk_size = cVector.chunk_size()
   local chunk_num = math.floor(lb / chunk_size) -- first usable chunk
   -- C = pointers to data to be printed
-  local C = assert(cmem.new({size = (nC * ffi.sizeof("void *")), name = "C"}))
-  C:zero()
-  local C = get_ptr(C, "void **")
+  local sz = nC * ffi.sizeof("void *")
+  local orig_C = assert(cmem.new(sz))
+  orig_C:zero()
+  local C = get_ptr(orig_C, "void **")
   -- F array of fldtypes 
   local F = assert(cmem.new({size = (nC * ffi.sizeof("int")), name = "F"}))
   F:zero()
@@ -107,6 +108,7 @@ local function cprint(
     end
     chunk_num = chunk_num + 1 
   end
+  orig_C:delete()
   return true
 end
 return cprint

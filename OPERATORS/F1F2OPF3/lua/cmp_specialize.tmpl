@@ -50,6 +50,7 @@ return function (
   subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/", 
                 "OPERATORS/F1F2OPF3/inc/" }
   if ( f1_qtype == "B1" ) then 
+    subs.incs = { "UTILS/inc/", "OPERATORS/F1F2OPF3/inc/" }
     subs.tmpl = nil -- no code generation
     subs.dotc = "OPERATORS/F1F2OPF3/src/<<operator>>_B1_B1.c"
     subs.doth = "OPERATORS/F1F2OPF3/inc/<<operator>>_B1_B1.h"

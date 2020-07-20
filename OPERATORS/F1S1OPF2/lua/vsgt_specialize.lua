@@ -31,7 +31,8 @@ return function (
   subs.cst_f1_as = subs.f1_ctype  .. "*" 
   subs.cst_f2_as = subs.f2_ctype .. "*" 
 
-  subs.args = get_ptr(scalar:to_cmem(), subs.cst_f1_as)
+  subs.cargs        = scalar:to_cmem()
+  subs.cst_cargs_as = subs.cst_f1_as
 
   local f2_width  = qconsts.qtypes[subs.f2_qtype].width
   subs.f2_buf_sz  = cVector.chunk_size() * f2_width

@@ -29,11 +29,12 @@ return function (
   local f2_width  = qconsts.qtypes[subs.f2_qtype].width
   subs.f2_buf_sz  = cVector.chunk_size() * f2_width
 
-  subs.cst_f1_as = subs.f1_ctype .. "*" 
+  subs.cst_f1_as = subs.f1_ctype  .. "*" 
   subs.cst_f2_as = subs.f2_ctype .. "*" 
 
   scalar = assert(scalar:conv(f1_qtype))
-  subs.args        = get_ptr(scalar:to_cmem(), subs.cst_f1_as)
+  subs.cargs        = scalar:to_cmem()
+  subs.cst_cargs_as = subs.cst_f1_as
 
   subs.c_code_for_operator = "c = a + b;"
   subs.tmpl        = "OPERATORS/F1S1OPF2/lua/arith.tmpl"

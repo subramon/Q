@@ -37,6 +37,7 @@ return function (
   subs.incs   = { "OPERATORS/F1S1OPF2/gen_inc/", "UTILS/inc/" }
   if ( f1_qtype == "B1" ) then 
     subs.tmpl = nil -- no code generation
+    subs.incs =  { "OPERATORS/F1S1OPF2/inc/", "UTILS/inc/" }
     subs.dotc = "OPERATORS/F1S1OPF2/src/vnot_B1.c"
     subs.doth = "OPERATORS/F1S1OPF2/inc/vnot_B1.h"
     subs.srcs = { "UTILS/src/set_bit_u64.c", "UTILS/src/get_bit_u64.c" }

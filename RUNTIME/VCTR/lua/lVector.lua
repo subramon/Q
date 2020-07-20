@@ -5,10 +5,11 @@ local cutils            = require 'libcutils'
 local cmem		= require 'libcmem'
 local Scalar		= require 'libsclr'
 local cVector		= require 'libvctr'
-local chunk_size = cVector.chunk_size()
+local to_scalar		= require 'Q/UTILS/lua/to_scalar'
 local register_type	= require 'Q/UTILS/lua/q_types'
 local H                 = require 'Q/RUNTIME/VCTR/lua/helpers'
 local for_cdef          = require 'Q/UTILS/lua/for_cdef'
+local chunk_size = cVector.chunk_size()
 ffi.cdef(for_cdef("RUNTIME/VCTR/inc/core_vec_struct.h",{ "UTILS/inc/" }))
 --====================================
 local lVector = {}
@@ -611,19 +612,10 @@ function lVector:set_meta(k, v)
   -- now deal with reserved keywords
   if ( ( k == "__max" ) or ( k == "__min" ) or ( k == "__sum" ) ) then
     -- TODO P3: Put more asserts on types of elements in table
-    assert(type(v) == "table")
-    if ( ( k == "__max" ) or ( k == "__min" ) ) then 
-      assert(#v == 3) 
-    end
-    if ( k == "__sum" ) then
-      assert(#v == 2) 
-    end
-  elseif ( ( k == "__meaning" ) or  ( k == "__name" ) ) then 
-    assert(v and (type(v) == "string") and (#v > 0 ))
-  elseif ( k == "__dictionary" ) then
-    assert(v and (type(v) == "lDictionary") )
+    local v = assert(to_scalar(v, self:qtype()))
+    self._meta[k] = v
   else
-    assert(nil)
+    assert(nil, "TO BE IMPLEMENTED")
   end
 end
 

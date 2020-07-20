@@ -11,6 +11,10 @@ LABEL author ramesh_subramonian
 # man-db for man pages
 # lsof for networking
 USER 0
+RUN apt-get update && apt-get install -y apt-utils software-properties-common
+ENV DEBIAN_FRONTEND  noninteractive
+RUN apt update
+RUN apt-get -y install tzdata
 RUN apt-get update -y \
     && apt-get install -y \
     autoconf \

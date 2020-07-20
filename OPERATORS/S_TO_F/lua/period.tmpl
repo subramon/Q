@@ -11,7 +11,7 @@ extern int
 period_${out_qtype}(
   ${out_ctype} *X,
   uint64_t nX,
-  ${args_ctype} *ptr_args,
+  ${cargs_ctype} *ptr_args,
   uint64_t idx
   );
 //STOP_FOR_CDEF
@@ -22,7 +22,7 @@ int
 period_${out_qtype}(
   ${out_ctype} *X,
   uint64_t nX,
-  ${args_ctype} *ptr_args,
+  ${cargs_ctype} *ptr_args,
   uint64_t idx
   )
 {

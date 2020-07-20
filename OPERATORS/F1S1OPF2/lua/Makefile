@@ -10,8 +10,8 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
-all \
-  	: f1s1opf2.lua \
+all : \
+  	f1s1opf2.lua \
 	f1opf2_specializers \
 	arith_specializers \
 	cmp_specializers 

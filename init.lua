@@ -8,6 +8,7 @@ require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
 
 require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
 require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
+require 'Q/OPERATORS/WHERE/lua/where'
 -- require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
@@ -54,7 +55,6 @@ require "Q/OPERATORS/PCA/lua/corr_mat"
 
 require 'Q/OPERATORS/UNIQUE/lua/unique'
 
-require 'Q/OPERATORS/WHERE/lua/where'
 -- alias wrappers
 require 'Q/ALIAS/lua/add'
 require 'Q/ALIAS/lua/count'

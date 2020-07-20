@@ -19,10 +19,9 @@ tests.t1 = function()
 end
 --=========================================
 tests.t2 = function()
-  local n = 16 -- 1048576+17
+  local n = 1048576+17
   local y = Q.seq({start = 1, by = 1, qtype = "I4", len = n })
   local z = Q.sum(y):eval():to_num()
-  print(z)
   assert( z == (n * (n+1) / 2 ) )
   print("Test t2 succeeded")
 end
@@ -37,7 +36,8 @@ end
 --=========================================
 return tests
 --[[
-tests.t2()
+tests.t1()
 tests.t2()
 tests.t3()
+os.exit()
 --]]

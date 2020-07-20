@@ -7,9 +7,9 @@ declaration = [[
 //START_FOR_CDEF
 extern int
 ${fn}(  
-      const ${in_ctype} * restrict in,  
+      const ${ctype} * restrict in,  
       uint64_t nR,
-      ${args_ctype}  *ptr_args,
+      ${cargs_ctype}  *ptr_args,
       uint64_t idx
       ) 
 ;
@@ -19,9 +19,9 @@ definition = [[
 #include "${fn}.h"
 int
 ${fn}(  
-      const ${in_ctype} * restrict in,
+      const ${ctype} * restrict in,
       uint64_t nR,  
-      ${args_ctype}  *ptr_args,
+      ${cargs_ctype}  *ptr_args,
       uint64_t idx
       )
 

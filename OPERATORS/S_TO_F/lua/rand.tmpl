@@ -12,7 +12,7 @@ extern int
 rand_${out_qtype}(
   ${out_ctype} *X,
   uint64_t nX,
-  ${args_ctype} *ptr_args,
+  ${cargs_ctype} *ptr_args,
   uint64_t idx
   );
 //STOP_FOR_CDEF
@@ -25,7 +25,7 @@ int
 rand_${out_qtype}(
   ${out_ctype} *X,
   uint64_t nX,
-  ${args_ctype} *ptr_args,
+  ${cargs_ctype} *ptr_args,
   uint64_t idx
   )
 //STOP_FUNC_DECL

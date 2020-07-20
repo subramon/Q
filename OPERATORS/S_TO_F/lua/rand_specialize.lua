@@ -7,7 +7,6 @@ local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local qconsts   = require 'Q/UTILS/lua/q_consts'
-local tmpl      = "OPERATORS/S_TO_F/lua/rand.tmpl"
 local qc        = require 'Q/UTILS/lua/q_core'
 
 -- cdef the necessary struct within pcall to prevent error on second call
@@ -16,34 +15,34 @@ qc.q_cdef("UTILS/inc/drand_struct.h")
 qc.q_cdef("OPERATORS/S_TO_F/inc/rand_struct.h", incs)
 qc.q_cdef("RUNTIME/SCLR/inc/scalar_struct.h", incs)
 return function (
-  in_args
+  largs
   )
   --=================================
-  assert(type(in_args) == "table")
-  local qtype = assert(in_args.qtype)
-  local len   = assert(in_args.len)
+  assert(type(largs) == "table")
+  local qtype = assert(largs.qtype)
+  local len   = assert(largs.len)
   assert(is_in(qtype, { "B1", "I1", "I2", "I4", "I8", "F4", "F8"}))
   assert(len > 0, "vector length must be positive")
   --=======================
   local subs = {}
   subs.fn = "rand_" .. qtype
   subs.len = len
-  subs.out_ctype = qconsts.qtypes[qtype].ctype
   subs.out_qtype = qtype
-  subs.tmpl = tmpl
-  subs.buf_size = cVector.chunk_size() * qconsts.qtypes[qtype].width
+  subs.out_ctype = qconsts.qtypes[qtype].ctype
+  subs.out_buf_size = cVector.chunk_size() * qconsts.qtypes[qtype].width
+  subs.cst_out_as = subs.out_ctype .. " * "
   --=======================
   -- set up args for C code
-  local args_ctype = "RAND_" .. qtype .. "_REC_TYPE";
-  local sz = ffi.sizeof(args_ctype)
-  local cargs = cmem.new({size = sz}); 
-  local args = get_ptr(cargs, args_ctype .. " *")
+  subs.cargs_ctype = "RAND_" .. qtype .. "_REC_TYPE";
+  local sz = ffi.sizeof(subs.cargs_ctype)
+  subs.cargs = cmem.new(sz); 
+  subs.cargs:zero()
+  subs.cst_cargs_as = subs.cargs_ctype .. " *"
 
   -- set seed
   local seed
-  if ( in_args.seed ) then 
-    seed = in_args.seed
-    print("seed = ", seed)
+  if ( largs.seed ) then 
+    seed = largs.seed
   else
     seed = cutils.rdtsc() 
     -- following is to make sure we stay as integer and not fp
@@ -53,45 +52,42 @@ return function (
   assert(type(seed) == "number")
   assert(seed > 0)
   --=============
-  local sseed = Scalar.new(seed, "I8")
+  local sseed = assert(to_scalar(seed, "I8"))
   local sseed = ffi.cast("SCLR_REC_TYPE *", sseed)
-  args[0]["seed"] = sseed[0].cdata["valI8"]
-
-  subs.args       = args
-  subs.args_ctype = args_ctype
+  local cargs = assert(get_ptr(subs.cargs, subs.cst_cargs_as))
+  cargs[0]["seed"] = sseed[0].cdata["valI8"]
   --=========================
   --=== handle B1 as special case
+  subs.tmpl   = "OPERATORS/S_TO_F/lua/rand.tmpl"
+  subs.incdir = "OPERATORS/S_TO_F/gen_inc/"
+  subs.srcdir = "OPERATORS/S_TO_F/gen_src/"
+  subs.incs = { "UTILS/inc", "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
+  subs.structs = { "OPERATORS/S_TO_F/inc/rand_struct.h" }
   if ( qtype ~= "B1" ) then
     -- set lb
-    local lb   = assert(in_args.lb)
+    local lb  = assert(largs.lb)
     local slb = assert(to_scalar(lb, qtype))
     local slb = ffi.cast("SCLR_REC_TYPE *", slb)
-    args[0]["lb"] = slb[0].cdata["val" .. qtype]
+    cargs[0]["lb"] = slb[0].cdata["val" .. qtype]
     -- set ub
-    local ub   = assert(in_args.ub)
+    local ub   = assert(largs.ub)
     local sub = assert(to_scalar(ub, qtype))
     local sub = ffi.cast("SCLR_REC_TYPE *", sub)
-    args[0]["ub"] = sub[0].cdata["val" .. qtype]
+    cargs[0]["ub"] = sub[0].cdata["val" .. qtype]
   
     assert(ub > lb)
     -- Check  lb, ub in range for type dony b to_scalar()
   else
     -- set probability
-    local probability   = assert(in_args.probability)
+    local probability  = assert(largs.probability)
     local sprobability = assert(to_scalar(probability, "F8"))
     local sprobability = ffi.cast("SCLR_REC_TYPE *", sprobability)
-    args[0]["probability"] = sprobability[0].cdata["valF8"]
-    subs.buf_size = cVector.chunk_size() / 8
+    cargs[0]["probability"] = sprobability[0].cdata["valF8"]
+
     subs.tmpl = nil -- this is not generated code 
-    subs.out_ctype = "uint64_t" 
     subs.dotc = "OPERATORS/S_TO_F/src/rand_B1.c"
     subs.doth = "OPERATORS/S_TO_F/inc/rand_B1.h"
     subs.srcs = { "UTILS/src/rdtsc.c" }
   end
-  subs.incdir = "OPERATORS/S_TO_F/gen_inc/"
-  subs.srcdir = "OPERATORS/S_TO_F/gen_src/"
-  subs.incs = { "UTILS/inc", "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
-  subs.structs = { "OPERATORS/S_TO_F/inc/rand_struct.h" }
-  subs.cst_out_as = subs.out_ctype .. " * "
   return subs
 end

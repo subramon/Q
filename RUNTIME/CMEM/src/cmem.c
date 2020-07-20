@@ -155,7 +155,7 @@ static int l_cmem_new( lua_State *L)
   else {
     if ( !lua_istable(L, 1) ) { go_BYE(-1); }
     status = get_int_from_tbl(L, "size", &is_key, &size); cBYE(status);
-    if ( !is_key ) { go_BYE(-1); }
+    if ( !is_key ) { fprintf(stderr, "CMEM size not specified\n"); go_BYE(-1); }
     status = get_str_from_tbl(L, "qtype", &is_key, &fldtype); cBYE(status);
     status = get_str_from_tbl(L, "name", &is_key, &cell_name); cBYE(status);
   }

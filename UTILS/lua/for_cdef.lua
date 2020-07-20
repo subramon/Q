@@ -15,7 +15,7 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local exec    = require 'Q/UTILS/lua/exec_and_capture_stdout'
 local cutils = require 'libcutils'
-local plpath = require 'pl.path'
+-- local plpath = require 'pl.path'
 
 local function for_cdef(
   infile,
@@ -38,8 +38,8 @@ local function for_cdef(
     local str_incs = {}
     for k, v in ipairs(incs) do
       local incdir = src_root .. "/" .. v
-      -- assert(cutils.isdir(incdir))
-      assert(plpath.isdir(incdir), infile)
+      assert(cutils.isdir(incdir))
+      -- assert(plpath.isdir(incdir), infile)
       str_incs[k] = "-I" .. incdir
     end
     incs = table.concat(str_incs, " ")

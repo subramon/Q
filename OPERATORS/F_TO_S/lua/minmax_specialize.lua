@@ -1,30 +1,30 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts   = require 'Q/UTILS/lua/q_consts'
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
 local Scalar    = require 'libsclr'
+local lVector   = require 'Q/RUNTIME/VCTR/lua/lVector'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local rev_lkp   = require 'Q/UTILS/lua/rev_lkp'
 local qconsts   = require 'Q/UTILS/lua/q_consts'
 local good_qtypes = rev_lkp({ "I1", "I2", "I4", "I8", "F4", "F8"})
-local for_cdef  = require 'Q/UTILS/lua/for_cdef'
 local qc        = require 'Q/UTILS/lua/q_core'
 
--- cdef the necessary struct within pcall to prevent error on second call
-local incs = { "UTILS/inc/" }
-qc.q_cdef("OPERATORS/F_TO_S/inc/minmax_struct.h", incs)
--- qc.q_cdef("RUNTIME/SCLR/inc/scalar_struct.h", incs)
+qc.q_cdef("OPERATORS/F_TO_S/inc/minmax_struct.h", { "UTILS/inc/" })
+qc.q_cdef("RUNTIME/SCLR/inc/scalar_struct.h", { "UTILS/inc/" })
 
-return function (in_qtype, operator)
+return function (operator, x, optargs)
   assert(type(operator) == "string")
-  assert(type(in_qtype) == "string")
-  assert(good_qtypes[in_qtype])
+  assert(type(x) == "lVector")
+  assert(not x:has_nulls())
+  local qtype = x:qtype()
+  assert(good_qtypes[qtype])
   --====================
   local subs = {}
-  subs.fn = operator ..  "_" .. in_qtype 
-  subs.in_ctype = qconsts.qtypes[in_qtype].ctype
-  subs.cst_in_as = subs.in_ctype .. " *"
-  subs.reduce_qtype = in_qtype
+  subs.fn        = operator ..  "_" .. qtype 
+  subs.ctype     = qconsts.qtypes[qtype].ctype
+  subs.cst_in_as = subs.ctype .. " *"
+  subs.reduce_qtype = qtype
   if ( operator == "min" ) then 
     subs.comparator     = " < "
     subs.alt_comparator = " <= "
@@ -37,13 +37,14 @@ return function (in_qtype, operator)
   subs.operator = operator -- used by check_subs()
   --=====================================
   -- set up args for C code
-  subs.args_ctype = "MINMAX_" .. in_qtype .. "_ARGS";
-  local args = cmem.new({size = ffi.sizeof(subs.args_ctype)})
-  args:zero()
-  subs.args = get_ptr(args, subs.args_ctype .. " *")
+  subs.cargs_ctype = "MINMAX_" .. qtype .. "_ARGS";
+  subs.cargs = cmem.new({size = ffi.sizeof(subs.cargs_ctype)})
+  subs.cargs:zero()
+  subs.cst_cargs_as = subs.cargs_ctype .. " *"
   --==========
   local getter = function (x)
-    assert(x) -- this contains the value into which reduction happens
+    assert(type(x) == "CMEM") -- this contains the value into which reduction happens
+    x = get_ptr(x, subs.cst_cargs_as)
 
     local sval = Scalar.new(0, subs.reduce_qtype) -- out_qtype from closure
     local s = ffi.cast("SCLR_REC_TYPE *", sval)

@@ -10,7 +10,7 @@ extern int
 seq_${out_qtype}(
   ${out_ctype} *X,
   uint64_t nX,
-  ${args_ctype} *ptr_in,
+  ${cargs_ctype} *ptr_in,
   uint64_t idx // which element of vector 
   );
 //STOP_FOR_CDEF
@@ -23,7 +23,7 @@ int
 seq_${out_qtype}(
   ${out_ctype} *X,
   uint64_t nX,
-  ${args_ctype} *ptr_in,
+  ${cargs_ctype} *ptr_in,
   uint64_t idx // which element of vector 
   )
 {
