@@ -1,3 +1,6 @@
+0) luarocks install --server=https://luarocks.org/dev luaffi
+   luarocks remove luaffi
+
 Changes required in Q to work with LuaFFI
 
 1)Changes in syntax:
