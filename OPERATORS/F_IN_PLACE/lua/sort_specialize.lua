@@ -17,6 +17,7 @@ return function(invec, ordr)
   subs.QTYPE = in_qtype
   subs.fn = "qsort_" .. ordr .. "_" .. in_qtype
   subs.FLDTYPE = qconsts.qtypes[in_qtype].ctype
+  subs.cst_x_as = subs.FLDTYPE .. " *"
   -- TODO Check below is correct order/comparator combo
   local c 
   if ordr == "asc" then c = "<" end
