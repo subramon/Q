@@ -1,12 +1,15 @@
-#include "q_incs.h"
-#include "q_process_req.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+
+#include "q_types.h"
 #include "auxil.h"
-#include "init.h"
-#include "setup.h"
 #include "do_string.h"
 #include "do_file.h"
-
-extern bool g_halt; 
+#include "q_process_req.h"
 
 // START FUNC DECL
 int
@@ -14,11 +17,13 @@ q_process_req(
     Q_REQ_TYPE req_type,
     const char *const api,
     char * const args,
-    const char * const body
+    q_server_t *ptr_sinfo
     )
   // STOP FUNC DECL
 {
   int status = 0;
+  lua_State *L = ptr_sinfo->L;
+  const char * const body = ptr_sinfo->body;
   //-----------------------------------------
   switch ( req_type ) {
     case Undefined :
@@ -26,16 +31,15 @@ q_process_req(
       break;
       //--------------------------------------------------------
     case DoString :
-      status = do_string(args, body); cBYE(status);
+      status = do_string(L, args, body); cBYE(status);
       break;
       //--------------------------------------------------------
     case DoFile :
-      status = do_file(args, body); cBYE(status);
+      status = do_file(L, args, body); cBYE(status);
       break;
       //--------------------------------------------------------
     case Halt : 
       fprintf(stdout, "{ \"%s\" : \"OK\" }", api);
-      g_halt = true;
       break;
       //--------------------------------------------------------
     case HealthCheck : 

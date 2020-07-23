@@ -1,5 +1,5 @@
-#include "q_incs.h"
 #include "get_time_usec.h"
+#include "intrinsics.h"
 #include "rdtsc.h"
 
 //START_FUNC_DECL
@@ -17,15 +17,3 @@ RDTSC(
   return ((uint64_t)hi << 32) | lo;
 #endif
 }
-
-/* 
-int main(int argc, char* argv[]) {
-  uint64_t tick = RDTSC();  // tick before
-  int i ;
-  for (i = 1; i < argc; ++ i) {
-    system(argv[i]); // start the command
-  }
-  // printf("%ld",RDTSC() - tick); // difference
-  return 0;
-}
-*/

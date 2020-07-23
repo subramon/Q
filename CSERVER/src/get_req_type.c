@@ -1,4 +1,6 @@
-#include "q_incs.h"
+#include <stdio.h>
+#include <stdint.h>
+#include "q_types.h"
 #include "auxil.h"
 #include "get_req_type.h"
 Q_REQ_TYPE

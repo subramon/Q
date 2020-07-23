@@ -1,4 +1,7 @@
-#include "q_incs.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include "q_types.h"
 #include "auxil.h"
 #include "get_body.h"
 

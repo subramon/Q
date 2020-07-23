@@ -1,6 +1,6 @@
 #ifndef __Q_HTTPD_TYPES_H
 #define __Q_HTTPD_TYPES_H
-#include "q_incs.h"
+#include "q_macros.h"
 
 typedef enum _q_req_type {
   Undefined, // --- & ---
@@ -21,4 +21,8 @@ typedef enum _q_req_type {
   ZeroCounters // Write &  C
 } Q_REQ_TYPE;
 
+#define MAX_HEADERS_SIZE 2048-1
+#define MAX_LEN_BODY     65536-1
+#define MAX_LEN_API_NAME 32-1
+#define MAX_LEN_ARGS     128-1
 #endif
