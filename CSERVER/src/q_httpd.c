@@ -29,6 +29,7 @@ main(
 {
   int status = 0;
   q_server_t *ptr_q_server = NULL;
+  config_t   *ptr_config   = NULL;
 
   struct evhttp *httpd = NULL;
   struct event_base *base = NULL;
@@ -36,11 +37,15 @@ main(
   signal(SIGINT, halt_server);
   //----------------------------------
   if ( argc != 2 ) { fprintf(stderr, "Provide config file \n");go_BYE(-1); }
-  const char * config_file = argv[1];
+  //----------------------------------
   ptr_q_server = malloc(1 * sizeof(q_server_t));
   memset(ptr_q_server, 0,  (1 * sizeof(q_server_t)));
   status = mk_state(&(ptr_q_server->L)); cBYE(status);
-
+  //----------------------------------
+  const char * config_file = argv[1];
+  ptr_config = malloc(1 * sizeof(config));
+  memset(ptr_config, 0,  (1 * sizeof(config)));
+  status = mk_config(L, &ptr_config); cBYE(status);
   //----------------------------------
   base = event_base_new();
   httpd = evhttp_new(base);
@@ -60,5 +65,11 @@ BYE:
     free_if_non_null(ptr_q_server->rslt);
   }
   free_if_non_null(ptr_q_server);
+
+  if ( ptr_config != NULL ) { 
+    free_if_non_null(ptr_config->qc_flags);
+    free_if_non_null(ptr_config->q_data_dir);
+  }
+  free_if_non_null(ptr_config);
   return status;
 }

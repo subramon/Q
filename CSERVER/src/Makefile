@@ -21,8 +21,10 @@ all : q_httpd
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS) $(DBGFLAGS)
 
 q_httpd : $(COBJS)  
-	$(CC) $(CFLAGS) $(COBJS) $(INCS) \
-	  -o q_httpd  \
+	$(CC) $(CFLAGS) $(COBJS) \
+	../../UTILS/src/isfile.c \
+	$(INCS) \
+	-o q_httpd  \
 	-lm  -lpthread -ldl -levent /usr/local/lib/libluajit-5.1.so
 
 clean:
