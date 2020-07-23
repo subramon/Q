@@ -1,3 +1,6 @@
+local ffi = require 'ffi'
+ffi.cdef[[
+extern void *malloc(size_t size);
 typedef struct lua_State lua_State;
 
 typedef struct _config_t { 
@@ -12,3 +15,4 @@ typedef struct _q_server_t {
   char *rslt; // [sz_body] 
   int sz_rslt;
 } q_server_t;
+]]

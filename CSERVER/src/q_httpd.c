@@ -36,13 +36,12 @@ main(
   int port = 0;
   signal(SIGINT, halt_server);
   //----------------------------------
-  if ( argc != 2 ) { fprintf(stderr, "Provide config file \n");go_BYE(-1); }
+  if ( argc != 1 ) { go_BYE(-1); }
   //----------------------------------
   ptr_q_server = malloc(1 * sizeof(q_server_t));
   memset(ptr_q_server, 0,  (1 * sizeof(q_server_t)));
   status = mk_state(&(ptr_q_server->L)); cBYE(status);
   //----------------------------------
-  const char * config_file = argv[1];
   ptr_config = malloc(1 * sizeof(config));
   memset(ptr_config, 0,  (1 * sizeof(config)));
   status = mk_config(L, &ptr_config); cBYE(status);
