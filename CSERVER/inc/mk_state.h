@@ -1,4 +1,4 @@
 extern int
 mk_state(
-  lua_State **ptr_L
+  q_server_t **ptr_q_server
   );

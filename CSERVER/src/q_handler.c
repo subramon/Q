@@ -1,14 +1,12 @@
 #include <malloc.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 #include <signal.h>
-// #include <event.h>
-#include <evhttp.h>
-#include <event2/http.h>
-#include <event2/buffer.h>
-#include <event2/keyvalq_struct.h>
+#include <stdio.h>
+#include <sys/mman.h>
 
 #include "q_types.h"
 #include "q_macros.h"
@@ -46,8 +44,8 @@ q_handler(
   char *rslt = ptr_sinfo->rslt;
   int sz_body = ptr_sinfo->sz_body;
   int sz_rslt = ptr_sinfo->sz_rslt;
+  struct event_base *base = ptr_sinfo->base;
 
-  struct event_base *base = (struct event_base *)arg;
   char api[MAX_LEN_API_NAME+1]; 
   char args[MAX_LEN_ARGS+1];
 
@@ -58,6 +56,8 @@ q_handler(
 
   memset(rslt, 0, sz_rslt);
   memset(body, 0, sz_body);
+  memset(args, 0, MAX_LEN_ARGS+1);
+  memset(api, 0, MAX_LEN_API_NAME+1);
   //--------------------------------------
   status = extract_api_args(uri, api, MAX_LEN_API_NAME, 
       args, MAX_LEN_ARGS);

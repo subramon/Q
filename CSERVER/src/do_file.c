@@ -13,7 +13,7 @@
 int
 do_file(
     lua_State *L,
-    char *const args,
+    const char *const args,
     const char *const body
     )
 {
@@ -21,7 +21,7 @@ do_file(
   status = luaL_dostring(L, body);
   char *cptr = strstr(args, "File=");
   if ( cptr == NULL ) { go_BYE(-1); }
-  char *file_name = args + strlen("File=");
+  char *file_name = (char *)args + strlen("File=");
   if ( !isfile(file_name) ) { go_BYE(-1); }
 
   status = luaL_dofile(L, file_name);

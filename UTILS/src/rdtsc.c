@@ -1,5 +1,4 @@
 #include "get_time_usec.h"
-#include "intrinsics.h"
 #include "rdtsc.h"
 
 //START_FUNC_DECL

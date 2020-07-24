@@ -58,8 +58,6 @@ local qconsts = {}
   else
     qconsts.QC_FLAGS	= os.getenv("QC_FLAGS")
   end
-  qconsts.Q_TRACE_DIR	= os.getenv("Q_TRACE_DIR")
-  qconsts.Q_BUILD_DIR	= os.getenv("Q_BUILD_DIR")
   qconsts.Q_LINK_FLAGS	= os.getenv("Q_LINK_FLAGS")
   qconsts.LUA_PATH	= os.getenv("LUA_PATH")
   qconsts.LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")

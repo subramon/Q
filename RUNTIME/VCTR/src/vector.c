@@ -113,7 +113,17 @@ static int l_vec_init_globals( lua_State *L) {
   //------------------- get chunk size 
   status = get_int_from_tbl(L, "chunk_size", &is_key, &itmp); 
   if ( !is_key ) { 
-    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    int chunk_size = 0;
+    char *str_chunk_size = getenv("Q_CHUNK_SIZE");
+    if ( str_chunk_size == NULL ) { 
+      chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    }
+    else {
+      chunk_size = atoi(str_chunk_size);
+    }
+    if ( chunk_size < 64 ) { go_BYE(-1); }
+    if ( ( ( chunk_size / 64 ) * 64 )   != chunk_size )  { go_BYE(-1); }
+    g_S.chunk_size = chunk_size;
   }
   else {
     if ( itmp < 1024 ) { go_BYE(-1); }

@@ -14,6 +14,9 @@ require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
+
+require 'Q/QTILS/lua/nop'
+require 'Q/QTILS/lua/avg'
 -- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
 --[[
 
@@ -63,7 +66,6 @@ require 'Q/ALIAS/lua/mink'
 require 'Q/ALIAS/lua/mul'
 require 'Q/ALIAS/lua/sub'
 --============== UTILITY FUNCTIONS FOR Q PROGRAMMER
-require 'Q/QTILS/lua/average'
 require 'Q/QTILS/lua/fold'
 require 'Q/QTILS/lua/is_sorted'
 require 'Q/QTILS/lua/vvmax'

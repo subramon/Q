@@ -14,5 +14,10 @@ T[#T+1] = " -Wduplicated-branches -Wrestrict "
 return  { 
   port = 8080,
   qc_flags = table.concat(T, " "),
+  sz_body = 1024,
+  sz_rslt = 32768,
+  q_data_dir = "/home/subramon/local/Q/data/",
+  q_src_root = "/home/subramon/Q/",
+  q_root = "/home/subramon/local/Q/",
+  chunk_size = 65536
 }
-
