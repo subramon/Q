@@ -10,10 +10,13 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
-all : libgroupby.so
+all : sumby.tmpl numby.tmpl maxby_minby.tmpl
+	luajit generator.lua
+	luajit numby_generator.lua
+	luajit minby_generator.lua
+	luajit maxby_generator.lua
 
-all_for_dc :
-	echo "nothing to do"
+test : libgroupby.so
 	
 #----------------------------------
 clean :
@@ -22,22 +25,6 @@ clean :
 	rm -f _*
 	rm -f *.so
 
-libgroupby.so : sumby.tmpl \
-	numby.tmpl \
-	maxby_minby.tmpl
-	luajit generator.lua
-	luajit numby_generator.lua
-	luajit minby_generator.lua
-	luajit maxby_generator.lua
+libgroupby.so : sumby.tmpl numby.tmpl maxby_minby.tmpl
 	gcc ../gen_src/*.c ${CFLAGS} ${INCS} ${Q_LINK_FLAGS} -o libgroupby.so
-	test -d ${Q_BUILD_DIR}
-	cp ../gen_src/*.c ${Q_BUILD_DIR}/src/
-	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
 
-test_q : libgroupby.so
-	echo "TODO"
-
-test_c :  libgroupby.so
-	echo "TODO"
-
-test : test_q test_c

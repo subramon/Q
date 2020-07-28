@@ -1,5 +1,4 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 
 return function(invec, ordr)
 
@@ -8,8 +7,8 @@ return function(invec, ordr)
   assert(not invec:has_nulls())
 
   assert(type(ordr) == "string", "Sort order should be a string")
-  if ( ordr == "ascending"  ) then ordr = "asc" end 
-  if ( ordr == "descending" ) then ordr = "dsc" end 
+  if ( ordr == "ascending"  ) then ordr = "asc" end
+  if ( ordr == "descending" ) then ordr = "dsc" end
   assert( ( ( ordr == "asc") or ( ordr == "dsc") ))
   local subs = {}
   subs.F_IN_PLACE_ORDER = ordr
@@ -19,10 +18,8 @@ return function(invec, ordr)
   subs.FLDTYPE = qconsts.qtypes[in_qtype].ctype
   subs.cst_x_as = subs.FLDTYPE .. " *"
   -- TODO Check below is correct order/comparator combo
-  local c 
-  if ordr == "asc" then c = "<" end
-  if ordr == "dsc" then c = ">" end
-  subs.COMPARATOR = c
+  if ordr == "asc" then subs.COMPARATOR = "<" end
+  if ordr == "dsc" then subs.COMPARATOR = ">" end
   subs.tmpl   = "OPERATORS/F_IN_PLACE/lua/qsort.tmpl"
   subs.incdir = "OPERATORS/F_IN_PLACE/gen_inc/"
   subs.srcdir = "OPERATORS/F_IN_PLACE/gen_src/"
