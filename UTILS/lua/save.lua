@@ -77,6 +77,7 @@ local function save()
     cutils.delete(meta_file)
     cutils.delete(aux_file)
   end
+  print("Writing to ", local_meta_file, local_aux_file)
   --================================================
   local fp = assert(io.open(aux_file, "w+"))
   local str = string.format(

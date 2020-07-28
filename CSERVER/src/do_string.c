@@ -17,6 +17,7 @@ do_string(
     )
 {
   int status = 0;
+  WHEREAMI; 
   status = luaL_dostring(L, body);
   if ( status != 0 ) { 
     fprintf(stderr, "Error luaL_string=%s\n", lua_tostring(L, -1));
@@ -29,21 +30,21 @@ do_string(
   for ( int i = 1; i <= nargs; i++ ) {
     if ( i > 1 ) { 
       fprintf(stdout, ", ");
-      if ( lua_isstring(L, i) ) {
-        const char * arg_value = lua_tostring(L, i);
-        fprintf(stdout, "\"%s\" ", arg_value);
-      }
-      else if ( lua_isnumber(L, i) ) {
-        double  arg_value = lua_tonumber(L, i);
-        fprintf(stdout, "%lf", arg_value);
-      }
-      else if ( lua_isboolean(L, i) ) {
-        bool  arg_value = lua_toboolean(L, i);
-        fprintf(stdout, "%s", arg_value ? "true" : "false");
-      }
-      else {
-        go_BYE(-1);
-      }
+    }
+    if ( lua_isstring(L, i) ) {
+      const char * arg_value = lua_tostring(L, i);
+      fprintf(stdout, "\"%s\" ", arg_value);
+    }
+    else if ( lua_isnumber(L, i) ) {
+      double  arg_value = lua_tonumber(L, i);
+      fprintf(stdout, "%lf", arg_value);
+    }
+    else if ( lua_isboolean(L, i) ) {
+      bool  arg_value = lua_toboolean(L, i);
+      fprintf(stdout, "%s", arg_value ? "true" : "false");
+    }
+    else {
+      go_BYE(-1);
     }
   }
   fprintf(stdout, "]\n");

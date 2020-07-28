@@ -6,7 +6,7 @@ local cVector		= require 'libvctr'
 --====================================
 local helpers = {}
 helpers.determine_kind_of_new = function (args)
-  assert(type(arg) == "table", "Vector constructor requires table as arg")
+  assert(type(args) == "table", "Vector constructor requires table as arg")
   local is_rehydrate = false
   local is_single = true
   assert(type(args) == "table")

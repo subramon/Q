@@ -62,7 +62,17 @@ cd luaffi-master
 make
 cp ffi.so $HOME/local/Q/lib/
 
-echo "All done"
+### For bison for ispc
+wget http://ftp.gnu.org/gnu/bison/bison-3.7.tar.gz -O /tmp/bison.tar.gz
+cd /tmp/
+tar -zxvf bison.tar.gz
+cd /tmp/bison-3.7/
+./configure
+make
+make install
+cd /tmp/
+rm -r -f bison-3.7*
+#------------------------------------------------
 
 
 echo "All done"

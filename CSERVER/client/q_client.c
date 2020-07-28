@@ -40,7 +40,7 @@ int main(
   if ( argc != 3 ) {
     printf("Please provide the appropriate arguments\n");
     printf("Usage\n");
-    printf("./q_client <ip/hostname> <port>\n");
+    printf("./qc <ip/hostname> <port>\n");
     go_BYE(-1);
   }
 

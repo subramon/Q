@@ -17,6 +17,8 @@ require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
 
 require 'Q/QTILS/lua/nop'
 require 'Q/QTILS/lua/avg'
+require "Q/UTILS/lua/restore"
+require "Q/UTILS/lua/save" 
 -- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
 --[[
 
@@ -73,8 +75,6 @@ require 'Q/QTILS/lua/vvpromote'
 require 'Q/QTILS/lua/vvseq'
 --============= TODO P4 Document usage of  these routines
 require "Q/UTILS/lua/pack"
-require "Q/UTILS/lua/restore"
-require "Q/UTILS/lua/save" 
 require "Q/UTILS/lua/set_memo"
 require "Q/UTILS/lua/unpack"
 require "Q/UTILS/lua/view_meta"

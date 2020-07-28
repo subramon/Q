@@ -69,7 +69,7 @@ mk_state(
   setenv("CHUNK_SIZE", buf, 1);
   //--------------------------------
   // Initialize Lua State with Q 
-  status = luaL_dostring(L, "require 'Q'");
+  status = luaL_dostring(L, "Q = require 'Q'");
   if ( status != 0 ) { 
     fprintf(stderr, "Error luaL_string=%s\n", lua_tostring(L,-1));
   }
