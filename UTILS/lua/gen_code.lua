@@ -3,10 +3,19 @@ local cutils  = require 'libcutils'
 -- local pldir   = require 'pl.dir'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
-local section = { c = 'definition', h = 'declaration' }
+local section = { 
+  c = 'definition', 
+  h = 'declaration',
+  ispc = 'definition', 
+  }
 
-local function do_replacements(subs)
-  local tmpl = subs.tmpl
+local function do_replacements(subs, lang)
+  local tmpl
+  if ( lang == "C" ) then
+    tmpl = assert(subs.tmpl)
+  else
+    tmpl = assert(subs.ispc_tmpl)
+  end
   -- TODO P4: What if no forward slash in infile?
   if ( string.find(tmpl, "/") ~= 1 ) then
     tmpl = qconsts.Q_SRC_ROOT .. tmpl
@@ -20,7 +29,9 @@ local function do_replacements(subs)
   return T
 end
 
-local _dotfile = function(subs, opdir, ext)
+local _dotfile = function(subs, opdir, lang, ext)
+  if ( not lang ) then lang = "C" end -- backward compatibility
+  assert(( lang == "C" ) or ( lang == "ISPC") )
   assert(type(opdir) == "string")
   assert(#opdir > 0)
   local basic_fname = opdir .. "/" .. subs.fn .. "." .. ext
@@ -32,7 +43,7 @@ local _dotfile = function(subs, opdir, ext)
     assert(cutils.makepath(opdir))
   end
   assert(cutils.isdir(opdir))
-  local T = do_replacements(subs)
+  local T = do_replacements(subs, lang)
   local dotfile = T(section[ext])
   local fname = opdir .. "/" .. subs.fn .. "." .. ext
   local f = assert(io.open(fname, "w"))
@@ -45,12 +56,27 @@ end
 
 local fns = {}
 
-fns.dotc = function (subs, opdir)
-  return _dotfile(subs, opdir, 'c')
+fns.dotc = function (subs, opdir, lang)
+  return _dotfile(subs, opdir, lang, 'c')
 end
 
-fns.doth = function (subs, opdir )
-  return _dotfile(subs, opdir, 'h')
+fns.doth = function (subs, opdir, lang )
+  return _dotfile(subs, opdir, lang, 'h')
 end
 
+fns.dotispc = function (subs, opdir, lang)
+  if ( subs.ispc_tmpl )  then 
+    return _dotfile(subs, opdir, lang, 'ispc')
+  else
+    return nil
+  end
+end
+
+fns.dotisph = function (subs, opdir, lang)
+  if ( subs.ispc_tmpl )  then 
+    return _dotfile(subs, opdir, lang, 'h')
+  else
+    return nil
+  end
+end
 return fns

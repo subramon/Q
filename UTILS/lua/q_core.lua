@@ -83,7 +83,7 @@ end
 local function q_add(
   subs
   )
-  local tmpl, doth, dotc
+  local tmpl, doth, dotc, dotispc, dotisph
   local fn = assert(subs.fn)
   if ( known_functions[fn] ) then assert(qc[fn]) end
   if ( not known_functions[fn] ) then assert(not qc[fn]) end
@@ -98,17 +98,22 @@ local function q_add(
     assert(not subs.doth) assert(not subs.dotc)
     tmpl = subs.tmpl
     assert( (type(tmpl) == "string") and  ( #tmpl > 0 ) )
-    doth = gen_code.doth(subs, subs.incdir) -- this creates a .h file
-    dotc = gen_code.dotc(subs, subs.srcdir) -- this created a .c file
+    doth = gen_code.doth(subs, subs.incdir) -- creates a .h file
+    dotc = gen_code.dotc(subs, subs.srcdir) -- creates a .c file
+    dotispc = gen_code.dotispc(subs, subs.srcdir) -- creates a .ispc file
+    dotisph = gen_code.dotisph(subs, subs.srcdir) -- creates a .ispc file
   else
     doth = subs.doth
     assert( (type(doth) == "string") and  ( #doth > 0 ) )
     dotc = subs.dotc
     assert( (type(dotc) == "string") and  ( #dotc > 0 ) )
+    dotispc = subs.dotispc -- Optional, hence no assert on it 
+    dotisph = subs.dotisph -- Optional, hence no assert on it 
   end
   assert( (type(fn) == "string") and  ( #fn > 0 ) )
   --==================================
-  local sofile = assert(compile(dotc, subs.srcs, subs.incs, subs.libs, fn))
+  -- PROCESS ISPC after this 
+  local sofile = assert(compile(dotc, dotispc, subs, fn))
 
   local cdefs = load_lib(fn, doth, subs.incs, subs.structs, sofile,subs)
   assert(type(cdefs) == "table")

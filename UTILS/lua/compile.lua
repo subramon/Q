@@ -14,11 +14,13 @@ assert(cutils.isdir(Q_SRC_ROOT))
 --================================================
 local function compile(
   dotc,  -- INPUT
-  srcs, -- INPUT, any other files to be compiled
-  incs, -- INPUT, where to look for include files
-  libs, -- INPUT, any libraries that need to be linked
+  dotispc,  -- INPUT
+  subs,
   fn -- INPUT
   )
+  local srcs = subs.srcs -- INPUT, any other files to be compiled
+  local incs = subs.incs -- INPUT, where to look for include files
+  local libs = subs.libs -- INPUT, any libraries that need to be linked
   -- TODO P4: What if no forward slash in dotc?
   if ( string.find(dotc, "/") ~= 1 ) then
     -- we do not have fully qualified path
