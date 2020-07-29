@@ -746,50 +746,68 @@ reincarnate(
   sprintf(buf, "width = %u, ", ptr_v->field_width); 
   safe_strcat(&X, &nX, buf);
 
-  if ( is_clone ) { 
-    uint64_t old_vec_uqid = ptr_v->uqid; 
-    char old_file_name[Q_MAX_LEN_FILE_NAME+1];
-    status = mk_file_name(old_vec_uqid, old_file_name,Q_MAX_LEN_FILE_NAME); 
-    cBYE(status);
-    if ( !isfile(old_file_name) ) { 
-      go_BYE(-1); 
-    }
-    uint64_t new_vec_uqid = mk_uqid(ptr_S);
-    char new_file_name[Q_MAX_LEN_FILE_NAME+1];
-    status = mk_file_name(new_vec_uqid, new_file_name,Q_MAX_LEN_FILE_NAME); 
-    status = copy_file(old_file_name, new_file_name); cBYE(status);
-    sprintf(buf, "vec_uqid = %" PRIu64 ",",  new_vec_uqid);
-  }
-  else {
-    sprintf(buf, "vec_uqid = %" PRIu64 ",",  ptr_v->uqid);
-  }
-  safe_strcat(&X, &nX, buf);
+  char old_file_name[Q_MAX_LEN_FILE_NAME+1];
+  char new_file_name[Q_MAX_LEN_FILE_NAME+1];
 
-  safe_strcat(&X, &nX, "chunk_uqids = { ");
+  bool is_master_file     = false;
+  uint64_t old_vec_uqid = ptr_v->uqid; 
+  status = mk_file_name(old_vec_uqid, old_file_name,Q_MAX_LEN_FILE_NAME); 
+  cBYE(status);
+  if ( isfile(old_file_name) ) { 
+    is_master_file = true;
+  }
+  if ( is_master_file ) {
+    if ( is_clone ) { 
+      uint64_t new_vec_uqid = mk_uqid(ptr_S);
+      status = mk_file_name(new_vec_uqid, new_file_name,Q_MAX_LEN_FILE_NAME); 
+      status = copy_file(old_file_name, new_file_name); cBYE(status);
+      sprintf(buf, "vec_uqid = %" PRIu64 ",",  new_vec_uqid);
+    }
+    else {
+      sprintf(buf, "vec_uqid = %" PRIu64 ",",  old_vec_uqid);
+    }
+    safe_strcat(&X, &nX, buf);
+  }
+  //-------------------------------------------------------
+  bool is_all_chunk_files = true;
+  // no master file => all chunk files must exist. Do quick check 
   for ( unsigned int i = 0; i < ptr_v->num_chunks; i++ ) { 
     uint32_t chunk_idx = ptr_v->chunks[i];
     chk_chunk_dir_idx(chunk_idx);
     CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
-    if ( is_clone ) { 
+    uint64_t old_uqid = ptr_c->uqid; 
+    status = mk_file_name(old_uqid, old_file_name,Q_MAX_LEN_FILE_NAME); 
+    cBYE(status);
+    if ( !isfile(old_file_name) ) { 
+      is_all_chunk_files = false;
+    }
+  }
+  //------------------------------------------------------------
+  if ( is_all_chunk_files ) {
+    safe_strcat(&X, &nX, "chunk_uqids = { ");
+    for ( unsigned int i = 0; i < ptr_v->num_chunks; i++ ) { 
+      uint32_t chunk_idx = ptr_v->chunks[i];
+      chk_chunk_dir_idx(chunk_idx);
+      CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
       uint64_t old_uqid = ptr_c->uqid; 
-      char old_file_name[Q_MAX_LEN_FILE_NAME+1];
       status = mk_file_name(old_uqid, old_file_name,Q_MAX_LEN_FILE_NAME); 
       cBYE(status);
-      if ( !isfile(old_file_name) ) { go_BYE(-1); }
-      uint64_t new_uqid = mk_uqid(ptr_S);
-      char new_file_name[Q_MAX_LEN_FILE_NAME+1];
-      status = mk_file_name(new_uqid, new_file_name,Q_MAX_LEN_FILE_NAME); 
-      status = copy_file(old_file_name, new_file_name); cBYE(status);
-      sprintf(buf, "%" PRIu64 ",",  new_uqid);
+      if ( is_clone ) { 
+        uint64_t new_uqid = mk_uqid(ptr_S);
+        status = mk_file_name(new_uqid, new_file_name,Q_MAX_LEN_FILE_NAME); 
+        status = copy_file(old_file_name, new_file_name); cBYE(status);
+        sprintf(buf, "%" PRIu64 ",",  new_uqid);
+      }
+      else {
+        sprintf(buf, "%" PRIu64 ",",  old_uqid);
+      }
+      safe_strcat(&X, &nX, buf);
     }
-    else {
-      sprintf(buf, "%" PRIu64 ",",  ptr_c->uqid);
-    }
-    safe_strcat(&X, &nX, buf);
+    safe_strcat(&X, &nX, " }  ");
   }
   safe_strcat(&X, &nX, " }  ");
-  safe_strcat(&X, &nX, " }  ");
   *ptr_X = X;
+  if ( ( !is_master_file ) && ( !is_all_chunk_files ) ) { go_BYE(-1); }
 BYE:
   free_if_non_null(buf);
   if ( status < 0 ) { free_if_non_null(X); }

@@ -32,8 +32,8 @@ tests.t1 = function()
             local x1 = Q.mk_col(vals, qtype1):eval()
             local x2 = Q.mk_col(vals, qtype2):eval()
             assert(x1:length() == n)
-            x1:flush_all() -- TODO P3 Delete later
-            x2:flush_all() -- TODO P3 Delete later
+            x1:master() -- TODO P3 Delete later
+            x2:master() -- TODO P3 Delete later
             Q.sort2(x1, x2, order)
             local xlb, xub, xincr
             if ( order == "asc" ) then

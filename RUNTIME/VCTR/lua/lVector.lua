@@ -178,7 +178,7 @@ end
 -- If chunk_num not defined, return name of master file 
 -- If chunk_num IS  defined, return name of file in which chunk data is 
 -- Note that these files may not exist. If you want them to exist, 
--- then you must call flush_all()
+-- then you must call master()
 function lVector:file_name(chunk_num)
   local f1, f2
   if ( chunk_num) then 
@@ -370,7 +370,7 @@ function lVector:clone()
   local v2, nn_v2
   local v1 = self._base_vec
   assert(v1:is_eov())
-  cVector.flush_all(v1)
+  cVector.master(v1)
   local x, y = cVector.reincarnate(v1)
   assert(x, y)
   assert(type(x) == "string")

@@ -30,7 +30,7 @@ tests.t1 = function()
         for _, qtype in ipairs(qtypes) do
           local x = Q.mk_col(vals, qtype):eval()
           assert(x:length() == n)
-          x:flush_all() -- TODO P3 Delete later
+          x:master() -- TODO P3 Delete later
           Q.sort(x, order)
           local xlb, xub, xincr
           if ( order == "asc" ) then

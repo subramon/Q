@@ -225,22 +225,24 @@ vec_rehydrate(
   status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
   ptr_vec->num_elements = num_elements; // after init_chunk_dir()
   ptr_vec->num_chunks   = num_chunks;
-  for ( uint32_t i = 0; i < num_chunks; i++ ) {
-    uint32_t chunk_idx;
-    status = allocate_chunk(ptr_S, ptr_T, 0, i, ptr_vec->uqid, 
-        &chunk_idx, false); 
-    cBYE(status); chk_chunk_idx(chunk_idx); 
-    ptr_vec->chunks[i] = chunk_idx;
-    CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
-    ptr_c->vec_uqid = ptr_vec->uqid;
-    ptr_c->uqid = chunk_uqids[i]; // Important: over-write
-    ptr_c->chunk_num = i;
-    status = mk_file_name(ptr_c->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-    if ( isfile(file_name) ) { ptr_c->is_file = true; }
-    int64_t expected_file_size = get_exp_file_size(ptr_S, 
-        ptr_S->chunk_size, ptr_vec->field_width, ptr_vec->fldtype);
-    int64_t actual_file_size = get_file_size(file_name);
-    if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
+  if ( chunk_uqids != NULL ) { 
+    for ( uint32_t i = 0; i < num_chunks; i++ ) {
+      uint32_t chunk_idx;
+      status = allocate_chunk(ptr_S, ptr_T, 0, i, ptr_vec->uqid, 
+          &chunk_idx, false); 
+      cBYE(status); chk_chunk_idx(chunk_idx); 
+      ptr_vec->chunks[i] = chunk_idx;
+      CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
+      ptr_c->vec_uqid = ptr_vec->uqid;
+      ptr_c->uqid = chunk_uqids[i]; // Important: over-write
+      ptr_c->chunk_num = i;
+      status = mk_file_name(ptr_c->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+      if ( isfile(file_name) ) { ptr_c->is_file = true; }
+      int64_t expected_file_size = get_exp_file_size(ptr_S, 
+          ptr_S->chunk_size, ptr_vec->field_width, ptr_vec->fldtype);
+      int64_t actual_file_size = get_file_size(file_name);
+      if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
+    }
   }
   //
   // Note that we just accept the file (after some checking)

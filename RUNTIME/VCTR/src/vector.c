@@ -852,6 +852,7 @@ static int l_vec_rehydrate( lua_State *L)
   int64_t *chunk_uqids = NULL;
   uint64_t num_elements;
   uint32_t field_width;
+  bool is_vec_uqid = false, is_chunks_uqid = false;
   //------------------- get qtype
   status = check_args_is_table(L); cBYE(status);
   status = get_str_from_tbl(L, "qtype", &is_key, &qtype);  cBYE(status);
@@ -877,7 +878,7 @@ static int l_vec_rehydrate( lua_State *L)
   //------------------
   status = get_int_from_tbl(L, "vec_uqid", &is_key, &vec_uqid);  
   cBYE(status);
-  if ( !is_key ) { go_BYE(-1); }
+  if ( is_key ) { is_vec_uqid = true; }
   //------------------
   num_chunks = ceil((double)num_elements / (double)g_S.chunk_size);
   chunk_uqids = malloc(num_chunks * sizeof(uint64_t));
@@ -886,7 +887,15 @@ static int l_vec_rehydrate( lua_State *L)
   status = get_array_of_ints_from_tbl(L, "chunk_uqids", &is_key, 
         chunk_uqids, num_chunks);
   cBYE(status);
-  if ( !is_key ) { go_BYE(-1); }
+  if ( is_key ) { 
+    is_chunks_uqid = true; 
+  }
+  else {
+    free_if_non_null(chunk_uqids);
+    num_chunks = 0;
+  }
+  //------------------
+  if ( ( !is_vec_uqid ) && ( !is_chunks_uqid ) ) { go_BYE(-1); }
   //------------------
   ptr_vec = (VEC_REC_TYPE *)lua_newuserdata(L, sizeof(VEC_REC_TYPE));
   return_if_malloc_failed(ptr_vec);

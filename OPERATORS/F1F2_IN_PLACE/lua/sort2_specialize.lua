@@ -9,8 +9,8 @@ return function(f1, f2, optargs)
   assert(not f2:has_nulls())
   local f1_qtype = f1:qtype()
   local f2_qtype = f2:qtype()
-  f1:flush_all() -- TODO P3 Delete later
-  f2:flush_all() -- TODO P3 Delete later
+  f1:master() -- TODO P3 Delete later
+  f2:master() -- TODO P3 Delete later
   -- Flush needed because start_write assumes file exists
 
   local ordr
