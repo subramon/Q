@@ -1,6 +1,7 @@
 require 'Q/UTILS/lua/strict'
 local is_in = require 'Q/UTILS/lua/is_in'
 local plpath = require 'pl.path'
+local plfile = require 'pl.file'
 cutils = require 'libcutils'
 
 local rootdir = os.getenv("Q_SRC_ROOT")
@@ -14,7 +15,6 @@ tests.t1 = function()
   
   local dir = rootdir .. "/RUNTIME/CUTILS/src/"
   x = cutils.getfiles(dir, ".*.c$", "only_files")
-  print(type(x))
   assert(type(x) == "table")
   for _, v in ipairs(x) do assert(type(v) == "string") end 
   -- print("here is what we got")
@@ -34,10 +34,15 @@ tests.t1 = function()
   -- print("here is what we got")
   -- for k, v in pairs(x) do print(k, v) end
   -- print("=============")
-  sec, nsec = cutils.gettime("../test/test.lua", "last_access")
+  assert(plfile.write("/tmp/_xxx.txt", "abcd"))
+  sec, nsec = cutils.gettime("/tmp/_xxx.txt", "last_access")
+  assert(type(sec) == "number")
+  assert(type(nsec) == "number")
   -- print("last_access", x, y)
-  sec, nsec = cutils.gettime("../test/test.lua", "last_mod")
+  sec, nsec = cutils.gettime("/tmp/_xxx.txt", "last_mod")
   -- print("last_mod", x, y)
+  assert(type(sec) == "number")
+  assert(type(nsec) == "number")
   --==============
   for i = 1, 110 do 
     local chkfile = rootdir .. "/RUNTIME/CUTILS/test/test_cutils.lua"
@@ -68,5 +73,5 @@ tests.t1 = function()
   
   print("Test t1 succeeded")
 end
-tests.t1()
--- return tests
+-- tests.t1()
+return tests

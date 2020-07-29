@@ -15,7 +15,7 @@ identifier/name of a test case, the value is the test case itself.
 Note that the table can also be an array, in which case the
 index-into-array is the identifier for the test cases in that suite.
 
-Run luajit q_testrunner.lua to see its usage.
+Run luajit runtest.lua to see its usage.
 ]]
 
 package.path  = "/?.lua;" .. package.path -- TODO P4 What is this for?
@@ -27,9 +27,11 @@ local qconsts  = require 'Q/UTILS/lua/q_consts'
 local plpretty = require "pl.pretty"
 local plpath   = require "pl.path"
 cleanup()
-local q_root = qconsts.Q_ROOT
 local recursive_lister = require 'Q/TEST_RUNNER/recursive_lister'
-assert(cutils.isdir(q_root))
+
+local q_src_root = qconsts.Q_SRC_ROOT
+assert(cutils.isdir(q_src_root))
+local setup_path = string.format("export q_src_root='%s';\n", q_src_root)
 
 local calls = 0
 
@@ -60,26 +62,23 @@ local function run_tests(suite_name, test_name)
   if calls == 20 then print("") calls = 0 end -- force eoln
   io.write(".")
   --==================
-  local setup_path = string.format("export Q_ROOT='%s';\n", q_root)
+  -- Does this need to be part of base_str export LUA_PATH="/?.lua;$LUA_PATH";
   local base_str = [[
-  export LUA_PATH="/?.lua;$LUA_PATH";
-  L -e "require '%s'[%s]();collectgarbage();os.exit(0)" >/dev/null 2>&1]]
+  luajit  -e "require '%s'[%s]();collectgarbage();os.exit(0)" >/dev/null 2>&1]]
   base_str = setup_path .. base_str
   --===========================================
   -- Given a suite_name = foo.lua, if you do x  = require 'foo'
   -- then x should be a table of functions
-  local suite_name_mod, subs = suite_name:gsub("%.lua$", "")
-  assert(subs == 1, suite_name .. " should end with .lua")
-  local status, tests = pcall(require, suite_name_mod)
+  local status, tests = pcall(require, suite_name)
   if not status then
     print(tests) -- this is the error message on failure
     return {}, { msg = "Failed to load suite\n" .. tostring(suite_name) }
   end
   assert(type(tests) == "table", 
-    "Script [ " .. suite_name_mod .. "] did not return table of functions")
+    "Script [ " .. suite_name .. "] did not return table of functions")
   for _, t in pairs(tests) do 
     assert(type(t) == "function", 
-      "Script [ " .. suite_name_mod .. "] did not return tbl of fns")
+      "Script [ " .. suite_name .. "] did not return tbl of fns")
   end 
   --===========================================
   local pass = {}
@@ -100,7 +99,7 @@ local function run_tests(suite_name, test_name)
     else
       base_cmd = 'luajit -e "t = require \'%s\'; t.%s(); os.exit(0)"'
     end
-    local cmd = string.format(base_cmd, suite_name_mod, k)
+    local cmd = string.format(base_cmd, suite_name, k)
     local status = os.execute(cmd)
     io.write(".")
     if status == 0 then
@@ -114,20 +113,34 @@ end
 
 
 local path      = assert(arg[1], "Error: provide file or directory")
-local test_name 
 -- test_name allows us to focus on just one test in a suite
+local test_name 
+if ( arg[2] ) then test_name = arg[2] end 
+--====================================
 local t_results = {}
 local files = {}
 if ( plpath.isfile(path) ) then
   -- we have provided a file, not a directory
-  -- we can optionally restrict attention to a single test in that file
   files[#files+1] = path
-  if ( arg[2] ) then test_name = arg[2] end 
 else
   -- we have provided a directory
   -- assemble a list of all files with name test_*.lua contained therein
   recursive_lister(files, path)
 end
+assert(#files > 0)
+-- cannot specify a test name when more than one file being evaluated
+if ( #files > 1 ) then test_name = nil end 
+local xfiles = {}
+for k, file in ipairs(files) do 
+  -- modify files to start from "Q/..."
+  local x = plpath.abspath(file)
+  local y = string.gsub(x, q_src_root, "Q/")
+  local z, subs = y:gsub("%.lua$", "")
+  assert(subs == 1, "file_name should end with .lua. It is " .. file)
+  xfiles[k] = z
+end
+files = xfiles 
+-- for k, v in pairs(files) do print(k, v) end
 --- Now we have a list of files that need to be executed
 for _,f in pairs(files) do
   t_results[f] = {}

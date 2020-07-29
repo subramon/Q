@@ -38,8 +38,6 @@ services:
       Q_RESET: "true"
       Q_DATA_DIR: /local/Q/data/
       QC_FLAGS:  -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wno-unused-parameter -pedantic -fopenmp -mavx2 -mfma -Wno-implicit-fallthrough
-      Q_LINK_FLAGS:  -llapacke -llapack -lblas -lm -shared -lgomp
-      Q_BUILD_DIR: /tmp/q/
 
   dev1 : 
     image: ramesh_dev

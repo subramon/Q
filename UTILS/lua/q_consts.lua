@@ -59,7 +59,6 @@ local qconsts = {}
     qconsts.QC_FLAGS	= os.getenv("QC_FLAGS")
   end
   qconsts.Q_LINK_FLAGS	= os.getenv("Q_LINK_FLAGS")
-  qconsts.LUA_PATH	= os.getenv("LUA_PATH")
   qconsts.LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")
 
   -- Use cVector qconsts.Q_DATA_DIR for data_dir

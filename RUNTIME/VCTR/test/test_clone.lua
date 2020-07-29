@@ -42,5 +42,5 @@ tests.t1 = function()
   w:eov()
   print("Test t1 completed")
 end
--- return tests
-tests.t1()
+return tests
+-- tests.t1()

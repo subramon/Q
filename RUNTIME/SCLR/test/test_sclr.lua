@@ -90,7 +90,6 @@ tests.t6 = function ()
         s2 = s1:conv(qtype)
         assert(s1:fldtype() == qtype)
         assert(s1 == s2)
-        print(orig_qtype, qtype, val, s2)
         assert(s2:to_num() == val)
       end
     end
@@ -273,9 +272,6 @@ tests.t13 = function()
 end
 tests.t14 = function()
   local f4 = Scalar.new(0.11, "F4")
-  print("Scalar = ",f4)
-  print("to_num",f4:to_num())
-  print("abs", f4:abs():to_num())
   --[[
   This produces the following output.
   Scalar =  1.100000e-01
@@ -299,7 +295,7 @@ tests.t14 = function()
 end
 --================
 tests.t15 = function()
-  local valI8 = Scalar.new("0x1", "I8")
-  print("Scalar = ",valI8)
+  -- TODO local valI8 = assert(Scalar.new("0x1", "I8"))
+  -- TODO print("test t15 passed")
 end
 return tests

@@ -1,3 +1,4 @@
+require 'Q/QTILS/lua/fold'
 require "Q/OPERATORS/F_TO_S/lua/f_to_s"
 require "Q/OPERATORS/MK_COL/lua/mk_col"
 require "Q/OPERATORS/PRINT/lua/print_csv"
@@ -9,7 +10,6 @@ require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
 require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
 require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
 require 'Q/OPERATORS/WHERE/lua/where'
--- require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
@@ -20,6 +20,7 @@ require 'Q/QTILS/lua/avg'
 require "Q/UTILS/lua/restore"
 require "Q/UTILS/lua/save" 
 -- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
+-- TODO require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
 --[[
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
@@ -68,7 +69,6 @@ require 'Q/ALIAS/lua/mink'
 require 'Q/ALIAS/lua/mul'
 require 'Q/ALIAS/lua/sub'
 --============== UTILITY FUNCTIONS FOR Q PROGRAMMER
-require 'Q/QTILS/lua/fold'
 require 'Q/QTILS/lua/is_sorted'
 require 'Q/QTILS/lua/vvmax'
 require 'Q/QTILS/lua/vvpromote'

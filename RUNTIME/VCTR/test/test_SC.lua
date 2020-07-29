@@ -7,14 +7,18 @@ local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local get_func_decl = require 'Q/UTILS/build/get_func_decl'
+--== cdef necessary stuff
+local for_cdef = require 'Q/UTILS/lua/for_cdef'
 
-local hdrs = get_func_decl("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
-pcall(ffi.cdef, hdrs)
--- following only because we are testing. Normally, we get this from q_core
-local hdrs = get_func_decl("../../CMEM/inc/cmem_struct.h", " -I../../../UTILS/inc/")
-pcall(ffi.cdef, hdrs)
+local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
+local incs = { "UTILS/inc/" }
+local x = for_cdef(infile, incs)
+ffi.cdef(x)
 
+local infile = "RUNTIME/VCTR/inc/core_vec_struct.h"
+local incs = { "UTILS/inc/" }
+local x = for_cdef(infile, incs)
+ffi.cdef(x)
 --=================================
 local chunk_size = 65536
 local params = { chunk_size = chunk_size, sz_chunk_dir = 4096, 
@@ -74,7 +78,7 @@ tests.t0 = function(delta)
   assert(y.num_elements == n)
   assert(y.width == width)
   assert(y.qtype == qtype)
-  if ( incr > 0 ) then 
+  if ( delta > 0 ) then 
     assert(not y.file_name)
     assert(type(y.file_names) == "table")
     assert(#y.file_names == num_chunks)

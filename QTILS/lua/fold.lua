@@ -1,5 +1,5 @@
 local Scalar = require 'libsclr'
-local f_to_s = require 'Q/OPERATORS/F_TO_S/lua/_f_to_s'
+local f_to_s = require 'Q/OPERATORS/F_TO_S/lua/f_to_s'
 
 local T = {}
 local function fold( fns, vec)

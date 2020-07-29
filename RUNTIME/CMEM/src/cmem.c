@@ -409,6 +409,12 @@ BYE:
   return 2;
 }
 
+static int l_cmem_qtype( lua_State *L) {
+  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
+  lua_pushstring(L, ptr_cmem->fldtype);
+  return 1;
+}
+
 static int l_cmem_fldtype( lua_State *L) {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   lua_pushstring(L, ptr_cmem->fldtype);
@@ -792,6 +798,7 @@ static const struct luaL_Reg cmem_methods[] = {
     { "new",        l_cmem_new },
     { "nop",        l_cmem_nop },
     { "prbuf",      l_cmem_prbuf },
+    { "qtype",      l_cmem_qtype },
     { "set",        l_cmem_set               },
     { "set_default", l_cmem_set_default },
     { "set_max",    l_cmem_set_max },
@@ -818,6 +825,7 @@ static const struct luaL_Reg cmem_functions[] = {
     { "new",        l_cmem_new },
     { "nop",        l_cmem_nop },
     { "prbuf",      l_cmem_prbuf },
+    { "qtype",      l_cmem_qtype },
     { "set",        l_cmem_set               },
     { "set_default", l_cmem_set_default },
     { "set_max",    l_cmem_set_max },

@@ -22,13 +22,14 @@ clean :
 	rm -f _*
 	rm -f *.so
 
+AUX_FILES = \
+	    ../../../UTILS/src/get_bit_u64.c \
+	    ../../../UTILS/src/set_bit_u64.c \
+
 libwhere.so : ${GEN_FILES} \
 	where.tmpl
 	luajit generator.lua
-	gcc ${GEN_FILES} ${AUX_FILES} ${CFLAGS} ${INCS} ${Q_LINK_FLAGS} -o libwhere.so
-	test -d ${Q_BUILD_DIR}
-	cp ../gen_src/*.c ${Q_BUILD_DIR}/src/
-	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
+	gcc ${GEN_FILES} ${AUX_FILES} ${CFLAGS} ${INCS} -shared -o libwhere.so
 
 test_q : libwhere.so
 	echo "TODO"
@@ -39,9 +40,9 @@ test_c :  libwhere.so
 test : test_q test_c
 
 GEN_FILES = \
-	../gen_src/_where_F4.c \
-	../gen_src/_where_F8.c \
-	../gen_src/_where_I1.c \
-	../gen_src/_where_I2.c \
-	../gen_src/_where_I4.c \
-	../gen_src/_where_I8.c \
+	../gen_src/where_F4.c \
+	../gen_src/where_F8.c \
+	../gen_src/where_I1.c \
+	../gen_src/where_I2.c \
+	../gen_src/where_I4.c \
+	../gen_src/where_I8.c \

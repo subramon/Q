@@ -19,7 +19,6 @@ INCS=-I. \
 
 
 all: libcutils.so 
-	cp libcutils.so ${Q_ROOT}/lib/
 
 UTILS_INC_FILES = \
 	../../../UTILS/inc/get_bit_u64.h \
@@ -48,6 +47,5 @@ libcutils.so:   cutils.c \
 	gcc ${CFLAGS} ${INCS} \
 	cutils.c \
 	${UTILS_SRC_FILES} \
-	${Q_LINK_FLAGS} -shared -o libcutils.so
-	test -d ${Q_ROOT}/lib/
+	-shared -o libcutils.so
 

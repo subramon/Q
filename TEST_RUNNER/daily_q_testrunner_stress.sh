@@ -27,13 +27,13 @@ build_output_heading="------------OUTPUT of build scripts-----------------------
 build_output=$(make 2>&1)
 
 cd ../../
-#running q_testrunner from Q_SRC_ROOT and dump output in temporary file
-luajit $Q_SRC_ROOT/TEST_RUNNER/q_testrunner.lua s $Q_SRC_ROOT > $HOME/q_testrunner_output_stress.txt
+#running runtest from Q_SRC_ROOT and dump output in temporary file
+luajit $Q_SRC_ROOT/TEST_RUNNER/runtest.lua s $Q_SRC_ROOT > $HOME/runtest_output_stress.txt
 
 
-#cmd to get last line of output of q_testrunner
-q_test_runner_result=$(tail -n1 < $HOME/q_testrunner_output_stress.txt)
+#cmd to get last line of output of runtest
+q_test_runner_result=$(tail -n1 < $HOME/runtest_output_stress.txt)
 
-#cmd to mail the output of q_testrunner
-echo $q_test_runner_result | /usr/bin/mail -s "Q Unit Tests" Subramonian@gmail.com -A $HOME/q_testrunner_output_stress.txt
+#cmd to mail the output of runtest
+echo $q_test_runner_result | /usr/bin/mail -s "Q Unit Tests" Subramonian@gmail.com -A $HOME/runtest_output_stress.txt
 

@@ -36,9 +36,6 @@ echo "Q_DATA_DIR: $Q_DATA_DIR"
 export LD_LIBRARY_PATH="${Q_ROOT}/lib:/usr/local/lib64:${LD_LIBRARY_PATH}"
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 #-----------------------------------
-export Q_LINK_FLAGS=" -llapacke -llapack -lblas -lm -shared -lgomp"
-echo "Q_LINK_FLAGS: $Q_LINK_FLAGS"
-#-----------------------------------
 
 CURR_PATH=`pwd`
 cd $Q_SRC_ROOT

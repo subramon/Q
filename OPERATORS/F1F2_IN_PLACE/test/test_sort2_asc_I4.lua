@@ -1,5 +1,6 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
+local plpath  = require 'pl.path'
 local Q       = require 'Q'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local ffi     = require 'ffi'
@@ -9,19 +10,20 @@ local for_cdef = require 'Q/UTILS/lua/for_cdef'
 local so_dir_path = os.getenv("Q_SRC_ROOT") ..  "/OPERATORS/F1F2_IN_PLACE/lua/"
 local sofile = so_dir_path .. "libsort2.so"
 
+local cmd = "make -C " .. so_dir_path .. " test"
+local xstatus = os.execute(cmd)
+assert(xstatus == 0 )
+assert(plpath.isfile(sofile))
+local qc_sort = ffi.load(sofile)
+  
+
 local qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
 for _, qtype in ipairs(qtypes) do 
   local hfile = 
     "OPERATORS/F1F2_IN_PLACE/gen_inc/sort2_asc_" .. qtype .. "_" .. qtype .. ".h"
   local x = for_cdef(hfile)
-  print(x)
   ffi.cdef(x)
 end 
-
-local cmd = "make -C " .. so_dir_path .. " test"
-local xstatus = os.execute(cmd)
-assert(xstatus == 0 )
-local qc_sort = ffi.load(sofile)
 
 -- lua test to check the working of SORT2_ASC operator only for I4 qtype
 local tests = {}
