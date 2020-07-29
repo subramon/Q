@@ -22,8 +22,7 @@ local function SC_to_TM(
   subs.fn = "SC_to_TM"
   subs.dotc = "OPERATORS/LOAD_CSV/src/SC_to_TM.c"
   subs.doth = "OPERATORS/LOAD_CSV/inc/SC_to_TM.h"
-  subs.incs = { "OPERATORS/LOAD_CSV/inc/", "OPERATORS/LOAD_CSV/gen_inc/", 
-    "UTILS/inc/" }
+  subs.incs = { "OPERATORS/LOAD_CSV/inc/", "UTILS/inc/" }
   -- subs.srcs = {}
   qc.q_add(subs)
   

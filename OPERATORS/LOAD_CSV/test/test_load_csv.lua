@@ -4,7 +4,6 @@ local ffi     = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local Scalar  = require 'libsclr'
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local plfile = require 'pl.file'
 local plpath = require 'pl.path'
 local plutils= require 'pl.utils'
 local test_print  = true -- turn false if you want only load_csv tested
@@ -15,7 +14,8 @@ tests.t1 = function()
   local O = { is_hdr = true }
   M[1] = { name = "i4", qtype = "I4", is_memo = false}
   M[2] = { name = "f4", qtype = "F4", is_memo = true}
-  local datafile = "in1.csv"
+  local datafile = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in1.csv"
+  assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   local num_cols = 0
   assert(type(T) == "table")
@@ -73,7 +73,8 @@ tests.t2 = function()
   local O = { is_hdr = true }
   M[1] = { name = "i1", qtype = "I4", has_nulls = false }
   M[2] = { name = "s1", qtype = "SC", has_nulls = false, width = 6}
-  local datafile = "in2.csv"
+  local datafile = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in2.csv"
+  assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   assert(type(T) == "table")
   for k, v in ipairs(M) do 
@@ -129,7 +130,8 @@ tests.t3 = function()
   M[#M+1] = { is_memo = false, name = "customer_id", qtype = "I8", }
   M[#M+1] = { is_memo = false, name = "category_id", qtype = "I4", }
   M[#M+1] = { is_memo = true, name = "price", qtype = "F4", has_nulls = false}
-  local datafile = "in3.csv"
+  local datafile = "/OPERATORS/LOAD_CSV/test/in3.csv"
+  assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   for _, v in pairs(T) do assert(v:is_memo()) end 
   local chunk_idx = 0
@@ -161,8 +163,9 @@ tests.t4 = function()
   local O = { is_hdr = true }
   M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
   M[#M+1] = { name = "store_id", qtype = "I4", has_nulls = false}
-  local datafile = "in4.csv"
   local format = "%Y-%m-%d %H:%M:%S"
+  local datafile = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in4.csv"
+  assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   local x = Q.SC_to_TM(T.datetime, format)
   local y = Q.TM_to_SC(x:eval(), format)
@@ -188,9 +191,9 @@ tests.t5 = function()
   M[#M+1] = { is_load = false, name = "customer_id", qtype = "I8", has_nulls = false}
   M[#M+1] = { is_load = false, name = "category_id", qtype = "I4", has_nulls = false}
   M[#M+1] = { is_load = false, name = "price", qtype = "F4", has_nulls = false}
-  local datafile = "in3.csv"
-
   local format = "%Y-%m-%d %H:%M:%S"
+  local datafile = q_consts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in3.csv"
+  assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   assert(T.datetime) 
   local x = Q.SC_to_TM(T.datetime, format)

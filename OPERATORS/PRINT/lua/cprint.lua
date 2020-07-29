@@ -13,23 +13,17 @@ local function cprint(
   ub, -- number
   V -- table of lVectors to be printed
   )
-  -- START: Dynamic compilation
   local func_name = "cprint"
-  if ( not qc[func_name] ) then 
-    print("Dynamic compilation kicking in... ")
-    local subs = {}
-    subs.fn = func_name
-    -- IMPORTANT: In specifying files, Do not start with a backslash
-    subs.dotc = "OPERATORS/PRINT/src/cprint.c"
-    subs.doth = "OPERATORS/PRINT/inc/cprint.h"
-    subs.srcs = { "UTILS/src/get_bit_u64.c" }
-    subs.incs = { "OPERATORS/PRINT/inc/", "UTILS/inc/" }
-    subs.structs = nil -- no structs need to be cdef'd
-    subs.libs = nil -- no libaries need to be linked
-    qc.q_add(subs); 
-  end 
-  -- STOP : Dynamic compilation
-  assert(qc[func_name], "Symbol not available" .. func_name)
+  local subs = {}
+  subs.fn = func_name
+  -- IMPORTANT: In specifying files, Do not start with a backslash
+  subs.dotc = "OPERATORS/PRINT/src/cprint.c"
+  subs.doth = "OPERATORS/PRINT/inc/cprint.h"
+  subs.srcs = { "UTILS/src/get_bit_u64.c" }
+  subs.incs = { "OPERATORS/PRINT/inc/", "UTILS/inc/" }
+  subs.structs = nil -- no structs need to be cdef'd
+  subs.libs = nil -- no libaries need to be linked
+  qc.q_add(subs); 
 
   if ( opfile ) then 
     cutils.delete(opfile) -- clean out any existing file

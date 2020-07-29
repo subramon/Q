@@ -57,8 +57,7 @@ local function bridge_C(
   subs.fn = "load_csv_fast"
   subs.dotc = "OPERATORS/LOAD_CSV/src/load_csv_fast.c"
   subs.doth = "OPERATORS/LOAD_CSV/inc/load_csv_fast.h"
-  subs.incs = { "OPERATORS/LOAD_CSV/inc/", "OPERATORS/LOAD_CSV/gen_inc/", 
-    "UTILS/inc/" }
+  subs.incs = { "OPERATORS/LOAD_CSV/inc/", "UTILS/inc/" }
   subs.srcs = { "UTILS/src/is_valid_chars_for_num.c", 
     "UTILS/src/get_bit_u64.c",  
     "UTILS/src/rs_mmap.c",  
