@@ -5,7 +5,7 @@ rm -f _log
 luajit ~/Q/TEST_RUNNER/runtest.lua $Q_SRC_ROOT/RUNTIME/CUTILS/test 1>>_log 2>&1
 luajit ~/Q/TEST_RUNNER/runtest.lua $Q_SRC_ROOT/RUNTIME/CMEM/test 1>>_log 2>&1
 luajit ~/Q/TEST_RUNNER/runtest.lua $Q_SRC_ROOT/RUNTIME/SCLR/test 1>>_log 2>&1
-# luajit ~/Q/TEST_RUNNER/runtest.lua $Q_SRC_ROOT/RUNTIME/VCTR/test 1>>_log 2>&1
+luajit ~/Q/TEST_RUNNER/runtest.lua $Q_SRC_ROOT/RUNTIME/VCTR/test 1>>_log 2>&1
 #---------------------------------
 luajit ~/Q/TEST_RUNNER/runtest.lua $Q_SRC_ROOT/OPERATORS/F_IN_PLACE/test 1>>_log 2>&1
 luajit ~/Q/TEST_RUNNER/runtest.lua $Q_SRC_ROOT/OPERATORS/F1F2_IN_PLACE/test 1>>_log 2>&1

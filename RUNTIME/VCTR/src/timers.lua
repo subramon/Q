@@ -5,18 +5,23 @@ local mode = arg[1]
 local timers = {
   "check ",
   "clone ",
+
+  "clean_chunk ",
   "delete_chunk_file ",
-  "delete_master_file ",
-  "flush ",
+  "make_chunk_file ",
+
+  "master ",
+  "unmaster ",
+
   "free ",
   "get1 ",
-  "start_read ",
   "get_chunk ",
   "new ",
   "put1 ",
   "put_chunk ",
   "rehydrate",
   "shutdown ",
+  "start_read ",
   "start_write ",
 
   "malloc ",

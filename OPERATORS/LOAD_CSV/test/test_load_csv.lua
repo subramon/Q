@@ -130,7 +130,7 @@ tests.t3 = function()
   M[#M+1] = { is_memo = false, name = "customer_id", qtype = "I8", }
   M[#M+1] = { is_memo = false, name = "category_id", qtype = "I4", }
   M[#M+1] = { is_memo = true, name = "price", qtype = "F4", has_nulls = false}
-  local datafile = "/OPERATORS/LOAD_CSV/test/in3.csv"
+  local datafile = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in3.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   for _, v in pairs(T) do assert(v:is_memo()) end 
@@ -192,7 +192,7 @@ tests.t5 = function()
   M[#M+1] = { is_load = false, name = "category_id", qtype = "I4", has_nulls = false}
   M[#M+1] = { is_load = false, name = "price", qtype = "F4", has_nulls = false}
   local format = "%Y-%m-%d %H:%M:%S"
-  local datafile = q_consts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in3.csv"
+  local datafile = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in3.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   assert(T.datetime) 

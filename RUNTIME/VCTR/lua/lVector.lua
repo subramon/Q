@@ -108,8 +108,8 @@ function lVector:delete_chunk_file(chunk_num)
 end
 
 -- Mainly used for testing. Not really needed by Q programmer
-function lVector:delete_master_file()
-  return H.on_both(self, cVector.delete_master_file)
+function lVector:unmaster()
+  return H.on_both(self, cVector.unmaster)
 end
 
 -- Relinquish read access to the entire vector 
@@ -197,15 +197,42 @@ function lVector:file_name(chunk_num)
 end
 
 
--- flushes contents of vector to disk
 -- creates a master file if one does not exist
+-- if is_free_mem, then frees chunk memory
+function lVector:master(is_free_mem)
+  if ( is_free_mem ) then 
+    assert(type(is_free_mem) == "boolean") 
+  end
+  assert(cVector.master(self._base_vec, is_free_mem))
+  if ( self._nn_vec ) then 
+    assert(cVector.master(self._nn_vec, is_free_mem))
+  end
+  return self
+end
+--
+-- flushes contents of chunks to disk
 -- Mainly used for testing. Not really needed by Q programmer
-function lVector:flush_all()
-  return H.on_both(self, cVector.flush_all)
+function lVector:make_chunk_files(is_free_mem)
+  if ( is_free_mem ) then 
+    assert(type(is_free_mem) == "boolean") 
+  end
+  assert(cVector.make_chunk_files(self._base_vec, is_free_mem))
+  if ( self._nn_vec ) then 
+    assert(cVector.make_chunk_files(self._nn_vec, is_free_mem))
+  end
+  return true
 end
 
-function lVector:flush_chunk(chunk_num)
-  return H.on_both(self, cVector.flush_chunk, chunk_num)
+function lVector:make_chunk_file(chunk_num, is_free_mem)
+  assert(type(chunk_num) == "number") 
+  if ( is_free_mem ) then 
+    assert(type(is_free_mem) == "boolean") 
+  end
+  assert(cVector.make_chunk_file(self._base_vec, chunk_num, is_free_mem))
+  if ( self._nn_vec ) then 
+    assert(cVector.make_chunk_file(self._nn_vec, chunk_num, is_free_mem))
+  end
+  return true
 end
 
 function lVector:free()
@@ -454,18 +481,20 @@ function lVector:put_chunk(base_addr, nn_addr, len)
   if ( ( type(len) == "number") and ( len == 0 ) )  then -- no more data
     return H.on_both(self, cVector.eov)
   end
+  if ( type(len) == "nil" ) then
+    len = cVector.chunk_size()
+  end
+  assert(type(len) == "number")
   --====================
   -- TODO P4 Use on_both for the following..
   assert(type(base_addr) == "CMEM")
-  if ( type(len) == "nil" ) then len = -1 end 
-  assert(type(len) == "number")
   assert(cVector.put_chunk(self._base_vec, base_addr, len))
   if ( self._nn_vec ) then
     assert(type(nn_addr) == "CMEM")
     status = cVector.put_chunk(self._nn_vec, nn_addr, len)
     assert(status)
   end
-  if ( len < cVector.chunk_size() ) then 
+  if ( len and ( len < cVector.chunk_size() ) ) then 
     assert(cVector.eov(self._base_vec))
     if ( self._nn_vec ) then
       assert(cVector.eov(self._nn_vec))
@@ -592,7 +621,9 @@ end
 function lVector:shutdown()
   if ( qconsts.debug ) then self:check() end
   local status, msg = cVector.shutdown(self._base_vec)
-  if ( not status ) then print("Unable to shutdown"); print(msg) end 
+  if ( not status ) then 
+    print(msg .. ": Unable to shutdown"); return false
+  end 
   -- TODO P1 What about nn_vec?
   return status 
 end

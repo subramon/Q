@@ -18,7 +18,7 @@ mkdir -p $HOME/local/
 mkdir -p $HOME/local/Q/
 mkdir -p $HOME/local/Q/lib/
 #-----------------------------------
-C_FLAGS=' -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wno-unused-parameter -pedantic -fopenmp -mavx2 -mfma -Wno-implicit-fallthrough'
+C_FLAGS=' -g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wno-unused-parameter -pedantic -fopenmp -mavx2 -mfma -Wno-implicit-fallthrough'
 
 export QC_FLAGS="${QC_FLAGS:=$C_FLAGS}"
 lscpu | grep "Architecture" | grep "arm"
