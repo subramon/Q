@@ -8,6 +8,7 @@ local cmem    = require 'libcmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
+local function initialize()
 --== cdef necessary stuff
 local for_cdef = require 'Q/UTILS/lua/for_cdef'
 
@@ -20,9 +21,11 @@ local infile = "RUNTIME/VCTR/inc/core_vec_struct.h"
 local incs = { "UTILS/inc/" }
 local x = for_cdef(infile, incs)
 ffi.cdef(x)
+end
 --=================================
 local tests = {}
 tests.t1 = function ()
+  initialize()
   local params = { chunk_size = 65536, sz_chunk_dir = 1024, 
     data_dir = qconsts.Q_DATA_DIR }
   cVector.init_globals(params)

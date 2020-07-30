@@ -10,15 +10,17 @@ local get_ptr = require 'Q/UTILS/lua/get_ptr'
 --== cdef necessary stuff
 local for_cdef = require 'Q/UTILS/lua/for_cdef'
 
-local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
-local incs = { "UTILS/inc/" }
-local x = for_cdef(infile, incs)
-ffi.cdef(x)
-
-local infile = "RUNTIME/VCTR/inc/core_vec_struct.h"
-local incs = { "UTILS/inc/" }
-local x = for_cdef(infile, incs)
-ffi.cdef(x)
+local function initialize()
+  local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
+  local incs = { "UTILS/inc/" }
+  local x = for_cdef(infile, incs)
+  ffi.cdef(x)
+  
+  local infile = "RUNTIME/VCTR/inc/core_vec_struct.h"
+  local incs = { "UTILS/inc/" }
+  local x = for_cdef(infile, incs)
+  ffi.cdef(x)
+end
 --=================================
 --=================================
 local chunk_size = 65536
@@ -30,6 +32,7 @@ local tests = {}
 -- testing put1 and get1 for B1
 
 tests.t0 = function(incr)
+  initialize()
   if ( not  incr ) then incr = 0 end 
   local qtype = "B1"
   local width = 1
@@ -82,16 +85,21 @@ tests.t0 = function(incr)
   assert(y.num_elements == n)
   assert(y.width == width)
   assert(y.qtype == qtype)
-  print("incr/num_chunks = ", incr, num_chunks)
-
-  if ( incr > 0 ) then 
-    assert(not y.file_name)
-    assert(type(y.file_names) == "table")
-    print(#y.file_names, num_chunks)
-    assert(#y.file_names == num_chunks)
-    for k, v in pairs(y.file_names) do 
-      assert(plpath.isfile(v)) 
+  -- print("incr/num_chunks = ", incr, num_chunks)
+  assert(type(y.chunk_uqids) == "table")
+  for _, v in ipairs(y.chunk_uqids) do
+    assert(type(v) == "number")
+    assert(v > 0)
+  end 
+  for k1, v1 in ipairs(y.chunk_uqids) do
+    for k2, v2 in ipairs(y.chunk_uqids) do
+      if ( k1 ~= k2 ) then assert(v1 ~= v2) end 
     end
+  end 
+  if ( incr > 0 ) then 
+    assert(#y.chunk_uqids > 1 ) 
+  else
+    assert(#y.chunk_uqids == 1 ) 
   end
 
   local z = assert(cVector.rehydrate(y))
@@ -122,12 +130,15 @@ end
 
 tests.t1 = function()
   assert(tests.t0(-1))
-  assert(tests.t0(1))
   print("Successfully completed test t1")
+end
+tests.t2 = function()
+  assert(tests.t0(1))
+  print("Successfully completed test t2")
 end
 return tests
 --[[
-tests.t0() 
 tests.t1() 
+tests.t0() 
 os.exit()
 --]]

@@ -218,50 +218,60 @@ vec_rehydrate(
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_rehydrate++;
 
+  if ( num_elements == 0 ) { go_BYE(-1); }
+  if ( vec_uqid == 0 ) { go_BYE(-1); }
+  if ( chunk_uqids == NULL ) { go_BYE(-1); }
+  if ( field_width == 0 ) { go_BYE(-1); }
+  if ( fldtype == NULL ) { go_BYE(-1); }
+
   status = vec_new_common(ptr_S, ptr_T, ptr_vec, fldtype, field_width);
   cBYE(status);
-  ptr_vec->uqid = vec_uqid; // Important: over-write
+  // Important: Normally, vec_new_common will assign a new vec_uqid
+  // by calling mk_uqid(). However, given that this is a rehydration,
+  // we use the vec_uqid provided, not the one generated. Hence, as below:
+  ptr_vec->uqid = vec_uqid; 
+
   uint32_t num_chunks = ceil((double)num_elements / (double)ptr_S->chunk_size);
   status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
   ptr_vec->num_elements = num_elements; // after init_chunk_dir()
   ptr_vec->num_chunks   = num_chunks;
-  if ( chunk_uqids != NULL ) { 
-    for ( uint32_t i = 0; i < num_chunks; i++ ) {
-      uint32_t chunk_idx;
-      status = allocate_chunk(ptr_S, ptr_T, 0, i, ptr_vec->uqid, 
-          &chunk_idx, false); 
-      cBYE(status); chk_chunk_idx(chunk_idx); 
-      ptr_vec->chunks[i] = chunk_idx;
-      CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
-      ptr_c->vec_uqid = ptr_vec->uqid;
-      ptr_c->uqid = chunk_uqids[i]; // Important: over-write
-      ptr_c->chunk_num = i;
-      status = mk_file_name(ptr_c->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-      if ( isfile(file_name) ) { ptr_c->is_file = true; }
+  for ( uint32_t i = 0; i < num_chunks; i++ ) {
+    uint32_t chunk_idx;
+    status = allocate_chunk(ptr_S, ptr_T, 0, i, ptr_vec->uqid, 
+        &chunk_idx, false); 
+    cBYE(status); chk_chunk_idx(chunk_idx); 
+    ptr_vec->chunks[i] = chunk_idx;
+    CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
+    ptr_c->vec_uqid = ptr_vec->uqid;
+    ptr_c->uqid = chunk_uqids[i]; // Important: over-write
+    ptr_c->chunk_num = i;
+    status = mk_file_name(ptr_c->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+    if ( isfile(file_name) ) { 
       int64_t expected_file_size = get_exp_file_size(ptr_S, 
           ptr_S->chunk_size, ptr_vec->field_width, ptr_vec->fldtype);
       int64_t actual_file_size = get_file_size(file_name);
       if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
+      ptr_c->is_file = true; 
     }
   }
   //
-  // Note that we just accept the file (after some checking)
+  // Note that we just accept the master file (after some checking)
   // we do not "load" it into memory. We delay that until needed
   status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME);
   if ( isfile(file_name) ) { 
-    ptr_vec->is_file = true; 
     int64_t expected_file_size = get_exp_file_size(ptr_S, num_elements,
         ptr_vec->field_width, ptr_vec->fldtype);
     int64_t actual_file_size = get_file_size(file_name);
     if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
     ptr_vec->file_size = actual_file_size;
+    ptr_vec->is_file = true; 
   }
   ptr_vec->num_elements = num_elements;
   ptr_vec->is_eov     = true;
   ptr_vec->is_persist = true;
   //------------
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_rehydrate+= delta; }
+  delta=RDTSC()-t_start; if ( delta > 0 ) { ptr_T->t_rehydrate+= delta; }
   return status;
 }
 //-------------------------------------------------

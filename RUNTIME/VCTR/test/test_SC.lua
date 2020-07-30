@@ -7,6 +7,7 @@ local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local function initialize()
 --== cdef necessary stuff
 local for_cdef = require 'Q/UTILS/lua/for_cdef'
 
@@ -19,6 +20,7 @@ local infile = "RUNTIME/VCTR/inc/core_vec_struct.h"
 local incs = { "UTILS/inc/" }
 local x = for_cdef(infile, incs)
 ffi.cdef(x)
+end
 --=================================
 local chunk_size = 65536
 local params = { chunk_size = chunk_size, sz_chunk_dir = 4096, 
@@ -29,6 +31,7 @@ local tests = {}
 -- testing put1 and get1 
 
 tests.t0 = function(delta)
+  initialize()
   -- delta allows us to test more than just multiple of chunk size 
   if ( not  delta ) then delta = 0 end 
   local qtype = "SC"
@@ -77,15 +80,6 @@ tests.t0 = function(delta)
   assert(type(y) == "table")
   assert(y.num_elements == n)
   assert(y.width == width)
-  assert(y.qtype == qtype)
-  if ( delta > 0 ) then 
-    assert(not y.file_name)
-    assert(type(y.file_names) == "table")
-    assert(#y.file_names == num_chunks)
-    for k, v in pairs(y.file_names) do 
-      assert(plpath.isfile(v)) 
-    end
-  end
   local z = assert(cVector.rehydrate(y))
   local M = assert(z:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
@@ -102,8 +96,11 @@ tests.t0 = function(delta)
     local sp = ffi.cast("CMEM_REC_TYPE *", s)
     assert(sp.width == width)
     assert(ffi.string(sp.fldtype) == "SC")
-    assert(ffi.string(sp.data) == "ABC")
     assert(s:fldtype() == "SC")
+        if ( ( i % 3 ) == 0 ) then assert(ffi.string(sp.data) == "ABC")
+    elseif ( ( i % 3 ) == 1 ) then assert(ffi.string(sp.data) == "DEF")
+    elseif ( ( i % 3 ) == 2 ) then assert(ffi.string(sp.data) == "GHI")
+    else error("") end 
   end
   z:check()
   cVector:check_chunks()
@@ -113,10 +110,12 @@ tests.t0 = function(delta)
 end
 
 tests.t1 = function()
-  assert(tests.t0())
   assert(tests.t0(-1))
-  assert(tests.t0(1))
   print("Successfully completed test t1")
+end
+tests.t2 = function()
+  assert(tests.t0(1))
+  print("Successfully completed test t2")
 end
 return tests
 --[[

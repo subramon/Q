@@ -442,7 +442,7 @@ tests.t5 = function()
     print(">>> start deliberate error")
     status = v:delete()
     print("<<<< stop deliberate error")
-    print("Successfully completed test t5")
+    print("Successfully completed test t5 for mode = " .. mode)
     print("garbage collection starts")
   end
 end
