@@ -6,13 +6,13 @@
 
 #include "_hmap_instantiate.h"
 // Like hmap_create but ptr_hmap has been allocated prior
-//START_FUNC_DECL
+//START_FOR_CDEF
 int 
 hmap_instantiate(
     hmap_t *ptr_hmap,
     size_t minsize
     )
-//STOP_FUNC_DECL
+//STOP_FOR_CDEF
 {
   int status = 0;
 

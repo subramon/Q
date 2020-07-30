@@ -4,7 +4,7 @@
 #include "_calc_new_size.h"
 /* Checks whether resize is needed. If so, calculates newsize */
 /* Resize needed when occupancy is too high or too low */
-//START_FUNC_DECL
+//START_FOR_CDEF
 int
 calc_new_size(
     uint32_t nitems, 
@@ -17,7 +17,7 @@ calc_new_size(
     uint32_t *ptr_newsize,
     bool *ptr_resize
     )
-//STOP_FUNC_DECL
+//STOP_FOR_CDEF
 {
   int status = 0;
   *ptr_resize = false;

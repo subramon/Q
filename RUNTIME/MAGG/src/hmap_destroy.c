@@ -3,12 +3,12 @@
 #include "_hmap_types.h"
 //STOP_INCLUDES
 #include "_hmap_destroy.h"
-//START_FUNC_DECL
+//START_FOR_CDEF
 void
 hmap_destroy(
     hmap_t *ptr_hmap
     )
-//STOP_FUNC_DECL
+//STOP_FOR_CDEF
 {
   if ( ptr_hmap == NULL ) { return; }
   free_if_non_null(ptr_hmap->bkts);

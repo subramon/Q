@@ -9,12 +9,12 @@
 #include "_hmap_types.h"
 //STOP_INCLUDES
 #include "_hmap_chk.h"
-//START_FUNC_DECL
+//START_FOR_CDEF
 int 
 hmap_chk(
     hmap_t *ptr_hmap
     )
-//STOP_FUNC_DECL
+//STOP_FOR_CDEF
 {
   int status = 0;
   if ( ptr_hmap->bkts == 0 ) { 

@@ -1,6 +1,6 @@
 local gen_code = require "Q/UTILS/lua/gen_code"
 local qconsts  = require 'Q/UTILS/lua/q_consts'
-local extract_func_decl  = require 'Q/UTILS/src/extract_func_decl'
+local for_cdef = require 'Q/UTILS/lua/for_cdef'
 local plpath   = require "pl.path"
 local srcdir   = "../xgen_src/"
 local incdir   = "../xgen_inc/"
@@ -188,7 +188,7 @@ local function libgen(
   S[#S+1] = "../src/murmurhash.c"
   S[#S+1] = "../src/validate_psl_p.c"
   for k, v in ipairs(S) do 
-    extract_func_decl(v, incdir)
+    for_cdef(v, incdir)
   end
 
   -- compile code 

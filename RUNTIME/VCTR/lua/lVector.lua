@@ -419,6 +419,18 @@ function lVector.new(args)
         assert(cVector.check(vector._nn_vec)) 
       end 
     end
+    --=======================
+    local is_memo
+    if ( args.is_memo ) then
+      is_memo = args.is_memo
+    else
+      is_memo = qconsts.is_memo
+    end 
+    cVector.memo(vector._base_vec, is_memo)
+    if ( vector._nn_vec ) then 
+      cVector.memo(vector._nn_vec, is_memo)
+    end
+    --=======================
   else -- materialized vector
     vector._base_vec = assert(cVector.rehydrate(args))
     if ( args.has_nulls ) then
@@ -620,12 +632,12 @@ end
 
 function lVector:shutdown()
   if ( qconsts.debug ) then self:check() end
-  local status, msg = cVector.shutdown(self._base_vec)
-  if ( not status ) then 
-    print(msg .. ": Unable to shutdown"); return false
+  local reincarnate_str = cVector.shutdown(self._base_vec)
+  if ( not reincarnate_str ) then 
+    print("Unable to shutdown"); return nil 
   end 
   -- TODO P1 What about nn_vec?
-  return status 
+  return reincarnate_str
 end
 
 function lVector:set_meta(k, v)

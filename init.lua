@@ -19,6 +19,10 @@ require 'Q/QTILS/lua/nop'
 require 'Q/QTILS/lua/avg'
 require "Q/UTILS/lua/restore"
 require "Q/UTILS/lua/save" 
+
+require "Q/UTILS/lua/pack"
+require "Q/UTILS/lua/unpack"
+require "Q/UTILS/lua/set_memo"
 -- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
 -- TODO require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
 --[[
@@ -74,9 +78,6 @@ require 'Q/QTILS/lua/vvmax'
 require 'Q/QTILS/lua/vvpromote'
 require 'Q/QTILS/lua/vvseq'
 --============= TODO P4 Document usage of  these routines
-require "Q/UTILS/lua/pack"
-require "Q/UTILS/lua/set_memo"
-require "Q/UTILS/lua/unpack"
 require "Q/UTILS/lua/view_meta"
 --============== UTILITY FUNCTIONS FOR Q PROGRAMMER
 --]]
@@ -86,8 +87,8 @@ _G['g_ctr']  = {}
 --=== Stuff to do at first load time 
 local cVector = require 'libvctr'
 cVector.init_globals({})
-local reset = os.getenv("Q_RESET")
-local reset_fn = require 'Q/UTILS/lua/reset'
+local reset      = os.getenv("Q_RESET")
+local reset_fn   = require 'Q/UTILS/lua/reset'
 local restore_fn = require 'Q/UTILS/lua/restore'
 if ( reset == "true" ) then 
   reset_fn()
@@ -95,6 +96,7 @@ else
   status, msg = pcall(restore_fn)
   if ( not status ) then 
     print("WARNING!!! Restore failed. Wiping things out...")
+    print(msg)
     reset_fn()
   else
     print("Restored data")

@@ -4,13 +4,13 @@
 #include "_hmap_types.h"
 //STOP_INCLUDES
 #include "_validate_psl_p.h"
-//START_FUNC_DECL
+//START_FOR_CDEF
 int __attribute__((__unused__))
 validate_psl_p(
     hmap_t *hmap, 
     uint32_t i
     )
-//STOP_FUNC_DECL
+//STOP_FOR_CDEF
 {
 #ifdef DEBUG
   uint32_t base_i = fast_rem32(hmap->hashes[i], hmap->size, hmap->divinfo);

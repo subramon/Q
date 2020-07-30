@@ -3,45 +3,32 @@ do_all = false
 do_arith = false
 do_cmp = false
 do_bop = false
+assert(nargs < 2 )
 if nargs == 0 then do_all = true end 
-if nargs >= 1 then
+if nargs == 1 then
   for i = 1, nargs do
     if arg[i] == "arith" then do_arith = true end 
-    if arg[i] == "cmp" then do_cmp = true end 
-    if arg[i] == "bop" then do_bop = true end 
+    if arg[i] == "cmp"   then do_cmp   = true end 
+    if arg[i] == "bop"   then do_bop   = true end 
+    if arg[i] == "all"   then do_all   = true end 
   end
 end
 
-local plfile = require 'pl.file'
-local plpath = require 'pl.path'
+local do_subs = require 'Q/UTILS/lua/do_subs'
+
 if do_cmp or do_all then 
-    assert(plpath.isfile("cmp_specialize.tmpl"), "File not found")
-    local x = plfile.read("cmp_specialize.tmpl")
-    --=======================
-    y = string.gsub(x, "<<operator>>", "vveq")
-    y = string.gsub(y, "<<comparator>>", "==")
-    plfile.write("vveq_specialize.lua", y)
-    --=======================
-    y = string.gsub(x, "<<operator>>", "vvneq")
-    y = string.gsub(y, "<<comparator>>", "!=")
-    plfile.write("vvneq_specialize.lua", y)
-    assert(plpath.isfile("vvneq_specialize.lua"))
-    --=======================
-    y = string.gsub(x, "<<operator>>", "vvgeq")
-    y = string.gsub(y, "<<comparator>>", ">=")
-    plfile.write("vvgeq_specialize.lua", y)
-    --=======================
-    y = string.gsub(x, "<<operator>>", "vvleq")
-    y = string.gsub(y, "<<comparator>>", "<=")
-    plfile.write("vvleq_specialize.lua", y)
-    --=======================
-    y = string.gsub(x, "<<operator>>", "vvlt")
-    y = string.gsub(y, "<<comparator>>", "<")
-    plfile.write("vvlt_specialize.lua", y)
-    --=======================
-    y = string.gsub(x, "<<operator>>", "vvgt")
-    y = string.gsub(y, "<<comparator>>", ">")
-    plfile.write("vvgt_specialize.lua", y)
+  do_subs("cmp_specialize.tmpl", "vveq_specialize.lua",
+    { __operator__ =  "vveq", __comparator__ = "=="})
+  do_subs("cmp_specialize.tmpl", "vvneq_specialize.lua",
+    { __operator__ =  "vvneq", __comparator__ = "!="})
+  do_subs("cmp_specialize.tmpl", "vvleq_specialize.lua",
+    { __operator__ =  "vvleq", __comparator__ = "<="})
+  do_subs("cmp_specialize.tmpl", "vvgeq_specialize.lua",
+    { __operator__ =  "vvgeq", __comparator__ = ">="})
+  do_subs("cmp_specialize.tmpl", "vvlt_specialize.lua",
+    { __operator__ =  "vvlt",  __comparator__ = "<"})
+  do_subs("cmp_specialize.tmpl", "vvgt_specialize.lua",
+    { __operator__ =  "vvgt",  __comparator__ = ">"})
 end
 --+++++++++++++++++++++++++
 if do_arith or do_all then 

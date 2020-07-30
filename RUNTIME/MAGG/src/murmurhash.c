@@ -13,14 +13,14 @@
 #include "hmap_utils.h"
 //STOP_INCLUDES
 #include "_murmurhash.h"
-//START_FUNC_DECL
+//START_FOR_CDEF
 uint32_t
 murmurhash3(
       const void *key, 
       size_t len, 
       uint32_t seed
       )
-//STOP_FUNC_DECL
+//STOP_FOR_CDEF
 {
   const uint8_t *data = key;
   const size_t orig_len = len;

@@ -1,6 +1,8 @@
-local strict		= require 'Q/UTILS/lua/strict'
-local Q = require 'Q'
-local qconsts		= require 'Q/UTILS/lua/q_consts'
+local strict  = require 'Q/UTILS/lua/strict'
+local Q       = require 'Q'
+local qconsts = require 'Q/UTILS/lua/q_consts'
+local cVector = require 'libvctr'
+local chunk_size = cVector.chunk_size()
 
 local tests = {}
 
@@ -20,7 +22,6 @@ end
 -- Q.unpack to evaluate vector internally 
 -- test-case for num_elements > chunk_size
 tests.t2 = function()
-  local chunk_size =  qconsts.chunk_size
   local num_elements = chunk_size + 4
   local vec = Q.seq({ start = 1, by = 1, len = num_elements , qtype = "I4"})
   local tbl = Q.unpack(vec)

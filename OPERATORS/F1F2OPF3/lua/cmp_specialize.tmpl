@@ -33,7 +33,7 @@ return function (
     assert(is_base_qtype(f2_qtype), "f2_qtype must be base type")
   end
 
-  subs.fn = "<<operator>>_" .. f1_qtype .. "_" .. f2_qtype 
+  subs.fn = "__operator___" .. f1_qtype .. "_" .. f2_qtype 
 
   subs.f3_qtype = "B1"
   subs.f3_ctype   = qconsts.qtypes[subs.f3_qtype].ctype
@@ -42,7 +42,7 @@ return function (
   subs.f2_cast_as = subs.f2_ctype .. "*"
   subs.f3_cast_as = subs.f3_ctype .. "*"
 
-  subs.comparator = " <<comparator>> "
+  subs.comparator = " __comparator__ "
   subs.tmpl = "OPERATORS/F1F2OPF3/lua/f1f2opf3_cmp.tmpl"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
@@ -52,8 +52,8 @@ return function (
   if ( f1_qtype == "B1" ) then 
     subs.incs = { "UTILS/inc/", "OPERATORS/F1F2OPF3/inc/" }
     subs.tmpl = nil -- no code generation
-    subs.dotc = "OPERATORS/F1F2OPF3/src/<<operator>>_B1_B1.c"
-    subs.doth = "OPERATORS/F1F2OPF3/inc/<<operator>>_B1_B1.h"
+    subs.dotc = "OPERATORS/F1F2OPF3/src/__operator___B1_B1.c"
+    subs.doth = "OPERATORS/F1F2OPF3/inc/__operator___B1_B1.h"
     subs.srcs = { "UTILS/src/set_bit_u64.c", "UTILS/src/get_bit_u64.c" }
   end
   return subs

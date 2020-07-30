@@ -1,7 +1,9 @@
-local strict		= require 'Q/UTILS/lua/strict'
-local Q = require 'Q'
-local qconsts		= require 'Q/UTILS/lua/q_consts'
-local Scalar = require 'libsclr'
+local strict  = require 'Q/UTILS/lua/strict'
+local Q       = require 'Q'
+local qconst  = require 'Q/UTILS/lua/q_consts'
+local Scalar  = require 'libsclr'
+local cVector = require 'libvctr'
+local chunk_size = cVector.chunk_size()
 
 local tests = {}
 
@@ -13,7 +15,7 @@ tests.t1 = function()
   assert( type(vec) == "lVector" )
   assert(vec:length() == 5 )
   for i = 0, #tbl-1 do
-    assert(vec:get_one(i):to_num() == tbl[i+1])
+    assert(vec:get1(i):to_num() == tbl[i+1])
   end
   print("successfully executed t1")
 end
@@ -22,7 +24,6 @@ end
 -- Q.pack to return error as max_limit is crossed
 -- by requesting num_elements to be more than 1024
 tests.t2 = function()
-  local chunk_size =  qconsts.chunk_size
   local num_elements = chunk_size + 4
   local qtype = "I4"
   local tbl = {}
@@ -48,7 +49,7 @@ tests.t3 = function()
   assert( type(vec) == "lVector" )
   assert(vec:length() == 5 )
   for i = 0, #tbl-1 do
-    assert(vec:get_one(i):to_num() == tbl[i+1])
+    assert(vec:get1(i):to_num() == tbl[i+1])
   end
   print("successfully executed t3")
 end

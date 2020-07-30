@@ -988,10 +988,10 @@ vec_make_chunk_file(
     uint32_t chunk_idx = ptr_vec->chunks[i];
     chk_chunk_idx(chunk_idx);
     CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-    status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-    cBYE(status);
-    if ( !ptr_chunk->is_file ) { // flush buffer only if NO backup 
+    if ( !ptr_chunk->is_file ) { 
+      memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
+      status = mk_file_name(ptr_chunk->uqid,file_name,Q_MAX_LEN_FILE_NAME);
+      cBYE(status);
       if ( ptr_chunk->data == NULL ) { go_BYE(-1); }
       FILE *fp = fopen(file_name, "wb");
       return_if_fopen_failed(fp, file_name, "wb");

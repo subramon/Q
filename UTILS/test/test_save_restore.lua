@@ -1,3 +1,5 @@
+os.execute("export Q_RESET=true")
+-- DO NOT USE require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local Scalar = require 'libsclr'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
@@ -5,6 +7,8 @@ local cVector = require 'libvctr'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local tests = {}
+
+vec = nil
 
 tests.t1 = function()
   -- Simple test to check save() & restore() functionality  
@@ -57,6 +61,7 @@ tests.t3 = function()
   local status, ret = pcall(Q.restore)
   assert(status, ret)
   assert(not vec)
+  print("Successfully executed test t3")
 end
 return tests
--- tests.t1()
+-- tests.t3()

@@ -23,7 +23,7 @@ Note that locs doesn't give you the location of a key.
 It only gives you a starting point for the hunt for the location of a key
  */
 
-//START_FUNC_DECL
+//START_FOR_CDEF
 int 
 hmap_mk_tid(
     uint32_t *hashes, // input  [nkeys] 
@@ -31,7 +31,7 @@ hmap_mk_tid(
     uint32_t nT, // input , number of threads
     uint8_t *tids // output [nkeys] 
     )
-//STOP_FUNC_DECL
+//STOP_FOR_CDEF
 {
   int status = 0;
   int chunk_size = 1024;

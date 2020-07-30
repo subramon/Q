@@ -34,15 +34,15 @@ local function internal_save(
   elseif ( type(value) == "lVector" ) then
     local vec = value
     vec:eov() -- Debatable whether we should do this or not
-    vec:flush_all()
-    local x = vec:shutdown()
-    if ( x ) then
-      assert(type(x) == "string")
-      local y = loadstring(x)()
+    local reincarnate_str = vec:shutdown()
+    if ( reincarnate_str ) then
+      assert(type(reincarnate_str) == "string")
+      local y = loadstring(reincarnate_str)()
       assert(type(y) == "table")
-      y = string.gsub(x, "return ", "" )
+      y = string.gsub(reincarnate_str, "return ", "" )
       fp:write(name, " = lVector ( ", y, " ) " )
       fp:write("\n")
+      print(y)
       --===========================
       --TODO internal_save(name .. "._meta", vec._meta, Tsaved, fp)
       fp:write(name .. ":persist(true)")
@@ -77,7 +77,7 @@ local function save()
     cutils.delete(meta_file)
     cutils.delete(aux_file)
   end
-  print("Writing to ", local_meta_file, local_aux_file)
+  print("Writing to ", meta_file, aux_file)
   --================================================
   local fp = assert(io.open(aux_file, "w+"))
   local str = string.format(

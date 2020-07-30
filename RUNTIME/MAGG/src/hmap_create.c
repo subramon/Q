@@ -7,12 +7,12 @@
 #include "_hmap_create.h"
 // hmap_create: construct a new hash table.
 // Number of buckets is larger of input value and pre-defined value
-//START_FUNC_DECL
+//START_FOR_CDEF
 hmap_t *
 hmap_create(
       size_t minsize
         )
-//STOP_FUNC_DECL
+//STOP_FOR_CDEF
 {
   int status = 0;
   hmap_t *ptr_hmap = NULL;
