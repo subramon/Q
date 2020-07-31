@@ -20,8 +20,8 @@ return function (
   end
   assert(is_in(f3_qtype, { "I1", "I2", "I4", "I8", "F4", "F8" }))
 
-  subs.fn = "<<operator>>_" .. f1type .. "_" .. f2type .. "_" .. f3_qtype 
-  subs.ispc_fn = "ispc" .. "<<operator>>_" .. f1type .. "_" .. f2type .. "_" .. f3_qtype 
+  subs.fn = "__operator___" .. f1type .. "_" .. f2type .. "_" .. f3_qtype 
+  subs.ispc_fn = "ispc" .. "__operator___" .. f1type .. "_" .. f2type .. "_" .. f3_qtype 
   subs.f1_ctype = qconsts.qtypes[f1type].ctype
   subs.f2_ctype = qconsts.qtypes[f2type].ctype
   subs.f3_qtype = f3_qtype
@@ -31,7 +31,7 @@ return function (
   subs.f2_cast_as = subs.f2_ctype .. "*"
   subs.f3_cast_as = subs.f3_ctype .. "*"
 
-  subs.c_code_for_operator = "c = a <<mathsymbol>> b; "
+  subs.c_code_for_operator = "c = a __mathsymbol__ b; "
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3.tmpl"
   subs.tmpl_ispc   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_ispc.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"

@@ -32,30 +32,20 @@ if do_cmp or do_all then
 end
 --+++++++++++++++++++++++++
 if do_arith or do_all then 
-  assert(plpath.isfile("arith_specialize.tmpl"), "File not found")
-  local x = plfile.read("arith_specialize.tmpl")
-  
-  y = string.gsub(x, "<<operator>>", "vvadd")
-  y = string.gsub(y, "<<mathsymbol>>", "+")
-  plfile.write("vvadd_specialize.lua", y)
-  --=======================
-  y = string.gsub(x, "<<operator>>", "vvsub")
-  y = string.gsub(y, "<<mathsymbol>>", "-")
-  plfile.write("vvsub_specialize.lua", y)
-  --=======================
-  y = string.gsub(x, "<<operator>>", "vvmul")
-  y = string.gsub(y, "<<mathsymbol>>", "*")
-  plfile.write("vvmul_specialize.lua", y)
-  --=======================
-  y = string.gsub(x, "<<operator>>", "vvdiv")
-  y = string.gsub(y, "<<mathsymbol>>", "/")
-  plfile.write("vvdiv_specialize.lua", y)
+  do_subs("arith_specialize.tmpl", "vvadd_specialize.lua",
+    { __operator__ = "vvadd", __mathsymbol__ = "+"})
+  do_subs("arith_specialize.tmpl", "vvsub_specialize.lua",
+    { __operator__ = "vvsub", __mathsymbol__ = "-"})
+  do_subs("arith_specialize.tmpl", "vvmul_specialize.lua",
+    { __operator__ = "vvmul", __mathsymbol__ = "*"})
+  do_subs("arith_specialize.tmpl", "vvdiv_specialize.lua",
+    { __operator__ = "vvdiv", __mathsymbol__ = "/"})
 end
 --=======================
 --+++++++++++++++++++++++++
 if do_bop or do_all then 
-  assert(plpath.isfile("bop_specialize.tmpl"), "File not found")
-  local x = plfile.read("bop_specialize.tmpl")
+  do_subs("bop_specialize.tmpl", "vvand_specialize.lua", 
+    { __operator__ = "vvand", __mathsymbol = "&"})
   
   y = string.gsub(x, "<<operator>>", "vvand")
   y = string.gsub(y, "<<mathsymbol>>", "&")

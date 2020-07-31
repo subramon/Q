@@ -15,7 +15,7 @@ return function (
   assert(f2type == "B1", "f2type must be B1")
   local subs = {} ; 
 
-  subs.fn = "<<operator>>"
+  subs.fn = "__operator__"
   subs.f1_ctype = qconsts.qtypes[f1type].ctype
   subs.f2_ctype = qconsts.qtypes[f2type].ctype
   subs.f3_ctype = "uint64_t"
@@ -26,7 +26,7 @@ return function (
   subs.f3_cast_as = subs.f3_ctype .. "*"
 
 
-  subs.c_code_for_operator = "c = (a <<mathsymbol>> b); "
+  subs.c_code_for_operator = "c = (a __mathsymbol__ b); "
   subs.tmpl = "OPERATORS/F1F2OPF3/lua/bop.tmpl"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
