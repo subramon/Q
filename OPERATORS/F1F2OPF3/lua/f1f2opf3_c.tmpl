@@ -1,0 +1,56 @@
+return require 'Q/UTILS/lua/code_gen' {
+   declaration = [[
+#include <omp.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+//START_FOR_CDEF
+extern int
+${fn}(  
+      const ${f1_ctype} * restrict in1,  
+      const ${f2_ctype} * restrict in2,  
+      uint32_t nR,  
+      ${f3_ctype} * restrict out 
+      ) 
+;
+//STOP_FOR_CDEF
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+#include "${ispc_fn}.h"
+
+int
+${fn}(  
+      const ${f1_ctype} * restrict in1,  
+      const ${f2_ctype} * restrict in2,  
+      uint32_t nR,  
+      ${f3_ctype} * restrict out 
+      )
+
+{ 
+  int status = 0;
+  int nT = omp_get_num_threads();
+  uint32_t n = (nR / nT ) * nT;
+  uint32_t n_per_core = n / nT;
+#pragma omp parallel for schedule(static)
+  for ( uint32_t i = 0; i < nT; i++ ) {  
+    uint32_t lb = i * n_per_core;
+    ${ispc_fn}(in1+lb, in2+lb, n_per_core, out+lb);
+  }
+
+  // handle the balance 
+  for ( uint32_t i = n; i < nR; i++ ) {  
+    ${f1_ctype} inv1 = in1[i]; 
+    ${f2_ctype} inv2 = in2[i]; 
+    ${f3_ctype} outv;
+    outv = inv1 ${mathsymbol} inv2;
+    out[i] = outv;
+  } 
+
+  return status;
+}
+
+   ]]
+}

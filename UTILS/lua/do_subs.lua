@@ -10,7 +10,7 @@ local function do_subs(tmpl_file, out_file, replacements)
   for k, v in pairs(replacements) do 
     out = string.gsub(out, k, v)
   end
-  plfile.write(out, out_file)
-  assert(plpath.isfile(out_file))
+  plfile.write(out_file, out)
+  assert(plpath.isfile(out_file), "file not created " .. out_file)
 end
 return do_subs

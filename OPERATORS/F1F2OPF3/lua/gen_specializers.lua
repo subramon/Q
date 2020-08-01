@@ -46,22 +46,12 @@ end
 if do_bop or do_all then 
   do_subs("bop_specialize.tmpl", "vvand_specialize.lua", 
     { __operator__ = "vvand", __mathsymbol = "&"})
-  
-  y = string.gsub(x, "<<operator>>", "vvand")
-  y = string.gsub(y, "<<mathsymbol>>", "&")
-  plfile.write("vvand_specialize.lua", y)
-  --=======================
-  y = string.gsub(x, "<<operator>>", "vvor")
-  y = string.gsub(y, "<<mathsymbol>>", "|")
-  plfile.write("vvor_specialize.lua", y)
-  --=======================
-  y = string.gsub(x, "<<operator>>", "vvxor")
-  y = string.gsub(y, "<<mathsymbol>>", "^")
-  plfile.write("vvxor_specialize.lua", y)
-  --=======================
-  y = string.gsub(x, "<<operator>>", "vvandnot")
-  y = string.gsub(y, "<<mathsymbol>>", "& ~")
-  plfile.write("vvandnot_specialize.lua", y)
+  do_subs("bop_specialize.tmpl", "vvor_specialize.lua", 
+    { __operator__ = "vvor", __mathsymbol = "|"})
+  do_subs("bop_specialize.tmpl", "vvxor_specialize.lua", 
+    { __operator__ = "vvxor", __mathsymbol = "^"})
+  do_subs("bop_specialize.tmpl", "vvandnot_specialize.lua", 
+    { __operator__ = "vvandnot", __mathsymbol = " & ~"})
 end
 --=======================
 

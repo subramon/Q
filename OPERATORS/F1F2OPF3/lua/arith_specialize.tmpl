@@ -31,8 +31,8 @@ return function (
   subs.f2_cast_as = subs.f2_ctype .. "*"
   subs.f3_cast_as = subs.f3_ctype .. "*"
 
-  subs.c_code_for_operator = "c = a __mathsymbol__ b; "
-  subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3.tmpl"
+  subs.mathsymbol = "__mathsymbol__"
+  subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_c.tmpl"
   subs.tmpl_ispc   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_ispc.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
