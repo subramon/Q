@@ -56,8 +56,15 @@ local qconsts = {}
 -Wduplicated-branches -Wrestrict
     ]]
   else
-    qconsts.QC_FLAGS	= os.getenv("QC_FLAGS")
+    qconsts.QC_FLAGS	= assert(os.getenv("QC_FLAGS"))
   end
+  --==================================
+  if ( not os.getenv("QISPC_FLAGS") ) then
+    qconsts.QISPC_FLAGS	= " --pic "
+  else
+    qconsts.QISPC_FLAGS	= assert(os.getenv("QISPC_FLAGS"))
+  end
+  --==================================
   qconsts.Q_LINK_FLAGS	= os.getenv("Q_LINK_FLAGS")
   qconsts.LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")
 
@@ -116,6 +123,7 @@ local qconsts = {}
     max_txt_width  = 32,
     width = 1,
     ctype = "int8_t",
+    ispctype = "int8",
     max_length="6",
     cenum = 1, -- used to pass qtype to C
   }
@@ -125,6 +133,7 @@ local qconsts = {}
     max_txt_width  = 32,
     width = 2,
     ctype = "int16_t",
+    ispctype = "int16",
     max_length="8",
     cenum = 2, -- used to pass qtype to C
   }
@@ -134,6 +143,7 @@ local qconsts = {}
     max_txt_width = 32,
     width = 4,
     ctype = "int32_t",
+    ispctype = "int32",
     max_length="13",
     cenum = 3, -- used to pass qtype to C
   }
@@ -143,6 +153,7 @@ local qconsts = {}
     max_txt_width = 32,
     width = 8,
     ctype = "int64_t",
+    ispctype = "int64",
     max_length="22" ,
     cenum = 4, -- used to pass qtype to C
   }
@@ -152,6 +163,7 @@ local qconsts = {}
     max_txt_width = 32,
     width = 4,
     ctype = "float",
+    ispctype = "float",
     max_length="33",
     cenum = 5, -- used to pass qtype to C
   }
@@ -161,6 +173,7 @@ local qconsts = {}
     max_txt_width = 32,
     width = 8,
     ctype = "double",
+    ispctype = "double",
     max_length="65" ,
     cenum = 6, -- used to pass qtype to C
   }

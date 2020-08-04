@@ -26,6 +26,45 @@
 int luaopen_libcutils (lua_State *L);
 
 //----------------------------------------
+static int l_cutils_basename( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
+  const char *path = luaL_checkstring(L, 1);
+  char *x = strdup(path);
+  const char *base = basename(x);
+  lua_pushstring(L, base);
+  free_if_non_null(x);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
+//----------------------------------------
+//----------------------------------------
+static int l_cutils_dirname( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
+  const char *path = luaL_checkstring(L, 1);
+  char *x = strdup(path);
+  const char *dir = dirname(x);
+  lua_pushstring(L, dir);
+  free_if_non_null(x);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
+//----------------------------------------
 static int l_cutils_rdtsc( 
     lua_State *L
     )
@@ -144,7 +183,7 @@ static int l_cutils_copyfile(
   char *x_new_file = NULL; 
   if ( !isfile(old_file) ) { go_BYE(-1); }
   if ( isdir(new_file) ) {
-    char *dir = new_file; // we have been given directory not file 
+    const char *dir = new_file; // we have been given directory not file 
     int len = strlen(dir) + strlen(old_file) + 8;
     x_new_file = malloc(len * sizeof(char));
     return_if_malloc_failed(x_new_file);
@@ -365,7 +404,7 @@ static int l_cutils_getfiles(
       else if ( mode == ONLY_DIRS ) { 
         /* IMPORTANT: We do not return . or .. */
         if ( ( strcmp(file_name, "." ) == 0 ) || 
-             ( strcmp(file_name, ".." ) == 0 )  ) {
+            ( strcmp(file_name, ".." ) == 0 )  ) {
           continue;
         }
         if ( !S_ISDIR (st_buf.st_mode)) {
@@ -416,7 +455,9 @@ BYE:
 }
 //----------------------------------------
 static const struct luaL_Reg cutils_methods[] = {
-    { "copyfile",   l_cutils_copyfile },
+    { "basename",    l_cutils_basename },
+    { "copyfile",    l_cutils_copyfile },
+    { "dirname",     l_cutils_dirname },
     { "currentdir",  l_cutils_currentdir },
     { "getfiles",    l_cutils_getfiles },
     { "getsize",     l_cutils_getsize },
@@ -433,7 +474,9 @@ static const struct luaL_Reg cutils_methods[] = {
 };
  
 static const struct luaL_Reg cutils_functions[] = {
-    { "copyfile",   l_cutils_copyfile },
+    { "basename",    l_cutils_basename },
+    { "copyfile",    l_cutils_copyfile },
+    { "dirname",     l_cutils_dirname },
     { "currentdir",  l_cutils_currentdir },
     { "delete",      l_cutils_delete },
     { "get_bit_u64", l_cutils_get_bit_u64 },

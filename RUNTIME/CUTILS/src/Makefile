@@ -19,6 +19,7 @@ INCS=-I. \
 
 
 all: libcutils.so 
+	cp libcutils.so ${Q_ROOT}/lib/
 
 UTILS_INC_FILES = \
 	../../../UTILS/inc/get_bit_u64.h \

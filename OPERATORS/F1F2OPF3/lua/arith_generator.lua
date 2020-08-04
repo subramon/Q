@@ -19,8 +19,12 @@ for _, operator in ipairs(operators) do
         local status, subs = pcall( sp_fn, f1, f2, optargs)
         if ( status ) then 
           assert(type(subs) == "table")
-          gen_code.doth(subs, subs.incdir)
-          gen_code.dotc(subs, subs.srcdir)
+          assert(gen_code.doth(subs, subs.incdir))
+          assert(gen_code.dotc(subs, subs.srcdir))
+          if ( subs.fn_ispc ) then 
+            local ispc_file, doth_file = 
+              assert(gen_code.ispc(subs, subs.srcdir, subs.incdir))
+          end
           num_produced = num_produced + 1
         else
           print(subs)

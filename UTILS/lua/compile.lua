@@ -1,72 +1,71 @@
-local cutils        = require 'libcutils'
-local qconsts       = require 'Q/UTILS/lua/q_consts'
-local assertx       = require 'Q/UTILS/lua/assertx'
-local exec          = require 'Q/UTILS/lua/exec_and_capture_stdout'
+local cutils       = require 'libcutils'
+local qconsts      = require 'Q/UTILS/lua/q_consts'
+local exec         = require 'Q/UTILS/lua/exec_and_capture_stdout'
 
-local QC_FLAGS     = qconsts.QC_FLAGS
-local Q_ROOT       = qconsts.Q_ROOT
+local QISPC_FLAGS  = assert(qconsts.QISPC_FLAGS)
+local QC_FLAGS     = assert(qconsts.QC_FLAGS)
 local Q_SRC_ROOT   = qconsts.Q_SRC_ROOT
-
-local lib_prefix = Q_ROOT .. "/lib/lib"
 
 -- some basic checks
 assert(cutils.isdir(Q_SRC_ROOT))
 --================================================
 local function compile(
+  lang,
   dotc,  -- INPUT
-  dotispc,  -- INPUT
-  subs,
-  fn -- INPUT
+  srcs, -- INPUT, any other files to be compiled
+  incs, -- INPUT, where to look for include files
+  dotos
   )
-  local srcs = subs.srcs -- INPUT, any other files to be compiled
-  local incs = subs.incs -- INPUT, where to look for include files
-  local libs = subs.libs -- INPUT, any libraries that need to be linked
-  -- TODO P4: What if no forward slash in dotc?
-  if ( string.find(dotc, "/") ~= 1 ) then
+  dotos = dotos or {}
+  assert ( ( lang == "C" ) or ( lang == "ISPC" ) )
+  if ( string.find(dotc, "/") ~= 1 ) then -- TODO P4: What if no '/'?
     -- we do not have fully qualified path
     dotc = Q_SRC_ROOT .. "/" .. dotc
   end
   assert(cutils.isfile(dotc), dotc)
-  local sofile = lib_prefix .. fn .. ".so" -- to be created
-  if ( cutils.isfile(sofile) ) then
-    -- print("File exists: No need to create " .. sofile)
-    return sofile
-  end
-  --===============================
+  --===================================
   local str_incs = {}
-  if ( incs ) then 
-  for _, v in ipairs(incs) do
-    local incdir = qconsts.Q_SRC_ROOT .. v
-    assert(cutils.isdir(incdir), incdir)
-    str_incs[#str_incs+1] = "-I" .. incdir
-  end
+  if ( incs ) then
+    for _, v in ipairs(incs) do
+      local incdir = qconsts.Q_SRC_ROOT .. v
+      assert(cutils.isdir(incdir), incdir)
+      str_incs[#str_incs+1] = "-I" .. incdir
+    end
     str_incs = table.concat(str_incs, " ")
   else
-    str_incs = ""
+    str_incs = " "
   end
   --===============================
-  local str_srcs = {}
+  -- make a table of all source files to be compiled
+  local xsrcs = {}
   if ( srcs ) then
     for _, v in ipairs(srcs) do
       local srcfile = qconsts.Q_SRC_ROOT .. v
       assert(cutils.isfile(srcfile))
-      str_srcs[#str_srcs+1] = srcfile
+      xsrcs[#xsrcs+1] = srcfile
     end
-    str_srcs = table.concat(str_srcs, " ")
-  else
-    str_srcs = ""
   end
+  xsrcs[#xsrcs+1] = dotc
   --===============================
-  local str_libs = ""
-  if ( libs ) then
-    str_libs = table.concat(libs, " ")
+  for _, srcfile in ipairs(xsrcs) do
+    local q_cmd
+    local doto = "/tmp/" .. cutils.basename(srcfile) .. ".o"
+    if ( lang == "C" ) then
+      q_cmd = string.format("gcc -c %s %s %s -o %s",
+         QC_FLAGS, str_incs, dotc, doto)
+      assert(exec(q_cmd), q_cmd)
+    end
+    if ( lang == "ISPC" ) then
+      print(" QISPC_FLAGS " ..  QISPC_FLAGS)
+      q_cmd = string.format("ispc %s %s %s -o %s",
+         QISPC_FLAGS, str_incs, dotc, doto)
+    end
+    print("compiling ", q_cmd)
+    local status = os.execute(q_cmd)
+    assert(status == 0)
+    assert(cutils.isfile(doto))
+    dotos[#dotos+1] = doto
   end
-  --===============================
-  local q_cmd = string.format("gcc -shared %s %s %s %s -o %s %s",
-       QC_FLAGS, str_incs, dotc, str_srcs, sofile, str_libs)
-       print(q_cmd)
-  assert(exec(q_cmd), q_cmd)
-  assertx(cutils.isfile(sofile), "Target " ..  sofile .. " not created")
-  return sofile
+  return dotos
 end
 return compile

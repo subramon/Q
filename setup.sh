@@ -28,6 +28,9 @@ if [ ${IS_ARM} -eq 0 ]; then
 fi
 echo "QC_FLAGS: $QC_FLAGS"
 #-----------------------------------
+QISPC_FLAGS=' --pic  ' #- TODO to be set  P2
+echo "QISPC_FLAGS: $QISPC_FLAGS"
+#-----------------------------------
 # Default data directory
 mkdir -p $Q_ROOT/data
 export Q_DATA_DIR="${Q_DATA_DIR:=${Q_ROOT}/data}"

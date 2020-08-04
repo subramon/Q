@@ -1,8 +1,9 @@
 -- Quick and dirty test
 require 'Q/UTILS/lua/strict'
 local Scalar  = require 'libsclr'
+local cVector = require 'libvctr'
 local Q       = require 'Q'
-local x, y, n1, n2
+local x, y, z, n1, n2
 --=====================================
 local T = {}
 for i = 1, 3 do T[#T+1] = i end
@@ -39,6 +40,13 @@ print("max ", n1, n2)
 n1, n2 = Q.sum(y):eval()
 print("sum ", n1, n2)
 
-
+local len = cVector.chunk_size() + 17
+x = Q.const({val = 1, qtype = "I1", len = len})
+y = Q.const({val = 1, qtype = "F4", len =  len})
+for i = 1, 10 do 
+  z = Q.vvadd(x, y)
+  n1, n2 = Q.sum(z):eval()
+  assert(n1 == Scalar.new(2*len))
+end
 print("Success")
 os.exit()

@@ -1,5 +1,8 @@
 local assertx  = require 'Q/UTILS/lua/assertx'
 local compile  = require 'Q/UTILS/lua/compile'
+local link     = require 'Q/UTILS/lua/link'
+local compile_and_link  = require 'Q/UTILS/lua/compile_and_link'
+local is_so_file  = require 'Q/UTILS/lua/is_so_file'
 local ffi      = require 'ffi'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 local for_cdef = require 'Q/UTILS/lua/for_cdef'
@@ -83,39 +86,55 @@ end
 local function q_add(
   subs
   )
-  local tmpl, doth, dotc, dotispc, dotisph
+  local tmpl, doth, dotc, ispc
   local fn = assert(subs.fn)
   if ( known_functions[fn] ) then assert(qc[fn]) end
   if ( not known_functions[fn] ) then assert(not qc[fn]) end
   if ( known_functions[fn] ) then
-    -- print("Nothing to do: Known function " .. fn) 
+    -- print("Nothing to do: Known function " .. fn)
     return true
   end
 
   -- EITHER provide a tmpl OR the doth and dotc, not both
   assert(type(subs) == "table")
+  assert( (type(fn) == "string") and  ( #fn > 0 ) )
+  --=================================================
   if ( subs.tmpl ) then
     assert(not subs.doth) assert(not subs.dotc)
     tmpl = subs.tmpl
     assert( (type(tmpl) == "string") and  ( #tmpl > 0 ) )
     doth = gen_code.doth(subs, subs.incdir) -- creates a .h file
     dotc = gen_code.dotc(subs, subs.srcdir) -- creates a .c file
-    dotispc = gen_code.dotispc(subs, subs.srcdir) -- creates a .ispc file
-    dotisph = gen_code.dotisph(subs, subs.srcdir) -- creates a .ispc file
   else
     doth = subs.doth
     assert( (type(doth) == "string") and  ( #doth > 0 ) )
     dotc = subs.dotc
     assert( (type(dotc) == "string") and  ( #dotc > 0 ) )
-    dotispc = subs.dotispc -- Optional, hence no assert on it 
-    dotisph = subs.dotisph -- Optional, hence no assert on it 
   end
-  assert( (type(fn) == "string") and  ( #fn > 0 ) )
+  --============================================
+  if ( subs.tmpl_ispc ) then
+    assert(not subs.isph) assert(not subs.ispc)
+    -- creates a .ispc file and corresponding .h file
+    ispc = gen_code.ispc(subs, subs.srcdir, subs.incdir)
+  else
+    ispc = subs.ispc -- Optional, hence no assert on it
+  end
   --==================================
-  -- PROCESS ISPC after this 
-  local sofile = assert(compile(dotc, dotispc, subs, fn))
+  -- PROCESS ISPC after this
+  local is_so, sofile = is_so_file(subs.fn)
+  if ( not is_so ) then
+    if ( not ispc ) then
+      assert(compile_and_link( dotc, subs.srcs, subs.incs, subs.libs, fn))
+    else
+      local dotos      = assert(
+        compile("C", dotc, subs.srcs, subs.incs))
+      dotos = assert(
+        compile("ISPC", ispc, subs.srcs_ispc, subs.incs_ispc, dotos))
+      assert(link(dotos, subs.libs, subs.libs_ispc, sofile))
+    end
+  end
 
-  local cdefs = load_lib(fn, doth, subs.incs, subs.structs, sofile,subs)
+  local cdefs = load_lib(fn, doth, subs.incs, subs.structs, sofile, subs)
   assert(type(cdefs) == "table")
 
   return true
