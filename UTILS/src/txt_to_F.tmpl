@@ -1,7 +1,7 @@
 return require 'Q/UTILS/lua/code_gen' { 
 declaration = [[
 #include "q_incs.h"
-#include "_is_valid_chars_for_num.h"
+#include "is_valid_chars_for_num.h"
 
 extern int
 txt_to_${out_type_displ}(
@@ -12,7 +12,7 @@ txt_to_${out_type_displ}(
 ]],
 
 definition = [[
-#include "_txt_to_${out_type_displ}.h"
+#include "txt_to_${out_type_displ}.h"
 
 //START_FUNC_DECL
 int

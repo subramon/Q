@@ -186,12 +186,23 @@ vec_delete(
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     );
+//--------------------------------------
 extern int
-vec_flush_all(
+vec_make_chunk_file(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
-    VEC_REC_TYPE *ptr_vec
+    const VEC_REC_TYPE *const ptr_vec,
+    bool is_free_mem,
+    int chunk_num
     );
+extern int
+vec_make_chunk_files(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
+    VEC_REC_TYPE *ptr_vec,
+    bool is_free_mem
+    );
+//--------------------------------------
 extern int
 vec_put_chunk(
     VEC_GLOBALS_TYPE *ptr_S,
@@ -216,20 +227,21 @@ vec_file_name(
     int len_file_name
 
     );
+//--------------------------
 extern int
-vec_flush_chunk(
+vec_master(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
-    const VEC_REC_TYPE *const ptr_vec,
-    bool is_free_mem,
-    int chunk_num
+    VEC_REC_TYPE *ptr_vec,
+    bool is_free_mem
     );
 extern int
-vec_delete_master_file(
+vec_unmaster(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     );
+//-------------------------
 extern int
 vec_delete_chunk_file(
     VEC_GLOBALS_TYPE *ptr_S,
@@ -237,6 +249,7 @@ vec_delete_chunk_file(
     VEC_REC_TYPE *ptr_vec,
     int chunk_num
     );
+//-------------------------
 extern int
 check_chunks(
     VEC_GLOBALS_TYPE *ptr_S

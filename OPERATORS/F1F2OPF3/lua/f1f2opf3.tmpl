@@ -2,49 +2,52 @@ return require 'Q/UTILS/lua/code_gen' {
 
    declaration = [[
 
-#include "q_incs.h"
-${includes}
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+//START_FOR_CDEF
 extern int
 ${fn}(  
-      const ${in1_ctype} * restrict in1,  
-      const ${in2_ctype} * restrict in2,  
+      const ${f1_ctype} * restrict in1,  
+      const ${f2_ctype} * restrict in2,  
       uint64_t nR,  
-      ${out_ctype} * restrict out 
+      ${f3_ctype} * restrict out 
       ) 
 ;
-
+//STOP_FOR_CDEF
    ]],
    definition = [[
 
-#include "_${fn}.h"
+#include "${fn}.h"
 
 static void
 __operation(
-      ${in1_ctype} a,
-      ${in2_ctype} b, 
-      ${out_ctype} *ptr_c
+      ${f1_ctype} a,
+      ${f2_ctype} b, 
+      ${f3_ctype} *ptr_c
       )
       {
-      ${out_ctype} c;
+      ${f3_ctype} c;
       ${c_code_for_operator}
       *ptr_c = c;
       }
 
 int
 ${fn}(  
-      const ${in1_ctype} * restrict in1,  
-      const ${in2_ctype} * restrict in2,  
+      const ${f1_ctype} * restrict in1,  
+      const ${f2_ctype} * restrict in2,  
       uint64_t nR,  
-      ${out_ctype} * restrict out 
+      ${f3_ctype} * restrict out 
       )
 
 { 
   int status = 0;
 #pragma omp parallel for schedule(static)
   for ( uint64_t i = 0; i < nR; i++ ) {  
-    ${in1_ctype} inv1 = in1[i]; 
-    ${in2_ctype} inv2 = in2[i]; 
-    ${out_ctype} outv;
+    ${f1_ctype} inv1 = in1[i]; 
+    ${f2_ctype} inv2 = in2[i]; 
+    ${f3_ctype} outv;
     __operation(inv1, inv2, &outv);
     out[i] = outv;
   } 

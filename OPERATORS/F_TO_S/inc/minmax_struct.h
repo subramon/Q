@@ -1,5 +1,6 @@
 #ifndef _MINMAX_STRUCT_H
 #define _MINMAX_STRUCT_H
+//START_FOR_CDEF
 typedef struct _minmax_F4_args {
   float    val;
    int64_t idx; // where min (or max) was found 
@@ -35,5 +36,5 @@ typedef struct _min_I8_args {
    int64_t idx; // where min (or max) was found 
   uint64_t num; // number of values consumed so far
 } MINMAX_I8_ARGS;
-  
+//STOP_FOR_CDEF
 #endif

@@ -2,8 +2,12 @@ return require 'Q/UTILS/lua/code_gen' {
 
    declaration = [[
 
-#include "q_incs.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include "q_macros.h"
 
+//START_FOR_CDEF
 extern int ${fn}(
     ${in_ctype} *X, /* [nX] */
     uint32_t nX,
@@ -11,10 +15,10 @@ extern int ${fn}(
     uint32_t nZ,
     bool is_safe
     );
-    ]],
-    definition = [[
-
-#include "_${fn}.h"
+//STOP_FOR_CDEF
+]],
+definition = [[
+#include "${fn}.h"
 int ${fn}(
     ${in_ctype} *X, /* [nX] */
     uint32_t nX,

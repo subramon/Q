@@ -1,5 +1,6 @@
 #ifndef _RAND_STRUCT_H
 #define _RAND_STRUCT_H
+//START_FOR_CDEF
 typedef struct _rand_F4_rec_type {
   uint64_t seed;
   struct drand48_data buffer;
@@ -47,4 +48,5 @@ typedef struct _rand_B1_rec_type {
   float probability;
   struct drand48_data buffer;
 } RAND_B1_REC_TYPE;
+//STOP_FOR_CDEF
 #endif

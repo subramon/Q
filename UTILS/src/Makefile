@@ -1,140 +1,211 @@
 #!/bin/bash
-INCS=-I../inc/ -I../gen_inc/
-INCDIR=../gen_inc/
+INCS=-I../inc/ -I../inc/
+INCDIR=../inc/
 
 
-all : libutils.so ${hdr_files} 
+all : gen_src_files src_files gen_inc_files
 
-$(INCDIR) :
-	mkdir -p ../gen_inc/
 
-../gen_inc/_txt_to_B1.h : $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua txt_to_B1.c ${INCDIR}
-../gen_inc/_txt_to_SC.h : $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua txt_to_SC.c ${INCDIR}
-txt_to_B1.c : ../gen_inc/_txt_to_B1.h
-txt_to_SC.c : ../gen_inc/_txt_to_SC.h
+gen_inc_files : \
+	../inc/txt_to_B1.h \
+	../inc/txt_to_SC.h \
+	../inc/txt_to_I1.h \
+	../inc/txt_to_I2.h \
+	../inc/txt_to_I4.h \
+	../inc/txt_to_I8.h \
+	../inc/txt_to_F4.h \
+	../inc/txt_to_F8.h \
+	../inc/B1_to_txt.h \
+	../inc/SC_to_txt.h \
+	../inc/I1_to_txt.h \
+	../inc/I2_to_txt.h \
+	../inc/I4_to_txt.h \
+	../inc/I8_to_txt.h \
+	../inc/F4_to_txt.h \
+	../inc/F8_to_txt.h \
+	../inc/copy_file.h \
+	../inc/file_exists.h \
+	../inc/isfile.h \
+	../inc/isdir.h \
+	../inc/rand_file_name.h \
+	../inc/get_bit_u64.h \
+	../inc/get_file_size.h \
+	../inc/get_time_usec.h \
+	../inc/get_bit_u64.h \
+	../inc/is_valid_chars_for_num.h \
+	../inc/q_omp_get_num_procs.h \
+	../inc/rdtsc.h \
+	../inc/rs_mmap.h \
+	../inc/set_bit_u64.h \
+	../inc/trim.h 
+
+
+src_files :  \
+	copy_file.c \
+	B1_to_txt.c \
+	file_exists.c \
+	get_bit_u64.c  \
+	get_file_size.c \
+	get_time_usec.c \
+	is_valid_chars_for_num.c \
+	isfile.c \
+	isdir.c \
+	q_omp_get_num_procs.c  \
+	rand_file_name.c \
+	rdtsc.c \
+	rs_mmap.c \
+	SC_to_txt.c \
+	set_bit_u64.c  \
+	spooky_hash.c \
+	trim.c \
+	txt_to_B1.c \
+	txt_to_SC.c 
+
+gen_src_files : \
+	../src/I1_to_txt.c  \
+	../src/I2_to_txt.c  \
+	../src/I4_to_txt.c  \
+	../src/I8_to_txt.c  \
+	../src/F4_to_txt.c  \
+	../src/F8_to_txt.c \
+	../src/txt_to_I1.c \
+	../src/txt_to_I2.c \
+	../src/txt_to_I4.c \
+	../src/txt_to_I8.c \
+	../src/txt_to_F4.c \
+	../src/txt_to_F8.c \
 #----------------------------------
-../gen_inc/_txt_to_I1.h : $(INCDIR)
-	lua gen_code_I.lua 
-../gen_inc/_txt_to_I2.h : $(INCDIR)
-	lua gen_code_I.lua 
-../gen_inc/_txt_to_I4.h : $(INCDIR)
-	lua gen_code_I.lua 
-../gen_inc/_txt_to_I8.h : $(INCDIR)
-	lua gen_code_I.lua 
-../gen_inc/_txt_to_F4.h : $(INCDIR)
-	lua gen_code_F.lua 
-../gen_inc/_txt_to_F8.h : $(INCDIR)
-	lua gen_code_F.lua 
+
+# the purpose of test is to run a quick test on *all* the code here
+test : libutils.so 
+	
+../inc/txt_to_B1.h : 
+	luajit ../src/cli_extract_func_decl.lua txt_to_B1.c ${INCDIR}
+../inc/txt_to_SC.h :
+	luajit ../src/cli_extract_func_decl.lua txt_to_SC.c ${INCDIR}
+txt_to_B1.c : ../inc/txt_to_B1.h
+txt_to_SC.c : ../inc/txt_to_SC.h
 #----------------------------------
-../gen_src/_txt_to_I1.c : $(INCDIR)
-	lua gen_code_I.lua 
-../gen_src/_txt_to_I2.c : $(INCDIR)
-	lua gen_code_I.lua 
-../gen_src/_txt_to_I4.c : $(INCDIR)
-	lua gen_code_I.lua 
-../gen_src/_txt_to_I8.c : $(INCDIR)
-	lua gen_code_I.lua 
-../gen_src/_txt_to_F4.c : $(INCDIR)
-	lua gen_code_F.lua 
-../gen_src/_txt_to_F8.c : $(INCDIR)
-	lua gen_code_F.lua 
+../inc/txt_to_I1.h :
+	luajit gen_code_I.lua 
+../inc/txt_to_I2.h :
+	luajit gen_code_I.lua 
+../inc/txt_to_I4.h :
+	luajit gen_code_I.lua 
+../inc/txt_to_I8.h :
+	luajit gen_code_I.lua 
+../inc/txt_to_F4.h :
+	luajit gen_code_F.lua 
+../inc/txt_to_F8.h :
+	luajit gen_code_F.lua 
 #----------------------------------
-../gen_inc/_B1_to_txt.h :  $(INCDIR)
+../src/txt_to_I1.c :
+	luajit gen_code_I.lua 
+../src/txt_to_I2.c :
+	luajit gen_code_I.lua 
+../src/txt_to_I4.c :
+	luajit gen_code_I.lua 
+../src/txt_to_I8.c :
+	luajit gen_code_I.lua 
+../src/txt_to_F4.c :
+	luajit gen_code_F.lua 
+../src/txt_to_F8.c :
+	luajit gen_code_F.lua 
+#----------------------------------
+../inc/B1_to_txt.h : 
 	lua ../src/cli_extract_func_decl.lua B1_to_txt.c ${INCDIR}
-../gen_inc/_SC_to_txt.h :  $(INCDIR)
+../inc/SC_to_txt.h : 
 	lua ../src/cli_extract_func_decl.lua SC_to_txt.c ${INCDIR}
-B1_to_txt.c : ../gen_inc/_B1_to_txt.h
-SC_to_txt.c : ../gen_inc/_SC_to_txt.h
+B1_to_txt.c : ../inc/B1_to_txt.h
+SC_to_txt.c : ../inc/SC_to_txt.h
 #----------------------------------
-../gen_inc/_I1_to_txt.h : $(INCDIR)
+../inc/I1_to_txt.h :
 	luajit print_generator.lua I1
-../gen_inc/_I2_to_txt.h : $(INCDIR)
+../inc/I2_to_txt.h :
 	luajit print_generator.lua I2
-../gen_inc/_I4_to_txt.h : $(INCDIR)
+../inc/I4_to_txt.h :
 	luajit print_generator.lua I4
-../gen_inc/_I8_to_txt.h : $(INCDIR)
+../inc/I8_to_txt.h :
 	luajit print_generator.lua I8
-../gen_inc/_F4_to_txt.h : $(INCDIR)
+../inc/F4_to_txt.h :
 	luajit print_generator.lua F4
-../gen_inc/_F8_to_txt.h : $(INCDIR)
+../inc/F8_to_txt.h :
 	luajit print_generator.lua F8
 #----------------------------------
-../gen_src/_I1_to_txt.c : $(INCDIR)
+../src/I1_to_txt.c :
 	luajit print_generator.lua I1
-../gen_src/_I2_to_txt.c : $(INCDIR)
+../src/I2_to_txt.c :
 	luajit print_generator.lua I2
-../gen_src/_I4_to_txt.c : $(INCDIR)
+../src/I4_to_txt.c :
 	luajit print_generator.lua I4
-../gen_src/_I8_to_txt.c : $(INCDIR)
+../src/I8_to_txt.c :
 	luajit print_generator.lua I8
-../gen_src/_F4_to_txt.c : $(INCDIR)
+../src/F4_to_txt.c :
 	luajit print_generator.lua F4
-../gen_src/_F8_to_txt.c : $(INCDIR)
+../src/F8_to_txt.c :
 	luajit print_generator.lua F8
 
-../gen_inc/_copy_file.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua copy_file.c ${INCDIR}
+../inc/copy_file.h : 
+	luajit ../src/cli_extract_func_decl.lua copy_file.c ${INCDIR}
 
-../gen_inc/_file_exists.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua file_exists.c ${INCDIR}
+../inc/file_exists.h : 
+	luajit ../src/cli_extract_func_decl.lua file_exists.c ${INCDIR}
 
-../gen_inc/_isfile.h : $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua isfile.c ${INCDIR}
+../inc/isfile.h :
+	luajit ../src/cli_extract_func_decl.lua isfile.c ${INCDIR}
 
-../gen_inc/_isdir.h : $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua isdir.c ${INCDIR}
+../inc/isdir.h :
+	luajit ../src/cli_extract_func_decl.lua isdir.c ${INCDIR}
 
-../gen_inc/_rand_file_name.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua rand_file_name.c ${INCDIR}
+../inc/rand_file_name.h : 
+	luajit ../src/cli_extract_func_decl.lua rand_file_name.c ${INCDIR}
 
-../gen_inc/_get_file_size.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua get_file_size.c ${INCDIR}
+../inc/get_file_size.h : 
+	luajit ../src/cli_extract_func_decl.lua get_file_size.c ${INCDIR}
 
-../gen_inc/_get_time_usec.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua get_time_usec.c ${INCDIR}
+../inc/get_time_usec.h : 
+	luajit ../src/cli_extract_func_decl.lua get_time_usec.c ${INCDIR}
   
-../gen_inc/_get_bit_u64.h : $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua get_bit_u64.c ${INCDIR}
+../inc/get_bit_u64.h :
+	luajit ../src/cli_extract_func_decl.lua get_bit_u64.c ${INCDIR}
 
-../gen_inc/_is_valid_chars_for_num.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua is_valid_chars_for_num.c ${INCDIR}
+../inc/is_valid_chars_for_num.h : 
+	luajit ../src/cli_extract_func_decl.lua is_valid_chars_for_num.c ${INCDIR}
 
-../gen_inc/_q_omp_get_num_procs.h : $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua q_omp_get_num_procs.c ${INCDIR}
+../inc/q_omp_get_num_procs.h :
+	luajit ../src/cli_extract_func_decl.lua q_omp_get_num_procs.c ${INCDIR}
 
-../gen_inc/_rdtsc.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua rdtsc.c ${INCDIR}
+../inc/rdtsc.h : 
+	luajit ../src/cli_extract_func_decl.lua rdtsc.c ${INCDIR}
 
-../gen_inc/_rs_mmap.h : $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua rs_mmap.c ${INCDIR}
+../inc/rs_mmap.h :
+	luajit ../src/cli_extract_func_decl.lua rs_mmap.c ${INCDIR}
 
-../gen_inc/_set_bit_u64.h : $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua set_bit_u64.c ${INCDIR}
+../inc/set_bit_u64.h :
+	luajit ../src/cli_extract_func_decl.lua set_bit_u64.c ${INCDIR}
 
-../gen_inc/_trim.h :  $(INCDIR)
-	lua ../src/cli_extract_func_decl.lua trim.c ${INCDIR}
+../inc/trim.h : 
+	luajit ../src/cli_extract_func_decl.lua trim.c ${INCDIR}
 
-hdr_files = \
-	../gen_inc/_B1_to_txt.h   \
-	../gen_inc/_file_exists.h  \
-	../gen_inc/_get_bit_u64.h \
-	../gen_inc/_get_file_size.h  \
-	../gen_inc/_get_time_usec.h \
-	../gen_inc/_isdir.h  \
-	../gen_inc/_isfile.h  \
-	../gen_inc/_is_valid_chars_for_num.h  \
-	../gen_inc/_q_omp_get_num_procs.h \
-	../gen_inc/_rand_file_name.h  \
-	../gen_inc/_rdtsc.h \
-	../gen_inc/_rs_mmap.h \
-	../gen_inc/_SC_to_txt.h   \
-	../gen_inc/_set_bit_u64.h \
-	../gen_inc/_trim.h  \
+GEN_INC_FILES = \
+	../inc/B1_to_txt.h   \
+	../inc/file_exists.h  \
+	../inc/get_bit_u64.h \
+	../inc/get_file_size.h  \
+	../inc/get_time_usec.h \
+	../inc/isdir.h  \
+	../inc/isfile.h  \
+	../inc/is_valid_chars_for_num.h  \
+	../inc/q_omp_get_num_procs.h \
+	../inc/rand_file_name.h  \
+	../inc/rdtsc.h \
+	../inc/rs_mmap.h \
+	../inc/SC_to_txt.h   \
+	../inc/set_bit_u64.h \
+	../inc/trim.h  \
 
 #--------
-src_files =  \
+SRC_FILES =  \
 	copy_file.c \
 	B1_to_txt.c \
 	file_exists.c \
@@ -154,39 +225,35 @@ src_files =  \
 	trim.c \
 	txt_to_B1.c \
 	txt_to_SC.c \
-	../gen_src/_I1_to_txt.c  \
-	../gen_src/_I2_to_txt.c  \
-	../gen_src/_I4_to_txt.c  \
-	../gen_src/_I8_to_txt.c  \
-	../gen_src/_F4_to_txt.c  \
-	../gen_src/_F8_to_txt.c \
-	../gen_src/_txt_to_I1.c \
-	../gen_src/_txt_to_I2.c \
-	../gen_src/_txt_to_I4.c \
-	../gen_src/_txt_to_I8.c \
-	../gen_src/_txt_to_F4.c \
-	../gen_src/_txt_to_F8.c \
+
+GEN_SRC_FILES = \
+	../src/I1_to_txt.c  \
+	../src/I2_to_txt.c  \
+	../src/I4_to_txt.c  \
+	../src/I8_to_txt.c  \
+	../src/F4_to_txt.c  \
+	../src/F8_to_txt.c \
+	../src/txt_to_I1.c \
+	../src/txt_to_I2.c \
+	../src/txt_to_I4.c \
+	../src/txt_to_I8.c \
+	../src/txt_to_F4.c \
+	../src/txt_to_F8.c \
 #----------------------------------
 
 
-libutils.so : ${hdr_files} ${src_files} 
-	gcc ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} ${src_files} -o libutils.so
-	mkdir -p ${Q_BUILD_DIR}/include/
-	mkdir -p ${Q_BUILD_DIR}/src/
-	cp ${src_files}            ${Q_BUILD_DIR}/src/
-	cp ../inc/copy_file.h      ${Q_BUILD_DIR}/include/
-	cp ../inc/q_incs.h         ${Q_BUILD_DIR}/include/
-	cp ../inc/q_constants.h    ${Q_BUILD_DIR}/include/
-	cp ../inc/q_macros.h       ${Q_BUILD_DIR}/include/
-	cp ../inc/spooky_struct.h  ${Q_BUILD_DIR}/include/
-	cp ../inc/drand_struct.h   ${Q_BUILD_DIR}/include/
-	cp ../inc/spooky_hash.h    ${Q_BUILD_DIR}/include/
-	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
+libutils.so : src_files gen_src_files gen_inc_files
+	gcc ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} \
+		${GEN_SRC_FILES} \
+		${SRC_FILES} -o libutils.so
 
 clean :
-	rm -f ../gen_src/*
-	rm -f ../gen_inc/*
 	rm -f _*
 	rm -f *.so
 	rm -f *.o
 
+
+# do not use following unless you absolutely need to
+# else, it breaks the build from UTILS/build/
+hardclean :
+	rm -f ${GEN_SRC_FILES} ${GEN_INC_FILES}

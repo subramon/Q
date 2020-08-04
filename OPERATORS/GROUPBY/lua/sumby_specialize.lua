@@ -2,7 +2,6 @@ local utils = require 'Q/UTILS/lua/utils'
 local val_qtypes = { 'I1', 'I2', 'I4', 'I8', 'F4', 'F8' }
 local grpby_qtypes = { 'I1', 'I2', 'I4', 'I8' }
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/GROUPBY/lua/sumby.tmpl"
 
 return function (
   val_qtype, 
@@ -43,6 +42,8 @@ return function (
       "_" .. out_qtype
   end
   subs.out_ctype = qconsts.qtypes[out_qtype].ctype
-  subs.tmpl = tmpl
+  subs.tmpl = "OPERATORS/GROUPBY/lua/sumby.tmpl"
+  subs.srcdir = "OPERATORS/GROUPBY/gen_src/"
+  subs.incdir = "OPERATORS/GROUPBY/gen_inc/"
   return subs
 end

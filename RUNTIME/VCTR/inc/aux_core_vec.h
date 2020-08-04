@@ -155,7 +155,8 @@ extern int
 make_master_file(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
-    VEC_REC_TYPE *ptr_v
+    VEC_REC_TYPE *ptr_v,
+    bool is_free_mem
     );
 extern int
 safe_strcat(
@@ -166,4 +167,10 @@ safe_strcat(
 extern uint64_t
 mk_uqid(
     VEC_GLOBALS_TYPE *ptr_S
+    );
+extern int
+vec_clean_chunks(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
+    const VEC_REC_TYPE *const ptr_vec
     );

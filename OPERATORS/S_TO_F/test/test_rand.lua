@@ -4,7 +4,6 @@ require 'Q/UTILS/lua/strict'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
-cVector.init_globals({})
 
 local tests = {}
 --========================================

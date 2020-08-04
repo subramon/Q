@@ -4,14 +4,14 @@
 #include "aux_core_vec.h"
 #include "cmem.h"
 
-#include "_copy_file.h"
-#include "_file_exists.h"
-#include "_get_file_size.h"
-#include "_isfile.h"
-#include "_isdir.h"
-#include "_rdtsc.h"
-#include "_rs_mmap.h"
-#include "_txt_to_I4.h"
+#include "copy_file.h"
+#include "file_exists.h"
+#include "get_file_size.h"
+#include "isfile.h"
+#include "isdir.h"
+#include "rdtsc.h"
+#include "rs_mmap.h"
+#include "txt_to_I4.h"
 
 #include "lauxlib.h"
 
@@ -218,9 +218,19 @@ vec_rehydrate(
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_rehydrate++;
 
+  if ( num_elements == 0 ) { go_BYE(-1); }
+  if ( vec_uqid == 0 ) { go_BYE(-1); }
+  if ( chunk_uqids == NULL ) { go_BYE(-1); }
+  if ( field_width == 0 ) { go_BYE(-1); }
+  if ( fldtype == NULL ) { go_BYE(-1); }
+
   status = vec_new_common(ptr_S, ptr_T, ptr_vec, fldtype, field_width);
   cBYE(status);
-  ptr_vec->uqid = vec_uqid; // Important: over-write
+  // Important: Normally, vec_new_common will assign a new vec_uqid
+  // by calling mk_uqid(). However, given that this is a rehydration,
+  // we use the vec_uqid provided, not the one generated. Hence, as below:
+  ptr_vec->uqid = vec_uqid; 
+
   uint32_t num_chunks = ceil((double)num_elements / (double)ptr_S->chunk_size);
   status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
   ptr_vec->num_elements = num_elements; // after init_chunk_dir()
@@ -236,31 +246,32 @@ vec_rehydrate(
     ptr_c->uqid = chunk_uqids[i]; // Important: over-write
     ptr_c->chunk_num = i;
     status = mk_file_name(ptr_c->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-    if ( isfile(file_name) ) { ptr_c->is_file = true; }
-    int64_t expected_file_size = get_exp_file_size(ptr_S, 
-        ptr_S->chunk_size, ptr_vec->field_width, ptr_vec->fldtype);
-    int64_t actual_file_size = get_file_size(file_name);
-    if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
+    if ( isfile(file_name) ) { 
+      int64_t expected_file_size = get_exp_file_size(ptr_S, 
+          ptr_S->chunk_size, ptr_vec->field_width, ptr_vec->fldtype);
+      int64_t actual_file_size = get_file_size(file_name);
+      if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
+      ptr_c->is_file = true; 
+    }
   }
   //
-  // Note that we just accept the file (after some checking)
+  // Note that we just accept the master file (after some checking)
   // we do not "load" it into memory. We delay that until needed
   status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-  if ( isfile(file_name) ) { ptr_vec->is_file = true; }
-
-  int64_t expected_file_size = get_exp_file_size(ptr_S, num_elements,
-      ptr_vec->field_width, ptr_vec->fldtype);
-  int64_t actual_file_size = get_file_size(file_name);
-  if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
-  ptr_vec->file_size = actual_file_size;
+  if ( isfile(file_name) ) { 
+    int64_t expected_file_size = get_exp_file_size(ptr_S, num_elements,
+        ptr_vec->field_width, ptr_vec->fldtype);
+    int64_t actual_file_size = get_file_size(file_name);
+    if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
+    ptr_vec->file_size = actual_file_size;
+    ptr_vec->is_file = true; 
+  }
   ptr_vec->num_elements = num_elements;
-  //------------
   ptr_vec->is_eov     = true;
   ptr_vec->is_persist = true;
-  ptr_vec->is_file    = true;
   //------------
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_rehydrate+= delta; }
+  delta=RDTSC()-t_start; if ( delta > 0 ) { ptr_T->t_rehydrate+= delta; }
   return status;
 }
 //-------------------------------------------------
@@ -495,7 +506,7 @@ vec_start_read(
 
   ptr_vec->num_readers++; 
   if ( ptr_vec->mmap_addr == NULL ) { 
-    status = make_master_file(ptr_S, ptr_T, ptr_vec); cBYE(status);
+    status = make_master_file(ptr_S, ptr_T, ptr_vec, false); cBYE(status);
     if ( !ptr_vec->is_file ) { go_BYE(-1); }
     char *X = NULL; size_t nX = 0;
     char file_name[Q_MAX_LEN_FILE_NAME+1];
@@ -589,9 +600,10 @@ vec_shutdown(
   *ptr_str = NULL;
 
   if ( ( !ptr_vec->is_memo )  && 
-       ( ptr_vec->num_elements > ptr_S->chunk_size ) ) { 
-      // We have lost data and there is no hope of recovering it
-      go_BYE(-1); 
+      ( ptr_vec->num_elements > ptr_S->chunk_size ) ) { 
+    fprintf(stderr,"We have lost data and no hope of recovering it\n");
+    status = vec_delete(ptr_S, ptr_T, ptr_vec); cBYE(status);
+    go_BYE(-1); 
   }
   // if not eov, then delete the vector
   // In other words, only eov vectors get to be saved
@@ -614,7 +626,7 @@ vec_shutdown(
       // master file exists, no need to flush chunks individually
     }
     else {
-      status = vec_flush_chunk(ptr_S, ptr_T, ptr_vec, true, -1); 
+      status = vec_make_chunk_file(ptr_S, ptr_T, ptr_vec, true, -1); 
       cBYE(status);
     }
     status = reincarnate(ptr_S, ptr_T, ptr_vec, ptr_str, false);
@@ -947,42 +959,9 @@ BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_put1 += delta; }
   return status;
 }
-//------------------------------------------------------
-// This should be invoked only when a master file exists 
+
 int
-vec_clean_chunks(
-    VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
-    const VEC_REC_TYPE *const ptr_vec
-    )
-{
-  int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_flush++;
-  if ( ptr_vec == NULL ) { go_BYE(-1); }
-  if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
-  if ( ptr_vec->is_file == false ) { go_BYE(-1); }
-  uint32_t lb = 0;
-  uint32_t ub = ptr_vec->num_chunks; 
-  for ( unsigned int i = lb; i < ub; i++ ) { 
-    char file_name[Q_MAX_LEN_FILE_NAME+1];
-    uint32_t chunk_idx = ptr_vec->chunks[i];
-    chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    if ( ptr_chunk->is_file ) { // flush buffer only if NO backup 
-      memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-      status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-      cBYE(status);
-      status = remove(file_name); cBYE(status);
-      ptr_chunk->is_file = false;
-    }
-    free_if_non_null(ptr_chunk->data);
-  }
-BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_flush += delta; }
-  return status;
-}
-int
-vec_flush_chunk(
+vec_make_chunk_file(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     const VEC_REC_TYPE *const ptr_vec,
@@ -991,7 +970,7 @@ vec_flush_chunk(
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_flush++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_make_chunk_file++;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
   uint32_t lb, ub;
@@ -1009,60 +988,59 @@ vec_flush_chunk(
     uint32_t chunk_idx = ptr_vec->chunks[i];
     chk_chunk_idx(chunk_idx);
     CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-    status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-    cBYE(status);
-    if ( !ptr_chunk->is_file ) { // flush buffer only if NO backup 
+    if ( !ptr_chunk->is_file ) { 
+      memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
+      status = mk_file_name(ptr_chunk->uqid,file_name,Q_MAX_LEN_FILE_NAME);
+      cBYE(status);
+      if ( ptr_chunk->data == NULL ) { go_BYE(-1); }
       FILE *fp = fopen(file_name, "wb");
       return_if_fopen_failed(fp, file_name, "wb");
       fwrite(ptr_chunk->data, ptr_vec->chunk_size_in_bytes, 1, fp);
       fclose(fp);
-      // data is redundant since we have backed it up in file 
-      if ( is_free_mem ) { 
-        free_if_non_null(ptr_chunk->data);
-      }
       ptr_chunk->is_file = true;
+    }
+    if ( is_free_mem ) { 
+      free_if_non_null(ptr_chunk->data);
     }
   }
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_flush += delta; }
+  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_make_chunk_file += delta; }
   return status;
 }
 
 int
-vec_flush_all(
+vec_master(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
-    VEC_REC_TYPE *ptr_vec
+    VEC_REC_TYPE *ptr_vec,
+    bool is_free_mem
     )
 {
   int status = 0;
-  FILE *fp = NULL; 
-  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_flush++;
+  status = make_master_file(ptr_S, ptr_T, ptr_vec, is_free_mem); cBYE(status);
+BYE:
+  return status;
+}
+
+int
+vec_make_chunk_files(
+    VEC_GLOBALS_TYPE *ptr_S,
+    VEC_TIMERS_TYPE *ptr_T,
+    VEC_REC_TYPE *ptr_vec,
+    bool is_free_mem
+    )
+{
+  int status = 0;
 
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
   if ( ptr_vec->is_dead ) { go_BYE(-1); }
 
-  status = make_master_file(ptr_S, ptr_T, ptr_vec); cBYE(status);
-
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
-    uint32_t chunk_idx = ptr_vec->chunks[i];
-    chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    if ( !ptr_chunk->is_file ) { 
-      char chnk_file_name[Q_MAX_LEN_FILE_NAME+1];
-      status = mk_file_name(ptr_chunk->uqid, chnk_file_name, Q_MAX_LEN_FILE_NAME); 
-      fp = fopen(chnk_file_name, "wb");
-      int nw = fwrite(ptr_chunk->data, ptr_vec->chunk_size_in_bytes, 1,fp);
-      if ( nw != 1 ) { go_BYE(-1); }
-      fclose_if_non_null(fp);
-      ptr_chunk->is_file = true;
-    }
+    status = vec_make_chunk_file(ptr_S, ptr_T, ptr_vec, i, is_free_mem);
+    cBYE(status);
   }
 BYE:
-  fclose_if_non_null(fp);
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_flush += delta; }
   return status;
 }
 
@@ -1097,19 +1075,18 @@ BYE:
 }
 
 int
-vec_delete_master_file(
+vec_unmaster(
     VEC_GLOBALS_TYPE *ptr_S,
     VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_delete_master_file++;
+  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_unmaster++;
   if  (  ptr_vec->is_dead ) { go_BYE(-1); }
   if  ( !ptr_vec->is_memo ) { go_BYE(-1); }
-  if  ( !ptr_vec->is_file ) { go_BYE(-1); }
-  // can delete file only if data can be restored from elsewhere
-  bool can_delete = true;
+  if  ( !ptr_vec->is_file ) { return status; } // nothing to do 
+
   for ( uint32_t i = 0; i < ptr_vec->num_chunks; i++ ) { 
     uint32_t chunk_idx = ptr_vec->chunks[i];
     CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
@@ -1117,24 +1094,22 @@ vec_delete_master_file(
       /* all is well */
     }
     else {
-      can_delete = false; break;
+      status = load_chunk(ptr_T, ptr_chunk, ptr_vec, 
+          &(ptr_chunk->t_last_get), &(ptr_chunk->data)); 
+      cBYE(status);
     }
   }
-  if ( can_delete ) {
-    char file_name[Q_MAX_LEN_FILE_NAME+1];
-    status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
-    cBYE(status);
-    status = remove(file_name); cBYE(status);
-    ptr_vec->is_file = false;
-    ptr_vec->file_size = 0;
-  }
-  else {
-    go_BYE(-1);
-  }
+  char file_name[Q_MAX_LEN_FILE_NAME+1];
+  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+  cBYE(status);
+  status = remove(file_name); cBYE(status);
+  ptr_vec->is_file = false;
+  ptr_vec->file_size = 0;
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_delete_master_file += delta; }
+  delta = RDTSC() - t_start; if (delta > 0) {ptr_T->t_unmaster+= delta;}
   return status;
 }
+//--------------------------------------------
 int
 vec_delete_chunk_file(
     VEC_GLOBALS_TYPE *ptr_S,
@@ -1169,6 +1144,8 @@ vec_delete_chunk_file(
       ptr_chunk->is_file = false;
     }
     else { // cannot delete the file; will cause loss of data 
+      // TODO P4 Above statement is not strictly true, 
+      // One can load from master file if it exists
       go_BYE(-1);
     }
   }

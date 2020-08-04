@@ -36,7 +36,7 @@ local mk_col = function (
     has_nulls = true
   end
   
-  assert(good_qtypes[qtype])
+  assert(good_qtypes[qtype], qtype)
   local width
   local ctype =  assert(qconsts.qtypes[qtype].ctype, err.NULL_CTYPE_ERROR)
   local table_length = table.getn(input)

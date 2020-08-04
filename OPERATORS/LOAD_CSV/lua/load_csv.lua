@@ -4,7 +4,6 @@ local cutils        = require 'libcutils'
 local cVector       = require 'libvctr'
 local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
 local validate_meta = require "Q/OPERATORS/LOAD_CSV/lua/validate_meta"
-local chk_file      = require "Q/OPERATORS/LOAD_CSV/lua/chk_file"
 local get_ptr       = require "Q/UTILS/lua/get_ptr"
 local process_opt_args = 
   require "Q/OPERATORS/LOAD_CSV/lua/process_opt_args"
@@ -69,7 +68,10 @@ local function load_csv(
   opt_args
   )
   local chunk_size = cVector.chunk_size()
-  assert(chk_file(infile))
+  assert( type(infile) == "string")
+  assert(cutils.isfile(infile))
+  assert(tonumber(cutils.getsize(infile)) > 0)
+
   assert(validate_meta(M))
   local is_hdr, fld_sep, global_is_memo, global_is_persist = 
   process_opt_args(opt_args)

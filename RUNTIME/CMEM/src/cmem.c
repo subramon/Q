@@ -8,13 +8,13 @@
 
 #include "q_incs.h"
 
-#include "_B1_to_txt.h"
-#include "_I1_to_txt.h"
-#include "_I2_to_txt.h"
-#include "_I4_to_txt.h"
-#include "_I8_to_txt.h"
-#include "_F4_to_txt.h"
-#include "_F8_to_txt.h"
+#include "B1_to_txt.h"
+#include "I1_to_txt.h"
+#include "I2_to_txt.h"
+#include "I4_to_txt.h"
+#include "I8_to_txt.h"
+#include "F4_to_txt.h"
+#include "F8_to_txt.h"
 
 #include "cmem_struct.h"
 #include "aux_lua_to_c.h"
@@ -155,7 +155,7 @@ static int l_cmem_new( lua_State *L)
   else {
     if ( !lua_istable(L, 1) ) { go_BYE(-1); }
     status = get_int_from_tbl(L, "size", &is_key, &size); cBYE(status);
-    if ( !is_key ) { go_BYE(-1); }
+    if ( !is_key ) { fprintf(stderr, "CMEM size not specified\n"); go_BYE(-1); }
     status = get_str_from_tbl(L, "qtype", &is_key, &fldtype); cBYE(status);
     status = get_str_from_tbl(L, "name", &is_key, &cell_name); cBYE(status);
   }
@@ -407,6 +407,12 @@ BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
   return 2;
+}
+
+static int l_cmem_qtype( lua_State *L) {
+  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
+  lua_pushstring(L, ptr_cmem->fldtype);
+  return 1;
 }
 
 static int l_cmem_fldtype( lua_State *L) {
@@ -792,6 +798,7 @@ static const struct luaL_Reg cmem_methods[] = {
     { "new",        l_cmem_new },
     { "nop",        l_cmem_nop },
     { "prbuf",      l_cmem_prbuf },
+    { "qtype",      l_cmem_qtype },
     { "set",        l_cmem_set               },
     { "set_default", l_cmem_set_default },
     { "set_max",    l_cmem_set_max },
@@ -818,6 +825,7 @@ static const struct luaL_Reg cmem_functions[] = {
     { "new",        l_cmem_new },
     { "nop",        l_cmem_nop },
     { "prbuf",      l_cmem_prbuf },
+    { "qtype",      l_cmem_qtype },
     { "set",        l_cmem_set               },
     { "set_default", l_cmem_set_default },
     { "set_max",    l_cmem_set_max },

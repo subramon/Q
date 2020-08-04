@@ -1,5 +1,6 @@
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local cVector = require 'libvctr'
+local cutils  = require 'libcutils'
 local plpath  = require 'pl.path'
 local ffi     = require 'ffi'
 local qc      = require 'Q/UTILS/lua/q_core'
@@ -12,36 +13,29 @@ local chunk_size = cVector.chunk_size()
 local function expander_f1f2opf3(a, f1 , f2, optargs )
   local sp_fn_name = "Q/OPERATORS/F1F2OPF3/lua/" .. a .. "_specialize"
   local spfn = assert(require(sp_fn_name))
-  assert(type(f1) == "lVector", "f1 must be a lVector")
-  assert(not f1:has_nulls())
-  assert(type(f2) == "lVector", "f2 must be a lVector")
-  assert(not f2:has_nulls())
-  if ( optargs ) then assert(type(optargs) == "table") end
-  local status, subs = pcall(spfn, f1:fldtype(), f2:fldtype(), optargs)
-  if not status then print(subs) end
+  if ( optargs ) then 
+    assert(type(optargs) == "table") 
+  else
+    optargs = {}
+  end
+  optargs.__operator = a -- needed for some specializers
+  local subs = assert(spfn(f1, f2, optargs))
+  -- subs should return 
+  -- (1) f3_qtype (2) f1_cst_as (2) f2_cst_as (3) f3_cst_as
   local func_name = assert(subs.fn)
-  -- START: Dynamic compilation
-  if ( not qc[func_name] ) then 
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
-  end 
-  -- STOP : Dynamic compilation
-  assert(qc[func_name], "Symbol not available" .. func_name)
+  qc.q_add(subs)
 
-  local f3_qtype = assert(subs.out_qtype)
-  local f3_width = qconsts.qtypes[f3_qtype].width
-  f3_width = f3_width or 1 -- to account for B1 and such types
-
+  local f3_width = qconsts.qtypes[subs.f3_qtype].width
   local buf_sz = chunk_size * f3_width
   local buf = assert(cmem.new(0)) -- note we don't really allocate data
 
   local first_call = true
   local l_chunk_num = 0
-  local myvec  -- see note expander_f1f2opf3.txt
   local f3_gen = function(chunk_num)
     assert(chunk_num == l_chunk_num)
     --=== START: buffer allocation
     if ( not buf:is_data() ) then 
-      buf = assert(cmem.new({size = buf_sz, qtype = subs.out_qtype}))
+      buf = assert(cmem.new({size = buf_sz, qtype = subs.f3_qtype}))
       buf:stealable(true)
     end
     --=== STOP : buffer allocation
@@ -50,15 +44,12 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
     local f2_len, f2_chunk, nn_f2_chunk
     f1_len, f1_chunk, nn_f1_chunk = f1:get_chunk(l_chunk_num)
     f2_len, f2_chunk, nn_f2_chunk = f2:get_chunk(l_chunk_num)
-    local f1_cast_as = subs.in1_ctype .. "*"
-    local f2_cast_as = subs.in2_ctype .. "*"
-    local f3_cast_as = subs.out_ctype .. "*"
     assert(f1_len == f2_len)
     if f1_len > 0 then
-      local chunk1 = get_ptr(f1_chunk, f1_cast_as)
-      local chunk2 = get_ptr(f2_chunk, f2_cast_as)
-      local chunk3 = get_ptr(f3_chunk, f3_cast_as)
-      local start_time = qc.RDTSC()
+      local chunk1 = get_ptr(f1_chunk, subs.f1_cast_as)
+      local chunk2 = get_ptr(f2_chunk, subs.f2_cast_as)
+      local chunk3 = get_ptr(buf,      subs.f3_cast_as)
+      local start_time = cutils.rdtsc()
       qc[func_name](chunk1, chunk2, f1_len, chunk3)
       record_time(start_time, func_name)
     end
@@ -72,8 +63,6 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
     l_chunk_num = l_chunk_num + 1
     return f1_len, buf
   end
-  myvec = lVector{gen=f3_gen, nn=false, qtype=f3_qtype, has_nulls=false}
-  return myvec
+  return lVector{gen=f3_gen, qtype=subs.f3_qtype, has_nulls=false}
 end
-
 return expander_f1f2opf3

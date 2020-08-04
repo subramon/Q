@@ -1,17 +1,12 @@
 -- If not, any other string will work but do not use __ as a prefix
 local ffi               = require 'ffi'
 local qconsts		= require 'Q/UTILS/lua/q_consts'
-local cutils            = require 'libcutils'
 local cmem		= require 'libcmem'
-local Scalar		= require 'libsclr'
 local cVector		= require 'libvctr'
-local register_type	= require 'Q/UTILS/lua/q_types'
-local is_base_qtype	= require 'Q/UTILS/lua/is_base_qtype'
-local qc		= require 'Q/UTILS/lua/q_core'
 --====================================
 local helpers = {}
 helpers.determine_kind_of_new = function (args)
-  assert(type(arg) == "table", "Vector constructor requires table as arg")
+  assert(type(args) == "table", "Vector constructor requires table as arg")
   local is_rehydrate = false
   local is_single = true
   assert(type(args) == "table")

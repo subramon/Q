@@ -36,7 +36,7 @@ require('Q/q_export').export('<<operator>>', <<operator>>)
     ]===]
 
 
-io.output("_f1s1opf2.lua")
+io.output("f1s1opf2.lua")
 io.write("local T = {} \n")
 local ops = assert(require 'Q/OPERATORS/F1S1OPF2/lua/operators')
 local T = {}

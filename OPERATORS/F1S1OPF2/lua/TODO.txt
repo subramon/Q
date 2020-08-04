@@ -1,6 +1,11 @@
-- Modification in pow() operation
-  User can provide qtype in optargs, use user specified qtype as qtype for out_vector.
-  If not specified then use in_vector qtype for out_vector
-
--- logit2
- do common sub-expression elimination
+Need to fix following tests
+../test/test_convert.lua
+../test/test_cum_cnt.lua
+../test/test_cum_cnt.sh
+../test/test_explog.lua
+../test/test_is_prev.lua
+../test/test_logit.lua
+../test/test_misc.sh
+../test/test_pow_sqr.lua
+../test/test_safe_convert.lua
+../test/test_shift.lua

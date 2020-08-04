@@ -5,9 +5,12 @@ local cutils            = require 'libcutils'
 local cmem		= require 'libcmem'
 local Scalar		= require 'libsclr'
 local cVector		= require 'libvctr'
+local to_scalar		= require 'Q/UTILS/lua/to_scalar'
 local register_type	= require 'Q/UTILS/lua/q_types'
-local qc		= require 'Q/UTILS/lua/q_core'
 local H                 = require 'Q/RUNTIME/VCTR/lua/helpers'
+local for_cdef          = require 'Q/UTILS/lua/for_cdef'
+local chunk_size = cVector.chunk_size()
+ffi.cdef(for_cdef("RUNTIME/VCTR/inc/core_vec_struct.h",{ "UTILS/inc/" }))
 --====================================
 local lVector = {}
 lVector.__index = lVector
@@ -105,8 +108,8 @@ function lVector:delete_chunk_file(chunk_num)
 end
 
 -- Mainly used for testing. Not really needed by Q programmer
-function lVector:delete_master_file()
-  return H.on_both(self, cVector.delete_master_file)
+function lVector:unmaster()
+  return H.on_both(self, cVector.unmaster)
 end
 
 -- Relinquish read access to the entire vector 
@@ -141,7 +144,7 @@ end
 function lVector:eval()
   if ( self:is_eov() ) then return self end 
   assert(H.is_multiple_of_chunk_size(self:num_elements()))
-  local csz = cVector.chunk_size()
+  local csz = chunk_size
   local chunk_num = self:num_elements() / csz
   local base_len, base_addr, nn_addr 
   repeat
@@ -175,7 +178,7 @@ end
 -- If chunk_num not defined, return name of master file 
 -- If chunk_num IS  defined, return name of file in which chunk data is 
 -- Note that these files may not exist. If you want them to exist, 
--- then you must call flush_all()
+-- then you must call master()
 function lVector:file_name(chunk_num)
   local f1, f2
   if ( chunk_num) then 
@@ -194,15 +197,42 @@ function lVector:file_name(chunk_num)
 end
 
 
--- flushes contents of vector to disk
 -- creates a master file if one does not exist
+-- if is_free_mem, then frees chunk memory
+function lVector:master(is_free_mem)
+  if ( is_free_mem ) then 
+    assert(type(is_free_mem) == "boolean") 
+  end
+  assert(cVector.master(self._base_vec, is_free_mem))
+  if ( self._nn_vec ) then 
+    assert(cVector.master(self._nn_vec, is_free_mem))
+  end
+  return self
+end
+--
+-- flushes contents of chunks to disk
 -- Mainly used for testing. Not really needed by Q programmer
-function lVector:flush_all()
-  return H.on_both(self, cVector.flush_all)
+function lVector:make_chunk_files(is_free_mem)
+  if ( is_free_mem ) then 
+    assert(type(is_free_mem) == "boolean") 
+  end
+  assert(cVector.make_chunk_files(self._base_vec, is_free_mem))
+  if ( self._nn_vec ) then 
+    assert(cVector.make_chunk_files(self._nn_vec, is_free_mem))
+  end
+  return true
 end
 
-function lVector:flush_chunk(chunk_num)
-  return H.on_both(self, cVector.flush_chunk, chunk_num)
+function lVector:make_chunk_file(chunk_num, is_free_mem)
+  assert(type(chunk_num) == "number") 
+  if ( is_free_mem ) then 
+    assert(type(is_free_mem) == "boolean") 
+  end
+  assert(cVector.make_chunk_file(self._base_vec, chunk_num, is_free_mem))
+  if ( self._nn_vec ) then 
+    assert(cVector.make_chunk_file(self._nn_vec, chunk_num, is_free_mem))
+  end
+  return true
 end
 
 function lVector:free()
@@ -340,7 +370,7 @@ function lVector:clone()
   local v2, nn_v2
   local v1 = self._base_vec
   assert(v1:is_eov())
-  cVector.flush_all(v1)
+  cVector.master(v1)
   local x, y = cVector.reincarnate(v1)
   assert(x, y)
   assert(type(x) == "string")
@@ -389,6 +419,18 @@ function lVector.new(args)
         assert(cVector.check(vector._nn_vec)) 
       end 
     end
+    --=======================
+    local is_memo
+    if ( args.is_memo ) then
+      is_memo = args.is_memo
+    else
+      is_memo = qconsts.is_memo
+    end 
+    cVector.memo(vector._base_vec, is_memo)
+    if ( vector._nn_vec ) then 
+      cVector.memo(vector._nn_vec, is_memo)
+    end
+    --=======================
   else -- materialized vector
     vector._base_vec = assert(cVector.rehydrate(args))
     if ( args.has_nulls ) then
@@ -451,18 +493,20 @@ function lVector:put_chunk(base_addr, nn_addr, len)
   if ( ( type(len) == "number") and ( len == 0 ) )  then -- no more data
     return H.on_both(self, cVector.eov)
   end
+  if ( type(len) == "nil" ) then
+    len = cVector.chunk_size()
+  end
+  assert(type(len) == "number")
   --====================
   -- TODO P4 Use on_both for the following..
   assert(type(base_addr) == "CMEM")
-  if ( type(len) == "nil" ) then len = -1 end 
-  assert(type(len) == "number")
   assert(cVector.put_chunk(self._base_vec, base_addr, len))
   if ( self._nn_vec ) then
     assert(type(nn_addr) == "CMEM")
     status = cVector.put_chunk(self._nn_vec, nn_addr, len)
     assert(status)
   end
-  if ( len < cVector.chunk_size() ) then 
+  if ( len and ( len < cVector.chunk_size() ) ) then 
     assert(cVector.eov(self._base_vec))
     if ( self._nn_vec ) then
       assert(cVector.eov(self._nn_vec))
@@ -588,10 +632,12 @@ end
 
 function lVector:shutdown()
   if ( qconsts.debug ) then self:check() end
-  local status, msg = cVector.shutdown(self._base_vec)
-  if ( not status ) then print("Unable to shutdown"); print(msg) end 
+  local reincarnate_str = cVector.shutdown(self._base_vec)
+  if ( not reincarnate_str ) then 
+    print("Unable to shutdown"); return nil 
+  end 
   -- TODO P1 What about nn_vec?
-  return status 
+  return reincarnate_str
 end
 
 function lVector:set_meta(k, v)
@@ -609,19 +655,10 @@ function lVector:set_meta(k, v)
   -- now deal with reserved keywords
   if ( ( k == "__max" ) or ( k == "__min" ) or ( k == "__sum" ) ) then
     -- TODO P3: Put more asserts on types of elements in table
-    assert(type(v) == "table")
-    if ( ( k == "__max" ) or ( k == "__min" ) ) then 
-      assert(#v == 3) 
-    end
-    if ( k == "__sum" ) then
-      assert(#v == 2) 
-    end
-  elseif ( ( k == "__meaning" ) or  ( k == "__name" ) ) then 
-    assert(v and (type(v) == "string") and (#v > 0 ))
-  elseif ( k == "__dictionary" ) then
-    assert(v and (type(v) == "lDictionary") )
+    local v = assert(to_scalar(v, self:qtype()))
+    self._meta[k] = v
   else
-    assert(nil)
+    assert(nil, "TO BE IMPLEMENTED")
   end
 end
 

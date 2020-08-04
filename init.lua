@@ -1,7 +1,31 @@
--- require all the root operator files
--- TODO Krushnakant local qc = require 'libq_core'
--- TODO assert(qc["chk_env_var"]())
--- require 'libsclr' -- Took this out. Hope its okay ;-)
+require 'Q/QTILS/lua/fold'
+require "Q/OPERATORS/F_TO_S/lua/f_to_s"
+require "Q/OPERATORS/MK_COL/lua/mk_col"
+require "Q/OPERATORS/PRINT/lua/print_csv"
+require "Q/OPERATORS/S_TO_F/lua/s_to_f"
+require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
+require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
+require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
+
+require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
+require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
+require 'Q/OPERATORS/WHERE/lua/where'
+require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
+require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
+require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
+require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
+
+require 'Q/QTILS/lua/nop'
+require 'Q/QTILS/lua/avg'
+require "Q/UTILS/lua/restore"
+require "Q/UTILS/lua/save" 
+
+require "Q/UTILS/lua/pack"
+require "Q/UTILS/lua/unpack"
+require "Q/UTILS/lua/set_memo"
+-- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
+-- TODO require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
+--[[
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/get_idx_by_val"
@@ -16,10 +40,7 @@ require "Q/OPERATORS/CLONE/lua/clone"
 
 require "Q/OPERATORS/DROP_NULLS/lua/drop_nulls"
 
-require "Q/OPERATORS/F_TO_S/lua/_f_to_s"
-require "Q/OPERATORS/F1F2OPF3/lua/_f1f2opf3"
 require "Q/OPERATORS/F1OPF2F3/lua/f1opf2f3"
-require "Q/OPERATORS/F1S1OPF2/lua/_f1s1opf2"
 require "Q/OPERATORS/F1S1OPF2/lua/is_prev"
 
 require "Q/OPERATORS/GET/lua/get_val_by_idx"
@@ -35,28 +56,15 @@ require "Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez"
 require 'Q/OPERATORS/INDEX/lua/indexing'
 
 
-require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
-require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
-require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
-require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
-require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
-require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
--- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
 
-require "Q/OPERATORS/MK_COL/lua/mk_col"
 require "Q/OPERATORS/MM/lua/mv_mul"
 require "Q/OPERATORS/MDB/lua/mk_comp_key_val"
 
 require "Q/OPERATORS/PCA/lua/corr_mat"
-require "Q/OPERATORS/PRINT/lua/print_csv"
 
-require "Q/OPERATORS/S_TO_F/lua/_s_to_f"
-require "Q/OPERATORS/SORT/lua/sort"
-require "Q/OPERATORS/SORT2/lua/sort2"
 
 require 'Q/OPERATORS/UNIQUE/lua/unique'
 
-require 'Q/OPERATORS/WHERE/lua/where'
 -- alias wrappers
 require 'Q/ALIAS/lua/add'
 require 'Q/ALIAS/lua/count'
@@ -65,28 +73,22 @@ require 'Q/ALIAS/lua/mink'
 require 'Q/ALIAS/lua/mul'
 require 'Q/ALIAS/lua/sub'
 --============== UTILITY FUNCTIONS FOR Q PROGRAMMER
-require 'Q/QTILS/lua/average'
-require 'Q/QTILS/lua/fold'
 require 'Q/QTILS/lua/is_sorted'
 require 'Q/QTILS/lua/vvmax'
 require 'Q/QTILS/lua/vvpromote'
 require 'Q/QTILS/lua/vvseq'
 --============= TODO P4 Document usage of  these routines
-require "Q/UTILS/lua/pack"
-require "Q/UTILS/lua/restore"
-require "Q/UTILS/lua/save" 
-require "Q/UTILS/lua/set_memo"
-require "Q/UTILS/lua/unpack"
 require "Q/UTILS/lua/view_meta"
 --============== UTILITY FUNCTIONS FOR Q PROGRAMMER
+--]]
 _G['g_time'] = {}
 _G['g_ctr']  = {}
 
 --=== Stuff to do at first load time 
 local cVector = require 'libvctr'
 cVector.init_globals({})
-local reset = os.getenv("Q_RESET")
-local reset_fn = require 'Q/UTILS/lua/reset'
+local reset      = os.getenv("Q_RESET")
+local reset_fn   = require 'Q/UTILS/lua/reset'
 local restore_fn = require 'Q/UTILS/lua/restore'
 if ( reset == "true" ) then 
   reset_fn()
@@ -94,6 +96,7 @@ else
   status, msg = pcall(restore_fn)
   if ( not status ) then 
     print("WARNING!!! Restore failed. Wiping things out...")
+    print(msg)
     reset_fn()
   else
     print("Restored data")

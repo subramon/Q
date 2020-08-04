@@ -13,7 +13,7 @@ for i, v in pairs(blacklist) do
 end
 
 --=== Following to prune unwanted directories
-local x_ignore_dirs = { "DOC", "doc", "experimental", "DEPRECATED" } 
+local x_ignore_dirs = { "TODO", "DOC", "doc", "experimental", "DEPRECATED" } 
 local ignore_dirs = {}
 for k, v in ipairs(x_ignore_dirs) do
   ignore_dirs[v] = true

@@ -1,7 +1,7 @@
 //START_INCLUDES
 #include "q_incs.h"
 //STOP_INCLUDES
-#include "_get_file_size.h"
+#include "get_file_size.h"
 //START_FUNC_DECL
 int64_t 
 get_file_size(

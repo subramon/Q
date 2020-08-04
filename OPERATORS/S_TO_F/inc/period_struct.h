@@ -1,6 +1,6 @@
 #ifndef _PERIOD_STRUCT_H
 #define _PERIOD_STRUCT_H
-
+//START_FOR_CDEF
 typedef struct _period_F4_rec_type {
    float start;
    float by;
@@ -36,4 +36,5 @@ typedef struct _period_I8_rec_type {
    int64_t by;
    int period;
 } PERIOD_I8_REC_TYPE;
+//STOP_FOR_CDEF
 #endif

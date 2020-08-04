@@ -1,7 +1,6 @@
 #include "q_incs.h"
 #include "auxil.h"
 #include "extract_api_args.h"
-extern char g_valid_chars_in_url[256]; 
 
 int 
 extract_api_args(
@@ -21,16 +20,12 @@ extract_api_args(
   //-------------------------------------
   for ( int i = 0; ( ( *cptr !=  '?' ) && ( *cptr !=  '\0' ) ); i++ ) {
     if ( i >= sz_api ) { go_BYE(-1); }
-    if ( !g_valid_chars_in_url[(uint8_t)(*cptr)] ) { go_BYE(-1); }
     api[i] = *cptr++;
   }
   if ( *cptr == '?' ) { cptr++; /* Skip over '?' */ }
   //--------------------------------------
   for ( int i = 0; *cptr !=  '\0'; i++ ) {
     if ( i >= sz_args ) { go_BYE(-1); }
-    if ( !g_valid_chars_in_url[(uint8_t)*cptr] ) { 
-      printf("hello\n");
-      go_BYE(-1); }
     args[i] = *cptr++;
   }
 BYE:

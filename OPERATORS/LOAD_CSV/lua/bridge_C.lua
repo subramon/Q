@@ -53,18 +53,24 @@ local function bridge_C(
     has_nulls[i-1] = M[i].has_nulls
     width[i-1]     = M[i].width
   end
-  -- START: Dynamic compilation
-  local func_name = "load_csv_fast"
-  if ( not qc[func_name] ) then 
-    local root = assert(qconsts.Q_SRC_ROOT)
-    local subs = {}
-    subs.fn = func_name
-    subs.dotc = root .. "/OPERATORS/LOAD_CSV/src/load_csv_fast.c"
-    subs.doth = root .. "/OPERATORS/LOAD_CSV/inc/load_csv_fast.h"
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
-  end 
-  -- STOP : Dynamic compilation
-  assert(qc[func_name], "Symbol not available" .. func_name)
+  local subs = {}
+  subs.fn = "load_csv_fast"
+  subs.dotc = "OPERATORS/LOAD_CSV/src/load_csv_fast.c"
+  subs.doth = "OPERATORS/LOAD_CSV/inc/load_csv_fast.h"
+  subs.incs = { "OPERATORS/LOAD_CSV/inc/", "UTILS/inc/" }
+  subs.srcs = { "UTILS/src/is_valid_chars_for_num.c", 
+    "UTILS/src/get_bit_u64.c",  
+    "UTILS/src/rs_mmap.c",  
+    "UTILS/src/trim.c",  
+    "UTILS/src/txt_to_I1.c", 
+    "UTILS/src/txt_to_I2.c", 
+    "UTILS/src/txt_to_I4.c", 
+    "UTILS/src/txt_to_I8.c", 
+    "UTILS/src/txt_to_F4.c", 
+    "UTILS/src/txt_to_F8.c", 
+}
+  qc.q_add(subs); 
+  local func_name = subs.fn
 
   local status = qc[func_name](infile, nC, 
     ffi.cast("char *", fld_sep),

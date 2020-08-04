@@ -1,25 +1,31 @@
 return require 'Q/UTILS/lua/code_gen' {
 
    declaration = [[
-#include "q_incs.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "q_macros.h"
 #include "rand_struct.h"
+//START_FOR_CDEF
 extern int
 rand_${out_qtype}(
   ${out_ctype} *X,
   uint64_t nX,
-  ${args_ctype} *ptr_args,
+  ${cargs_ctype} *ptr_args,
   uint64_t idx
   );
+//STOP_FOR_CDEF
    ]],
    definition = [[
-#include "_rand_${out_qtype}.h"
+#include "rand_${out_qtype}.h"
 
 //START_FUNC_DECL
 int
 rand_${out_qtype}(
   ${out_ctype} *X,
   uint64_t nX,
-  ${args_ctype} *ptr_args,
+  ${cargs_ctype} *ptr_args,
   uint64_t idx
   )
 //STOP_FUNC_DECL

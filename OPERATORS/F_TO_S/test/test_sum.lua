@@ -8,11 +8,12 @@ tests.t1 = function()
     local x = Q.rand( { lb = 0, ub = 1, qtype = "F8", len = 65537 } )
     assert(type(x) == "lVector")
     assert(x:fldtype() == "F8")
-    x:eval()
-    -- local y = Q.sum(x)
-    -- y:eval()
-    -- assert(type(y) == "Scalar")
-    -- assert(y:fldtype() == "F8")
+    local y = Q.sum(x)
+    assert(type(y) == "Reducer")
+    local n, m = y:eval()
+    assert(type(n) == "Scalar")
+    assert(n:fldtype() == "F8")
+    assert(m:fldtype() == "I8")
   end
   print("Test t1 succeeded")
 end
@@ -25,8 +26,18 @@ tests.t2 = function()
   print("Test t2 succeeded")
 end
 --=========================================
--- return tests
-tests.t1()
+tests.t3 = function()
+  local n = 1048576+17
+  local y = Q.const({val = true, qtype = "B1", len = n })
+  local z = Q.sum(y):eval():to_num()
+  assert(z == n)
+  print("Test t3 succeeded")
+end
+--=========================================
+return tests
 --[[
+tests.t1()
 tests.t2()
+tests.t3()
+os.exit()
 --]]

@@ -1,20 +1,60 @@
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/F1F2OPF3/lua/f1f2opf3_cmp.tmpl"
+local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
 return function (
-  f1type, 
-  f2type
+  f1, 
+  f2,
+  optargs
   )
-  local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
   local subs = {}
-  assert(is_base_qtype(f1type), "f1type must be base type")
-  assert(is_base_qtype(f2type), "f2type must be base type")
 
-  subs.fn = "<<operator>>_" .. f1type .. "_" .. f2type 
-  subs.in1_ctype   = qconsts.qtypes[f1type].ctype
-  subs.in2_ctype   = qconsts.qtypes[f2type].ctype
-  subs.out_ctype = "uint64_t"
-  subs.out_qtype = "B1"
-  subs.comparator = " <<comparator>> "
-  subs.tmpl = tmpl
+  assert(type(f1) == "lVector")
+  assert(not f1:has_nulls())
+
+  assert(type(f2) == "lVector")
+  assert(not f2:has_nulls())
+
+  local f1_qtype = f1:qtype()
+  subs.f1_ctype   = qconsts.qtypes[f1_qtype].ctype
+
+  local f2_qtype = f2:qtype()
+  subs.f2_ctype   = qconsts.qtypes[f2_qtype].ctype
+
+  if ( ( optargs.__operator == "vveq" ) or 
+       ( optargs.__operator == "vvneq" ) ) then
+    if ( f1_qtype == "B1" ) or ( f2_qtype == "B1" ) then 
+      assert(f1_qtype == f2_qtype)
+    else
+      assert(is_base_qtype(f1_qtype), "f1_qtype must be base type")
+      assert(is_base_qtype(f2_qtype), "f2_qtype must be base type")
+    end
+  else
+    assert(is_base_qtype(f1_qtype), "f1_qtype must be base type")
+    assert(is_base_qtype(f2_qtype), "f2_qtype must be base type")
+  end
+
+  subs.fn = "__operator___" .. f1_qtype .. "_" .. f2_qtype 
+
+  subs.f3_qtype = "B1"
+  subs.f3_ctype   = qconsts.qtypes[subs.f3_qtype].ctype
+
+  subs.f1_cast_as = subs.f1_ctype .. "*"
+  subs.f2_cast_as = subs.f2_ctype .. "*"
+  subs.f3_cast_as = subs.f3_ctype .. "*"
+
+  subs.comparator = " __comparator__ "
+  subs.tmpl = "OPERATORS/F1F2OPF3/lua/f1f2opf3_cmp.tmpl"
+  subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
+  subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
+  subs.srcs = { "UTILS/src/set_bit_u64.c" }
+  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/", 
+                "OPERATORS/F1F2OPF3/inc/" }
+  if ( f1_qtype == "B1" ) then 
+    subs.incs = { "UTILS/inc/", "OPERATORS/F1F2OPF3/inc/" }
+    subs.tmpl = nil -- no code generation
+    subs.dotc = "OPERATORS/F1F2OPF3/src/__operator___B1_B1.c"
+    subs.doth = "OPERATORS/F1F2OPF3/inc/__operator___B1_B1.h"
+    subs.srcs = { "UTILS/src/set_bit_u64.c", "UTILS/src/get_bit_u64.c" }
+  end
   return subs
 end

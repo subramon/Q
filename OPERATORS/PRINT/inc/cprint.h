@@ -1,3 +1,4 @@
+//START_FOR_CDEF
 extern int
 cprint(
     char * opfile,
@@ -9,3 +10,4 @@ cprint(
     int * enum_fldtypes,  
     int * widths // [nC]
     );
+//STOP_FOR_CDEF

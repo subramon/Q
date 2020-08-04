@@ -10,14 +10,14 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
-all : libf1s1opf2.so all_for_dc
-
-all_for_dc : \
-	_f1s1opf2.lua \
+all : \
+  	f1s1opf2.lua \
 	f1opf2_specializers \
 	arith_specializers \
 	cmp_specializers 
 	
+so : libf1s1opf2.so
+
 f1opf2_specializers: f1opf2_specialize.tmpl \
 	abs_specialize.lua \
 	sqrt_specialize.lua \
@@ -42,7 +42,7 @@ cmp_specializers: vsgeq_specialize.lua vsleq_specialize.lua  \
 
 #----------------------------------
 clean :
-	rm -f libf1s1opf2.so _f1s1opf2.lua
+	rm -f libf1s1opf2.so f1s1opf2.lua
 	rm -f vsadd_specialize.lua
 	rm -f vssub_specialize.lua
 	rm -f vsmul_specialize.lua
@@ -132,9 +132,6 @@ libf1s1opf2.so : _arith_files  \
 	_convert_files \
 	_vnot_files 
 	gcc ../gen_src/*.c ${CFLAGS} ${INCS} -shared -o libf1s1opf2.so
-	test -d ${Q_BUILD_DIR}
-	cp ../gen_src/*.c ${Q_BUILD_DIR}/src/
-	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
 
 _is_prev_files : is_prev_specialize.lua is_prev.tmpl
 	luajit generator_is_prev.lua
@@ -148,21 +145,18 @@ _cum_cnt_files : cum_cnt_specialize.lua
 _vnot_files : vnot_specialize.lua
 	luajit generator_vnot.lua
 		
-_arith_files : arith_specializers
-	luajit generator1.lua arith_operators.lua
-
 _shift_files : shift_left_specialize.lua shift_right_specialize.lua
-	luajit gen_shift.lua 
+	luajit generator_shift.lua 
 
 _cmp_files : cmp_specializers
 	luajit generator1.lua cmp_operators.lua
 
 _f1opf2_files : f1opf2_specializers
-	luajit generator0.lua operators0.lua
+	luajit generator_unary_ops.lua unary_ops.lua
 
-_f1s1opf2.lua : 
+_arith_files : arith_specializers
+	luajit generator1.lua operators1.lua
+
+f1s1opf2.lua : 
 	lua pkg_f1s1opf2.lua
 
-_ctests : libf1s1opf2.so 
-	cd ../test/ && bash run_tests.sh && cd -
-	

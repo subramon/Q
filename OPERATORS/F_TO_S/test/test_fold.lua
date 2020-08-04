@@ -3,7 +3,6 @@ require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
-cVector.init_globals({})
 
 local tests = {}
 tests.t1 = function( to_memo)

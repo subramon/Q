@@ -1,22 +1,28 @@
 return require 'Q/UTILS/lua/code_gen' {
    declaration = [[
-#include "q_incs.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "q_macros.h"
 #include "const_struct.h"
+//START_FOR_CDEF
 extern int
 const_${out_qtype}(
   ${out_ctype} * const restrict X,
   uint64_t nX,
-  ${args_ctype} *ptr_arg,
+  ${cargs_ctype} *ptr_arg,
   uint64_t lb // not used but for consistency with others
   );
+//STOP_FOR_CDEF
 ]],
 definition = [[
-#include "_const_${out_qtype}.h"
+#include "const_${out_qtype}.h"
 int
 const_${out_qtype}(
   ${out_ctype} * const restrict X,
   uint64_t nX,
-  ${args_ctype} *ptr_arg,
+  ${cargs_ctype} *ptr_arg,
   uint64_t lb // not used but for consistency with others
   )
 {

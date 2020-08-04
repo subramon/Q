@@ -1,3 +1,0 @@
-git clone 'https://github.com/NerdWalletOSS/Q.git'
-git checkout dev
-git pull

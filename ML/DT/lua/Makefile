@@ -14,13 +14,10 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} 
 
-all : libdt.so
+all : 
 
-all_for_dc:
-	cp ../src/*.c ${Q_BUILD_DIR}/src/
-	cp ../inc/*.h ${Q_BUILD_DIR}/include/
-	echo "Nothing to do"
-	
+test : libdt.so
+
 #----------------------------------
 clean :
 	rm -r -f ../gen_src; 

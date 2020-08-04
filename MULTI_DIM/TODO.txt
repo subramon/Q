@@ -1,9 +1,0 @@
-Q.load_csv()
-a) take out hash if it is there
-b) make it incremental, doing so means storing the number of bytes read, to be persisted across invocations
-   This can be done as a local variable on the Lua side
-
-Q.f1s1opf2()
-a) add converter from string to timestamp using format as the scalar s1
-
-write is_numeric() if not there in UTILS/lua/

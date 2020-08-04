@@ -10,6 +10,11 @@ ffi.cdef([[
 char *strncpy(char *dest, const char *src, size_t n);
 ]]
 )
+local for_cdef = require 'Q/UTILS/lua/for_cdef'
+local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
+local incs = { "UTILS/inc/" }
+local x = for_cdef(infile, incs)
+ffi.cdef(x)
 
 tests.t0 = function()
   -- basic test 
@@ -42,10 +47,8 @@ tests.t2 = function()
     buf:set_width(qconsts.qtypes[qtype].width)
     assert(buf:width() == qconsts.qtypes[qtype].width)
     buf:set(j, qtype)
-    -- print(buf, "I4")
     local x = buf:to_str(qtype)
     assert(j == tonumber(x))
-    -- print(j, x)
     buf = nil
   end
   local num_elements = 1024
@@ -55,7 +58,6 @@ tests.t2 = function()
   local incr  = 1
   buf:seq(start, incr, num_elements, qtype)
   local x = buf:to_str(qtype)
-  print(start, tonumber(x))
   assert(start == tonumber(x))
   -- check using FFI
   local iptr = assert(get_ptr(buf, qtype))
@@ -70,7 +72,7 @@ tests.t3 = function()
   -- setting data using ffi and verifying using to_str()
   local buf = cmem.new( {size = ffi.sizeof("int32_t"), qtype = "I4"})
   local cbuf = ffi.cast("CMEM_REC_TYPE *", buf)
-  ffi.C.strncpy(cbuf[0].qtype, "I4", 2)
+  ffi.C.strncpy(cbuf[0].fldtype, "I4", 2)
   ffi.C.strncpy(cbuf[0].cell_name, "some bogus name", 15)
   local iptr = assert(get_ptr(buf, "I4"))
   iptr[0] = 123456789;
@@ -141,7 +143,6 @@ tests.t7 = function()
   local c1 = assert(cmem.new({size = size, qtype = qtype, name = name}))
     c1:set(v)
     local y = c1:to_str("SC")
-    print(y)
     assert(y == v)
   end
   print("test t7 passed")
@@ -190,7 +191,6 @@ tests.t10 = function()
   qtypes.F4 = 4
   qtypes.F8 = 8
   for qtype, width in pairs(qtypes) do 
-    print(qtype, width)
     local size = width * n
     local c1 = assert(cmem.new({size = size, qtype = qtype}))
     c1:set_min()
@@ -271,14 +271,13 @@ tests.t15 = function()
   local name = "hello world"
   local c1 = cmem.new( { size = size,  qtype = qtype, name = name})
   local x = c1:me()
-  -- for k, v in pairs(x) do print(k, v); print(type(v)) end 
   assert(type(x) == "table")
   -- assert(x.is_foreign == false) TODO Why is this failing?
   assert(x.width == 0)
   assert(x.size == size)
   assert(x.cell_name == "hello world")
   -- assert(x.is_stealable ==false)TODO Why is this failing?
-  assert(x.qtype == qtype)
+  assert(x.fldtype == qtype)
   print("test t15 passed")
 end
 tests.t16 = function()
@@ -289,21 +288,15 @@ tests.t16 = function()
   local c1 = cmem.new({ size = size, qtype = qtype, name = name})
   local x = c1:me()
   -- assert(x.is_stealable ==false)TODO Why is this failing?
-  for k, v in pairs(x) do print(k, v); end
 
   c1:stealable(true)
   local x = c1:me()
   -- assert(x.is_stealable == true)  -- TODO Why is this failing?
-  for k, v in pairs(x) do print(k, v); print(type(v)) end 
 
   c1:stealable(false)
   local x = c1:me()
   -- assert(x.is_stealable == false) -- TODO Why is this failing?
-  for k, v in pairs(x) do print(k, v); print(type(v)) end 
 
   print("test t16 passed")
 end
-tests.t3()
--- return tests
--- tests.t13()
--- tests.t16()
+return tests

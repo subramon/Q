@@ -2,8 +2,12 @@ return require 'Q/UTILS/lua/code_gen' {
 
    declaration = [[
 
-#include "q_incs.h"
-#include "_get_bit_u64.h"
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include "q_macros.h"
+#include "get_bit_u64.h"
+//START_FOR_CDEF
 extern int
 ${fn}(
       const ${a_ctype} * restrict A,
@@ -14,10 +18,11 @@ ${fn}(
       uint64_t nC,
       uint64_t *ptr_num_in_C
       );
+//STOP_FOR_CDEF
    ]],
    definition = [[
 
-#include "_${fn}.h"
+#include "${fn}.h"
 
 int
 ${fn}(

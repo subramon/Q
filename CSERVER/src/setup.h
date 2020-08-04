@@ -1,4 +1,0 @@
-extern int
-setup(
-    void
-    );

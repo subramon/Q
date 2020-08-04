@@ -13,19 +13,17 @@ local function cprint(
   ub, -- number
   V -- table of lVectors to be printed
   )
-  -- START: Dynamic compilation
   local func_name = "cprint"
-  if ( not qc[func_name] ) then 
-    local root = assert(qconsts.Q_SRC_ROOT)
-    assert(cutils.isdir(root))
-    local subs = {}
-    subs.fn = func_name
-    subs.dotc = root .. "/OPERATORS/PRINT/src/cprint.c"
-    subs.doth = root .. "/OPERATORS/PRINT/inc/cprint.h"
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
-  end 
-  -- STOP : Dynamic compilation
-  assert(qc[func_name], "Symbol not available" .. func_name)
+  local subs = {}
+  subs.fn = func_name
+  -- IMPORTANT: In specifying files, Do not start with a backslash
+  subs.dotc = "OPERATORS/PRINT/src/cprint.c"
+  subs.doth = "OPERATORS/PRINT/inc/cprint.h"
+  subs.srcs = { "UTILS/src/get_bit_u64.c" }
+  subs.incs = { "OPERATORS/PRINT/inc/", "UTILS/inc/" }
+  subs.structs = nil -- no structs need to be cdef'd
+  subs.libs = nil -- no libaries need to be linked
+  qc.q_add(subs); 
 
   if ( opfile ) then 
     cutils.delete(opfile) -- clean out any existing file
@@ -38,9 +36,10 @@ local function cprint(
   local chunk_size = cVector.chunk_size()
   local chunk_num = math.floor(lb / chunk_size) -- first usable chunk
   -- C = pointers to data to be printed
-  local C = assert(cmem.new({size = (nC * ffi.sizeof("void *")), name = "C"}))
-  C:zero()
-  local C = get_ptr(C, "void **")
+  local sz = nC * ffi.sizeof("void *")
+  local orig_C = assert(cmem.new(sz))
+  orig_C:zero()
+  local C = get_ptr(orig_C, "void **")
   -- F array of fldtypes 
   local F = assert(cmem.new({size = (nC * ffi.sizeof("int")), name = "F"}))
   F:zero()
@@ -103,6 +102,7 @@ local function cprint(
     end
     chunk_num = chunk_num + 1 
   end
+  orig_C:delete()
   return true
 end
 return cprint

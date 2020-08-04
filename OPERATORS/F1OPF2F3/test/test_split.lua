@@ -1,6 +1,6 @@
 require 'Q/UTILS/lua/strict'
 local Q        = require 'Q'
-local cVector  = require 'libvctr' cVector.init_globals({})
+local cVector  = require 'libvctr' 
 local chunk_size = cVector.chunk_size()
 local tests = {}
 

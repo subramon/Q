@@ -1,5 +1,5 @@
 #include "q_incs.h"
-#include "_txt_to_SC.h"
+#include "txt_to_SC.h"
 //START_FUNC_DECL
 int
 txt_to_SC(

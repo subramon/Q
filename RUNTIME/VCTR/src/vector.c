@@ -12,10 +12,9 @@
 #include "cmem.h"
 #include "aux_lua_to_c.h"
 
-#include "_txt_to_I4.h"
-#include "_isdir.h"
+#include "txt_to_I4.h"
+#include "isdir.h"
 
-#define Q_INITIAL_SZ_CHUNK_DIR 1024
 
 VEC_GLOBALS_TYPE g_S;
 #include "_struct_timers.h"
@@ -27,6 +26,28 @@ VEC_TIMERS_TYPE g_T;
 
 LUALIB_API void *luaL_testudata (lua_State *L, int ud, const char *tname);
 int luaopen_libvctr (lua_State *L);
+
+
+static int
+set_default_values(
+    VEC_GLOBALS_TYPE *ptr_g_S
+    )
+{
+  int status = 0;
+  ptr_g_S->sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; 
+  ptr_g_S->chunk_size   = Q_DEFAULT_CHUNK_SIZE;
+  //----------------------------------
+  char *cptr = getenv("Q_DATA_DIR");
+  if ( ( cptr == NULL ) || ( *cptr == '\0' ) ) { go_BYE(-1); }
+  if ( !isdir(cptr) ) { go_BYE(1); }
+  free_if_non_null(ptr_g_S->q_data_dir); 
+  ptr_g_S->q_data_dir = malloc(strlen(cptr)+1); 
+  return_if_malloc_failed(ptr_g_S->q_data_dir);
+  strcpy(ptr_g_S->q_data_dir, cptr);
+  //----------------------------------
+BYE:
+  return status;
+}
 //----------------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_reset_timers( lua_State *L) {
@@ -74,8 +95,9 @@ static int l_vec_init_globals( lua_State *L) {
   }
   if ( ( g_S.chunk_dir != NULL ) || ( g_S.q_data_dir != NULL ) ||
        ( g_S.chunk_size > 0 ) ) {
-    fprintf(stderr, "ERROR: globals have been initialized already\n");
-    go_BYE(-1); 
+    // fprintf(stderr, "ERROR: globals have been initialized already\n");
+    // go_BYE(-1); 
+    status = -1; goto BYE;
   }
   status = check_args_is_table(L); cBYE(status);
   //-------------------------------
@@ -91,7 +113,17 @@ static int l_vec_init_globals( lua_State *L) {
   //------------------- get chunk size 
   status = get_int_from_tbl(L, "chunk_size", &is_key, &itmp); 
   if ( !is_key ) { 
-    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    int chunk_size = 0;
+    char *str_chunk_size = getenv("Q_CHUNK_SIZE");
+    if ( str_chunk_size == NULL ) { 
+      chunk_size = Q_DEFAULT_CHUNK_SIZE;
+    }
+    else {
+      chunk_size = atoi(str_chunk_size);
+    }
+    if ( chunk_size < 64 ) { go_BYE(-1); }
+    if ( ( ( chunk_size / 64 ) * 64 )   != chunk_size )  { go_BYE(-1); }
+    g_S.chunk_size = chunk_size;
   }
   else {
     if ( itmp < 1024 ) { go_BYE(-1); }
@@ -181,17 +213,8 @@ static int l_vec_free_globals( lua_State *L) {
 static int l_vec_chunk_size( lua_State *L) {
   int status = 0; 
   if ( g_S.chunk_size == 0 ) {  
-    printf("Setting default values \n");
-    g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
-    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
-    //----------------------------------
-    char *cptr = getenv("Q_DATA_DIR");
-    if ( ( cptr == NULL ) || ( *cptr == '\0' ) ) { go_BYE(-1); }
-    if ( !isdir(cptr) ) { go_BYE(1); }
-    g_S.q_data_dir = malloc(strlen(cptr)+1); 
-    return_if_malloc_failed(g_S.q_data_dir);
-    strcpy(g_S.q_data_dir, cptr);
-    //----------------------------------
+    // printf("Setting default values \n");
+    status = set_default_values(&g_S); cBYE(status);
   }
   lua_pushnumber(L, g_S.chunk_size);
   return 1;
@@ -204,20 +227,17 @@ BYE:
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
 static int l_vec_data_dir( lua_State *L) {
-  if ( g_S.q_data_dir[0] == '\0' ) {  
-    // set default values
-    g_S.sz_chunk_dir = Q_INITIAL_SZ_CHUNK_DIR; // use default 
-    g_S.chunk_size = Q_DEFAULT_CHUNK_SIZE;
-    memset(g_S.q_data_dir, '\0', Q_MAX_LEN_DIR+1);
-    snprintf(g_S.q_data_dir, Q_MAX_LEN_DIR, "%s/local/Q/data/", getenv("HOME"));
-    if ( !isdir(g_S.q_data_dir) ) { 
-      lua_pushnil(L);
-      lua_pushstring(L, __func__);
-      return 2;
-    }
+  int status = 0;
+  if ( ( g_S.q_data_dir == NULL ) || ( g_S.q_data_dir[0] == '\0' ) ) {  
+    status = set_default_values(&g_S); cBYE(status);
   }
+  if ( !isdir(g_S.q_data_dir) ) { go_BYE(-1); }
   lua_pushstring(L, g_S.q_data_dir);
   return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
 }
 //-----------------------------------
 static int l_vec_reincarnate( lua_State *L) {
@@ -675,7 +695,7 @@ BYE:
 static int l_vec_put_chunk( lua_State *L) {
   int status = 0;
   int num_args = lua_gettop(L);
-  if ( ( num_args != 2 ) && ( num_args != 3 ) ) { go_BYE(-1); }
+  if ( num_args != 3 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   if ( !luaL_testudata (L, 2, "CMEM") ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 2, "CMEM");
@@ -686,14 +706,8 @@ static int l_vec_put_chunk( lua_State *L) {
   if ( ptr_cmem->size < ptr_vec->chunk_size_in_bytes ) { 
     go_BYE(-1); 
   }
-  int64_t num_in_cmem;
-  if ( num_args == 3 ) { 
-    num_in_cmem = luaL_checknumber(L, 3);
-  }
-  else {
-    num_in_cmem = g_S.chunk_size; 
-  }
-  if ( num_in_cmem < 0 ) { num_in_cmem = g_S.chunk_size; }
+  int64_t num_in_cmem = luaL_checknumber(L, 3);
+  if ( num_in_cmem <= 0 ) { go_BYE(-1); }
   status = vec_put_chunk(&g_S, &g_T, ptr_vec, ptr_cmem, num_in_cmem); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
@@ -779,9 +793,9 @@ BYE:
   return 2;
 }
 //----------------------------------------
-static int l_vec_delete_master_file( lua_State *L) {
+static int l_vec_unmaster( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_delete_master_file(&g_S, &g_T, ptr_vec); cBYE(status);
+  int status = vec_unmaster(&g_S, &g_T, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -892,7 +906,7 @@ BYE:
   return 2;
 }
 //----------------------------------------
-static int l_vec_flush_chunk( lua_State *L) 
+static int l_vec_make_chunk_file( lua_State *L) 
 {
   int status = 0;
   int num_args = lua_gettop(L);
@@ -906,7 +920,7 @@ static int l_vec_flush_chunk( lua_State *L)
   if ( num_args >= 3 ) {
     free_mem = lua_toboolean(L, 3); 
   }
-  status = vec_flush_chunk(&g_S, &g_T, ptr_vec, free_mem, chunk_idx); 
+  status = vec_make_chunk_file(&g_S, &g_T, ptr_vec, free_mem, chunk_idx); 
   cBYE(status);
   lua_pushboolean(L, true);
   return 1; 
@@ -915,13 +929,35 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
-static int l_vec_flush_all( lua_State *L) 
+static int l_vec_make_chunk_files( lua_State *L) 
 {
   int status = 0;
   int num_args = lua_gettop(L);
-  if ( num_args < 1 ) { go_BYE(-1); }
+  if ( ( num_args < 1 ) || ( num_args > 2 ) ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vec_flush_all(&g_S, &g_T, ptr_vec); cBYE(status);
+  bool free_mem = false; // default 
+  if ( num_args == 2 ) {
+    free_mem = lua_toboolean(L, 2); 
+  }
+  status = vec_make_chunk_files(&g_S, &g_T, ptr_vec, free_mem); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+static int l_vec_master( lua_State *L) 
+{
+  int status = 0;
+  int num_args = lua_gettop(L);
+  if ( ( num_args < 1 ) || ( num_args > 2 ) ) { go_BYE(-1); }
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  bool free_mem = false; // default 
+  if ( num_args == 2 ) {
+    free_mem = lua_toboolean(L, 2); 
+  }
+  status = vec_master(&g_S, &g_T, ptr_vec, free_mem); cBYE(status);
   lua_pushboolean(L, true);
   return 1; 
 BYE:
@@ -937,14 +973,15 @@ static const struct luaL_Reg vector_methods[] = {
     { "chunk_size", l_vec_chunk_size }, 
     { "data_dir", l_vec_data_dir }, 
     { "delete", l_vec_delete },
+
     { "delete_chunk_file", l_vec_delete_chunk_file },
-    { "delete_master_file", l_vec_delete_master_file },
+    { "make_chunk_file", l_vec_make_chunk_file },
+    { "make_chunk_files", l_vec_make_chunk_files },
+
     { "end_read", l_vec_end_read },
     { "end_write", l_vec_end_write },
     { "eov", l_vec_eov },
     { "file_name", l_vec_file_name },
-    { "flush_all", l_vec_flush_all },
-    { "flush_chunk", l_vec_flush_chunk },
     { "free", l_vec_free },
     { "free_globals", l_vec_free_globals },
     { "get_globals", l_vec_get_globals },
@@ -974,6 +1011,9 @@ static const struct luaL_Reg vector_methods[] = {
     { "start_read", l_vec_start_read },
     { "start_write", l_vec_start_write },
     { "unget_chunk", l_vec_unget_chunk },
+
+    { "master", l_vec_master },
+    { "unmaster", l_vec_unmaster },
     { NULL,          NULL               },
 };
  
@@ -983,17 +1023,14 @@ static const struct luaL_Reg vector_functions[] = {
     { "chunk_size", l_vec_chunk_size }, 
     { "data_dir", l_vec_data_dir }, 
     { "delete", l_vec_delete },
+
     { "delete_chunk_file", l_vec_delete_chunk_file },
-    { "delete_master_file", l_vec_delete_master_file },
-    { "end_read", l_vec_end_read },
-    { "end_write", l_vec_end_write },
+    { "make_chunk_file", l_vec_make_chunk_file },
+    { "make_chunk_files", l_vec_make_chunk_files },
+
     { "eov", l_vec_eov },
     { "file_name", l_vec_file_name },
-    { "flush_all", l_vec_flush_all },
-    { "flush_chunk", l_vec_flush_chunk },
     { "free", l_vec_free },
-    { "get1", l_vec_get1 },
-    { "get_chunk", l_vec_get_chunk },
     { "get_globals", l_vec_get_globals },
     { "init_globals", l_vec_init_globals },
     { "is_dead", l_vec_is_dead },
@@ -1009,8 +1046,6 @@ static const struct luaL_Reg vector_functions[] = {
     { "num_elements", l_vec_num_elements },
     { "persist", l_vec_persist },
     { "print_timers", l_vec_print_timers },
-    { "put1", l_vec_put1 },
-    { "put_chunk", l_vec_put_chunk },
     { "rehydrate", l_vec_rehydrate},
     { "reincarnate", l_vec_reincarnate},
     { "reset_timers", l_vec_reset_timers },
@@ -1018,9 +1053,22 @@ static const struct luaL_Reg vector_functions[] = {
     { "set_globals", l_vec_set_globals },
     { "set_name", l_vec_set_name },
     { "shutdown", l_vec_shutdown },
+
     { "start_read", l_vec_start_read },
+    { "end_read", l_vec_end_read },
+
     { "start_write", l_vec_start_write },
+    { "end_write", l_vec_end_write },
+
+    { "get1", l_vec_get1 },
+    { "put1", l_vec_put1 },
+    { "put_chunk", l_vec_put_chunk },
+    { "get_chunk", l_vec_get_chunk },
     { "unget_chunk", l_vec_unget_chunk },
+
+    { "master", l_vec_master },
+    { "unmaster", l_vec_unmaster },
+
     { NULL,  NULL         }
   };
 

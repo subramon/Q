@@ -4,15 +4,24 @@ local Scalar = require 'libsclr'
 require('Q/UTILS/lua/cleanup')()
 require 'Q/UTILS/lua/strict'
 
+local qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
 local tests = {}
 tests.t1 = function()
-  local c1 = Q.mk_col( {1,2,3,4,5,6,7,8}, "I4")
-  local c2 = Q.vsadd(c1, Scalar.new(10, "I8"))
-  local c3 = Q.mk_col( {11,12,13,14,15,16,17,18}, "I4")
-  -- local opt_args = { opfile = "" }
-  -- c2:eval(); Q.print_csv(c2, opt_args)
-  local sum = Q.sum(Q.vveq(c2, c3)):eval():to_num()
-  assert(sum == c1:length(), "Length Mismatch, Expected : " .. c1:length() .. ", Actual: " .. sum)
+  for _, v_qtype in ipairs(qtypes) do 
+    local c1 = Q.mk_col( {1,2,3,4,5,6,7,8}, v_qtype)
+    for _, s_qtype in ipairs(qtypes) do 
+      local c2 = Q.vsadd(c1, Scalar.new(10, s_qtype))
+      local c3 = Q.mk_col( {11,12,13,14,15,16,17,18}, v_qtype)
+      local n1, n2 = Q.sum(Q.vveq(c2, c3)):eval()
+      -- Q.print_csv({c1,c2,c3})
+      assert(n1 == n2)
+
+      local c4 = Q.vssub(c3, Scalar.new(10, s_qtype))
+      local n1, n2 = Q.sum(Q.vveq(c1, c4)):eval()
+      assert(n1 == n2)
+
+    end
+  end
 end
 tests.t2 = function()
   local len = 1000000
@@ -28,3 +37,5 @@ tests.t2 = function()
   print("test t2 passed")
 end
 return tests
+-- tests.t1()
+-- tests.t2()

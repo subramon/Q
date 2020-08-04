@@ -1,7 +1,5 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
-local cVector = require 'libvctr'
-cVector.init_globals({})
 local Scalar = require 'libsclr'
 local mk_col = require 'Q/OPERATORS/MK_COL/lua/mk_col'
 
@@ -30,4 +28,5 @@ tests.t2 = function()
   end
   print("Test t2 succeeded")
 end
+-- tests.t1()
 return tests

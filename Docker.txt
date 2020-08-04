@@ -1,0 +1,2 @@
+docker  build -t qdev -f ./Dockerfile-q .
+docker exec -it q_q1_1 /bin/bash

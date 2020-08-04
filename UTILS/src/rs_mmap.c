@@ -1,7 +1,7 @@
 //START_INCLUDES
 #include "q_incs.h"
 //STOP_INCLUDES
-#include "_rs_mmap.h"
+#include "rs_mmap.h"
 //START_FUNC_DECL
 int
 rs_mmap(

@@ -1,3 +1,7 @@
+// The original inspiration for this was to replace Penlight
+// While a wonderful library, I did not want to depend on Penlight
+// for run time. For testing, it is just fine to use Penlight.
+// Hence, some of the names use here are from Penlight. 
 #define LUA_LIB
 
 #include <fcntl.h>
@@ -12,16 +16,54 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-#include "q_incs.h"
-
-#include "_isdir.h"
-#include "_isfile.h"
-#include "_rdtsc.h"
-#include "_rs_mmap.h"
-#include "_get_file_size.h"
+#include "get_file_size.h"
+#include "get_bit_u64.h"
+#include "isdir.h"
+#include "isfile.h"
+#include "rdtsc.h"
+#include "rs_mmap.h"
 
 int luaopen_libcutils (lua_State *L);
 
+//----------------------------------------
+static int l_cutils_basename( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
+  const char *path = luaL_checkstring(L, 1);
+  char *x = strdup(path);
+  const char *base = basename(x);
+  lua_pushstring(L, base);
+  free_if_non_null(x);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
+//----------------------------------------
+//----------------------------------------
+static int l_cutils_dirname( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
+  const char *path = luaL_checkstring(L, 1);
+  char *x = strdup(path);
+  const char *dir = dirname(x);
+  lua_pushstring(L, dir);
+  free_if_non_null(x);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
 //----------------------------------------
 static int l_cutils_rdtsc( 
     lua_State *L
@@ -30,6 +72,25 @@ static int l_cutils_rdtsc(
   double x = (double)RDTSC();
   lua_pushnumber(L, x);
   return 1;
+}
+//----------------------------------------
+static int l_cutils_get_bit_u64( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 2 ) { go_BYE(-1); }
+  const uint64_t *X  = (const uint64_t *)lua_topointer(L, 1);
+  uint64_t bnum = luaL_checknumber(L, 2);
+  if ( bnum >= 64 ) { go_BYE(-1); }
+  int bval = get_bit_u64(X, bnum); 
+  lua_pushnumber(L, bval);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
 }
 //----------------------------------------
 static int l_cutils_isdir( 
@@ -122,10 +183,11 @@ static int l_cutils_copyfile(
   char *x_new_file = NULL; 
   if ( !isfile(old_file) ) { go_BYE(-1); }
   if ( isdir(new_file) ) {
-    int len = strlen(new_file) + strlen(old_file) + 8;
+    const char *dir = new_file; // we have been given directory not file 
+    int len = strlen(dir) + strlen(old_file) + 8;
     x_new_file = malloc(len * sizeof(char));
     return_if_malloc_failed(x_new_file);
-    sprintf(x_new_file, "%s/%s", new_file, basename((char *)old_file));
+    sprintf(x_new_file, "%s/%s", dir, basename((char *)old_file));
   }
   else {
     x_new_file = strdup(new_file);
@@ -342,7 +404,7 @@ static int l_cutils_getfiles(
       else if ( mode == ONLY_DIRS ) { 
         /* IMPORTANT: We do not return . or .. */
         if ( ( strcmp(file_name, "." ) == 0 ) || 
-             ( strcmp(file_name, ".." ) == 0 )  ) {
+            ( strcmp(file_name, ".." ) == 0 )  ) {
           continue;
         }
         if ( !S_ISDIR (st_buf.st_mode)) {
@@ -393,7 +455,9 @@ BYE:
 }
 //----------------------------------------
 static const struct luaL_Reg cutils_methods[] = {
-    { "copyfile",   l_cutils_copyfile },
+    { "basename",    l_cutils_basename },
+    { "copyfile",    l_cutils_copyfile },
+    { "dirname",     l_cutils_dirname },
     { "currentdir",  l_cutils_currentdir },
     { "getfiles",    l_cutils_getfiles },
     { "getsize",     l_cutils_getsize },
@@ -410,9 +474,12 @@ static const struct luaL_Reg cutils_methods[] = {
 };
  
 static const struct luaL_Reg cutils_functions[] = {
-    { "copyfile",   l_cutils_copyfile },
+    { "basename",    l_cutils_basename },
+    { "copyfile",    l_cutils_copyfile },
+    { "dirname",     l_cutils_dirname },
     { "currentdir",  l_cutils_currentdir },
     { "delete",      l_cutils_delete },
+    { "get_bit_u64", l_cutils_get_bit_u64 },
     { "getfiles",    l_cutils_getfiles },
     { "getsize",     l_cutils_getsize },
     { "gettime",     l_cutils_gettime },

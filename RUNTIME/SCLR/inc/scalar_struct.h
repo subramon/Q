@@ -1,7 +1,7 @@
 #ifndef __SCALAR_H
 #define __SCALAR_H
+//START_FOR_CDEF
 #include "q_constants.h"
-
 typedef union _cdata_type {
   bool    valB1;
   int8_t  valI1;
@@ -17,4 +17,5 @@ typedef struct _sclr_rec_type {
   uint32_t field_width;
   CDATA_TYPE cdata;
 } SCLR_REC_TYPE;
+//STOP_FOR_CDEF
 #endif

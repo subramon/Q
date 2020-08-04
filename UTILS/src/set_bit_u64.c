@@ -1,7 +1,9 @@
 //START_INCLUDES
-#include "q_incs.h"
+#include <stdio.h>
+#include <stdint.h>
+#include "q_macros.h"
 //STOP_INCLUDES
-#include "_set_bit_u64.h"
+#include "set_bit_u64.h"
 //START_FUNC_DECL
 int // TODO inline this function
 set_bit_u64(

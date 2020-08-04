@@ -2,7 +2,6 @@ local qconsts = require 'Q/UTILS/lua/q_consts'
 local Reducer = require 'Q/RUNTIME/lua/Reducer'
 local ffi = require 'ffi'
 local qc      = require 'Q/UTILS/lua/q_core'
-local chk_chunk      = require 'Q/UTILS/lua/chk_chunk'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 local to_scalar   = require 'Q/UTILS/lua/to_scalar'
@@ -39,7 +38,6 @@ return function (a, x, y, optargs )
     -- Adding assert on chunk_idx to have sync between expected chunk_num and generator's chunk_idx state
     assert(chunk_num == chunk_index)
     local x_len, x_chunk, nn_x_chunk = x:chunk(chunk_index)
-    assert(chk_chunk(x_len, x_chunk, nn_x_chunk))
     chunk_index = chunk_index + 1
     if x_len and ( x_len > 0 ) then
       local casted_x_chunk = ffi.cast( subs.ctype .. "*",  get_ptr(x_chunk))

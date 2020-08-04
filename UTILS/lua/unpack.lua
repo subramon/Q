@@ -1,4 +1,5 @@
 local T = {}
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 
 -- Q.unpack(x) : gives table of scalars
             -- Return value:
@@ -13,13 +14,13 @@ local function unpack(x)
   if not x:is_eov() then
     x:eval()
   end
-  
-  local tbl_of_sclr = {} 
+
+  local tbl_of_sclr = {}
   for i = 0, x:length()-1 do
-    local value = x:get_one(i)
+    local value = x:get1(i)
     tbl_of_sclr[#tbl_of_sclr + 1] = value
   end
-  
+
   return tbl_of_sclr
 end
 

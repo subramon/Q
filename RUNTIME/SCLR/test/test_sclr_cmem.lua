@@ -5,6 +5,14 @@ local ffi    = require 'ffi'
 local Scalar = require 'libsclr' 
 local tests = {}
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
+-- cdef the scalar struct 
+local for_cdef = require 'Q/UTILS/lua/for_cdef'
+local infile = "RUNTIME/SCLR/inc/scalar_struct.h"
+local incs = { "UTILS/inc/" }
+local x = for_cdef(infile, incs)
+ffi.cdef(x)
+--=========================================
+
 tests.t1 = function()
   local num_iters = 1000000
   for i = 1, num_iters do 
@@ -48,10 +56,6 @@ ffi.cdef([[
     local ks = "val" .. qtype
     c2[0][kc] = s2[0].cdata[ks]
     cnt = cnt + 1 
-  end
-  print("=======")
-  for _, qtype in pairs(qtypes) do
-    print(c2[0][qtype])
   end
   for _, qtype in pairs(qtypes) do
     if ( qtype == "F8" ) then assert(c2[0][qtype] == 6 ) end 

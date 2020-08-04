@@ -1,14 +1,13 @@
 local Q = require 'Q'
-local utils = require 'Q/UTILS/lua/utils'
-local make_dt = require 'Q/ML/DT/lua/make_dt'
-local ml_utils = require 'Q/ML/UTILS/lua/ml_utils'
-local JSON = require 'Q/ML/UTILS/lua/JSON'
-local extract_goal = require 'Q/ML/UTILS/lua/extract_goal'
+local make_dt            = require 'Q/ML/DT/lua/make_dt'
+local ml_utils           = require 'Q/ML/UTILS/lua/ml_utils'
+local JSON               = require 'Q/ML/UTILS/lua/JSON'
+local extract_goal       = require 'Q/ML/UTILS/lua/extract_goal'
 local check_extract_goal = require 'Q/ML/DT/lua/check_extract_goal'
-local split_train_test = require 'Q/ML/UTILS/lua/split_train_test'
+local split_train_test   = require 'Q/ML/UTILS/lua/split_train_test'
 local export_to_graphviz = require 'Q/ML/DT/lua/export_to_graphviz'
-local eval_dt = require 'Q/ML/DT/lua/eval_dt'['eval_dt']
-local calc_avg_metrics = require 'Q/ML/DT/lua/eval_dt'['calc_avg_metrics']
+local eval_dt            = require 'Q/ML/DT/lua/eval_dt'['eval_dt']
+local calc_avg_metrics   = require 'Q/ML/DT/lua/eval_dt'['calc_avg_metrics']
 
 local function check_args(args)
 

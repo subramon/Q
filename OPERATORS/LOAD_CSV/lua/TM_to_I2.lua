@@ -21,12 +21,9 @@ local function TM_to_I2(
   local status, subs = pcall(spfn, tm_fld)
   assert(status)
   local func_name = assert(subs.fn)
-  -- START: Dynamic compilation
-  if ( not qc[func_name] ) then
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
-  end
-  -- STOP: Dynamic compilation
-  assert(qc[func_name], "Function not found " .. func_name)
+  subs.incs = { "OPERATORS/LOAD_CSV/gen_inc/", "OPERATORS/LOAD_CSV/inc/", 
+    "UTILS/inc/" }
+  qc.q_add(subs)
 
 
   local chunk_size = cVector.chunk_size()

@@ -8,7 +8,7 @@
 #include "hmap_common.h"
 //STOPINCLUDES
 #include "_hmap_mk_loc.h"
-//START_FUNC_DECL
+//START_FOR_CDEF
 int 
 hmap_mk_loc(
     uint32_t *hashes, // input  [nkeys] 
@@ -16,7 +16,7 @@ hmap_mk_loc(
     uint32_t hmap_size, // input 
     uint32_t *locs // output [nkeys] 
     )
-//STOP_FUNC_DECL
+//STOP_FOR_CDEF
 {
   int status = 0;
   uint64_t divinfo = fast_div32_init(hmap_size);

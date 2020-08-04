@@ -1,6 +1,0 @@
-All files should start with the following lines
-#!/bin/bash
-set -e
-
-The "set -e" causes the script to exit as soon as it executes any 
-command that returns non-zero status code

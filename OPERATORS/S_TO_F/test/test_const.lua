@@ -3,7 +3,7 @@ local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
 local qconsts = require 'Q/UTILS/lua/q_consts'
 local cVector = require 'libvctr'
-cVector.init_globals({})
+local Scalar  = require 'libsclr'
 
 local tests = {}
 tests.t1 = function() 
@@ -26,12 +26,10 @@ tests.t2 = function()
   local vals = { true, false }
   local qtype = "B1"
   for _, val in pairs(vals) do 
-    local ival 
-    if ( val == true ) then ival = 1 else ival = 0 end 
     local c1 = Q.const( {val = val, qtype = qtype, len = len })
     c1:eval()
     for i = 1, len do
-      assert(c1:get1(i-1):to_num() == ival)
+      assert(c1:get1(i-1) == Scalar.new(val, "B1"))
     end
     assert(c1:num_elements() == len)
     local status = pcall(c1.get1, len) -- deliberate error
@@ -62,8 +60,8 @@ tests.t3 = function() -- this is a stress test
 end
 --[[
 tests.t1()
-tests.t2()
 tests.t3()
+tests.t2()
 os.exit()
 --]]
 return tests

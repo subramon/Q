@@ -1,7 +1,7 @@
   local gen_code = require 'Q/UTILS/lua/gen_code'
   local plpath = require 'pl.path'
-  local srcdir = '../gen_src/'
-  local incdir = '../gen_inc/'
+  local srcdir = "UTILS/src/"
+  local incdir = "UTILS/inc/"
   if ( not plpath.isdir(srcdir) ) then plpath.mkdir(srcdir) end 
   if ( not plpath.isdir(incdir) ) then plpath.mkdir(incdir) end 
   local qtypes

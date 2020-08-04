@@ -1,0 +1,6 @@
+These steps have not yet been automated
+Download ispc binary
+e.g.,I have downloaded it in ~/ISPC/
+Set the path in the .bashrc file as shown below
+# For ISPC
+export PATH=$PATH:$HOME/ISPC/ispc-v1.13.0-linux/bin

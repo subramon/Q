@@ -1,29 +1,30 @@
 return require 'Q/UTILS/lua/code_gen' {
-
    declaration = [[
-
-#include "q_incs.h"
-#include "_set_bit_u64.h"
-
-${includes}
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include "q_macros.h"
+#include "set_bit_u64.h"
+//START_FOR_CDEF
 extern int
 ${fn}(  
-      const ${in1_ctype} * restrict in1,  
-      const ${in2_ctype} * restrict in2,  
+      const ${f1_ctype} * restrict in1,  
+      const ${f2_ctype} * restrict in2,  
       uint64_t nR,  
       uint64_t *restrict out 
       ) 
 ;
-
+//STOP_FOR_CDEF
    ]],
    definition = [[
 
-#include "_${fn}.h"
+#include "${fn}.h"
 
 int
 ${fn}(  
-      const ${in1_ctype} * restrict in1,  
-      const ${in2_ctype} * restrict in2,  
+      const ${f1_ctype} * restrict in1,  
+      const ${f2_ctype} * restrict in2,  
       uint64_t nR,  
       uint64_t * restrict out 
       )
@@ -60,8 +61,8 @@ relational operators except for their lower precedence
     uint64_t out_idx = lb / 64;
     uint64_t oval = 0;
     for ( uint64_t iidx = lb; iidx < ub; iidx++ ) {
-      ${in1_ctype} inv1 = in1[iidx]; 
-      ${in2_ctype} inv2 = in2[iidx]; 
+      ${f1_ctype} inv1 = in1[iidx]; 
+      ${f2_ctype} inv2 = in2[iidx]; 
       int rslt = (inv1 ${comparator} inv2);
       /* TODO: Avoid the if condition */
       if ( rslt == 1 ) { set_bit_u64(&oval, bit_idx, 1); }

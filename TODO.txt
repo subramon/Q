@@ -1,5 +1,13 @@
+F1S1OPF2
+How to use ispc for bits? See if this helps
+https://software.intel.com/content/www/us/en/develop/blogs/processing-arrays-of-bits-with-intel-advanced-vector-extensions-512-intel-avx-512.html
+--=================
+Check whether we have implemented essence of F1F2OPF3/expander_f1f2opf3.txt
+--=================
+Check whether we have implemented essence of F1F2OPF3/expander_f1f2opf3.txt
+--=================
 Verify that extra bits are zeroed out for vveq and vseq and so on
-
+--=================
 Delete get_hdr.lua -- used in MDB
 
 ======================================

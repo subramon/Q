@@ -1,6 +1,8 @@
 #ifndef __VEC_STRUCT_H
 #define __VEC_STRUCT_H
+//START_FOR_CDEF
 #include "q_constants.h"
+#define Q_MAX_LEN_FILE_NAME 63
 
 typedef struct _chunk_rec_type {
   // Redundant uint32_t num_in_chunk; 
@@ -25,7 +27,7 @@ typedef struct _vec_rec_type {
   uint64_t uqid; // unique identifier across all vectors. Set by vec_new() 
 
   uint64_t num_elements; // starts at 0, increases monotonically
-  char name[Q_MAX_LEN_VEC_NAME+1]; 
+  char name[Q_MAX_LEN_INTERNAL_NAME+1]; 
   // system does not enforce any constraints on name other than it be
   // alphanumeric and no more than specified length. Useful for debugging
 
@@ -58,6 +60,7 @@ typedef struct _vec_rec_type {
   uint32_t *chunks;  // [sz_chunks] 
   // i <= j and chunk[i] == 0 => chunk[j] = 0
 } VEC_REC_TYPE;
+//STOP_FOR_CDEF
 
 typedef struct _vec_globals_type { 
   uint32_t chunk_size;

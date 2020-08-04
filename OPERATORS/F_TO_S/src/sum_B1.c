@@ -1,7 +1,6 @@
-#include "q_incs.h"
 #include "sum_struct.h"
 #include "sum_B1.h"
-#include "_get_bit_u64.h"
+#include "get_bit_u64.h"
 int
 sum_B1(  
       const uint64_t  * restrict in,  

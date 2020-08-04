@@ -7,13 +7,13 @@
 #include "luaconf.h"
 #include "lualib.h"
 
-#include "_txt_to_B1.h"
-#include "_txt_to_I1.h"
-#include "_txt_to_I2.h"
-#include "_txt_to_I4.h"
-#include "_txt_to_I8.h"
-#include "_txt_to_F4.h"
-#include "_txt_to_F8.h"
+#include "txt_to_B1.h"
+#include "txt_to_I1.h"
+#include "txt_to_I2.h"
+#include "txt_to_I4.h"
+#include "txt_to_I8.h"
+#include "txt_to_F4.h"
+#include "txt_to_F8.h"
 
 #include "cmem_struct.h"
 #include "cmem.h"
@@ -26,39 +26,41 @@ static int l_sclr_to_cmem( lua_State *L)
   int status = 0;
   SCLR_REC_TYPE *ptr_sclr = NULL;
   CMEM_REC_TYPE *ptr_cmem = NULL;
+  bool is_foreign = false;
 
   if ( lua_gettop(L) < 1 ) { go_BYE(-1); }
   ptr_sclr = (SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
   if ( ptr_sclr == NULL ) { go_BYE(-1); }
-/*
-  if ( lua_isstring(L, 2) ) {
-    const char *x = luaL_checkstring(L, 2);
-    if ( strcmp(x, "is_foreign") == 0 ) {
-      is_foreign = false;
-    }
-    if ( strcmp(x, "not_is_foreign") == 0 ) {
-      is_foreign = false;
+  if ( lua_gettop(L) == 2 ) { 
+    if ( lua_isstring(L, 2) ) {
+      const char *x = luaL_checkstring(L, 2);
+      if ( strcmp(x, "new") == 0 ) {
+        is_foreign = false;
+      }
+      else {
+        // TODO P3 Implement case where you just copy pointer from Scalar
+        WHEREAMI; goto BYE;
+      }
     }
     else {
-      WHEREAMI; goto BYE;
+      is_foreign = false;
     }
   }
-  else {
-    is_foreign = false;
-  }
-  */
   ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
   if ( ptr_cmem == NULL ) { WHEREAMI; goto BYE; }
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
+  ptr_cmem->is_foreign = is_foreign;
 
   size_t size = sizeof(CDATA_TYPE);
-  status = cmem_malloc(ptr_cmem, size, ptr_sclr->field_type, "");
-
-  ptr_cmem->is_foreign = true; 
-  memcpy(ptr_cmem->data, &(ptr_sclr->cdata), size);
-  strncpy(ptr_cmem->fldtype, ptr_sclr->field_type, 4-1);
-  // TODO P3 Avoid hard coding of length above 
-  ptr_cmem->width = ptr_sclr->field_width;
+  if ( !is_foreign ) { 
+    status = cmem_malloc(ptr_cmem, size, ptr_sclr->field_type, "");
+    memcpy(ptr_cmem->data, &(ptr_sclr->cdata), size);
+    strncpy(ptr_cmem->fldtype, ptr_sclr->field_type, Q_MAX_LEN_QTYPE_NAME-1);
+    ptr_cmem->width = ptr_sclr->field_width;
+  }
+  else {
+    fprintf(stderr, "TO BE IMPLEMENTED\n"); go_BYE(-1); 
+  }
 
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
@@ -463,7 +465,7 @@ static int l_sclr_new( lua_State *L) {
   // TESTING GC problems lua_gc(L, LUA_GCCOLLECT, 0);  
 
   bool found = false;
-  if ( lua_gettop(L) < 2 ) { go_BYE(-1); }
+  if ( ( lua_gettop(L) != 1) && ( lua_gettop(L) != 2 ) ) { go_BYE(-1); }
   if ( lua_isstring(L, 1) ) { 
     str_val = luaL_checkstring(L, 1);
     found = true;
@@ -485,7 +487,13 @@ static int l_sclr_new( lua_State *L) {
   else {
     go_BYE(-1);
   }
-  const char *qtype   = luaL_checkstring(L, 2);
+  const char *qtype;
+  if ( lua_gettop(L) == 2 ) {
+    qtype   = luaL_checkstring(L, 2);
+  }
+  else {
+    qtype = "I8"; // default 
+  }
   SCLR_REC_TYPE *ptr_sclr = NULL;
   ptr_sclr = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
   return_if_malloc_failed(ptr_sclr);

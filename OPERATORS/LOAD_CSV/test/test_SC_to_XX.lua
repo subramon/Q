@@ -1,15 +1,17 @@
 require 'Q/UTILS/lua/strict'
-local Q = require 'Q'
-local tests = {}
-local plfile = require 'pl.file'
-local plpath = require 'pl.path'
+local plpath    = require 'pl.path'
+local Q         = require 'Q'
+local qconsts   = require 'Q/UTILS/lua/q_consts'
+local converter = require 'Q/OPERATORS/LOAD_CSV/test/converter_1'
 --=======================================================
+local tests = {}
 tests.t1 = function()
-  local converter = require 'converter_1'
   local M = {}
   local O = { is_hdr = true }
   M[1] = { name = "day", qtype = "SC", width = 10, has_nulls = false }
-  local datafile = "SC_to_XX_1.csv"
+  local datafile = qconsts.Q_SRC_ROOT .. 
+    "/OPERATORS/LOAD_CSV/test/SC_to_XX_1.csv"
+  assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   assert(type(converter) == "function")
   assert(type(T.day) == "lVector")

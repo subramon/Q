@@ -10,15 +10,15 @@ OPTFLAGS=
 
 CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} -Werror
 
-all : all_for_dc _concat_files _arith_files _bop_files _cmp_files 
-
-so : libf1f2opf3.so 
-
-all_for_dc : \
-	_f1f2opf3.lua \
+all : \
+	f1f2opf3.lua \
 	arith_specializers  \
 	cmp_specializers  \
-	bop_specializers  \
+	bop_specializers 
+	
+
+test : libf1f2opf3.so  \
+	_concat_files _arith_files _bop_files _cmp_files 
 	
 arith_specializers: vvadd_specialize.lua vvsub_specialize.lua \
 	vvmul_specialize.lua vvdiv_specialize.lua 
@@ -35,6 +35,8 @@ bop_specializers : vvand_specialize.lua vvor_specialize.lua  \
 
 #----------------------------------
 clean :
+	rm -f f1f2opf3.lua
+#-----------
 	rm -f vvadd_specialize.lua
 	rm -f vvsub_specialize.lua
 	rm -f vvmul_specialize.lua
@@ -88,12 +90,9 @@ vvlt_specialize.lua  : cmp_specialize.tmpl
 
 libf1f2opf3.so : _concat_files _arith_files _bop_files _cmp_files
 	gcc ../gen_src/*.c ${CFLAGS} ${INCS} -shared -o libf1f2opf3.so
-	test -d ${Q_BUILD_DIR}
-	cp ../gen_src/*.c ${Q_BUILD_DIR}/src/
-	cp ../gen_inc/*.h ${Q_BUILD_DIR}/include/
 
 _concat_files : concat_specialize.lua
-	luajit concat_generator.lua concat_operators.lua
+	luajit concat_generator.lua 
 
 _arith_files : arith_specializers
 	luajit arith_generator.lua arith_operators.lua
@@ -104,6 +103,6 @@ _bop_files : bop_specializers
 _cmp_files : cmp_specializers
 	luajit cmp_generator.lua cmp_operators.lua
 
-_f1f2opf3.lua : 
+f1f2opf3.lua : 
 	lua pkg_f1f2opf3.lua
 

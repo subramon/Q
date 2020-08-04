@@ -2,7 +2,6 @@ local utils = require 'Q/UTILS/lua/utils'
 local val_qtypes = { 'I1', 'I2', 'I4', 'I8', 'F4', 'F8' }
 local grpby_qtypes = { 'I1', 'I2', 'I4', 'I8' }
 local qconsts = require 'Q/UTILS/lua/q_consts'
-local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/GROUPBY/lua/maxby_minby.tmpl"
 
 return function (
   val_qtype, 
@@ -23,6 +22,8 @@ return function (
   if ( val_qtype == "I8" ) then subs.initial_val = qconsts.qtypes[val_qtype].min end
   if ( val_qtype == "F4" ) then subs.initial_val = qconsts.qtypes[val_qtype].min end
   if ( val_qtype == "F8" ) then subs.initial_val = qconsts.qtypes[val_qtype].min end
-  subs.tmpl = tmpl
+  subs.tmpl = "OPERATORS/GROUPBY/lua/maxby_minby.tmpl"
+  subs.srcdir = "OPERATORS/GROUPBY/gen_src/"
+  subs.incdir = "OPERATORS/GROUPBY/gen_inc/"
   return subs
 end

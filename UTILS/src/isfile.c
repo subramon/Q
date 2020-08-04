@@ -1,7 +1,7 @@
 //START_INCLUDES
 #include "q_incs.h"
 //STOP_INCLUDES
-#include "_isfile.h"
+#include "isfile.h"
 
 //START_FUNC_DECL
 bool 

@@ -1,9 +1,7 @@
 #ifndef __CMEM_STRUCT_H
 #define __CMEM_STRUCT_H
+//START_FOR_CDEF
 #include "q_constants.h"
-
-// Note: if you change this, do a grep to make sure this is not
-// hard coded anywhere else
 typedef struct _cmem_rec_type {
   void *data;
   int64_t size;
@@ -14,4 +12,5 @@ typedef struct _cmem_rec_type {
   bool is_foreign; // true => do not delete 
   bool is_stealable; // true => data can be stolen
 } CMEM_REC_TYPE;
+//STOP_FOR_CDEF
 #endif

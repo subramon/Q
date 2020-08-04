@@ -18,18 +18,13 @@ local function SC_to_TM(
   assert(type(format) == "string")
   assert(#format > 0)
 
-  -- START: Dynamic compilation
-  local func_name = "SC_to_TM"
-  if ( not qc[func_name] ) then 
-    local root = assert(qconsts.Q_SRC_ROOT)
-    local subs = {}
-    subs.fn = func_name
-    subs.dotc = root .. "/OPERATORS/LOAD_CSV/src/SC_to_TM.c"
-    subs.doth = root .. "/OPERATORS/LOAD_CSV/inc/SC_to_TM.h"
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
-  end 
-  local cfunc = assert(qc[func_name], "Symbol not available" .. func_name)
-  -- STOP : Dynamic compilation
+  local subs = {}
+  subs.fn = "SC_to_TM"
+  subs.dotc = "OPERATORS/LOAD_CSV/src/SC_to_TM.c"
+  subs.doth = "OPERATORS/LOAD_CSV/inc/SC_to_TM.h"
+  subs.incs = { "OPERATORS/LOAD_CSV/inc/", "UTILS/inc/" }
+  -- subs.srcs = {}
+  qc.q_add(subs)
   
   local chunk_size = cVector.chunk_size()
   local out_qtype = "TM"
@@ -48,7 +43,8 @@ local function SC_to_TM(
     local len, base_data = invec:get_chunk(l_chunk_num)
     if ( len > 0 ) then 
       local ptr_to_chars = get_ptr(base_data, "char *")
-      local status = cfunc(ptr_to_chars, in_width, len, format, cst_buf)
+      local status = qc[subs.fn](ptr_to_chars, in_width, len, format, 
+        cst_buf)
       assert(status == 0)
       l_chunk_num = l_chunk_num + 1
     end

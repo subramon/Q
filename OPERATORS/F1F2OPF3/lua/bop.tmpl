@@ -1,8 +1,9 @@
 return require 'Q/UTILS/lua/code_gen' {
-
    declaration = [[
-
-#include "q_incs.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+//START_FOR_CDEF
 extern int
 ${fn}(  
       const uint64_t   * restrict in1,  
@@ -11,11 +12,12 @@ ${fn}(
       uint64_t  * restrict out 
       ) 
 ;
+//STOP_FOR_CDEF
 
    ]],
    definition = [[
 
-#include "_${fn}.h"
+#include "${fn}.h"
 
 static void
 __operation(
