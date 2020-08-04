@@ -1,0 +1,13 @@
+Selecting 32 or 64 Bit Addressing
+By default, ispc uses 32-bit arithmetic for performing addressing calculations, even when using a 64-bit compilation target like x86-64. This implementation approach can provide substantial performance benefits by reducing the cost of addressing calculations. (Note that pointers themselves are still maintained as 64-bit quantities for 64-bit targets.)
+
+If you need to be able to address more than 4GB of memory from your ispc programs, the --addressing=64 command-line argument can be provided to cause the compiler to generate 64-bit arithmetic for addressing calculations. Note that it is safe to mix object files where some were compiled with the default --addressing=32 and others were compiled with --addressing=64.
+
+
+
+What if we have a large array that requires more than 4 GB but every particular
+call to ispc will not access that much?
+
+Also, can we have some ispc functions compiled one way and some another?
+
+

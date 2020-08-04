@@ -1,0 +1,38 @@
+See known_count_2.S
+Why does function appear twice?
+
+	.file	"f1f2opf3.ispc"
+	.globl	ispc_vvadd_F4_F4_F4___un_3C_unf_3E_un_3C_unf_3E_un_3C_unf_3E_ # -- Begin function ispc_vvadd_F4_F4_F4___un_3C_unf_3E_un_3C_unf_3E_un_3C_unf_3E_
+	.p2align	4, 0x90
+	.type	ispc_vvadd_F4_F4_F4___un_3C_unf_3E_un_3C_unf_3E_un_3C_unf_3E_,@function
+ispc_vvadd_F4_F4_F4___un_3C_unf_3E_un_3C_unf_3E_un_3C_unf_3E_: # @ispc_vvadd_F4_F4_F4___un_3C_unf_3E_un_3C_unf_3E_un_3C_unf_3E_
+# %bb.0:                                # %allocas
+	movq	$-32, %rax
+	.p2align	4, 0x90
+.LBB0_1:                                # %foreach_full_body
+                                        # =>This Inner Loop Header: Depth=1
+......................... elided .......................
+# %bb.2:                                # %partial_inner_all_outer
+	vzeroupper
+	retq
+.Lfunc_end0:
+	.size	ispc_vvadd_F4_F4_F4___un_3C_unf_3E_un_3C_unf_3E_un_3C_unf_3E_, .Lfunc_end0-ispc_vvadd_F4_F4_F4___un_3C_unf_3E_un_3C_unf_3E_un_3C_unf_3E_
+                                        # -- End function
+	.globl	ispc_vvadd_F4_F4_F4     # -- Begin function ispc_vvadd_F4_F4_F4
+	.p2align	4, 0x90
+	.type	ispc_vvadd_F4_F4_F4,@function
+ispc_vvadd_F4_F4_F4:                    # @ispc_vvadd_F4_F4_F4
+# %bb.0:                                # %allocas
+	movq	$-32, %rax
+	.p2align	4, 0x90
+.LBB1_1:                                # %foreach_full_body
+                                        # =>This Inner Loop Header: Depth=1
+......................... elided .......................
+# %bb.2:                                # %partial_inner_all_outer
+	vzeroupper
+	retq
+.Lfunc_end1:
+	.size	ispc_vvadd_F4_F4_F4, .Lfunc_end1-ispc_vvadd_F4_F4_F4
+                                        # -- End function
+	.ident	"clang version 10.0.0 (/usr/local/src/llvm/llvm-10.0/clang d32170dbd5b0d54436537b6b75beaf44324e0c28)"
+	.section	".note.GNU-stack","",@progbits
