@@ -8,11 +8,11 @@ local tests = {}
 
 tests.t1 = function()
   local correct = {}
-  local c1         = Q.mk_col ({0,0,1,1}, "B1")
-  local c2         = Q.mk_col ({0,1,0,1}, "B1")
-  correct.vvand    = Q.mk_col ({0,0,0,0}, "B1")
-  correct.vvor     = Q.mk_col ({1,1,1,1}, "B1")
-  correct.vvandnot = Q.mk_col ({0,0,1,0}, "B1")
+  local c1         = Q.mk_col ({0,0,1,1}, "I1")
+  local c2         = Q.mk_col ({0,1,0,1}, "I1")
+  correct.vvand    = Q.mk_col ({0,0,0,0}, "I1")
+  correct.vvor     = Q.mk_col ({1,1,1,1}, "I1")
+  correct.vvandnot = Q.mk_col ({0,0,1,0}, "I1")
   local n = #c1
   local operators = { "vvand", "vvor", "vvandnot" }
   for _, operator in pairs(operators) do 

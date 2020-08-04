@@ -9,12 +9,12 @@ assert(is_inttype[f1_qtype]); assert(is_inttype[f2_qtype]);
 
 local set_f3_qtype_3 = [[
 local f3_qtype 
-  sz1 = qconsts.qtypes[f1_qtype].width
-  sz2 = qconsts.qtypes[f2_qtype].width
+  local sz1 = qconsts.qtypes[f1_qtype].width
+  local sz2 = qconsts.qtypes[f2_qtype].width
   if ( sz1 < sz2 ) then 
-    f3_type = f1_type
+    f3_qtype = f1_qtype
   else
-    f3_type = f2_type
+    f3_qtype = f2_qtype
   end
   if ( optargs ) then
     assert(type(optargs) == "table")
@@ -69,6 +69,19 @@ local f3_qtype = promote(f1_qtype, f2_qtype)
 --=======================
   do_subs(tmpl, "vvrem_specialize.lua",
     { __operator__ = "vvrem", __mathsymbol__ = " % ",
+      __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
+--=======================
+  do_subs(tmpl, "vvand_specialize.lua",
+    { __operator__ = "vvand", __mathsymbol__ = " & ",
+      __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
+  do_subs(tmpl, "vvor_specialize.lua",
+    { __operator__ = "vvor", __mathsymbol__ = " | ",
+      __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
+  do_subs(tmpl, "vvxor_specialize.lua",
+    { __operator__ = "vvxor", __mathsymbol__ = " & ",
+      __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
+  do_subs(tmpl, "vvandnot_specialize.lua",
+    { __operator__ = "vvandnot", __mathsymbol__ = " & ~ ",
       __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
 
 print("ALL DONE")

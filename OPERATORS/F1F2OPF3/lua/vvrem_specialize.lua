@@ -25,12 +25,12 @@ return function (
   assert(is_inttype[f1_qtype]); assert(is_inttype[f2_qtype]); 
 
   local f3_qtype 
-  sz1 = qconsts.qtypes[f1_qtype].width
-  sz2 = qconsts.qtypes[f2_qtype].width
+  local sz1 = qconsts.qtypes[f1_qtype].width
+  local sz2 = qconsts.qtypes[f2_qtype].width
   if ( sz1 < sz2 ) then 
-    f3_type = f1_type
+    f3_qtype = f1_qtype
   else
-    f3_type = f2_type
+    f3_qtype = f2_qtype
   end
   if ( optargs ) then
     assert(type(optargs) == "table")
