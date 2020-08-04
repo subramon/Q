@@ -18,7 +18,6 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
   else
     optargs = {}
   end
-  optargs.__operator = a -- needed for some specializers
   local subs = assert(spfn(f1, f2, optargs))
   -- subs should return 
   -- (1) f3_qtype (2) f1_cst_as (2) f2_cst_as (3) f3_cst_as

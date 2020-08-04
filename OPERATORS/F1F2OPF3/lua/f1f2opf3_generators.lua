@@ -9,6 +9,7 @@ assert(plpath.isfile(operator_file))
 local operators = dofile(operator_file)
 local types = { 'I1', 'I2', 'I4', 'I8','F4', 'F8' }
 
+local optargs = {}
 local num_produced = 0
 for _, operator in ipairs(operators) do
   local sp_fn = assert(require((operator .. "_specialize")))
@@ -27,7 +28,7 @@ for _, operator in ipairs(operators) do
           end
           num_produced = num_produced + 1
         else
-          print(subs)
+          -- print(subs)
         end
       end
   end

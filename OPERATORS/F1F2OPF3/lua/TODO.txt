@@ -1,3 +1,1 @@
-Remove all paths and have them  be part of LUA_PATH ot some such
-
 Handle the case of B1 for comparison operators ==, != and so on
