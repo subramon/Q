@@ -1,0 +1,5 @@
+MAke an example for 
+
+While this rule that says that program instances can safely depend on side-effects from by other program instances in their gang eliminates a class of synchronization requirements imposed by some other SPMD languages, it conversely means that it is possible to write ispc programs that compute different results when run with different gang sizes.
+
+

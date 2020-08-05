@@ -1,0 +1,7 @@
+In
+Uniform Variables and Varying Control Flow
+
+
+Here, if any of the values of a across the gang was non-zero, then b will have a value of 10 after the if statement has executed. However, if all of the values of a in the currently-executing program instances at the start of the if statement had a value of zero, then b would have a value of 1.
+
+Not sure I agree

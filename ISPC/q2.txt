@@ -1,0 +1,6 @@
+When we have branching, we don't know which branch is taken first.
+
+Can program instances on branch A cause side effects that would impact 
+proigram instances on branch B?
+
+
