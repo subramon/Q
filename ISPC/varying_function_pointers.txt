@@ -1,0 +1,3 @@
+Need to understand this with an example:
+
+The way that "varying" function pointers are handled in ispc is also affected by this guarantee: if a function pointer is varying, then it has a possibly-different value for all running program instances. Given a call to a varying function pointer, ispc must maintain as much execution convergence as possible; the assembly code generated finds the set of unique function pointers over the currently running program instances and calls each one just once, such that the executing program instances when it is called are the set of active program instances that had that function pointer value. The order in which the various function pointers are called in this case is undefined.

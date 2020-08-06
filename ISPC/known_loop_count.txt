@@ -1,0 +1,2 @@
+See _1.S and _2.S 
+only difference is in one case we know count and other we do not

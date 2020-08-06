@@ -1,0 +1,8 @@
+In Section Uniform Data,
+
+It is an error to try to assign a varying value to a uniform variable, though uniform values can be assigned to uniform variables.
+
+I presume what was meant was 
+
+It is an error to try to assign a varying value to a uniform variable, though
+uniform values can be assigned to varying variables.
