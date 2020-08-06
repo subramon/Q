@@ -5,13 +5,14 @@ ${fn_ispc}(
   uniform ${f1_ctype_ispc} vin1[], 
   uniform ${f2_ctype_ispc} vin2[],
   uniform ${f3_ctype_ispc} vout[],
-  uniform int count
+  uniform int count,
+  uniform int shift_by
   ) 
 {
   foreach (index = 0 ... count) {
     varying uint64 sin1 = vin1[index];
     varying uint64 sin2 = vin2[index];
-    varying uint64 sout = ( sin1 << ${shift_by} )  | sin2;
+    varying uint64 sout = ( sin1 << shift_by )  | sin2;
     vout[index] = sout;
   }
 }

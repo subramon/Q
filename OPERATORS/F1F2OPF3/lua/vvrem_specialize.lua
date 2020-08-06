@@ -1,3 +1,4 @@
+local ffi = require 'ffi'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
 local qconsts = require 'Q/UTILS/lua/q_consts'
@@ -49,6 +50,9 @@ return function (
   subs.f1_cast_as = subs.f1_ctype .. "*"
   subs.f2_cast_as = subs.f2_ctype .. "*"
   subs.f3_cast_as = subs.f3_ctype .. "*"
+
+  subs.cargs = nil
+  subs.cst_cargs = ffi.NULL
 
   subs.mathsymbol = "  "
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
