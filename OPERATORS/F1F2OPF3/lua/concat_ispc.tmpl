@@ -10,9 +10,9 @@ ${fn_ispc}(
   ) 
 {
   foreach (index = 0 ... count) {
-    varying uint64 sin1 = vin1[index];
-    varying uint64 sin2 = vin2[index];
-    varying uint64 sout = ( sin1 << shift_by )  | sin2;
+    varying uint64 s1 = vin1[index];
+    varying uint64 s2 = vin2[index];
+    varying uint64 sout = ( s1 << shift_by )  | s2;
     vout[index] = sout;
   }
 }

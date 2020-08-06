@@ -59,7 +59,7 @@ return function (
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
   subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}
-  subs.libs = { "-lgomp" } 
+  subs.libs = { "-lgomp", "-lm", } 
   -- for ISPC
   subs.f1_ctype_ispc = qconsts.qtypes[f1_qtype].ispctype
   subs.f2_ctype_ispc = qconsts.qtypes[f2_qtype].ispctype

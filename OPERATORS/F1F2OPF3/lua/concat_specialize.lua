@@ -59,7 +59,7 @@ return function (
   subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/", 
     "OPERATORS/F1F2OPF3/inc/" }
 
-  subs.libs = { "-lgomp" } 
+  subs.libs = { "-lgomp", "-lm" } 
   -- for ISPC
   subs.f1_ctype_ispc = "u" .. qconsts.qtypes[f1_qtype].ispctype
   subs.f2_ctype_ispc = "u" .. qconsts.qtypes[f2_qtype].ispctype
