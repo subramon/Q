@@ -1,146 +1,112 @@
-local plfile = require 'pl.file'
-local plpath = require 'pl.path'
---=======================
-assert(plpath.isfile("arith_specialize.tmpl"), "File not found")
-local x = plfile.read("arith_specialize.tmpl")
+local do_subs = require 'Q/UTILS/lua/do_subs'
+local tmpl = "f1s1opf2_specialize.tmpl"
+local a_chk_f = [[
+assert(is_basetype[f1_qtype]); assert(is_basetype[f2_qtype]); 
+]]
+local b_chk_f = [[
+assert(is_inttype[f1_qtype]); assert(is_inttype[f2_qtype]); 
+]]
+--================
+local a_set_f2_qtype = [[
+local f2_qtype = f1_qytpe
+]]
+local b_set_f2_qtype = [[
+local f2_qtype = "I1"
+]]
+--================
+local a_set_f2_ctype = [[
+local f2_ctype = qconsts.qtypes[f2_qtype].ctype
+]]
+local b_set_f2_ctype = [[
+local f2_qtype = "u" .. qconsts.qtypes[f2_qtype].ctype
+]]
+--================
+local a_set_s1_qtype = [[
+assert(type(s1) == "Scalar")
+  local s1_qtype = s1:qtype()
+]]
+local b_set_s1_qtype = ""
 
-y = string.gsub(x, "<<operator>>", "vsadd")
-y = string.gsub(y, "<<c_code>>", "c = a + b")
-plfile.write("vsadd_specialize.lua", y)
+do_subs(tmpl, "vsadd_specialize.lua", 
+{ __operator__ = "vsadd", __code__ = "c = a + b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = a_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+do_subs(tmpl, "vssub_specialize.lua", 
+{ __operator__ = "vssub", __code__ = "c = a - b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = a_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+do_subs(tmpl, "vsmul_specialize.lua", 
+{ __operator__ = "vsmul", __code__ = "c = a * b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = a_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+do_subs(tmpl, "vsdiv_specialize.lua", 
+{ __operator__ = "vsdiv", __code__ = "c = a / b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = a_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+do_subs(tmpl, "vsrem_specialize.lua", 
+{ __operator__ = "vsrem", __code__ = "c = a % b", 
+  __chk_f__ = b_chk_f, __set_f2_qtype__ = a_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
 --=======================
-y = string.gsub(x, "<<operator>>", "pow")
-y = string.gsub(y, "<<c_code>>", "c = pow((double)a, (double)b)")
-plfile.write("pow_specialize.lua", y)
+do_subs(tmpl, "vsand_specialize.lua", 
+{ __operator__ = "vsand", __code__ = "c = a & b", 
+  __chk_f__ = b_chk_f, __set_f2_qtype__ = a_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+do_subs(tmpl, "vsor_specialize.lua", 
+{ __operator__ = "vsor", __code__ = "c = a | b", 
+  __chk_f__ = b_chk_f, __set_f2_qtype__ = a_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+do_subs(tmpl, "vsxor_specialize.lua", 
+{ __operator__ = "vsxor", __code__ = "c = a ^ b", 
+  __chk_f__ = b_chk_f, __set_f2_qtype__ = a_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+--==============================
+do_subs(tmpl, "vseq_specialize.lua", 
+{ __operator__ = "vseq", __code__ = "c = a == b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype_ = b_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+do_subs(tmpl, "vsneq_specialize.lua", 
+{ __operator__ = "vsneq", __code__ = "c = a != b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = b_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+do_subs(tmpl, "vsgeq_specialize.lua", 
+{ __operator__ = "vsgeq", __code__ = "c = a >= b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = b_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+do_subs(tmpl, "vsleq_specialize.lua", 
+{ __operator__ = "vsleq", __code__ = "c = a <= b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = b_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+do_subs(tmpl, "vsgt_specialize.lua", 
+{ __operator__ = "vsgt", __code__ = "c = a > b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = b_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
+do_subs(tmpl, "vslt_specialize.lua", 
+{ __operator__ = "vslt", __code__ = "c = a < b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = b_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
 --=======================
-y = string.gsub(x, "<<operator>>", "vssub")
-y = string.gsub(y, "<<c_code>>", "c = a - b")
-plfile.write("vssub_specialize.lua", y)
+do_subs(tmpl, "shift_left_specialize.lua", 
+{ __operator__ = "shift_left", __code__ = "c = (uint64_t)a << (uint8_t)b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = a_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = b_set_f2_ctype})
+do_subs(tmpl, "shift_right_specialize.lua", 
+{ __operator__ = "shift_right", __code__ = "c = (uint64_t)a >> (uint8_t)b", 
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = a_set_f2_qtype,
+  __set_s1_qtype__ = a_set_s1_qtype, __set_f2_ctype__ = b_set_f2_ctype})
 --=======================
-y = string.gsub(x, "<<operator>>", "vsmul")
-y = string.gsub(y, "<<c_code>>", "c = a * b")
-plfile.write("vsmul_specialize.lua", y)
+do_subs(tmpl, "incr_specialize.lua", 
+{ __operator__ = "incr", __code__ = "c = a++ ",
+  __chk_f__ = a_chk_f, __set_f2_qtype__ = a_set_f2_qtype,
+  __set_s1_qtype__ = b_set_s1_qtype, __set_f2_ctype__ = a_set_f2_ctype})
 --=======================
-y = string.gsub(x, "<<operator>>", "vsdiv")
-y = string.gsub(y, "<<c_code>>", "c = a / b")
-plfile.write("vsdiv_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "vsrem")
-y = string.gsub(y, "<<c_code>>", 'c = a %% b;')
-plfile.write("vsrem_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "vsand")
-y = string.gsub(y, "<<c_code>>", "c = a & b;")
-plfile.write("vsand_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "vsor")
-y = string.gsub(y, "<<c_code>>", "c = a | b;")
-plfile.write("vsor_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "vsxor")
-y = string.gsub(y, "<<c_code>>", "c = a ^ b;")
-plfile.write("vsxor_specialize.lua", y)
---=======================
-assert(plpath.isfile("cmp_specialize.tmpl"), "File not found")
-local x = plfile.read("cmp_specialize.tmpl")
-
-y = string.gsub(x, "<<operator>>", "vseq")
-y = string.gsub(y, "<<comparison>>", " == " )
-plfile.write("vseq_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "vsneq")
-y = string.gsub(y, "<<comparison>>", " != " )
-plfile.write("vsneq_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "vsleq")
-y = string.gsub(y, "<<comparison>>", " <= " )
-plfile.write("vsleq_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "vsgeq")
-y = string.gsub(y, "<<comparison>>", " >= " )
-plfile.write("vsgeq_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "vsgt")
-y = string.gsub(y, "<<comparison>>", " > " )
-plfile.write("vsgt_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "vslt")
-y = string.gsub(y, "<<comparison>>", " < " )
-plfile.write("vslt_specialize.lua", y)
---=======================
--- assert(plpath.isfile("cmp2_specialize.tmpl"), "File not found")
--- local x = plfile.read("cmp2_specialize.tmpl")
--- 
--- y = string.gsub(x, "<<operator>>", "vsltorgt")
--- y = string.gsub(y, "<<comparator1>>", " < " )
--- y = string.gsub(y, "<<comparator2>>", " > " )
--- y = string.gsub(y, "<<combiner>>", " || " )
--- plfile.write("vsltorgt_specialize.lua", y)
--- --=======================
--- y = string.gsub(x, "<<operator>>", "vsleqorgeq")
--- y = string.gsub(y, "<<comparator1>>", " <= " )
--- y = string.gsub(y, "<<comparator2>>", " >= " )
--- y = string.gsub(y, "<<combiner>>", " || " )
--- plfile.write("vsleqorgeq_specialize.lua", y)
--- --=======================
--- y = string.gsub(x, "<<operator>>", "vsgtandlt")
--- y = string.gsub(y, "<<comparator1>>", " > " )
--- y = string.gsub(y, "<<comparator2>>", " < " )
--- y = string.gsub(y, "<<combiner>>", " && " )
--- plfile.write("vsgtandlt_specialize.lua", y)
--- --=======================
--- y = string.gsub(x, "<<operator>>", "vsgeqandleq")
--- y = string.gsub(y, "<<comparator1>>", " >= " )
--- y = string.gsub(y, "<<comparator2>>", " <= " )
--- y = string.gsub(y, "<<combiner>>", " && " )
--- plfile.write("vsgeqandleq_specialize.lua", y)
---=======================
-assert(plpath.isfile("f1opf2_specialize.tmpl"), "File not found")
-local x = plfile.read("f1opf2_specialize.tmpl")
-
-y = string.gsub(x, "<<operator>>", "exp")
-y = string.gsub(y, "<<c_code_for_operator>>", "c = exp((double)a);")
-y = string.gsub(y, "<<out_qtype>>", '"F8"')
-plfile.write("exp_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "reciprocal")
-y = string.gsub(y, "<<c_code_for_operator>>", "c = 1 / a; ")
-y = string.gsub(y, "<<out_qtype>>", 'in_qtype')
-plfile.write("reciprocal_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "sqrt")
-y = string.gsub(y, "<<c_code_for_operator>>", "c = sqrt((double)a);")
-y = string.gsub(y, "<<out_qtype>>", 'in_qtype')
-plfile.write("sqrt_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "sqr")
-y = string.gsub(y, "<<c_code_for_operator>>", "c = (a * a);")
-y = string.gsub(y, "<<out_qtype>>", 'in_qtype')
-plfile.write("sqr_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "log")
-y = string.gsub(y, "<<c_code_for_operator>>", "c = log((double)a);")
-y = string.gsub(y, "<<out_qtype>>", '"F8"')
-plfile.write("log_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "incr")
-y = string.gsub(y, "<<c_code_for_operator>>", "c = a + 1;")
-y = string.gsub(y, "<<out_qtype>>", "in_qtype")
-plfile.write("incr_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "decr")
-y = string.gsub(y, "<<c_code_for_operator>>", "c = a - 1;")
-y = string.gsub(y, "<<out_qtype>>", "in_qtype")
-plfile.write("decr_specialize.lua", y)
---=======================
-y = string.gsub(x, "<<operator>>", "logit")
-y = string.gsub(y, "<<c_code_for_operator>>", 
-  "c = 1.0 / ( 1.0 + exp(-1.0 * a)); ")
-y = string.gsub(y, "<<out_qtype>>", '"F8"')
-plfile.write("logit_specialize.lua", y)
---=======================
+--[[
 y = string.gsub(x, "<<operator>>", "logit2")
 y = string.gsub(y, "<<c_code_for_operator>>", 
 " c = 1.0 / mcr_sqr ( ( 1.0 + exp(-1.0 *a) ) ); " )
 y = string.gsub(y, "<<out_qtype>>", '"F8"')
 plfile.write("logit2_specialize.lua", y)
+--]]
 --=======================
+----]]
+print("Generated specializers")

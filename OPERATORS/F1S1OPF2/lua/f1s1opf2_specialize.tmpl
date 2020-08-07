@@ -20,27 +20,22 @@ return function (
   local subs = {}; 
   assert(type(f1) == "lVector"); assert(not f1:has_nulls())
 
-  assert(type(s1) == "Scalar")
-  local s1_qtype = s1:qtype()
-
+  __set_s1_qtype__
 
   local f1_qtype = f1:qtype()
-  assert(is_inttype[f1_qtype]); assert(is_inttype[f2_qtype]); 
- 
-  local fn = "vsand" .. f1_qtype
+  __chk_f__ 
+  local fn = "__operator__" .. f1_qtype
   if ( s1_qtype ) then fn = fn .. "_" .. s1_qtype end 
   subs.fn = fn 
   subs.fn_ispc = fn .. "_ispc"
-  local f2_qtype = f1_qytpe
-
+  __set_f2_qtype__
 
   subs.f1_qtype   = f1_qtype
   subs.f1_ctype   = assert(qconsts.qtypes[f1_qtype].ctype)
   subs.cst_f1_as  = subs.f1_ctype .. " *"
 
   subs.f2_qtype   = f1_qtype
-  local f2_ctype = qconsts.qtypes[f2_qtype].ctype
-
+  __set_f2_ctype__
   subs.f2_ctype = f2_ctype
   subs.cst_f2_as  = subs.f2_ctype .. " *"
 
@@ -54,7 +49,7 @@ return function (
     subs.cst_cargs = ffi.NULL
   end
 
-  subs.c_code_for_operator = "c = a & b"
+  subs.c_code_for_operator = "__code__"
   subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2.tmpl"
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"
