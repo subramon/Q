@@ -1,4 +1,5 @@
-local cVector = require 'libvctr'
+-- WARNING! If this line is in a .lua file, it is auto-generated
+local ffi     = require 'ffi'
 local Scalar  = require 'libsclr'
 local qconsts       = require "Q/UTILS/lua/q_consts"
 local basetypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
@@ -23,24 +24,34 @@ return function (
   __set_s1_qtype__
 
   local f1_qtype = f1:qtype()
-  __chk_f__ 
+  __chk_f1_qtype__ 
   local fn = "__operator__" .. f1_qtype
   if ( s1_qtype ) then fn = fn .. "_" .. s1_qtype end 
   subs.fn = fn 
   subs.fn_ispc = fn .. "_ispc"
-  __set_f2_qtype__
 
   subs.f1_qtype   = f1_qtype
   subs.f1_ctype   = assert(qconsts.qtypes[f1_qtype].ctype)
   subs.cst_f1_as  = subs.f1_ctype .. " *"
 
-  subs.f2_qtype   = f1_qtype
+  local f2_qtype 
+  if ( optargs ) then 
+    assert(type(optargs) == "table") 
+    if ( optargs.f2_qtype ) then 
+      f2_qtype = optargs.f2_qtype 
+      assert(is_basetype[f2_qtype]) -- not strong enough
+    end
+  end
+  if ( not f2_qtype ) then 
+    __set_f2_qtype__
+  end 
+  -- TODO P2 chk_f2_qtype 
   __set_f2_ctype__
+  subs.f2_qtype = f2_qtype
   subs.f2_ctype = f2_ctype
   subs.cst_f2_as  = subs.f2_ctype .. " *"
 
-  local f2_width  = qconsts.qtypes[subs.f2_qtype].width
-  subs.f2_buf_sz  = cVector.chunk_size() * f2_width
+  subs.f2_width = qconsts.qtypes[f2_qtype].width
 
   if ( s1_qtype ) then 
     subs.cargs     = s1:to_data()

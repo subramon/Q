@@ -31,6 +31,7 @@ return {
   ---
   "vabs"
   "vnot"
+  "vnegate" -- different from vnot 
   ----
   "convert"
 }

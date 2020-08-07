@@ -16,11 +16,13 @@ local chunk_size = cVector.chunk_size()
 local function expander_f1s1opf2(a, f1, sclr, optargs )
   local sp_fn_name = "Q/OPERATORS/F1S1OPF2/lua/" .. a .. "_specialize"
   local spfn = assert(require(sp_fn_name))
+  optargs = optargs or {}
   optargs.__operator = a -- for use in specializer if needed
   local subs = assert(spfn(f1, sclr, optargs))
 
   local func_name = assert(subs.fn)
   qc.q_add(subs); 
+  local f2_buf_sz = subs.f2_width * chunk_size
 
   local f2_buf    = cmem.new(0)
   local l_chunk_num = 0
@@ -29,7 +31,7 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
     assert(chunk_num == l_chunk_num)
     if ( not f2_buf:is_data() ) then 
       f2_buf = assert(cmem.new( 
-        { size = subs.f2_buf_sz, qtype = subs.f2_qtype}))
+        { size = f2_buf_sz, qtype = subs.f2_qtype}))
       f2_buf:stealable(true)
     end
     local f1_len, f1_chunk, _ = f1:get_chunk(l_chunk_num)

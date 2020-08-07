@@ -36,6 +36,6 @@ tests.t2 = function()
   end
   print("test t2 passed")
 end
-return tests
--- tests.t1()
+-- return tests
+tests.t1()
 -- tests.t2()
