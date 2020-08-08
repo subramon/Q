@@ -1,8 +1,10 @@
 -- FUNCTIONAL
-local Q = require 'Q'
-local Scalar = require 'libsclr'
-require('Q/UTILS/lua/cleanup')()
 require 'Q/UTILS/lua/strict'
+local Q      = require 'Q'
+local Scalar = require 'libsclr'
+local cVector = require 'libvctr'
+require('Q/UTILS/lua/cleanup')()
+local chunk_size = cVector.chunk_size()
 
 local qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
 local tests = {}
@@ -22,9 +24,10 @@ tests.t1 = function()
 
     end
   end
+  print("test t2 passed")
 end
 tests.t2 = function()
-  local len = 1000000
+  local len = (2 * chunk_size) + 17
   local qtypes = { "I4", "I8", "F4", "F8" } 
   for k, qtype in ipairs(qtypes) do 
     local s = Scalar.new(2, qtype)
@@ -36,6 +39,6 @@ tests.t2 = function()
   end
   print("test t2 passed")
 end
--- return tests
-tests.t1()
+return tests
+-- tests.t1()
 -- tests.t2()

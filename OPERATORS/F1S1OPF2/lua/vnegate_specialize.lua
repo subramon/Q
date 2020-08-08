@@ -21,14 +21,12 @@ return function (
   local subs = {}; 
   assert(type(f1) == "lVector"); assert(not f1:has_nulls())
 
-  assert(type(s1) == "Scalar")
-  local s1_qtype = s1:qtype()
-
+  
 
   local f1_qtype = f1:qtype()
-  assert(is_inttype[f1_qtype]); 
+  assert(f1_qtype == "I1")
  
-  local fn = "vsrem" .. "_" .. f1_qtype
+  local fn = "vnegate" .. "_" .. f1_qtype
   if ( s1_qtype ) then fn = fn .. "_" .. s1_qtype end 
   subs.fn = fn 
   subs.fn_ispc = fn .. "_ispc"
@@ -67,14 +65,14 @@ return function (
   end
   subs.s1_ctype = qconsts.qtypes[s1_qtype].ctype
 
-  subs.code = "c = a  b; "
+  subs.code = " if ( a == 0 ) { c = 1; } else { c = 0; } "
   subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"
   subs.incs        = { "OPERATORS/F1S1OPF2/gen_inc/", "UTILS/inc/" }
   subs.libs        = { "-lgomp", "-lm" }
   -- for ISPC
-  subs.code_ispc = "c = a  b; "
+  subs.code_ispc = " if ( a == 0 ) { c = 1; } else { c = 0; } "
   subs.f1_ctype_ispc = qconsts.qtypes[f1_qtype].ispctype
   subs.s1_ctype_ispc = qconsts.qtypes[s1_qtype].ispctype
   subs.f2_ctype_ispc = qconsts.qtypes[f2_qtype].ispctype

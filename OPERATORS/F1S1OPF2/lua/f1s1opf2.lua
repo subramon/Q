@@ -9,6 +9,7 @@ end
 T.vsadd = vsadd
 require('Q/q_export').export('vsadd', vsadd)
     
+--[[
 local function vssub(x, y, optargs)
   local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
   local status, col = pcall(expander, "vssub", x, y, optargs)
@@ -18,6 +19,7 @@ local function vssub(x, y, optargs)
 end
 T.vssub = vssub
 require('Q/q_export').export('vssub', vssub)
+--]]
     
 local function vsmul(x, y, optargs)
   local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'

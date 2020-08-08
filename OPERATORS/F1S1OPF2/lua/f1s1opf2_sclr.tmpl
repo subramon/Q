@@ -1,5 +1,7 @@
 return require 'Q/UTILS/lua/code_gen' {
    declaration = [[
+#include <math.h>
+#include <omp.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -11,12 +13,13 @@ ${fn}(
       uint64_t nR,
       const ${s1_ctype} * const ptr_sval,
       ${f2_ctype} * restrict out
-      ) 
+      ) ;
 //STOP_FOR_CDEF
 ;
    ]],
    definition = [[
 #include "${fn}.h"
+#include "${fn_ispc}.h"
 int
 ${fn}(  
       const ${f1_ctype} * restrict in,
@@ -27,7 +30,7 @@ ${fn}(
 {
   int status = 0;
   ${s1_ctype} b = 0;
-  if ( *ptr_sval != NULL ) { 
+  if ( ptr_sval != NULL ) { 
     b = *ptr_sval;
   }
   uint32_t nT = omp_get_num_threads(); // number of cores
@@ -41,13 +44,14 @@ ${fn}(
     if ( ub > nB ) { ub = nB; }
     uint32_t off = lb * block_size;
     uint32_t n_for_me = (ub-lb)*block_size;
-    ${fn_ispc}(in+off, out+off, b, n_for_me);
+    ${fn_ispc}(in+off, ptr_sval, out+off, n_for_me);
   }
 
   // handle the balance 
   for ( uint32_t i = (nR/block_size)*block_size; i < nR; i++ ) {  
-    int32_t a = in1[i]; 
-    = __code__
+    ${f1_ctype} a = in[i]; 
+    ${f2_ctype} c;
+    ${code}
     out[i] = c;
   } 
 

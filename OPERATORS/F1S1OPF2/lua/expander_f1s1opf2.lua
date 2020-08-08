@@ -41,14 +41,16 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
     local cst_f1_chunk    = get_ptr(f1_chunk, subs.cst_f1_as)
     local cst_f2_buf      = get_ptr(f2_buf,   subs.cst_f2_as)
     local start_time = cutils.rdtsc()
-    local status = qc[func_name](cst_f1_chunk, f1_len, subs.st_cargs, 
+    local status = qc[func_name](cst_f1_chunk, f1_len, subs.cst_cargs, 
       cst_f2_buf)
     assert(status == 0)
     f1:unget_chunk(l_chunk_num)
     record_time(start_time, func_name)
     l_chunk_num = l_chunk_num + 1
     if ( f1_len < chunk_size ) then 
-      if ( cargs ) then cargs:delete() end 
+      if ( ( subs.cargs ) and ( type(subs.cargs) == "CMEM" ) ) then 
+        cargs:delete() 
+      end 
     end
     return f1_len, f2_buf
   end

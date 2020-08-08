@@ -19,6 +19,7 @@ require 'Q/QTILS/lua/nop'
 require 'Q/QTILS/lua/avg'
 require "Q/UTILS/lua/restore"
 require "Q/UTILS/lua/save" 
+require "Q/UTILS/lua/register" 
 
 require "Q/UTILS/lua/pack"
 require "Q/UTILS/lua/unpack"
