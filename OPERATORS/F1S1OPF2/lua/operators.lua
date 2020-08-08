@@ -13,8 +13,8 @@ return {
   "vsgeq",
   "vsleq",
   ------
-  "shift_left"
-  "shift_right"
+  "shift_left",
+  "shift_right",
   -- unary, do not need a scalar
   "decr", 
   "incr", 
@@ -29,10 +29,10 @@ return {
   "sqr",
   "sqrt",
   ---
-  "vabs"
-  "vnot"
-  "vnegate" -- different from vnot 
+  "vabs",
+  "vnot",
+  "vnegate", -- different from vnot 
   ----
-  "convert"
+  "convert",
 }
 -- TODO cum_cnt 
