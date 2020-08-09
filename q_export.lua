@@ -8,14 +8,13 @@ local function setDefault (t, d)
   setmetatable(t, mt)
 end
 
+local qfns = {} -- list of functions registered for Q
+qfns[0] = function () return nil end 
+setDefault(qfns, qfns[0])
 
-local res = {}
-res[0] = function () return nil end 
-setDefault(res, res[0])
-
-res.export = function(s, f) 
-  -- print("registering ", s)
-  res[s] = f
-  return f
+qfns.export = function(fname, fn) 
+  -- print("registering function with name ", fname)
+  qfns[fname] = fn
+  return fn
 end
-return res
+return qfns
