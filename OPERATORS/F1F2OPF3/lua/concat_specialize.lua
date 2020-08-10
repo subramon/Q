@@ -52,7 +52,6 @@ return function (
   subs.f2_cast_as = subs.f2_ctype .. "*"
   subs.f3_cast_as = subs.f3_ctype .. "*"
 
-  subs.mathsymbol = "+"
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/concat_sclr.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"

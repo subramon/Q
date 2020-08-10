@@ -42,19 +42,21 @@ return function (
 
   subs.fn = "vvrem_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
+
   subs.f1_ctype = qconsts.qtypes[f1_qtype].ctype
+  subs.f1_cast_as = subs.f1_ctype .. "*"
+
   subs.f2_ctype = qconsts.qtypes[f2_qtype].ctype
+  subs.f2_cast_as = subs.f2_ctype .. "*"
+
   subs.f3_qtype = f3_qtype
   subs.f3_ctype = qconsts.qtypes[f3_qtype].ctype
-
-  subs.f1_cast_as = subs.f1_ctype .. "*"
-  subs.f2_cast_as = subs.f2_ctype .. "*"
   subs.f3_cast_as = subs.f3_ctype .. "*"
 
   subs.cargs = nil
   subs.cst_cargs = ffi.NULL
 
-  subs.mathsymbol = "  "
+  subs.code = " c = a  b; "
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"

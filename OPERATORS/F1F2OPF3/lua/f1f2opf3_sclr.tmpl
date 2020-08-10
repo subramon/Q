@@ -50,11 +50,11 @@ ${fn}(
 
   // handle the balance 
   for ( uint32_t i = (nR/block_size)*block_size; i < nR; i++ ) {  
-    int32_t v1 = in1[i]; 
-    int32_t v2 = in2[i]; 
-    int32_t outv;
-    outv = v1 ${mathsymbol} v2;
-    out[i] = outv;
+    ${f1_ctype} a = in1[i]; 
+    ${f2_ctype} b = in2[i]; 
+    ${f3_ctype} c;
+    ${code}
+    out[i] = c;
   } 
 
   return status;

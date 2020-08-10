@@ -35,53 +35,53 @@ local f3_qtype = promote(f1_qtype, f2_qtype)
   ]]
 
   do_subs(tmpl, "vveq_specialize.lua",
-    { __operator__ =  "vveq", __mathsymbol__ = "==", 
+    { __operator__ =  "vveq", __code__ = "c = a == b;",
     __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
   do_subs(tmpl, "vvneq_specialize.lua",
-    { __operator__ =  "vvneq", __mathsymbol__ = "!=",
+    { __operator__ =  "vvneq", __code__ = " c = a != b; ",
     __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
   do_subs(tmpl, "vvleq_specialize.lua",
-    { __operator__ =  "vvleq", __mathsymbol__ = "<=",
+    { __operator__ =  "vvleq", __code__ = " c = a <= b; ",
     __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
   do_subs(tmpl, "vvgeq_specialize.lua",
-    { __operator__ =  "vvgeq", __mathsymbol__ = ">=",
+    { __operator__ =  "vvgeq", __code__ = " c = a >= b; ",
     __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
   do_subs(tmpl, "vvlt_specialize.lua",
-    { __operator__ =  "vvlt",  __mathsymbol__ = "<",
+    { __operator__ =  "vvlt",  __code__ = " c = a < b; ",
     __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
   do_subs(tmpl, "vvgt_specialize.lua",
-    { __operator__ =  "vvgt",  __mathsymbol__ = ">",
+    { __operator__ =  "vvgt",  __code__ = " c = a > b; ",
     __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
 --=======================
 
   do_subs(tmpl, "vvadd_specialize.lua",
-    { __operator__ = "vvadd", __mathsymbol__ = "+",
+    { __operator__ = "vvadd", __code__ = " c = a + b; ", 
       __set_f3_qtype__ = set_f3_qtype_2, __chk_f1f2__ = a_chk_f1f2})
   do_subs(tmpl, "vvsub_specialize.lua",
-    { __operator__ = "vvsub", __mathsymbol__ = "-",
+    { __operator__ = "vvsub", __code__ = "c = a - b; ",
       __set_f3_qtype__ = set_f3_qtype_2, __chk_f1f2__ = a_chk_f1f2})
   do_subs(tmpl, "vvmul_specialize.lua",
-    { __operator__ = "vvmul", __mathsymbol__ = "*",
+    { __operator__ = "vvmul", __code__ = " c = a * b; ",
       __set_f3_qtype__ = set_f3_qtype_2, __chk_f1f2__ = a_chk_f1f2})
   do_subs(tmpl, "vvdiv_specialize.lua",
-    { __operator__ = "vvdiv", __mathsymbol__ = "/",
+    { __operator__ = "vvdiv", __code__ = " c = a / b; ",
       __set_f3_qtype__ = set_f3_qtype_2, __chk_f1f2__ = a_chk_f1f2})
 --=======================
   do_subs(tmpl, "vvrem_specialize.lua",
-    { __operator__ = "vvrem", __mathsymbol__ = " % ",
+    { __operator__ = "vvrem", __code__ = " c = a % b; ",
       __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
 --=======================
   do_subs(tmpl, "vvand_specialize.lua",
-    { __operator__ = "vvand", __mathsymbol__ = " & ",
+    { __operator__ = "vvand", __code__ = " c = a & b; ",
       __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
   do_subs(tmpl, "vvor_specialize.lua",
-    { __operator__ = "vvor", __mathsymbol__ = " | ",
+    { __operator__ = "vvor", __code__ = " c = a | b; ",
       __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
   do_subs(tmpl, "vvxor_specialize.lua",
-    { __operator__ = "vvxor", __mathsymbol__ = " & ",
+    { __operator__ = "vvxor", __code__ = " c = a ^ b; ",
       __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
   do_subs(tmpl, "vvandnot_specialize.lua",
-    { __operator__ = "vvandnot", __mathsymbol__ = " & ~ ",
+    { __operator__ = "vvandnot", __code__ = " c = a & (~ b); ",
       __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
 
 print("ALL DONE")
