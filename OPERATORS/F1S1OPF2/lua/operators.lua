@@ -1,17 +1,38 @@
-local t1 = require 'Q/OPERATORS/F1S1OPF2/lua/arith_operators'
--- WONTFIX local t2 = require 'Q/OPERATORS/F1S1OPF2/lua/cmp2_operators'
--- WONTFIX for i, v in ipairs(t2) do t1[#t1+1] = v end
-local t2 = require 'Q/OPERATORS/F1S1OPF2/lua/cmp_operators'
-for i, v in ipairs(t2) do t1[#t1+1] = v end
-local t2 = require 'Q/OPERATORS/F1S1OPF2/lua/unary_ops'
-for i, v in ipairs(t2) do t1[#t1+1] = v end
-
-t1[#t1+1] = "vabs"
-t1[#t1+1] = "convert"
-t1[#t1+1] = "vnot"
-t1[#t1+1] = "cum_cnt"
-t1[#t1+1] = "shift_left"
-t1[#t1+1] = "shift_right"
-
--- for k, v in ipairs(t1) do print(k, v) end
-return t1
+return { 
+  -- following need a scalar
+  "vsadd",
+  "vssub",
+  "vsmul",
+  "vsdiv",
+  "vsrem",
+  ------
+  "vseq",
+  "vsneq",
+  "vsgt",
+  "vslt",
+  "vsgeq",
+  "vsleq",
+  ------
+  "shift_left",
+  "shift_right",
+  -- unary, do not need a scalar
+  "decr", 
+  "incr", 
+  ---
+  "exp", 
+  "log", 
+  ----
+  "logit", 
+  "logit2",
+  ----
+  "reciprocal",
+  "sqr",
+  "sqrt",
+  ---
+  "vabs",
+  "vnot",
+  "vnegate", -- different from vnot 
+  ----
+  "convert",
+}
+-- TODO cum_cnt 

@@ -20,9 +20,9 @@ end
 T.vvadd = vvadd
 require('Q/q_export').export('vvadd', vvadd)
     
-local function vvand(x, y, optargs)
-  local doc_string = [[ Signature: Q.vvand(x, y, opt_optargs)
-  -- This operator performs vvand of x and y
+local function vvsub(x, y, optargs)
+  local doc_string = [[ Signature: Q.vvsub(x, y, opt_optargs)
+  -- This operator performs vvsub of x and y
   ]]
   -- this call has been just done for docstring
   if x and x == "help" then
@@ -31,19 +31,19 @@ local function vvand(x, y, optargs)
 
   local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
   if type(x) == "lVector" and type(y) == "lVector" then
-    local status, col = pcall(expander, "vvand", x, y, optargs)
+    local status, col = pcall(expander, "vvsub", x, y, optargs)
     if ( not status ) then print(col) end
-    assert(status, "Could not execute vvand")
+    assert(status, "Could not execute vvsub")
     return col
   end
   assert(nil, "Bad arguments to f1f2opf3")
 end
-T.vvand = vvand
-require('Q/q_export').export('vvand', vvand)
+T.vvsub = vvsub
+require('Q/q_export').export('vvsub', vvsub)
     
-local function vvor(x, y, optargs)
-  local doc_string = [[ Signature: Q.vvor(x, y, opt_optargs)
-  -- This operator performs vvor of x and y
+local function vvmul(x, y, optargs)
+  local doc_string = [[ Signature: Q.vvmul(x, y, opt_optargs)
+  -- This operator performs vvmul of x and y
   ]]
   -- this call has been just done for docstring
   if x and x == "help" then
@@ -52,19 +52,19 @@ local function vvor(x, y, optargs)
 
   local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
   if type(x) == "lVector" and type(y) == "lVector" then
-    local status, col = pcall(expander, "vvor", x, y, optargs)
+    local status, col = pcall(expander, "vvmul", x, y, optargs)
     if ( not status ) then print(col) end
-    assert(status, "Could not execute vvor")
+    assert(status, "Could not execute vvmul")
     return col
   end
   assert(nil, "Bad arguments to f1f2opf3")
 end
-T.vvor = vvor
-require('Q/q_export').export('vvor', vvor)
+T.vvmul = vvmul
+require('Q/q_export').export('vvmul', vvmul)
     
-local function vvxor(x, y, optargs)
-  local doc_string = [[ Signature: Q.vvxor(x, y, opt_optargs)
-  -- This operator performs vvxor of x and y
+local function vvdiv(x, y, optargs)
+  local doc_string = [[ Signature: Q.vvdiv(x, y, opt_optargs)
+  -- This operator performs vvdiv of x and y
   ]]
   -- this call has been just done for docstring
   if x and x == "help" then
@@ -73,19 +73,19 @@ local function vvxor(x, y, optargs)
 
   local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
   if type(x) == "lVector" and type(y) == "lVector" then
-    local status, col = pcall(expander, "vvxor", x, y, optargs)
+    local status, col = pcall(expander, "vvdiv", x, y, optargs)
     if ( not status ) then print(col) end
-    assert(status, "Could not execute vvxor")
+    assert(status, "Could not execute vvdiv")
     return col
   end
   assert(nil, "Bad arguments to f1f2opf3")
 end
-T.vvxor = vvxor
-require('Q/q_export').export('vvxor', vvxor)
+T.vvdiv = vvdiv
+require('Q/q_export').export('vvdiv', vvdiv)
     
-local function vvandnot(x, y, optargs)
-  local doc_string = [[ Signature: Q.vvandnot(x, y, opt_optargs)
-  -- This operator performs vvandnot of x and y
+local function vvrem(x, y, optargs)
+  local doc_string = [[ Signature: Q.vvrem(x, y, opt_optargs)
+  -- This operator performs vvrem of x and y
   ]]
   -- this call has been just done for docstring
   if x and x == "help" then
@@ -94,15 +94,15 @@ local function vvandnot(x, y, optargs)
 
   local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
   if type(x) == "lVector" and type(y) == "lVector" then
-    local status, col = pcall(expander, "vvandnot", x, y, optargs)
+    local status, col = pcall(expander, "vvrem", x, y, optargs)
     if ( not status ) then print(col) end
-    assert(status, "Could not execute vvandnot")
+    assert(status, "Could not execute vvrem")
     return col
   end
   assert(nil, "Bad arguments to f1f2opf3")
 end
-T.vvandnot = vvandnot
-require('Q/q_export').export('vvandnot', vvandnot)
+T.vvrem = vvrem
+require('Q/q_export').export('vvrem', vvrem)
     
 local function vvgeq(x, y, optargs)
   local doc_string = [[ Signature: Q.vvgeq(x, y, opt_optargs)
@@ -229,6 +229,90 @@ local function vvneq(x, y, optargs)
 end
 T.vvneq = vvneq
 require('Q/q_export').export('vvneq', vvneq)
+    
+local function vvand(x, y, optargs)
+  local doc_string = [[ Signature: Q.vvand(x, y, opt_optargs)
+  -- This operator performs vvand of x and y
+  ]]
+  -- this call has been just done for docstring
+  if x and x == "help" then
+    return doc_string
+  end
+
+  local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
+  if type(x) == "lVector" and type(y) == "lVector" then
+    local status, col = pcall(expander, "vvand", x, y, optargs)
+    if ( not status ) then print(col) end
+    assert(status, "Could not execute vvand")
+    return col
+  end
+  assert(nil, "Bad arguments to f1f2opf3")
+end
+T.vvand = vvand
+require('Q/q_export').export('vvand', vvand)
+    
+local function vvor(x, y, optargs)
+  local doc_string = [[ Signature: Q.vvor(x, y, opt_optargs)
+  -- This operator performs vvor of x and y
+  ]]
+  -- this call has been just done for docstring
+  if x and x == "help" then
+    return doc_string
+  end
+
+  local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
+  if type(x) == "lVector" and type(y) == "lVector" then
+    local status, col = pcall(expander, "vvor", x, y, optargs)
+    if ( not status ) then print(col) end
+    assert(status, "Could not execute vvor")
+    return col
+  end
+  assert(nil, "Bad arguments to f1f2opf3")
+end
+T.vvor = vvor
+require('Q/q_export').export('vvor', vvor)
+    
+local function vvxor(x, y, optargs)
+  local doc_string = [[ Signature: Q.vvxor(x, y, opt_optargs)
+  -- This operator performs vvxor of x and y
+  ]]
+  -- this call has been just done for docstring
+  if x and x == "help" then
+    return doc_string
+  end
+
+  local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
+  if type(x) == "lVector" and type(y) == "lVector" then
+    local status, col = pcall(expander, "vvxor", x, y, optargs)
+    if ( not status ) then print(col) end
+    assert(status, "Could not execute vvxor")
+    return col
+  end
+  assert(nil, "Bad arguments to f1f2opf3")
+end
+T.vvxor = vvxor
+require('Q/q_export').export('vvxor', vvxor)
+    
+local function vvandnot(x, y, optargs)
+  local doc_string = [[ Signature: Q.vvandnot(x, y, opt_optargs)
+  -- This operator performs vvandnot of x and y
+  ]]
+  -- this call has been just done for docstring
+  if x and x == "help" then
+    return doc_string
+  end
+
+  local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
+  if type(x) == "lVector" and type(y) == "lVector" then
+    local status, col = pcall(expander, "vvandnot", x, y, optargs)
+    if ( not status ) then print(col) end
+    assert(status, "Could not execute vvandnot")
+    return col
+  end
+  assert(nil, "Bad arguments to f1f2opf3")
+end
+T.vvandnot = vvandnot
+require('Q/q_export').export('vvandnot', vvandnot)
     
 local function concat(x, y, optargs)
   local doc_string = [[ Signature: Q.concat(x, y, opt_optargs)

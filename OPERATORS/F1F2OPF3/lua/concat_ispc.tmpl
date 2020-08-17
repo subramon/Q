@@ -1,0 +1,20 @@
+return require 'Q/UTILS/lua/code_gen' {
+   definition = [[
+export void
+${fn_ispc}(
+  uniform ${f1_ctype_ispc} vin1[], 
+  uniform ${f2_ctype_ispc} vin2[],
+  uniform ${f3_ctype_ispc} vout[],
+  uniform int count,
+  uniform int shift_by
+  ) 
+{
+  foreach (index = 0 ... count) {
+    varying uint64 s1 = vin1[index];
+    varying uint64 s2 = vin2[index];
+    varying uint64 sout = ( s1 << shift_by )  | s2;
+    vout[index] = sout;
+  }
+}
+]]
+}

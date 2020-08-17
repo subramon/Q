@@ -1,5 +1,4 @@
 local Q       = require 'Q/q_export'
-local err     = require 'Q/UTILS/lua/error_code'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'

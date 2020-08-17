@@ -68,6 +68,7 @@ libsclr.so:  \
    	${GEN_INC_FILES} \
 	${LOCAL_GEN_FILES} \
    	${SRC_FILES} \
+	scalar.c \
  	../../CMEM/src/libcmem.so
 	gcc ${QC_FLAGS} ${INCS} \
 	scalar.c \

@@ -21,6 +21,22 @@
 
 extern int luaopen_libsclr (lua_State *L);
 
+static int l_sclr_to_data( lua_State *L) 
+{
+  int status = 0;
+  SCLR_REC_TYPE *ptr_sclr = NULL;
+  if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
+  ptr_sclr = (SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
+  if ( ptr_sclr == NULL ) { go_BYE(-1); }
+  void *ptr = (void *)(&(ptr_sclr->cdata));
+  lua_pushlightuserdata(L, ptr);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
 static int l_sclr_to_cmem( lua_State *L) 
 {
   int status = 0;
@@ -161,8 +177,19 @@ BYE:
   return 2;
 }
 
+static int l_qtype(lua_State *L) {
+  if ( lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
+  SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
+  lua_pushstring(L, ptr_sclr->field_type);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+
 static int l_fldtype(lua_State *L) {
-  if ( lua_gettop(L) < 1 ) { WHEREAMI; goto BYE; }
+  if ( lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
   SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
   lua_pushstring(L, ptr_sclr->field_type);
   return 1;
@@ -751,35 +778,39 @@ BYE:
 #include "_outer_eval_arith.c"
 //-----------------------
 static const struct luaL_Reg sclr_methods[] = {
+    { "abs", l_sclr_abs },
+    { "conv", l_sclr_conv },
     { "to_str", l_sclr_to_str },
     { "to_num", l_sclr_to_num },
     { "to_cmem", l_sclr_to_cmem },
-    { "conv", l_sclr_conv },
-    { "abs", l_sclr_abs },
+    { "to_data", l_sclr_to_data },
     { "fldtype", l_fldtype },
+    { "qtype", l_qtype },
     { "reincarnate", l_sclr_reincarnate },
     { NULL,          NULL               },
 };
  
 static const struct luaL_Reg sclr_functions[] = {
-    { "new", l_sclr_new },
-    { "fldtype", l_fldtype },
-    { "to_str", l_sclr_to_str },
-    { "to_num", l_sclr_to_num },
-    { "reincarnate", l_sclr_reincarnate },
-    { "to_cmem", l_sclr_to_cmem },
-    { "conv", l_sclr_conv },
-    { "eq", l_sclr_eq },
-    { "neq", l_sclr_neq },
-    { "gt", l_sclr_gt },
-    { "lt", l_sclr_lt },
-    { "geq", l_sclr_geq },
-    { "leq", l_sclr_leq },
-    { "add", l_sclr_add },
-    { "sub", l_sclr_sub },
-    { "mul", l_sclr_mul },
-    { "div", l_sclr_div },
     { "abs", l_sclr_abs },
+    { "add", l_sclr_add },
+    { "conv", l_sclr_conv },
+    { "div", l_sclr_div },
+    { "eq", l_sclr_eq },
+    { "fldtype", l_fldtype },
+    { "geq", l_sclr_geq },
+    { "gt", l_sclr_gt },
+    { "leq", l_sclr_leq },
+    { "lt", l_sclr_lt },
+    { "mul", l_sclr_mul },
+    { "neq", l_sclr_neq },
+    { "new", l_sclr_new },
+    { "qtype", l_qtype },
+    { "reincarnate", l_sclr_reincarnate },
+    { "sub", l_sclr_sub },
+    { "to_cmem", l_sclr_to_cmem },
+    { "to_data", l_sclr_to_data },
+    { "to_num", l_sclr_to_num },
+    { "to_str", l_sclr_to_str },
     { NULL,  NULL         }
 };
  

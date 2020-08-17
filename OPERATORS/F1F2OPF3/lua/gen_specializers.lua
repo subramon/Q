@@ -1,58 +1,87 @@
-nargs = #arg
-do_all = false
-do_arith = false
-do_cmp = false
-do_bop = false
-assert(nargs < 2 )
-if nargs == 0 then do_all = true end 
-if nargs == 1 then
-  for i = 1, nargs do
-    if arg[i] == "arith" then do_arith = true end 
-    if arg[i] == "cmp"   then do_cmp   = true end 
-    if arg[i] == "bop"   then do_bop   = true end 
-    if arg[i] == "all"   then do_all   = true end 
-  end
-end
-
 local do_subs = require 'Q/UTILS/lua/do_subs'
+local tmpl = "f1f2opf3_specialize.tmpl"
+local a_chk_f1f2 = [[
+assert(is_basetype[f1_qtype]); assert(is_basetype[f2_qtype]); 
+]]
+local b_chk_f1f2 = [[
+assert(is_inttype[f1_qtype]); assert(is_inttype[f2_qtype]); 
+]]
 
-if do_cmp or do_all then 
-  do_subs("cmp_specialize.tmpl", "vveq_specialize.lua",
-    { __operator__ =  "vveq", __comparator__ = "=="})
-  do_subs("cmp_specialize.tmpl", "vvneq_specialize.lua",
-    { __operator__ =  "vvneq", __comparator__ = "!="})
-  do_subs("cmp_specialize.tmpl", "vvleq_specialize.lua",
-    { __operator__ =  "vvleq", __comparator__ = "<="})
-  do_subs("cmp_specialize.tmpl", "vvgeq_specialize.lua",
-    { __operator__ =  "vvgeq", __comparator__ = ">="})
-  do_subs("cmp_specialize.tmpl", "vvlt_specialize.lua",
-    { __operator__ =  "vvlt",  __comparator__ = "<"})
-  do_subs("cmp_specialize.tmpl", "vvgt_specialize.lua",
-    { __operator__ =  "vvgt",  __comparator__ = ">"})
-end
---+++++++++++++++++++++++++
-if do_arith or do_all then 
-  do_subs("arith_specialize.tmpl", "vvadd_specialize.lua",
-    { __operator__ = "vvadd", __mathsymbol__ = "+"})
-  do_subs("arith_specialize.tmpl", "vvsub_specialize.lua",
-    { __operator__ = "vvsub", __mathsymbol__ = "-"})
-  do_subs("arith_specialize.tmpl", "vvmul_specialize.lua",
-    { __operator__ = "vvmul", __mathsymbol__ = "*"})
-  do_subs("arith_specialize.tmpl", "vvdiv_specialize.lua",
-    { __operator__ = "vvdiv", __mathsymbol__ = "/"})
-end
+local set_f3_qtype_3 = [[
+local f3_qtype 
+  local sz1 = qconsts.qtypes[f1_qtype].width
+  local sz2 = qconsts.qtypes[f2_qtype].width
+  if ( sz1 < sz2 ) then 
+    f3_qtype = f1_qtype
+  else
+    f3_qtype = f2_qtype
+  end
+  if ( optargs ) then
+    assert(type(optargs) == "table")
+    f3_qtype = optargs.f3_qtype or f3_qtype
+  end
+  assert(is_inttype[f3_qtype])
+  ]]
+local set_f3_qtype_1 = [[
+local f3_qtype = "I1" 
+  ]]
+local set_f3_qtype_2 = [[
+local f3_qtype = promote(f1_qtype, f2_qtype)
+  if ( optargs ) then
+    assert(type(optargs) == "table")
+    f3_qtype = optargs.f3_qtype or f3_qtype
+  end
+  assert(is_basetype[f3_qtype])
+  ]]
+
+  do_subs(tmpl, "vveq_specialize.lua",
+    { __operator__ =  "vveq", __code__ = "c = a == b;",
+    __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
+  do_subs(tmpl, "vvneq_specialize.lua",
+    { __operator__ =  "vvneq", __code__ = " c = a != b; ",
+    __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
+  do_subs(tmpl, "vvleq_specialize.lua",
+    { __operator__ =  "vvleq", __code__ = " c = a <= b; ",
+    __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
+  do_subs(tmpl, "vvgeq_specialize.lua",
+    { __operator__ =  "vvgeq", __code__ = " c = a >= b; ",
+    __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
+  do_subs(tmpl, "vvlt_specialize.lua",
+    { __operator__ =  "vvlt",  __code__ = " c = a < b; ",
+    __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
+  do_subs(tmpl, "vvgt_specialize.lua",
+    { __operator__ =  "vvgt",  __code__ = " c = a > b; ",
+    __set_f3_qtype__ = set_f3_qtype_1, __chk_f1f2__ = a_chk_f1f2})
 --=======================
---+++++++++++++++++++++++++
-if do_bop or do_all then 
-  do_subs("bop_specialize.tmpl", "vvand_specialize.lua", 
-    { __operator__ = "vvand", __mathsymbol = "&"})
-  do_subs("bop_specialize.tmpl", "vvor_specialize.lua", 
-    { __operator__ = "vvor", __mathsymbol = "|"})
-  do_subs("bop_specialize.tmpl", "vvxor_specialize.lua", 
-    { __operator__ = "vvxor", __mathsymbol = "^"})
-  do_subs("bop_specialize.tmpl", "vvandnot_specialize.lua", 
-    { __operator__ = "vvandnot", __mathsymbol = " & ~"})
-end
+
+  do_subs(tmpl, "vvadd_specialize.lua",
+    { __operator__ = "vvadd", __code__ = " c = a + b; ", 
+      __set_f3_qtype__ = set_f3_qtype_2, __chk_f1f2__ = a_chk_f1f2})
+  do_subs(tmpl, "vvsub_specialize.lua",
+    { __operator__ = "vvsub", __code__ = "c = a - b; ",
+      __set_f3_qtype__ = set_f3_qtype_2, __chk_f1f2__ = a_chk_f1f2})
+  do_subs(tmpl, "vvmul_specialize.lua",
+    { __operator__ = "vvmul", __code__ = " c = a * b; ",
+      __set_f3_qtype__ = set_f3_qtype_2, __chk_f1f2__ = a_chk_f1f2})
+  do_subs(tmpl, "vvdiv_specialize.lua",
+    { __operator__ = "vvdiv", __code__ = " c = a / b; ",
+      __set_f3_qtype__ = set_f3_qtype_2, __chk_f1f2__ = a_chk_f1f2})
 --=======================
+  do_subs(tmpl, "vvrem_specialize.lua",
+    { __operator__ = "vvrem", __code__ = " c = a % b; ",
+      __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
+--=======================
+  do_subs(tmpl, "vvand_specialize.lua",
+    { __operator__ = "vvand", __code__ = " c = a & b; ",
+      __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
+  do_subs(tmpl, "vvor_specialize.lua",
+    { __operator__ = "vvor", __code__ = " c = a | b; ",
+      __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
+  do_subs(tmpl, "vvxor_specialize.lua",
+    { __operator__ = "vvxor", __code__ = " c = a ^ b; ",
+      __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
+  do_subs(tmpl, "vvandnot_specialize.lua",
+    { __operator__ = "vvandnot", __code__ = " c = a & (~ b); ",
+      __set_f3_qtype__ = set_f3_qtype_3, __chk_f1f2__ = b_chk_f1f2})
 
 print("ALL DONE")

@@ -1,5 +1,4 @@
-return require 'Q/UTILS/lua/code_gen' {
-   definition = [[
+return require 'Q/UTILS/lua/code_gen' { definition = [[
 export void
 ${fn_ispc}(
   uniform ${f1_ctype_ispc} vin1[], 
@@ -8,11 +7,13 @@ ${fn_ispc}(
   uniform int count
   ) 
 {
-  // print("hello world\n");
+  // print("hello world\n"); // Note: NOT printf or fprintf
   foreach (index = 0 ... count) {
-    float sin1 = vin1[index];
-    float sin2 = vin2[index];
-    vout[index] = vin1[index] ${mathsymbol} vin2[index];
+    varying ${f1_ctype_ispc} a = vin1[index];
+    varying ${f2_ctype_ispc} b = vin2[index];
+    varying ${f3_ctype_ispc} c;
+    ${code}
+    vout[index] = c;
   }
 }
 ]]

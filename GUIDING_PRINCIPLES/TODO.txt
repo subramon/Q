@@ -1,0 +1,5 @@
+Document the fact that all Q calls should be protected by pcall
+See Q/QTILS/lua/nop for an example
+
+Understand and docuemnt Q/q_export
+

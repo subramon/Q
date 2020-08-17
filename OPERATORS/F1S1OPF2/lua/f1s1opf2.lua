@@ -109,6 +109,26 @@ end
 T.vsleq = vsleq
 require('Q/q_export').export('vsleq', vsleq)
     
+local function shift_left(x, y, optargs)
+  local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
+  local status, col = pcall(expander, "shift_left", x, y, optargs)
+  if ( not status ) then print(col) end
+  assert(status, "Could not execute shift_left")
+  return col
+end
+T.shift_left = shift_left
+require('Q/q_export').export('shift_left', shift_left)
+    
+local function shift_right(x, y, optargs)
+  local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
+  local status, col = pcall(expander, "shift_right", x, y, optargs)
+  if ( not status ) then print(col) end
+  assert(status, "Could not execute shift_right")
+  return col
+end
+T.shift_right = shift_right
+require('Q/q_export').export('shift_right', shift_right)
+    
 local function decr(x, y, optargs)
   local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
   local status, col = pcall(expander, "decr", x, y, optargs)
@@ -119,16 +139,6 @@ end
 T.decr = decr
 require('Q/q_export').export('decr', decr)
     
-local function exp(x, y, optargs)
-  local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
-  local status, col = pcall(expander, "exp", x, y, optargs)
-  if ( not status ) then print(col) end
-  assert(status, "Could not execute exp")
-  return col
-end
-T.exp = exp
-require('Q/q_export').export('exp', exp)
-    
 local function incr(x, y, optargs)
   local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
   local status, col = pcall(expander, "incr", x, y, optargs)
@@ -138,6 +148,16 @@ local function incr(x, y, optargs)
 end
 T.incr = incr
 require('Q/q_export').export('incr', incr)
+    
+local function exp(x, y, optargs)
+  local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
+  local status, col = pcall(expander, "exp", x, y, optargs)
+  if ( not status ) then print(col) end
+  assert(status, "Could not execute exp")
+  return col
+end
+T.exp = exp
+require('Q/q_export').export('exp', exp)
     
 local function log(x, y, optargs)
   local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
@@ -209,16 +229,6 @@ end
 T.vabs = vabs
 require('Q/q_export').export('vabs', vabs)
     
-local function convert(x, y, optargs)
-  local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
-  local status, col = pcall(expander, "convert", x, y, optargs)
-  if ( not status ) then print(col) end
-  assert(status, "Could not execute convert")
-  return col
-end
-T.convert = convert
-require('Q/q_export').export('convert', convert)
-    
 local function vnot(x, y, optargs)
   local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
   local status, col = pcall(expander, "vnot", x, y, optargs)
@@ -229,34 +239,24 @@ end
 T.vnot = vnot
 require('Q/q_export').export('vnot', vnot)
     
-local function cum_cnt(x, y, optargs)
+local function vnegate(x, y, optargs)
   local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
-  local status, col = pcall(expander, "cum_cnt", x, y, optargs)
+  local status, col = pcall(expander, "vnegate", x, y, optargs)
   if ( not status ) then print(col) end
-  assert(status, "Could not execute cum_cnt")
+  assert(status, "Could not execute vnegate")
   return col
 end
-T.cum_cnt = cum_cnt
-require('Q/q_export').export('cum_cnt', cum_cnt)
+T.vnegate = vnegate
+require('Q/q_export').export('vnegate', vnegate)
     
-local function shift_left(x, y, optargs)
+local function convert(x, y, optargs)
   local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
-  local status, col = pcall(expander, "shift_left", x, y, optargs)
+  local status, col = pcall(expander, "convert", x, y, optargs)
   if ( not status ) then print(col) end
-  assert(status, "Could not execute shift_left")
+  assert(status, "Could not execute convert")
   return col
 end
-T.shift_left = shift_left
-require('Q/q_export').export('shift_left', shift_left)
-    
-local function shift_right(x, y, optargs)
-  local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
-  local status, col = pcall(expander, "shift_right", x, y, optargs)
-  if ( not status ) then print(col) end
-  assert(status, "Could not execute shift_right")
-  return col
-end
-T.shift_right = shift_right
-require('Q/q_export').export('shift_right', shift_right)
+T.convert = convert
+require('Q/q_export').export('convert', convert)
     
 return T

@@ -1,83 +1,68 @@
+local ffi     = require 'ffi'
+local cmem    = require 'libcmem'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+local promote = require 'Q/UTILS/lua/promote'
 local qconsts = require 'Q/UTILS/lua/q_consts'
+local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local qc      = require 'Q/UTILS/lua/q_core'
+local inttypes = { "I1", "I2", "I4", "I8" }
+local is_inttype = {}
+for _, inttype in ipairs(inttypes) do
+  is_inttype[inttype] = true
+end
+qc.q_cdef("OPERATORS/F1F2OPF3/inc/f1f2opf3_concat.h")
+
 return function (
   f1, 
-  f2, 
+  f2,
   optargs
   )
-  assert(type(f1) == "lVector")
-  assert(type(f2) == "lVector")
-  assert(not f1:has_nulls())
-  assert(not f2:has_nulls())
-  local f1_qtype = f1:qtype()
-  local f2_qtype = f2:qtype()
-  local plfile = require "pl.file"
-  local f3_qtype 
-  if ( optargs ) then
-    assert(type(optargs) == "table")
-    f3_qtype = optargs.f3_qtype -- okay for f3_qtype to be nil
-  end
-  local ok_intypes = { I1 = true, I2 = true, I4 = true }
-  local ok_f3_qtypes = { I2 = true, I4 = true, I8 = true }
+  local subs = {}; 
+  assert(type(f1) == "lVector"); assert(not f1:has_nulls())
+  assert(type(f2) == "lVector"); assert(not f2:has_nulls())
+  local f1_qtype = f1:qtype();   assert(is_inttype[f1_qtype])
+  local f2_qtype = f2:qtype();   assert(is_inttype[f2_qtype])
 
-  assert(ok_intypes[f1_qtype], "input type " .. f1_qtype .. " not acceptable")
-  assert(ok_intypes[f2_qtype], "input type " .. f2_qtype .. " not acceptable")
-
-  local w1   = assert(qconsts.qtypes[f1_qtype].width)
-  local w2   = assert(qconsts.qtypes[f2_qtype].width)
-
-  local shift = w2 * 8 -- convert bytes to bits 
-  local l_f3_qtype = nil
-  if ( f1_qtype == "I4" ) then 
-    l_f3_qtype = "I8"
-  elseif( f1_qtype == "I2" ) then 
-    if ( f2_qtype == "I4" ) then
-      l_f3_qtype = "I8"
-    elseif( f2_qtype == "I2" ) then
-      l_f3_qtype = "I4"
-    elseif( f2_qtype == "I1" ) then
-      l_f3_qtype = "I4"
-    end
-  elseif( f1_qtype == "I1" ) then 
-    if ( f2_qtype == "I4" ) then
-      l_f3_qtype = "I8"
-    elseif( f2_qtype == "I2" ) then
-      l_f3_qtype = "I4"
-    elseif( f2_qtype == "I1" ) then
-      l_f3_qtype = "I2"
-    end
-  end
-  assert(l_f3_qtype, "Control should never come here")
-  assert(ok_f3_qtypes[l_f3_qtype], "output type " .. 
-  l_f3_qtype .. " not acceptable")
-  if ( f3_qtype ) then 
-    assert(ok_f3_qtypes[f3_qtype], "output type " ..
-    f3_qtype .. " not acceptable")
-    local width_l_f3_qtype = assert(qconsts.qtypes[l_f3_qtype].width, "ERROR")
-    local width_f3_qtype   = assert(qconsts.qtypes[f3_qtype].width, "ERROR")
-    assert( width_f3_qtype >= width_l_f3_qtype,
-    "specfiied outputtype not big enough")
-    l_f3_qtype = f3_qtype
-  end
-  local subs = {}
-  -- This includes is just as a demo. Not really needed
-  subs.fn = 
-  "concat_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. l_f3_qtype 
+  assert(type(optargs) == "table")
+  local f3_qtype = assert(optargs.f3_qtype)
+  assert(is_inttype[f3_qtype])
+  local shift_by = assert(optargs.shift_by )
+  assert(type(shift_by) == "number")
+  assert(shift_by >  0) 
+  assert(shift_by <= 32)
+  
+  subs.fn = "vvconcat_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
+  subs.fn_ispc = subs.fn .. "_ispc"
   subs.f1_ctype = "u" .. qconsts.qtypes[f1_qtype].ctype
   subs.f2_ctype = "u" .. qconsts.qtypes[f2_qtype].ctype
-  subs.f3_qtype = l_f3_qtype
-  subs.f3_ctype = "u" .. qconsts.qtypes[l_f3_qtype].ctype
+  subs.f3_qtype = f3_qtype
+  subs.f3_ctype = "u" .. qconsts.qtypes[f3_qtype].ctype
+
+  -- allocate cargs
+  local sz = ffi.sizeof("f1f2opf3_concat_t")
+  subs.cargs = assert(cmem.new(sz))
+  subs.cargs:zero()
+  -- initialize cargs from scalar values 
+  local cst_cargs = get_ptr(subs.cargs, "f1f2opf3_concat_t *")
+  cst_cargs[0]["shift_by"] = shift_by
+  subs.cst_cargs = cst_cargs
+
 
   subs.f1_cast_as = subs.f1_ctype .. "*"
   subs.f2_cast_as = subs.f2_ctype .. "*"
   subs.f3_cast_as = subs.f3_ctype .. "*"
 
-  -- Note that we are movint int8_t to uint8_t below
-  subs.c_code_for_operator = " c = ((" .. subs.f3_ctype .. ")a << " .. shift .. " ) | b; "
-
-  subs.tmpl = "OPERATORS/F1F2OPF3/lua/f1f2opf3.tmpl"
+  subs.tmpl   = "OPERATORS/F1F2OPF3/lua/concat_sclr.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
-  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}
+  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/", 
+    "OPERATORS/F1F2OPF3/inc/" }
+
+  subs.libs = { "-lgomp", "-lm" } 
+  -- for ISPC
+  subs.f1_ctype_ispc = "u" .. qconsts.qtypes[f1_qtype].ispctype
+  subs.f2_ctype_ispc = "u" .. qconsts.qtypes[f2_qtype].ispctype
+  subs.f3_ctype_ispc = "u" .. qconsts.qtypes[f3_qtype].ispctype
+  subs.tmpl_ispc   = "OPERATORS/F1F2OPF3/lua/concat_ispc.tmpl"
   return subs
 end

@@ -105,15 +105,6 @@ local qconsts = {}
   width["F8"]  = 64;
   qconsts.width = width
   --===========================
-  local iorf = {}
-  iorf["I1"]  = "fixed";
-  iorf["I2"] = "fixed";
-  iorf["I4"] = "fixed";
-  iorf["I8"] = "fixed";
-  iorf["F4"] = "floating_point";
-  iorf["F8"] =  "floating_point";
-  qconsts.iorf = iorf
-  --===========================
 
   -- CAUTION: cenum Needs to be in sync with OPERATORS/PRINT/src/cprint.c
   local qtypes = {}

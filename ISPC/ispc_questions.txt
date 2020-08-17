@@ -1,0 +1,53 @@
+Can you give me a programming example of why the following matters?
+
+Maximal convergence means that in the presence of divergent control flow such as the following:
+
+if (test) {
+  // true
+}
+else {
+  // false
+}
+It is guaranteed that all program instances that were running before the if test will also be running after the end of the else block. (This guarantee stems from the notion of having a single program counter for the gang of program instances, rather than the concept of a unique program counter for each program instance.)
+===========================================
+What is C in the following example: See simple.c
+===========================================
+https://pharr.org/matt/blog/2018/04/30/ispc-all.html
+======================
+https://ingowald.blog/2018/06/13/ispc-bag-of-tricks-part-1-addressing/
+======================
+For vim support: 
+Figure out how to use https://github.com/jez/vim-ispc
+======================
+Feedback from ispc when vectorization quality poor
+
+What when source and destination widths are different
+
+Bytes to bits compression in intrinsics
+
+Reductions
+
+Random number generation
+
+hash functions in ispc stdlib e.g., will this vectorize well?
+https://github.com/ztanml/fast-hash/blob/master/fasthash.c
+
+Calling straight line C code from ispc: 
+(a) what happens when a library function like sqrt where no source code
+(b) what if we do have source code
+(c) do we need to static inline to help compiler 
+
+Binary search for ispc
+=====
+What is the difference between for and foreach ?
+------
+Describe the where problem properly:
+How to compute prefix sums?
+How to write to different offsets
+I think prefix sums can be implemented with exclusive_scan_add() function 
+Read details in doc
+
+What exactly is streaming store/load?
+==============
+for conditional reduction, the reduce_* operations will work
+on all active lanes as expected

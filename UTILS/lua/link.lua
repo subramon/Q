@@ -19,8 +19,9 @@ local function link(
   --===============================
   local str_dotos = table.concat(dotos, " ")
   --===============================
-  local q_cmd = string.format("gcc -shared %s %s -o %s",
+  local q_cmd = string.format("gcc -shared %s %s -o %s 1>/dev/null 2>&1",
        str_dotos, str_libs, sofile)
+  print("linking ", q_cmd)
   local status = os.execute(q_cmd)
   assert(status == 0)
   assert(cutils.isfile(sofile))

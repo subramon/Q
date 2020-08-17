@@ -56,11 +56,11 @@ local function compile(
       assert(exec(q_cmd), q_cmd)
     end
     if ( lang == "ISPC" ) then
-      print(" QISPC_FLAGS " ..  QISPC_FLAGS)
+      -- print(" QISPC_FLAGS " ..  QISPC_FLAGS)
       q_cmd = string.format("ispc %s %s %s -o %s",
          QISPC_FLAGS, str_incs, dotc, doto)
     end
-    print("compiling ", q_cmd)
+    -- print("compiling ", q_cmd)
     local status = os.execute(q_cmd)
     assert(status == 0)
     assert(cutils.isfile(doto))

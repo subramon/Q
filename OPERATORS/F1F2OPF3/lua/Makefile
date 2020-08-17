@@ -12,26 +12,33 @@ CFLAGS = ${DBGFLAGS} ${OPTFLAGS} ${QC_FLAGS} -Werror
 
 all : \
 	f1f2opf3.lua \
-	arith_specializers  \
-	cmp_specializers  \
-	bop_specializers 
+	f1f2opf3_specializers  \
 	
 
 test : libf1f2opf3.so  \
 	_concat_files _arith_files _bop_files _cmp_files 
 	
-arith_specializers: vvadd_specialize.lua vvsub_specialize.lua \
-	vvmul_specialize.lua vvdiv_specialize.lua 
-	luajit gen_specializers.lua arith
+f1f2opf3_specializers: \
+  	vvadd_specialize.lua \
+	vvsub_specialize.lua \
+	vvmul_specialize.lua \
+	vvdiv_specialize.lua  \
+	\
+	vvgeq_specialize.lua \
+	vvleq_specialize.lua  \
+	vvgt_specialize.lua \
+	vvlt_specialize.lua \
+	vveq_specialize.lua \
+	vvneq_specialize.lua \
+	\
+	vvand_specialize.lua \
+	vvor_specialize.lua  \
+	vvxor_specialize.lua  \
+	vvandnot_specialize.lua  \
+	\
+	vvrem_specialize.lua 
+	luajit gen_specializers.lua 
 
-cmp_specializers: vvgeq_specialize.lua vvleq_specialize.lua  \
-	vvgt_specialize.lua vvlt_specialize.lua \
-	vveq_specialize.lua vvneq_specialize.lua 
-	luajit gen_specializers.lua cmp
-
-bop_specializers : vvand_specialize.lua vvor_specialize.lua  \
-	vvxor_specialize.lua  vvandnot_specialize.lua  
-	luajit gen_specializers.lua bop
 
 #----------------------------------
 clean :
@@ -49,6 +56,8 @@ clean :
 	rm -f vvgt_specialize.lua
 	rm -f vvlt_specialize.lua
 #-------------
+	rm -f vvrem_specialize.lua
+#-------------
 	rm -f vvand_specialize.lua
 	rm -f vvor_specialize.lua
 	rm -f vvxor_specialize.lua
@@ -59,49 +68,52 @@ clean :
 	rm -f _*
 	rm -f *.so
 		
-vvadd_specialize.lua : arith_specialize.tmpl
-	lua gen_specializers.lua arith
-vvsub_specialize.lua : arith_specialize.tmpl
-	lua gen_specializers.lua arith
-vvmul_specialize.lua : arith_specialize.tmpl
-	lua gen_specializers.lua arith
-vvdiv_specialize.lua : arith_specialize.tmpl
-	lua gen_specializers.lua arith
-vvand_specialize.lua  : bop_specialize.tmpl
-	lua gen_specializers.lua bop
-vvor_specialize.lua  : bop_specialize.tmpl
-	lua gen_specializers.lua bop
-vvxor_specialize.lua  : bop_specialize.tmpl
-	lua gen_specializers.lua bop
-vvandnot_specialize.lua  : bop_specialize.tmpl
-	lua gen_specializers.lua bop
-vveq_specialize.lua  : cmp_specialize.tmpl
-	lua gen_specializers.lua cmp
-vvneq_specialize.lua  : cmp_specialize.tmpl
-	lua gen_specializers.lua cmp
-vvgeq_specialize.lua  : cmp_specialize.tmpl
-	lua gen_specializers.lua cmp
-vvleq_specialize.lua   : cmp_specialize.tmpl
-	lua gen_specializers.lua cmp
-vvgt_specialize.lua  : cmp_specialize.tmpl
-	lua gen_specializers.lua cmp
-vvlt_specialize.lua  : cmp_specialize.tmpl
-	lua gen_specializers.lua cmp
+vvadd_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+vvsub_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+vvmul_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+vvdiv_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+#-------
+vvgeq_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+vvneq_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+vvleq_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+vveq_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+vvgt_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+vvlt_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+#-------
+vvrem_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+#-------
+vvand_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+vvor_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+vvxor_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+vvandnot_specialize.lua : f1f2opf3_specialize.tmpl
+	lua gen_specializers.lua 
+#-------
+#-------
+#-------
+#-------
 
-libf1f2opf3.so : _concat_files _arith_files _bop_files _cmp_files
+libf1f2opf3.so : _concat_files _arith_files _bop_files 
 	gcc ../gen_src/*.c ${CFLAGS} ${INCS} -shared -o libf1f2opf3.so
 
 _concat_files : concat_specialize.lua
 	luajit concat_generator.lua 
 
-_arith_files : arith_specializers
-	luajit arith_generator.lua arith_operators.lua
-
-_bop_files : bop_specializers
-	luajit bop_generator.lua bop_operators.lua
-
-_cmp_files : cmp_specializers
-	luajit cmp_generator.lua cmp_operators.lua
+_f1f2opf3_files : f1f2opf3_specializers
+	luajit f1f2opf3_generator.lua f1f2opf3_operators.lua
 
 f1f2opf3.lua : 
 	lua pkg_f1f2opf3.lua

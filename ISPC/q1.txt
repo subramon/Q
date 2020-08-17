@@ -1,0 +1,6 @@
+Thus, four or eight program instances in a gang on a CPU using the the 4-wide SSE instruction set, and eight or sixteen on a CPU using 8-wide AVX.)
+
+What happens when we are adding 1 byte (8 bit) numbers on 512 bit wide
+registers? Is parallelism = 512/8?
+
+

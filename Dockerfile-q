@@ -61,7 +61,6 @@ RUN rm -r -f /tmp/curl/ \
 RUN luarocks install luacheck 
 RUN luarocks install lpeg 
 RUN luarocks install luafilesystem 
-RUN luarocks install md5 
 RUN luarocks install penlight 
 # RUN luarocks install Lua-cURL CURL_DIR=/usr/local/
 RUN luarocks install lua-curl CURL_DIR=/usr/local/

@@ -62,6 +62,7 @@ local function load_lib(
   else
     -- print("doth: cdef'ing " .. doth)
     local y = for_cdef(doth, incs, subs)
+    -- print("cdefing ", y)
     ffi.cdef(y)
     cdefd[doth] = true
     cdefs[doth] = y

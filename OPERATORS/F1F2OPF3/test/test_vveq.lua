@@ -15,7 +15,7 @@ tests.t1 = function()
     T1[i] = val1; if ( val1 == 0 ) then val1 = 1 else val1 = 0 end 
     T2[i] = val2; if ( val2 == 0 ) then val2 = 1 else val2 = 0 end 
   end
-  for _, qtype in ipairs({"B1", "I1", "I2", "I4", "I8", "F4", "F8"}) do
+  for _, qtype in ipairs({"I1", "I2", "I4", "I8", "F4", "F8"}) do
     local c1 = Q.mk_col(T1, qtype)
     local c2 = Q.mk_col(T2, qtype)
     assert(c1:length() == len)
@@ -44,11 +44,11 @@ tests.t2 = function()
 end
 tests.t2 = function()
   local len =  2*chunk_size + 17
-  local c1 = lVector.new({ qtype = "B1" })
-  local c2 = lVector.new({ qtype = "B1" })
+  local c1 = lVector.new({ qtype = "I1" })
+  local c2 = lVector.new({ qtype = "I1" })
   for i = 1, len do 
-    c1:put1(Scalar.new(1, "B1"))
-    c2:put1(Scalar.new(0, "B1"))
+    c1:put1(Scalar.new(1, "I1"))
+    c2:put1(Scalar.new(0, "I1"))
    end
   local c3 = Q.vveq(c1, c1)
   local n1, n2 = Q.sum(c3):eval()
@@ -57,7 +57,7 @@ tests.t2 = function()
   local c3 = Q.vveq(c1, c2)
   local n1, n2 = Q.sum(c3):eval()
   assert(n1 == Scalar.new(0))
-  print("Test t3 succeeded")
+  print("Test t2 succeeded")
 end
 return tests
 -- tests.t1()

@@ -1,6 +1,0 @@
-To run load script
-
-goto DATA_LOAD/test folder
-run bash test_load.sh
-
-please make sure that C and H files for load and print are generated using build script in UTILS folder

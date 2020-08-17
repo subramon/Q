@@ -18,7 +18,6 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
   else
     optargs = {}
   end
-  optargs.__operator = a -- needed for some specializers
   local subs = assert(spfn(f1, f2, optargs))
   -- subs should return 
   -- (1) f3_qtype (2) f1_cst_as (2) f2_cst_as (3) f3_cst_as
@@ -50,7 +49,7 @@ local function expander_f1f2opf3(a, f1 , f2, optargs )
       local chunk2 = get_ptr(f2_chunk, subs.f2_cast_as)
       local chunk3 = get_ptr(buf,      subs.f3_cast_as)
       local start_time = cutils.rdtsc()
-      qc[func_name](chunk1, chunk2, f1_len, chunk3)
+      qc[func_name](chunk1, chunk2, f1_len, subs.cst_cargs, chunk3)
       record_time(start_time, func_name)
     end
     f1:unget_chunk(l_chunk_num)

@@ -7,7 +7,7 @@ local tests = {}
 tests.t1 = function()
   local len = 13
   local c1 = Q.seq( {len = len, start = 1, by = 1, qtype = "I4"}):eval()
-  local c2 = Q.concat(c1, c1):eval()
+  local c2 = Q.concat(c1, c1, { f3_qtype = "I8", shift_by = 32}):eval()
   -- Q.print_csv({c1, c2})
 local c3 = Q.mk_col( {
 4294967297,
