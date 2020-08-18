@@ -243,7 +243,7 @@ GEN_SRC_FILES = \
 
 
 libutils.so : src_files gen_src_files gen_inc_files
-	gcc ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} \
+	gcc -shared ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} \
 		${GEN_SRC_FILES} \
 		${SRC_FILES} -o libutils.so
 

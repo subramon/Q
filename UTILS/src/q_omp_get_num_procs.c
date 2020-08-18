@@ -1,5 +1,9 @@
 //START_INCLUDES
-#include "q_incs.h"
+#include <omp.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdint.h>
+#include "q_macros.h"
 //STOP_INCLUDES
 #include "q_omp_get_num_procs.h"
 //START_FUNC_DECL

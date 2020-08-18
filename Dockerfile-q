@@ -65,6 +65,14 @@ RUN luarocks install penlight
 # RUN luarocks install Lua-cURL CURL_DIR=/usr/local/
 RUN luarocks install lua-curl CURL_DIR=/usr/local/
 
+# Install lua-simdjson from source
+RUN rm -r -f /tmp/simdjson/ \
+&& cd /tmp/ \
+&& git clone https://github.com/FourierTransformer/lua-simdjson \
+&& cd /tmp/simdjson/ \
+&& luarocks make lua-simdjson-scm-0.rockspec \
+&& rm -r -f /tmp/simdjson/
+
 
 ## lua
 RUN wget -O /tmp/lua-5.1.5.tar.gz "https://www.lua.org/ftp/lua-5.1.5.tar.gz" \

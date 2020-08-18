@@ -25,19 +25,18 @@ local mk_col = function (
       return doc_string
   end
 
-  assert(input,  err.INPUT_NOT_TABLE)
-  assert(type(input) == "table", err.INPUT_NOT_TABLE)
+  assert(type(input) == "table")
   assert(#input > 0, "Input table has no entries")
   local has_nulls = false
   if ( nn_input ) then 
-    assert(type(nn_input) == "table", err.INPUT_NOT_TABLE)
+    assert(type(nn_input) == "table")
     assert(#nn_input == #input)
     has_nulls = true
   end
   
   assert(good_qtypes[qtype], qtype)
   local width
-  local ctype =  assert(qconsts.qtypes[qtype].ctype, err.NULL_CTYPE_ERROR)
+  local ctype =  assert(qconsts.qtypes[qtype].ctype)
   local table_length = table.getn(input)
   local length_in_bytes = nil
   local chunk = nil
