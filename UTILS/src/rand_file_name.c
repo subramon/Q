@@ -1,4 +1,8 @@
-#include "q_incs.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
+#include "q_macros.h"
 #include "rand_file_name.h"
 
 static inline uint64_t RDTSC()

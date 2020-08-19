@@ -2,8 +2,11 @@
  * C Program to List Files in Directory
  */
 #include <dirent.h>
+#include <string.h>
 #include <stdio.h>
-#include "q_incs.h"
+#include <stdint.h>
+#include <stdio.h>
+#include "q_macros.h"
 #include "list_dirs.h"
  
 int 

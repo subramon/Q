@@ -4,3 +4,7 @@ e.g.,I have downloaded it in ~/ISPC/
 Set the path in the .bashrc file as shown below
 # For ISPC
 export PATH=$PATH:$HOME/ISPC/ispc-v1.13.0-linux/bin
+
+
+I have a hack in UTILS/build/Makefile to 
+cp ~/luaffi/ffi.so into $Q_ROOT/lib/

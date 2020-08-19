@@ -1,4 +1,6 @@
-#include "q_incs.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "is_valid_chars_for_num.h"
 
 extern int

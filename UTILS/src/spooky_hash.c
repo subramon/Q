@@ -12,8 +12,12 @@
 
 // Assumes little endian ness. Caller has to check this case.
 //START_INCLUDES
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include "q_macros.h"
 //STOP_INCLUDES
-#include "q_incs.h"
 #include "spooky_struct.h"
 #include "spooky_hash.h"
 

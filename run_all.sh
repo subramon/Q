@@ -1,6 +1,9 @@
 #!/bin/bash
 # set -e 
 test -d $Q_SRC_ROOT
+cd $Q_SRC_ROOT/UTILS/build/
+make clean && make 
+cd -
 rm -f _log
 luajit ~/Q/TEST_RUNNER/runtest.lua $Q_SRC_ROOT/RUNTIME/CUTILS/test/ 1>>_log 2>&1
 luajit ~/Q/TEST_RUNNER/runtest.lua $Q_SRC_ROOT/RUNTIME/CMEM/test/ 1>>_log 2>&1

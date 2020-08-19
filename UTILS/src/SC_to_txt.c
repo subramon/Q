@@ -1,5 +1,8 @@
 //START_INCLUDES
-#include "q_incs.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdint.h>
+#include "q_macros.h"
 //STOP_INCLUDES
 #include "SC_to_txt.h"
 //START_FUNC_DECL

@@ -1,0 +1,3 @@
+For all C files, run
+cppcheck foo.c --enable=all
+

@@ -11,6 +11,7 @@ cp -r ~/Q/GUIDING_PRINCIPLES/SHELL_UTILS/bashrc $HOME/.bashrc
 cp -r ~/Q/GUIDING_PRINCIPLES/SHELL_UTILS/git_prompt.sh $HOME/
 #-------------------------
 cd $HOME/Q/UTILS/build/
-make clean
-make
+make clean && make
+luajit test_qd.lua
+lua    test_qd.lua
 echo "Q installed"
