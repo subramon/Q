@@ -18,13 +18,28 @@ mkdir -p $HOME/local/
 mkdir -p $HOME/local/Q/
 mkdir -p $HOME/local/Q/lib/
 #-----------------------------------
-C_FLAGS=' -g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wno-unused-parameter -pedantic -fopenmp -mavx2 -mfma -Wno-implicit-fallthrough'
-
+C_FLAGS=" -g -std=gnu99  -fPIC"
+C_FLAGS+=" -Wall -W -Waggregate-return -Wcast-align -Wmissing-prototypes"
+C_FLAGS+=" -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable "
+C_FLAGS+=" -Wunused-parameter -Wno-pedantic -fopenmp -Wno-unused-label " 
+C_FLAGS+=" -Wmissing-declarations -Wredundant-decls -Wnested-externs "
+C_FLAGS+=" -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith "
+C_FLAGS+=" -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings "
+C_FLAGS+=" -Wold-style-definition -Wsuggest-attribute=noreturn "
+C_FLAGS+=" -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference "
+C_FLAGS+=" -Wduplicated-branches -Wrestrict "
+#
+# CFLAGS+= -fsanitize=address -fno-omit-frame-pointer 
+# CFLAGS+= -fsanitize=undefined
+# https://lemire.me/blog/2016/04/20/no-more-leaks-with-sanitize-flags-in-gcc-and-clang/
+# NOT DOING THIS BECUASE WILL HAVE TO REWRITE TOO MUCH -Wjump-misses-init
+# New GCC 6/7 flags:
 export QC_FLAGS="${QC_FLAGS:=$C_FLAGS}"
 lscpu | grep "Architecture" | grep "arm"
 IS_ARM="`echo $?`"
 if [ ${IS_ARM} -eq 0 ]; then 
   export QC_FLAGS=" $QC_FLAGS -DRASPBERRY_PI"
+  export Q_IS_ARM="true"
 fi
 echo "QC_FLAGS: $QC_FLAGS"
 #-----------------------------------
