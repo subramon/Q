@@ -69,6 +69,8 @@ typedef struct _vec_globals_type {
   uint32_t n_chunk_dir;  // 0 <= g_n_chunk_dir <= g_sz_chunk_dir
   char *q_data_dir;  
   uint64_t max_file_num;
+  uint64_t max_mem_KB;
+  uint64_t now_mem_KB;
 } VEC_GLOBALS_TYPE;
 
 #endif

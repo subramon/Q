@@ -428,6 +428,7 @@ vec_check(
     if  ( v->field_width == 0 ) { go_BYE(-1); }
     status = chk_fldtype(v->fldtype, v->field_width); cBYE(status);
   }
+  if ( ptr_S->max_mem_KB < ptr_S->now_mem_KB ) { go_BYE(-1); }
 BYE:
   delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_check += delta; }
   return status;
