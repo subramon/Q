@@ -1,29 +1,26 @@
 apt-get update
-apt-get install autoconf
-apt-get install cppcheck
-apt-get install gcc
-apt-get install git
-apt-get install imagemagick
-apt-get install libevent-dev
-apt-get install libcurl4-openssl-dev
-apt-get install libgsl-dev
-apt-get install liblapack-dev
-apt-get install liblapacke-dev
-apt-get install libreadline-dev
-apt-get install luarocks
-apt-get install make
-apt-get install valgrind
-apt-get install wget
+apt-get  --yes install autoconf
+apt-get  --yes install cppcheck
+apt-get  --yes install gcc
+apt-get  --yes install git
+apt-get  --yes install libevent-dev
+apt-get  --yes install libcurl4-openssl-dev
+apt-get  --yes install libgsl-dev
+apt-get  --yes install liblapack-dev
+apt-get  --yes install liblapacke-dev
+apt-get  --yes install libreadline-dev
+apt-get  --yes install luarocks
+apt-get  --yes install make
+apt-get  --yes install valgrind
+apt-get  --yes install wget
 #-----
-apt-get install g++ # experimental
+# apt-get  --yes install g++ # experimental 
 #-----
-apt-get install bc
-apt-get install dc
-apt-get install jq
-apt-get install telnet
-apt-get install unzip
-apt-get install vim
-#-------------------- for ispc
-apt-get install cmake
-apt-get install python3-all
-apt-get install flex
+apt-get  --yes install bc
+apt-get  --yes install dc
+apt-get  --yes install jq
+apt-get  --yes install telnet
+apt-get  --yes install unzip
+apt-get  --yes install vim
+#-- Do we need following?
+# apt-get  --yes install imagemagick

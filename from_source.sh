@@ -1,5 +1,13 @@
 #!/bin/bash
 set -e 
+#--- for ispc
+cd
+git clone https://github.com/ispc/ispc.git ispc
+cd ispc
+export ISPC_HOME=$PWD
+export LLVM_HOME=$PWD
+python3 alloy.py -b --version=10.0 --selfbuild
+#--- for curl 
 rm -r -f /tmp/curl/ \
  && cd /tmp/ \
  && git clone https://github.com/curl/curl.git \
@@ -59,8 +67,13 @@ cp $HOME/Q/EXTERNAL/luaffi-master.tgz /tmp/
 cd /tmp/
 tar -zxvf luaffi-master.tgz
 cd luaffi-master
+if [ "$Q_IS_ARM" == "true" ]; then 
+  cp $Q_SRC_ROOT/EXTERNAL/call_arm.h /tmp/luaffi-master
+fi
 make
 cp ffi.so $HOME/local/Q/lib/
+# following to protect ffi.so from accidental deletion
+cp -r /tmp/luaffi-master $HOME/local/Q/ 
 
 ### For bison for ispc
 wget http://ftp.gnu.org/gnu/bison/bison-3.7.tar.gz -O /tmp/bison.tar.gz
