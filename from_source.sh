@@ -63,16 +63,22 @@ make
 cp ffi.so $HOME/local/Q/lib/
 
 ### For bison for ispc
-wget http://ftp.gnu.org/gnu/bison/bison-3.7.tar.gz -O /tmp/bison.tar.gz
-cd /tmp/
-tar -zxvf bison.tar.gz
-cd /tmp/bison-3.7/
-./configure
-make
-make install
-cd /tmp/
-rm -r -f bison-3.7*
+# wget http://ftp.gnu.org/gnu/bison/bison-3.7.tar.gz -O /tmp/bison.tar.gz
+# cd /tmp/
+# tar -zxvf bison.tar.gz
+# cd /tmp/bison-3.7/
+# ./configure
+# make
+# make install
+# cd /tmp/
+# rm -r -f bison-3.7*
 #------------------------------------------------
+# Install lua-simdjson from source
+rm -r -f /tmp/simdjson/ 
+git clone https://github.com/FourierTransformer/lua-simdjson 
+cd /tmp/simdjson/ 
+luarocks make lua-simdjson-scm-0.rockspec 
+rm -r -f /tmp/simdjson/
 
 
 echo "All done"
