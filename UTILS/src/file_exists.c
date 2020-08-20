@@ -1,8 +1,12 @@
 //START_INCLUDES
+#include <fcntl.h>
+#include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "q_macros.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 //STOP_INCLUDES
 #include "file_exists.h"
 

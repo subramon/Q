@@ -9,7 +9,6 @@
 int
 SC_to_txt(
     char * const in,
-    uint32_t width, 
     char * X,
     size_t nX
     )

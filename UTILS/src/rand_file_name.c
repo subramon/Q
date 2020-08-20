@@ -2,10 +2,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <sys/time.h>
+#include <time.h>
 #include "q_macros.h"
 #include "rand_file_name.h"
 
-static inline uint64_t RDTSC()
+static inline uint64_t RDTSC(
+    void
+    )
 {
 #ifdef RASPBERRY_PI
   struct timeval Tps; struct timezone Tpf;
@@ -39,7 +43,7 @@ rand_file_name(
   char ct[32];
   memset(ct, '\0', 32);
   for ( int i = 0; i < 4; i++ ) { 
-    int64_t t;
+    long int t;
     lrand48_r(&buffer, &t);
     memcpy(ct+(i*4), &t, 4);
   }

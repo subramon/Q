@@ -96,8 +96,8 @@ static int l_cmem_dupe( lua_State *L)  // ONLY FOR TESTING
 {
   int status = 0;
   CMEM_REC_TYPE *ptr_cmem = NULL;
-  char *fldtype = NULL;
-  char *cell_name = NULL;
+  const char *fldtype = NULL;
+  const char *cell_name = NULL;
   void *data = NULL;
 
   ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
@@ -115,12 +115,12 @@ static int l_cmem_dupe( lua_State *L)  // ONLY FOR TESTING
 
   if ( lua_gettop(L) > 3 ) { 
     if ( lua_isstring(L, 3) ) {
-      fldtype = (char *)luaL_checkstring(L, 3);
+      fldtype = luaL_checkstring(L, 3);
     }
   }
   if ( lua_gettop(L) > 4 ) { 
     if ( lua_isstring(L, 4) ) {
-      cell_name = (char *)luaL_checkstring(L, 4);
+      cell_name = luaL_checkstring(L, 4);
     }
   }
   status = cmem_dupe(ptr_cmem, data, size, fldtype, cell_name);
@@ -619,12 +619,12 @@ static int l_cmem_set( lua_State *L) {
 
   CMEM_REC_TYPE *ptr_cmem  = luaL_checkudata( L, 1, "CMEM");
   lua_Number val = 0;
-  char *str_val = NULL;
+  const char *str_val = NULL;
   // NOTE: Do NOT change order of if. Lua will claim it as string 
   // even if it is a number
   if ( strcmp(ptr_cmem->fldtype, "SC") == 0 ) { 
     if ( lua_isstring(L, 2) ) {
-      str_val = (char *)luaL_checkstring(L, 2);
+      str_val = luaL_checkstring(L, 2);
     }
     else { WHEREAMI; goto BYE; }
   }
@@ -635,10 +635,10 @@ static int l_cmem_set( lua_State *L) {
     else { WHEREAMI; goto BYE; }
   }
   void *X = ptr_cmem->data;
-  char *fldtype = ptr_cmem->fldtype;
+  const char *fldtype = ptr_cmem->fldtype;
   if ( lua_gettop(L) >= 3 ) { 
     if ( lua_isstring(L, 3) ) {
-      fldtype = (char *)luaL_checkstring(L, 3);
+      fldtype = luaL_checkstring(L, 3);
       if ( strcmp(fldtype,  ptr_cmem->fldtype) != 0 ) {
         WHEREAMI; goto BYE;
       }
@@ -773,7 +773,7 @@ static int l_cmem_prbuf( lua_State *L) {
     for ( int i = 0; i < num_to_pr; i++ ) { printf("%" PRF8 ":", Y[i]); }
   }
   else if ( strcmp(qtype, "SC") == 0 ) { 
-    char *Y = (char  *)X; 
+    const char *Y = (const char  *)X; 
     printf("%s", Y);
   }
   else {

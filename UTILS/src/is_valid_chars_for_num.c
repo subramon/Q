@@ -26,7 +26,7 @@ is_valid_chars_for_num(
     is_valid_char['E'] = true; // allow scientific notation
   }
   if ( ( X == NULL ) || ( *X == '\0' ) ) { WHEREAMI; return false; }
-  for ( char *cptr = (char *)X; *cptr != '\0'; cptr++ ) { 
+  for ( const char *cptr = X; *cptr != '\0'; cptr++ ) { 
     if ( !is_valid_char[(uint8_t)*cptr] ) { 
       fprintf(stderr, "Invalid char [%c] in string [%s] \n", *cptr, X);
       return false;

@@ -1,7 +1,7 @@
 local cutils  = require 'libcutils'
 -- local plpath  = require 'pl.path'
 -- local pldir   = require 'pl.dir'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qcfg = require 'Q/UTILS/lua/qcfg'
 
 local section = { 
   c = 'definition', 
@@ -15,7 +15,7 @@ local function do_replacements(subs, lang)
   if ( lang == "C" ) then tmpl = assert(subs.tmpl) end 
   if ( lang == "ISPC" ) then tmpl = assert(subs.tmpl_ispc) end 
   if ( string.find(tmpl, "/") ~= 1 ) then -- TODO P4: What if no '/'? 
-    tmpl = qconsts.Q_SRC_ROOT .. tmpl
+    tmpl = qcfg.q_src_root .. tmpl
   end
   local T
   assert(cutils.isfile(tmpl), "File not found " .. tmpl)
@@ -32,7 +32,7 @@ local _dotfile = function(subs, opdir, lang, ext)
   local func_name = subs.fn
   local basic_fname = opdir .. "/" .. func_name .. "." .. ext
   if ( string.find(opdir, "/") ~= 1 ) then -- TODO P4: What if no '/' ?
-    opdir = qconsts.Q_SRC_ROOT .. opdir
+    opdir = qcfg.q_src_root .. opdir
   end
   if ( not cutils.isdir(opdir) ) then
     assert(cutils.makepath(opdir))
@@ -68,7 +68,7 @@ fns.ispc = function (subs, srcdir, incdir)
   local func_name = subs.fn_ispc
   local h_basic = incdir .. "/" .. func_name .. ".h"
   if ( string.find(incdir, "/") ~= 1 ) then -- TODO P4: What if no '/' ?
-    incdir = qconsts.Q_SRC_ROOT .. incdir
+    incdir = qcfg.q_src_root .. incdir
   end
   if ( not cutils.isdir(incdir) ) then
     assert(cutils.makepath(incdir))

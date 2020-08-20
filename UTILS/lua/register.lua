@@ -1,6 +1,5 @@
 -- How to register a function with Q that uses an expander
 -- TODO P1: Make sure that qname has not been registered before
-local qconsts = require 'Q/UTILS/lua/q_consts'
 
 local function pack(...)
   return { n = select("#", ...), ... }

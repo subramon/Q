@@ -1,6 +1,7 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts       = require 'Q/UTILS/lua/qconsts'
+local qcfg          = require 'Q/UTILS/lua/qcfg'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-local tmpl = qconsts.Q_SRC_ROOT .. '/UTILS/src/print.tmpl'
+local tmpl          = qcfg.q_src_root .. '/UTILS/src/print.tmpl'
 return function (
   qtype, 
   optargs

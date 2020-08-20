@@ -9,20 +9,8 @@ INCS=-I. -I../inc/ \
 all: libvctr.so 
 	cp libvctr.so ${Q_ROOT}/lib/
 
-../inc/_struct_timers.h : timers.lua
-	lua timers.lua "struct" > ../inc/_struct_timers.h
-
-_reset_timers.c : timers.lua
-	lua timers.lua "reset" > _reset_timers.c
-
-_print_timers.c : timers.lua
-	lua timers.lua "print" > _print_timers.c 
-
 clean:
 	rm -f *.so *.o _*
-	rm -f ../inc/_struct_timers.h 
-	rm -f reset_timers.c
-	rm -f print_timers.c
 
 GEN_INC_FILES =  \
 	../../../UTILS/inc/I1_to_txt.h  \
@@ -78,7 +66,6 @@ UTILS_SRC_FILES = \
 
 vector.o : vector.c \
 	../inc/core_vec_struct.h \
-  	../inc/_struct_timers.h  \
 	../../../UTILS/inc/txt_to_I4.h \
 	${UTILS_INC_FILES}
 	gcc -c $(INCS) ${QC_FLAGS} vector.c -o vector.o
@@ -86,16 +73,12 @@ vector.o : vector.c \
 core_vec.o : core_vec.c \
   	../inc/core_vec_struct.h \
 	../inc/core_vec.h \
-  	../inc/_struct_timers.h \
-	_reset_timers.c \
-	_print_timers.c \
 	${UTILS_INC_FILES}
 	gcc -c $(INCS) ${QC_FLAGS} core_vec.c -o core_vec.o
 
 aux_core_vec.o : aux_core_vec.c \
 	../inc/core_vec_struct.h \
 	../inc/aux_core_vec.h \
-  	../inc/_struct_timers.h \
 	${UTILS_INC_FILES} 
 	gcc -c $(INCS) ${QC_FLAGS} aux_core_vec.c -o aux_core_vec.o
 

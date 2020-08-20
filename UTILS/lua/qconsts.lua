@@ -1,19 +1,3 @@
---[[
-  q_consts will be a place where all constants are defined
-  it also includes all environment variables as well
-  Functions that require access to these constants should have
-  require 'Q/UTILS/lua/q_consts'
-]]
-
-local function add_trailing_bslash(x)
-  assert(type(x) == "string")
-  assert(#x > 1)
-  if ( string.sub(x, #x, #x) ~= "/" ) then
-    x = x .. "/"
-  end
-  return x
-end
-
 local ffi = require 'ffi'
 ffi.cdef([[
 typedef struct tm
@@ -33,55 +17,10 @@ typedef struct tm
 } TM ; // NOTE: I gave a name TM to the struct tm because LuaFFI complained
    ]])
 local qconsts = {}
---===========================
-  -- Initialize environment variable constants
-  -- Note: These are Environment variable constants, if modified in same lua environment
-  -- would not modify the value of these environment variable constants
-  qconsts.Q_SRC_ROOT	= add_trailing_bslash(os.getenv("Q_SRC_ROOT"))
-  qconsts.Q_ROOT	= add_trailing_bslash(os.getenv("Q_ROOT"))
-  if ( not os.getenv("QC_FLAGS") ) then
-    qconsts.QC_FLAGS = [[
--g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align
--Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings
--Wunused-variable -Wunused-parameter -Wno-pedantic
--fopenmp -mavx2 -mfma -Wno-unused-label
--fsanitize=address -fno-omit-frame-pointer
--fsanitize=undefined
--Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith
--Wmissing-declarations -Wredundant-decls -Wnested-externs
--Wshadow -Wcast-qual -Wcast-align -Wwrite-strings
--Wold-style-definition
--Wsuggest-attribute=noreturn
--Wduplicated-cond -Wmisleading-indentation -Wnull-dereference
--Wduplicated-branches -Wrestrict
-    ]]
-  else
-    qconsts.QC_FLAGS	= assert(os.getenv("QC_FLAGS"))
-  end
-  --==================================
-  if ( not os.getenv("QISPC_FLAGS") ) then
-    qconsts.QISPC_FLAGS	= " --pic "
-  else
-    qconsts.QISPC_FLAGS	= assert(os.getenv("QISPC_FLAGS"))
-  end
-  --==================================
-  qconsts.Q_LINK_FLAGS	= os.getenv("Q_LINK_FLAGS")
-  qconsts.LD_LIBRARY_PATH = os.getenv("LD_LIBRARY_PATH")
 
-  -- Use cVector qconsts.Q_DATA_DIR for data_dir
-  -- Use cVector qconsts.chunk_size for chunk_size
---=================================
-
-  qconsts.debug = true -- set to TRUE only if you want debugging
-  qconsts.is_memo = true -- Vector code uses this default value
-  qconsts.has_nulls = false -- Vector code uses this default value
-  qconsts.qc_trace = false -- set to FALSE if performance logging of qc is to be turned off
   local max_width = {}
   max_width["SC"] = 1024 -- 1 char reserved for nullc
 
-  -- Commenting 'max_len_file_name' field as it is not required on lua side
-  -- On C side, it is present in q_constants.h
-  -- qconsts.max_len_file_name = 255 -- TODO keep in sync with C
   qconsts.max_width = max_width
  --===========================
   qconsts.sz_str_for_lua = 1048576 -- TODO Should be much bigger

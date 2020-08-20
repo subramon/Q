@@ -17,8 +17,6 @@
 
 
 VEC_GLOBALS_TYPE g_S;
-#include "_struct_timers.h"
-VEC_TIMERS_TYPE g_T;
 
 // Set globals in C in main program after creating Lua state
 // but before doing anything else
@@ -47,20 +45,6 @@ set_default_values(
   //----------------------------------
 BYE:
   return status;
-}
-//----------------------------------------
-// TODO P3 Should not be part of vector code, this deals with globals
-static int l_vec_reset_timers( lua_State *L) {
-  reset_timers(&g_T);
-  lua_pushboolean(L, true);
-  return 1;
-}
-//-----------------------------------
-// TODO P3 Should not be part of vector code, this deals with globals
-static int l_vec_print_timers( lua_State *L) {
-  print_timers(&g_T);
-  lua_pushboolean(L, true);
-  return 1;
 }
 //-----------------------------------
 // TODO P3 Should not be part of vector code, this deals with globals
@@ -144,7 +128,7 @@ static int l_vec_init_globals( lua_State *L) {
   //-------------------
   g_S.max_file_num = 0;
   //-------------------
-  status = init_globals(&g_S, &g_T); cBYE(status);
+  status = init_globals(&g_S); cBYE(status);
   fclose_if_non_null(fp);
   lua_pushboolean(L, true);
   return 1;
@@ -252,7 +236,7 @@ static int l_vec_reincarnate( lua_State *L) {
   if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
   if ( !ptr_vec->is_eov ) { go_BYE(-1); }
   //--------------
-  status = reincarnate(&g_S, &g_T, ptr_vec, &X, is_clone);
+  status = reincarnate(&g_S, ptr_vec, &X, is_clone);
   if ( status < 0 ) { free_if_non_null(X); } cBYE(status);
   lua_pushstring(L, X);
   free_if_non_null(X); 
@@ -268,7 +252,7 @@ static int l_vec_shutdown( lua_State *L) {
   char *X = NULL;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vec_shutdown(&g_S, &g_T, ptr_vec, &X); 
+  status = vec_shutdown(&g_S, ptr_vec, &X); 
   if ( status < 0 ) { free_if_non_null(X); } cBYE(status);
   lua_pushstring(L, X);
   free_if_non_null(X); 
@@ -369,7 +353,7 @@ BYE:
 static int l_vec_kill( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_kill(&g_S, &g_T, ptr_vec); cBYE(status);
+  int status = vec_kill(&g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -502,9 +486,9 @@ static int l_vec_get1( lua_State *L) {
 
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int64_t idx = luaL_checknumber(L, 2);
-  char *data = NULL; int width = ptr_vec->field_width;
+  void *data = NULL; int width = ptr_vec->field_width;
 
-  status = vec_get1(&g_S, &g_T, ptr_vec, idx, &data); cBYE(status);
+  status = vec_get1(&g_S, ptr_vec, idx, &data); cBYE(status);
 
   if ( strcmp(ptr_vec->fldtype, "SC") == 0 ) { 
     // set up mechanics for return 
@@ -570,7 +554,7 @@ static int l_vec_start_read( lua_State *L)
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
   cmem_undef(ptr_cmem);
 
-  status = vec_start_read(&g_S, &g_T, ptr_vec, ptr_cmem); cBYE(status);
+  status = vec_start_read(&g_S, ptr_vec, ptr_cmem); cBYE(status);
   lua_pushinteger(L, ptr_vec->num_elements);
   return 2;
 BYE:
@@ -614,7 +598,7 @@ static int l_vec_get_chunk( lua_State *L)
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
   cmem_undef(ptr_cmem);
 
-  status = vec_get_chunk(&g_S, &g_T, ptr_vec, chunk_num, ptr_cmem, 
+  status = vec_get_chunk(&g_S, ptr_vec, chunk_num, ptr_cmem, 
       &num_in_chunk);
   cBYE(status);
   lua_pushinteger(L, num_in_chunk);
@@ -640,7 +624,7 @@ static int l_vec_put1( lua_State *L) {
     }
     addr = (void *)(&ptr_sclr->cdata);
   }
-  status = vec_put1(&g_S, &g_T, ptr_vec, addr); cBYE(status);
+  status = vec_put1(&g_S, ptr_vec, addr); cBYE(status);
   lua_pushinteger(L, status);
   return 1;
 BYE:
@@ -659,7 +643,7 @@ static int l_vec_start_write( lua_State *L) {
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
-  status = vec_start_write(&g_S, &g_T, ptr_vec, ptr_cmem); cBYE(status);
+  status = vec_start_write(&g_S, ptr_vec, ptr_cmem); cBYE(status);
   lua_pushinteger(L, ptr_vec->num_elements);
   return 2;
 BYE:
@@ -708,7 +692,7 @@ static int l_vec_put_chunk( lua_State *L) {
   }
   int64_t num_in_cmem = luaL_checknumber(L, 3);
   if ( num_in_cmem <= 0 ) { go_BYE(-1); }
-  status = vec_put_chunk(&g_S, &g_T, ptr_vec, ptr_cmem, num_in_cmem); cBYE(status);
+  status = vec_put_chunk(&g_S, ptr_vec, ptr_cmem, num_in_cmem); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -736,7 +720,7 @@ static int l_vec_meta( lua_State *L) {
 //----------------------------------------
 static int l_vec_check( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_check(&g_S, &g_T, ptr_vec);
+  int status = vec_check(&g_S, ptr_vec);
   if ( status == 0) { 
     lua_pushboolean(L, 1);
     return 1;
@@ -751,7 +735,7 @@ static int l_vec_check( lua_State *L) {
 static int l_vec_free( lua_State *L) {
   // printf("l_vec_free: Freeing vector\n");
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_free(&g_S, &g_T, ptr_vec); cBYE(status);
+  int status = vec_free(&g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -767,7 +751,7 @@ BYE:
 // (2) munmaps stuff that has been mmapped
 static int l_vec_delete( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_delete(&g_S, &g_T, ptr_vec); cBYE(status);
+  int status = vec_delete(&g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -783,7 +767,7 @@ static int l_vec_delete_chunk_file( lua_State *L) {
   if ( num_args == 2 ) { 
     chunk_num = lua_tonumber(L, 2);
   }
-  int status = vec_delete_chunk_file(&g_S, &g_T, ptr_vec, chunk_num); 
+  int status = vec_delete_chunk_file(&g_S,  ptr_vec, chunk_num); 
   cBYE(status);
   lua_pushboolean(L, true);
   return 1;
@@ -795,7 +779,7 @@ BYE:
 //----------------------------------------
 static int l_vec_unmaster( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int status = vec_unmaster(&g_S, &g_T, ptr_vec); cBYE(status);
+  int status = vec_unmaster(&g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -832,7 +816,7 @@ static int l_vec_new( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vec_new(&g_S, &g_T, ptr_vec, qtype, field_width);
+  status = vec_new(&g_S, ptr_vec, qtype, field_width);
   cBYE(status);
 
   return 1; 
@@ -894,7 +878,7 @@ static int l_vec_rehydrate( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vec_rehydrate(&g_S, &g_T, ptr_vec, qtype, field_width, 
+  status = vec_rehydrate(&g_S, ptr_vec, qtype, field_width, 
       num_elements, vec_uqid, chunk_uqids);
   cBYE(status);
   free_if_non_null(chunk_uqids);
@@ -920,7 +904,7 @@ static int l_vec_make_chunk_file( lua_State *L)
   if ( num_args >= 3 ) {
     free_mem = lua_toboolean(L, 3); 
   }
-  status = vec_make_chunk_file(&g_S, &g_T, ptr_vec, free_mem, chunk_idx); 
+  status = vec_make_chunk_file(&g_S, ptr_vec, free_mem, chunk_idx); 
   cBYE(status);
   lua_pushboolean(L, true);
   return 1; 
@@ -939,7 +923,7 @@ static int l_vec_make_chunk_files( lua_State *L)
   if ( num_args == 2 ) {
     free_mem = lua_toboolean(L, 2); 
   }
-  status = vec_make_chunk_files(&g_S, &g_T, ptr_vec, free_mem); cBYE(status);
+  status = vec_make_chunk_files(&g_S, ptr_vec, free_mem); cBYE(status);
   lua_pushboolean(L, true);
   return 1; 
 BYE:
@@ -957,7 +941,7 @@ static int l_vec_master( lua_State *L)
   if ( num_args == 2 ) {
     free_mem = lua_toboolean(L, 2); 
   }
-  status = vec_master(&g_S, &g_T, ptr_vec, free_mem); cBYE(status);
+  status = vec_master(&g_S, ptr_vec, free_mem); cBYE(status);
   lua_pushboolean(L, true);
   return 1; 
 BYE:
@@ -998,12 +982,10 @@ static const struct luaL_Reg vector_methods[] = {
     { "memo", l_vec_memo },
     { "num_elements", l_vec_num_elements },
     { "persist", l_vec_persist },
-    { "print_timers", l_vec_print_timers },
     { "put1", l_vec_put1 },
     { "put_chunk", l_vec_put_chunk },
     { "rehydrate", l_vec_rehydrate},
     { "reincarnate", l_vec_reincarnate},
-    { "reset_timers", l_vec_reset_timers },
     { "same_state", l_vec_same_state },
     { "set_globals", l_vec_set_globals },
     { "set_name", l_vec_set_name },
@@ -1045,10 +1027,8 @@ static const struct luaL_Reg vector_functions[] = {
     { "new", l_vec_new },
     { "num_elements", l_vec_num_elements },
     { "persist", l_vec_persist },
-    { "print_timers", l_vec_print_timers },
     { "rehydrate", l_vec_rehydrate},
     { "reincarnate", l_vec_reincarnate},
-    { "reset_timers", l_vec_reset_timers },
     { "same_state", l_vec_same_state },
     { "set_globals", l_vec_set_globals },
     { "set_name", l_vec_set_name },

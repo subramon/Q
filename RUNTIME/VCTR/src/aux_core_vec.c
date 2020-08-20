@@ -1,7 +1,6 @@
 #include "q_incs.h"
 #include "vec_macros.h"
 #include "core_vec_struct.h"
-#include "_struct_timers.h"
 
 #include "get_file_size.h"
 #include "copy_file.h"
@@ -54,30 +53,24 @@ void
 l_memcpy(
     void *dest,
     const void *src,
-    size_t n,
-    VEC_TIMERS_TYPE *ptr_T
+    size_t n
     )
 {
-  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_memcpy++;
   memcpy(dest, src, n);
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_memcpy += delta; }
 }
 
 void *
 l_malloc(
-    size_t n,
-    VEC_TIMERS_TYPE *ptr_T
+    size_t n
     )
 {
   int status = 0;
   void  *x = NULL;
-  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_malloc++;
 
   status = posix_memalign(&x, CORE_VEC_ALIGNMENT, n); 
   if ( status < 0 ) { WHEREAMI; return NULL; }
   if ( x == NULL ) { WHEREAMI; return NULL; }
   if ( status < 0 ) { WHEREAMI; return NULL; }
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_malloc += delta; }
 
   return x;
 }
@@ -102,7 +95,7 @@ chk_name(
   int status = 0;
   if ( name == NULL ) { go_BYE(-1); }
   if ( strlen(name) > Q_MAX_LEN_INTERNAL_NAME ) {go_BYE(-1); }
-  for ( char *cptr = (char *)name; *cptr != '\0'; cptr++ ) { 
+  for ( const char *cptr = (const char *)name; *cptr != '\0'; cptr++ ) { 
     if ( !isascii(*cptr) ) { 
       fprintf(stderr, "Cannot have character [%c] in name \n", *cptr);
       go_BYE(-1); 
@@ -179,7 +172,6 @@ BYE:
 
 int
 load_chunk(
-    VEC_TIMERS_TYPE *ptr_T,
     const CHUNK_REC_TYPE *const ptr_chunk, 
     const VEC_REC_TYPE *const ptr_vec,
     uint64_t *ptr_t_last_get,
@@ -200,7 +192,7 @@ load_chunk(
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
   char *X = NULL; size_t nX = 0;
-  data = l_malloc(ptr_vec->chunk_size_in_bytes, ptr_T);
+  data = l_malloc(ptr_vec->chunk_size_in_bytes);
   return_if_malloc_failed(data);
   memset(data, '\0', ptr_vec->chunk_size_in_bytes);
 
@@ -259,6 +251,7 @@ chk_chunk(
     if ( ptr_chunk->data != NULL ) { go_BYE(-1); }
   }
   else {
+    if ( ptr_chunk->vec_uqid != vec_uqid ) { go_BYE(-1); } }
     if ( !ptr_vec->is_file ) { 
       // this check is valid only when there is no master file 
       if ( ptr_chunk->data == NULL ) { 
@@ -266,10 +259,7 @@ chk_chunk(
       }
     }
     if ( ptr_chunk->is_file ) { 
-      if ( !isfile(file_name) ) { 
-        printf("hello world\n");
-        go_BYE(-1); }
-    }
+      if ( !isfile(file_name) ) { }
   }
 BYE:
   return status;
@@ -277,8 +267,7 @@ BYE:
 
 int
 init_globals(
-    VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T
+    VEC_GLOBALS_TYPE *ptr_S
     )
 {
   int status = 0;
@@ -293,7 +282,7 @@ init_globals(
     if ( ptr_S->sz_chunk_dir  ==   0  )  { go_BYE(-1); }
 
     size_t sz = ptr_S->sz_chunk_dir*sizeof(CHUNK_REC_TYPE);
-    ptr_S->chunk_dir = l_malloc(sz, ptr_T);
+    ptr_S->chunk_dir = l_malloc(sz);
     return_if_malloc_failed(ptr_S->chunk_dir);
     for ( unsigned int i = 0; i < ptr_S->sz_chunk_dir; i++ ) { 
       memset(&(ptr_S->chunk_dir[i]), '\0', sizeof(CHUNK_REC_TYPE));
@@ -307,13 +296,12 @@ BYE:
 
 static int
 chk_space_in_chunk_dir(
-    VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T
+    VEC_GLOBALS_TYPE *ptr_S
     )
 {
   int status = 0;
   if ( ptr_S->chunk_dir == NULL ) { 
-    status = init_globals(ptr_S, ptr_T ); 
+    status = init_globals(ptr_S); 
     cBYE(status);
   }
   else {
@@ -329,7 +317,6 @@ BYE:
 int
 allocate_chunk(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     size_t sz,
     uint32_t chunk_num,
     uint64_t vec_uqid,
@@ -339,7 +326,7 @@ allocate_chunk(
 {
   int status = 0;
   static unsigned int start_search = 1;
-  status = chk_space_in_chunk_dir(ptr_S, ptr_T);  cBYE(status); 
+  status = chk_space_in_chunk_dir(ptr_S);  cBYE(status); 
   // NOTE: we do not allocate 0th entry
   for ( int iter = 0; iter < 2; iter++ ) { 
     unsigned int lb, ub;
@@ -359,7 +346,7 @@ allocate_chunk(
         ptr_S->chunk_dir[i].vec_uqid = vec_uqid;
         if ( is_malloc ) { 
           if ( sz == 0 ) { go_BYE(-1); }
-          ptr_S->chunk_dir[i].data = l_malloc(sz, ptr_T);
+          ptr_S->chunk_dir[i].data = l_malloc(sz);
           return_if_malloc_failed(ptr_S->chunk_dir[i].data);
         }
         *ptr_chunk_dir_idx = i; 
@@ -562,7 +549,6 @@ BYE:
 int 
 get_chunk_dir_idx(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_num,
     const uint32_t *const chunks,
@@ -575,7 +561,7 @@ get_chunk_dir_idx(
   if ( chunk_num >= ptr_vec->sz_chunks )  { go_BYE(-1); }
   uint32_t chunk_dir_idx = ptr_vec->chunks[chunk_num];
   if ( chunk_dir_idx == 0 ) { // we need to set it 
-    status = allocate_chunk(ptr_S, ptr_T, ptr_vec->chunk_size_in_bytes, 
+    status = allocate_chunk(ptr_S, ptr_vec->chunk_size_in_bytes, 
         chunk_num, ptr_vec->uqid, &chunk_dir_idx, is_malloc); 
     cBYE(status);
     *ptr_num_chunks = *ptr_num_chunks + 1;
@@ -590,7 +576,6 @@ BYE:
 int
 vec_new_common(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width
@@ -658,7 +643,6 @@ BYE:
 int 
 make_master_file(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_v,
     bool is_free_mem
     )
@@ -711,7 +695,6 @@ BYE:
 int
 reincarnate(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     const VEC_REC_TYPE *const ptr_v,
     char **ptr_X,
     bool is_clone
@@ -825,12 +808,10 @@ is_multiple(
 int
 vec_clean_chunks(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     const VEC_REC_TYPE *const ptr_vec
     )
 {
   int status = 0;
-  uint64_t delta = 0, t_start = RDTSC(); ptr_T->n_clean_chunk++;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
   if ( ptr_vec->is_file == false ) { go_BYE(-1); }
@@ -851,7 +832,6 @@ vec_clean_chunks(
     free_if_non_null(ptr_chunk->data);
   }
 BYE:
-  delta = RDTSC() - t_start; if ( delta > 0 ) { ptr_T->t_clean_chunk += delta; }
   return status;
 }
 

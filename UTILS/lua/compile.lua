@@ -1,13 +1,13 @@
 local cutils       = require 'libcutils'
-local qconsts      = require 'Q/UTILS/lua/q_consts'
+local qcfg        = require 'Q/UTILS/lua/qcfg'
 local exec         = require 'Q/UTILS/lua/exec_and_capture_stdout'
 
-local QISPC_FLAGS  = assert(qconsts.QISPC_FLAGS)
-local QC_FLAGS     = assert(qconsts.QC_FLAGS)
-local Q_SRC_ROOT   = qconsts.Q_SRC_ROOT
+local qispc_flags  = assert(qcfg.qispc_flags)
+local qc_flags     = assert(qcfg.qc_flags)
+local q_src_root   = qcfg.q_src_root
 
 -- some basic checks
-assert(cutils.isdir(Q_SRC_ROOT))
+assert(cutils.isdir(q_src_root))
 --================================================
 local function compile(
   lang,
@@ -20,14 +20,14 @@ local function compile(
   assert ( ( lang == "C" ) or ( lang == "ISPC" ) )
   if ( string.find(dotc, "/") ~= 1 ) then -- TODO P4: What if no '/'?
     -- we do not have fully qualified path
-    dotc = Q_SRC_ROOT .. "/" .. dotc
+    dotc = q_src_root .. "/" .. dotc
   end
   assert(cutils.isfile(dotc), dotc)
   --===================================
   local str_incs = {}
   if ( incs ) then
     for _, v in ipairs(incs) do
-      local incdir = qconsts.Q_SRC_ROOT .. v
+      local incdir = qcfg.q_src_root .. v
       assert(cutils.isdir(incdir), incdir)
       str_incs[#str_incs+1] = "-I" .. incdir
     end
@@ -40,7 +40,7 @@ local function compile(
   local xsrcs = {}
   if ( srcs ) then
     for _, v in ipairs(srcs) do
-      local srcfile = qconsts.Q_SRC_ROOT .. v
+      local srcfile = qcfg.q_src_root .. v
       assert(cutils.isfile(srcfile))
       xsrcs[#xsrcs+1] = srcfile
     end
@@ -52,13 +52,13 @@ local function compile(
     local doto = "/tmp/" .. cutils.basename(srcfile) .. ".o"
     if ( lang == "C" ) then
       q_cmd = string.format("gcc -c %s %s %s -o %s",
-         QC_FLAGS, str_incs, dotc, doto)
+         qc_flags, str_incs, dotc, doto)
       assert(exec(q_cmd), q_cmd)
     end
     if ( lang == "ISPC" ) then
-      -- print(" QISPC_FLAGS " ..  QISPC_FLAGS)
+      -- print(" qispc_flags " ..  qispc_flags)
       q_cmd = string.format("ispc %s %s %s -o %s",
-         QISPC_FLAGS, str_incs, dotc, doto)
+         qispc_flags, str_incs, dotc, doto)
     end
     -- print("compiling ", q_cmd)
     local status = os.execute(q_cmd)

@@ -1,5 +1,7 @@
+local qcfg    = require 'Q/UTILS/lua/qcfg'
 local Q       = require 'Q'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+
 local tests = {}
 
 tests.t1 = function()
@@ -13,4 +15,16 @@ tests.t1 = function()
   print("Successfully completed test t1")
 end
 
+tests.t2 = function()
+  assert(Q.set_memo(true))
+  assert(qcfg.is_memo == true)
+
+  assert(Q.set_memo(false))
+  assert(qcfg.is_memo == false)
+
+  assert( not Q.set_memo("false"))
+
+  print("Successfully completed test t2")
+end
+-- tests.t2()
 return tests

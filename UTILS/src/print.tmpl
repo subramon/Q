@@ -1,8 +1,11 @@
 return require 'Q/UTILS/lua/code_gen' {
   declaration = [[
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
+#include "q_macros.h"
 
 extern int
 ${qtype}_to_txt(

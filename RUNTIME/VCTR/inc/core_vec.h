@@ -2,7 +2,6 @@
 #define __CORE_VEC_H
 #include "cmem_struct.h"
 #include "core_vec_struct.h"
-#include "_struct_timers.h"
 
 extern void
 vec_reset_timers(
@@ -15,11 +14,6 @@ vec_print_timers(
 extern uint64_t
 vec_print_mem(
    void 
-    );
-extern int
-chk_fldtype(
-    const char * const fldtype,
-    uint32_t field_width
     );
 extern int
 vec_meta(
@@ -39,7 +33,6 @@ get_qtype_and_field_width(
 extern int 
 vec_rehydrate(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width,
@@ -50,7 +43,6 @@ vec_rehydrate(
 extern int 
 vec_new(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width
@@ -71,13 +63,11 @@ vec_materialized(
 extern int
 vec_check(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     );
 extern int
 vec_free(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     );
 extern int
@@ -99,15 +89,13 @@ vec_persist(
 extern int
 vec_get1(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx, 
-    char **ptr_data
+    void **ptr_data
     );
 extern int
 vec_get_chunk(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     uint32_t chunk_num,
     CMEM_REC_TYPE *ptr_cmem,
@@ -133,14 +121,12 @@ vec_memo(
 extern int
 vec_start_read(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem
     );
 extern int
 vec_start_write(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem
     );
@@ -167,10 +153,6 @@ vec_cast(
     const char * const new_qtype,
     uint32_t new_width
     );
-extern int
-vec_clean_chunk(
-    VEC_REC_TYPE *ptr_vec
-    );
 extern char *
 vec_get_buf(
   VEC_REC_TYPE *ptr_vec
@@ -183,14 +165,12 @@ vec_clone(
 extern int
 vec_delete(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     );
 //--------------------------------------
 extern int
 vec_make_chunk_file(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     const VEC_REC_TYPE *const ptr_vec,
     bool is_free_mem,
     int chunk_num
@@ -198,7 +178,6 @@ vec_make_chunk_file(
 extern int
 vec_make_chunk_files(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     bool is_free_mem
     );
@@ -206,7 +185,6 @@ vec_make_chunk_files(
 extern int
 vec_put_chunk(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem,
     uint32_t num_elements
@@ -214,9 +192,8 @@ vec_put_chunk(
 extern int
 vec_put1(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
-    const char * const data
+    const void * const data
     );
 extern int
 vec_file_name(
@@ -231,21 +208,18 @@ vec_file_name(
 extern int
 vec_master(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     bool is_free_mem
     );
 extern int
 vec_unmaster(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
     );
 //-------------------------
 extern int
 vec_delete_chunk_file(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     int chunk_num
     );
@@ -254,18 +228,9 @@ extern int
 check_chunks(
     VEC_GLOBALS_TYPE *ptr_S
     );
-extern void 
-reset_timers(
-    VEC_TIMERS_TYPE *ptr_T
-    );
-extern void 
-print_timers(
-    VEC_TIMERS_TYPE *ptr_T
-    );
 extern int
 vec_shutdown(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec,
     char **ptr_x
     );
@@ -282,13 +247,6 @@ vec_killable(
 extern int
 vec_kill(
     VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
     VEC_REC_TYPE *ptr_vec
-    );
-extern int
-vec_clean_chunks(
-    VEC_GLOBALS_TYPE *ptr_S,
-    VEC_TIMERS_TYPE *ptr_T,
-    const VEC_REC_TYPE *const ptr_vec
     );
 #endif
