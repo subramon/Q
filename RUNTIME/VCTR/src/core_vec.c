@@ -69,6 +69,7 @@ vec_meta(
     )
 {
   int status = 0;
+#define Q_MAX_LEN_FILE_NAME 63
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); cBYE(status);
   char  buf[4096]; // TODO P4 Need to avoid static allocation
@@ -128,7 +129,7 @@ BYE:
 
 int
 vec_free(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -166,7 +167,7 @@ BYE:
 // vec_delete is *almost* identical as vec_free but hard delete of files
 int
 vec_delete(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -179,7 +180,6 @@ BYE:
 
 int 
 vec_new(
-    VEC_GLOBALS_TYPE *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width
@@ -187,7 +187,7 @@ vec_new(
 {
   int status = 0;
 
-  status = vec_new_common(ptr_S, ptr_vec, fldtype, field_width); 
+  status = vec_new_common(ptr_vec, fldtype, field_width); 
   cBYE(status);
 BYE:
   return status;
@@ -195,7 +195,7 @@ BYE:
 
 int 
 vec_rehydrate(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width,
@@ -213,7 +213,7 @@ vec_rehydrate(
   if ( field_width == 0 ) { go_BYE(-1); }
   if ( fldtype == NULL ) { go_BYE(-1); }
 
-  status = vec_new_common(ptr_S, ptr_vec, fldtype, field_width);
+  status = vec_new_common(ptr_vec, fldtype, field_width);
   cBYE(status);
   // Important: Normally, vec_new_common will assign a new vec_uqid
   // by calling mk_uqid(). However, given that this is a rehydration,
@@ -265,7 +265,7 @@ BYE:
 //-------------------------------------------------
 int
 check_chunks(
-    VEC_GLOBALS_TYPE *ptr_S
+    qmem_struct_t *ptr_S
     )
 {
   int status = 0;
@@ -317,7 +317,7 @@ BYE:
 //-------------------------------------------------
 int
 vec_check(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v
     )
 {
@@ -444,7 +444,7 @@ BYE:
 
 int
 vec_get1(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
     void **ptr_data
@@ -476,7 +476,7 @@ BYE:
 //--------------------------------------------------
 int
 vec_start_read(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem
     )
@@ -526,7 +526,7 @@ BYE:
 //--------------------------------------------------
 int
 vec_get_chunk(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t chunk_num,
     CMEM_REC_TYPE *ptr_cmem,
@@ -566,7 +566,7 @@ BYE:
 //------------------------------------------------
 int
 vec_shutdown(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     char **ptr_str
     )
@@ -613,7 +613,7 @@ BYE:
 }
 int
 vec_unget_chunk(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t chunk_num
     )
@@ -634,7 +634,7 @@ BYE:
 
 int
 vec_start_write(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem
     )
@@ -686,7 +686,7 @@ BYE:
 
 int
 vec_kill(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -764,7 +764,7 @@ BYE:
 
 int
 vec_put_chunk(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem,
     uint32_t num_elements
@@ -864,7 +864,7 @@ BYE:
 
 int
 vec_put1(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const void * const data
     )
@@ -925,7 +925,7 @@ BYE:
 
 int
 vec_make_chunk_file(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
     bool is_free_mem,
     int chunk_num
@@ -970,7 +970,7 @@ BYE:
 
 int
 vec_master(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     bool is_free_mem
     )
@@ -983,7 +983,7 @@ BYE:
 
 int
 vec_make_chunk_files(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     bool is_free_mem
     )
@@ -1004,7 +1004,7 @@ BYE:
 
 int
 vec_file_name(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     int32_t chunk_num,
     char *file_name,
@@ -1034,7 +1034,7 @@ BYE:
 
 int
 vec_unmaster(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -1067,7 +1067,7 @@ BYE:
 //--------------------------------------------
 int
 vec_delete_chunk_file(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     int chunk_num
     )

@@ -2,23 +2,7 @@
 #define __VEC_STRUCT_H
 //START_FOR_CDEF
 #include "q_constants.h"
-#define Q_MAX_LEN_FILE_NAME 63
-
-typedef struct _chunk_rec_type {
-  // Redundant uint32_t num_in_chunk; 
-  uint64_t uqid; // unique identifier across all chunks
-  //
-  // (vec_uqid, chunk_num) are pointer back to parent
-  uint64_t vec_uqid; // pointer to parent 
-  uint32_t chunk_num;   // 0 <= chunk_num <  num_chunks
-  uint64_t t_last_get; // time of last read acces
-
-  bool is_file;  // has chunk been backed up to a file?
-  // name of file is derived using mk_file_name()
-  char *data; 
-  // Invariant: (is_file == true) or (data != NULL) 
-  int num_readers;
-} CHUNK_REC_TYPE;
+#include "qmem_struct.h"
 
 typedef struct _vec_rec_type {
   char fldtype[Q_MAX_LEN_QTYPE_NAME+1]; // set by vec_new()
@@ -60,17 +44,7 @@ typedef struct _vec_rec_type {
   uint32_t *chunks;  // [sz_chunks] 
   // i <= j and chunk[i] == 0 => chunk[j] = 0
 } VEC_REC_TYPE;
-//STOP_FOR_CDEF
 
-typedef struct _vec_globals_type { 
-  uint32_t chunk_size;
-  CHUNK_REC_TYPE *chunk_dir;  // [g_sz_chunk_dir]
-  uint32_t sz_chunk_dir; 
-  uint32_t n_chunk_dir;  // 0 <= g_n_chunk_dir <= g_sz_chunk_dir
-  char *q_data_dir;  
-  uint64_t max_file_num;
-  uint64_t max_mem_KB;
-  uint64_t now_mem_KB;
-} VEC_GLOBALS_TYPE;
+//STOP_FOR_CDEF
 
 #endif

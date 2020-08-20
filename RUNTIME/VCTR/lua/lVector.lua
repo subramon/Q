@@ -8,9 +8,12 @@ local cVector		= require 'libvctr'
 local to_scalar		= require 'Q/UTILS/lua/to_scalar'
 local register_type	= require 'Q/UTILS/lua/q_types'
 local H                 = require 'Q/RUNTIME/VCTR/lua/helpers'
-local for_cdef          = require 'Q/UTILS/lua/for_cdef'
-local chunk_size = cVector.chunk_size()
-ffi.cdef(for_cdef("RUNTIME/VCTR/inc/core_vec_struct.h",{ "UTILS/inc/" }))
+local qc                = require 'Q/UTILS/lua/qcore'
+qc.q_cdef( "RUNTIME/VCTR/inc/core_vec_struct.h",{ "UTILS/inc/" })
+qc.q_cdef("UTILS/lua/qmem_struct.h")
+local qmem              = require 'Q/UTILS/lua/qmem'
+local chunk_size        = qmem.chunk_size
+local g_S               = qmem.cdata
 --====================================
 local lVector = {}
 lVector.__index = lVector
@@ -22,13 +25,6 @@ setmetatable(lVector, {
 })
 
 register_type(lVector, "lVector")
-
--- not from Lua. Use cVector:print_timers()
--- not from Lua. Use cVector:check_chunks()
--- not from Lua. Use cVector:init_globals()
--- not from Lua. Use cVector:reset_timers()
--- not from Lua. Use lVector:same_state()
---
 
 function lVector:check()
   -- cannot use function on_both here because check called from within
@@ -432,7 +428,7 @@ function lVector.new(args)
     end
     --=======================
   else -- materialized vector
-    vector._base_vec = assert(cVector.rehydrate(args))
+    vector._base_vec = assert(cVector.rehydrate(g_S, args))
     if ( args.has_nulls ) then
       error("NOT IMPLEMENTED") -- TODO P1
       vector._nn_vec   = assert(cVector.rehydrate(args[2]))

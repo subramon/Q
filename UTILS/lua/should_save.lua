@@ -21,7 +21,7 @@ local function should_save(k,v)
   if k == "package" then return false end
   if k == "posix" then return false end
   if k == "q" then return false end
-  if k == "q_core" then return false end
+  if k == "qcore" then return false end
   if k == "os" then return false end
   if k == "Q" then return false end
   if k == "string" then return false end

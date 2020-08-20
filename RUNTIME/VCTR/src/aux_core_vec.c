@@ -14,7 +14,7 @@
 
 uint64_t
 mk_uqid(
-    VEC_GLOBALS_TYPE *ptr_S
+    qmem_struct_t *ptr_S
     )
 {
   return ++ptr_S->max_file_num;
@@ -147,7 +147,7 @@ BYE:
 
 int
 free_chunk(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     uint32_t chunk_dir_idx,
     bool is_persist
     )
@@ -229,7 +229,7 @@ chk_chunk(
     uint32_t chunk_dir_idx,
     uint64_t vec_uqid,
     const VEC_REC_TYPE *const ptr_vec,
-    VEC_GLOBALS_TYPE *ptr_S
+    qmem_struct_t *ptr_S
     )
 {
   int status = 0;
@@ -267,7 +267,7 @@ BYE:
 
 int
 init_globals(
-    VEC_GLOBALS_TYPE *ptr_S
+    qmem_struct_t *ptr_S
     )
 {
   int status = 0;
@@ -296,7 +296,7 @@ BYE:
 
 static int
 chk_space_in_chunk_dir(
-    VEC_GLOBALS_TYPE *ptr_S
+    qmem_struct_t *ptr_S
     )
 {
   int status = 0;
@@ -316,7 +316,7 @@ BYE:
 
 int
 allocate_chunk(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     size_t sz,
     uint32_t chunk_num,
     uint64_t vec_uqid,
@@ -365,7 +365,7 @@ BYE:
 
 int64_t 
 get_exp_file_size(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     uint64_t num_elements,
     uint32_t field_width,
     const char * const fldtype
@@ -384,7 +384,7 @@ get_exp_file_size(
 
 int32_t
 get_chunk_size_in_bytes(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
       uint32_t field_width, 
       const char * const fldtype
       )
@@ -492,7 +492,7 @@ BYE:
 // tells us which chunk to read this element from
 int 
 chunk_dir_idx_for_read(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
     uint32_t *ptr_chunk_dir_idx
@@ -517,7 +517,7 @@ BYE:
 // tells us which chunk to write this element into
 int 
 get_chunk_num_for_write(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t *ptr_chunk_num
     )
@@ -548,7 +548,7 @@ BYE:
 
 int 
 get_chunk_dir_idx(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_num,
     const uint32_t *const chunks,
@@ -575,7 +575,6 @@ BYE:
 
 int
 vec_new_common(
-    VEC_GLOBALS_TYPE *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width
@@ -592,6 +591,18 @@ vec_new_common(
   ptr_vec->chunk_size_in_bytes = get_chunk_size_in_bytes(
       ptr_S, field_width, fldtype);
   ptr_vec->uqid = mk_uqid(ptr_S);
+  //-----------------------------
+  chunk_dir = malloc(1 * sizeof(chunk_dir_t));
+  return_if_malloc_failed(chunk_dir);
+  memset(chunk_dir, '\0', sizeof(chunk_dir_t));
+  chunk_dir->n = 0;
+  chunk_dir->chunks = malloc(chunk_dir->sz * sizeof(CHUNK_REC_TYPE));
+  return_if_malloc_failed(chunk_dir->chunks);
+  chunk_dir->sz = Q_INITIAL_SZ_CHUNK_DIR;
+  ptr_vec->chunk_dir = chunk_dir; 
+  //-----------------------------
+
+
   ptr_vec->is_memo = true; // default behavior
 BYE:
   return status;
@@ -642,7 +653,7 @@ BYE:
 
 int 
 make_master_file(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_v,
     bool is_free_mem
     )
@@ -694,7 +705,7 @@ BYE:
 
 int
 reincarnate(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_v,
     char **ptr_X,
     bool is_clone
@@ -807,7 +818,7 @@ is_multiple(
 // This should be invoked only when a master file exists 
 int
 vec_clean_chunks(
-    VEC_GLOBALS_TYPE *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec
     )
 {
