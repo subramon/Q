@@ -1,6 +1,7 @@
 #include "q_incs.h"
 #include "vec_macros.h"
 #include "core_vec.h"
+#include "aux_qmem.h"
 #include "aux_core_vec.h"
 #include "cmem.h"
 
@@ -65,64 +66,60 @@ sortfn(
 int
 vec_meta(
     VEC_REC_TYPE *ptr_vec,
-    char *opbuf
+    char **ptr_opbuf
     )
 {
   int status = 0;
+  *ptr_opbuf = NULL;
+  char buf[4096]; // should be large enough 
+  if ( ptr_vec == NULL ) {  go_BYE(-1); }
 #define Q_MAX_LEN_FILE_NAME 63
   char file_name[Q_MAX_LEN_FILE_NAME+1];
   status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); cBYE(status);
-  char  buf[4096]; // TODO P4 Need to avoid static allocation
-  memset(buf, '\0', 4096);
-  if ( ptr_vec == NULL ) {  go_BYE(-1); }
-  strcpy(opbuf, "return { ");
+
+  char  *opbuf = NULL; size_t bufsz = 4096; // initial size 
+  opbuf = malloc(bufsz); return_if_malloc_failed(opbuf);
+  memset(opbuf, '\0', bufsz);
+
+  strcpy(buf, "return { ");
+  safe_strcat(&opbuf, &bufsz, buf); 
   //------------------------------------------------
   sprintf(buf, "fldtype   = \"%s\", ", ptr_vec->fldtype);
-  strcat(opbuf, buf);
+  safe_strcat(&opbuf, &bufsz, buf); 
   sprintf(buf, "field_width   = %d, ", ptr_vec->field_width);
-  strcat(opbuf, buf);
-  sprintf(buf, "chunk_size_in_bytes   = %" PRIu32 ", ", ptr_vec->chunk_size_in_bytes);
-  strcat(opbuf, buf);
+  safe_strcat(&opbuf, &bufsz, buf);
   sprintf(buf, "uqid         = %" PRIu64 ", ", ptr_vec->uqid);
-  strcat(opbuf, buf);
+  safe_strcat(&opbuf, &bufsz, buf);
 
   //-------------------------------------
   sprintf(buf, "num_elements = %" PRIu64 ", ", ptr_vec->num_elements);
-  strcat(opbuf, buf);
+  safe_strcat(&opbuf, &bufsz, buf);
   sprintf(buf, "name         = \"%s\", ", ptr_vec->name);
-  strcat(opbuf, buf);
+  safe_strcat(&opbuf, &bufsz, buf);
 
   //-------------------------------------
-  sprintf(buf, "is_file = %s, ", ptr_vec->is_file ? "true" : "false");
-  strcat(opbuf, buf);
-  sprintf(buf, "file_name    = \"%s\", ", file_name);
-  strcat(opbuf, buf);
-//  sprintf(buf, "file_size    = %" PRIu64 ", ", ptr_vec->file_size);
-  sprintf(buf, "file_size    = %zu,",  ptr_vec->file_size);
-  strcat(opbuf, buf);
-  sprintf(buf, "num_readers   = %d, ", ptr_vec->num_readers);
-  strcat(opbuf, buf);
-  sprintf(buf, "num_writers   = %d, ", ptr_vec->num_writers);
-  strcat(opbuf, buf);
+  // TODO P2: All the stuff from qmem_struct about chunks
+  // TODO P2: All the stuff from qmem_struct about whole_vecs
 
   //-------------------------------------
   sprintf(buf, "is_persist = %s, ", ptr_vec->is_persist ? "true" : "false");
-  strcat(opbuf, buf);
+  safe_strcat(&opbuf, &bufsz, buf);
   sprintf(buf, "is_killable = %s, ", ptr_vec->is_killable ? "true" : "false");
-  strcat(opbuf, buf);
+  safe_strcat(&opbuf, &bufsz, buf);
   sprintf(buf, "is_memo = %s, ", ptr_vec->is_memo ? "true" : "false");
-  strcat(opbuf, buf);
+  safe_strcat(&opbuf, &bufsz, buf);
   sprintf(buf, "is_eov = %s, ", ptr_vec->is_eov ? "true" : "false");
-  strcat(opbuf, buf);
+  safe_strcat(&opbuf, &bufsz, buf);
   //-------------------------------------
   sprintf(buf, "num_chunks = %" PRIu32 ", ", ptr_vec->num_chunks);
-  strcat(opbuf, buf);
+  safe_strcat(&opbuf, &bufsz, buf);
   sprintf(buf, "sz_chunks = %" PRIu32 ", ", ptr_vec->sz_chunks);
-  strcat(opbuf, buf);
-  // TODO P1 Need to print information about chunks in vector
+  safe_strcat(&opbuf, &bufsz, buf);
 
   //-------------------------------------
-  strcat(opbuf, "} ");
+  strcpy(buf, "} ");
+  safe_strcat(&opbuf, &bufsz, buf);
+  *ptr_opbuf = opbuf;
 BYE:
   return status;
 }
@@ -149,8 +146,8 @@ vec_free(
     ptr_vec->mmap_len  = 0;
   }
   // delete file created for entire access
-  status = delete_vec_file(ptr_vec->uqid, ptr_vec->is_persist,
-      &(ptr_vec->is_file), &(ptr_vec->file_size));
+  status = delete_vec_file(ptr_vec->uqid, ptr_vec->whole_vec_dir_idx, 
+      ptr_vec->is_persist, ptr_S);
   cBYE(status);
   //-- Free all chunks that you own
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
@@ -537,14 +534,14 @@ vec_get_chunk(
   if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); } 
   uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
   chk_chunk_idx(chunk_idx);
-  CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-  status = load_chunk(ptr_chunk, ptr_vec, &(ptr_chunk->t_last_get), 
-      &(ptr_chunk->data)); 
+  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+  status = load_chunk(chunk, ptr_vec, &(chunk->t_last_get), 
+      &(chunk->data)); 
   cBYE(status);
-  if ( ptr_chunk->num_readers  < 0 ) { go_BYE(-1); }
-  ptr_chunk->num_readers++;
+  if ( chunk->num_readers  < 0 ) { go_BYE(-1); }
+  chunk->num_readers++;
 
-  ptr_cmem->data = ptr_chunk->data;
+  ptr_cmem->data = chunk->data;
   ptr_cmem->size = ptr_vec->chunk_size_in_bytes;
   strncpy(ptr_cmem->fldtype, ptr_vec->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_cmem->is_foreign = true;
@@ -591,8 +588,8 @@ vec_shutdown(
   }
   for ( uint32_t i = 0; i < ptr_vec->num_chunks; i++ ) { 
     uint32_t chunk_idx = ptr_vec->chunks[i];
-    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    if ( ptr_chunk->num_readers > 0 ) { go_BYE(-1); }
+    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+    if ( chunk->num_readers > 0 ) { go_BYE(-1); }
   }
   //------------------------------------------
   if ( ptr_vec->is_persist ) { 
@@ -621,10 +618,10 @@ vec_unget_chunk(
   if ( !ptr_vec->is_memo ) { chunk_num = 0; } // Important
   if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
   uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
-  CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-  if ( ptr_chunk->data     == NULL ) { go_BYE(-1); }
-  if ( ptr_chunk->num_readers == 0 ) { go_BYE(-1); }
-  ptr_chunk->num_readers--;
+  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+  if ( chunk->data     == NULL ) { go_BYE(-1); }
+  if ( chunk->num_readers == 0 ) { go_BYE(-1); }
+  chunk->num_readers--;
 BYE:
   return status;
 }
@@ -801,10 +798,10 @@ vec_put_chunk(
       status = allocate_chunk(ptr_S, ptr_vec->chunk_size_in_bytes, 
           chunk_num, ptr_vec->uqid, &chunk_idx, is_malloc); 
       cBYE(status);
-      if ( chunk_idx >= ptr_S->sz_chunk_dir ) { go_BYE(-1); }
+      if ( chunk_idx >= ptr_S->chunk_dir->sz ) { go_BYE(-1); }
       if ( !is_malloc ) {
         ptr_cmem->is_foreign   = true;
-        ptr_S->chunk_dir[chunk_idx].data = ptr_cmem->data;
+        ptr_S->chunk_dir->chunks[chunk_idx].data = ptr_cmem->data;
       }
       ptr_vec->chunks[chunk_num] = chunk_idx;
       ptr_vec->num_chunks = 1;
@@ -824,14 +821,14 @@ vec_put_chunk(
     status = get_chunk_num_for_write(ptr_S, ptr_vec, &chunk_num); 
     cBYE(status);
     status = get_chunk_dir_idx(ptr_S, ptr_vec, chunk_num, 
-        ptr_vec->chunks, &(ptr_vec->num_chunks), &chunk_idx, is_malloc); 
+        &(ptr_vec->num_chunks), &chunk_idx, is_malloc); 
     cBYE(status);
     // if NOT memo and stealable, then you have stolen CMEM by now
     // This means that Vector took the CMEM from the generator
     // as the data for its chunk and there is nothing more to do 
     if ( !is_malloc ) { 
       ptr_cmem->is_foreign   = true;
-      ptr_S->chunk_dir[chunk_idx].data = ptr_cmem->data;
+      ptr_S->chunk_dir->chunks[chunk_idx].data = ptr_cmem->data;
       ptr_cmem->data = NULL;
       ptr_cmem->size = 0;
       // following to tell cmem that it is okay for data to be NULL
@@ -844,14 +841,14 @@ vec_put_chunk(
     }
   }
   chk_chunk_idx(chunk_idx);
-  CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
+  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
 
   size_t sz = num_elements * ptr_vec->field_width;
   // handle special case for B1
   if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { 
     sz = ceil((double)num_elements / 8.0); 
   }
-  l_memcpy(ptr_chunk->data, data, sz);
+  l_memcpy(chunk->data, data, sz);
 
   ptr_vec->num_elements += num_elements;
   ptr_vec->chunks[chunk_num] = chunk_idx;
@@ -881,14 +878,14 @@ vec_put1(
   status = get_chunk_num_for_write(ptr_S, ptr_vec, &chunk_num); 
   cBYE(status);
   status = get_chunk_dir_idx(ptr_S, ptr_vec, chunk_num, 
-      ptr_vec->chunks, &(ptr_vec->num_chunks), &chunk_idx, true); 
+      &(ptr_vec->num_chunks), &chunk_idx, true); 
   cBYE(status);
-  CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
+  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
   if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) {
     // Unfortunately, need to handle B1 as a special case
     uint32_t num_in_chunk = ptr_vec->num_elements % ptr_S->chunk_size;
     const uint64_t *const in_bdata = (const uint64_t *const )data;
-    uint64_t *out_bdata = (uint64_t *)ptr_chunk->data;
+    uint64_t *out_bdata = (uint64_t *)chunk->data;
     uint64_t word_idx = num_in_chunk / 64;
     uint64_t  bit_idx = num_in_chunk % 64;
     uint64_t one = 1 ;
@@ -914,7 +911,7 @@ vec_put1(
   else {
     uint32_t in_chunk_idx = ptr_vec->num_elements % ptr_S->chunk_size;
     uint32_t offset = (in_chunk_idx*ptr_vec->field_width);
-    char *data_ptr = ptr_chunk->data + offset;
+    char *data_ptr = chunk->data + offset;
     l_memcpy(data_ptr, data, ptr_vec->field_width);
   }
   ptr_vec->num_elements++;
@@ -947,20 +944,20 @@ vec_make_chunk_file(
     char file_name[Q_MAX_LEN_FILE_NAME+1];
     uint32_t chunk_idx = ptr_vec->chunks[i];
     chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    if ( !ptr_chunk->is_file ) { 
+    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+    if ( !chunk->is_file ) { 
       memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-      status = mk_file_name(ptr_chunk->uqid,file_name,Q_MAX_LEN_FILE_NAME);
+      status = mk_file_name(chunk->uqid,file_name,Q_MAX_LEN_FILE_NAME);
       cBYE(status);
-      if ( ptr_chunk->data == NULL ) { go_BYE(-1); }
+      if ( chunk->data == NULL ) { go_BYE(-1); }
       FILE *fp = fopen(file_name, "wb");
       return_if_fopen_failed(fp, file_name, "wb");
-      fwrite(ptr_chunk->data, ptr_vec->chunk_size_in_bytes, 1, fp);
+      fwrite(chunk->data, ptr_vec->chunk_size_in_bytes, 1, fp);
       fclose(fp);
-      ptr_chunk->is_file = true;
+      chunk->is_file = true;
     }
     if ( is_free_mem ) { 
-      free_if_non_null(ptr_chunk->data);
+      free_if_non_null(chunk->data);
     }
   }
 BYE:
@@ -1020,8 +1017,8 @@ vec_file_name(
     if ( (uint32_t)chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
     uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
     chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    status = mk_file_name(ptr_chunk->uqid, file_name, len_file_name); 
+    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+    status = mk_file_name(chunk->uqid, file_name, len_file_name); 
     cBYE(status);
   }
   else { 
@@ -1044,13 +1041,13 @@ vec_unmaster(
 
   for ( uint32_t i = 0; i < ptr_vec->num_chunks; i++ ) { 
     uint32_t chunk_idx = ptr_vec->chunks[i];
-    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    if ( ( ptr_chunk->is_file ) || ( ptr_chunk->data != NULL ) ) {
+    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+    if ( ( chunk->is_file ) || ( chunk->data != NULL ) ) {
       /* all is well */
     }
     else {
-      status = load_chunk(ptr_chunk, ptr_vec, 
-          &(ptr_chunk->t_last_get), &(ptr_chunk->data)); 
+      status = load_chunk(chunk, ptr_vec, &(chunk->t_last_get), 
+          &(chunk->data)); 
       cBYE(status);
     }
   }
@@ -1086,15 +1083,15 @@ vec_delete_chunk_file(
   }
   for ( uint32_t i = lb; i < ub; i++ ) { 
     uint32_t chunk_idx = ptr_vec->chunks[i];
-    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    if ( !ptr_chunk->is_file ) { continue; }
+    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+    if ( !chunk->is_file ) { continue; }
     // can delete either if data in memory or master file exists
-    if  ( ( ptr_vec->is_file ) || ( ptr_chunk->data != NULL ) ) {
+    if  ( ( ptr_vec->is_file ) || ( chunk->data != NULL ) ) {
       char file_name[Q_MAX_LEN_FILE_NAME+1];
-      status = mk_file_name(ptr_chunk->uqid,file_name,Q_MAX_LEN_FILE_NAME); 
+      status = mk_file_name(chunk->uqid,file_name,Q_MAX_LEN_FILE_NAME); 
       cBYE(status);
       status = remove(file_name); cBYE(status);
-      ptr_chunk->is_file = false;
+      chunk->is_file = false;
     }
     else { // cannot delete the file; will cause loss of data 
       // TODO P4 Above statement is not strictly true, 

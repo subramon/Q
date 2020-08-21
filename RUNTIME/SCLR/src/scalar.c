@@ -17,7 +17,7 @@
 
 #include "cmem_struct.h"
 #include "cmem.h"
-#include "scalar_struct.h"
+#include "sclr_struct.h"
 
 extern int luaopen_libsclr (lua_State *L);
 

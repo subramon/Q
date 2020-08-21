@@ -7,13 +7,11 @@
 #include "vec_macros.h"
 #include "core_vec.h"
 #include "aux_core_vec.h"
-#include "scalar_struct.h"
+#include "sclr_struct.h"
 #include "cmem_struct.h"
 #include "qmem_struct.h"
 #include "cmem.h"
 #include "aux_lua_to_c.h"
-
-#include "txt_to_I4.h"
 #include "isdir.h"
 
 
@@ -35,7 +33,7 @@ LUALIB_API void *luaL_testudata (
   void *p = lua_touserdata(L, ud);
   if (p != NULL) {  /* value is a userdata? */
     if (lua_getmetatable(L, ud)) {  /* does it have a metatable? */
-      lua_getfield(L, LUA_REGISTRYINDEX, tname);  /* get correct metatable */
+      lua_getfield(L, LUA_REGISTRYINDEX, tname);  // get correct metatable
       if (lua_rawequal(L, -1, -2)) {  /* does it have the correct mt? */
         lua_pop(L, 2);  /* remove both metatables */
         return p;
@@ -55,17 +53,13 @@ static int l_vec_reincarnate( lua_State *L) {
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 1);
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
-  // check status of vector 
-  if ( ptr_vec->is_dead ) { go_BYE(-1); }
-  if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
-  if ( !ptr_vec->is_eov ) { go_BYE(-1); }
-  //--------------
-  status = reincarnate(g_S, ptr_vec, &X, is_clone);
-  if ( status < 0 ) { free_if_non_null(X); } cBYE(status);
+  //----------------------------------
+  status = reincarnate(g_S, ptr_vec, &X, is_clone); cBYE(status);
   lua_pushstring(L, X);
   free_if_non_null(X); 
   return 1;
 BYE:
+  free_if_non_null(X); 
   lua_pushnil(L);
   lua_pushstring(L, __func__);
   return 2;
@@ -79,12 +73,12 @@ static int l_vec_shutdown( lua_State *L) {
   const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 1);
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
   //------------------
-  status = vec_shutdown(g_S, ptr_vec, &X); 
-  if ( status < 0 ) { free_if_non_null(X); } cBYE(status);
+  status = vec_shutdown(g_S, ptr_vec, &X); cBYE(status);
   lua_pushstring(L, X);
   free_if_non_null(X); 
   return 1;
 BYE:
+  free_if_non_null(X); 
   lua_pushnil(L);
   lua_pushstring(L, __func__);
   return 2;
@@ -120,32 +114,32 @@ BYE:
 //-----------------------------------
 static int l_vec_file_name( lua_State *L) {
   int status = 0;
-#define Q_MAX_LEN_FILE_NAME 63
-  char file_name[Q_MAX_LEN_FILE_NAME+1];
-  memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
+  char *file_name = NULL;
 
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); 
+  if ( ( num_args != 2 ) && ( num_args != 3 ) ) { go_BYE(-1); }
   const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 1);
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
   //------------------
   int32_t chunk_number = -1;
-  if ( num_args == 1 ) { 
+  if ( num_args == 2 ) { 
     // we want name of file for vector
   } 
-  else if ( num_args == 2 ) { 
+  else if ( num_args == 3 ) { 
     // we want name of file for chunk
     chunk_number = luaL_checknumber(L, 2);
   }
   else {
     go_BYE(-1);
   }
-  status = vec_file_name(g_S, ptr_vec, chunk_number, file_name, 
-      Q_MAX_LEN_FILE_NAME); 
+  status = vec_file_name(g_S, ptr_vec, chunk_number, &file_name);
   cBYE(status);
   lua_pushstring(L, file_name);
+  free_if_non_null(file_name);
   return 1;
 BYE:
+  free_if_non_null(file_name);
   lua_pushnil(L);
   lua_pushstring(L, __func__);
   return 2;
@@ -164,12 +158,23 @@ static int l_vec_me( lua_State *L) {
   lua_newtable(L);
   for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
     int chunk_dir_idx = ptr_vec->chunks[i];
-    CHUNK_REC_TYPE *ptr_chunk = g_S->chunk_dir->chunks + chunk_dir_idx;
+    CHUNK_REC_TYPE *chunk = g_S->chunk_dir->chunks + chunk_dir_idx;
     lua_pushnumber(L, i+1);
-    lua_pushlightuserdata(L, ptr_chunk);
+    lua_pushlightuserdata(L, chunk);
     lua_settable(L, -3);
   }
-  return 2;
+  // return info in whole_vec_dir
+  lua_newtable(L);
+  WHOLE_VEC_REC_TYPE *whole_vec_rec = 
+    g_S->whole_vec_dir->whole_vecs +ptr_vec->whole_vec_dir_idx;
+
+  lua_pushstring(L,"is_file");
+  lua_pushboolean(L, whole_vec_rec->is_file);
+  lua_settable(L, -3);
+  // TODO P3 Put other relevant stuff over here
+
+  return 3;
+  
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
@@ -554,14 +559,19 @@ static int l_vec_put_chunk( lua_State *L) {
   // Ideally should have == in comparison below
   // You (generator) need to give me (Vector) a buffer whose size 
   // is *at least* as the size of my chunk
-  if ( ptr_cmem->size < ptr_vec->chunk_size_in_bytes ) { 
-    go_BYE(-1); 
-  }
+  size_t chunk_size = g_S->chunk_size;
+  size_t chunk_size_in_bytes = ptr_vec->field_width * chunk_size;
+  if ( ptr_cmem->size < chunk_size_in_bytes ) { go_BYE(-1); }
   int64_t num_in_cmem = luaL_checknumber(L, 4);
-  if ( num_in_cmem <= 0 ) { go_BYE(-1); }
-  status = vec_put_chunk(g_S, ptr_vec, ptr_cmem, num_in_cmem); cBYE(status);
-  lua_pushboolean(L, true);
-  return 1;
+  if ( num_in_cmem <= 0 ) { 
+    fprintf(stderr, "WARNING! Empty chunk being ignored\n");
+  }
+  else {
+    status = vec_put_chunk(g_S, ptr_vec, ptr_cmem, num_in_cmem); 
+    cBYE(status);
+    lua_pushboolean(L, true);
+    return 1;
+  }
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
@@ -569,20 +579,18 @@ BYE:
 }
 //----------------------------------------
 static int l_vec_meta( lua_State *L) {
-  char opbuf[4096]; // TODO P4 try not to hard code bound
+  char *opbuf = NULL;
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
 
-  memset(opbuf, '\0', 4096);
-  int status = vec_meta(ptr_vec, opbuf);
-  if ( status == 0) { 
-    lua_pushstring(L, opbuf);
-    return 1;
-  }
-  else {
-    lua_pushnil(L);
-    lua_pushstring(L, __func__);
-    return 2;
-  }
+  int status = vec_meta(ptr_vec, &opbuf); cBYE(status);
+  lua_pushstring(L, opbuf);
+  free_if_non_null(opbuf);
+  return 1;
+BYE:
+  free_if_non_null(opbuf);
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
 }
 //----------------------------------------
 static int l_vec_check( lua_State *L) {
@@ -647,7 +655,7 @@ static int l_vec_delete_chunk_file( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
   //------------------
   int chunk_num = -1; // default is to delete for all chunks
-  if ( num_args == 2 ) { 
+  if ( num_args == 3 ) { 
     chunk_num = lua_tonumber(L, 3);
   }
   status = vec_delete_chunk_file(g_S,  ptr_vec, chunk_num); 
@@ -704,8 +712,7 @@ static int l_vec_new( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vec_new(ptr_vec, qtype, field_width);
-  cBYE(status);
+  status = vec_new(ptr_vec, qtype, field_width); cBYE(status);
 
   return 1; 
 BYE:

@@ -11,193 +11,34 @@
 
 #define Q_MAX_LEN_FILE_NAME 63 // TODO  P2 Delete
 #define CORE_VEC_ALIGNMENT 64
-#include "aux_core_vec.h"
+#include "aux_qmem.h"
 
 uint64_t
-mk_uqid(
+get_uqid(
     qmem_struct_t *ptr_S
     )
 {
-  uint64_t n = ptr_S->max_file_num + 1;
-  ptr_S->max_file_num = n;
-  return n;
+  return ++ptr_S->uqid_gen;
 }
 
 int
-safe_strcat(
-    char **ptr_X,
-    size_t *ptr_nX,
-    const char * const buf
+free_chunk(
+    const qmem_struct_t *ptr_S,
+    uint32_t chunk_dir_idx,
+    bool is_persist
     )
 {
   int status = 0;
-  char *X = *ptr_X;
-  size_t nX = *ptr_nX;
-  size_t buflen = strlen(buf);
-  size_t Xlen   = strlen(X);
-  if ( Xlen + buflen + 2 >= nX ) { 
-    while ( (Xlen + buflen + 2) >= nX ) { 
-      nX *= 2;
-    }
-    X = malloc(nX);
-    return_if_malloc_failed(X);
-    memset(X, 0, nX);
-    strcpy(X, *ptr_X);
+  chk_chunk_idx(chunk_dir_idx); 
+
+  CHUNK_REC_TYPE *chunk =  ptr_S->chunk_dir->chunks + chunk_dir_idx;
+  if ( chunk->num_readers > 0 ) { go_BYE(-1); }
+  free_if_non_null(chunk->data);
+  if ( !is_persist ) { 
+    status = delete_chunk_file(chunk, &(chunk->is_file)); cBYE(status);
   }
-  strcat(X, buf);
-  *ptr_X = X;
-  *ptr_nX = nX;
-BYE:
-  return status;
-}
-
-
-void 
-l_memcpy(
-    void *dest,
-    const void *src,
-    size_t n
-    )
-{
-  memcpy(dest, src, n);
-}
-
-void *
-l_malloc(
-    size_t n
-    )
-{
-  int status = 0;
-  void  *x = NULL;
-
-  status = posix_memalign(&x, CORE_VEC_ALIGNMENT, n); 
-  if ( status < 0 ) { WHEREAMI; return NULL; }
-  if ( x == NULL ) { WHEREAMI; return NULL; }
-  if ( status < 0 ) { WHEREAMI; return NULL; }
-
-  return x;
-}
-
-bool 
-is_file_size_okay(
-    const char *const file_name,
-    int64_t expected_size
-    )
-{
-  if ( ( *file_name == '\0' ) && ( expected_size == 0 ) ) { return true; }
-  int64_t actual_size = get_file_size(file_name);
-  if ( actual_size !=  expected_size ) { return false; }
-  return true;
-}
-
-int 
-chk_name(
-    const char * const name
-    )
-{
-  int status = 0;
-  if ( name == NULL ) { go_BYE(-1); }
-  if ( strlen(name) > Q_MAX_LEN_INTERNAL_NAME ) {go_BYE(-1); }
-  for ( const char *cptr = (const char *)name; *cptr != '\0'; cptr++ ) { 
-    if ( !isascii(*cptr) ) { 
-      fprintf(stderr, "Cannot have character [%c] in name \n", *cptr);
-      go_BYE(-1); 
-    }
-    if ( ( *cptr == ',' ) || ( *cptr == '"' ) || ( *cptr == '\\') ) {
-      go_BYE(-1);
-    }
-  }
-BYE:
-  return status;
-}
-
-int
-chk_fldtype(
-    const char * const fldtype,
-    uint32_t field_width
-    )
-{
-  int status = 0;
-  if ( fldtype == NULL ) { go_BYE(-1); }
-  // TODO P3: SYNC with qtypes in q_consts.lua
-  if ( ( strcmp(fldtype, "B1") == 0 ) || 
-       ( strcmp(fldtype, "I1") == 0 ) || 
-       ( strcmp(fldtype, "I2") == 0 ) || 
-       ( strcmp(fldtype, "I4") == 0 ) || 
-       ( strcmp(fldtype, "I8") == 0 ) || 
-       ( strcmp(fldtype, "F4") == 0 ) || 
-       ( strcmp(fldtype, "F8") == 0 ) || 
-       ( strcmp(fldtype, "SC") == 0 ) || 
-       ( strcmp(fldtype, "TM") == 0 ) ) {
-    /* all is well */
-  }
-  else {
-    fprintf(stderr, "Bad field type = [%s] \n", fldtype);
-    go_BYE(-1);
-  }
-  if ( strcmp(fldtype, "B1") == 0 )  {
-    if ( field_width != 1 ) { go_BYE(-1); }
-  }
-  else {
-    if ( field_width == 0 ) { go_BYE(-1); }
-  }
-  if ( strcmp(fldtype, "SC") == 0 )  {
-    if ( field_width < 2 ) { go_BYE(-1); }
-  }
-BYE:
-  return status;
-}
-
-int
-load_chunk(
-    const CHUNK_REC_TYPE *const chunk, 
-    const VEC_REC_TYPE *const ptr_vec,
-    uint64_t *ptr_t_last_get,
-    char **ptr_data
-    )
-{
-  int status = 0;
-  char *data = NULL;
-  *ptr_t_last_get = RDTSC();
-  if ( chunk->data != NULL ) { return status; } // already loaded
-  // double check that this chunk is yours
-  if ( chunk->vec_uqid != ptr_vec->uqid ) { go_BYE(-1); }
-  if ( chunk->num_readers != 0 ) { go_BYE(-1); }
-
-  // must be able to backup data from chunk file or vector file 
-  if ( ( !chunk->is_file ) && ( !ptr_vec->is_file ) ) { go_BYE(-1); }
-
-  char file_name[Q_MAX_LEN_FILE_NAME+1];
-  memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-  char *X = NULL; size_t nX = 0;
-  data = l_malloc(ptr_vec->chunk_size_in_bytes);
-  return_if_malloc_failed(data);
-  memset(data, '\0', ptr_vec->chunk_size_in_bytes);
-
-  if ( chunk->is_file ) { // chunk has a backup file 
-    status = mk_file_name(chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-    cBYE(status);
-    status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
-    if ( X == NULL ) { go_BYE(-1); }
-    if ( nX > ptr_vec->chunk_size_in_bytes ) { go_BYE(-1); }
-    memcpy(data, X, nX);
-  }
-  else { // vector has a backup file 
-    size_t num_to_copy = ptr_vec->chunk_size_in_bytes;
-    status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
-    cBYE(status);
-    status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
-    if ( X == NULL                ) { go_BYE(-1); }
-    if ( nX != ptr_vec->file_size ) { go_BYE(-1); }
-    size_t offset = ptr_vec->chunk_size_in_bytes * chunk->chunk_num;
-    // handle case where last chunk requested and vec_size not multiple 
-    if ( nX - offset < num_to_copy ) { num_to_copy = nX - offset; }
-    //--------
-    if ( offset + num_to_copy > nX ) { go_BYE(-1); }
-    memcpy(data, X + offset, num_to_copy);
-  }
-  *ptr_data = data;
-  munmap(X, nX);
+  memset(chunk, '\0', sizeof(CHUNK_REC_TYPE));
+  ptr_S->chunk_dir->n--;
 BYE:
   return status;
 }
@@ -205,7 +46,6 @@ BYE:
 int
 chk_chunk(
     const qmem_struct_t *ptr_S,
-    const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_dir_idx,
     uint64_t vec_uqid
     )
@@ -550,6 +390,33 @@ vec_new_common(
 BYE:
   return status;
 }
+
+int
+delete_vec_file(
+    uint64_t uqid,
+    uint32_t whole_vec_dir_idx,
+    bool is_persist,
+    const qmem_struct_t *ptr_S
+    )
+{
+  int status = 0;
+  WHOLE_VEC_REC_TYPE *w = 
+    ptr_S->whole_vec_dir->whole_vecs + whole_vec_dir_idx;
+  if ( w->uqid != uqid ) { go_BYE(-1); } 
+  if ( w->is_file ) { 
+    if ( !is_persist ) {
+      char file_name[Q_MAX_LEN_FILE_NAME+1];
+      status = mk_file_name(uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+      cBYE(status);
+      if ( !isfile(file_name) ) { go_BYE(-1); }
+      status = remove(file_name); cBYE(status);
+    }
+  }
+  w->is_file = false;
+  w->file_size = 0;
+BYE:
+  return status;
+}
 //---------------------
 int
 delete_chunk_file(
@@ -636,11 +503,6 @@ reincarnate(
   char *buf = NULL;
   char *X = NULL;
 
-  // check status of vector 
-  if ( ptr_v->is_dead ) { go_BYE(-1); }
-  if ( ptr_v->num_writers > 0 ) { go_BYE(-1); }
-  if ( !ptr_v->is_eov ) { go_BYE(-1); }
-  //--------------
   buf = malloc(BUFLEN+1);
   return_if_malloc_failed(buf);
   memset(buf, '\0', BUFLEN+1);

@@ -6,6 +6,8 @@ local stringify = require 'Q/UTILS/lua/stringify'
 local qc     = require 'Q/UTILS/lua/qcore'
 local qc     = require 'Q/UTILS/lua/qcore'
 
+local sz, n
+
 qc.q_cdef("UTILS/inc/qmem_struct.h")
 pcall(ffi.cdef, "extern void *malloc(size_t);")
 pcall(ffi.cdef, "extern void free (void *);")
@@ -17,18 +19,37 @@ local cdata = assert(ffi.C.malloc(sz))
 ffi.fill(cdata, 0)
 cst_cdata = ffi.cast("qmem_struct_t *", cdata)
 
+--=====================================================
 sz = ffi.sizeof("chunk_dir_t ")
 local chunk_dir = assert(ffi.C.malloc(sz))
 ffi.fill(chunk_dir, 0)
 cst_chunk_dir = ffi.cast("chunk_dir_t  *", chunk_dir)
 cst_cdata[0].chunk_dir = cst_chunk_dir
 
-sz = 262144 * ffi.sizeof("CHUNK_REC_TYPE ") -- default value 
+n = 262144 -- default value 
+sz = n * ffi.sizeof("CHUNK_REC_TYPE ") 
 local chunks = assert(ffi.C.malloc(sz))
 ffi.fill(chunks, 0)
 cst_chunks = ffi.cast("CHUNK_REC_TYPE  *", chunks)
 cst_cdata[0].chunk_dir[0].chunks = cst_chunks
+cst_cdata[0].chunk_dir[0].sz = 262144
+cst_cdata[0].chunk_dir[0].n  = 0
+--=====================================================
+sz = ffi.sizeof("whole_vec_dir_t ")
+local whole_vec_dir = assert(ffi.C.malloc(sz))
+ffi.fill(whole_vec_dir, 0)
+cst_whole_vec_dir = ffi.cast("whole_vec_dir_t  *", whole_vec_dir)
+cst_cdata[0].whole_vec_dir = cst_whole_vec_dir
 
+n = 1024 -- default value 
+sz = n * ffi.sizeof("WHOLE_VEC_REC_TYPE ") 
+local whole_vecs = assert(ffi.C.malloc(sz))
+ffi.fill(whole_vecs, 0)
+cst_whole_vecs = ffi.cast("WHOLE_VEC_REC_TYPE  *", whole_vecs)
+cst_cdata[0].whole_vec_dir[0].whole_vecs = cst_whole_vecs
+cst_cdata[0].whole_vec_dir[0].sz = n
+cst_cdata[0].whole_vec_dir[0].n  = 0
+--=====================================================
 --===========================
 -- TODO  cVector qcfg.Q_DATA_DIR for data_dir
 -- TODO Use cVector qcfg.chunk_size for chunk_size

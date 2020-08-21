@@ -1,6 +1,6 @@
 local tests = {}
 tests.t1 = function()
-  local qmem = require 'qmem'
+  local qmem = require 'Q/UTILS/lua/qmem'
   local T = qmem.get()
   assert(type(T) == "table")
   local V = {}

@@ -65,24 +65,30 @@ UTILS_SRC_FILES = \
 	../../../UTILS/src/rs_mmap.c \
 
 vector.o : vector.c \
-	../inc/core_vec_struct.h \
+	../inc/vctr_struct.h \
 	../../../UTILS/inc/txt_to_I4.h \
 	${UTILS_INC_FILES}
 	gcc -c $(INCS) ${QC_FLAGS} vector.c -o vector.o
 
 core_vec.o : core_vec.c \
-  	../inc/core_vec_struct.h \
+  	../inc/vctr_struct.h \
 	../inc/core_vec.h \
 	${UTILS_INC_FILES}
 	gcc -c $(INCS) ${QC_FLAGS} core_vec.c -o core_vec.o
 
+aux_qmem.o : aux_qmem.c \
+	../inc/vctr_struct.h \
+	../inc/aux_qmem.h \
+	${UTILS_INC_FILES} 
+	gcc -c $(INCS) ${QC_FLAGS} aux_qmem.c -o aux_qmem.o
+
 aux_core_vec.o : aux_core_vec.c \
-	../inc/core_vec_struct.h \
+	../inc/vctr_struct.h \
 	../inc/aux_core_vec.h \
 	${UTILS_INC_FILES} 
 	gcc -c $(INCS) ${QC_FLAGS} aux_core_vec.c -o aux_core_vec.o
 
-libvctr.so: vector.o core_vec.o aux_core_vec.o \
+libvctr.so: vector.o core_vec.o aux_qmem.o aux_core_vec.o \
 	${GEN_INC_FILES} \
 	${GEN_SRC_FILES} \
 	${UTILS_SRC_FILES} \

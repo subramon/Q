@@ -7,7 +7,7 @@ return require 'Q/UTILS/lua/code_gen' {
 #include "lauxlib.h"
 #include "lualib.h"
 // for other run time stuff
-#include "scalar_struct.h"
+#include "sclr_struct.h"
 #include "cmem_struct.h"
 // for hmap/aggregator stuff
 #include "hmap_common.h"

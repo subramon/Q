@@ -104,7 +104,6 @@ get_chunk_dir_idx(
     const qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_idx,
-    const uint32_t *const chunks,
     uint32_t *ptr_num_chunks,
     uint32_t *ptr_chunk_dir_idx,
     bool is_malloc
@@ -114,13 +113,6 @@ vec_new_common(
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width
-    );
-extern int
-delete_vec_file(
-    uint64_t uqid,
-    bool is_persist,
-    bool *ptr_is_file, 
-    size_t *ptr_file_size
     );
 extern int
 delete_chunk_file(
@@ -153,7 +145,7 @@ safe_strcat(
     );
 extern uint64_t
 mk_uqid(
-    const qmem_struct_t *ptr_S
+    qmem_struct_t *ptr_S
     );
 extern int
 vec_clean_chunks(

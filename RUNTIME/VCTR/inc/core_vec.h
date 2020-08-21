@@ -2,7 +2,7 @@
 #define __CORE_VEC_H
 #include "cmem_struct.h"
 #include "qmem_struct.h"
-#include "core_vec_struct.h"
+#include "vctr_struct.h"
 
 extern void
 vec_reset_timers(
@@ -19,7 +19,7 @@ vec_print_mem(
 extern int
 vec_meta(
     VEC_REC_TYPE *ptr_vec,
-    char *opbuf
+    char **ptr_opbuf
     );
 extern int
 update_file_name(
@@ -200,9 +200,7 @@ vec_file_name(
     const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     int32_t chunk_num,
-    char *file_name,
-    int len_file_name
-
+    char **ptr_file_name
     );
 //--------------------------
 extern int
