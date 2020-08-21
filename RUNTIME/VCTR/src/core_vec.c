@@ -129,7 +129,7 @@ BYE:
 
 int
 vec_free(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -167,7 +167,7 @@ BYE:
 // vec_delete is *almost* identical as vec_free but hard delete of files
 int
 vec_delete(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -195,7 +195,7 @@ BYE:
 
 int 
 vec_rehydrate(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width,
@@ -230,17 +230,17 @@ vec_rehydrate(
         &chunk_idx, false); 
     cBYE(status); chk_chunk_idx(chunk_idx); 
     ptr_vec->chunks[i] = chunk_idx;
-    CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
-    ptr_c->vec_uqid = ptr_vec->uqid;
-    ptr_c->uqid = chunk_uqids[i]; // Important: over-write
-    ptr_c->chunk_num = i;
-    status = mk_file_name(ptr_c->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+    chunk->vec_uqid = ptr_vec->uqid;
+    chunk->uqid = chunk_uqids[i]; // Important: over-write
+    chunk->chunk_num = i;
+    status = mk_file_name(chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
     if ( isfile(file_name) ) { 
       int64_t expected_file_size = get_exp_file_size(ptr_S, 
           ptr_S->chunk_size, ptr_vec->field_width, ptr_vec->fldtype);
       int64_t actual_file_size = get_file_size(file_name);
       if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
-      ptr_c->is_file = true; 
+      chunk->is_file = true; 
     }
   }
   //
@@ -265,13 +265,13 @@ BYE:
 //-------------------------------------------------
 int
 check_chunks(
-    qmem_struct_t *ptr_S
+    const qmem_struct_t *ptr_S
     )
 {
   int status = 0;
-  CHUNK_REC_TYPE *chunk_dir = ptr_S->chunk_dir;
-  uint32_t sz  = ptr_S->sz_chunk_dir;
-  uint32_t n   = ptr_S->n_chunk_dir;
+  CHUNK_REC_TYPE *chunks = ptr_S->chunk_dir->chunks;
+  uint32_t sz  = ptr_S->chunk_dir->sz;
+  uint32_t n   = ptr_S->chunk_dir->n;
   if ( n == 0 ) { return status;  }
   if ( n > sz ) { go_BYE(-1); }
   VEC_UQID_CHUNK_NUM_REC_TYPE *buf1 = NULL;
@@ -285,14 +285,14 @@ check_chunks(
 
   uint32_t alt_n = 0;
   for ( uint32_t i = 0; i < sz; i++ ) { 
-    if ( chunk_dir[i].uqid == 0 ) { continue;}
+    if ( chunks[i].uqid == 0 ) { continue;}
     if ( alt_n >= n ) { go_BYE(-1); }
-    buf1[alt_n].vec_uqid = chunk_dir[i].vec_uqid;
-    buf1[alt_n].chunk_num = chunk_dir[i].chunk_num;
-    buf2[alt_n] = chunk_dir[i].uqid;
+    buf1[alt_n].vec_uqid = chunks[i].vec_uqid;
+    buf1[alt_n].chunk_num = chunks[i].chunk_num;
+    buf2[alt_n] = chunks[i].uqid;
     alt_n++;
     // other checks 
-    if ( chunk_dir[i].num_readers < 0 ) { go_BYE(-1); }
+    if ( chunks[i].num_readers < 0 ) { go_BYE(-1); }
   }
   if ( alt_n != n ) { go_BYE(-1); }
   // check uniqueness of (vec_uqid, chunk_num);
@@ -317,7 +317,7 @@ BYE:
 //-------------------------------------------------
 int
 vec_check(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v
     )
 {
@@ -398,10 +398,9 @@ vec_check(
   }
   //-------------------------------------------
   for ( uint32_t i = 0; i < v->num_chunks; i++ ) {
-    status = chk_chunk(v->chunks[i], v->uqid, v, ptr_S);
+    status = chk_chunk(ptr_S, v, v->chunks[i], v->uqid);
     cBYE(status);
-    if (  v->chunks[i] == 0 ) { go_BYE(-1); }
-    if (  v->chunks[i] >= ptr_S->sz_chunk_dir ) { go_BYE(-1); }
+    chk_chunk_idx(v->chunks[i]);
     for ( uint32_t j = i+1; j  < v->num_chunks; j++ ) {
       if (  v->chunks[i] == v->chunks[j] ) { go_BYE(-1); }
     }
@@ -444,7 +443,7 @@ BYE:
 
 int
 vec_get1(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
     void **ptr_data
@@ -458,16 +457,16 @@ vec_get1(
   cBYE(status);
   in_chunk_idx = idx % ptr_S->chunk_size; // identifies element within chunk
 
-  CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_dir_idx;
-  status = load_chunk(ptr_chunk, ptr_vec, &(ptr_chunk->t_last_get), 
-      &(ptr_chunk->data)); 
+  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_dir_idx;
+  status = load_chunk(chunk, ptr_vec, &(chunk->t_last_get), 
+      &(chunk->data)); 
   cBYE(status);
   if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { 
     uint32_t word_idx = in_chunk_idx / 64;
-    *ptr_data =  ptr_chunk->data + word_idx;
+    *ptr_data =  chunk->data + word_idx;
   }
   else {
-    *ptr_data =  ptr_chunk->data + (in_chunk_idx * ptr_vec->field_width);
+    *ptr_data =  chunk->data + (in_chunk_idx * ptr_vec->field_width);
   }
 
 BYE:
@@ -476,7 +475,7 @@ BYE:
 //--------------------------------------------------
 int
 vec_start_read(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem
     )
@@ -526,7 +525,7 @@ BYE:
 //--------------------------------------------------
 int
 vec_get_chunk(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t chunk_num,
     CMEM_REC_TYPE *ptr_cmem,
@@ -566,7 +565,7 @@ BYE:
 //------------------------------------------------
 int
 vec_shutdown(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     char **ptr_str
     )
@@ -613,7 +612,7 @@ BYE:
 }
 int
 vec_unget_chunk(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t chunk_num
     )
@@ -634,7 +633,7 @@ BYE:
 
 int
 vec_start_write(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem
     )
@@ -686,7 +685,7 @@ BYE:
 
 int
 vec_kill(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -764,7 +763,7 @@ BYE:
 
 int
 vec_put_chunk(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem,
     uint32_t num_elements
@@ -864,7 +863,7 @@ BYE:
 
 int
 vec_put1(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const void * const data
     )
@@ -925,7 +924,7 @@ BYE:
 
 int
 vec_make_chunk_file(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
     bool is_free_mem,
     int chunk_num
@@ -970,7 +969,7 @@ BYE:
 
 int
 vec_master(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     bool is_free_mem
     )
@@ -983,7 +982,7 @@ BYE:
 
 int
 vec_make_chunk_files(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     bool is_free_mem
     )
@@ -1004,7 +1003,7 @@ BYE:
 
 int
 vec_file_name(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     int32_t chunk_num,
     char *file_name,
@@ -1034,7 +1033,7 @@ BYE:
 
 int
 vec_unmaster(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -1067,7 +1066,7 @@ BYE:
 //--------------------------------------------
 int
 vec_delete_chunk_file(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     int chunk_num
     )

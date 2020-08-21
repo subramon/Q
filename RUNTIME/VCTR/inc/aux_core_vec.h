@@ -15,7 +15,7 @@ chk_fldtype(
     );
 extern int
 free_chunk(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     uint32_t chunk_dir_idx,
     bool is_persist
     );
@@ -28,14 +28,14 @@ load_chunk(
     );
 extern int
 chk_chunk(
-    uint32_t chunk_dir_idx,
-    uint64_t vec_uqid,
+    const qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
-    qmem_struct_t *ptr_S
+    uint32_t chunk_dir_idx,
+    uint64_t vec_uqid
     );
 extern int
 allocate_chunk(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     size_t sz,
     uint32_t chunk_idx,
     uint64_t vec_uqid,
@@ -44,14 +44,14 @@ allocate_chunk(
     );
 extern int64_t 
 get_exp_file_size(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     uint64_t num_elements,
     uint32_t field_width,
     const char * const fldtype
     );
 extern int32_t
 get_chunk_size_in_bytes(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     uint32_t field_width, 
     const char * const fldtype
     );
@@ -83,14 +83,14 @@ initial_case(
     );
 extern int 
 chunk_dir_idx_for_read(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
     uint32_t *ptr_chunk_dir_idx
     );
 extern int
 get_chunk_num_for_write(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t *ptr_chunk_num
     );
@@ -101,7 +101,7 @@ init_chunk_dir(
     );
 extern int 
 get_chunk_dir_idx(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_idx,
     const uint32_t *const chunks,
@@ -129,14 +129,10 @@ delete_chunk_file(
     );
 extern int
 reincarnate(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_v,
     char **ptr_x,
     bool is_clone 
-    );
-extern int
-init_globals(
-    qmem_struct_t *ptr_S
     );
 extern bool
 is_multiple(
@@ -145,7 +141,7 @@ is_multiple(
     );
 extern int 
 make_master_file(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_v,
     bool is_free_mem
     );
@@ -157,10 +153,10 @@ safe_strcat(
     );
 extern uint64_t
 mk_uqid(
-    qmem_struct_t *ptr_S
+    const qmem_struct_t *ptr_S
     );
 extern int
 vec_clean_chunks(
-    qmem_struct_t *ptr_S,
+    const qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec
     );
