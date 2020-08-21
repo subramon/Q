@@ -65,17 +65,17 @@ sortfn(
 
 int
 vec_meta(
+    const qmem_struct_t *ptr_S, 
     VEC_REC_TYPE *ptr_vec,
     char **ptr_opbuf
     )
 {
   int status = 0;
   *ptr_opbuf = NULL;
+  char *file_name = NULL;
   char buf[4096]; // should be large enough 
   if ( ptr_vec == NULL ) {  go_BYE(-1); }
-#define Q_MAX_LEN_FILE_NAME 63
-  char file_name[Q_MAX_LEN_FILE_NAME+1];
-  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); cBYE(status);
+  status = mk_file_name(ptr_S, ptr_vec->uqid, &file_name); cBYE(status);
 
   char  *opbuf = NULL; size_t bufsz = 4096; // initial size 
   opbuf = malloc(bufsz); return_if_malloc_failed(opbuf);
@@ -137,24 +137,10 @@ vec_free(
     // fprintf(stderr, "Freeing Vector that is already dead\n");
     return status; // TODO P4 Should this be an error?
   }
-  if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
-  if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
-  // If file has been opened, close it and delete it 
-  if ( ( ptr_vec->mmap_addr  != NULL ) && ( ptr_vec->mmap_len > 0 ) )  {
-    munmap(ptr_vec->mmap_addr, ptr_vec->mmap_len);
-    ptr_vec->mmap_addr = NULL;
-    ptr_vec->mmap_len  = 0;
-  }
-  // delete file created for entire access
-  status = delete_vec_file(ptr_vec->uqid, ptr_vec->whole_vec_dir_idx, 
-      ptr_vec->is_persist, ptr_S);
+  // delete all resources for this vector (modulo what is_persist says)
+  status = delete_vec(ptr_vec->uqid, ptr_vec->is_persist, ptr_S, 
+      ptr_vec->whole_vec_dir_idx);
   cBYE(status);
-  //-- Free all chunks that you own
-  for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
-    status = free_chunk(ptr_S, ptr_vec->chunks[i], ptr_vec->is_persist);  
-    cBYE(status);
-  }
-  memset(ptr_vec->fldtype, '\0', sizeof(Q_MAX_LEN_QTYPE_NAME+1));
   memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
   ptr_vec->is_dead = true;
   // Don't do this in C. Lua will do it: free(ptr_vec);
@@ -190,75 +176,6 @@ BYE:
   return status;
 }
 
-int 
-vec_rehydrate(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
-    const char * const fldtype,
-    uint32_t field_width,
-    int64_t num_elements,
-    int64_t vec_uqid,
-    int64_t *chunk_uqids
-    )
-{
-  int status = 0;
-  char file_name[Q_MAX_LEN_FILE_NAME+1];
-
-  if ( num_elements == 0 ) { go_BYE(-1); }
-  if ( vec_uqid == 0 ) { go_BYE(-1); }
-  if ( chunk_uqids == NULL ) { go_BYE(-1); }
-  if ( field_width == 0 ) { go_BYE(-1); }
-  if ( fldtype == NULL ) { go_BYE(-1); }
-
-  status = vec_new_common(ptr_vec, fldtype, field_width);
-  cBYE(status);
-  // Important: Normally, vec_new_common will assign a new vec_uqid
-  // by calling mk_uqid(). However, given that this is a rehydration,
-  // we use the vec_uqid provided, not the one generated. Hence, as below:
-  ptr_vec->uqid = vec_uqid; 
-
-  uint32_t num_chunks = ceil((double)num_elements / (double)ptr_S->chunk_size);
-  status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
-  ptr_vec->num_elements = num_elements; // after init_chunk_dir()
-  ptr_vec->num_chunks   = num_chunks;
-  for ( uint32_t i = 0; i < num_chunks; i++ ) {
-    uint32_t chunk_idx;
-    status = allocate_chunk(ptr_S, 0, i, ptr_vec->uqid, 
-        &chunk_idx, false); 
-    cBYE(status); chk_chunk_idx(chunk_idx); 
-    ptr_vec->chunks[i] = chunk_idx;
-    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
-    chunk->vec_uqid = ptr_vec->uqid;
-    chunk->uqid = chunk_uqids[i]; // Important: over-write
-    chunk->chunk_num = i;
-    status = mk_file_name(chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-    if ( isfile(file_name) ) { 
-      int64_t expected_file_size = get_exp_file_size(ptr_S, 
-          ptr_S->chunk_size, ptr_vec->field_width, ptr_vec->fldtype);
-      int64_t actual_file_size = get_file_size(file_name);
-      if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
-      chunk->is_file = true; 
-    }
-  }
-  //
-  // Note that we just accept the master file (after some checking)
-  // we do not "load" it into memory. We delay that until needed
-  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-  if ( isfile(file_name) ) { 
-    int64_t expected_file_size = get_exp_file_size(ptr_S, num_elements,
-        ptr_vec->field_width, ptr_vec->fldtype);
-    int64_t actual_file_size = get_file_size(file_name);
-    if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
-    ptr_vec->file_size = actual_file_size;
-    ptr_vec->is_file = true; 
-  }
-  ptr_vec->num_elements = num_elements;
-  ptr_vec->is_eov     = true;
-  ptr_vec->is_persist = true;
-  //------------
-BYE:
-  return status;
-}
 //-------------------------------------------------
 int
 check_chunks(
@@ -319,50 +236,54 @@ vec_check(
     )
 {
   int status = 0;
+  WHOLE_VEC_REC_TYPE *w = 
+    ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
+  if ( w->uqid != v->uqid ) { go_BYE(-1); } 
+
   if ( v->num_elements == 0 ) {
     if ( v->chunks      != NULL ) { go_BYE(-1); }
     if ( v->num_chunks  != 0    ) { go_BYE(-1); }
     if ( v->sz_chunks   != 0    ) { go_BYE(-1); }
-    if ( v->file_size   != 0    ) { go_BYE(-1); }
-    if ( v->mmap_addr   != NULL ) { go_BYE(-1); }
-    if ( v->mmap_len    != 0    ) { go_BYE(-1); }
-    if ( v->num_readers != 0    ) { go_BYE(-1); }
-    if ( v->num_writers != 0    ) { go_BYE(-1); }
+    if ( w->file_size   != 0    ) { go_BYE(-1); }
+    if ( w->mmap_addr   != NULL ) { go_BYE(-1); }
+    if ( w->mmap_len    != 0    ) { go_BYE(-1); }
+    if ( w->num_readers != 0    ) { go_BYE(-1); }
+    if ( w->num_writers != 0    ) { go_BYE(-1); }
 
     if ( v->is_dead             ) { go_BYE(-1); }
     // TODO P2 THINK if ( v->is_eov              ) { go_BYE(-1); }
-    if ( v->is_file             ) { go_BYE(-1); }
+    if ( w->is_file             ) { go_BYE(-1); }
     return status;
   }
   //------------------------------------------
-  if ( v->is_file ) { 
-    if ( v->file_size == 0 ) { go_BYE(-1); }
+  if ( w->is_file ) { 
+    if ( w->file_size == 0 ) { go_BYE(-1); }
   }
   else {
-    if ( v->file_size   != 0    ) { go_BYE(-1); }
-    if ( v->mmap_addr   != NULL ) { go_BYE(-1); }
-    if ( v->mmap_len    != 0    ) { go_BYE(-1); }
-    if ( v->num_readers != 0    ) { go_BYE(-1); }
-    if ( v->num_writers != 0    ) { go_BYE(-1); }
+    if ( w->file_size   != 0    ) { go_BYE(-1); }
+    if ( w->mmap_addr   != NULL ) { go_BYE(-1); }
+    if ( w->mmap_len    != 0    ) { go_BYE(-1); }
+    if ( w->num_readers != 0    ) { go_BYE(-1); }
+    if ( w->num_writers != 0    ) { go_BYE(-1); }
   }
   //-------------------------------------------
-  if ( v->num_readers > 0 ) { 
-    if ( v->num_writers != 0 ) { go_BYE(-1); }
+  if ( w->num_readers > 0 ) { 
+    if ( w->num_writers != 0 ) { go_BYE(-1); }
   }
-  if ( v->num_writers > 1 ) { go_BYE(-1); }
-  if ( v->num_writers == 1 ) { 
-    if ( v->num_readers != 0 ) { go_BYE(-1); }
+  if ( w->num_writers > 1 ) { go_BYE(-1); }
+  if ( w->num_writers == 1 ) { 
+    if ( w->num_readers != 0 ) { go_BYE(-1); }
   }
   //-------------------------------------------
-  if ( v->mmap_addr != NULL ) { 
-    if ( !v->is_file      ) { go_BYE(-1); }
-    if ( v->mmap_len == 0 ) { go_BYE(-1); }
-    if ( ( v->num_readers == 0 ) && ( v->num_writers == 0 ) )  {
+  if ( w->mmap_addr != NULL ) { 
+    if ( !w->is_file      ) { go_BYE(-1); }
+    if ( w->mmap_len == 0 ) { go_BYE(-1); }
+    if ( ( w->num_readers == 0 ) && ( w->num_writers == 0 ) )  {
       go_BYE(-1);
     }
   }
   else {
-    if ( ( v->num_readers > 0 ) || ( v->num_writers > 0 ) )  {
+    if ( ( w->num_readers > 0 ) || ( w->num_writers > 0 ) )  {
       go_BYE(-1);
     }
   }
@@ -395,9 +316,8 @@ vec_check(
   }
   //-------------------------------------------
   for ( uint32_t i = 0; i < v->num_chunks; i++ ) {
-    status = chk_chunk(ptr_S, v, v->chunks[i], v->uqid);
-    cBYE(status);
     chk_chunk_idx(v->chunks[i]);
+    status = chk_chunk(ptr_S, v, v->chunks[i]); cBYE(status);
     for ( uint32_t j = i+1; j  < v->num_chunks; j++ ) {
       if (  v->chunks[i] == v->chunks[j] ) { go_BYE(-1); }
     }
@@ -473,48 +393,55 @@ BYE:
 int
 vec_start_read(
     const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
-    CMEM_REC_TYPE *ptr_cmem
+    VEC_REC_TYPE *v,
+    CMEM_REC_TYPE *c
     )
 {
   int status = 0;
-  if ( !ptr_vec->is_eov         ) { go_BYE(-1); }
-  if ( ptr_vec->num_writers > 0 ) { go_BYE(-1); }
+  if ( !v->is_eov         ) { go_BYE(-1); }
+  WHOLE_VEC_REC_TYPE *w = 
+    ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
+  if ( w->uqid != v->uqid ) { go_BYE(-1); } 
+  if ( w->num_writers > 0 ) { go_BYE(-1); }
 
-  ptr_vec->num_readers++; 
-  if ( ptr_vec->mmap_addr == NULL ) { 
-    status = make_master_file(ptr_S, ptr_vec, false); cBYE(status);
-    if ( !ptr_vec->is_file ) { go_BYE(-1); }
+  w->num_readers++; 
+  if ( w->mmap_addr == NULL ) { 
+    status = make_master_file(ptr_S, v, false); cBYE(status);
+    if ( !w->is_file ) { go_BYE(-1); }
     char *X = NULL; size_t nX = 0;
     char file_name[Q_MAX_LEN_FILE_NAME+1];
-    status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+    status = mk_file_name(v->uqid, file_name, Q_MAX_LEN_FILE_NAME);
     status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
-    ptr_vec->mmap_addr = X;
-    ptr_vec->mmap_len  = nX;
+    w->mmap_addr = X;
+    w->mmap_len  = nX;
   }
-  ptr_cmem->data = ptr_vec->mmap_addr;
-  ptr_cmem->size = ptr_vec->mmap_len;
-  strncpy(ptr_cmem->fldtype, ptr_vec->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
-  ptr_cmem->is_foreign = true;
+  c->data = w->mmap_addr;
+  c->size = w->mmap_len;
+  strncpy(c->fldtype, v->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
+  c->is_foreign = true;
 BYE:
   return status;
 }
 //--------------------------------------------------
 int
 vec_end_read(
-    VEC_REC_TYPE *ptr_vec
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *v
     )
 {
   int status = 0;
-  if ( ptr_vec->mmap_addr   == NULL ) { go_BYE(-1); }
-  if ( ptr_vec->mmap_len    == 0    )  { go_BYE(-1); }
-  if ( ptr_vec->num_readers == 0    ) { go_BYE(-1); }
+  WHOLE_VEC_REC_TYPE *w = 
+    ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
+  if ( w->uqid != v->uqid ) { go_BYE(-1); } 
+  if ( w->mmap_addr   == NULL ) { go_BYE(-1); }
+  if ( w->mmap_len    == 0    )  { go_BYE(-1); }
+  if ( w->num_readers == 0    ) { go_BYE(-1); }
 
-  ptr_vec->num_readers--;
-  if ( ptr_vec->num_readers == 0 ) { 
-    munmap(ptr_vec->mmap_addr, ptr_vec->mmap_len);
-    ptr_vec->mmap_addr  = NULL;
-    ptr_vec->mmap_len   = 0;
+  w->num_readers--;
+  if ( w->num_readers == 0 ) { 
+    munmap(w->mmap_addr, w->mmap_len);
+    w->mmap_addr  = NULL;
+    w->mmap_len   = 0;
   }
 BYE:
   return status;
@@ -523,35 +450,34 @@ BYE:
 int
 vec_get_chunk(
     const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
+    VEC_REC_TYPE *v,
     uint32_t chunk_num,
     CMEM_REC_TYPE *ptr_cmem,
     uint32_t *ptr_num_in_chunk
     )
 {
   int status = 0;
-  if ( !ptr_vec->is_memo ) { chunk_num = 0; } // Important
-  if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); } 
-  uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
+  if ( !v->is_memo ) { chunk_num = 0; } // Important
+  if ( chunk_num >= v->num_chunks ) { go_BYE(-1); } 
+  uint32_t chunk_idx = v->chunks[chunk_num];
   chk_chunk_idx(chunk_idx);
   CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
-  status = load_chunk(chunk, ptr_vec, &(chunk->t_last_get), 
-      &(chunk->data)); 
+  status = load_chunk(chunk, v, &(chunk->t_last_get), &(chunk->data)); 
   cBYE(status);
   if ( chunk->num_readers  < 0 ) { go_BYE(-1); }
   chunk->num_readers++;
 
   ptr_cmem->data = chunk->data;
-  ptr_cmem->size = ptr_vec->chunk_size_in_bytes;
-  strncpy(ptr_cmem->fldtype, ptr_vec->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
+  ptr_cmem->size = ptr_S->chunk_size * v->field_width;
+  strncpy(ptr_cmem->fldtype, v->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_cmem->is_foreign = true;
 
   // set chunk size
-  if ( chunk_num < ptr_vec->num_chunks - 1 ) {
+  if ( chunk_num < v->num_chunks - 1 ) {
     *ptr_num_in_chunk = ptr_S->chunk_size;
   }
   else {
-    *ptr_num_in_chunk = ptr_vec->num_elements % ptr_S->chunk_size;
+    *ptr_num_in_chunk = v->num_elements % ptr_S->chunk_size;
     if ( *ptr_num_in_chunk == 0 ) { 
       *ptr_num_in_chunk = ptr_S->chunk_size;
     }
@@ -563,47 +489,50 @@ BYE:
 int
 vec_shutdown(
     const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
+    VEC_REC_TYPE *v,
     char **ptr_str
     )
 {
   int status = 0;
   *ptr_str = NULL;
+  WHOLE_VEC_REC_TYPE *w = 
+    ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
+  if ( w->uqid != v->uqid ) { go_BYE(-1); } 
 
-  if ( ( !ptr_vec->is_memo )  && 
-      ( ptr_vec->num_elements > ptr_S->chunk_size ) ) { 
+  if ( ( !v->is_memo )  && 
+      ( v->num_elements > ptr_S->chunk_size ) ) { 
     fprintf(stderr,"We have lost data and no hope of recovering it\n");
-    status = vec_delete(ptr_S, ptr_vec); cBYE(status);
+    status = vec_delete(ptr_S, v); cBYE(status);
     go_BYE(-1); 
   }
   // if not eov, then delete the vector
   // In other words, only eov vectors get to be saved
-  if ( !ptr_vec->is_eov )  {
-    status = vec_delete(ptr_S, ptr_vec); cBYE(status);
+  if ( !v->is_eov )  {
+    status = vec_delete(ptr_S, v); cBYE(status);
     return status;
   }
   // check if anybody is using it 
-  if ( ( ptr_vec->num_readers > 0 ) || ( ptr_vec->num_writers > 0 ) ) {
+  if ( ( w->num_readers > 0 ) || ( w->num_writers > 0 ) ) {
     go_BYE(-1);
   }
-  for ( uint32_t i = 0; i < ptr_vec->num_chunks; i++ ) { 
-    uint32_t chunk_idx = ptr_vec->chunks[i];
+  for ( uint32_t i = 0; i < v->num_chunks; i++ ) { 
+    uint32_t chunk_idx = v->chunks[i];
     CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
     if ( chunk->num_readers > 0 ) { go_BYE(-1); }
   }
   //------------------------------------------
-  if ( ptr_vec->is_persist ) { 
-    if ( ptr_vec->is_file ) { 
+  if ( v->is_persist ) { 
+    if ( w->is_file ) { 
       // master file exists, no need to flush chunks individually
     }
     else {
-      status = vec_make_chunk_file(ptr_S, ptr_vec, true, -1); 
+      status = vec_make_chunk_file(ptr_S, v, true, -1); 
       cBYE(status);
     }
-    status = reincarnate(ptr_S, ptr_vec, ptr_str, false);
+    status = reincarnate(ptr_S, v, ptr_str, false);
     cBYE(status);
   }
-  status = vec_free(ptr_S, ptr_vec); cBYE(status);
+  status = vec_free(ptr_S, v); cBYE(status);
 BYE:
   return status;
 }
@@ -631,33 +560,36 @@ BYE:
 int
 vec_start_write(
     const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
+    VEC_REC_TYPE *v,
     CMEM_REC_TYPE *ptr_cmem
     )
 {
   int status = 0;
   char *X = NULL; size_t nX = 0;
-  if ( ptr_vec->is_dead ) { go_BYE(-1); }
-  if ( !ptr_vec->is_eov ) { go_BYE(-1); }
-  if ( ptr_vec->num_writers != 0 ) { go_BYE(-1); }
-  if ( ptr_vec->num_readers != 0 ) { go_BYE(-1); }
-  if ( !ptr_vec->is_file  ) { 
+  WHOLE_VEC_REC_TYPE *w = 
+    ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
+  if ( w->uqid != v->uqid ) { go_BYE(-1); } 
+  if ( v->is_dead ) { go_BYE(-1); }
+  if ( !v->is_eov ) { go_BYE(-1); }
+  if ( w->num_writers != 0 ) { go_BYE(-1); }
+  if ( w->num_readers != 0 ) { go_BYE(-1); }
+  if ( !w->is_file  ) { 
     fprintf(stderr, "TO BE IMPLEMENTED\n"); go_BYE(-1); 
   }
-  if ( !ptr_vec->is_file  ) { go_BYE(-1); }
-  ptr_vec->num_writers = 1;
+  if ( !w->is_file  ) { go_BYE(-1); }
+  w->num_writers = 1;
   // delete chunks since they no longer reflect reality
-  status = vec_clean_chunks(ptr_S, ptr_vec);
+  status = vec_clean_chunks(ptr_S, v);
   cBYE(status);
   char file_name[Q_MAX_LEN_FILE_NAME+1];
-  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
+  status = mk_file_name(v->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
   cBYE(status);
   rs_mmap(file_name, &X, &nX, 1); cBYE(status);
   // Set the CMEM that will be consumed by caller
-  ptr_vec->mmap_addr = ptr_cmem->data     = X;
-  ptr_vec->mmap_len  = ptr_cmem->size     = nX;
+  w->mmap_addr = ptr_cmem->data     = X;
+  w->mmap_len  = ptr_cmem->size     = nX;
   ptr_cmem->is_foreign = true;
-  strncpy(ptr_cmem->fldtype, ptr_vec->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
+  strncpy(ptr_cmem->fldtype, v->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
 
 BYE:
   return status;
@@ -665,17 +597,21 @@ BYE:
 
 int
 vec_end_write(
-    VEC_REC_TYPE *ptr_vec
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *v
     )
 {
   int status = 0;
-  if ( ptr_vec->num_writers != 1 ) { go_BYE(-1); }
-  if ( ptr_vec->mmap_addr  == NULL ) { go_BYE(-1); }
-  if ( ptr_vec->mmap_len   == 0    )  { go_BYE(-1); }
-  munmap(ptr_vec->mmap_addr, ptr_vec->mmap_len);
-  ptr_vec->mmap_addr  = NULL;
-  ptr_vec->mmap_len   = 0;
-  ptr_vec->num_writers = 0; 
+  WHOLE_VEC_REC_TYPE *w = 
+    ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
+  if ( w->uqid != v->uqid ) { go_BYE(-1); } 
+  if ( w->num_writers != 1 ) { go_BYE(-1); }
+  if ( w->mmap_addr  == NULL ) { go_BYE(-1); }
+  if ( w->mmap_len   == 0    )  { go_BYE(-1); }
+  munmap(w->mmap_addr, w->mmap_len);
+  w->mmap_addr  = NULL;
+  w->mmap_len   = 0;
+  w->num_writers = 0; 
 BYE:
   return status;
 }
@@ -795,8 +731,8 @@ vec_put_chunk(
   if ( !ptr_vec->is_memo ) {
     chunk_num = 0;
     if ( ptr_vec->num_chunks == 0 ) { // indicating no allocation done 
-      status = allocate_chunk(ptr_S, ptr_vec->chunk_size_in_bytes, 
-          chunk_num, ptr_vec->uqid, &chunk_idx, is_malloc); 
+      status = allocate_chunk((qmem_struct_t *)ptr_S, ptr_vec, chunk_num, 
+          &chunk_idx, is_malloc); 
       cBYE(status);
       if ( chunk_idx >= ptr_S->chunk_dir->sz ) { go_BYE(-1); }
       if ( !is_malloc ) {
@@ -940,6 +876,7 @@ vec_make_chunk_file(
     lb = chunk_num;
     ub = lb + 1; 
   }
+  size_t chunk_size_in_bytes = ptr_vec->field_width * ptr_S->chunk_size;
   for ( unsigned int i = lb; i < ub; i++ ) { 
     char file_name[Q_MAX_LEN_FILE_NAME+1];
     uint32_t chunk_idx = ptr_vec->chunks[i];
@@ -952,7 +889,7 @@ vec_make_chunk_file(
       if ( chunk->data == NULL ) { go_BYE(-1); }
       FILE *fp = fopen(file_name, "wb");
       return_if_fopen_failed(fp, file_name, "wb");
-      fwrite(chunk->data, ptr_vec->chunk_size_in_bytes, 1, fp);
+      fwrite(chunk->data, chunk_size_in_bytes, 1, fp);
       fclose(fp);
       chunk->is_file = true;
     }
@@ -1003,8 +940,7 @@ vec_file_name(
     const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     int32_t chunk_num,
-    char *file_name,
-    int len_file_name
+    char **ptr_file_name
     )
 {
   int status = 0;
@@ -1115,6 +1051,76 @@ vec_same_state(
   if ( ptr_v1->is_eov != ptr_v2->is_eov ) { go_BYE(-1); }
   if ( ptr_v1->is_memo != ptr_v2->is_memo ) { go_BYE(-1); }
   if ( ptr_v1->is_persist != ptr_v2->is_persist ) { go_BYE(-1); }
+BYE:
+  return status;
+}
+
+int 
+vec_rehydrate(
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *ptr_vec,
+    const char * const fldtype,
+    uint32_t field_width,
+    int64_t num_elements,
+    int64_t vec_uqid,
+    int64_t *chunk_uqids
+    )
+{
+  int status = 0;
+  char file_name[Q_MAX_LEN_FILE_NAME+1];
+
+  if ( num_elements == 0 ) { go_BYE(-1); }
+  if ( vec_uqid == 0 ) { go_BYE(-1); }
+  if ( chunk_uqids == NULL ) { go_BYE(-1); }
+  if ( field_width == 0 ) { go_BYE(-1); }
+  if ( fldtype == NULL ) { go_BYE(-1); }
+
+  status = vec_new_common(ptr_vec, fldtype, field_width);
+  cBYE(status);
+  // Important: Normally, vec_new_common will assign a new vec_uqid
+  // by calling mk_uqid(). However, given that this is a rehydration,
+  // we use the vec_uqid provided, not the one generated. Hence, as below:
+  ptr_vec->uqid = vec_uqid; 
+
+  uint32_t num_chunks = ceil((double)num_elements / (double)ptr_S->chunk_size);
+  status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
+  ptr_vec->num_elements = num_elements; // after init_chunk_dir()
+  ptr_vec->num_chunks   = num_chunks;
+  for ( uint32_t i = 0; i < num_chunks; i++ ) {
+    uint32_t chunk_idx;
+    status = allocate_chunk(ptr_S, i, ptr_vec->uqid, 
+        &chunk_idx, false); 
+    cBYE(status); chk_chunk_idx(chunk_idx); 
+    ptr_vec->chunks[i] = chunk_idx;
+    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+    chunk->vec_uqid = ptr_vec->uqid;
+    chunk->uqid = chunk_uqids[i]; // Important: over-write
+    chunk->chunk_num = i;
+    status = mk_file_name(chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+    if ( isfile(file_name) ) { 
+      int64_t expected_file_size = get_exp_file_size(ptr_S, 
+          ptr_S->chunk_size, ptr_vec->field_width, ptr_vec->fldtype);
+      int64_t actual_file_size = get_file_size(file_name);
+      if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
+      chunk->is_file = true; 
+    }
+  }
+  //
+  // Note that we just accept the master file (after some checking)
+  // we do not "load" it into memory. We delay that until needed
+  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+  if ( isfile(file_name) ) { 
+    int64_t expected_file_size = get_exp_file_size(ptr_S, num_elements,
+        ptr_vec->field_width, ptr_vec->fldtype);
+    int64_t actual_file_size = get_file_size(file_name);
+    if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
+    ptr_vec->file_size = actual_file_size;
+    ptr_vec->is_file = true; 
+  }
+  ptr_vec->num_elements = num_elements;
+  ptr_vec->is_eov     = true;
+  ptr_vec->is_persist = true;
+  //------------
 BYE:
   return status;
 }

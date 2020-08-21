@@ -202,111 +202,6 @@ BYE:
   return status;
 }
 
-int
-chk_chunk(
-    const qmem_struct_t *ptr_S,
-    const VEC_REC_TYPE *const ptr_vec,
-    uint32_t chunk_dir_idx,
-    uint64_t vec_uqid
-    )
-{
-  int status = 0;
-  if ( chunk_dir_idx >= ptr_S->chunk_dir->sz ) { go_BYE(-1); }
-  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_dir_idx;
-  /* What checks on these guys?
-  if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
-  */
-  char file_name[Q_MAX_LEN_FILE_NAME+1];
-  memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-  status = mk_file_name(chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
-  cBYE(status);
-  if ( chunk->uqid == 0 ) { // we expect this to be free 
-    if ( chunk->chunk_num != 0 ) { go_BYE(-1); }
-    if ( chunk->uqid != 0 ) { go_BYE(-1); }
-    if ( chunk->vec_uqid != 0 ) { go_BYE(-1); }
-    if ( chunk->is_file ) { go_BYE(-1); }
-    if ( isfile(file_name) ) { go_BYE(-1); }
-    if ( chunk->data != NULL ) { go_BYE(-1); }
-  }
-  else {
-    if ( chunk->vec_uqid != vec_uqid ) { go_BYE(-1); } }
-    if ( !ptr_vec->is_file ) { 
-      // this check is valid only when there is no master file 
-      if ( chunk->data == NULL ) { 
-        if ( !chunk->is_file ) { go_BYE(-1); }
-      }
-    }
-    if ( chunk->is_file ) { 
-      if ( !isfile(file_name) ) { }
-  }
-BYE:
-  return status;
-}
-
-static int
-chk_space_in_chunk_dir(
-    const qmem_struct_t *ptr_S
-    )
-{
-  int status = 0;
-  if ( ptr_S->chunk_dir == NULL ) { go_BYE(-1); }
-  if ( ptr_S->chunk_dir->n >= ptr_S->chunk_dir->sz ) { 
-    // TODO P1
-    fprintf(stderr, "TO BE IMPLEMENTED: allocate space\n"); go_BYE(-1);
-  }
-BYE:
-  return status;
-}
-
-int
-allocate_chunk(
-    const qmem_struct_t *ptr_S,
-    size_t sz,
-    uint32_t chunk_num,
-    uint64_t vec_uqid,
-    uint32_t *ptr_chunk_dir_idx,
-    bool is_malloc
-    )
-{
-  int status = 0;
-  static unsigned int start_search = 1;
-  status = chk_space_in_chunk_dir(ptr_S);  cBYE(status); 
-  // NOTE: we do not allocate 0th entry
-  for ( int iter = 0; iter < 2; iter++ ) { 
-    unsigned int lb, ub;
-    if ( iter == 0 ) { 
-      lb = start_search; // note not 0
-      ub = ptr_S->chunk_dir->sz;
-    }
-    else {
-      lb = 1; 
-      ub = start_search; // note not 0
-    }
-    for ( unsigned int i = lb ; i < ub; i++ ) { 
-      if ( ptr_S->chunk_dir->chunks[i].uqid == 0 ) {
-        ptr_S->chunk_dir->chunks[i].uqid = mk_uqid((qmem_struct_t *)ptr_S);
-        ptr_S->chunk_dir->chunks[i].chunk_num = chunk_num;
-        ptr_S->chunk_dir->chunks[i].is_file = false;
-        ptr_S->chunk_dir->chunks[i].vec_uqid = vec_uqid;
-        if ( is_malloc ) { 
-          if ( sz == 0 ) { go_BYE(-1); }
-          ptr_S->chunk_dir->chunks[i].data = l_malloc(sz);
-          return_if_malloc_failed(ptr_S->chunk_dir->chunks[i].data);
-        }
-        *ptr_chunk_dir_idx = i; 
-        ptr_S->chunk_dir->n++;
-        start_search = i+1;
-        if ( start_search >= ptr_S->chunk_dir->sz ) { start_search = 1; }
-        return status;
-      }
-    }
-  }
-  /* control should not come here */
-  go_BYE(-1); 
-BYE:
-  return status;
-}
-
 int64_t 
 get_exp_file_size(
     const qmem_struct_t *ptr_S,
@@ -383,24 +278,29 @@ BYE:
 
 int
 mk_file_name(
+    const qmem_struct_t *ptr_S,
     uint64_t uqid, 
-    char *file_name, // [sz]
-    int len_file_name
+    char **ptr_file_name
     )
 {
   int status = 0;
+  *ptr_file_name = NULL;
+  char *file_name = NULL; int len_file_name = 64; // TODO P4 Fix hard code 
+
   int len = NUM_HEX_DIGITS_IN_UINT64;
   char buf[len+1];
   memset(buf, '\0', len+1);
-  if ( len_file_name > 0 ) { memset(file_name, '\0', len_file_name+1); }
+
+  file_name = malloc(len_file_name); 
+  memset(file_name, 0,  len_file_name); 
   status = as_hex(uqid, buf, len); cBYE(status);
-  // TODO P3 Need to avoid repeated initialization
-  char *data_dir = getenv("Q_DATA_DIR");
+  char *data_dir = ptr_S->q_data_dir;
   if ( data_dir == NULL ) { go_BYE(-1); }
   if ( !isdir(data_dir) ) { go_BYE(-1); }
-  int nw = snprintf(file_name, Q_MAX_LEN_FILE_NAME, 
+  int nw = snprintf(file_name, len_file_name-1, 
       "%s/_%s.bin", data_dir, buf);
-  if ( nw == Q_MAX_LEN_FILE_NAME ) { go_BYE(-1); }
+  if ( nw == len_file_name-1 ) { go_BYE(-1); }
+  *ptr_file_name = file_name;
 BYE:
   return status;
 }

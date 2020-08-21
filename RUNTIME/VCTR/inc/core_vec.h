@@ -18,6 +18,7 @@ vec_print_mem(
     );
 extern int
 vec_meta(
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     char **ptr_opbuf
     );
@@ -132,10 +133,12 @@ vec_start_write(
     );
 extern int
 vec_end_read(
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     );
 extern int
 vec_end_write(
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     );
 extern int

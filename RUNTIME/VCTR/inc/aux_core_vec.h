@@ -26,22 +26,6 @@ load_chunk(
     uint64_t *ptr_t_last_get,
     char **ptr_data
     );
-extern int
-chk_chunk(
-    const qmem_struct_t *ptr_S,
-    const VEC_REC_TYPE *const ptr_vec,
-    uint32_t chunk_dir_idx,
-    uint64_t vec_uqid
-    );
-extern int
-allocate_chunk(
-    const qmem_struct_t *ptr_S,
-    size_t sz,
-    uint32_t chunk_idx,
-    uint64_t vec_uqid,
-    uint32_t *ptr_chunk_dir_idx,
-    bool is_malloc
-    );
 extern int64_t 
 get_exp_file_size(
     const qmem_struct_t *ptr_S,
@@ -73,9 +57,9 @@ as_hex(
     );
 extern int
 mk_file_name(
+    const qmem_struct_t *ptr_S,
     uint64_t uqid, 
-    char *file_name,
-    int len_file_name
+    char **ptr_file_name
     );
 extern int
 initial_case(
@@ -98,15 +82,6 @@ extern int
 init_chunk_dir(
     VEC_REC_TYPE *ptr_vec,
     int num_chunks
-    );
-extern int 
-get_chunk_dir_idx(
-    const qmem_struct_t *ptr_S,
-    const VEC_REC_TYPE *const ptr_vec,
-    uint32_t chunk_idx,
-    uint32_t *ptr_num_chunks,
-    uint32_t *ptr_chunk_dir_idx,
-    bool is_malloc
     );
 extern int
 vec_new_common(

@@ -524,8 +524,12 @@ BYE:
 //----------------------------------------
 static int l_vec_end_read( lua_State *L) {
   int status = 0;
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vec_end_read(ptr_vec); cBYE(status);
+  // get args from Lua 
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 1);
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
+  //--------------------------
+  status = vec_end_read(g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -536,8 +540,12 @@ BYE:
 //----------------------------------------
 static int l_vec_end_write( lua_State *L) {
   int status = 0;
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vec_end_write(ptr_vec); cBYE(status);
+  // get args from Lua 
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 1);
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
+  //--------------------------
+  status = vec_end_write(g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -579,10 +587,15 @@ BYE:
 }
 //----------------------------------------
 static int l_vec_meta( lua_State *L) {
+  int status = 0;
   char *opbuf = NULL;
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
 
-  int status = vec_meta(ptr_vec, &opbuf); cBYE(status);
+  // get args from Lua 
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 1);
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
+  //----------------------------
+  status = vec_meta(g_S, ptr_vec, &opbuf); cBYE(status);
   lua_pushstring(L, opbuf);
   free_if_non_null(opbuf);
   return 1;
