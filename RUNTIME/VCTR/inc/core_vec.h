@@ -40,7 +40,8 @@ vec_rehydrate(
     uint32_t field_width,
     int64_t num_elements,
     int64_t vec_uqid,
-    int64_t *chunk_uqids
+    int64_t *chunk_uqids, // [num_chunks]
+    uint32_t num_chunks
     );
 extern int 
 vec_new(
@@ -172,22 +173,8 @@ vec_delete(
     );
 //--------------------------------------
 extern int
-vec_make_chunk_file(
-    const qmem_struct_t *ptr_S,
-    const VEC_REC_TYPE *const ptr_vec,
-    bool is_free_mem,
-    int chunk_num
-    );
-extern int
-vec_make_chunk_files(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
-    bool is_free_mem
-    );
-//--------------------------------------
-extern int
 vec_put_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     CMEM_REC_TYPE *ptr_cmem,
     uint32_t num_elements
@@ -207,13 +194,7 @@ vec_file_name(
     );
 //--------------------------
 extern int
-vec_master(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
-    bool is_free_mem
-    );
-extern int
-vec_unmaster(
+vec_un_backup_vec(
     const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     );
@@ -249,5 +230,11 @@ extern int
 vec_kill(
     const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
+    );
+extern int
+vec_make_chunk_files(
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *ptr_vec,
+    bool is_free_mem
     );
 #endif

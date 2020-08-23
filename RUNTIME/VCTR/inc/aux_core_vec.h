@@ -33,12 +33,6 @@ get_exp_file_size(
     uint32_t field_width,
     const char * const fldtype
     );
-extern int32_t
-get_chunk_size_in_bytes(
-    const qmem_struct_t *ptr_S,
-    uint32_t field_width, 
-    const char * const fldtype
-    );
 extern void 
 l_memcpy(
     void *dest,
@@ -54,12 +48,6 @@ as_hex(
     uint64_t n,
     char *buf,
     size_t buflen
-    );
-extern int
-mk_file_name(
-    const qmem_struct_t *ptr_S,
-    uint64_t uqid, 
-    char **ptr_file_name
     );
 extern int
 initial_case(

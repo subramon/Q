@@ -68,7 +68,7 @@ vector.o : vector.c \
 	../inc/vctr_struct.h \
 	../../../UTILS/inc/txt_to_I4.h \
 	${UTILS_INC_FILES}
-	gcc -c $(INCS) ${QC_FLAGS} vector.c -o vector.o
+	gcc -c $(INCS) ${QC_FLAGS} -Wno-discarded-qualifiers vector.c -o vector.o
 
 core_vec.o : core_vec.c \
   	../inc/vctr_struct.h \
@@ -80,7 +80,7 @@ aux_qmem.o : aux_qmem.c \
 	../inc/vctr_struct.h \
 	../inc/aux_qmem.h \
 	${UTILS_INC_FILES} 
-	gcc -c $(INCS) ${QC_FLAGS} aux_qmem.c -o aux_qmem.o
+	gcc -c $(INCS) ${QC_FLAGS} -Wno-discarded-qualifiers aux_qmem.c -o aux_qmem.o
 
 aux_core_vec.o : aux_core_vec.c \
 	../inc/vctr_struct.h \

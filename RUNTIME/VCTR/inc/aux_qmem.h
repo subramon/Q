@@ -1,4 +1,9 @@
 #include "qmem_struct.h"
+extern size_t
+get_chunk_size_in_bytes(
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *ptr_v
+    );
 extern uint64_t
 get_uqid(
     qmem_struct_t *ptr_S
@@ -32,4 +37,69 @@ get_chunk_dir_idx(
     uint32_t *ptr_num_chunks,
     uint32_t *ptr_chunk_dir_idx,
     bool is_malloc
+    );
+extern int
+mk_file_name(
+    const qmem_struct_t *ptr_S,
+    uint64_t uqid, 
+    char **ptr_file_name
+    );
+//--------------------------------------
+extern int
+qmem_load_chunk(
+    const qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const ptr_vec,
+    int chunk_num
+    );
+extern int
+qmem_un_load_chunk(
+    const qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const ptr_vec,
+    int chunk_num
+    );
+//--------------------------------------
+extern int
+qmem_backup_chunk(
+    const qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const ptr_vec,
+    int chunk_num
+    );
+extern int
+qmem_un_backup_chunk(
+    const qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const ptr_vec,
+    int chunk_num
+    );
+//--------------------------------------
+extern int
+qmem_un_backup_vec(
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *v
+    );
+extern int 
+qmem_backup_vec(
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *ptr_v
+    );
+//--------------------------------------
+extern int
+qmem_backup_chunks(
+    const qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const ptr_vec
+    );
+extern int
+qmem_un_backup_chunks(
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *v
+    );
+//--------------------------------------
+extern int
+qmem_load_chunks(
+    const qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const ptr_vec
+    );
+extern int
+qmem_un_load_chunks(
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *v
     );
