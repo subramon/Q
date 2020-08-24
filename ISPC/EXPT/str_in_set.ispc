@@ -1,4 +1,4 @@
-#define N 1 
+#define N 48
 export void str_in_set_ispc(
     uniform uint64 xsin,  // scalar input 
     uniform uint64 vin[], // vector or known values 
