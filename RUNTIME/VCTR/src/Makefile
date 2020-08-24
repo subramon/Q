@@ -96,11 +96,12 @@ libvctr.so: vector.o core_vec.o aux_qmem.o aux_core_vec.o \
 	gcc ${QC_FLAGS} $(INCS) \
 	  	${GEN_SRC_FILES} \
 	  	${UTILS_SRC_FILES} \
-		vector.c \
+		vector.o \
 		../../CMEM/src/cmem.c \
 		../../CMEM/src/aux_lua_to_c.c \
-		core_vec.c \
-		aux_core_vec.c \
+		core_vec.o \
+		aux_core_vec.o \
+		aux_qmem.o \
 		-shared -o libvctr.so
 
 #------------------------------------------------------

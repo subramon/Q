@@ -46,26 +46,7 @@ LUALIB_API void *luaL_testudata (
 
 int luaopen_libvctr (lua_State *L);
 //-----------------------------------
-static int l_vec_reincarnate( lua_State *L) {
-  int status = 0;
-  bool is_clone = true;
-  char *X = NULL;
-  // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
-  const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 1);
-  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
-  //----------------------------------
-  status = reincarnate(g_S, ptr_vec, &X, is_clone); cBYE(status);
-  lua_pushstring(L, X);
-  free_if_non_null(X); 
-  return 1;
-BYE:
-  free_if_non_null(X); 
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-//-----------------------------------
+// Called by Q.save() for checkpointing or shutdown of Q
 static int l_vec_shutdown( lua_State *L) {
   int status = 0;
   char *X = NULL;
@@ -75,7 +56,14 @@ static int l_vec_shutdown( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
   //------------------
   status = vec_shutdown(g_S, ptr_vec, &X); cBYE(status);
-  lua_pushstring(L, X);
+  // If vector is to be persisted, 
+  // returns a string that can be used to reincarnate X; else, NULL
+  if ( X == NULL ) { 
+    lua_pushnil(L);
+  }
+  else {
+    lua_pushstring(L, X);
+  }
   free_if_non_null(X); 
   return 1;
 BYE:
@@ -576,7 +564,8 @@ static int l_vec_put_chunk( lua_State *L) {
     fprintf(stderr, "WARNING! Empty chunk being ignored\n");
   }
   else {
-    status = vec_put_chunk(g_S, ptr_vec, ptr_cmem, num_in_cmem); 
+    status = vec_put_chunk((qmem_struct_t *)g_S, ptr_vec, ptr_cmem, 
+        num_in_cmem); 
     cBYE(status);
     lua_pushboolean(L, true);
     return 1;
@@ -668,7 +657,8 @@ static int l_vec_un_load_chunks( lua_State *L) {
   const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 1);
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
   //------------------
-  status = qmem_un_load_chunks(g_S,  ptr_vec); cBYE(status);
+  bool is_hard = false;
+  status = qmem_un_load_chunks(g_S,  ptr_vec, is_hard); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -685,7 +675,9 @@ static int l_vec_un_load_chunk( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
   int chunk_num = lua_tonumber(L, 3);
   //------------------
-  status = qmem_un_load_chunk(g_S,  ptr_vec, chunk_num); cBYE(status);
+  bool is_hard = false;
+  status = qmem_un_load_chunk(g_S,  ptr_vec, chunk_num, is_hard); 
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -988,7 +980,6 @@ static const struct luaL_Reg vector_methods[] = {
     //--------------------------------
     { "new", l_vec_new },
     { "rehydrate", l_vec_rehydrate},
-    { "reincarnate", l_vec_reincarnate},
     { "same_state", l_vec_same_state },
     { "shutdown", l_vec_shutdown },
     //--------------------------------
@@ -1043,7 +1034,6 @@ static const struct luaL_Reg vector_functions[] = {
     //--------------------------------
     { "new", l_vec_new },
     { "rehydrate", l_vec_rehydrate},
-    { "reincarnate", l_vec_reincarnate},
     { "same_state", l_vec_same_state },
     { "shutdown", l_vec_shutdown },
     //--------------------------------

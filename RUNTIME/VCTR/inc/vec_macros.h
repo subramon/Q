@@ -1,5 +1,5 @@
 
-#define chk_chunk_idx(x) { \
+#define chk_chunk_dir_idx(x) { \
   if ( ( x <= 0 ) || ( (uint32_t)x >= ptr_S->chunk_dir->sz) ) { go_BYE(-1); } \
 }
 

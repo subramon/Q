@@ -48,7 +48,8 @@ extern int
 qmem_un_load_chunk(
     const qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
-    int chunk_num
+    int chunk_num,
+    bool is_hard
     );
 //--------------------------------------
 extern int
@@ -97,5 +98,16 @@ qmem_load_chunks(
 extern int
 qmem_un_load_chunks(
     const qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const v,
+    bool is_hard
+    );
+extern bool 
+vec_in_use(
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v
+    );
+extern int
+qmem_delete_vec(
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *ptr_vec
     );

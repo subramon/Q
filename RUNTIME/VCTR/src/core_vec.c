@@ -329,7 +329,7 @@ vec_check(
   }
   //-------------------------------------------
   for ( uint32_t i = 0; i < v->num_chunks; i++ ) {
-    chk_chunk_idx(v->chunks[i]);
+    chk_chunk_dir_idx(v->chunks[i]);
     status = chk_chunk(ptr_S, v, v->chunks[i]); cBYE(status);
     for ( uint32_t j = i+1; j  < v->num_chunks; j++ ) {
       if (  v->chunks[i] == v->chunks[j] ) { go_BYE(-1); }
@@ -418,7 +418,7 @@ vec_start_read(
 
   w->num_readers++; 
   if ( w->mmap_addr == NULL ) { 
-    status = make_master_file(ptr_S, v, false); cBYE(status);
+    status = qmem_backup_vec(ptr_S, v); cBYE(status);
     if ( !w->is_file ) { go_BYE(-1); }
     char *X = NULL; size_t nX = 0;
     char *file_name = NULL;
@@ -473,9 +473,9 @@ vec_get_chunk(
   if ( !v->is_memo ) { chunk_num = 0; } // Important
   if ( chunk_num >= v->num_chunks ) { go_BYE(-1); } 
   status = qmem_load_chunk(ptr_S, v, chunk_num); cBYE(status);
-  uint32_t chunk_idx = v->chunks[chunk_num];
-  chk_chunk_idx(chunk_idx);
-  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+  uint32_t chunk_dir_idx = v->chunks[chunk_num];
+  chk_chunk_dir_idx(chunk_dir_idx);
+  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_dir_idx;
   if ( chunk->num_readers  < 0 ) { go_BYE(-1); }
   chunk->num_readers++;
 
@@ -524,15 +524,10 @@ vec_shutdown(
     return status;
   }
   // check if anybody is using it 
-  if ( ( w->num_readers > 0 ) || ( w->num_writers > 0 ) ) {
-    go_BYE(-1);
-  }
-  for ( uint32_t i = 0; i < v->num_chunks; i++ ) { 
-    uint32_t chunk_idx = v->chunks[i];
-    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
-    if ( chunk->num_readers > 0 ) { go_BYE(-1); }
-  }
+  if ( vec_in_use(ptr_S, v) ) { go_BYE(-1); }
   //------------------------------------------
+  // When we shutdown a vector, we prepare for reincarnation ONLY 
+  // if is_persist == true 
   if ( v->is_persist ) { 
     if ( w->is_file ) { 
       // master file exists, no need to flush chunks individually
@@ -557,8 +552,9 @@ vec_unget_chunk(
   int status = 0;
   if ( !ptr_vec->is_memo ) { chunk_num = 0; } // Important
   if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
-  uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
-  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+  uint32_t chunk_dir_idx = ptr_vec->chunks[chunk_num];
+  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_dir_idx;
+  chk_chunk_dir_idx(chunk_dir_idx);
   if ( chunk->data     == NULL ) { go_BYE(-1); }
   if ( chunk->num_readers == 0 ) { go_BYE(-1); }
   chunk->num_readers--;
@@ -591,8 +587,13 @@ vec_start_write(
   if ( !w->is_file  ) { go_BYE(-1); }
   w->num_writers = 1;
   // delete chunks since they no longer reflect reality
-  status = vec_clean_chunks(ptr_S, v);
-  cBYE(status);
+  bool is_hard = false;  
+  // note that since vector file exists, chunks will be 
+  // un-loaded and un-backedup
+  status = qmem_un_load_chunks(ptr_S, v, is_hard); cBYE(status);
+  status = qmem_un_backup_chunks(ptr_S, v, is_hard); cBYE(status);
+  //------------------
+
   status = mk_file_name(ptr_S, v->uqid, &file_name); cBYE(status);
   rs_mmap(file_name, &X, &nX, 1); cBYE(status);
   // Set the CMEM that will be consumed by caller
@@ -738,23 +739,24 @@ vec_put_chunk(
   if ( !is_multiple(ptr_vec->num_elements, ptr_S->chunk_size) ) { 
     go_BYE(-1); 
   }
-  uint32_t chunk_num, chunk_idx;
+  uint32_t chunk_num, chunk_dir_idx;
   if ( !ptr_vec->is_memo ) {
     chunk_num = 0;
     if ( ptr_vec->num_chunks == 0 ) { // indicating no allocation done 
       status = allocate_chunk(ptr_S, ptr_vec, chunk_num, 
-          &chunk_idx, is_malloc); 
+          &chunk_dir_idx, is_malloc); 
       cBYE(status);
-      if ( chunk_idx >= ptr_S->chunk_dir->sz ) { go_BYE(-1); }
+      if ( chunk_dir_idx >= ptr_S->chunk_dir->sz ) { go_BYE(-1); }
+  chk_chunk_dir_idx(chunk_dir_idx);
       if ( !is_malloc ) {
         ptr_cmem->is_foreign   = true;
-        ptr_S->chunk_dir->chunks[chunk_idx].data = ptr_cmem->data;
+        ptr_S->chunk_dir->chunks[chunk_dir_idx].data = ptr_cmem->data;
       }
-      ptr_vec->chunks[chunk_num] = chunk_idx;
+      ptr_vec->chunks[chunk_num] = chunk_dir_idx;
       ptr_vec->num_chunks = 1;
     }
     else {
-      chunk_idx = ptr_vec->chunks[chunk_num];
+      chunk_dir_idx = ptr_vec->chunks[chunk_num];
     }
     // if memo and stealable, then you have stolen CMEM by now
     // This means that the write done by the generator was into the
@@ -768,14 +770,14 @@ vec_put_chunk(
     status = get_chunk_num_for_write(ptr_S, ptr_vec, &chunk_num); 
     cBYE(status);
     status = get_chunk_dir_idx(ptr_S, ptr_vec, chunk_num, 
-        &(ptr_vec->num_chunks), &chunk_idx, is_malloc); 
+        &(ptr_vec->num_chunks), &chunk_dir_idx, is_malloc); 
     cBYE(status);
     // if NOT memo and stealable, then you have stolen CMEM by now
     // This means that Vector took the CMEM from the generator
     // as the data for its chunk and there is nothing more to do 
     if ( !is_malloc ) { 
       ptr_cmem->is_foreign   = true;
-      ptr_S->chunk_dir->chunks[chunk_idx].data = ptr_cmem->data;
+      ptr_S->chunk_dir->chunks[chunk_dir_idx].data = ptr_cmem->data;
       ptr_cmem->data = NULL;
       ptr_cmem->size = 0;
       // following to tell cmem that it is okay for data to be NULL
@@ -787,8 +789,8 @@ vec_put_chunk(
       return 0;
     }
   }
-  chk_chunk_idx(chunk_idx);
-  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+  chk_chunk_dir_idx(chunk_dir_idx);
+  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_dir_idx;
 
   size_t sz = num_elements * ptr_vec->field_width;
   // handle special case for B1
@@ -798,7 +800,7 @@ vec_put_chunk(
   l_memcpy(chunk->data, data, sz);
 
   ptr_vec->num_elements += num_elements;
-  ptr_vec->chunks[chunk_num] = chunk_idx;
+  ptr_vec->chunks[chunk_num] = chunk_dir_idx;
 
 BYE:
   return status;
@@ -821,13 +823,13 @@ vec_put1(
   if ( ptr_vec->is_eov ) { go_BYE(-1); }
   //---------------------------------------
   status = init_chunk_dir(ptr_vec, -1); cBYE(status);
-  uint32_t chunk_num, chunk_idx;
+  uint32_t chunk_num, chunk_dir_idx;
   status = get_chunk_num_for_write(ptr_S, ptr_vec, &chunk_num); 
   cBYE(status);
   status = get_chunk_dir_idx(ptr_S, ptr_vec, chunk_num, 
-      &(ptr_vec->num_chunks), &chunk_idx, true); 
+      &(ptr_vec->num_chunks), &chunk_dir_idx, true); 
   cBYE(status);
-  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_dir_idx;
   if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) {
     // Unfortunately, need to handle B1 as a special case
     uint32_t num_in_chunk = ptr_vec->num_elements % ptr_S->chunk_size;
@@ -900,9 +902,9 @@ vec_file_name(
   }
   else if ( chunk_num >= 0 ) {
     if ( (uint32_t)chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
-    uint32_t chunk_idx = ptr_vec->chunks[chunk_num];
-    chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+    uint32_t chunk_dir_idx = ptr_vec->chunks[chunk_num];
+    chk_chunk_dir_idx(chunk_dir_idx);
+    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_dir_idx;
     status = mk_file_name(ptr_S, chunk->uqid, ptr_file_name); 
     cBYE(status);
   }
@@ -936,7 +938,7 @@ vec_rehydrate(
   status = vec_new(ptr_S, ptr_vec, fldtype, field_width);
   cBYE(status);
   // Important: Normally, vec_new will assign a new vec_uqid
-  // by calling mk_uqid(). However, given that this is a rehydration,
+  // by calling get_uqid(). However, given that this is a rehydration,
   // we use the vec_uqid provided, not the one generated. Hence, as below:
   ptr_vec->uqid = vec_uqid; 
 
@@ -950,7 +952,7 @@ vec_rehydrate(
     status = allocate_chunk((qmem_struct_t *)ptr_S, ptr_vec, i, 
         &chunk_dir_idx, false); 
     cBYE(status); 
-    chk_chunk_idx(chunk_dir_idx); 
+    chk_chunk_dir_idx(chunk_dir_idx); 
     ptr_vec->chunks[i] = chunk_dir_idx;
     CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_dir_idx;
     chunk->vec_uqid = ptr_vec->uqid;

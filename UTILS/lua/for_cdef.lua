@@ -30,7 +30,7 @@ local function for_cdef(
     -- we do not have fully qualified path
     infile = src_root .. "/" .. infile
   end
-  assert(cutils.isfile(infile), infile)
+  assert(cutils.isfile(infile), "File not found: " .. infile)
   -- assert(plpath.isfile(infile), infile)
   local cmd
   if ( incs ) then
@@ -85,5 +85,5 @@ local function for_cdef(
   return rslt
 end
 return for_cdef
--- x = for_cdef("RUNTIME/VCTR/inc/core_vec_struct.h", { "UTILS/inc/" })
+-- x = for_cdef("RUNTIME/VCTR/inc/vctr_struct.h", { "UTILS/inc/" })
 -- print(x)

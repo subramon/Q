@@ -76,12 +76,6 @@ is_multiple(
     uint64_t x, 
     uint32_t y
     );
-extern int 
-make_master_file(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_v,
-    bool is_free_mem
-    );
 extern int
 safe_strcat(
     char **ptr_X,

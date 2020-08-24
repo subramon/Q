@@ -9,8 +9,8 @@ local to_scalar		= require 'Q/UTILS/lua/to_scalar'
 local register_type	= require 'Q/UTILS/lua/q_types'
 local H                 = require 'Q/RUNTIME/VCTR/lua/helpers'
 local qc                = require 'Q/UTILS/lua/qcore'
-qc.q_cdef( "RUNTIME/VCTR/inc/core_vec_struct.h",{ "UTILS/inc/" })
-qc.q_cdef("UTILS/lua/qmem_struct.h")
+qc.q_cdef( "RUNTIME/VCTR/inc/vctr_struct.h",{ "UTILS/inc/" })
+-- TO DELETE TODO qc.q_cdef("UTILS/inc/qmem_struct.h")
 local qmem              = require 'Q/UTILS/lua/qmem'
 local chunk_size        = qmem.chunk_size
 local g_S               = qmem.cdata

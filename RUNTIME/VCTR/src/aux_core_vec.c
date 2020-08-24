@@ -293,9 +293,9 @@ reincarnate(
   // (2) data must exist 
   if ( !w->is_file ) { 
     for ( unsigned int i = 0; i < v->num_chunks; i++ ) { 
-      uint32_t chunk_idx = v->chunks[i];
-      chk_chunk_idx(chunk_idx);
-      CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir->chunks + chunk_idx;
+      uint32_t chunk_dir_idx = v->chunks[i];
+      chk_chunk_dir_idx(chunk_dir_idx);
+      CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir->chunks + chunk_dir_idx;
       if ( ( !ptr_c->is_file ) && ( ptr_c->data == NULL ) ) { 
         go_BYE(-1);
       }
@@ -306,9 +306,9 @@ reincarnate(
   for ( unsigned int i = 0; i < v->num_chunks; i++ ) { 
     char *old_chunk_file_name = NULL;
     char *new_chunk_file_name = NULL;
-    uint32_t chunk_idx = v->chunks[i];
-    chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir->chunks + chunk_idx;
+    uint32_t chunk_dir_idx = v->chunks[i];
+    chk_chunk_dir_idx(chunk_dir_idx);
+    CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir->chunks + chunk_dir_idx;
     uint64_t old_uqid = ptr_c->uqid; 
     if ( is_clone ) { 
       status = mk_file_name(ptr_S, old_uqid, &old_chunk_file_name); 

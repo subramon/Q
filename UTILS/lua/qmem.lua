@@ -4,7 +4,6 @@ local cutils = require 'libcutils'
 local add_trailing_bslash = require 'Q/UTILS/lua/add_trailing_bslash'
 local stringify = require 'Q/UTILS/lua/stringify'
 local qc     = require 'Q/UTILS/lua/qcore'
-local qc     = require 'Q/UTILS/lua/qcore'
 
 local sz, n
 
