@@ -13,16 +13,6 @@
 #define CORE_VEC_ALIGNMENT 64
 #include "aux_core_vec.h"
 
-uint64_t
-mk_uqid(
-    qmem_struct_t *ptr_S
-    )
-{
-  uint64_t n = ptr_S->max_file_num + 1;
-  ptr_S->max_file_num = n;
-  return n;
-}
-
 int
 safe_strcat(
     char **ptr_X,
@@ -277,7 +267,7 @@ vec_new_common(
   ptr_vec->field_width = field_width;
   ptr_vec->chunk_size_in_bytes = get_chunk_size_in_bytes(
       ptr_S, field_width, fldtype);
-  ptr_vec->uqid = mk_uqid(ptr_S);
+  ptr_vec->uqid = get_uqid(ptr_S);
   //-----------------------------
   chunk_dir = malloc(1 * sizeof(chunk_dir_t));
   return_if_malloc_failed(chunk_dir);
@@ -364,7 +354,7 @@ reincarnate(
   status = mk_file_name(old_vec_uqid, old_file_name,Q_MAX_LEN_FILE_NAME); 
   cBYE(status);
   if ( is_clone ) { 
-    uint64_t new_vec_uqid = mk_uqid(ptr_S);
+    uint64_t new_vec_uqid = get_uqid(ptr_S);
     if ( ptr_v->is_file ) {
       status = mk_file_name(new_vec_uqid, new_file_name,Q_MAX_LEN_FILE_NAME); 
       status = copy_file(old_file_name, new_file_name); cBYE(status);
@@ -402,7 +392,7 @@ reincarnate(
     status = mk_file_name(old_uqid, old_file_name,Q_MAX_LEN_FILE_NAME); 
     cBYE(status);
     if ( is_clone ) { 
-      uint64_t new_uqid = mk_uqid(ptr_S);
+      uint64_t new_uqid = get_uqid(ptr_S);
       status = mk_file_name(new_uqid, new_file_name,Q_MAX_LEN_FILE_NAME); 
       if ( ptr_c->is_file ) { 
         status = copy_file(old_file_name, new_file_name); cBYE(status);

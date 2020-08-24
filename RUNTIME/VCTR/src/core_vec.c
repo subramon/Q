@@ -527,8 +527,7 @@ vec_shutdown(
       // master file exists, no need to flush chunks individually
     }
     else {
-      status = vec_make_chunk_file(ptr_S, v, true, -1); 
-      cBYE(status);
+      status = qmem_backup_chunks(ptr_S, v); cBYE(status);
     }
     status = reincarnate(ptr_S, v, ptr_str, false);
     cBYE(status);
@@ -874,18 +873,6 @@ BYE:
 }
 
 int
-vec_backup_vec(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec
-    )
-{
-  int status = 0;
-  status = qmem_backup_vec(ptr_S, ptr_vec); cBYE(status);
-BYE:
-  return status;
-}
-
-int
 vec_file_name(
     const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
@@ -911,45 +898,6 @@ vec_file_name(
   else { 
     go_BYE(-1);
   }
-BYE:
-  return status;
-}
-
-int
-vec_un_backup_vec(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *v
-    )
-{
-  int status = 0;
-  if  (  v->is_dead ) { go_BYE(-1); }
-  if  ( !v->is_memo ) { go_BYE(-1); }
-  status = qmem_unmaster(ptr_S, v); cBYE(status);
-BYE:
-  return status;
-}
-//--------------------------------------------
-int
-vec_delete_chunk_file(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
-    int chunk_num
-    )
-{
-  int status = 0;
-  uint32_t lb, ub;
-  if  ( ptr_vec->is_dead ) { go_BYE(-1); }
-  if  ( !ptr_vec->is_memo ) { go_BYE(-1); }
-  if ( (uint32_t)chunk_num > ptr_vec->num_chunks ) { go_BYE(-1); }
-  if ( chunk_num < 0 ) { // delete ALL chunks 
-    lb = 0;
-    ub = ptr_vec->num_chunks;
-  }
-  else { // delete specified chunk
-    lb = chunk_num;
-    ub = lb + 1;
-  }
-  status = qmem_delete_chunk_files(ptr_S, ptr_vec, lb, ub); cBYE(status);
 BYE:
   return status;
 }
@@ -1029,26 +977,6 @@ vec_rehydrate(
   ptr_vec->is_eov     = true;
   ptr_vec->is_persist = true;
   //------------
-BYE:
-  return status;
-}
-int
-vec_make_chunk_files(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
-    bool is_free_mem
-    )
-{
-  int status = 0;
-
-  if ( ptr_vec == NULL ) { go_BYE(-1); }
-  if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
-  if ( ptr_vec->is_dead ) { go_BYE(-1); }
-
-  for ( unsigned int i = 0; i < ptr_vec->num_chunks; i++ ) { 
-    status = vec_make_chunk_file(ptr_S, ptr_vec, i, is_free_mem);
-    cBYE(status);
-  }
 BYE:
   return status;
 }

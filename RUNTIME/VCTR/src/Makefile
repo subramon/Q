@@ -74,7 +74,7 @@ core_vec.o : core_vec.c \
   	../inc/vctr_struct.h \
 	../inc/core_vec.h \
 	${UTILS_INC_FILES}
-	gcc -c $(INCS) ${QC_FLAGS} core_vec.c -o core_vec.o
+	gcc -c $(INCS) ${QC_FLAGS} -Wno-discarded-qualifiers core_vec.c -o core_vec.o
 
 aux_qmem.o : aux_qmem.c \
 	../inc/vctr_struct.h \

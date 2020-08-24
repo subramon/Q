@@ -194,12 +194,6 @@ vec_file_name(
     );
 //--------------------------
 extern int
-vec_un_backup_vec(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec
-    );
-//-------------------------
-extern int
 vec_delete_chunk_file(
     const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
