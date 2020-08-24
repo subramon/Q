@@ -795,9 +795,9 @@ tests.t10 = function()
   print("Successfully completed test t10")
 end
   --===========================
-return tests
---[[
 tests.t1() -- PASSES
+--[[
+return tests
 tests.t2() -- PASSES
 tests.t3() -- PASSES
 tests.t4() -- PASSES 

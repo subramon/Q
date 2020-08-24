@@ -15,13 +15,6 @@ chk_chunk(
     uint32_t chunk_dir_idx
     );
 extern int
-delete_vec(
-    uint64_t uqid,
-    bool is_persist,
-    const qmem_struct_t *ptr_S,
-    uint32_t whole_vec_dir_idx
-    );
-extern int
 allocate_chunk(
     qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v,
@@ -68,13 +61,15 @@ extern int
 qmem_un_backup_chunk(
     const qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
-    int chunk_num
+    uint32_t chunk_num,
+    bool is_hard
     );
 //--------------------------------------
 extern int
 qmem_un_backup_vec(
     const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *v
+    VEC_REC_TYPE *v,
+    bool is_hard
     );
 extern int 
 qmem_backup_vec(
@@ -90,7 +85,8 @@ qmem_backup_chunks(
 extern int
 qmem_un_backup_chunks(
     const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *v
+    VEC_REC_TYPE *v,
+    bool is_hard
     );
 //--------------------------------------
 extern int

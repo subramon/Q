@@ -169,17 +169,17 @@ BYE:
 
 // tells us which chunk to read this element from
 int 
-chunk_dir_idx_for_read(
+chunk_num_for_read(
     const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
-    uint32_t *ptr_chunk_dir_idx
+    uint32_t *ptr_chunk_num
     )
 {
   int status = 0;
+  uint32_t chunk_num;
   if ( ptr_vec->num_elements == 0 ) { go_BYE(-1); }
   if ( idx >= ptr_vec->num_elements ) { go_BYE(-1); }
-  uint32_t chunk_num;
   if ( !ptr_vec->is_memo ) { 
     chunk_num = 0; 
   }
@@ -187,8 +187,7 @@ chunk_dir_idx_for_read(
     chunk_num = idx / ptr_S->chunk_size;
   }
   if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
-  *ptr_chunk_dir_idx = ptr_vec->chunks[chunk_num];
-  if ( *ptr_chunk_dir_idx >= ptr_S->chunk_dir->sz ) { go_BYE(-1); }
+  *ptr_chunk_num = chunk_num;
 BYE:
   return status;
 }
@@ -223,37 +222,6 @@ get_chunk_num_for_write(
 BYE:
   return status;
 }
-
-int
-vec_new_common(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
-    const char * const fldtype,
-    uint32_t field_width
-    )
-{
-  int status = 0;
-  if ( ptr_vec == NULL ) { go_BYE(-1); }
-  status = chk_fldtype(fldtype, field_width); cBYE(status);
-
-  memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
-
-  strncpy(ptr_vec->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1);
-  ptr_vec->field_width = field_width;
-  ptr_vec->uqid = get_uqid((qmem_struct_t *)ptr_S);
-  //-----------------------------
-  ptr_vec->num_chunks = 0;
-  ptr_vec->sz_chunks = INITIAL_NUM_CHUNKS_PER_VECTOR;
-  size_t sz = ptr_vec->sz_chunks * sizeof(CHUNK_REC_TYPE);
-  ptr_vec->chunks = malloc(sz); 
-  return_if_malloc_failed(ptr_vec->chunks);
-  memset(ptr_vec->chunks, '\0', sz);
-  //-----------------------------
-  // TODO P2 ptr_vec->is_memo = ptr_S->is_memo; // default behavior 
-BYE:
-  return status;
-}
-//---------------------
 
 int
 reincarnate(

@@ -1,0 +1,3 @@
+return { 
+"auditreport","auditreportconsumer","batchconsumer","dciprocessor","eachventory","elasticledger","elasticledgerexternal","event","eventconsumer","eventinbox","externalevents","inventory","inventoryaggregator","inventorycleanup","inventorydataload","inventoryelastic","inventoryevaluator","inventoryeventconsumer","inventoryledger","inventoryorchestration","inventorypriorityrouter","inventorysummary","iv3monitor","leatherman","location","objectproxy","ole","oleauthproxy","oleinternalreports","olescheduler","orderpool","orderpoolconsumer","outboxfilter","printing","redistelegraf","reservableinventory","shipping","shippingconsumer","shippinginfo","slacker","taskaggregator","taskconsumer","taskmanager","trafficcop","transferorder","wms","yardmanagement",
+}

@@ -23,8 +23,6 @@ typedef struct _chunk_rec_type {
 } CHUNK_REC_TYPE;
 
 typedef struct _whole_vec_rec_type { 
-  uint64_t t_last_get; // time of last read access
-  // TODO P3 Be precise on when above is updated
   uint64_t uqid; // unique identifier across all vectors
   bool is_file;  
   // if is_file = true, following fields are relevant

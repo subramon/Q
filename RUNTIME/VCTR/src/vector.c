@@ -6,6 +6,7 @@
 #include "q_incs.h"
 #include "vec_macros.h"
 #include "core_vec.h"
+#include "aux_core_vec.h" // TODO P2 reincarnate is here. Where should itbe
 #include "aux_qmem.h"
 #include "sclr_struct.h"
 #include "cmem_struct.h"
@@ -569,7 +570,7 @@ static int l_vec_put_chunk( lua_State *L) {
   // is *at least* as the size of my chunk
   size_t chunk_size = g_S->chunk_size;
   size_t chunk_size_in_bytes = ptr_vec->field_width * chunk_size;
-  if ( ptr_cmem->size < chunk_size_in_bytes ) { go_BYE(-1); }
+  if ( (size_t)ptr_cmem->size < chunk_size_in_bytes ) { go_BYE(-1); }
   int64_t num_in_cmem = luaL_checknumber(L, 4);
   if ( num_in_cmem <= 0 ) { 
     fprintf(stderr, "WARNING! Empty chunk being ignored\n");
@@ -701,7 +702,9 @@ static int l_vec_un_backup_chunk( lua_State *L) {
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
   int chunk_num = lua_tonumber(L, 3);
   //------------------
-  status = qmem_un_backup_chunk(g_S,  ptr_vec, chunk_num); cBYE(status);
+  bool is_hard = false;
+  status = qmem_un_backup_chunk(g_S,  ptr_vec, chunk_num, is_hard); 
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -717,7 +720,9 @@ static int l_vec_un_backup_chunks( lua_State *L) {
   const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 1);
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
   //------------------
-  status = qmem_un_backup_chunks(g_S,  ptr_vec); cBYE(status);
+  bool is_hard = false;
+  status = qmem_un_backup_chunks(g_S,  ptr_vec, is_hard); 
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -733,7 +738,8 @@ static int l_vec_un_backup_vec( lua_State *L) {
   const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 1);
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
   //------------------
-  status = qmem_un_backup_vec(g_S, ptr_vec); cBYE(status);
+  bool is_hard = false;
+  status = qmem_un_backup_vec(g_S, ptr_vec, is_hard); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:

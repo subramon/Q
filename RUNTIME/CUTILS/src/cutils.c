@@ -9,6 +9,7 @@
 #include <libgen.h>
 #include <regex.h>
 #include <sys/stat.h>
+#include <stdint.h>
 
 #include "luaconf.h"
 #include "lua.h"

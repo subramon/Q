@@ -21,28 +21,6 @@ get_uqid(
 }
 
 int
-free_chunk(
-    const qmem_struct_t *ptr_S,
-    uint32_t chunk_dir_idx,
-    bool is_persist
-    )
-{
-  int status = 0;
-  chk_chunk_idx(chunk_dir_idx); 
-
-  CHUNK_REC_TYPE *chunk =  ptr_S->chunk_dir->chunks + chunk_dir_idx;
-  if ( chunk->num_readers > 0 ) { go_BYE(-1); }
-  free_if_non_null(chunk->data);
-  if ( !is_persist ) { 
-    status = delete_chunk_file(chunk, &(chunk->is_file)); cBYE(status);
-  }
-  memset(chunk, '\0', sizeof(CHUNK_REC_TYPE));
-  ptr_S->chunk_dir->n--;
-BYE:
-  return status;
-}
-
-int
 chk_chunk(
     const qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const v,
@@ -261,63 +239,6 @@ BYE:
   return status;
 }
 
-// tells us which chunk to read this element from
-int 
-chunk_dir_idx_for_read(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
-    uint64_t idx,
-    uint32_t *ptr_chunk_dir_idx
-    )
-{
-  int status = 0;
-  if ( ptr_vec->num_elements == 0 ) { go_BYE(-1); }
-  if ( idx >= ptr_vec->num_elements ) { go_BYE(-1); }
-  uint32_t chunk_num;
-  if ( !ptr_vec->is_memo ) { 
-    chunk_num = 0; 
-  }
-  else {
-    chunk_num = idx / ptr_S->chunk_size;
-  }
-  if ( chunk_num >= ptr_vec->num_chunks ) { go_BYE(-1); }
-  *ptr_chunk_dir_idx = ptr_vec->chunks[chunk_num];
-  if ( *ptr_chunk_dir_idx >= ptr_S->chunk_dir->sz ) { go_BYE(-1); }
-BYE:
-  return status;
-}
-// tells us which chunk to write this element into
-int 
-get_chunk_num_for_write(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
-    uint32_t *ptr_chunk_num
-    )
-{
-  int status = 0;
-  uint32_t *new = NULL;
-  if ( !ptr_vec->is_memo ) { *ptr_chunk_num = 0; return status; }
-  // let us say chunk size = 64 and num elements = 63
-  // this means that when you want to write, you write to chunk 0
-  // let us say chunk size = 64 and num elements = 64
-  // this means that when you want to write, you write to chunk 1
-  uint32_t chunk_num =  (ptr_vec->num_elements / ptr_S->chunk_size);
-  uint32_t sz = ptr_vec->sz_chunks;
-  if ( chunk_num >= sz ) { // need to reallocate space
-    new = calloc(2*sz, sizeof(uint32_t));
-    return_if_malloc_failed(new);
-    for ( uint32_t i = 0; i < sz; i++ ) {
-      new[i] = ptr_vec->chunks[i];
-    }
-    free(ptr_vec->chunks);
-    ptr_vec->chunks  = new;
-    ptr_vec->sz_chunks  = 2*sz;
-  }
-  *ptr_chunk_num = chunk_num;
-BYE:
-  return status;
-}
-
 int 
 get_chunk_dir_idx(
     const qmem_struct_t *ptr_S,
@@ -340,18 +261,6 @@ get_chunk_dir_idx(
   *ptr_chunk_dir_idx = chunk_dir_idx;
   if ( chunk_dir_idx >= ptr_S->chunk_dir->sz ) { go_BYE(-1); }
   ptr_vec->chunks[chunk_num] = chunk_dir_idx;
-BYE:
-  return status;
-}
-
-int
-qmem_un_load_chunk(
-    const qmem_struct_t *ptr_S,
-    const VEC_REC_TYPE *const ptr_vec,
-    int chunk_num
-    )
-{
-  int status = 0;
 BYE:
   return status;
 }
@@ -415,10 +324,12 @@ qmem_backup_chunks(
 BYE:
   return status;
 }
+
 int
 qmem_un_backup_vec(
     const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *v
+    VEC_REC_TYPE *v,
+    bool is_hard
     )
 {
   int status = 0;
@@ -426,20 +337,26 @@ qmem_un_backup_vec(
   WHOLE_VEC_REC_TYPE *w = 
     ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
   if ( w->uqid != v->uqid ) { go_BYE(-1); } 
+  // If in use, then don't proceed
+  if ( w->num_readers != 0 ) { go_BYE(-1); }
+  if ( w->num_writers != 0 ) { go_BYE(-1); }
+  if ( w->mmap_addr   != NULL ) { go_BYE(-1); }
+  if ( w->mmap_len    != 0 ) { go_BYE(-1); }
 
   // No master file => nothing to do 
   if  ( !w->is_file ) { return status; } 
 
-  // Before deleting master file, must make sure chunks contain data
-  for ( uint32_t i = 0; i < v->num_chunks; i++ ) { 
-    uint32_t chunk_idx = v->chunks[i];
-    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
-    if ( ( chunk->is_file ) || ( chunk->data != NULL ) ) {
-      /* all is well */
-    }
-    else {
-      status = load_chunk(chunk, v, &(chunk->t_last_get), &(chunk->data)); 
-      cBYE(status);
+  if ( !is_hard ) {
+    // Before deleting master file, must make sure chunks contain data
+    for ( uint32_t i = 0; i < v->num_chunks; i++ ) { 
+      uint32_t chunk_idx = v->chunks[i];
+      CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+      if ( ( chunk->is_file ) || ( chunk->data != NULL ) ) {
+        /* all is well */
+      }
+      else {
+        // TODO P1 load chunk from vector  file 
+      }
     }
   }
   status = mk_file_name(ptr_S, v->uqid, &file_name); cBYE(status);
@@ -452,9 +369,11 @@ BYE:
 }
 
 int
-qmem_un_backup_chunks(
+qmem_un_backup_chunk(
     const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *v
+    const VEC_REC_TYPE *const v,
+    uint32_t chunk_num,
+    bool is_hard
     )
 {
   int status = 0;
@@ -462,24 +381,40 @@ qmem_un_backup_chunks(
   WHOLE_VEC_REC_TYPE *w = 
     ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
   if ( w->uqid != v->uqid ) { go_BYE(-1); } 
+  if ( chunk_num >= v->num_chunks ) { go_BYE(-1); }
 
-  for ( uint32_t i = 0; i < v->num_chunks; i++ ) { 
-    uint32_t chunk_idx = v->chunks[i];
-    CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
-    if ( !chunk->is_file ) { continue; }
-    // At this point, we know that chunk file does not exist 
-    // can delete either if data in memory or master file exists
-    if  ( ( w->is_file ) || ( chunk->data != NULL ) ) {
-      status = mk_file_name(ptr_S, chunk->uqid, &file_name); cBYE(status);
-      status = remove(file_name); cBYE(status);
-      free_if_non_null(file_name);
-      chunk->is_file = false;
-    }
+  uint32_t chunk_idx = v->chunks[chunk_num];
+  CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
+  if ( !chunk->is_file ) { return status; }
+  // At this point, we know that chunk file does not exist 
+  // can delete either if data in memory or master file exists
+  if ( (is_hard) || ( w->is_file ) || ( chunk->data != NULL ) ) {
+    status = mk_file_name(ptr_S, chunk->uqid, &file_name); cBYE(status);
+    status = remove(file_name); cBYE(status);
+    free_if_non_null(file_name);
+    chunk->is_file = false;
   }
 BYE:
   free_if_non_null(file_name);
   return status;
 }
+
+int
+qmem_un_backup_chunks(
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *v,
+    bool is_hard
+    )
+{
+  int status = 0;
+
+  for ( uint32_t i = 0; i < v->num_chunks; i++ ) { 
+    status = qmem_un_backup_chunk(ptr_S, v, i, is_hard); cBYE(status);
+  }
+BYE:
+  return status;
+}
+
 int 
 qmem_backup_vec(
     const qmem_struct_t *ptr_S,
@@ -591,6 +526,40 @@ qmem_load_chunks(
   for ( uint32_t i = 0; i < ptr_vec->num_chunks; i++ ) {
     status = qmem_load_chunk(ptr_S, ptr_vec, i); cBYE(status);
   }
+BYE:
+  return status;
+}
+
+int
+qmem_un_load_chunk(
+    const qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const ptr_vec,
+    int chunk_num
+    )
+{
+  int status = 0;
+  // TODO P1 
+BYE:
+  return status;
+}
+
+int
+qmem_delete_vec(
+    const qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *ptr_vec
+    )
+{
+  int status = 0;
+  WHOLE_VEC_REC_TYPE *w = 
+    ptr_S->whole_vec_dir->whole_vecs + ptr_vec->whole_vec_dir_idx;
+  if ( w->uqid != ptr_vec->uqid ) { go_BYE(-1); } 
+
+  bool is_hard = true;
+  status = qmem_un_backup_vec(ptr_S, ptr_vec, is_hard); cBYE(status);
+
+  status = qmem_un_backup_chunks(ptr_S, ptr_vec, is_hard); cBYE(status);
+  // clean out space in data structures
+  memset(w, 0, sizeof(WHOLE_VEC_REC_TYPE));
 BYE:
   return status;
 }

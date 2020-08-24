@@ -104,11 +104,11 @@ vec_meta(
   //-------------------------------------
   sprintf(buf, "is_persist = %s, ", ptr_vec->is_persist ? "true" : "false");
   safe_strcat(&opbuf, &bufsz, buf);
-  sprintf(buf, "is_killable = %s, ", ptr_vec->is_killable ? "true" : "false");
-  safe_strcat(&opbuf, &bufsz, buf);
   sprintf(buf, "is_memo = %s, ", ptr_vec->is_memo ? "true" : "false");
   safe_strcat(&opbuf, &bufsz, buf);
   sprintf(buf, "is_eov = %s, ", ptr_vec->is_eov ? "true" : "false");
+  safe_strcat(&opbuf, &bufsz, buf);
+  sprintf(buf, "is_killable = %s, ", ptr_vec->is_killable ? "true" : "false");
   safe_strcat(&opbuf, &bufsz, buf);
   //-------------------------------------
   sprintf(buf, "num_chunks = %" PRIu32 ", ", ptr_vec->num_chunks);
@@ -138,9 +138,7 @@ vec_free(
     return status; // TODO P4 Should this be an error?
   }
   // delete all resources for this vector (modulo what is_persist says)
-  status = delete_vec(ptr_vec->uqid, ptr_vec->is_persist, ptr_S, 
-      ptr_vec->whole_vec_dir_idx);
-  cBYE(status);
+  status = qmem_delete_vec(ptr_S, ptr_vec); cBYE(status);
   memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
   ptr_vec->is_dead = true;
   // Don't do this in C. Lua will do it: free(ptr_vec);
@@ -161,7 +159,7 @@ BYE:
   return status;
 }
 
-int 
+int
 vec_new(
     const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
@@ -170,13 +168,27 @@ vec_new(
     )
 {
   int status = 0;
+  if ( ptr_vec == NULL ) { go_BYE(-1); }
+  status = chk_fldtype(fldtype, field_width); cBYE(status);
 
-  status = vec_new_common(ptr_S, ptr_vec, fldtype, field_width); 
-  cBYE(status);
+  memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
+
+  strncpy(ptr_vec->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1);
+  ptr_vec->field_width = field_width;
+  ptr_vec->uqid = get_uqid((qmem_struct_t *)ptr_S);
+  //-----------------------------
+  ptr_vec->num_chunks = 0;
+  ptr_vec->sz_chunks = INITIAL_NUM_CHUNKS_PER_VECTOR;
+  size_t sz = ptr_vec->sz_chunks * sizeof(CHUNK_REC_TYPE);
+  ptr_vec->chunks = malloc(sz); 
+  return_if_malloc_failed(ptr_vec->chunks);
+  memset(ptr_vec->chunks, '\0', sz);
+  //-----------------------------
+  // TODO P2 ptr_vec->is_memo = ptr_S->is_memo; // default behavior 
 BYE:
   return status;
 }
-
+//---------------------
 //-------------------------------------------------
 int
 check_chunks(
@@ -368,17 +380,16 @@ vec_get1(
     )
 {
   int status = 0;
-  uint32_t chunk_dir_idx, in_chunk_idx;
+  uint32_t chunk_num, chunk_dir_idx, in_chunk_idx;
 
   if ( ptr_vec->is_dead ) { go_BYE(-1); }
-  status = chunk_dir_idx_for_read(ptr_S, ptr_vec, idx, &chunk_dir_idx);
+  status = chunk_num_for_read(ptr_S, ptr_vec, idx, &chunk_num);
   cBYE(status);
+  status = qmem_load_chunk(ptr_S, ptr_vec, chunk_num); cBYE(status);
   in_chunk_idx = idx % ptr_S->chunk_size; // identifies element within chunk
+  chunk_dir_idx = ptr_vec->chunks[chunk_num];
 
   CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_dir_idx;
-  status = load_chunk(chunk, ptr_vec, &(chunk->t_last_get), 
-      &(chunk->data)); 
-  cBYE(status);
   if ( strcmp(ptr_vec->fldtype, "B1") == 0 ) { 
     uint32_t word_idx = in_chunk_idx / 64;
     *ptr_data =  chunk->data + word_idx;
@@ -461,11 +472,10 @@ vec_get_chunk(
   int status = 0;
   if ( !v->is_memo ) { chunk_num = 0; } // Important
   if ( chunk_num >= v->num_chunks ) { go_BYE(-1); } 
+  status = qmem_load_chunk(ptr_S, v, chunk_num); cBYE(status);
   uint32_t chunk_idx = v->chunks[chunk_num];
   chk_chunk_idx(chunk_idx);
   CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
-  status = load_chunk(chunk, v, &(chunk->t_last_get), &(chunk->data)); 
-  cBYE(status);
   if ( chunk->num_readers  < 0 ) { go_BYE(-1); }
   chunk->num_readers++;
 
@@ -923,9 +933,9 @@ vec_rehydrate(
   if ( field_width == 0 ) { go_BYE(-1); }
   if ( fldtype == NULL ) { go_BYE(-1); }
 
-  status = vec_new_common(ptr_S, ptr_vec, fldtype, field_width);
+  status = vec_new(ptr_S, ptr_vec, fldtype, field_width);
   cBYE(status);
-  // Important: Normally, vec_new_common will assign a new vec_uqid
+  // Important: Normally, vec_new will assign a new vec_uqid
   // by calling mk_uqid(). However, given that this is a rehydration,
   // we use the vec_uqid provided, not the one generated. Hence, as below:
   ptr_vec->uqid = vec_uqid; 

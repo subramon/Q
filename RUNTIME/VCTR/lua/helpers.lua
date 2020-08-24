@@ -1,6 +1,7 @@
 -- If not, any other string will work but do not use __ as a prefix
 local ffi               = require 'ffi'
-local qconsts		= require 'Q/UTILS/lua/q_consts'
+local qcfg		= require 'Q/UTILS/lua/qcfg'
+local qconsts		= require 'Q/UTILS/lua/qconsts'
 local cmem		= require 'libcmem'
 local cVector		= require 'libvctr'
 --====================================
@@ -30,8 +31,8 @@ helpers.determine_kind_of_new = function (args)
   if ( is_rehydrate == false ) then 
     if ( args.has_nulls) then 
       assert(type(args.has_nulls) == "boolean")
-    else -- get from qconsts, default usually false
-      args.has_nulls = qconsts.has_nulls 
+    else -- get from qcfg, default usually false
+      args.has_nulls = qcfg.has_nulls 
     end
    --=============================
     assert(qconsts.qtypes[args.qtype], "Invalid qtype provided")
@@ -61,7 +62,7 @@ helpers.on_both = function(
       assert(fn_to_apply(self._nn_vec)) 
     end
   end
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return true
 end
 
@@ -111,11 +112,10 @@ helpers.mk_boolean = function(inval, default_val)
   return inval
 end
 
-helpers.is_multiple_of_chunk_size = function(n)
+helpers.is_multiple_of_chunk_size = function(n, m)
   if ( n == 0 ) then return true end 
-  local csz = cVector.chunk_size()
-  assert(csz > 0)
-  if ( math.ceil(n / csz ) == math.floor(n / csz ) ) then
+  assert(m > 0)
+  if ( math.ceil(n / m ) == math.floor(n / m ) ) then
     return true
   else
     return false

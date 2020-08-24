@@ -19,13 +19,6 @@ free_chunk(
     uint32_t chunk_dir_idx,
     bool is_persist
     );
-extern int
-load_chunk(
-    const CHUNK_REC_TYPE *const ptr_chunk, 
-    const VEC_REC_TYPE *const ptr_vec,
-    uint64_t *ptr_t_last_get,
-    char **ptr_data
-    );
 extern int64_t 
 get_exp_file_size(
     const qmem_struct_t *ptr_S,
@@ -54,11 +47,11 @@ initial_case(
     VEC_REC_TYPE *ptr_vec
     );
 extern int 
-chunk_dir_idx_for_read(
+chunk_num_for_read(
     const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
-    uint32_t *ptr_chunk_dir_idx
+    uint32_t *ptr_chunk_num
     );
 extern int
 get_chunk_num_for_write(
@@ -70,13 +63,6 @@ extern int
 init_chunk_dir(
     VEC_REC_TYPE *ptr_vec,
     int num_chunks
-    );
-extern int
-vec_new_common(
-    const qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec,
-    const char * const fldtype,
-    uint32_t field_width
     );
 extern int
 reincarnate(
