@@ -9,8 +9,8 @@
 #include "rdtsc.h"
 #include "rs_mmap.h"
 
-#define Q_MAX_LEN_FILE_NAME 63 // TODO  P2 Delete
 #define CORE_VEC_ALIGNMENT 64
+#include "aux_qmem.h"
 #include "aux_core_vec.h"
 
 int
@@ -224,34 +224,9 @@ BYE:
   return status;
 }
 
-int 
-get_chunk_dir_idx(
-    const qmem_struct_t *ptr_S,
-    const VEC_REC_TYPE *const ptr_vec,
-    uint32_t chunk_num,
-    uint32_t *ptr_num_chunks,
-    uint32_t *ptr_chunk_dir_idx,
-    bool is_malloc
-    )
-{
-  int status = 0;
-  if ( chunk_num >= ptr_vec->sz_chunks )  { go_BYE(-1); }
-  uint32_t chunk_dir_idx = ptr_vec->chunks[chunk_num];
-  if ( chunk_dir_idx == 0 ) { // we need to set it 
-    status = allocate_chunk(ptr_S, ptr_vec->chunk_size_in_bytes, 
-        chunk_num, ptr_vec->uqid, &chunk_dir_idx, is_malloc); 
-    cBYE(status);
-    *ptr_num_chunks = *ptr_num_chunks + 1;
-  }
-  *ptr_chunk_dir_idx = chunk_dir_idx;
-  if ( chunk_dir_idx >= ptr_S->sz_chunk_dir ) { go_BYE(-1); }
-  ptr_vec->chunks[chunk_num] = chunk_dir_idx;
-BYE:
-  return status;
-}
-
 int
 vec_new_common(
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width
@@ -265,45 +240,20 @@ vec_new_common(
 
   strncpy(ptr_vec->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_vec->field_width = field_width;
-  ptr_vec->chunk_size_in_bytes = get_chunk_size_in_bytes(
-      ptr_S, field_width, fldtype);
-  ptr_vec->uqid = get_uqid(ptr_S);
+  ptr_vec->uqid = get_uqid((qmem_struct_t *)ptr_S);
   //-----------------------------
-  chunk_dir = malloc(1 * sizeof(chunk_dir_t));
-  return_if_malloc_failed(chunk_dir);
-  memset(chunk_dir, '\0', sizeof(chunk_dir_t));
-  chunk_dir->n = 0;
-  chunk_dir->chunks = malloc(chunk_dir->sz * sizeof(CHUNK_REC_TYPE));
-  return_if_malloc_failed(chunk_dir->chunks);
-  chunk_dir->sz = Q_INITIAL_SZ_CHUNK_DIR;
-  ptr_vec->chunk_dir = chunk_dir; 
+  ptr_vec->num_chunks = 0;
+  ptr_vec->sz_chunks = INITIAL_NUM_CHUNKS_PER_VECTOR;
+  size_t sz = ptr_vec->sz_chunks * sizeof(CHUNK_REC_TYPE);
+  ptr_vec->chunks = malloc(sz); 
+  return_if_malloc_failed(ptr_vec->chunks);
+  memset(ptr_vec->chunks, '\0', sz);
   //-----------------------------
-
-
-  ptr_vec->is_memo = true; // default behavior
+  // TODO P2 ptr_vec->is_memo = ptr_S->is_memo; // default behavior 
 BYE:
   return status;
 }
 //---------------------
-int
-delete_chunk_file(
-    const CHUNK_REC_TYPE *ptr_chunk,
-    bool *ptr_is_file
-    )
-{
-  int status = 0;
-  if ( ptr_chunk->is_file ) {
-    char file_name[Q_MAX_LEN_FILE_NAME+1];
-    status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME); 
-    cBYE(status);
-    if ( !isfile(file_name) ) { go_BYE(-1); }
-    status = remove(file_name); cBYE(status);
-  }
-BYE:
-  *ptr_is_file = false;
-  return status;
-}
-
 
 int
 reincarnate(

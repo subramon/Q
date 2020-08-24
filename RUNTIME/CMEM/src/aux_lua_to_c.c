@@ -100,8 +100,8 @@ int get_str_from_tbl(
       )
 {
   int status = 0; 
-  *ptr_cptr = false;
-  *ptr_is_key = false;
+  *ptr_cptr = false; *ptr_is_key = false;
+  //----------------------------
   int n = lua_gettop(L); if ( n != 1 ) { go_BYE(-1); }
   lua_getfield (L, 1, key); 
   n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
@@ -125,7 +125,7 @@ get_int_from_tbl(
 {
   int status = 0;
   *ptr_itmp = -1; *ptr_is_key = false;
-  //------------------- get sz_chunk_dir
+  //------------------- 
   lua_getfield (L, 1, key);
   int n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
   if  ( lua_type(L, 1+1) != LUA_TNUMBER ) { 

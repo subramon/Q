@@ -163,6 +163,7 @@ BYE:
 
 int 
 vec_new(
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width
@@ -170,7 +171,7 @@ vec_new(
 {
   int status = 0;
 
-  status = vec_new_common(ptr_vec, fldtype, field_width); 
+  status = vec_new_common(ptr_S, ptr_vec, fldtype, field_width); 
   cBYE(status);
 BYE:
   return status;
@@ -922,7 +923,7 @@ vec_rehydrate(
   if ( field_width == 0 ) { go_BYE(-1); }
   if ( fldtype == NULL ) { go_BYE(-1); }
 
-  status = vec_new_common(ptr_vec, fldtype, field_width);
+  status = vec_new_common(ptr_S, ptr_vec, fldtype, field_width);
   cBYE(status);
   // Important: Normally, vec_new_common will assign a new vec_uqid
   // by calling mk_uqid(). However, given that this is a rehydration,

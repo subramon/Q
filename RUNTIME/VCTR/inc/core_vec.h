@@ -45,17 +45,10 @@ vec_rehydrate(
     );
 extern int 
 vec_new(
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width
-    );
-extern int
-vec_new_virtual(
-    VEC_REC_TYPE *ptr_vec,
-    char * map_addr,
-    const char * const fldtype,
-    uint32_t chunk_size,
-    int64_t num_elements
     );
 extern int
 vec_materialized(

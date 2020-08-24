@@ -73,14 +73,10 @@ init_chunk_dir(
     );
 extern int
 vec_new_common(
+    const qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width
-    );
-extern int
-delete_chunk_file(
-    const CHUNK_REC_TYPE *ptr_chunk,
-    bool *ptr_is_file
     );
 extern int
 reincarnate(

@@ -749,8 +749,12 @@ static int l_vec_new( lua_State *L)
   bool is_key; int64_t itmp; 
   const char * qtype;
   uint32_t field_width;
+  //--- get args passed from Lua 
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 1);
+  if ( !lua_istable(L, 2) ) { go_BYE(-1); }
+  luaL_checktype(L, 2, LUA_TTABLE ); // another way of checking
   //------------------- get qtype and width
-  status = check_args_is_table(L); cBYE(status);
   status = get_str_from_tbl(L, "qtype", &is_key, &qtype);  cBYE(status);
   if ( !is_key ) { go_BYE(-1); }
   if ( *qtype == '\0' ) { go_BYE(-1); }
@@ -761,7 +765,7 @@ static int l_vec_new( lua_State *L)
   if ( strcmp(qtype, "SC") == 0 ) { 
     if ( itmp < 2 ) { go_BYE(-1); }
   }
-  field_width = itmp;
+  field_width = (uint32_t)itmp;
   //------------------
 
   ptr_vec = (VEC_REC_TYPE *)lua_newuserdata(L, sizeof(VEC_REC_TYPE));
@@ -770,7 +774,7 @@ static int l_vec_new( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vec_new(ptr_vec, qtype, field_width); cBYE(status);
+  status = vec_new(g_S, ptr_vec, qtype, field_width); cBYE(status);
 
   return 1; 
 BYE:
