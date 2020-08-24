@@ -258,21 +258,26 @@ BYE:
 int
 reincarnate(
     const qmem_struct_t *ptr_S,
-    const VEC_REC_TYPE *const ptr_v,
+    const VEC_REC_TYPE *const v,
     char **ptr_X,
     bool is_clone
     )
 {
   int status = 0;
-  size_t nX = 65536;
+  size_t nX = 65536; // Initial estimate for size of X 
 #define BUFLEN 65535
   char *buf = NULL;
   char *X = NULL;
+  char *old_file_name = NULL; char *new_file_name = NULL;
+
+  WHOLE_VEC_REC_TYPE *w = 
+    ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
+  if ( w->uqid != v->uqid ) { go_BYE(-1); } 
 
   // check status of vector 
-  if ( ptr_v->is_dead ) { go_BYE(-1); }
-  if ( ptr_v->num_writers > 0 ) { go_BYE(-1); }
-  if ( !ptr_v->is_eov ) { go_BYE(-1); }
+  if ( v->is_dead ) { go_BYE(-1); }
+  if ( !v->is_eov ) { go_BYE(-1); }
+  if ( w->num_writers > 0 ) { go_BYE(-1); }
   //--------------
   buf = malloc(BUFLEN+1);
   return_if_malloc_failed(buf);
@@ -283,30 +288,29 @@ reincarnate(
   memset(X, '\0', nX);
 
   strcpy(buf, " return { ");
-  safe_strcat(&X, &nX, buf);
+  status = safe_strcat(&X, &nX, buf); cBYE(status);
 
-  sprintf(buf, "qtype = \"%s\", ", ptr_v->fldtype); 
-  safe_strcat(&X, &nX, buf);
+  sprintf(buf, "qtype = \"%s\", ", v->fldtype); 
+  status = safe_strcat(&X, &nX, buf); cBYE(status);
 
-  sprintf(buf, "num_elements = %" PRIu64 ", ", ptr_v->num_elements); 
-  safe_strcat(&X, &nX, buf);
+  sprintf(buf, "num_elements = %" PRIu64 ", ", v->num_elements); 
+  status = safe_strcat(&X, &nX, buf); cBYE(status);
 
-  sprintf(buf, "chunk_size = %d, ", ptr_S->chunk_size);
-  safe_strcat(&X, &nX, buf);
+  sprintf(buf, "chunk_size = %" PRIu64 ",", ptr_S->chunk_size);
+  status = safe_strcat(&X, &nX, buf); cBYE(status);
 
-  sprintf(buf, "width = %u, ", ptr_v->field_width); 
-  safe_strcat(&X, &nX, buf);
+  sprintf(buf, "width = %u, ", v->field_width); 
+  status = safe_strcat(&X, &nX, buf); cBYE(status);
 
-  char old_file_name[Q_MAX_LEN_FILE_NAME+1];
-  char new_file_name[Q_MAX_LEN_FILE_NAME+1];
 
-  uint64_t old_vec_uqid = ptr_v->uqid; 
-  status = mk_file_name(old_vec_uqid, old_file_name,Q_MAX_LEN_FILE_NAME); 
-  cBYE(status);
+  uint64_t old_vec_uqid = v->uqid; 
   if ( is_clone ) { 
-    uint64_t new_vec_uqid = get_uqid(ptr_S);
-    if ( ptr_v->is_file ) {
-      status = mk_file_name(new_vec_uqid, new_file_name,Q_MAX_LEN_FILE_NAME); 
+    status = mk_file_name(ptr_S, old_vec_uqid, &old_file_name); 
+    cBYE(status);
+    uint64_t new_vec_uqid = get_uqid((qmem_struct_t *)ptr_S);
+    if ( w->is_file ) {
+      status = mk_file_name(ptr_S, new_vec_uqid, &new_file_name); 
+      cBYE(status);
       status = copy_file(old_file_name, new_file_name); cBYE(status);
     }
     sprintf(buf, "vec_uqid = %" PRIu64 ",",  new_vec_uqid);
@@ -314,50 +318,54 @@ reincarnate(
   else {
     sprintf(buf, "vec_uqid = %" PRIu64 ",",  old_vec_uqid);
   }
-  safe_strcat(&X, &nX, buf);
+  status = safe_strcat(&X, &nX, buf); cBYE(status);
   //-------------------------------------------------------
-  // no master file => either 
-  // (1) all chunk files must exist. 
-  // (2) chunk data must exist 
-  if ( !ptr_v->is_file ) { 
-    for ( unsigned int i = 0; i < ptr_v->num_chunks; i++ ) { 
-      uint32_t chunk_idx = ptr_v->chunks[i];
+  // no master file => for each chunk, either 
+  // (1) file must exist
+  // (2) data must exist 
+  if ( !w->is_file ) { 
+    for ( unsigned int i = 0; i < v->num_chunks; i++ ) { 
+      uint32_t chunk_idx = v->chunks[i];
       chk_chunk_idx(chunk_idx);
-      CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
-      uint64_t old_uqid = ptr_c->uqid; 
-      status = mk_file_name(old_uqid, old_file_name,Q_MAX_LEN_FILE_NAME); 
-      cBYE(status);
-      if ( ( !isfile(old_file_name) ) && ( ptr_c->data == NULL ) ) { 
+      CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir->chunks + chunk_idx;
+      if ( ( !ptr_c->is_file ) && ( ptr_c->data == NULL ) ) { 
         go_BYE(-1);
       }
     }
   }
   //------------------------------------------------------------
-  safe_strcat(&X, &nX, "chunk_uqids = { ");
-  for ( unsigned int i = 0; i < ptr_v->num_chunks; i++ ) { 
-    uint32_t chunk_idx = ptr_v->chunks[i];
+  status = safe_strcat(&X, &nX, "chunk_uqids = { "); cBYE(status);
+  for ( unsigned int i = 0; i < v->num_chunks; i++ ) { 
+    char *old_chunk_file_name = NULL;
+    char *new_chunk_file_name = NULL;
+    uint32_t chunk_idx = v->chunks[i];
     chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir + chunk_idx;
+    CHUNK_REC_TYPE *ptr_c = ptr_S->chunk_dir->chunks + chunk_idx;
     uint64_t old_uqid = ptr_c->uqid; 
-    status = mk_file_name(old_uqid, old_file_name,Q_MAX_LEN_FILE_NAME); 
-    cBYE(status);
     if ( is_clone ) { 
-      uint64_t new_uqid = get_uqid(ptr_S);
-      status = mk_file_name(new_uqid, new_file_name,Q_MAX_LEN_FILE_NAME); 
+      status = mk_file_name(ptr_S, old_uqid, &old_chunk_file_name); 
+      cBYE(status);
+      uint64_t new_uqid = get_uqid((qmem_struct_t *)ptr_S);
+      status = mk_file_name(ptr_S,new_uqid, &new_chunk_file_name); 
+      cBYE(status);
       if ( ptr_c->is_file ) { 
-        status = copy_file(old_file_name, new_file_name); cBYE(status);
+        status = copy_file(old_chunk_file_name, new_chunk_file_name); 
+        cBYE(status);
+        free_if_non_null(old_chunk_file_name); 
+        free_if_non_null(new_chunk_file_name); 
       }
       sprintf(buf, "%" PRIu64 ",",  new_uqid);
     }
     else {
       sprintf(buf, "%" PRIu64 ",",  old_uqid);
     }
-    safe_strcat(&X, &nX, buf);
+    status = safe_strcat(&X, &nX, buf); cBYE(status);
   }
-  safe_strcat(&X, &nX, " }  ");
-  safe_strcat(&X, &nX, " }  ");
+  status = safe_strcat(&X, &nX, " }  "); cBYE(status);
+  status = safe_strcat(&X, &nX, " }  "); cBYE(status);
   *ptr_X = X;
 BYE:
+  free_if_non_null(old_file_name);  free_if_non_null(new_file_name); 
   free_if_non_null(buf);
   if ( status < 0 ) { free_if_non_null(X); }
   return status;
@@ -372,34 +380,3 @@ is_multiple(
   if ( ( ( x /y ) * y ) == x ) { return true; } else { return false; }
 }
 //------------------------------------------------------
-// This should be invoked only when a master file exists 
-int
-vec_clean_chunks(
-    const qmem_struct_t *ptr_S,
-    const VEC_REC_TYPE *const ptr_vec
-    )
-{
-  int status = 0;
-  if ( ptr_vec == NULL ) { go_BYE(-1); }
-  if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
-  if ( ptr_vec->is_file == false ) { go_BYE(-1); }
-  uint32_t lb = 0;
-  uint32_t ub = ptr_vec->num_chunks; 
-  for ( unsigned int i = lb; i < ub; i++ ) { 
-    char file_name[Q_MAX_LEN_FILE_NAME+1];
-    uint32_t chunk_idx = ptr_vec->chunks[i];
-    chk_chunk_idx(chunk_idx);
-    CHUNK_REC_TYPE *ptr_chunk = ptr_S->chunk_dir + chunk_idx;
-    if ( ptr_chunk->is_file ) { // flush buffer only if NO backup 
-      memset(file_name, '\0', Q_MAX_LEN_FILE_NAME+1);
-      status = mk_file_name(ptr_chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-      cBYE(status);
-      status = remove(file_name); cBYE(status);
-      ptr_chunk->is_file = false;
-    }
-    free_if_non_null(ptr_chunk->data);
-  }
-BYE:
-  return status;
-}
-
