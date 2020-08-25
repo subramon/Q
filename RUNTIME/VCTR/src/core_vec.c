@@ -139,6 +139,7 @@ vec_free(
   }
   // delete all resources for this vector (modulo what is_persist says)
   status = qmem_delete_vec(ptr_S, ptr_vec); cBYE(status);
+  free_if_non_null(ptr_vec->name); 
   memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
   ptr_vec->is_dead = true;
   // Don't do this in C. Lua will do it: free(ptr_vec);
@@ -677,10 +678,14 @@ vec_set_name(
 {
   int status = 0;
   if ( ptr_vec == NULL ) { go_BYE(-1); }
-  
-  memset(ptr_vec->name, '\0', Q_MAX_LEN_INTERNAL_NAME+1);
-  status = chk_name(name); cBYE(status);
-  strncpy(ptr_vec->name, name, Q_MAX_LEN_INTERNAL_NAME);
+  free_if_non_null(ptr_vec->name);
+  if ( ( name != NULL ) && ( *name != '\0' ) ) {
+    int len = strlen(name) + 1; 
+    ptr_vec->name = malloc(len);
+    memset(ptr_vec->name, '\0', len);
+    status = chk_name(name); cBYE(status);
+    strcpy(ptr_vec->name, name);
+  }
 BYE:
   return status;
 }

@@ -3,8 +3,8 @@ local cmem = require 'libcmem' ;
 local ffi = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local tests = {}
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local qc      = require  'Q/UTILS/lua/q_core' -- to cdef CMEM_REC_TYPE 
+local qconsts = require 'Q/UTILS/lua/qconsts'
+local qc      = require  'Q/UTILS/lua/qcore' -- to cdef CMEM_REC_TYPE 
 
 ffi.cdef([[
 char *strncpy(char *dest, const char *src, size_t n);
@@ -73,7 +73,7 @@ tests.t3 = function()
   local buf = cmem.new( {size = ffi.sizeof("int32_t"), qtype = "I4"})
   local cbuf = ffi.cast("CMEM_REC_TYPE *", buf)
   ffi.C.strncpy(cbuf[0].fldtype, "I4", 2)
-  ffi.C.strncpy(cbuf[0].cell_name, "some bogus name", 15)
+  buf:set_name("some bogus name"); 
   local iptr = assert(get_ptr(buf, "I4"))
   iptr[0] = 123456789;
   assert(type(buf) == "CMEM")

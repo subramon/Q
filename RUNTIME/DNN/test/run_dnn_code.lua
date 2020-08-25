@@ -1,6 +1,6 @@
 local Q = require 'Q'
 local lDNN = require 'Q/RUNTIME/DNN/lua/lDNN'
-local qc = require 'Q/UTILS/lua/q_core'
+local qc = require 'Q/UTILS/lua/qcore'
 local Scalar = require 'libsclr'
 
 

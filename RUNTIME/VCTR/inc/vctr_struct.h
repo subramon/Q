@@ -13,7 +13,7 @@ typedef struct _vec_rec_type {
   // whole_vec_dir[whole_vec_dir_idx].uqid == uqid 
 
   uint64_t num_elements; // starts at 0, increases monotonically
-  char name[Q_MAX_LEN_INTERNAL_NAME+1]; 
+  char *name;
   // system does not enforce any constraints on name other than it be
   // alphanumeric and no more than specified length. Useful for debugging
 

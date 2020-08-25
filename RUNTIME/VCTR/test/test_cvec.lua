@@ -26,7 +26,7 @@ local modes
 local test_without_q = false
 if test_without_q then 
   -- following only because we are testing. 
-  -- Normally, we get this from q_core
+  -- Normally, we get this from q_ore
   local get_func_decl = require 'Q/UTILS/build/get_func_decl'
   local hdrs = get_func_decl("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
   ffi.cdef(hdrs)

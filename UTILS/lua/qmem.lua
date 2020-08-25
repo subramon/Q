@@ -50,9 +50,6 @@ cst_cdata[0].whole_vec_dir[0].sz = n
 cst_cdata[0].whole_vec_dir[0].n  = 0
 --=====================================================
 --===========================
--- TODO  cVector qcfg.Q_DATA_DIR for data_dir
--- TODO Use cVector qcfg.chunk_size for chunk_size
-
 qmem.q_data_dir = os.getenv("Q_DATA_DIR")
 qmem.chunk_size = 65536 -- default value 
 qmem.max_mem_KB = 1048576 -- default value 

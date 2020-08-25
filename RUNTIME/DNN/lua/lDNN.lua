@@ -4,7 +4,7 @@ local cmem		= require 'libcmem'
 local Scalar		= require 'libsclr'
 local Dnn		= require 'libdnn'
 local register_type	= require 'Q/UTILS/lua/q_types'
-local qc		= require 'Q/UTILS/lua/q_core'
+local qc		= require 'Q/UTILS/lua/qcore'
 local get_ptr           = require 'Q/UTILS/lua/get_ptr'
 local get_network_structure           = 
   require 'Q/RUNTIME/DNN/lua/aux/get_network_structure'

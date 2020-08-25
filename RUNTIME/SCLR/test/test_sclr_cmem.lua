@@ -1,5 +1,5 @@
 require 'Q/UTILS/lua/strict'
-local qc     = require 'Q/UTILS/lua/q_core'
+local qc     = require 'Q/UTILS/lua/qcore'
 local cmem   = require 'libcmem'
 local ffi    = require 'ffi' 
 local Scalar = require 'libsclr' 
@@ -70,9 +70,9 @@ ffi.cdef([[
   print("test 2 passed")
 end
 --================
-return tests
---[[
 tests.t1()
+--[[
+return tests
 tests.t2()
 os.exit()
 --]]

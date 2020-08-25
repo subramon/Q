@@ -34,7 +34,7 @@ void cmem_undef( // USED FOR DEBUGGING
 {
   ptr_cmem->size = -1;
   strcpy(ptr_cmem->fldtype, "XXX");
-  strcpy(ptr_cmem->cell_name, "Uninitialized");
+  free_if_non_null(ptr_cmem->cell_name);
   ptr_cmem->is_foreign = false;
 }
 
@@ -42,8 +42,8 @@ int cmem_dupe( // INTERNAL NOT VISIBLE TO LUA
     CMEM_REC_TYPE *ptr_cmem,
     void *data,
     int64_t size,
-    const char *fldtype,
-    const char *cell_name
+    const char * const fldtype,
+    const char * const cell_name
     )
 {
   int status = 0;
@@ -55,7 +55,10 @@ int cmem_dupe( // INTERNAL NOT VISIBLE TO LUA
     strncpy(ptr_cmem->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1); 
   }
   if ( ( cell_name != NULL ) && ( *cell_name != '\0' ) ) { 
-    strncpy(ptr_cmem->cell_name, cell_name, Q_MAX_LEN_INTERNAL_NAME-1);
+    int len = strlen(cell_name) + 1; 
+    ptr_cmem->cell_name = malloc(len);
+    return_if_malloc_failed(ptr_cmem->cell_name);
+    strcpy(ptr_cmem->cell_name, cell_name); 
   }
   ptr_cmem->is_foreign = true;
 BYE:
@@ -65,8 +68,8 @@ BYE:
 int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA 
     CMEM_REC_TYPE *ptr_cmem,
     int64_t size,
-    const char *fldtype,
-    const char *cell_name
+    const char *const fldtype,
+    const char *const cell_name
     )
 {
   int status = 0;
@@ -86,7 +89,10 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
     strncpy(ptr_cmem->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   }
   if ( cell_name != NULL ) { 
-    strncpy(ptr_cmem->cell_name, cell_name, Q_MAX_LEN_INTERNAL_NAME-1);
+    int len = strlen(cell_name) + 1;
+    ptr_cmem->cell_name = malloc(len); 
+    return_if_malloc_failed(ptr_cmem->cell_name);
+    strcpy(ptr_cmem->cell_name, cell_name); 
   }
   ptr_cmem->is_foreign = false;
 BYE:
@@ -177,12 +183,37 @@ BYE:
   return 2;
 }
 
+static int l_cmem_set_name( lua_State *L) {
+  int status = 0;
+  int num_args = lua_gettop(L);
+  if ( num_args != 2 ) { go_BYE(-1); }
+  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
+  const char * const cell_name = luaL_checkstring(L, 2);
+  free_if_non_null(ptr_cmem->cell_name);
+  int len = strlen(cell_name) + 1;
+  ptr_cmem->cell_name = malloc(len);
+  if ( ptr_cmem->cell_name == NULL ) { go_BYE(-1); }
+  strcpy( ptr_cmem->cell_name, cell_name); 
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+
 static int l_cmem_name( lua_State *L) {
   int status = 0;
   int num_args = lua_gettop(L);
   if ( num_args != 1 ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
-  lua_pushstring(L, ptr_cmem->cell_name);
+  if ( ptr_cmem->cell_name == NULL ) { 
+    lua_pushnil(L);
+  }
+  else {
+    lua_pushstring(L, ptr_cmem->cell_name);
+  }
   return 1;
 BYE:
   lua_pushnil(L);
@@ -479,7 +510,12 @@ static int l_cmem_me( lua_State *L) {
   lua_settable(L, -3);
   // cell_name
   lua_pushstring(L, "cell_name");
-  lua_pushstring(L, ptr_cmem->cell_name );
+  if ( ptr_cmem->cell_name  == NULL ) {
+    lua_pushnil(L);
+  }
+  else {
+    lua_pushstring(L, ptr_cmem->cell_name );
+  }
   lua_settable(L, -3);
   return 1; 
 }
@@ -509,6 +545,7 @@ static int l_cmem_free( lua_State *L)
   int num_args = lua_gettop(L);
   if ( num_args != 1 ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
+  free_if_non_null(ptr_cmem->cell_name); 
   if ( ptr_cmem->data == NULL ) { 
     // explicit free will cause control to come here
     bool ok1 = false, ok2 = false;
@@ -543,7 +580,7 @@ static int l_cmem_free( lua_State *L)
         free(ptr_cmem->data);
         ptr_cmem->data = NULL;
         strcpy(ptr_cmem->fldtype, "XXX");
-        strcpy(ptr_cmem->cell_name, "Uninitialized");
+        free_if_non_null(ptr_cmem->cell_name);
         ptr_cmem->size = -1;
       }
     }
@@ -803,6 +840,7 @@ static const struct luaL_Reg cmem_methods[] = {
     { "set_default", l_cmem_set_default },
     { "set_max",    l_cmem_set_max },
     { "set_min",    l_cmem_set_min },
+    { "set_name",   l_cmem_set_name },
     { "set_width",  l_cmem_set_width },
     { "seq",        l_cmem_seq               },
     { "size",       l_cmem_size },
@@ -830,6 +868,7 @@ static const struct luaL_Reg cmem_functions[] = {
     { "set_default", l_cmem_set_default },
     { "set_max",    l_cmem_set_max },
     { "set_min",    l_cmem_set_min },
+    { "set_name",   l_cmem_set_name },
     { "set_width",  l_cmem_set_width },
     { "seq",        l_cmem_seq               },
     { "size",       l_cmem_size },

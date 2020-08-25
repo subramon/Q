@@ -21,15 +21,16 @@ Run luajit runtest.lua to see its usage.
 package.path  = "/?.lua;" .. package.path -- TODO P4 What is this for?
 local cutils   = require 'libcutils'
 
-local qc       = require 'Q/UTILS/lua/q_core'
+local qc       = require 'Q/UTILS/lua/qcore'
 local cleanup  = require 'Q/UTILS/lua/cleanup'
-local qconsts  = require 'Q/UTILS/lua/q_consts'
+local qconsts  = require 'Q/UTILS/lua/qconsts'
+local qcfg     = require 'Q/UTILS/lua/qcfg'
 local plpretty = require "pl.pretty"
 local plpath   = require "pl.path"
 cleanup()
 local recursive_lister = require 'Q/TEST_RUNNER/recursive_lister'
 
-local q_src_root = qconsts.Q_SRC_ROOT
+local q_src_root = qcfg.q_src_root
 assert(cutils.isdir(q_src_root))
 local setup_path = string.format("export q_src_root='%s';\n", q_src_root)
 

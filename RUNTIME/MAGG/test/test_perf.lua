@@ -4,7 +4,7 @@ local get_nDR      = require 'Q/OPERATORS/MDB/lua/get_nDR'
 local mk_mdb_input = require 'Q/OPERATORS/MDB/test/mk_mdb_input'
 local mk_template  = require 'Q/OPERATORS/MDB/lua/mk_template'
 local qconsts      = require 'Q/UTILS/lua/q_consts'
-local qc           = require 'Q/UTILS/lua/q_core'
+local qc           = require 'Q/UTILS/lua/qcore'
 local lAggregator  = require 'Q/RUNTIME/AGG/lua/lAggregator'
 
 local tests = {}

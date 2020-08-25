@@ -1,5 +1,5 @@
 local cmem = require 'libcmem' ;
-local qc = require 'Q/UTILS/lua/q_core'
+local qc = require 'Q/UTILS/lua/qcore'
 local utils = require 'Q/UTILS/lua/utils'
 
 local tests = {}

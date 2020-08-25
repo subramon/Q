@@ -87,7 +87,6 @@ chk_name(
 {
   int status = 0;
   if ( name == NULL ) { go_BYE(-1); }
-  if ( strlen(name) > Q_MAX_LEN_INTERNAL_NAME ) {go_BYE(-1); }
   for ( const char *cptr = (const char *)name; *cptr != '\0'; cptr++ ) { 
     if ( !isascii(*cptr) ) { 
       fprintf(stderr, "Cannot have character [%c] in name \n", *cptr);
