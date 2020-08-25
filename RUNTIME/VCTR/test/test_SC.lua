@@ -5,27 +5,23 @@ local ffi     = require 'ffi'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
+local qmem    = require 'Q/UTILS/lua/qmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local function initialize()
---== cdef necessary stuff
-local for_cdef = require 'Q/UTILS/lua/for_cdef'
-
-local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
-local incs = { "UTILS/inc/" }
-local x = for_cdef(infile, incs)
-ffi.cdef(x)
-
-local infile = "RUNTIME/VCTR/inc/core_vec_struct.h"
-local incs = { "UTILS/inc/" }
-local x = for_cdef(infile, incs)
-ffi.cdef(x)
+  --== cdef necessary stuff
+  local for_cdef = require 'Q/UTILS/lua/for_cdef'
+  
+  local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
+  local incs = { "UTILS/inc/" }
+  local x = for_cdef(infile, incs)
+  ffi.cdef(x)
+  
+  local infile = "RUNTIME/VCTR/inc/core_vec_struct.h"
+  local incs = { "UTILS/inc/" }
+  local x = for_cdef(infile, incs)
+  ffi.cdef(x)
 end
---=================================
-local chunk_size = 65536
-local params = { chunk_size = chunk_size, sz_chunk_dir = 4096, 
-    data_dir = qconsts.Q_DATA_DIR }
-cVector.init_globals(params)
 --=================================
 local tests = {}
 -- testing put1 and get1 

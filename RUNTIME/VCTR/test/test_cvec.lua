@@ -5,7 +5,8 @@ local ffi     = require 'ffi'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
+local qmem    = require 'Q/UTILS/lua/qmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local pldir   = require 'pl.dir'
 
@@ -28,19 +29,13 @@ if test_without_q then
   -- following only because we are testing. 
   -- Normally, we get this from q_ore
   local get_func_decl = require 'Q/UTILS/build/get_func_decl'
-  local hdrs = get_func_decl("../inc/core_vec_struct.h", " -I../../../UTILS/inc/")
+  local hdrs = get_func_decl("../inc/vctr_struct.h", " -I../../../UTILS/inc/")
   ffi.cdef(hdrs)
   modes = { "cVector" }
 else
   lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
   modes = { "cVector", "lVector" }
 end
---=================================
-local chunk_size = 65536
-local params = { chunk_size = chunk_size, sz_chunk_dir = 4096, 
-      data_dir = qconsts.Q_DATA_DIR }
-cVector.init_globals(params)
-assert(cVector.chunk_size() == chunk_size)
 --=================================
 -- testing put1 and get1 
 tests.t1 = function()

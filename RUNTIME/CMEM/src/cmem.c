@@ -160,10 +160,10 @@ static int l_cmem_new( lua_State *L)
   }
   else {
     if ( !lua_istable(L, 1) ) { go_BYE(-1); }
-    status = get_int_from_tbl(L, "size", &is_key, &size); cBYE(status);
+    status = get_int_from_tbl(L, 1, "size", &is_key, &size); cBYE(status);
     if ( !is_key ) { fprintf(stderr, "CMEM size not specified\n"); go_BYE(-1); }
-    status = get_str_from_tbl(L, "qtype", &is_key, &fldtype); cBYE(status);
-    status = get_str_from_tbl(L, "name", &is_key, &cell_name); cBYE(status);
+    status = get_str_from_tbl(L, 1, "qtype", &is_key, &fldtype); cBYE(status);
+    status = get_str_from_tbl(L, 1, "name", &is_key, &cell_name); cBYE(status);
   }
   // Note we allow size == 0 for dummy CMEM so that we do not 
   if ( size < 0 ) { go_BYE(-1); }

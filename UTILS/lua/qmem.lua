@@ -17,6 +17,8 @@ local sz = ffi.sizeof("qmem_struct_t")
 local cdata = assert(ffi.C.malloc(sz))
 ffi.fill(cdata, 0)
 cst_cdata = ffi.cast("qmem_struct_t *", cdata)
+cst_cdata[0].now_mem_KB = 0
+cst_cdata[0].max_mem_KB = 0
 
 --=====================================================
 sz = ffi.sizeof("chunk_dir_t ")
@@ -54,6 +56,9 @@ qmem.q_data_dir = os.getenv("Q_DATA_DIR")
 qmem.chunk_size = 65536 -- default value 
 qmem.max_mem_KB = 1048576 -- default value 
 local function init(T)
+  print("init ")
+  for k, v in pairs(T) do print(k, v) end 
+  print("init xx ")
   -- == Check new values
   assert(type(T.q_data_dir) == "string")
   assert(cutils.isdir(T.q_data_dir))
@@ -68,9 +73,19 @@ local function init(T)
   cst_cdata[0].chunk_size = T.chunk_size 
   cst_cdata[0].max_mem_KB = T.max_mem_KB
   -- Following needed by Lua and C
+  -- first hand to Lua 
   qmem.chunk_size = T.chunk_size 
   qmem.q_data_dir = T.q_data_dir 
   qmem.max_mem_KB = T.max_mem_KB 
+  -- now hand  to C
+  cst_cdata[0].max_mem_KB = T.max_mem_KB 
+  cst_cdata[0].chunk_size = T.max_mem_KB 
+  if ( cst_cdata[0].q_data_dir ~= ffi.NULL ) then 
+    ffi.C.free(cst_cdata[0].q_data_dir)
+    cst_cdata[0].q_data_dir = ffi.NULL
+  end
+  cst_cdata[0].q_data_dir = stringify(T.q_data_dir)
+
   return true
 end
 local function get()

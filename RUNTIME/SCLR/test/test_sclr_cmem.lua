@@ -70,9 +70,9 @@ ffi.cdef([[
   print("test 2 passed")
 end
 --================
-tests.t1()
---[[
 return tests
+--[[
+tests.t1()
 tests.t2()
 os.exit()
 --]]

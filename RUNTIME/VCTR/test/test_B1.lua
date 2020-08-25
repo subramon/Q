@@ -5,7 +5,9 @@ local ffi     = require 'ffi'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
+local qconsts = require 'Q/UTILS/lua/qconsts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 --== cdef necessary stuff
 local for_cdef = require 'Q/UTILS/lua/for_cdef'
@@ -16,17 +18,11 @@ local function initialize()
   local x = for_cdef(infile, incs)
   ffi.cdef(x)
   
-  local infile = "RUNTIME/VCTR/inc/core_vec_struct.h"
+  local infile = "RUNTIME/VCTR/inc/vctr_struct.h"
   local incs = { "UTILS/inc/" }
   local x = for_cdef(infile, incs)
   ffi.cdef(x)
 end
---=================================
---=================================
-local chunk_size = 65536
-local params = { chunk_size = chunk_size, sz_chunk_dir = 4096, 
-    data_dir = qconsts.Q_DATA_DIR }
-cVector.init_globals(params)
 --=================================
 local tests = {}
 -- testing put1 and get1 for B1
@@ -36,7 +32,8 @@ tests.t0 = function(incr)
   if ( not  incr ) then incr = 0 end 
   local qtype = "B1"
   local width = 1
-  local v = cVector.new( { qtype = qtype, width = width } )
+  local g_S = ffi.cast("qmem_struct_t *", qmem._cdata)
+  local v = assert(cVector.new({ qtype = qtype, width = width }, g_S)
   --=============
   local n = chunk_size + incr
   local exp_num_chunks = 0
@@ -47,10 +44,10 @@ tests.t0 = function(incr)
   local alternate = false
   for i = 1, n do 
     if ( alternate == true ) then 
-      assert(v:put1(s1))
+      assert(v:put1(qmem._cdata, s1))
       alternate = false
     else 
-      assert(v:put1(s0))
+      assert(v:put1(qmem._cdata, s0))
       alternate = true
     end
   end
@@ -136,9 +133,9 @@ tests.t2 = function()
   assert(tests.t0(1))
   print("Successfully completed test t2")
 end
-return tests
---[[
-tests.t1() 
 tests.t0() 
+--[[
+return tests
+tests.t1() 
 os.exit()
 --]]

@@ -20,6 +20,7 @@ BYE:
 int 
 get_array_of_ints_from_tbl(
       lua_State *L,
+      int stack_index,
       const char * const key,
       bool *ptr_is_key,
       int64_t *out, // allocated before call 
@@ -30,7 +31,7 @@ get_array_of_ints_from_tbl(
   if ( out == NULL ) { go_BYE(-1); }
   *ptr_is_key = false;
   int nstack = lua_gettop(L); 
-  if ( nstack != 1 ) { go_BYE(-1); }
+  if ( nstack < stack_index ) { go_BYE(-1); }
   lua_getfield (L, 1, key); 
   nstack = lua_gettop(L); 
   if ( nstack != (1+1) ) { go_BYE(-1); }
@@ -58,6 +59,7 @@ BYE:
 int 
 get_array_of_strings_from_tbl(
       lua_State *L,
+      int stack_index,
       const char * const key,
       bool *ptr_is_key,
       const char **file_names, // [n] 
@@ -67,7 +69,7 @@ get_array_of_strings_from_tbl(
   int status = 0; 
   *ptr_is_key = false;
   int nstack = lua_gettop(L); 
-  if ( nstack != 1 ) { go_BYE(-1); }
+  if ( nstack < stack_index ) { go_BYE(-1); }
   lua_getfield (L, 1, key); 
   nstack = lua_gettop(L); 
   if ( nstack != (1+1) ) { go_BYE(-1); }
@@ -94,6 +96,7 @@ BYE:
 }
 int get_str_from_tbl(
       lua_State *L,
+      int stack_index,
       const char * const key,
       bool *ptr_is_key,
       const char **ptr_cptr
@@ -102,22 +105,23 @@ int get_str_from_tbl(
   int status = 0; 
   *ptr_cptr = false; *ptr_is_key = false;
   //----------------------------
-  int n = lua_gettop(L); if ( n != 1 ) { go_BYE(-1); }
-  lua_getfield (L, 1, key); 
-  n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
-  if  ( lua_type(L, 1+1) != LUA_TSTRING ) { 
+  int n = lua_gettop(L); if ( n < stack_index ) { go_BYE(-1); }
+  lua_getfield (L, stack_index, key); 
+  int m = lua_gettop(L); if ( m != (n+1) ) { go_BYE(-1); }
+  if  ( lua_type(L, m) != LUA_TSTRING ) { 
     *ptr_is_key = false; goto BYE;
   }
-  *ptr_cptr = luaL_checkstring(L, 1+1); 
+  *ptr_cptr = luaL_checkstring(L, m);
   *ptr_is_key = true;
 BYE:
   lua_pop(L, 1);
-  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
+  m = lua_gettop(L); if ( m != n  ) { go_BYE(-1); }
   return status;
 }
 int
 get_int_from_tbl(
     lua_State *L, 
+    int stack_index,
     const char * const key,
     bool *ptr_is_key,
     int64_t *ptr_itmp
@@ -126,16 +130,17 @@ get_int_from_tbl(
   int status = 0;
   *ptr_itmp = -1; *ptr_is_key = false;
   //------------------- 
-  lua_getfield (L, 1, key);
-  int n = lua_gettop(L); if ( n != (1+1) ) { go_BYE(-1); }
-  if  ( lua_type(L, 1+1) != LUA_TNUMBER ) { 
+  int n = lua_gettop(L); if ( n < stack_index ) { go_BYE(-1); }
+  lua_getfield (L, stack_index, key);
+  int m = lua_gettop(L); if ( m != (n+1) ) { go_BYE(-1); }
+  if  ( lua_type(L, m) != LUA_TNUMBER ) { 
     *ptr_is_key = false; goto BYE;
   }
-  *ptr_itmp = luaL_checknumber(L, 1+1); 
+  *ptr_itmp = luaL_checknumber(L, m);
   *ptr_is_key = true;
 BYE:
   lua_pop(L, 1);
-  n = lua_gettop(L); if ( n != 1  ) { go_BYE(-1); }
+  m = lua_gettop(L); if ( m != n  ) { go_BYE(-1); }
   return status;
 }
 // Set globals in C in main program after creating Lua state
