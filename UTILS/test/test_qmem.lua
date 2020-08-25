@@ -13,7 +13,9 @@ tests.t1 = function()
   --===================================
   W = qmem.get()
 
-  local cdata = ffi.cast("qmem_struct_t *", qmem._cdata)
+  local cdata = assert(qmem.cdata)
+  assert(type(cdata) == "CMEM")
+  local cdata = ffi.cast("qmem_struct_t *", cdata:data())
   -- print("q_data_dir = ", ffi.string(cdata[0].q_data_dir))
   assert(ffi.string(cdata[0].q_data_dir) == W.q_data_dir)
   assert(tonumber(cdata[0].uqid_gen) == 0)
@@ -38,3 +40,4 @@ tests.t1 = function()
   print("Test t1 succeeded")
 end
 tests.t1()
+os.exit()

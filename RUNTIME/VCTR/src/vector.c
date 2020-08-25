@@ -748,10 +748,14 @@ static int l_vec_new( lua_State *L)
   const char * qtype;
   uint32_t field_width;
   //--- get args passed from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 3 ) { go_BYE(-1); }
   if ( !lua_istable(L, 1) ) { go_BYE(-1); }
   luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
-  const qmem_struct_t * g_S = (const qmem_struct_t *)lua_topointer(L, 2);
+  CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 2, "CMEM");
+  const qmem_struct_t * g_S = (const qmem_struct_t *)(ptr_cmem->data);
+  itmp = luaL_checknumber(L, 3);
+
+  int junk = lua_islightuserdata(L, 2); 
   //------------------- get qtype and width
   status = get_str_from_tbl(L, 1, "qtype", &is_key, &qtype);  cBYE(status);
   if ( !is_key ) { go_BYE(-1); }

@@ -1,4 +1,4 @@
-local function add_trailing_bslash(x)
+local function add_trailing_slash(x)
   assert(type(x) == "string")
   assert(#x > 1)
   if ( string.sub(x, #x, #x) ~= "/" ) then
@@ -6,4 +6,4 @@ local function add_trailing_bslash(x)
   end
   return x
 end
-return  add_trailing_bslash
+return  add_trailing_slash

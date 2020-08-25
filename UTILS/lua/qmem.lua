@@ -1,7 +1,9 @@
-local ffi    = require 'ffi'
-local cutils = require 'libcutils'
+local ffi     = require 'ffi'
+local cmem    = require 'libcmem'
+local cutils  = require 'libcutils'
+local qc      = require 'Q/UTILS/lua/qcore'
 local stringify = require 'Q/UTILS/lua/stringify'
-local qc     = require 'Q/UTILS/lua/qcore'
+local add_trailing_slash = require 'Q/UTILS/lua/add_trailing_slash'
 
 qc.q_cdef("UTILS/inc/qmem_struct.h")
 qc.q_cdef("UTILS/inc/q_common.h")
@@ -13,12 +15,13 @@ local Q_INITIAL_NUM_VECS   = 1024
 local sz, n
 local qmem = {}
 
-local sz = ffi.sizeof("qmem_struct_t")
-local cdata = assert(ffi.C.malloc(sz))
-ffi.fill(cdata, sz)
-cst_cdata = ffi.cast("qmem_struct_t *", cdata)
+sz = ffi.sizeof("qmem_struct_t")
+local cdata = cmem.new(sz); cdata:zero()
+local cst_cdata = ffi.cast("qmem_struct_t *", cdata:data())
 --==================================
-qmem.q_data_dir = os.getenv("Q_DATA_DIR")
+qmem.q_data_dir = assert(os.getenv("Q_DATA_DIR"))
+qmem.q_data_dir = add_trailing_slash(qmem.q_data_dir)
+
 cst_cdata[0].q_data_dir = stringify(qmem.q_data_dir)
 cst_cdata[0].uqid_gen   = 0
 
@@ -33,31 +36,35 @@ cst_cdata[0].now_mem_KB = 0       -- initial value
 --=====================================================
 
 sz = ffi.sizeof("chunk_dir_t ")
-local chunk_dir = assert(ffi.C.malloc(sz))
-ffi.fill(chunk_dir, sz)
-cst_chunk_dir = ffi.cast("chunk_dir_t  *", chunk_dir)
+local chunk_dir = cmem.new(sz); chunk_dir:zero()
+local cst_chunk_dir = 
+  ffi.cast("chunk_dir_t  *", chunk_dir:data())
+cst_cdata[0].chunk_dir = cst_chunk_dir
+
 cst_chunk_dir[0].n = 0
 cst_chunk_dir[0].sz = Q_INITIAL_NUM_CHUNKS
 
 sz = Q_INITIAL_NUM_CHUNKS * ffi.sizeof("CHUNK_REC_TYPE ") 
-local chunks = assert(ffi.C.malloc(sz))
-ffi.fill(chunks, sz)
-cst_chunk_dir[0].chunks = ffi.cast("CHUNK_REC_TYPE  *", chunks)
-cst_cdata[0].chunk_dir = cst_chunk_dir
+local chunks = cmem.new(sz); chunks:zero()
+local cst_chunks = 
+  ffi.cast("CHUNK_REC_TYPE  *", chunks:data())
+cst_chunk_dir[0].chunks = cst_chunks
 --=====================================================
 
 sz = ffi.sizeof("whole_vec_dir_t ")
-local whole_vec_dir = assert(ffi.C.malloc(sz))
-ffi.fill(whole_vec_dir, sz)
-cst_whole_vec_dir = ffi.cast("whole_vec_dir_t  *", whole_vec_dir)
+local whole_vec_dir = cmem.new(sz); whole_vec_dir:zero()
+local cst_whole_vec_dir = 
+  ffi.cast("whole_vec_dir_t  *", whole_vec_dir:data())
+cst_cdata[0].whole_vec_dir = cst_whole_vec_dir
+
 cst_whole_vec_dir[0].n = 0
 cst_whole_vec_dir[0].sz = Q_INITIAL_NUM_VECS 
 
 sz = Q_INITIAL_NUM_VECS * ffi.sizeof("WHOLE_VEC_REC_TYPE ") 
-local whole_vecs = assert(ffi.C.malloc(sz))
-ffi.fill(whole_vecs, sz)
-cst_whole_vec_dir[0].whole_vecs = ffi.cast("WHOLE_VEC_REC_TYPE  *", whole_vecs)
-cst_cdata[0].whole_vec_dir = cst_whole_vec_dir
+local whole_vecs = assert(cmem.new(sz)); whole_vecs:zero()
+local cst_whole_vecs = 
+  ffi.cast("WHOLE_VEC_REC_TYPE  *", whole_vecs:data())
+cst_whole_vec_dir[0].whole_vecs = cst_whole_vecs
 --=====================================================
 --===========================
 local function init(T)
@@ -102,31 +109,18 @@ local function get()
   return T
 end
 local function release()
-  local cst_cdata = ffi.cast("qmem_struct_t *", qmem._cdata)
   if ( cst_cdata[0].q_data_dir ~= ffi.NULL ) then 
     ffi.C.free(cst_cdata[0].q_data_dir)
   end
-  local cst_chunk_dir = ffi.cast("chunk_dir_t  *", cst_cdata[0].chunk_dir)
-  if ( cst_chunk_dir ~= ffi.NULL ) then 
-    if ( cst_chunk_dir[0].chunks ~= ffi.NULL ) then 
-      ffi.C.free(cst_chunk_dir[0].chunks)
-    end
-    ffi.C.free(cst_chunk_dir)
-  end
-  local cst_whole_vec_dir = ffi.cast("whole_vec_dir_t *", cst_cdata[0].whole_vec_dir)
-  if ( cst_whole_vec_dir ~= ffi.NULL ) then 
-    if ( cst_whole_vec_dir[0].whole_vecs ~= ffi.NULL ) then 
-      ffi.C.free(cst_whole_vec_dir[0].whole_vecs)
-    end
-    ffi.C.free(cst_whole_vec_dir)
-  end
-  if ( cst_cdata ~= ffi.NULL ) then 
-    ffi.C.free(cst_cdata)
-  end
+  chunks:delete()
+  chunk_dir:delete()
+  whole_vecs:delete()
+  whole_vec_dir:delete()
+  cdata:delete()
 end 
 --===================
 
-qmem._cdata = cst_cdata -- not to be modified by Lua, just pass through to C
+qmem.cdata = cdata -- not to be modified by Lua, just pass through to C
 qmem.init  = init 
 qmem.get   = get  
 qmem._release = release -- use with GREAT CARE !!!!!

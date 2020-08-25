@@ -68,6 +68,44 @@ BYE:
 }
 
 int
+assign_vec_idx(
+    qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *v,
+    uint32_t *ptr_whole_vec_dir_idx
+    )
+{
+  int status = 0;
+  static unsigned int start_search = 1;
+  whole_vec_dir_t *w = ptr_S->whole_vec_dir;
+  // NOTE: we do not allocate 0th entry
+  for ( int iter = 0; iter < 2; iter++ ) { 
+    unsigned int lb, ub;
+    if ( iter == 0 ) { 
+      lb = start_search; // note not 0
+      ub = ptr_S->chunk_dir->sz;
+    }
+    else {
+      lb = 1; 
+      ub = start_search; // note not 0
+    }
+    for ( unsigned int i = lb ; i < ub; i++ ) { 
+      if ( w->whole_vecs[i].uqid == 0 ) {
+        w->whole_vecs[i].uqid = v->uqid;
+        *ptr_whole_vec_dir_idx = i; 
+        w->n++;
+        start_search = i+1;
+        if ( start_search >= w->sz ) { start_search = 1; }
+        return status;
+      }
+    }
+  }
+  /* control should not come here */
+  go_BYE(-1); 
+BYE:
+  return status;
+}
+
+int
 allocate_chunk(
     qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v,

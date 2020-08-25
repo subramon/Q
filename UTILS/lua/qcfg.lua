@@ -1,11 +1,11 @@
 local cutils = require 'libcutils'
-local add_trailing_bslash = require 'Q/UTILS/lua/add_trailing_bslash'
+local add_trailing_slash = require 'Q/UTILS/lua/add_trailing_slash'
 
 local qcfg = {}
 --===========================
 -- Initialize environment variable constants
-qcfg.q_src_root	= add_trailing_bslash(os.getenv("Q_SRC_ROOT"))
-qcfg.q_root	= add_trailing_bslash(os.getenv("Q_ROOT"))
+qcfg.q_src_root	= add_trailing_slash(os.getenv("Q_SRC_ROOT"))
+qcfg.q_root	= add_trailing_slash(os.getenv("Q_ROOT"))
 
 assert(cutils.isdir(qcfg.q_src_root))
 assert(cutils.isdir(qcfg.q_root))
