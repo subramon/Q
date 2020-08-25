@@ -51,12 +51,15 @@ typedef struct _qmem_struct_t {
   char *q_data_dir; 
   uint64_t uqid_gen;  // used to generate unique IDs
 
-  whole_vec_dir_t *whole_vec_dir;
-  chunk_dir_t *chunk_dir;
   uint64_t chunk_size;  // size of vector chunk
 
   uint64_t max_mem_KB; // how much memory Q can use 
   uint64_t now_mem_KB; // how much memory Q has used
+
+  uint64_t padding;
+
+  chunk_dir_t *chunk_dir;
+  whole_vec_dir_t *whole_vec_dir;
 
 } qmem_struct_t;
 //STOP_FOR_CDEF
