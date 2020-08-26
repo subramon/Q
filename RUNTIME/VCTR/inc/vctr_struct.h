@@ -33,6 +33,8 @@ typedef struct _vec_rec_type {
   uint32_t num_chunks; 
   uint32_t sz_chunks; // num_chunks <= sz_chunks
   // if is_memo == false, sz_chunks = 1
+  //---------------
+  qmem_struct_t *g_S; // EXPERIMENTAL
 } VEC_REC_TYPE;
 
 //STOP_FOR_CDEF

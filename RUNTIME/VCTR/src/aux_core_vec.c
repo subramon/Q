@@ -141,27 +141,28 @@ BYE:
 int
 init_chunk_dir(
     VEC_REC_TYPE *ptr_vec,
-    int num_chunks
+    int num_chunks_to_allocate
     )
 {
   int status = 0;
+  uint32_t sz_chunks;
   // if elements exist, you would have initialized directory
   if ( ptr_vec->num_elements != 0 ) { return status; }
   //-----------------------------------------
   if ( ptr_vec->chunks     != NULL ) { go_BYE(-1); }
   if ( ptr_vec->sz_chunks  != 0    ) { go_BYE(-1); }
   if ( ptr_vec->num_chunks != 0    ) { go_BYE(-1); }
-  if ( num_chunks < 0 ) { 
+  if ( num_chunks_to_allocate < 0 ) { 
     if ( ptr_vec->is_memo ) { 
-      num_chunks = 1;
+      sz_chunks = 1;
     }
     else {
-      num_chunks = INITIAL_NUM_CHUNKS_PER_VECTOR;
+      sz_chunks = INITIAL_NUM_CHUNKS_PER_VECTOR;
     }
   }
-  ptr_vec->chunks = calloc(num_chunks, sizeof(uint32_t));
+  ptr_vec->chunks = calloc(sz_chunks, sizeof(uint32_t));
   return_if_malloc_failed(ptr_vec->chunks);
-  ptr_vec->sz_chunks = num_chunks;
+  ptr_vec->sz_chunks = sz_chunks;
 BYE:
   return status;
 }

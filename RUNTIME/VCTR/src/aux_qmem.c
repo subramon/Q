@@ -12,6 +12,19 @@
 #include "aux_qmem.h"
 #include "aux_core_vec.h"
 
+int 
+register_with_qmem(
+    qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *ptr_vec
+    )
+{
+  int status = 0;
+  ptr_vec->uqid = get_uqid(ptr_S);
+  status = assign_vec_idx(ptr_S, ptr_vec); cBYE(status);
+BYE:
+  return status; 
+}
+
 uint64_t
 get_uqid(
     qmem_struct_t *ptr_S
@@ -70,13 +83,13 @@ BYE:
 int
 assign_vec_idx(
     qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *v,
-    uint32_t *ptr_whole_vec_dir_idx
+    VEC_REC_TYPE *v
     )
 {
   int status = 0;
   static unsigned int start_search = 1;
   whole_vec_dir_t *w = ptr_S->whole_vec_dir;
+  if ( w->n  >= (w->sz-1) ) { go_BYE(-1); } // TODO P2 Need to re-allocate
   // NOTE: we do not allocate 0th entry
   for ( int iter = 0; iter < 2; iter++ ) { 
     unsigned int lb, ub;
@@ -91,7 +104,7 @@ assign_vec_idx(
     for ( unsigned int i = lb ; i < ub; i++ ) { 
       if ( w->whole_vecs[i].uqid == 0 ) {
         w->whole_vecs[i].uqid = v->uqid;
-        *ptr_whole_vec_dir_idx = i; 
+        v->whole_vec_dir_idx = i; 
         w->n++;
         start_search = i+1;
         if ( start_search >= w->sz ) { start_search = 1; }
@@ -597,6 +610,7 @@ qmem_delete_vec(
   WHOLE_VEC_REC_TYPE *w = 
     ptr_S->whole_vec_dir->whole_vecs + ptr_vec->whole_vec_dir_idx;
   if ( w->uqid != ptr_vec->uqid ) { go_BYE(-1); } 
+  
 
   bool is_hard = true;
   status = qmem_un_backup_vec(ptr_S, ptr_vec, is_hard); cBYE(status);
@@ -604,6 +618,7 @@ qmem_delete_vec(
   status = qmem_un_backup_chunks(ptr_S, ptr_vec, is_hard); cBYE(status);
   // clean out space in data structures
   memset(w, 0, sizeof(WHOLE_VEC_REC_TYPE));
+  ptr_S->whole_vec_dir->n--; // one spot opened up
 BYE:
   return status;
 }

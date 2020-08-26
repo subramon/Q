@@ -35,6 +35,7 @@ tests.t0 = function(incr)
   local cdata = qmem.cdata; assert(type(cdata) == "CMEM")
   local g_S = ffi.cast("const qmem_struct_t *", cdata:data())
   
+  --[[
   print(g_S)
   print(g_S[0].max_mem_KB)
   print(g_S[0].now_mem_KB)
@@ -43,6 +44,7 @@ tests.t0 = function(incr)
   print("sz = ", g_S[0].chunk_dir[0].sz)
   print("n  = ", g_S[0].whole_vec_dir[0].n)
   print("sz = ", g_S[0].whole_vec_dir[0].sz)
+  --]]
 
   local v = assert(cVector.new({ qtype = qtype, width = width }, cdata))
   --=============
@@ -55,10 +57,10 @@ tests.t0 = function(incr)
   local alternate = false
   for i = 1, n do 
     if ( alternate == true ) then 
-      assert(v:put1(qmem._cdata, s1))
+      assert(v:put1(s1))
       alternate = false
     else 
-      assert(v:put1(qmem._cdata, s0))
+      assert(v:put1(s0))
       alternate = true
     end
   end
@@ -82,8 +84,9 @@ tests.t0 = function(incr)
   v:eov()
   v:check()
   cVector:check_chunks()
-  local num_chunks=assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].num_chunks)
   local x = v:shutdown() 
+  print(x)
+  error("premature")
   -- assert(v:is_dead())
   -- TODO THINK P3 assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_dead)
   assert(type(x) == "string") 
@@ -93,7 +96,6 @@ tests.t0 = function(incr)
   assert(y.num_elements == n)
   assert(y.width == width)
   assert(y.qtype == qtype)
-  -- print("incr/num_chunks = ", incr, num_chunks)
   assert(type(y.chunk_uqids) == "table")
   for _, v in ipairs(y.chunk_uqids) do
     assert(type(v) == "number")

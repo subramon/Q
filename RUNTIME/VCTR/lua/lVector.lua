@@ -94,9 +94,9 @@ end
 
 -- Mainly used for testing. Not really needed by Q programmer
 function lVector:un_backup_chunk(chunk_num)
-  assert(cVector.un_backup_chunk(self._base_vec, g_S, chunk_num))
+  assert(cVector.un_backup_chunk(self._base_vec, chunk_num))
   if ( self._nn_vec ) then 
-    assert(cVector.un_backup_chunk(self._nn_vec, g_S, chunk_num)) 
+    assert(cVector.un_backup_chunk(self._nn_vec, , chunk_num)) 
   end 
   return self
 end
@@ -112,9 +112,9 @@ end
 
 -- Mainly used for testing. Not really needed by Q programmer
 function lVector:backup_chunk(chunk_num)
-  assert(cVector.backup_chunk(self._base_vec, g_S, chunk_num))
+  assert(cVector.backup_chunk(self._base_vec, chunk_num))
   if ( self._nn_vec ) then 
-    assert(cVector.backup_chunk(self._nn_vec, g_S, chunk_num)) 
+    assert(cVector.backup_chunk(self._nn_vec, chunk_num)) 
   end 
   return self
 end
@@ -130,9 +130,9 @@ end
 
 -- Mainly used for testing. Not really needed by Q programmer
 function lVector:un_load_chunk(chunk_num)
-  assert(cVector.un_load_chunk(self._base_vec, g_S, chunk_num))
+  assert(cVector.un_load_chunk(self._base_vec, chunk_num))
   if ( self._nn_vec ) then 
-    assert(cVector.un_load_chunk(self._nn_vec, g_S, chunk_num)) 
+    assert(cVector.un_load_chunk(self._nn_vec, chunk_num)) 
   end 
   return self
 end
@@ -148,9 +148,9 @@ end
 
 -- Mainly used for testing. Not really needed by Q programmer
 function lVector:load_chunk(chunk_num)
-  assert(cVector.load_chunk(self._base_vec, g_S, chunk_num))
+  assert(cVector.load_chunk(self._base_vec, chunk_num))
   if ( self._nn_vec ) then 
-    assert(cVector.load_chunk(self._nn_vec, g_S, chunk_num)) 
+    assert(cVector.load_chunk(self._nn_vec, chunk_num)) 
   end 
   return self
 end
@@ -326,14 +326,14 @@ end
 function lVector:get1(idx)
   -- notice that get1 will not invoke generator
   local s1, s2
-  s1 = assert(cVector.get1(self._base_vec, g_S, idx))
+  s1 = assert(cVector.get1(self._base_vec, idx))
   if ( self:fldtype() == "SC" ) then 
     assert(type(s1) == "CMEM")
   else
     assert(type(s1) == "Scalar")
  end
   if ( self._nn_vec ) then 
-    s2 = assert(cVector.get1(self._nn_vec, g_S, idx))
+    s2 = assert(cVector.get1(self._nn_vec, idx))
     assert(type(s2) == "Scalar")
     assert(s2:fldtype() == "B1")
   end
@@ -385,10 +385,10 @@ function lVector:get_chunk(chunk_num)
       assert(type(buf_size) == "number")
       if ( buf_size > 0 ) then 
         assert(type(base_data) == "CMEM")
-        assert(cVector.put_chunk(self._base_vec, g_S, base_data, buf_size))
+        assert(cVector.put_chunk(self._base_vec, base_data, buf_size))
         if ( self._nn_vec ) then 
           assert(type(nn_data) == "CMEM")
-          assert(lVector.put_chunk(self._nn_vec, g_S, nn_data, buf_size))
+          assert(lVector.put_chunk(self._nn_vec, nn_data, buf_size))
         end
       else
         self:eov(); return 0 
@@ -399,11 +399,11 @@ function lVector:get_chunk(chunk_num)
     end
   end
   --== Now you should be able to get the data you want
-  base_addr, base_len = cVector.get_chunk(self._base_vec, g_S, chunk_num)
+  base_addr, base_len = cVector.get_chunk(self._base_vec, chunk_num)
 
   H.chk_addr_len(base_addr, base_len)
   if ( self._nn_vec ) then 
-    nn_addr, nn_len = cVector.get_chunk(self._nn_vec, g_S, chunk_num)
+    nn_addr, nn_len = cVector.get_chunk(self._nn_vec, chunk_num)
     H.chk_addr_ler(nn_addr, nn_len, base_len)
   end
   -- for conjoined vectors
@@ -419,9 +419,9 @@ function lVector:get_chunk(chunk_num)
 end
 
 function lVector:unget_chunk(chunk_num)
-  assert(cVector.unget_chunk(self._base_vec, g_S, chunk_num))
+  assert(cVector.unget_chunk(self._base_vec, chunk_num))
   if ( self._nn_vec ) then 
-    assert(cVector.unget_chunk(self._nn_vec, g_S, chunk_num))
+    assert(cVector.unget_chunk(self._nn_vec, chunk_num))
   end
   return self
 end
@@ -551,11 +551,11 @@ function lVector:put1(s, nn_s)
   else
     assert( type(s) == "Scalar" ) 
   end
-  assert(cVector.put1(self._base_vec, g_S, s))
+  assert(cVector.put1(self._base_vec, s))
   if ( self._nn_vec ) then 
     assert(type(nn_s) == "Scalar")
     assert(nn_s:fldtype() == "B1")
-    assert(cVector.put1(self._nn_vec, g_S, nn_s))
+    assert(cVector.put1(self._nn_vec, nn_s))
   end
   if ( qconsts.debug ) then self:check() end
   return true

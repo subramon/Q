@@ -112,8 +112,12 @@ qmem_delete_vec(
     VEC_REC_TYPE *ptr_vec
     );
 extern int
+register_with_qmem(
+    qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *v
+    );
+extern int
 assign_vec_idx(
     qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *v,
-    uint32_t *ptr_whole_vec_dir_idx
+    VEC_REC_TYPE *v
     );

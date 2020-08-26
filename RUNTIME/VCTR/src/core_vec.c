@@ -176,14 +176,11 @@ vec_new(
 
   strncpy(ptr_vec->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_vec->field_width = field_width;
-  ptr_vec->uqid = get_uqid(ptr_S);
+  status = register_with_qmem(ptr_S, ptr_vec); cBYE(status);
+
   //-----------------------------
   ptr_vec->num_chunks = 0;
-  ptr_vec->sz_chunks = INITIAL_NUM_CHUNKS_PER_VECTOR;
-  size_t sz = ptr_vec->sz_chunks * sizeof(CHUNK_REC_TYPE);
-  ptr_vec->chunks = malloc(sz); 
-  return_if_malloc_failed(ptr_vec->chunks);
-  memset(ptr_vec->chunks, '\0', sz);
+  status = init_chunk_dir(ptr_vec, -1); cBYE(status);
   //-----------------------------
   // TODO P2 ptr_vec->is_memo = ptr_S->is_memo; // default behavior 
 BYE:
@@ -739,7 +736,6 @@ vec_put_chunk(
     is_malloc = true;
   }
   //-----------------------------------------
-  status = init_chunk_dir(ptr_vec, -1); cBYE(status);
   // number of elements must be a multiple of ptr_S->chunk_size
   if ( !is_multiple(ptr_vec->num_elements, ptr_S->chunk_size) ) { 
     go_BYE(-1); 
@@ -827,7 +823,6 @@ vec_put1(
   if ( data == NULL ) { go_BYE(-1); }
   if ( ptr_vec->is_eov ) { go_BYE(-1); }
   //---------------------------------------
-  status = init_chunk_dir(ptr_vec, -1); cBYE(status);
   uint32_t chunk_num, chunk_dir_idx;
   status = get_chunk_num_for_write(ptr_S, ptr_vec, &chunk_num); 
   cBYE(status);

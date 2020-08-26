@@ -51,10 +51,9 @@ static int l_vec_shutdown( lua_State *L) {
   int status = 0;
   char *X = NULL;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   status = vec_shutdown(g_S, ptr_vec, &X); cBYE(status);
   // If vector is to be persisted, 
@@ -108,10 +107,9 @@ static int l_vec_file_name( lua_State *L) {
 
   // get args from Lua 
   int num_args = lua_gettop(L); 
-  if ( ( num_args != 2 ) && ( num_args != 3 ) ) { go_BYE(-1); }
+  if ( ( num_args != 1 ) && ( num_args != 2 ) ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   int32_t chunk_number = -1;
   if ( num_args == 2 ) { 
@@ -139,10 +137,9 @@ BYE:
 static int l_vec_me( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
 
   lua_pushlightuserdata(L, ptr_vec);
@@ -188,10 +185,9 @@ BYE:
 static int l_vec_kill( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   status = vec_kill(g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
@@ -321,16 +317,14 @@ BYE:
 //----------------------------------------
 static int l_vec_get1( lua_State *L) {
   int status = 0;
-  if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
   SCLR_REC_TYPE *ptr_sclr = NULL;
   CMEM_REC_TYPE *ptr_cmem = NULL;
 
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 3 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
-  int64_t idx = luaL_checknumber(L, 3);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
+  int64_t idx = luaL_checknumber(L, 2);
   //------------------
   void *data = NULL; int width = ptr_vec->field_width;
 
@@ -392,10 +386,9 @@ static int l_vec_start_read( lua_State *L)
   CMEM_REC_TYPE *ptr_cmem = NULL;
 
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
 
   ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
@@ -421,9 +414,8 @@ static int l_vec_unget_chunk( lua_State *L)
   // get args from Lua 
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
-  uint32_t chunk_num = luaL_checknumber(L, 3);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
+  uint32_t chunk_num = luaL_checknumber(L, 2);
   //------------------
   status = vec_unget_chunk(g_S, ptr_vec, chunk_num); cBYE(status);
   lua_pushboolean(L, 1);
@@ -442,11 +434,10 @@ static int l_vec_get_chunk( lua_State *L)
   uint32_t num_in_chunk;
 
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 3 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
-  chunk_num = luaL_checknumber(L, 3);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
+  chunk_num = luaL_checknumber(L, 2);
   //------------------
 
   ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
@@ -471,18 +462,17 @@ static int l_vec_put1( lua_State *L) {
   int status = 0;
   void *addr = NULL;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 3 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
 
   if ( strcmp(ptr_vec->fldtype, "SC") == 0 ) { 
-    CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 3, "CMEM");
+    CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 2, "CMEM");
     addr = ptr_cmem->data;
   }
   else {
-    SCLR_REC_TYPE *ptr_sclr = luaL_checkudata(L, 3, "Scalar");
+    SCLR_REC_TYPE *ptr_sclr = luaL_checkudata(L, 2, "Scalar");
     if ( strcmp(ptr_vec->fldtype, ptr_sclr->field_type) != 0 ) { 
       go_BYE(-1);
     }
@@ -501,10 +491,9 @@ static int l_vec_start_write( lua_State *L) {
   int status = 0;
   CMEM_REC_TYPE *ptr_cmem = NULL;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
 
   ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
@@ -524,10 +513,9 @@ BYE:
 static int l_vec_end_read( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //--------------------------
   status = vec_end_read(g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
@@ -543,8 +531,7 @@ static int l_vec_end_write( lua_State *L) {
   // get args from Lua 
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //--------------------------
   status = vec_end_write(g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
@@ -558,12 +545,11 @@ BYE:
 static int l_vec_put_chunk( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 4 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 3 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
-  if ( !luaL_testudata (L, 3, "CMEM") ) { go_BYE(-1); }
-  CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 3, "CMEM");
+  qmem_struct_t * g_S   = ptr_vec->g_S;
+  if ( !luaL_testudata (L, 2, "CMEM") ) { go_BYE(-1); }
+  CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 2, "CMEM");
   //--------------------------------------
   if ( ptr_cmem == NULL ) { go_BYE(-1); }
   // Ideally should have == in comparison below
@@ -572,7 +558,7 @@ static int l_vec_put_chunk( lua_State *L) {
   size_t chunk_size = g_S->chunk_size;
   size_t chunk_size_in_bytes = ptr_vec->field_width * chunk_size;
   if ( (size_t)ptr_cmem->size < chunk_size_in_bytes ) { go_BYE(-1); }
-  int64_t num_in_cmem = luaL_checknumber(L, 4);
+  int64_t num_in_cmem = luaL_checknumber(L, 3);
   if ( num_in_cmem <= 0 ) { 
     fprintf(stderr, "WARNING! Empty chunk being ignored\n");
   }
@@ -594,10 +580,9 @@ static int l_vec_meta( lua_State *L) {
   char *opbuf = NULL;
 
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //----------------------------
   status = vec_meta(g_S, ptr_vec, &opbuf); cBYE(status);
   lua_pushstring(L, opbuf);
@@ -613,10 +598,9 @@ BYE:
 static int l_vec_check( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   status = vec_check(g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, 1);
@@ -630,10 +614,9 @@ BYE:
 static int l_vec_free( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   status = vec_free(g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
@@ -653,10 +636,9 @@ BYE:
 static int l_vec_delete( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   status = vec_delete(g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
@@ -670,10 +652,9 @@ BYE:
 static int l_vec_un_load_chunks( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   bool is_hard = false;
   status = qmem_un_load_chunks(g_S,  ptr_vec, is_hard); cBYE(status);
@@ -688,11 +669,10 @@ BYE:
 static int l_vec_un_load_chunk( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 3 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
-  int chunk_num = lua_tonumber(L, 3);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
+  int chunk_num = lua_tonumber(L, 2);
   //------------------
   bool is_hard = false;
   status = qmem_un_load_chunk(g_S,  ptr_vec, chunk_num, is_hard); 
@@ -708,11 +688,10 @@ BYE:
 static int l_vec_un_backup_chunk( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 3 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
-  int chunk_num = lua_tonumber(L, 3);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
+  int chunk_num = lua_tonumber(L, 2);
   //------------------
   bool is_hard = false;
   status = qmem_un_backup_chunk(g_S,  ptr_vec, chunk_num, is_hard); 
@@ -728,10 +707,9 @@ BYE:
 static int l_vec_un_backup_chunks( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   bool is_hard = false;
   status = qmem_un_backup_chunks(g_S,  ptr_vec, is_hard); 
@@ -747,10 +725,9 @@ BYE:
 static int l_vec_un_backup_vec( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   bool is_hard = false;
   status = qmem_un_backup_vec(g_S, ptr_vec, is_hard); cBYE(status);
@@ -773,8 +750,8 @@ static int l_vec_new( lua_State *L)
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   if ( !lua_istable(L, 1) ) { go_BYE(-1); }
   luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
+  qmem_struct_t * g_S  = (qmem_struct_t *)(ptr_c->data);
   //------------------- get qtype and width
   status = get_str_from_tbl(L, 1, "qtype", &is_key, &qtype);  cBYE(status);
   if ( !is_key ) { go_BYE(-1); }
@@ -796,6 +773,7 @@ static int l_vec_new( lua_State *L)
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
   status = vec_new(g_S, ptr_vec, qtype, field_width); cBYE(status);
+  ptr_vec->g_S = g_S; // needed for __gc
 
   return 1; 
 BYE:
@@ -818,8 +796,8 @@ static int l_vec_rehydrate( lua_State *L)
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   if ( !lua_istable(L, 1) ) { go_BYE(-1); }
   luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
+  qmem_struct_t * g_S  = (qmem_struct_t *)(ptr_c->data);
   //------------------- get qtype
   status = get_str_from_tbl(L, 1, "qtype", &is_key, &qtype);  cBYE(status);
   if ( !is_key ) { go_BYE(-1); }
@@ -877,10 +855,9 @@ static int l_vec_load_chunks( lua_State *L)
 {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //--------------------
   status = qmem_load_chunks(g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
@@ -895,12 +872,10 @@ static int l_vec_load_chunk( lua_State *L)
 {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); 
-  if ( num_args != 3 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
-  int chunk_idx = lua_tonumber(L, 3); 
+  qmem_struct_t * g_S   = ptr_vec->g_S;
+  int chunk_idx = lua_tonumber(L, 2); 
   //--------------------
   status = qmem_load_chunk(g_S, ptr_vec, chunk_idx); cBYE(status);
   lua_pushboolean(L, true);
@@ -915,12 +890,10 @@ static int l_vec_backup_chunk( lua_State *L)
 {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); 
-  if ( num_args != 3 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
-  int chunk_idx = lua_tonumber(L, 3); 
+  qmem_struct_t * g_S   = ptr_vec->g_S;
+  int chunk_idx = lua_tonumber(L, 2); 
   //-------------------------
   status = qmem_backup_chunk(g_S, ptr_vec, chunk_idx); 
   cBYE(status);
@@ -935,10 +908,9 @@ static int l_vec_backup_chunks( lua_State *L)
 {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   status = qmem_backup_chunks(g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
@@ -952,11 +924,9 @@ static int l_vec_backup_vec( lua_State *L)
 {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); 
-  if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  CMEM_REC_TYPE *ptr_c= luaL_checkudata(L, 2, "CMEM");
-  qmem_struct_t * g_S = (qmem_struct_t *)(ptr_c->data);
+  qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   status = qmem_backup_vec(g_S, ptr_vec); cBYE(status);
   lua_pushboolean(L, true);
