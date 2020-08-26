@@ -169,7 +169,7 @@ BYE:
 // tells us which chunk to read this element from
 int 
 chunk_num_for_read(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
     uint32_t *ptr_chunk_num
@@ -193,7 +193,7 @@ BYE:
 // tells us which chunk to write this element into
 int 
 get_chunk_num_for_write(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t *ptr_chunk_num
     )
@@ -224,7 +224,7 @@ BYE:
 
 int
 reincarnate(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const v,
     char **ptr_X,
     bool is_clone
@@ -274,7 +274,7 @@ reincarnate(
   if ( is_clone ) { 
     status = mk_file_name(ptr_S, old_vec_uqid, &old_file_name); 
     cBYE(status);
-    uint64_t new_vec_uqid = get_uqid((qmem_struct_t *)ptr_S);
+    uint64_t new_vec_uqid = get_uqid(ptr_S);
     if ( w->is_file ) {
       status = mk_file_name(ptr_S, new_vec_uqid, &new_file_name); 
       cBYE(status);
@@ -312,7 +312,7 @@ reincarnate(
     if ( is_clone ) { 
       status = mk_file_name(ptr_S, old_uqid, &old_chunk_file_name); 
       cBYE(status);
-      uint64_t new_uqid = get_uqid((qmem_struct_t *)ptr_S);
+      uint64_t new_uqid = get_uqid(ptr_S);
       status = mk_file_name(ptr_S,new_uqid, &new_chunk_file_name); 
       cBYE(status);
       if ( ptr_c->is_file ) { 

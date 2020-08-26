@@ -15,13 +15,13 @@ chk_fldtype(
     );
 extern int
 free_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     uint32_t chunk_dir_idx,
     bool is_persist
     );
 extern int64_t 
 get_exp_file_size(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     uint64_t num_elements,
     uint32_t field_width,
     const char * const fldtype
@@ -48,14 +48,14 @@ initial_case(
     );
 extern int 
 chunk_num_for_read(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
     uint32_t *ptr_chunk_num
     );
 extern int
 get_chunk_num_for_write(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t *ptr_chunk_num
     );
@@ -66,7 +66,7 @@ init_chunk_dir(
     );
 extern int
 reincarnate(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_v,
     char **ptr_x,
     bool is_clone 
@@ -88,6 +88,6 @@ mk_uqid(
     );
 extern int
 vec_clean_chunks(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec
     );

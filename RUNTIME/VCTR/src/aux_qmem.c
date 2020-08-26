@@ -22,7 +22,7 @@ get_uqid(
 
 int
 chk_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const v,
     uint32_t chunk_dir_idx
     )
@@ -154,7 +154,7 @@ BYE:
 
 int64_t 
 get_exp_file_size(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     uint64_t num_elements,
     uint32_t field_width,
     const char * const fldtype
@@ -173,7 +173,7 @@ get_exp_file_size(
 
 size_t
 get_chunk_size_in_bytes(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_v
     )
 {
@@ -227,7 +227,7 @@ BYE:
 
 int
 mk_file_name(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     uint64_t uqid, 
     char **ptr_file_name // [sz]
     )
@@ -251,7 +251,7 @@ BYE:
 
 int 
 get_chunk_dir_idx(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t chunk_num,
     uint32_t *ptr_num_chunks,
@@ -277,7 +277,7 @@ BYE:
 
 int
 qmem_backup_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const v,
     int chunk_num
     )
@@ -319,7 +319,7 @@ BYE:
 
 int
 qmem_backup_chunks(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec
     )
 {
@@ -337,7 +337,7 @@ BYE:
 
 int
 qmem_un_backup_vec(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v,
     bool is_hard
     )
@@ -380,7 +380,7 @@ BYE:
 
 int
 qmem_un_backup_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const v,
     uint32_t chunk_num,
     bool is_hard
@@ -411,7 +411,7 @@ BYE:
 
 int
 qmem_un_backup_chunks(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v,
     bool is_hard
     )
@@ -427,7 +427,7 @@ BYE:
 
 int 
 qmem_backup_vec(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v
     )
 {
@@ -479,7 +479,7 @@ BYE:
 
 int
 qmem_load_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const v,
     int chunk_num
     )
@@ -528,7 +528,7 @@ BYE:
 
 int
 qmem_load_chunks(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec
     )
 {
@@ -542,7 +542,7 @@ BYE:
 
 int
 qmem_un_load_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const v,
     int chunk_num,
     bool is_hard
@@ -573,7 +573,7 @@ BYE:
 
 int
 qmem_un_load_chunks(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
     bool is_hard
     )
@@ -589,7 +589,7 @@ BYE:
 
 int
 qmem_delete_vec(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -610,7 +610,7 @@ BYE:
 
 bool 
 vec_in_use(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v
     )
 {

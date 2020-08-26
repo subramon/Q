@@ -65,7 +65,7 @@ sortfn(
 
 int
 vec_meta(
-    const qmem_struct_t *ptr_S, 
+    qmem_struct_t *ptr_S, 
     VEC_REC_TYPE *ptr_vec,
     char **ptr_opbuf
     )
@@ -126,7 +126,7 @@ BYE:
 
 int
 vec_free(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -149,7 +149,7 @@ BYE:
 // vec_delete is *almost* identical as vec_free but hard delete of files
 int
 vec_delete(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -162,7 +162,7 @@ BYE:
 
 int
 vec_new(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width
@@ -176,7 +176,7 @@ vec_new(
 
   strncpy(ptr_vec->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_vec->field_width = field_width;
-  ptr_vec->uqid = get_uqid((qmem_struct_t *)ptr_S);
+  ptr_vec->uqid = get_uqid(ptr_S);
   //-----------------------------
   ptr_vec->num_chunks = 0;
   ptr_vec->sz_chunks = INITIAL_NUM_CHUNKS_PER_VECTOR;
@@ -193,7 +193,7 @@ BYE:
 //-------------------------------------------------
 int
 check_chunks(
-    const qmem_struct_t *ptr_S
+    qmem_struct_t *ptr_S
     )
 {
   int status = 0;
@@ -245,7 +245,7 @@ BYE:
 //-------------------------------------------------
 int
 vec_check(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v
     )
 {
@@ -374,7 +374,7 @@ BYE:
 
 int
 vec_get1(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint64_t idx,
     void **ptr_data
@@ -405,7 +405,7 @@ BYE:
 //--------------------------------------------------
 int
 vec_start_read(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v,
     CMEM_REC_TYPE *c
     )
@@ -439,7 +439,7 @@ BYE:
 //--------------------------------------------------
 int
 vec_end_read(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v
     )
 {
@@ -463,7 +463,7 @@ BYE:
 //--------------------------------------------------
 int
 vec_get_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v,
     uint32_t chunk_num,
     CMEM_REC_TYPE *ptr_cmem,
@@ -501,7 +501,7 @@ BYE:
 //------------------------------------------------
 int
 vec_shutdown(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v,
     char **ptr_str
     )
@@ -545,7 +545,7 @@ BYE:
 }
 int
 vec_unget_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t chunk_num
     )
@@ -567,7 +567,7 @@ BYE:
 
 int
 vec_start_write(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v,
     CMEM_REC_TYPE *ptr_cmem
     )
@@ -610,7 +610,7 @@ BYE:
 
 int
 vec_end_write(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v
     )
 {
@@ -631,7 +631,7 @@ BYE:
 
 int
 vec_kill(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     )
 {
@@ -814,7 +814,7 @@ BYE:
 
 int
 vec_put1(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const void * const data
     )
@@ -892,7 +892,7 @@ BYE:
 
 int
 vec_file_name(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     int32_t chunk_num,
     char **ptr_file_name
@@ -922,7 +922,7 @@ BYE:
 
 int 
 vec_rehydrate(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width,
@@ -954,8 +954,7 @@ vec_rehydrate(
     uint32_t chunk_dir_idx;
     // Note that we reserve a location for the chunk in chunk_dir_idx
     // but we do not malloc the data inside it 
-    status = allocate_chunk((qmem_struct_t *)ptr_S, ptr_vec, i, 
-        &chunk_dir_idx, false); 
+    status = allocate_chunk(ptr_S, ptr_vec, i, &chunk_dir_idx, false); 
     cBYE(status); 
     chk_chunk_dir_idx(chunk_dir_idx); 
     ptr_vec->chunks[i] = chunk_dir_idx;

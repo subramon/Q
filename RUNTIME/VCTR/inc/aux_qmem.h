@@ -1,7 +1,7 @@
 #include "qmem_struct.h"
 extern size_t
 get_chunk_size_in_bytes(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_v
     );
 extern uint64_t
@@ -10,7 +10,7 @@ get_uqid(
     );
 extern int
 chk_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const v,
     uint32_t chunk_dir_idx
     );
@@ -24,7 +24,7 @@ allocate_chunk(
     );
 extern int 
 get_chunk_dir_idx(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     uint32_t chunk_num,
     uint32_t *ptr_num_chunks,
@@ -33,20 +33,20 @@ get_chunk_dir_idx(
     );
 extern int
 mk_file_name(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     uint64_t uqid, 
     char **ptr_file_name
     );
 //--------------------------------------
 extern int
 qmem_load_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
     int chunk_num
     );
 extern int
 qmem_un_load_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
     int chunk_num,
     bool is_hard
@@ -54,13 +54,13 @@ qmem_un_load_chunk(
 //--------------------------------------
 extern int
 qmem_backup_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
     int chunk_num
     );
 extern int
 qmem_un_backup_chunk(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec,
     uint32_t chunk_num,
     bool is_hard
@@ -68,47 +68,47 @@ qmem_un_backup_chunk(
 //--------------------------------------
 extern int
 qmem_un_backup_vec(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v,
     bool is_hard
     );
 extern int 
 qmem_backup_vec(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_v
     );
 //--------------------------------------
 extern int
 qmem_backup_chunks(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec
     );
 extern int
 qmem_un_backup_chunks(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v,
     bool is_hard
     );
 //--------------------------------------
 extern int
 qmem_load_chunks(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_vec
     );
 extern int
 qmem_un_load_chunks(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const v,
     bool is_hard
     );
 extern bool 
 vec_in_use(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v
     );
 extern int
 qmem_delete_vec(
-    const qmem_struct_t *ptr_S,
+    qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec
     );
 extern int

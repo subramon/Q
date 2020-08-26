@@ -32,12 +32,10 @@ tests.t0 = function(incr)
   if ( not  incr ) then incr = 0 end 
   local qtype = "B1"
   local width = 1
-  local xx = assert(qmem._cdata)
-  assert(type(xx) == "CMEM")
-  local g_S = ffi.cast("const qmem_struct_t *", xx:data())
+  local cdata = qmem.cdata; assert(type(cdata) == "CMEM")
+  local g_S = ffi.cast("const qmem_struct_t *", cdata:data())
   
   print(g_S)
-
   print(g_S[0].max_mem_KB)
   print(g_S[0].now_mem_KB)
   print(ffi.string(g_S[0].q_data_dir))
@@ -46,13 +44,7 @@ tests.t0 = function(incr)
   print("n  = ", g_S[0].whole_vec_dir[0].n)
   print("sz = ", g_S[0].whole_vec_dir[0].sz)
 
-  --[[
-  local xx = ffi.C.malloc(1024)
-  ffi.copy(xx, "abcdefg")
-  xx = ffi.cast("char *", xx)
-  print("xx ", xx)
-  --]]
-  local v = assert(cVector.new({ qtype = qtype, width = width }, xx, 1234))
+  local v = assert(cVector.new({ qtype = qtype, width = width }, cdata))
   --=============
   local n = chunk_size + incr
   local exp_num_chunks = 0
