@@ -20,7 +20,8 @@ allocate_chunk(
     VEC_REC_TYPE *v,
     uint32_t chunk_num,
     uint32_t *ptr_chunk_dir_idx,
-    bool is_malloc
+    bool is_malloc,
+    uint64_t chunk_uqid
     );
 extern int 
 get_chunk_dir_idx(
@@ -109,15 +110,28 @@ vec_in_use(
 extern int
 qmem_delete_vec(
     qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec
+    VEC_REC_TYPE *ptr_vec,
+    bool is_hard
     );
 extern int
 register_with_qmem(
     qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *v
+    VEC_REC_TYPE *v,
+    uint64_t vec_uqid
     );
 extern int
 assign_vec_idx(
     qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v
+    );
+extern bool
+is_vec_file(
+    qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const v
+    );
+extern bool
+is_chunk_file(
+    qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const v,
+    uint32_t chunk_num
     );

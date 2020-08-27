@@ -476,9 +476,9 @@ end
 function lVector.new(args)
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector
-  local is_rehydrate = H.determine_kind_of_new(args)
+  local is_reincarnate = H.determine_kind_of_new(args)
 
-  if ( not is_rehydrate ) then 
+  if ( not is_reincarnate ) then 
     if args.gen then 
       if ( args.gen ) then 
         assert(type(args.gen) == "function") 
@@ -515,10 +515,10 @@ function lVector.new(args)
     end
     --=======================
   else -- materialized vector
-    vector._base_vec = assert(cVector.rehydrate(args, g_S))
+    vector._base_vec = assert(cVector.reincarnate(args, g_S))
     if ( args.has_nulls ) then
       error("NOT IMPLEMENTED") -- TODO P1
-      vector._nn_vec   = assert(cVector.rehydrate(args[2]))
+      vector._nn_vec   = assert(cVector.reincarnate(args[2]))
     end
   end
   --=============================================

@@ -8,7 +8,7 @@ local cVector		= require 'libvctr'
 local helpers = {}
 helpers.determine_kind_of_new = function (args)
   assert(type(args) == "table", "Vector constructor requires table as arg")
-  local is_rehydrate = false
+  local is_reincarnate = false
   local is_single = true
   assert(type(args) == "table")
   if ( ( #args == 2 ) and 
@@ -24,11 +24,11 @@ helpers.determine_kind_of_new = function (args)
     end
   else
     if ( args.vec_uqid ) then 
-      is_rehydrate = true; 
+      is_reincarnate = true; 
     end
   end
    --=============================
-  if ( is_rehydrate == false ) then 
+  if ( is_reincarnate == false ) then 
     if ( args.has_nulls) then 
       assert(type(args.has_nulls) == "boolean")
     else -- get from qcfg, default usually false
@@ -42,7 +42,7 @@ helpers.determine_kind_of_new = function (args)
    --=============================
   end
    --=============================
-  return is_rehydrate
+  return is_reincarnate
 end
 
 helpers.on_both = function(

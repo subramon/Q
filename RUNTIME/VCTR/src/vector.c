@@ -6,7 +6,7 @@
 #include "q_incs.h"
 #include "vec_macros.h"
 #include "core_vec.h"
-#include "aux_core_vec.h" // TODO P2 reincarnate is here. Where should itbe
+#include "aux_core_vec.h" 
 #include "aux_qmem.h"
 #include "sclr_struct.h"
 #include "cmem_struct.h"
@@ -772,7 +772,7 @@ static int l_vec_new( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vec_new(g_S, ptr_vec, qtype, field_width); cBYE(status);
+  status = vec_new(g_S, ptr_vec, qtype, field_width, 0); cBYE(status);
   ptr_vec->g_S = g_S; // needed for __gc
 
   return 1; 
@@ -782,7 +782,7 @@ BYE:
   return 2;
 }
 
-static int l_vec_rehydrate( lua_State *L) 
+static int l_vec_reincarnate( lua_State *L) 
 {
   int status = 0;
   VEC_REC_TYPE *ptr_vec = NULL;
@@ -839,7 +839,7 @@ static int l_vec_rehydrate( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vec_rehydrate(g_S, ptr_vec, qtype, field_width, 
+  status = vec_reincarnate(g_S, ptr_vec, qtype, field_width, 
       num_elements, vec_uqid, chunk_uqids, num_chunks);
   cBYE(status);
   free_if_non_null(chunk_uqids);
@@ -940,7 +940,6 @@ BYE:
 static const struct luaL_Reg vector_methods[] = {
     { "__gc",    l_vec_free   },
     { "check", l_vec_check },
-//    { "check_chunks", l_vec_check_chunks }, 
 
     { "un_backup_chunk", l_vec_un_backup_chunk },
     { "un_backup_chunks", l_vec_un_backup_chunks },
@@ -978,7 +977,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "meta", l_vec_meta },
     //--------------------------------
     { "new", l_vec_new },
-    { "rehydrate", l_vec_rehydrate},
+    { "reincarnate", l_vec_reincarnate},
     { "same_state", l_vec_same_state },
     { "shutdown", l_vec_shutdown },
     //--------------------------------
@@ -998,7 +997,6 @@ static const struct luaL_Reg vector_methods[] = {
  
 static const struct luaL_Reg vector_functions[] = {
     { "check", l_vec_check },
-//    { "check_chunks", l_vec_check_chunks }, 
 
     { "un_backup_chunk", l_vec_un_backup_chunk },
     { "backup_chunk", l_vec_backup_chunk },
@@ -1032,7 +1030,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "meta", l_vec_meta },
     //--------------------------------
     { "new", l_vec_new },
-    { "rehydrate", l_vec_rehydrate},
+    { "reincarnate", l_vec_reincarnate},
     { "same_state", l_vec_same_state },
     { "shutdown", l_vec_shutdown },
     //--------------------------------

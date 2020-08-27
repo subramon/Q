@@ -9,6 +9,7 @@ all: libcmem.so
 
 clean:
 	rm -f *.so *.o _*
+	rm -f ${Q_ROOT}/lib/libcmem.so
 		
 GEN_INC_FILES = \
 	../../../UTILS/inc/B1_to_txt.h \
@@ -31,7 +32,8 @@ GEN_SRC_FILES = \
 	../../../UTILS/src/F8_to_txt.c \
 
 libcmem.so:   cmem.c  \
-	${GEN_SRC_FILES} ${SRC_FILES}  ${INC_FILES} 
+	${GEN_SRC_FILES} ${SRC_FILES}  ${INC_FILES} \
+		aux_lua_to_c.c 
 	gcc ${QC_FLAGS} ${INCS} \
 		${GEN_SRC_FILES} \
 		${SRC_FILES} \

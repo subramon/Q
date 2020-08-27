@@ -224,7 +224,7 @@ BYE:
 }
 
 int
-reincarnate(
+code_for_reincarnate(
     qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const v,
     char **ptr_X,

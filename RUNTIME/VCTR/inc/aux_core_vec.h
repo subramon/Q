@@ -65,7 +65,7 @@ init_chunk_dir(
     int num_chunks
     );
 extern int
-reincarnate(
+code_for_reincarnate(
     qmem_struct_t *ptr_S,
     const VEC_REC_TYPE *const ptr_v,
     char **ptr_x,

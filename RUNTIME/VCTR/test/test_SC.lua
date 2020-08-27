@@ -76,7 +76,7 @@ tests.t0 = function(delta)
   assert(type(y) == "table")
   assert(y.num_elements == n)
   assert(y.width == width)
-  local z = assert(cVector.rehydrate(y))
+  local z = assert(cVector.reincarnate(y))
   local M = assert(z:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
   -- testing different style of access

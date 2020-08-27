@@ -138,7 +138,7 @@ vec_free(
     return status; // TODO P4 Should this be an error?
   }
   // delete all resources for this vector (modulo what is_persist says)
-  status = qmem_delete_vec(ptr_S, ptr_vec); cBYE(status);
+  status = qmem_delete_vec(ptr_S, ptr_vec, false); cBYE(status);
   free_if_non_null(ptr_vec->name); 
   memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
   ptr_vec->is_dead = true;
@@ -165,7 +165,8 @@ vec_new(
     qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
-    uint32_t field_width
+    uint32_t field_width,
+    uint64_t vec_uqid
     )
 {
   int status = 0;
@@ -176,7 +177,7 @@ vec_new(
 
   strncpy(ptr_vec->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   ptr_vec->field_width = field_width;
-  status = register_with_qmem(ptr_S, ptr_vec); cBYE(status);
+  status = register_with_qmem(ptr_S, ptr_vec, vec_uqid); cBYE(status);
 
   //-----------------------------
   ptr_vec->num_chunks = 0;
@@ -247,6 +248,23 @@ vec_check(
     )
 {
   int status = 0;
+
+  if ( ptr_S->q_data_dir == NULL ) { go_BYE(-1); }
+  if ( ptr_S->chunk_size == 0 ) { go_BYE(-1); }
+  if ( ptr_S->max_mem_KB < ptr_S->now_mem_KB ) { go_BYE(-1); }
+  if ( ptr_S->chunk_dir == NULL ) { go_BYE(-1); }
+
+  if ( ptr_S->whole_vec_dir == NULL ) { go_BYE(-1); }
+  if ( ptr_S->whole_vec_dir->whole_vecs == NULL ) { go_BYE(-1); }
+  if ( ptr_S->whole_vec_dir->sz == 0 ) { go_BYE(-1); }
+  if ( ptr_S->whole_vec_dir->n >= ptr_S->whole_vec_dir->sz ) {go_BYE(-1);} 
+
+  if ( ptr_S->chunk_dir == NULL ) { go_BYE(-1); }
+  if ( ptr_S->chunk_dir->chunks == NULL ) { go_BYE(-1); }
+  if ( ptr_S->chunk_dir->sz == 0 ) { go_BYE(-1); }
+  if ( ptr_S->chunk_dir->n >= ptr_S->chunk_dir->sz ) {go_BYE(-1);} 
+
+  // TODO P3 Check uniqueness of uqid in whole_vecs and chunks
   WHOLE_VEC_REC_TYPE *w = 
     ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
   if ( w->uqid != v->uqid ) { go_BYE(-1); } 
@@ -341,7 +359,6 @@ vec_check(
     if  ( v->field_width == 0 ) { go_BYE(-1); }
     status = chk_fldtype(v->fldtype, v->field_width); cBYE(status);
   }
-  if ( ptr_S->max_mem_KB < ptr_S->now_mem_KB ) { go_BYE(-1); }
 BYE:
   return status;
 }
@@ -531,9 +548,10 @@ vec_shutdown(
       // master file exists, no need to flush chunks individually
     }
     else {
+      status = qmem_un_load_chunks(ptr_S, v, false); cBYE(status);
       status = qmem_backup_chunks(ptr_S, v); cBYE(status);
     }
-    status = reincarnate(ptr_S, v, ptr_str, false);
+    status = code_for_reincarnate(ptr_S, v, ptr_str, false);
     cBYE(status);
   }
   status = vec_free(ptr_S, v); cBYE(status);
@@ -745,7 +763,7 @@ vec_put_chunk(
     chunk_num = 0;
     if ( ptr_vec->num_chunks == 0 ) { // indicating no allocation done 
       status = allocate_chunk(ptr_S, ptr_vec, chunk_num, 
-          &chunk_dir_idx, is_malloc); 
+          &chunk_dir_idx, is_malloc, 0); 
       cBYE(status);
       if ( chunk_dir_idx >= ptr_S->chunk_dir->sz ) { go_BYE(-1); }
   chk_chunk_dir_idx(chunk_dir_idx);
@@ -916,7 +934,7 @@ BYE:
 }
 
 int 
-vec_rehydrate(
+vec_reincarnate(
     qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
@@ -935,59 +953,31 @@ vec_rehydrate(
   if ( field_width == 0 ) { go_BYE(-1); }
   if ( fldtype == NULL ) { go_BYE(-1); }
 
-  status = vec_new(ptr_S, ptr_vec, fldtype, field_width);
+  status = vec_new(ptr_S, ptr_vec, fldtype, field_width, vec_uqid);
   cBYE(status);
-  // Important: Normally, vec_new will assign a new vec_uqid
-  // by calling get_uqid(). However, given that this is a rehydration,
-  // we use the vec_uqid provided, not the one generated. Hence, as below:
-  ptr_vec->uqid = vec_uqid; 
+  bool b_is_vec_file = is_vec_file(ptr_S, ptr_vec); 
 
-  status = init_chunk_dir(ptr_vec, num_chunks); cBYE(status);
   ptr_vec->num_elements = num_elements; // after init_chunk_dir()
   ptr_vec->num_chunks   = num_chunks;
   for ( uint32_t i = 0; i < num_chunks; i++ ) {
     uint32_t chunk_dir_idx;
     // Note that we reserve a location for the chunk in chunk_dir_idx
     // but we do not malloc the data inside it 
-    status = allocate_chunk(ptr_S, ptr_vec, i, &chunk_dir_idx, false); 
+    status = allocate_chunk(ptr_S, ptr_vec, i, &chunk_dir_idx, false,
+        chunk_uqids[i]); 
     cBYE(status); 
     chk_chunk_dir_idx(chunk_dir_idx); 
     ptr_vec->chunks[i] = chunk_dir_idx;
     CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_dir_idx;
-    chunk->vec_uqid = ptr_vec->uqid;
     chunk->uqid = chunk_uqids[i]; // Important: over-write
-    chunk->chunk_num = i;
-    // TODO P2 Add to chk_chunk, vec_check
-    /* This should be taken care of by qmem code, 
-     * And shoudl be possible to verify using vec_check->chk_chunk 
-    status = mk_file_name(chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-    if ( isfile(file_name) ) { 
-      int64_t expected_file_size = get_exp_file_size(ptr_S, 
-          ptr_S->chunk_size, ptr_vec->field_width, ptr_vec->fldtype);
-      int64_t actual_file_size = get_file_size(file_name);
-      if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
-      chunk->is_file = true; 
+    if ( ( !b_is_vec_file ) && ( !is_chunk_file(ptr_S, ptr_vec, i) ) ) {
+      go_BYE(-1);
     }
-    */
   }
-  //
-  // Note that we just accept the master file (after some checking)
-  // we do not "load" it into memory. We delay that until needed
-    /* This should be taken care of by qmem code, 
-     * And shoudl be possible to verify using vec_check->chk_chunk 
-  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME);
-  if ( isfile(file_name) ) { 
-    int64_t expected_file_size = get_exp_file_size(ptr_S, num_elements,
-        ptr_vec->field_width, ptr_vec->fldtype);
-    int64_t actual_file_size = get_file_size(file_name);
-    if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
-    ptr_vec->file_size = actual_file_size;
-    ptr_vec->is_file = true; 
-  }
-  */
   ptr_vec->num_elements = num_elements;
   ptr_vec->is_eov     = true;
   ptr_vec->is_persist = true;
+  ptr_vec->g_S        = ptr_S;
   //------------
 BYE:
   return status;

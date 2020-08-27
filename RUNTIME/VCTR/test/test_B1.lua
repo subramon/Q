@@ -83,12 +83,8 @@ tests.t0 = function(incr)
   v:persist()
   v:eov()
   v:check()
-  cVector:check_chunks()
   local x = v:shutdown() 
-  print(x)
-  error("premature")
   -- assert(v:is_dead())
-  -- TODO THINK P3 assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_dead)
   assert(type(x) == "string") 
   assert(#x > 0)
   local y = loadstring(x)()
@@ -112,8 +108,8 @@ tests.t0 = function(incr)
     assert(#y.chunk_uqids == 1 ) 
   end
 
-  local z = assert(cVector.rehydrate(y))
-  print("Successfully rehydrated")
+  local z = assert(cVector.reincarnate(y, cdata))
+  print("Successfully reincarnated")
   local M = assert(z:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
   assert(M[0].num_elements == n)
@@ -132,7 +128,6 @@ tests.t0 = function(incr)
     end
   end
   z:check()
-  cVector:check_chunks()
 
   print("Successfully completed test t0 with n = ", n )
   return true

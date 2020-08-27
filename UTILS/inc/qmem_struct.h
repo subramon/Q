@@ -38,13 +38,15 @@ typedef struct _whole_vec_rec_type {
 typedef struct _whole_vec_dir_t { 
   WHOLE_VEC_REC_TYPE *whole_vecs;  // [sz]
   uint32_t sz; 
-  uint32_t n;  // 0 <= n <= sz 
+  uint32_t n;  // 0 <= n < sz 
+  uint32_t start_search; // 1 <= start_search < sz
 } whole_vec_dir_t;
 
 typedef struct _chunk_dir_t { 
   CHUNK_REC_TYPE *chunks;  // [sz]
   uint32_t sz; 
-  uint32_t n;  // 0 <= n <= sz 
+  uint32_t n;  // 0 <= n < sz 
+  uint32_t start_search; // 1 <= start_search < sz
 } chunk_dir_t;
 
 typedef struct _qmem_struct_t { 

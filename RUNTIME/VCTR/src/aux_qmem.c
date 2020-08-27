@@ -15,11 +15,25 @@
 int 
 register_with_qmem(
     qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec
+    VEC_REC_TYPE *ptr_vec,
+    uint64_t vec_uqid
     )
 {
   int status = 0;
-  ptr_vec->uqid = get_uqid(ptr_S);
+  if ( vec_uqid == 0 ) { 
+    ptr_vec->uqid = get_uqid(ptr_S);
+  }
+  else {
+    // make sure that the vec_uqid is not in use 
+    whole_vec_dir_t *w = ptr_S->whole_vec_dir;
+    for ( uint32_t i = 0; i < w->sz; i++ ) { 
+      if ( w->whole_vecs[i].uqid == vec_uqid ) {
+        go_BYE(-1);
+      }
+    }
+    //-----------------
+    ptr_vec->uqid = vec_uqid;
+  }
   status = assign_vec_idx(ptr_S, ptr_vec); cBYE(status);
 BYE:
   return status; 
@@ -51,8 +65,6 @@ chk_chunk(
   /* What checks on these guys?
      if ( ptr_vec->num_readers > 0 ) { go_BYE(-1); }
      */
-  status = mk_file_name(ptr_S, chunk->uqid, &file_name);
-  cBYE(status);
   if ( chunk->uqid == 0 ) { // we expect this to be free 
     if ( chunk->chunk_num != 0 ) { go_BYE(-1); }
     if ( chunk->uqid != 0 ) { go_BYE(-1); }
@@ -65,14 +77,12 @@ chk_chunk(
     if ( chunk->vec_uqid != v->uqid ) { go_BYE(-1); }
     if ( !w->is_file ) { 
       // this check is valid only when there is no master file 
-      if ( chunk->data == NULL ) { 
-        if ( !chunk->is_file ) { go_BYE(-1); }
-      }
+      if ( ( chunk->data == NULL ) && ( !chunk->is_file ) ) { go_BYE(-1); }
     }
     if ( chunk->is_file ) { 
-      if ( !isfile(file_name) ) { 
-        // TODO P1 WHAT HAPPENS HEER 
-      }
+      status = mk_file_name(ptr_S, chunk->uqid, &file_name); cBYE(status);
+      if ( !isfile(file_name) ) { go_BYE(-1); }
+      free_if_non_null(file_name); 
     }
   }
 BYE:
@@ -87,8 +97,9 @@ assign_vec_idx(
     )
 {
   int status = 0;
-  static unsigned int start_search = 1;
   whole_vec_dir_t *w = ptr_S->whole_vec_dir;
+  unsigned int start_search = w->start_search;
+  if ( start_search == 0 ) { start_search = 1; } // do not allocate 0
   if ( w->n  >= (w->sz-1) ) { go_BYE(-1); } // TODO P2 Need to re-allocate
   // NOTE: we do not allocate 0th entry
   for ( int iter = 0; iter < 2; iter++ ) { 
@@ -106,8 +117,8 @@ assign_vec_idx(
         w->whole_vecs[i].uqid = v->uqid;
         v->whole_vec_dir_idx = i; 
         w->n++;
-        start_search = i+1;
-        if ( start_search >= w->sz ) { start_search = 1; }
+        w->start_search = i+1;
+        if ( w->start_search >= w->sz ) { w->start_search = 1; }
         return status;
       }
     }
@@ -124,12 +135,16 @@ allocate_chunk(
     VEC_REC_TYPE *v,
     uint32_t chunk_num,
     uint32_t *ptr_chunk_dir_idx,
-    bool is_malloc
+    bool is_malloc,
+    uint64_t chunk_uqid 
     )
 {
   int status = 0;
-  static unsigned int start_search = 1;
   size_t sz = ptr_S->chunk_size * v->field_width;
+  uint32_t start_search = ptr_S->chunk_dir->start_search;
+  if ( start_search == 0 ) { start_search = 1; } // do not allocate 0
+  // TODO P2 Need to re-allocate below
+  if ( ptr_S->chunk_dir->n  >= (ptr_S->chunk_dir->sz-1) ) { go_BYE(-1); } 
   // NOTE: we do not allocate 0th entry
   for ( int iter = 0; iter < 2; iter++ ) { 
     unsigned int lb, ub;
@@ -141,9 +156,19 @@ allocate_chunk(
       lb = 1; 
       ub = start_search; // note not 0
     }
-    for ( unsigned int i = lb ; i < ub; i++ ) { 
+    for ( unsigned int i = lb ; i < ub; i++ ) {
       if ( ptr_S->chunk_dir->chunks[i].uqid == 0 ) {
-        ptr_S->chunk_dir->chunks[i].uqid = get_uqid((qmem_struct_t *)ptr_S);
+        if ( chunk_uqid == 0 ) { 
+          ptr_S->chunk_dir->chunks[i].uqid = get_uqid((qmem_struct_t *)ptr_S);
+        }
+        else {
+          for ( uint32_t j = 0; j < ptr_S->chunk_dir->sz; j++ ) { 
+            if ( ptr_S->chunk_dir->chunks[j].uqid == chunk_uqid ) {
+              go_BYE(-1);
+            }
+          }
+          ptr_S->chunk_dir->chunks[i].uqid = chunk_uqid;
+        }
         ptr_S->chunk_dir->chunks[i].chunk_num = chunk_num;
         ptr_S->chunk_dir->chunks[i].is_file = false;
         ptr_S->chunk_dir->chunks[i].vec_uqid = v->uqid;
@@ -277,7 +302,7 @@ get_chunk_dir_idx(
   uint32_t chunk_dir_idx = ptr_vec->chunks[chunk_num];
   if ( chunk_dir_idx == 0 ) { // we need to set it 
     status = allocate_chunk((qmem_struct_t *)ptr_S, ptr_vec, chunk_num, 
-        &chunk_dir_idx, is_malloc); 
+        &chunk_dir_idx, is_malloc, 0); 
     cBYE(status);
     *ptr_num_chunks = *ptr_num_chunks + 1;
   }
@@ -341,7 +366,7 @@ qmem_backup_chunks(
   if ( ptr_vec->is_eov == false ) { go_BYE(-1); }
 
   for ( uint32_t i = 0; i  < ptr_vec->num_chunks; i++ ) { 
-    status = qmem_backup_chunk(ptr_S, ptr_vec, ptr_vec->chunks[i]);
+    status = qmem_backup_chunk(ptr_S, ptr_vec, i);
     cBYE(status);
   }
 BYE:
@@ -576,10 +601,14 @@ qmem_un_load_chunk(
 
   // If you are NOT doing hard unload
   // them, you must be able to backup data from chunk file or vector file 
-  if ( !is_hard ) { 
-   if ( ( !chunk->is_file ) && ( !w->is_file ) ) { go_BYE(-1); }
+  if ( is_hard ) { 
+    free_if_non_null(chunk->data); 
   }
-  free_if_non_null(chunk->data); 
+  else {
+    if ( ( chunk->is_file ) || ( w->is_file ) ) { // unload if safe
+      free_if_non_null(chunk->data); 
+    }
+  }
 BYE:
   return status;
 }
@@ -603,7 +632,8 @@ BYE:
 int
 qmem_delete_vec(
     qmem_struct_t *ptr_S,
-    VEC_REC_TYPE *ptr_vec
+    VEC_REC_TYPE *ptr_vec,
+    bool is_hard
     )
 {
   int status = 0;
@@ -612,12 +642,17 @@ qmem_delete_vec(
   if ( w->uqid != ptr_vec->uqid ) { go_BYE(-1); } 
   
 
-  bool is_hard = true;
   status = qmem_un_backup_vec(ptr_S, ptr_vec, is_hard); cBYE(status);
 
   status = qmem_un_backup_chunks(ptr_S, ptr_vec, is_hard); cBYE(status);
   // clean out space in data structures
   memset(w, 0, sizeof(WHOLE_VEC_REC_TYPE));
+  for ( uint32_t i = 0; i < ptr_vec->num_chunks; i++ ) { 
+    uint32_t chunk_dir_idx = ptr_vec->chunks[i];
+    CHUNK_REC_TYPE *c = ptr_S->chunk_dir->chunks + chunk_dir_idx;
+    memset(c, 0, sizeof(CHUNK_REC_TYPE));
+    ptr_S->chunk_dir->n--; // one spot opened up
+  }
   ptr_S->whole_vec_dir->n--; // one spot opened up
 BYE:
   return status;
@@ -632,12 +667,37 @@ vec_in_use(
   WHOLE_VEC_REC_TYPE *w = 
     ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
   if ( ( w->num_readers > 0 ) || ( w->num_writers > 0 ) ) {
-    return false;
+    return true;
   }
   for ( uint32_t i = 0; i < v->num_chunks; i++ ) { 
     uint32_t chunk_idx = v->chunks[i];
     CHUNK_REC_TYPE *chunk = ptr_S->chunk_dir->chunks + chunk_idx;
-    if ( chunk->num_readers > 0 ) { return false; }
+    if ( chunk->num_readers > 0 ) { return true; }
   }
-  return true;
+  return false;
+}
+
+bool
+is_vec_file(
+    qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const v
+    )
+{
+  WHOLE_VEC_REC_TYPE *w = 
+    ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
+  return w->is_file;
+}
+
+bool
+is_chunk_file(
+    qmem_struct_t *ptr_S,
+    const VEC_REC_TYPE *const v,
+    uint32_t chunk_num
+    )
+{
+  if ( chunk_num >= v->num_chunks ) { return false; } // actually error 
+  uint32_t chunk_dir_idx = v->chunks[chunk_num];
+  CHUNK_REC_TYPE *c = 
+    ptr_S->chunk_dir->chunks + chunk_dir_idx;
+  return c->is_file;
 }

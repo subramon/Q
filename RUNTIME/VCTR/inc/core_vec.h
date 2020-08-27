@@ -33,7 +33,7 @@ get_qtype_and_field_width(
     int * res_field_width
     );
 extern int 
-vec_rehydrate(
+vec_reincarnate(
     qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
@@ -48,7 +48,8 @@ vec_new(
     qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
-    uint32_t field_width
+    uint32_t field_width,
+    uint64_t vec_uqid
     );
 extern int
 vec_materialized(

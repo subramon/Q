@@ -11,6 +11,7 @@ all: libvctr.so
 
 clean:
 	rm -f *.so *.o _*
+	rm -f ${Q_ROOT}/lib/libvctr.so
 
 GEN_INC_FILES =  \
 	../../../UTILS/inc/I1_to_txt.h  \
