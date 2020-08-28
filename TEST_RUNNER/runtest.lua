@@ -114,9 +114,12 @@ end
 
 
 local path      = assert(arg[1], "Error: provide file or directory")
+assert(type(path) == "string")
 -- test_name allows us to focus on just one test in a suite
 local test_name 
-if ( arg[2] ) then test_name = arg[2] end 
+if ( arg[2] ) then 
+  test_name = arg[2]; assert(type(test_name) == "string") 
+end 
 --====================================
 local t_results = {}
 local files = {}

@@ -242,6 +242,126 @@ BYE:
 }
 //-------------------------------------------------
 int
+vec_check_qmem(
+    qmem_struct_t *ptr_S
+    )
+{
+  int status = 0;
+  size_t sz; char *cptr;
+  uint64_t *buf = NULL;
+
+  if ( ptr_S->q_data_dir == NULL ) { go_BYE(-1); }
+  if ( ptr_S->chunk_size == 0 ) { go_BYE(-1); }
+  if ( ptr_S->max_mem_KB < ptr_S->now_mem_KB ) { go_BYE(-1); }
+
+  if ( ptr_S->whole_vec_dir == NULL ) { go_BYE(-1); }
+  if ( ptr_S->whole_vec_dir->whole_vecs == NULL ) { go_BYE(-1); }
+  if ( ptr_S->whole_vec_dir->sz == 0 ) { go_BYE(-1); }
+  if ( ptr_S->whole_vec_dir->n >= ptr_S->whole_vec_dir->sz ) {go_BYE(-1);} 
+  // check that 0th position is unused
+  WHOLE_VEC_REC_TYPE *w0 = ptr_S->whole_vec_dir->whole_vecs + 0;
+  sz = sizeof(WHOLE_VEC_REC_TYPE);
+  cptr = (char *)w0;
+  for ( uint32_t i = 0; i < sz; i++ ) { 
+    if ( *cptr != '\0' ) { go_BYE(-1); 
+    }
+  }
+
+  if ( ptr_S->chunk_dir == NULL ) { go_BYE(-1); }
+  if ( ptr_S->chunk_dir->chunks == NULL ) { go_BYE(-1); }
+  if ( ptr_S->chunk_dir->sz == 0 ) { go_BYE(-1); }
+  if ( ptr_S->chunk_dir->n >= ptr_S->chunk_dir->sz ) {go_BYE(-1);} 
+
+  // check that 0th position is unused
+  CHUNK_REC_TYPE *c0 = ptr_S->chunk_dir->chunks + 0;
+  sz = sizeof(CHUNK_REC_TYPE);
+  cptr = (char *)c0;
+  for ( uint32_t i = 0; i < sz; i++ ) { 
+    if ( *cptr != '\0' ) { go_BYE(-1); 
+    }
+  }
+
+  uint32_t szW = ptr_S->whole_vec_dir->sz;
+  uint32_t nW  = ptr_S->whole_vec_dir->n;
+  for ( uint32_t i = 0; i < szW; i++ ) {
+    WHOLE_VEC_REC_TYPE *w = ptr_S->whole_vec_dir->whole_vecs + i;
+    if ( w->uqid == 0 ) { continue; }
+
+    //------------------------------------------
+    if ( w->is_file ) { 
+      if ( w->file_size == 0 ) { go_BYE(-1); }
+    }
+    else {
+      if ( w->file_size   != 0    ) { go_BYE(-1); }
+      if ( w->mmap_addr   != NULL ) { go_BYE(-1); }
+      if ( w->mmap_len    != 0    ) { go_BYE(-1); }
+      if ( w->num_readers != 0    ) { go_BYE(-1); }
+      if ( w->num_writers != 0    ) { go_BYE(-1); }
+    }
+    //-------------------------------------------
+    if ( w->num_readers > 0 ) { 
+      if ( w->num_writers != 0 ) { go_BYE(-1); }
+    }
+    if ( w->num_writers > 1 ) { go_BYE(-1); }
+    if ( w->num_writers == 1 ) { 
+      if ( w->num_readers != 0 ) { go_BYE(-1); }
+    }
+    //-------------------------------------------
+    if ( w->mmap_addr != NULL ) { 
+      if ( !w->is_file      ) { go_BYE(-1); }
+      if ( w->mmap_len == 0 ) { go_BYE(-1); }
+      if ( ( w->num_readers == 0 ) && ( w->num_writers == 0 ) )  {
+        go_BYE(-1);
+      }
+    }
+    else {
+      if ( ( w->num_readers > 0 ) || ( w->num_writers > 0 ) )  {
+        go_BYE(-1);
+      }
+    }
+  }
+  // check uniqueness of (vec_uqid);
+  if ( nW > 0 ) { 
+    free_if_non_null(buf);
+    uint32_t idx = 0;
+    buf = malloc(nW * sizeof(uint64_t));
+    return_if_malloc_failed(buf);
+    for ( uint32_t i = 0; i < szW; i++ ) {
+      WHOLE_VEC_REC_TYPE *w = ptr_S->whole_vec_dir->whole_vecs + i;
+      if ( w->uqid != 0 ) { 
+        if ( idx >= nW ) { go_BYE(-1); } buf[idx++] = w->uqid; 
+      }
+    }
+    qsort(buf, nW, sizeof(uint64_t), sortfn2);
+    for ( uint32_t i = 1; i < nW; i++ )   {
+      if ( buf[i] == buf[i-1] ) { go_BYE(-1); }
+    }
+  }
+  // check uniqueness of (chunk_uqid);
+  uint32_t szC = ptr_S->chunk_dir->sz;
+  uint32_t nC  = ptr_S->chunk_dir->n;
+  if ( nC > 0 ) {
+    free_if_non_null(buf);
+    uint32_t idx = 0;
+    buf = malloc(nC * sizeof(uint64_t));
+    return_if_malloc_failed(buf);
+    for ( uint32_t i = 0; i < szC; i++ ) {
+      CHUNK_REC_TYPE *c = ptr_S->chunk_dir->chunks + i;
+      if ( c->uqid != 0 ) { 
+        if ( idx >= nC ) { go_BYE(-1); } buf[idx++] = c->uqid; 
+      }
+    }
+    qsort(buf, nC, sizeof(uint64_t), sortfn2);
+    for ( uint32_t i = 1; i < nC; i++ )   {
+      if ( buf[i] == buf[i-1] ) { go_BYE(-1); }
+    }
+  }
+
+BYE:
+  free_if_non_null(buf);
+  return status;
+}
+int
 vec_check(
     qmem_struct_t *ptr_S,
     VEC_REC_TYPE *v
@@ -396,7 +516,6 @@ vec_get1(
 {
   int status = 0;
   uint32_t chunk_num, chunk_dir_idx, in_chunk_idx;
-
   if ( ptr_vec->is_dead ) { go_BYE(-1); }
   status = chunk_num_for_read(ptr_S, ptr_vec, idx, &chunk_num);
   cBYE(status);
@@ -976,6 +1095,7 @@ vec_reincarnate(
   }
   ptr_vec->num_elements = num_elements;
   ptr_vec->is_eov     = true;
+  ptr_vec->is_memo    = true;
   ptr_vec->is_persist = true;
   ptr_vec->g_S        = ptr_S;
   //------------

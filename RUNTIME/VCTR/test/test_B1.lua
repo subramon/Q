@@ -6,6 +6,7 @@ local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qmem    = require 'Q/UTILS/lua/qmem'
+qmem.init()
 local chunk_size = qmem.chunk_size
 local qconsts = require 'Q/UTILS/lua/qconsts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
@@ -36,7 +37,7 @@ tests.t0 = function(incr)
   if ( not  incr ) then incr = 0 end 
   local qtype = "B1"
   local width = 1
-  local cdata = qmem.cdata; assert(type(cdata) == "CMEM")
+  local cdata = qmem.cdata(); assert(type(cdata) == "CMEM")
   local g_S = ffi.cast("const qmem_struct_t *", cdata:data())
   
   --[[
@@ -51,6 +52,7 @@ tests.t0 = function(incr)
   --]]
 
   local v = assert(cVector.new({ qtype = qtype, width = width }, cdata))
+  v:memo(true)
   --=============
   local n = chunk_size + incr
   local exp_num_chunks = 0
@@ -67,7 +69,11 @@ tests.t0 = function(incr)
       assert(v:put1(s0))
       alternate = true
     end
+    assert(v:check())
+    -- print("Iter ", i)
   end
+  assert(cVector.check_qmem(cdata))
+  print("Finished puts, now getting")
   --================
   -- make sure you get what you put
   local alternate = false
@@ -82,7 +88,9 @@ tests.t0 = function(incr)
       assert(s == s0)
       alternate = true
     end
+    assert(v:check())
   end
+  assert(cVector.check_qmem(cdata))
   --================
   v:persist()
   v:eov()
@@ -149,9 +157,9 @@ tests.t2 = function()
   assert(tests.t0(1))
   print("Successfully completed test t2")
 end
+return tests
+--[[
 tests.t0() 
 tests.t1() 
---[[
-return tests
 os.exit()
 --]]

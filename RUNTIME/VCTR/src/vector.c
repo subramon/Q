@@ -607,6 +607,21 @@ BYE:
   return 2;
 }
 //----------------------------------------
+static int l_vec_check_qmem( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
+  CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 1, "CMEM");
+  qmem_struct_t * g_S  = (qmem_struct_t *)(ptr_c->data);
+  //------------------
+  status = vec_check_qmem(g_S); cBYE(status);
+  lua_pushboolean(L, 1);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
 static int l_vec_check( lua_State *L) {
   int status = 0;
   // get args from Lua 
@@ -1010,6 +1025,7 @@ static const struct luaL_Reg vector_methods[] = {
  
 static const struct luaL_Reg vector_functions[] = {
     { "check", l_vec_check },
+    { "check_qmem", l_vec_check_qmem },
 
     { "un_backup_chunk", l_vec_un_backup_chunk },
     { "backup_chunk", l_vec_backup_chunk },

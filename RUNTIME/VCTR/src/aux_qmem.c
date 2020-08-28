@@ -530,9 +530,12 @@ qmem_load_chunk(
   int status = 0;
   char *file_name = NULL;
   char *X = NULL; size_t nX = 0;
+  chk_whole_vec_dir_idx(v->whole_vec_dir_idx);
   WHOLE_VEC_REC_TYPE *w = 
     ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
-  if ( w->uqid != v->uqid ) { go_BYE(-1); } 
+  if ( w->uqid != v->uqid ) { 
+    go_BYE(-1); 
+  } 
   // cannot load when write is in progress
   if ( w->num_writers > 0 ) { go_BYE(-1); }
 

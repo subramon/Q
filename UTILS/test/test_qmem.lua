@@ -1,7 +1,9 @@
+require 'Q/UTILS/lua/strict'
 local ffi = require 'ffi'
 local tests = {}
 tests.t1 = function()
   local qmem = require 'Q/UTILS/lua/qmem'
+  assert(qmem.init())
   local T = qmem.get()
   assert(type(T) == "table")
   -- for k, v in pairs(T) do print(k, v) end 
@@ -9,11 +11,11 @@ tests.t1 = function()
   local V = {}
   V.max_mem_KB = T.max_mem_KB +  3
   V.q_data_dir = "/tmp/"
-  assert(qmem.init(V))
+  assert(qmem.update(V))
   --===================================
   W = qmem.get()
 
-  local cdata = assert(qmem.cdata)
+  local cdata = assert(qmem.cdata())
   assert(type(cdata) == "CMEM")
   local cdata = ffi.cast("qmem_struct_t *", cdata:data())
   -- print("q_data_dir = ", ffi.string(cdata[0].q_data_dir))

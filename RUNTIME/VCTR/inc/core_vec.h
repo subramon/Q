@@ -225,4 +225,8 @@ vec_make_chunk_files(
     VEC_REC_TYPE *ptr_vec,
     bool is_free_mem
     );
+extern int
+vec_check_qmem(
+    qmem_struct_t *ptr_S
+    );
 #endif
