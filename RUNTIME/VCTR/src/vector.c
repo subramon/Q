@@ -171,6 +171,18 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vec_nop( lua_State *L) {
+  VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  if ( ptr_vec == NULL ) { goto BYE; }
+  fprintf(stdout, "nop\n");
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_vec_num_elements( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
@@ -967,6 +979,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "is_killable", l_vec_is_killable },
     { "is_memo", l_vec_is_memo },
     { "num_elements", l_vec_num_elements },
+    { "nop", l_vec_nop },
     //--------------------------------
     { "killable", l_vec_killable },
     { "memo", l_vec_memo },
@@ -1020,6 +1033,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "is_killable", l_vec_is_killable },
     { "is_memo", l_vec_is_memo },
     { "num_elements", l_vec_num_elements },
+    { "nop", l_vec_nop },
     //--------------------------------
     { "killable", l_vec_killable },
     { "memo", l_vec_memo },

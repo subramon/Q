@@ -548,8 +548,8 @@ vec_shutdown(
       // master file exists, no need to flush chunks individually
     }
     else {
-      status = qmem_un_load_chunks(ptr_S, v, false); cBYE(status);
       status = qmem_backup_chunks(ptr_S, v); cBYE(status);
+      status = qmem_un_load_chunks(ptr_S, v, false); cBYE(status);
     }
     status = code_for_reincarnate(ptr_S, v, ptr_str, false);
     cBYE(status);

@@ -12,7 +12,9 @@ local get_ptr = require 'Q/UTILS/lua/get_ptr'
 --== cdef necessary stuff
 local for_cdef = require 'Q/UTILS/lua/for_cdef'
 
+local initialized = false
 local function initialize()
+  if ( initialized ) then return true end 
   local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
   local incs = { "UTILS/inc/" }
   local x = for_cdef(infile, incs)
@@ -22,6 +24,8 @@ local function initialize()
   local incs = { "UTILS/inc/" }
   local x = for_cdef(infile, incs)
   ffi.cdef(x)
+  initialized = true 
+  return true
 end
 --=================================
 local tests = {}
@@ -82,7 +86,7 @@ tests.t0 = function(incr)
   --================
   v:persist()
   v:eov()
-  v:check()
+  assert(v:check())
   local x = v:shutdown() 
   -- assert(v:is_dead())
   assert(type(x) == "string") 
@@ -109,6 +113,7 @@ tests.t0 = function(incr)
   end
 
   local z = assert(cVector.reincarnate(y, cdata))
+  assert(z:check())
   print("Successfully reincarnated")
   local M = assert(z:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
@@ -116,6 +121,9 @@ tests.t0 = function(incr)
   assert(M[0].field_width == width)
   assert(ffi.string(M[0].fldtype) == qtype)
   local alternate = false
+  print("Gets starting")
+  z:nop() -- for debugging 
+
   for i = 1, n do
     local s = z:get1(i-1)
     assert(type(s) == "Scalar")
@@ -142,8 +150,8 @@ tests.t2 = function()
   print("Successfully completed test t2")
 end
 tests.t0() 
+tests.t1() 
 --[[
 return tests
-tests.t1() 
 os.exit()
 --]]

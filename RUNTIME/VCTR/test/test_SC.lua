@@ -8,7 +8,9 @@ local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/qconsts'
 local qmem    = require 'Q/UTILS/lua/qmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local initialized = false
 local function initialize()
+ if ( initialized ) then return true end 
   --== cdef necessary stuff
   local for_cdef = require 'Q/UTILS/lua/for_cdef'
   
@@ -21,6 +23,7 @@ local function initialize()
   local incs = { "UTILS/inc/" }
   local x = for_cdef(infile, incs)
   ffi.cdef(x)
+  initialized = true
 end
 --=================================
 local tests = {}

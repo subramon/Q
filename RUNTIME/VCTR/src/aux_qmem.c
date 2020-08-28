@@ -160,6 +160,7 @@ allocate_chunk(
       if ( ptr_S->chunk_dir->chunks[i].uqid == 0 ) {
         if ( chunk_uqid == 0 ) { 
           ptr_S->chunk_dir->chunks[i].uqid = get_uqid((qmem_struct_t *)ptr_S);
+          ptr_S->chunk_dir->chunks[i].is_file = false;
         }
         else {
           for ( uint32_t j = 0; j < ptr_S->chunk_dir->sz; j++ ) { 
@@ -168,9 +169,13 @@ allocate_chunk(
             }
           }
           ptr_S->chunk_dir->chunks[i].uqid = chunk_uqid;
+          char *file_name = NULL;
+          status = mk_file_name(ptr_S, chunk_uqid, &file_name);cBYE(status);
+          if ( !isfile(file_name) ) { go_BYE(-1); }
+          ptr_S->chunk_dir->chunks[i].is_file = true;
+          free_if_non_null(file_name);
         }
         ptr_S->chunk_dir->chunks[i].chunk_num = chunk_num;
-        ptr_S->chunk_dir->chunks[i].is_file = false;
         ptr_S->chunk_dir->chunks[i].vec_uqid = v->uqid;
         if ( is_malloc ) { 
           ptr_S->chunk_dir->chunks[i].data = l_malloc(sz);
@@ -541,6 +546,8 @@ qmem_load_chunk(
   // must be able to backup data from chunk file or vector file 
   if ( ( !chunk->is_file ) && ( !w->is_file ) ) { go_BYE(-1); }
 
+  chunk->data = malloc(chnk_sz);
+  return_if_malloc_failed(chunk->data);
   if ( chunk->is_file ) { // chunk has a backup file 
     status = mk_file_name(ptr_S, chunk->uqid, &file_name); cBYE(status);
     status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
