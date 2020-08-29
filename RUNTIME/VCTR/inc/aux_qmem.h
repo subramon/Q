@@ -135,3 +135,9 @@ is_chunk_file(
     const VEC_REC_TYPE *const v,
     uint32_t chunk_num
     );
+extern int
+load_chunk_from_vec(
+    qmem_struct_t *ptr_S, 
+    VEC_REC_TYPE *ptr_v, 
+    uint32_t chunk_num
+    );

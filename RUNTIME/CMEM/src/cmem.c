@@ -27,17 +27,6 @@
 
 int luaopen_libcmem (lua_State *L);
 
-// Sets the CMEM struct to undefined values
-void cmem_undef( // USED FOR DEBUGGING
-    CMEM_REC_TYPE *ptr_cmem
-    )
-{
-  ptr_cmem->size = -1;
-  strcpy(ptr_cmem->fldtype, "XXX");
-  free_if_non_null(ptr_cmem->cell_name);
-  ptr_cmem->is_foreign = false;
-}
-
 int cmem_dupe( // INTERNAL NOT VISIBLE TO LUA 
     CMEM_REC_TYPE *ptr_cmem,
     void *data,
@@ -548,19 +537,7 @@ static int l_cmem_free( lua_State *L)
   free_if_non_null(ptr_cmem->cell_name); 
   if ( ptr_cmem->data == NULL ) { 
     // explicit free will cause control to come here
-    bool ok1 = false, ok2 = false;
-    if ( ( ptr_cmem->size == 0 ) &&
-         ( *ptr_cmem->fldtype == '\0' ) &&
-         ( *ptr_cmem->cell_name == '\0' ) ) {
-      ok1 = true;
-    }
-    if ( ( ptr_cmem->size <= 0 ) && 
-         ( strcmp(ptr_cmem->fldtype, "XXX") == 0 ) && 
-         ( strcmp(ptr_cmem->cell_name, "Uninitialized") == 0 ) ) {
-      ok2 = true;
-    }
-    if ( !ok1 && !ok2 ) { 
-      printf("not good\n"); 
+    if ( ptr_cmem->size != 0 ) {
       WHEREAMI; goto BYE;
     }
   }
@@ -570,19 +547,14 @@ static int l_cmem_free( lua_State *L)
     }
     else {
       // garbage collection of Lua
-      if ( ( ptr_cmem->size == -1 ) && 
-          ( strcmp(ptr_cmem->fldtype, "XXX") == 0 ) && 
-          ( strcmp(ptr_cmem->cell_name, "Uninitialized") == 0 ) ) {
+      if ( ptr_cmem->size == 0 ) {
         /* nothing to do */
         printf("TODO P0 not good\n"); WHEREAMI; goto BYE;
       }
-      else {
-        free(ptr_cmem->data);
-        ptr_cmem->data = NULL;
-        strcpy(ptr_cmem->fldtype, "XXX");
-        free_if_non_null(ptr_cmem->cell_name);
-        ptr_cmem->size = -1;
-      }
+      free_if_non_null(ptr_cmem->data);
+      free_if_non_null(ptr_cmem->cell_name);
+      memset(ptr_cmem->fldtype, '\0', Q_MAX_LEN_QTYPE_NAME+1);
+      ptr_cmem->size = 0;
     }
   }
   // printf("Freeing %x \n", ptr_cmem);

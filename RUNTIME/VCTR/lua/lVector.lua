@@ -1,6 +1,7 @@
 -- If not, any other string will work but do not use __ as a prefix
 local ffi               = require 'ffi'
 local qconsts		= require 'Q/UTILS/lua/qconsts'
+local qcfg		= require 'Q/UTILS/lua/qcfg'
 local cutils            = require 'libcutils'
 local cmem		= require 'libcmem'
 local Scalar		= require 'libsclr'
@@ -8,12 +9,15 @@ local cVector		= require 'libvctr'
 local to_scalar		= require 'Q/UTILS/lua/to_scalar'
 local register_type	= require 'Q/UTILS/lua/q_types'
 local H                 = require 'Q/RUNTIME/VCTR/lua/helpers'
+
+local qmem              = require 'Q/UTILS/lua/qmem'
+qmem.init()
+local chunk_size        = qmem.chunk_size
+local cdata             = qmem.cdata()
+
 local qc                = require 'Q/UTILS/lua/qcore'
 qc.q_cdef( "RUNTIME/VCTR/inc/vctr_struct.h",{ "UTILS/inc/" })
 -- TO DELETE TODO qc.q_cdef("UTILS/inc/qmem_struct.h")
-local qmem              = require 'Q/UTILS/lua/qmem'
-local chunk_size        = qmem.chunk_size
-local g_S               = ffi.cast("qmem_struct_t *", qmem._cdata)
 --====================================
 local lVector = {}
 lVector.__index = lVector
@@ -25,6 +29,11 @@ setmetatable(lVector, {
 })
 
 register_type(lVector, "lVector")
+
+function lVector:check_qmem()
+  -- cannot use function on_both here because check called from within
+  return  cVector.check_qmem(cdata)
+end
 
 function lVector:check()
   -- cannot use function on_both here because check called from within
@@ -96,16 +105,16 @@ end
 function lVector:un_backup_chunk(chunk_num)
   assert(cVector.un_backup_chunk(self._base_vec, chunk_num))
   if ( self._nn_vec ) then 
-    assert(cVector.un_backup_chunk(self._nn_vec, , chunk_num)) 
+    assert(cVector.un_backup_chunk(self._nn_vec, chunk_num)) 
   end 
   return self
 end
 
 -- Mainly used for testing. Not really needed by Q programmer
 function lVector:un_backup_chunks()
-  assert(cVector.un_backup_chunk(self._base_vec, g_S))
+  assert(cVector.un_backup_chunk(self._base_vec))
   if ( self._nn_vec ) then 
-    assert(cVector.un_backup_chunk(self._nn_vec, g_S)) 
+    assert(cVector.un_backup_chunk(self._nn_vec)) 
   end 
   return self
 end
@@ -121,9 +130,9 @@ end
 
 -- Mainly used for testing. Not really needed by Q programmer
 function lVector:backup_chunks()
-  assert(cVector.backup_chunk(self._base_vec, g_S))
+  assert(cVector.backup_chunk(self._base_vec))
   if ( self._nn_vec ) then 
-    assert(cVector.backup_chunk(self._nn_vec, g_S)) 
+    assert(cVector.backup_chunk(self._nn_vec)) 
   end 
   return self
 end
@@ -139,9 +148,9 @@ end
 
 -- Mainly used for testing. Not really needed by Q programmer
 function lVector:un_load_chunks()
-  assert(cVector.un_load_chunk(self._base_vec, g_S))
+  assert(cVector.un_load_chunk(self._base_vec))
   if ( self._nn_vec ) then 
-    assert(cVector.un_load_chunk(self._nn_vec, g_S)) 
+    assert(cVector.un_load_chunk(self._nn_vec)) 
   end 
   return self
 end
@@ -157,27 +166,29 @@ end
 
 -- Mainly used for testing. Not really needed by Q programmer
 function lVector:load_chunks()
-  assert(cVector.load_chunk(self._base_vec, g_S))
+  assert(cVector.load_chunk(self._base_vec))
   if ( self._nn_vec ) then 
-    assert(cVector.load_chunk(self._nn_vec, g_S)) 
+    assert(cVector.load_chunk(self._nn_vec)) 
   end 
   return self
 end
 
 -- used for testing. Not really needed by Q programmer
 function lVector:backup_vec()
-  assert(cVector.backup_vec(self._base_vec, g_S))
+  local s = cVector.backup_vec(self._base_vec)
+  if ( not s ) then return nil end
   if ( self._nn_vec ) then 
-    assert(cVector.backup_vec(self._nn_vec, g_S)) 
+    s = cVector.backup_vec(self._nn_vec)
+    if ( not s ) then return nil end
   end 
   return self
 end
 
 -- Mainly used for testing. Not really needed by Q programmer
 function lVector:un_backup_vec()
-  assert(cVector.un_backup_vec(self._base_vec, g_S))
+  assert(cVector.un_backup_vec(self._base_vec))
   if ( self._nn_vec ) then 
-    assert(cVector.un_backup_vec(self._nn_vec,g_S)) 
+    assert(cVector.un_backup_vec(self._nn_vec)) 
   end 
   return self
 end
@@ -185,26 +196,31 @@ end
 -- Get read access to the entire vector in a single liner address space
 function lVector:start_read()
   local nn_X, nn_nX 
-  local X, nX = cVector.start_read(self._base_vec, g_S)
-  assert(type(X) == "CMEM")
-  assert(type(nX) == "number")
-  assert(nX > 0)
+  local X, nX = cVector.start_read(self._base_vec)
+  if ( type(X)  ~= "CMEM"  ) then return nil end 
+  if ( type(nX) ~= "number") then return nil end 
+  if ( nX       ==  0      ) then return nil end 
   if ( self._nn_vec ) then
-    nn_X, nn_nX = cVector.start_read(self._nn_vec, g_S)
+    nn_X, nn_nX = cVector.start_read(self._nn_vec)
     assert(type(nn_X) == "CMEM")
     assert(type(nn_nX) == "number")
     assert(nn_nX > 0)
     assert(nX == nn_nX)
   end
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return nX, X, nn_X
+end
+function lVector:nop()
+  cVector.nop(self._base_vec)
 end
 
 -- Relinquish read access to the entire vector 
 function lVector:end_read()
-  assert(cVector.end_read(self._base_vec, g_S))
+  local s = cVector.end_read(self._base_vec)
+  if ( not s ) then return nil end 
   if ( self._nn_vec ) then 
-    assert(cVector.end_read(self._nn_vec, g_S)) 
+    s = cVector.end_read(self._nn_vec)
+    if ( not s ) then return nil end 
   end 
   return self
 end
@@ -212,25 +228,27 @@ end
 -- Get write access to the entire vector in a single liner address space
 function lVector:start_write()
   local nn_X, nn_nX 
-  local X, nX = cVector.start_write(self._base_vec, g_S)
-  assert(type(X) == "CMEM")
-  assert(type(nX) == "number")
-  assert(nX > 0)
+  local X, nX = cVector.start_write(self._base_vec)
+  if ( type(X)  ~= "CMEM"  ) then return nil end 
+  if ( type(nX) ~= "number") then return nil end 
+  if ( nX       == 0       ) then return nil end 
   if ( self._nn_vec ) then
-    nn_X, nn_nX = assert(cVector.start_write(self._nn_vec, g_S))
+    nn_X, nn_nX = assert(cVector.start_write(self._nn_vec))
     assert(type(nn_X) == "CMEM")
     assert(type(nn_nX) == "number")
     assert(nn_nX == nX)
   end
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return nX, X, nn_X
 end
 
 -- Relinquish write access to the entire vector 
 function lVector:end_write()
-  assert(cVector.end_write(self._base_vec, g_S))
+  local s = cVector.end_write(self._base_vec)
+  if ( not s ) then return nil end 
   if ( self._nn_vec ) then 
-    assert(cVector.end_write(self._nn_vec, g_S)) 
+    s = cVector.end_write(self._nn_vec)
+    if ( not s ) then return nil end 
   end 
   return self
 end
@@ -248,8 +266,8 @@ end
 
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
 function lVector:kill()
-  cVector.kill(self._base_vec, g_S)
-  if ( self._nn_vec ) then cVector.kill(self._nn_vec, g_S) end 
+  cVector.kill(self._base_vec)
+  if ( self._nn_vec ) then cVector.kill(self._nn_vec) end 
   return true 
 end
 
@@ -285,7 +303,7 @@ function lVector:eval()
     if ( nn_base_addr ) then nn_base_addr:delete() end 
     self._gen = nil -- generation all done => no generator needed
   end
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return self
 end
 
@@ -312,10 +330,10 @@ end
 
 
 function lVector:free()
-  local status = cVector.free(self._base_vec, g_S) 
+  local status = cVector.free(self._base_vec) 
   if ( not status ) then print("Likely you are freeing dead vector") end
   if ( self._nn_vec ) then 
-    status = cVector.free(self._nn_vec, g_S) 
+    status = cVector.free(self._nn_vec) 
     if ( not status ) then print("Likely you are freeing dead vector") end
   end
   return true
@@ -326,14 +344,16 @@ end
 function lVector:get1(idx)
   -- notice that get1 will not invoke generator
   local s1, s2
-  s1 = assert(cVector.get1(self._base_vec, idx))
+  s1 = cVector.get1(self._base_vec, idx)
+  if ( not s1 ) then return nil end 
   if ( self:fldtype() == "SC" ) then 
     assert(type(s1) == "CMEM")
   else
     assert(type(s1) == "Scalar")
  end
   if ( self._nn_vec ) then 
-    s2 = assert(cVector.get1(self._nn_vec, idx))
+    s2 = cVector.get1(self._nn_vec, idx)
+    if ( not s2 ) then return nil end 
     assert(type(s2) == "Scalar")
     assert(s2:fldtype() == "B1")
   end
@@ -414,7 +434,7 @@ function lVector:get_chunk(chunk_num)
     end
   end
 
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return base_len, base_addr,  nn_addr
 end
 
@@ -453,8 +473,8 @@ function lVector:clone()
   local v2, nn_v2
   local v1 = self._base_vec
   assert(v1:is_eov())
-  cVector.master(v1, g_S)
-  local x, y = cVector.reincarnate(v1, g_S)
+  cVector.master(v1, cdata)
+  local x, y = cVector.reincarnate(v1, cdata)
   assert(x, y)
   assert(type(x) == "string")
   local y = loadstring(x)()
@@ -492,13 +512,13 @@ function lVector.new(args)
     end
     assert(type(args.width) == "number") 
     --=======================
-    vector._base_vec = assert(cVector.new(args))
-    if ( qconsts.debug ) then 
+    vector._base_vec = assert(cVector.new(args, cdata))
+    if ( qcfg.debug ) then 
       assert(cVector.check(vector._base_vec)) 
     end 
     if ( args.has_nulls ) then 
-      vector._nn_vec   = cVector.new( { qtype = "B1", width = 1 })
-      if ( qconsts.debug ) then 
+      vector._nn_vec   = cVector.new( { qtype = "B1", width = 1 }, cdata)
+      if ( qcfg.debug ) then 
         assert(cVector.check(vector._nn_vec)) 
       end 
     end
@@ -515,10 +535,10 @@ function lVector.new(args)
     end
     --=======================
   else -- materialized vector
-    vector._base_vec = assert(cVector.reincarnate(args, g_S))
+    vector._base_vec = assert(cVector.reincarnate(args, cdata))
     if ( args.has_nulls ) then
       error("NOT IMPLEMENTED") -- TODO P1
-      vector._nn_vec   = assert(cVector.reincarnate(args[2]))
+      vector._nn_vec   = assert(cVector.reincarnate(args[2]), cdata)
     end
   end
   --=============================================
@@ -537,7 +557,7 @@ end
 function lVector:persist(is_persist)
   local is_persist = H.mk_boolean(is_persist, true)
   assert(H.on_both(self, cVector.persist, is_persist))
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return self
 end
 
@@ -545,19 +565,23 @@ end
 -- Puts one element at a time into Vector
 -- eov cannot be true for the Vector
 function lVector:put1(s, nn_s)
-  assert ( not self._gen ) -- if you have a generator, cannot apply put*
+  -- if you have a generator, cannot apply put*
+  if ( self._gen ) then return nil end 
+  ---
   if ( self:fldtype() == "SC" ) then 
-    assert( type(s) == "CMEM" )
+    if ( type(s) ~= "CMEM" ) then return nil end 
   else
-    assert( type(s) == "Scalar" ) 
+    if ( type(s) ~= "Scalar" )  then return nil end 
   end
-  assert(cVector.put1(self._base_vec, s))
+  local s = cVector.put1(self._base_vec, s)
+  if ( not s ) then return nil end 
   if ( self._nn_vec ) then 
-    assert(type(nn_s) == "Scalar")
-    assert(nn_s:fldtype() == "B1")
-    assert(cVector.put1(self._nn_vec, nn_s))
+    if ( type(nn_s)     ~= "Scalar") then return nil end 
+    if ( nn_s:fldtype() ~= "B1")     then return nil end 
+    s = cVector.put1(self._nn_vec, nn_s)
+    if ( not s ) then return nil end 
   end
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return true
 end
 --
@@ -596,7 +620,7 @@ function lVector:put_chunk(base_addr, nn_addr, len)
     end
   end
     
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return true
 end
 
@@ -605,7 +629,7 @@ function lVector:set_name(vname)
   if ( type(vname) == nil ) then vname = "" end 
   assert(type(vname) == "string")
   assert(cVector.set_name(self._base_vec, vname))
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return self
 end
 
@@ -614,13 +638,13 @@ function lVector:drop_nulls()
   assert(self:is_eov())
   assert(cVector.delete(self._nn_vec))
   self._nn_vec = nil
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return self
 end
 
 -- No help from C needed for this function
 function lVector:get_meta(k)
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   assert(k)
   assert(type(k) == "string")
   return self._meta[k]
@@ -644,7 +668,7 @@ function lVector:make_nulls(bvec)
 
   assert(cVector.same_state(self._base_vec, bvec))
   self._nn_vec = bvec._base_vec
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return self
 end
   
@@ -662,13 +686,13 @@ function lVector:meta()
   if ( self._nn_vec ) then 
     nn_meta = loadstring(cVector.meta(self._nn_vec))()
   end
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   return { base = base_meta, nn = nn_meta, aux = self._meta}
 end
 
 function lVector:shutdown()
-  if ( qconsts.debug ) then self:check() end
-  local reincarnate_str = cVector.shutdown(self._base_vec, g_S)
+  if ( qcfg.debug ) then self:check() end
+  local reincarnate_str = cVector.shutdown(self._base_vec)
   if ( not reincarnate_str ) then 
     print("Unable to shutdown"); return nil 
   end 
@@ -677,7 +701,7 @@ function lVector:shutdown()
 end
 
 function lVector:set_meta(k, v)
-  if ( qconsts.debug ) then self:check() end
+  if ( qcfg.debug ) then self:check() end
   assert(k)
   if ( not self._meta ) then self._meta = {} end 
   -- to destroy a value associated with a key

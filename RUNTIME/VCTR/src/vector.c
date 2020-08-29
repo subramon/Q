@@ -112,10 +112,10 @@ static int l_vec_file_name( lua_State *L) {
   qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
   int32_t chunk_number = -1;
-  if ( num_args == 2 ) { 
+  if ( num_args == 1 ) { 
     // we want name of file for vector
   } 
-  else if ( num_args == 3 ) { 
+  else if ( num_args == 2 ) { 
     // we want name of file for chunk
     chunk_number = luaL_checknumber(L, 2);
   }
@@ -402,14 +402,11 @@ static int l_vec_start_read( lua_State *L)
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   qmem_struct_t * g_S   = ptr_vec->g_S;
   //------------------
-
   ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
   return_if_malloc_failed(ptr_cmem);
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
-  cmem_undef(ptr_cmem);
-
   status = vec_start_read(g_S, ptr_vec, ptr_cmem); cBYE(status);
   lua_pushinteger(L, ptr_vec->num_elements);
   return 2;
@@ -452,16 +449,15 @@ static int l_vec_get_chunk( lua_State *L)
   chunk_num = luaL_checknumber(L, 2);
   //------------------
 
+  status = vec_get_chunk(g_S, ptr_vec, chunk_num, ptr_cmem, 
+      &num_in_chunk);
+  cBYE(status);
   ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
   return_if_malloc_failed(ptr_cmem);
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
-  cmem_undef(ptr_cmem);
 
-  status = vec_get_chunk(g_S, ptr_vec, chunk_num, ptr_cmem, 
-      &num_in_chunk);
-  cBYE(status);
   lua_pushinteger(L, num_in_chunk);
   return 2;
 BYE:
@@ -541,7 +537,7 @@ BYE:
 static int l_vec_end_write( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VEC_REC_TYPE *ptr_vec = (VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   qmem_struct_t * g_S   = ptr_vec->g_S;
   //--------------------------
@@ -922,8 +918,7 @@ static int l_vec_backup_chunk( lua_State *L)
   qmem_struct_t * g_S   = ptr_vec->g_S;
   int chunk_idx = lua_tonumber(L, 2); 
   //-------------------------
-  status = qmem_backup_chunk(g_S, ptr_vec, chunk_idx); 
-  cBYE(status);
+  status = qmem_backup_chunk(g_S, ptr_vec, chunk_idx); cBYE(status);
   lua_pushboolean(L, true);
   return 1; 
 BYE:

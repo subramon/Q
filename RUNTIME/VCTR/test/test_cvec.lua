@@ -7,9 +7,24 @@ local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/qconsts'
 local qmem    = require 'Q/UTILS/lua/qmem'
+qmem.init()
+local chunk_size = qmem.chunk_size
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local pldir   = require 'pl.dir'
 
+local initialized = false
+local function initialize()
+ if ( initialized ) then return true end 
+  --== cdef necessary stuff
+  local for_cdef = require 'Q/UTILS/lua/for_cdef'
+  
+  local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
+  local incs = { "UTILS/inc/" }
+  local x = for_cdef(infile, incs)
+  ffi.cdef(x)
+  initialized = true
+end
+initialize()
 local function delete_data_files()
   local ddir = os.getenv("Q_DATA_DIR")
   pldir.rmtree(ddir)
@@ -20,22 +35,11 @@ local function get_data_files()
   return pldir.getfiles(ddir, "_*.bin")
 end
 
+local status
 local tests = {}
 
-local lVector 
-local modes
-local test_without_q = false
-if test_without_q then 
-  -- following only because we are testing. 
-  -- Normally, we get this from q_ore
-  local get_func_decl = require 'Q/UTILS/build/get_func_decl'
-  local hdrs = get_func_decl("../inc/vctr_struct.h", " -I../../../UTILS/inc/")
-  ffi.cdef(hdrs)
-  modes = { "cVector" }
-else
-  lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
-  modes = { "cVector", "lVector" }
-end
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+local modes = { "lVector", "cVector" }
 --=================================
 -- testing put1 and get1 
 tests.t1 = function()
@@ -43,8 +47,10 @@ tests.t1 = function()
   local width = qconsts.qtypes[qtype].width
   local v 
   for _, mode in pairs(modes) do 
+    local cdata, g_S
     if ( mode == "cVector" ) then 
-      v = cVector.new( { qtype = qtype, width = width} )
+      cdata = qmem.cdata(); assert(type(cdata) == "CMEM")
+      v = cVector.new( { qtype = qtype, width = width}, cdata )
     elseif ( mode == "lVector" ) then 
       v = lVector.new( { qtype = qtype, width = width} )
     else
@@ -56,13 +62,14 @@ tests.t1 = function()
       assert( not  v:get1(-1))
       assert( not  v:get1(1))
     elseif ( mode == "lVector" ) then 
-      local status = pcall(v.get1, 0)  assert( not  status) 
-      status = pcall(v.get1,-1)  assert( not  status) 
-      status = pcall(v.get1,1)   assert( not  status) 
+      status = v:get1( 0); assert( not  status) 
+      status = v:get1( 1); assert( not  status) 
+      status = v:get1(-1); assert( not  status) 
     else
       error("")
     end
     print(">>>  stop deliberate error")
+    v:memo(true)
     local M = assert(v:me())
     M = ffi.cast("VEC_REC_TYPE *", M)
     assert(M[0].num_elements == 0)
@@ -71,7 +78,6 @@ tests.t1 = function()
     assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == false)
     assert(v:memo(true))
     assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_memo == true)
-    assert(M[0].chunk_size_in_bytes == (chunk_size * width))
     --=============
   
     local n = 1000000
@@ -86,7 +92,7 @@ tests.t1 = function()
         if ( mode == "cVector" ) then 
           assert( not v:memo(true)) 
         elseif ( mode == "lVector" ) then 
-          local status = pcall(v.memo, true)
+          status = pcall(v.memo, true)
           assert( not status)
         else
           error("")
@@ -101,7 +107,11 @@ tests.t1 = function()
       assert(M[0].num_chunks == exp_num_chunks)
       assert(v:check())
       if ( ( i % 1000 ) == 0 ) then 
-        assert(cVector.check_chunks())
+        if ( mode == "lVector" ) then 
+          assert(v:check_qmem())
+        elseif ( mode == "cVector" ) then 
+          assert(cVector.check_qmem(cdata))
+        end
       end
     end
     --================
@@ -140,8 +150,6 @@ tests.t1 = function()
     end
   end
   --===============================
-  -- cVector:print_timers()
-  cVector:reset_timers()
   print("Successfully completed test t1")
 end
 -- testing start_read/end_read, start_write, end_write
@@ -149,10 +157,10 @@ end
 -- a few simple tests for master()
 -- a few simple tests for unmaster and delete_chunk_file
 tests.t2 = function()
-  local status
   local qtype = "I8"
   local width = qconsts.qtypes[qtype].width
   local v = lVector.new( { qtype = qtype, width = width} )
+  v:memo(true)
   
   local n = 2 * chunk_size + 17 
   local num_chunks = math.ceil(n / chunk_size)
@@ -160,70 +168,96 @@ tests.t2 = function()
     local s = Scalar.new(i, qtype)
     v:put1(s)
   end
---  print(">>> start deliberate error")
-  status = pcall(v.start_read) assert(not status)
-  status = pcall(v.start_write) assert(not status)
-  status = pcall(v.end_read) assert(not status)
-  status = pcall(v.end_write) assert(not status)
---  print("<<< stop  deliberate error")
+  print(">>> start deliberate error")
+  status = v:start_read();  assert(not status)
+  status = v:start_write(); assert(not status)
+  status = v:end_read();    assert(not status)
+  status = v:end_write();   assert(not status)
+  print("<<< stop  deliberate error")
   v:eov()
-  local X = {}
-  local Y = {} 
-  local Z = {}
+  v:set_name("some bogus name")
+  -- mulitple calls to start_read are okay
+  local arr_X = {}
+  local arr_nX = {}
   for i = 1, 10 do 
-    local x, y, z = v:start_read()
-    X[#X+1] = x
-    Y[#Y+1] = y
-    Z[#Z+1] = x
+    local nX, X, nn_X = v:start_read()
+    assert(type(nX)   == "number")
+    assert(type(X)    == "CMEM")
+    assert(type(nn_X) == "nil") -- no null values for this vector 
+    local c_X = ffi.cast("CMEM_REC_TYPE *", X)
+    assert(c_X[0].is_foreign == true)
+    arr_X[#arr_X+1]  = X
+    arr_nX[#arr_nX+1] = nX
   end
-  status = pcall(v.start_write) assert(not status)
-  status = pcall(v.end_write) assert(not status)
+  -- cannot start write until reads are over 
+  print(">>> start deliberate error")
+  status = v:start_write(); assert(not status)
+  status = v:end_write();   assert(not status)
+  print("<<< stop  deliberate error")
+  -- make matching number of end_read() calls
   for i = 1, 10 do 
     assert(v:end_read())
   end
-  status = pcall(v.end_read) assert(not status)
-  local m, cmem, nn_cmem = v:start_write()
-  assert(type(cmem) == "CMEM")
-  assert(m == n)
+  -- now additional end_read call should fail 
+  print(">>> start deliberate error")
+  status = v:end_read(); assert(not status)
+  print("<<< stop  deliberate error")
+  local nX, X, nn_X = v:start_write()
+  assert(type(nX) == "number")
+  assert(type(X) == "CMEM")
+  assert(nX == n)
+  local c_X = ffi.cast("CMEM_REC_TYPE *", X)
+  assert(c_X[0].is_foreign == true)
   -- first call to end_write should succeed
   assert(v:end_write())
   -- second call to end_write should fail
-  status = pcall(v.end_write) assert(not status)
+  print(">>> start deliberate error")
+  status = v:end_write() assert(not status)
+  print(">>> stop  deliberate error")
   -- testing writing the vector after open wih start_write
   -- open vector for writing and write some new values
-  local m, cmem, nn_cmem = v:start_write()
-  local lptr = get_ptr(cmem, "I8")
-  for i = 1, n do 
+  local nX, X, nn_X = v:start_write()
+  assert(v:check_qmem())
+  local c_X = ffi.cast("CMEM_REC_TYPE *", X)
+  assert(c_X[0].is_foreign == true)
+  local lptr = get_ptr(X, "I8")
+  for i = 1, nX do 
     lptr[i-1] = 2*i 
   end
+  assert(v:check_qmem())
   assert(v:end_write())
   -- open vector for reading and test new values took effect
-  local m, cmem, nn_cmem = v:start_read()
-  local lptr = ffi.cast("int64_t *", get_ptr(cmem, qtype))
-  for i = 1, n do 
+
+  assert(v:check())
+  local nX, X, nn_X = v:start_read()
+  local lptr = get_ptr(X, "I8")
+  for i = 1, nX do 
     assert(lptr[i-1] == 2*i)
   end
   assert(v:end_read())
   -- Checking flush_all and delete_master_file and delete_chunk_file
   local width = qconsts.qtypes[qtype].width
-  for iter = 1, 20 do 
+  v:nop()
+  for iter = 1, 10 do 
     local exp_file_size = num_chunks * chunk_size * width
-    v:master() -- create master file, multiple calls not a problem
+    assert(v:backup_vec()) 
+    assert(v:check_qmem())
+    assert(v:check())
     local f1, _ = v:file_name()
     assert(plpath.isfile(f1))
     assert(plpath.getsize(f1) == exp_file_size)
-    v:unmaster() -- deletes master file, multiple calls not a problem
+    v:un_backup_vec() -- deletes master file, multiple calls not a problem
     assert(not plpath.isfile(f1))
   end
-  for iter = 1, 20 do 
+  for iter = 1, 10 do 
     local exp_file_size = chunk_size * width
     local full_fsz = 0
     for chunk_num = 1, num_chunks do
-      v:make_chunk_file(chunk_num-1) -- create chunk file 
+      v:backup_chunk(chunk_num-1) -- create chunk file 
       local f1, _ = v:file_name(chunk_num-1)
       assert(plpath.isfile(f1))
       assert(plpath.getsize(f1) == exp_file_size)
-      v:delete_chunk_file(chunk_num-1)
+      v:un_backup_chunk(chunk_num-1)
       -- Check that they no longer exist
       for i = 1, num_chunks do
         local f1, f2 = v:file_name(i-1)
@@ -241,18 +275,16 @@ tests.t3 = function()
     local qtype = "B1"
     local width = qconsts.qtypes[qtype].width
     local v
+    local cdata, g_S
     if ( mode == "cVector" ) then 
-      v = cVector.new({qtype = qtype, width = width})
+      cdata = qmem.cdata(); assert(type(cdata) == "CMEM")
+      v = cVector.new({qtype = qtype, width = width}, cdata)
     elseif ( mode == "lVector" ) then 
-      if ( test_without_q ) then 
-        print("Not testing lVector")
-        break
-      end
-      print("Testing lVector")
       v = lVector.new({qtype = qtype, width = width})
     else
       error("base case")
     end
+    assert(v)
     local n = 1000000
     for i = 1, n do 
       local bval
@@ -271,21 +303,11 @@ tests.t3 = function()
       assert(s:fldtype() == "B1")
       assert(s:to_num() == bval, "Entry " .. i .. " expected " .. bval .. " got " .. s:to_num())
     end
-    -- ask for one more than exists. Should error
     print(">>> start deliberate error")
-    if ( mode == "cVector" ) then 
-      local x, y, z = v:get1(n)
-      assert(not x) assert(y == "l_vec_get1")
-      --== ask for less than 0 
-      local x, y, z = v:get1(-1)
-      assert(not x) assert(y == "l_vec_get1")
-    elseif ( mode == "lVector" ) then 
-      local x, y, z = pcall(v.get1, v, n)
-      assert(not x) 
-      --== ask for less than 0 
-      local x, y, z = pcall(v.get1, v, -1)
-      assert(not x) 
-    end
+    -- ask for one more than exists. Should error
+    local x, y, z = v:get1(n);  assert(not x)
+    --== ask for less than 0 
+    local x, y, z = v:get1(-1); assert(not x)
     print("<<<  stop deliberate error")
   end
   print("Successfully completed test t3")
@@ -301,19 +323,17 @@ tests.t4 = function()
     local qtype = "F4"
     local width = qconsts.qtypes[qtype].width
     local v
+    local cdata, g_S
     if ( mode == "cVector" ) then 
       print("Testing cVector")
-      v = cVector.new({qtype = qtype, width = width})
+      cdata = qmem.cdata(); assert(type(cdata) == "CMEM")
+      v = cVector.new({qtype = qtype, width = width}, cdata)
     elseif ( mode == "lVector" ) then 
-      if ( test_without_q ) then 
-        print("Not testing lVector")
-        break
-      end
-      print("Testing lVector")
       v = lVector.new({qtype = qtype, width = width})
     else
       error("base case")
     end
+    v:memo(true)
     v:persist(false)
     local n = 1000000
     for i = 1, n do 
@@ -321,41 +341,31 @@ tests.t4 = function()
       v:put1(s)
     end
     print(">>> start deliberate error")
-    if ( mode == "cVector" ) then 
-      local status = v:master()
-      assert(not status)
-    elseif ( mode == "lVector" ) then 
-      local status = pcall(v.master)
-      assert(not status)
-    else
-      error("")
-    end
+    status = v:backup_vec()
+    assert(not status)
     print(">>>  stop deliberate error")
     assert(v:eov())
-    assert(v:master())
+    assert(v:backup_vec())
     assert(plpath.isfile(v:file_name()))
     local s = Scalar.new(0, "F4")
     print(">>> start deliberate error")
-    if ( mode == "cVector" ) then 
-      local status = v:put1(s)
-      assert(not status)
-    elseif ( mode == "lVector" ) then 
-      local status = pcall(v.put1, s)
-      assert(not status)
-    else
-      error("")
-    end
+    status = v:put1(s); assert(not status)
     print(">>>  stop deliberate error")
     local num_chunks = math.ceil(n / chunk_size) ;
+    print(" n = ", n)
+    print(" num_chunks = ", num_chunks)
     -- now we backup each chunk to file and delete in memory data
-    for chunk_num = 1, num_chunks do 
-      local free_mem = true
-      assert(v:make_chunk_file(chunk_num-1, free_mem))
-      local file_name = assert(v:file_name(chunk_num-1) )
+    for i = 1, num_chunks do 
+      assert(v:backup_chunk(i-1))
+      local file_name = assert(v:file_name(i-1) )
       local filesz = assert(plpath.getsize(file_name))
       assert(filesz == chunk_size * width)
       assert(v:check())
-      assert(cVector.check_chunks())
+      if ( mode == "cVector" ) then 
+        assert(cVector.check_qmem(cdata))
+      elseif ( mode == "lVector" ) then 
+        assert(v:check_qmem())
+      end
     end
     -- Now get all the stuff you put in 
     for i = 1, n do 
@@ -364,7 +374,12 @@ tests.t4 = function()
       assert(sin == sout)
     end
     assert(v:check())
-    assert(cVector.check_chunks())
+    if ( mode == "cVector" ) then 
+      assert(cVector.check_qmem(cdata))
+    elseif ( mode == "lVector" ) then 
+      assert(v:check_qmem())
+    end
+
     local x = get_data_files()
     print(#x, num_chunks)
     assert(#x == num_chunks + 1 ) -- +1 for whole file
@@ -391,8 +406,10 @@ tests.t5 = function()
   local width = qconsts.qtypes[qtype].width
   local v 
   for _, mode in pairs(modes) do 
+    local cdata, g_S
     if ( mode == "cVector" ) then 
-      v = cVector.new( { qtype = qtype, width = width} )
+      cdata = qmem.cdata(); assert(type(cdata) == "CMEM")
+      v = cVector.new( { qtype = qtype, width = width}, cdata )
     elseif ( mode == "lVector" ) then 
       v = lVector.new( { qtype = qtype, width = width} )
     else
@@ -425,7 +442,6 @@ tests.t5 = function()
     for i = 1, #C do
       local chunk = ffi.cast("CHUNK_REC_TYPE *", C[i])
     end
-    local status
     if ( mode == "cVector" ) then 
       status = v:__gc()
     elseif ( mode == "lVector" ) then 
@@ -448,8 +464,10 @@ tests.t6 = function()
   local v 
   for _, mode in pairs(modes) do 
     delete_data_files()
+    local cdata, g_S
     if ( mode == "cVector" ) then 
-      v = cVector.new( { qtype = qtype, width = width} )
+      cdata = qmem.cdata(); assert(type(cdata) == "CMEM")
+      v = cVector.new( { qtype = qtype, width = width}, cdata )
     elseif ( mode == "lVector" ) then 
       v = lVector.new( { qtype = qtype, width = width} )
     else
@@ -457,23 +475,14 @@ tests.t6 = function()
     end
     local M = v:me()
     M = ffi.cast("VEC_REC_TYPE *", M)
-    local n = M[0].chunk_size_in_bytes* 4
     --=============
-    for i = 1, n do 
+    for i = 1, 4*chunk_size + 17 do 
       local s = Scalar.new(i, "F4") v:put1(s)
     end
     --=============
     -- cannot flush until eov 
     print(">>> start deliberate error")
-    if ( mode == "cVector" ) then 
-      local status = v:master()
-      assert(not status) 
-    elseif ( mode == "lVector" ) then 
-      local status = pcall(v.master, v)
-      assert(not status) 
-    else
-      err("")
-    end
+    status = v:backup_vec(); assert(not status) 
     print(">>>  stop deliberate error")
     -- now terminate the vector 
     v:eov() 
@@ -502,7 +511,7 @@ tests.t6 = function()
     assert(M[0].is_file == false)
     --= flush all chunks and then verify that they have files 
     for i = 1, #C do
-      v:make_chunk_file(i-1)
+      v:backup_chunk(i-1)
     end
     local V, C = assert(v:me())
     for i = 1, #C do
@@ -520,7 +529,7 @@ tests.t6 = function()
       assert(not chunk[0].is_file)
     end
     assert(v:check())
-    assert(cVector.check_chunks())
+    assert(cVector.check_qmem(cdata))
     --=============================
   end
   print("Successfully completed test t6")
@@ -531,8 +540,10 @@ tests.t7 = function()
   local width = qconsts.qtypes[qtype].width
   for _, mode in pairs(modes) do 
     local v 
+    local cdata, g_S
     if ( mode == "cVector" ) then 
-      v = cVector.new( { qtype = qtype, width = width} )
+      cdata = qmem.cdata(); assert(type(cdata) == "CMEM")
+      v = cVector.new( { qtype = qtype, width = width}, cdata )
     elseif ( mode == "lVector" ) then 
       v = lVector.new( { qtype = qtype, width = width} )
     else
@@ -575,7 +586,7 @@ tests.t7 = function()
       assert(M[0].num_elements == exp_num_elements)
 
       assert(v:check())
-      assert(cVector.check_chunks())
+      assert(cVector.check_qmem(cdata))
       
       local chk_D, nD
       if ( mode == "cVector" ) then
@@ -604,8 +615,10 @@ tests.t8 = function()
     local width = qconsts.qtypes[qtype].width
     for _, mode in pairs(modes) do 
       local v 
+    local cdata, g_S
       if ( mode == "cVector" ) then 
-        v = cVector.new( { qtype = qtype, width = width} )
+      cdata = qmem.cdata(); assert(type(cdata) == "CMEM")
+        v = cVector.new( { qtype = qtype, width = width}, cdata )
       elseif ( mode == "lVector" ) then 
         v = lVector.new( { qtype = qtype, width = width} )
       else
@@ -686,8 +699,10 @@ tests.t9 = function()
       local qtype = "I4"
       local width = qconsts.qtypes[qtype].width
       local v
+      local cdata, g_S
       if ( mode == "cVector" ) then 
-        v = cVector.new( { qtype = qtype, width = width} )
+        cdata = qmem.cdata(); assert(type(cdata) == "CMEM")
+        v = cVector.new( { qtype = qtype, width = width}, cdata )
       elseif ( mode == "lVector" ) then 
         v = lVector.new( { qtype = qtype, width = width} )
       else
@@ -790,12 +805,13 @@ tests.t10 = function()
   print("Successfully completed test t10")
 end
   --===========================
-tests.t1() -- PASSES
+tests.t4() -- PASSES 
 --[[
 return tests
+tests.t1() -- PASSES
 tests.t2() -- PASSES
 tests.t3() -- PASSES
-tests.t4() -- PASSES 
+
 tests.t5() -- PASSES
 tests.t6() -- PASSES
 tests.t7() -- PASSES

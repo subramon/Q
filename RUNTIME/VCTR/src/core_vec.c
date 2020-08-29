@@ -263,7 +263,7 @@ vec_check_qmem(
   sz = sizeof(WHOLE_VEC_REC_TYPE);
   cptr = (char *)w0;
   for ( uint32_t i = 0; i < sz; i++ ) { 
-    if ( *cptr != '\0' ) { go_BYE(-1); 
+    if ( *cptr++ != '\0' ) { go_BYE(-1); 
     }
   }
 
@@ -277,7 +277,7 @@ vec_check_qmem(
   sz = sizeof(CHUNK_REC_TYPE);
   cptr = (char *)c0;
   for ( uint32_t i = 0; i < sz; i++ ) { 
-    if ( *cptr != '\0' ) { go_BYE(-1); 
+    if ( *cptr++ != '\0' ) { go_BYE(-1); 
     }
   }
 
@@ -390,16 +390,23 @@ vec_check(
   if ( w->uqid != v->uqid ) { go_BYE(-1); } 
 
   if ( v->num_elements == 0 ) {
-    if ( v->chunks      != NULL ) { go_BYE(-1); }
     if ( v->num_chunks  != 0    ) { go_BYE(-1); }
-    if ( v->sz_chunks   != 0    ) { go_BYE(-1); }
+    if ( v->is_dead             ) { go_BYE(-1); }
+    for ( uint32_t i = 0; i < v->sz_chunks; i++ ) { 
+      CHUNK_REC_TYPE *c = ptr_S->chunk_dir->chunks + v->chunks[i];
+      char *cptr = (char *)c;
+      size_t sz = sizeof(CHUNK_REC_TYPE);
+      for ( uint32_t j = 0; j < sz; j++ ) {
+        if ( *cptr++ != '\0' ) { go_BYE(-1); }
+      }
+    }
+
     if ( w->file_size   != 0    ) { go_BYE(-1); }
     if ( w->mmap_addr   != NULL ) { go_BYE(-1); }
     if ( w->mmap_len    != 0    ) { go_BYE(-1); }
     if ( w->num_readers != 0    ) { go_BYE(-1); }
     if ( w->num_writers != 0    ) { go_BYE(-1); }
 
-    if ( v->is_dead             ) { go_BYE(-1); }
     // TODO P2 THINK if ( v->is_eov              ) { go_BYE(-1); }
     if ( w->is_file             ) { go_BYE(-1); }
     return status;
@@ -440,7 +447,7 @@ vec_check(
   if ( v->is_dead ) { 
     char *cptr = (char *)v;
     for ( uint32_t i = 0; i < sizeof(VEC_REC_TYPE); i++ ) { 
-      if ( *cptr != '\0' ) { go_BYE(-1); }
+      if ( *cptr++ != '\0' ) { go_BYE(-1); }
     }
   }
   //-------------------------------------------
@@ -564,6 +571,12 @@ vec_start_read(
   }
   c->data = w->mmap_addr;
   c->size = w->mmap_len;
+  if ( v->name ) { 
+    size_t len = strlen(v->name) + 1;
+    char *name = malloc(len);
+    strcpy(name, v->name);
+    c->cell_name = name;
+  }
   strncpy(c->fldtype, v->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
   c->is_foreign = true;
 BYE:
@@ -714,13 +727,10 @@ vec_start_write(
   if ( w->uqid != v->uqid ) { go_BYE(-1); } 
   if ( v->is_dead ) { go_BYE(-1); }
   if ( !v->is_eov ) { go_BYE(-1); }
+  if ( !v->is_memo ) { go_BYE(-1); }
   if ( w->num_writers != 0 ) { go_BYE(-1); }
   if ( w->num_readers != 0 ) { go_BYE(-1); }
-  if ( !w->is_file  ) { 
-    fprintf(stderr, "TO BE IMPLEMENTED\n"); go_BYE(-1); 
-  }
-  if ( !w->is_file  ) { go_BYE(-1); }
-  w->num_writers = 1;
+  status = qmem_backup_vec(ptr_S, v); cBYE(status);
   // delete chunks since they no longer reflect reality
   bool is_hard = false;  
   // note that since vector file exists, chunks will be 
@@ -731,11 +741,19 @@ vec_start_write(
 
   status = mk_file_name(ptr_S, v->uqid, &file_name); cBYE(status);
   rs_mmap(file_name, &X, &nX, 1); cBYE(status);
+  if ( ( X == NULL ) || ( nX == 0 ) )  { go_BYE(-1); }
   // Set the CMEM that will be consumed by caller
+  w->num_writers = 1;
   w->mmap_addr = ptr_cmem->data     = X;
   w->mmap_len  = ptr_cmem->size     = nX;
   ptr_cmem->is_foreign = true;
   strncpy(ptr_cmem->fldtype, v->fldtype, Q_MAX_LEN_QTYPE_NAME-1);
+  if ( v->name ) { 
+    size_t len = strlen(v->name) + 1;
+    char *name = malloc(len);
+    strcpy(name, v->name);
+    ptr_cmem->cell_name = name;
+  }
 
 BYE:
   free_if_non_null(file_name);

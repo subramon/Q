@@ -12,6 +12,39 @@
 #include "aux_qmem.h"
 #include "aux_core_vec.h"
 
+int
+load_chunk_from_vec(
+    qmem_struct_t *ptr_S, 
+    VEC_REC_TYPE *v, 
+    uint32_t chunk_num
+    )
+{
+  int status = 0;
+  char *file_name = NULL;
+  char *X = NULL; size_t nX = 0;
+  if ( chunk_num >= v->num_chunks ) { go_BYE(-1); }
+  size_t chnk_sz = get_chunk_size_in_bytes(ptr_S, v);
+  uint32_t chunk_dir_idx = v->chunks[chunk_num];
+  CHUNK_REC_TYPE *chunk =  ptr_S->chunk_dir->chunks + chunk_dir_idx;
+
+  status = mk_file_name(ptr_S, v->uqid, &file_name); cBYE(status);
+  status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
+  if ( X == NULL ) { go_BYE(-1); }
+  size_t offset = chnk_sz * chunk_num;
+  if ( offset + chnk_sz > nX ) { 
+    printf("hello world \n"); 
+    go_BYE(-1); }
+  if ( chunk->data == NULL ) { 
+    chunk->data = malloc(chnk_sz);
+    return_if_malloc_failed(chunk->data);
+  }
+  memcpy(chunk->data, X + offset, chnk_sz);
+BYE:
+  free_if_non_null(file_name);
+  if ( X != NULL ) { munmap(X, nX); }
+  return status;
+}
+
 int 
 register_with_qmem(
     qmem_struct_t *ptr_S,
@@ -74,7 +107,9 @@ chk_chunk(
     if ( chunk->data != NULL ) { go_BYE(-1); }
   }
   else {
-    if ( chunk->vec_uqid != v->uqid ) { go_BYE(-1); }
+    if ( chunk->vec_uqid != v->uqid ) { 
+      printf("hello\n");
+      go_BYE(-1); }
     if ( !w->is_file ) { 
       // this check is valid only when there is no master file 
       if ( ( chunk->data == NULL ) && ( !chunk->is_file ) ) { go_BYE(-1); }
@@ -408,7 +443,7 @@ qmem_un_backup_vec(
         /* all is well */
       }
       else {
-        // TODO P1 load chunk from vector  file 
+        load_chunk_from_vec(ptr_S, v, i); cBYE(status);
       }
     }
   }
@@ -484,6 +519,7 @@ qmem_backup_vec(
     ptr_S->whole_vec_dir->whole_vecs + v->whole_vec_dir_idx;
   if ( w->uqid != v->uqid ) { go_BYE(-1); } 
   // Nothing to do: file exists 
+  status = mk_file_name(ptr_S, v->uqid, &vfile_name); cBYE(status);
   if ( w->is_file ) { return status; } 
 
   status = mk_file_name(ptr_S, v->uqid, &vfile_name); cBYE(status);
@@ -503,8 +539,8 @@ qmem_backup_vec(
       char *cfile_name = NULL;
       status = mk_file_name(ptr_S, ptr_chunk->uqid, &cfile_name);
       cBYE(status);
-      if ( nX != chnk_sz ) { go_BYE(-1); }
       status = rs_mmap(cfile_name, &X, &nX, 0); cBYE(status);
+      if ( nX != chnk_sz ) { go_BYE(-1); }
       nw = fwrite(X, nX, 1, vfp);
       if ( nw != 1 ) { go_BYE(-1); }
       munmap(X, nX); X = NULL; nX = 0;
@@ -558,15 +594,10 @@ qmem_load_chunk(
     if ( nX != chnk_sz ) { go_BYE(-1); }
     memcpy(chunk->data, X, nX);
     free_if_non_null(file_name);
+    munmap(X, nX);  X = NULL; nX = 0;
   }
   else { // vector has a backup file 
-    status = mk_file_name(ptr_S, v->uqid, &file_name); cBYE(status);
-    status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
-    if ( X == NULL ) { go_BYE(-1); }
-    if ( nX != chnk_sz ) { go_BYE(-1); }
-    size_t offset = chnk_sz * chunk->chunk_num;
-    memcpy(chunk->data, X + offset, chnk_sz);
-    free_if_non_null(file_name);
+    load_chunk_from_vec(ptr_S, v, chunk_num); cBYE(status);
   }
 BYE:
   if ( X != NULL ) { munmap(X, nX); }
