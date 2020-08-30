@@ -448,13 +448,12 @@ static int l_vec_get_chunk( lua_State *L)
   qmem_struct_t * g_S   = ptr_vec->g_S;
   chunk_num = luaL_checknumber(L, 2);
   //------------------
-
-  status = vec_get_chunk(g_S, ptr_vec, chunk_num, ptr_cmem, 
-      &num_in_chunk);
-  cBYE(status);
   ptr_cmem = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
   return_if_malloc_failed(ptr_cmem);
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
+  status = vec_get_chunk(g_S, ptr_vec, chunk_num, ptr_cmem, 
+      &num_in_chunk);
+  cBYE(status);
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
@@ -795,7 +794,7 @@ static int l_vec_new( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vec_new(g_S, ptr_vec, qtype, field_width, 0); cBYE(status);
+  status = vec_new(g_S, ptr_vec, qtype, field_width, 0, 0); cBYE(status);
   ptr_vec->g_S = g_S; // needed for __gc
 
   return 1; 

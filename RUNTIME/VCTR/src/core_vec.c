@@ -166,7 +166,8 @@ vec_new(
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width,
-    uint64_t vec_uqid
+    uint64_t vec_uqid,
+    uint32_t num_chunks_to_allocate
     )
 {
   int status = 0;
@@ -181,7 +182,7 @@ vec_new(
 
   //-----------------------------
   ptr_vec->num_chunks = 0;
-  status = init_chunk_dir(ptr_vec, -1); cBYE(status);
+  status = init_chunk_dir(ptr_vec, num_chunks_to_allocate); cBYE(status);
   //-----------------------------
   // TODO P2 ptr_vec->is_memo = ptr_S->is_memo; // default behavior 
 BYE:
@@ -1079,7 +1080,7 @@ vec_reincarnate(
     int64_t num_elements,
     int64_t vec_uqid,
     int64_t *chunk_uqids, // [num_chunks]
-    uint32_t num_chunks
+    uint32_t num_chunks_to_allocate
     )
 {
   int status = 0;
@@ -1090,13 +1091,14 @@ vec_reincarnate(
   if ( field_width == 0 ) { go_BYE(-1); }
   if ( fldtype == NULL ) { go_BYE(-1); }
 
-  status = vec_new(ptr_S, ptr_vec, fldtype, field_width, vec_uqid);
+  status = vec_new(ptr_S, ptr_vec, fldtype, field_width, vec_uqid,
+      num_chunks_to_allocate);
   cBYE(status);
   bool b_is_vec_file = is_vec_file(ptr_S, ptr_vec); 
 
   ptr_vec->num_elements = num_elements; // after init_chunk_dir()
-  ptr_vec->num_chunks   = num_chunks;
-  for ( uint32_t i = 0; i < num_chunks; i++ ) {
+  ptr_vec->num_chunks   = num_chunks_to_allocate;
+  for ( uint32_t i = 0; i < num_chunks_to_allocate; i++ ) {
     uint32_t chunk_dir_idx;
     // Note that we reserve a location for the chunk in chunk_dir_idx
     // but we do not malloc the data inside it 

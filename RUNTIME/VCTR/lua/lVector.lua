@@ -601,7 +601,7 @@ function lVector:put_chunk(base_addr, nn_addr, len)
     return H.on_both(self, cVector.eov)
   end
   if ( type(len) == "nil" ) then
-    len = cVector.chunk_size()
+    len = chunk_size
   end
   assert(type(len) == "number")
   --====================
@@ -613,7 +613,7 @@ function lVector:put_chunk(base_addr, nn_addr, len)
     status = cVector.put_chunk(self._nn_vec, nn_addr, len)
     assert(status)
   end
-  if ( len and ( len < cVector.chunk_size() ) ) then 
+  if ( len and ( len < chunk_size ) ) then 
     assert(cVector.eov(self._base_vec))
     if ( self._nn_vec ) then
       assert(cVector.eov(self._nn_vec))
@@ -658,15 +658,15 @@ end
 -- Make bvec the nn vector for this Vector 
 -- current vector must be "memoized" and in eov state
 function lVector:make_nulls(bvec)
-  assert(self:is_eov())
-  assert(self:is_memo())
-  assert(self._nn_vec == nil) 
+  if ( not self:is_eov() ) then return nil end 
+  if ( not self:is_memo()) then return nil end 
+  if ( self._nn_vec  )     then return nil end 
 
-  assert(type(bvec) == "lVector")
-  assert(bvec:fldtype() == "B1")
-  assert(bvec:has_nulls() == false)
+  if ( type(bvec)       ~= "lVector") then return nil end 
+  if ( bvec:fldtype()   ~= "B1")      then return nil end 
+  if ( bvec:has_nulls() ~= false)     then return nil end 
 
-  assert(cVector.same_state(self._base_vec, bvec))
+  if ( not cVector.same_state(self._base_vec, bvec)) then return nil end 
   self._nn_vec = bvec._base_vec
   if ( qcfg.debug ) then self:check() end
   return self

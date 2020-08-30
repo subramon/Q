@@ -49,7 +49,8 @@ vec_new(
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
     uint32_t field_width,
-    uint64_t vec_uqid
+    uint64_t vec_uqid,
+    uint32_t num_chunks_to_allocate
     );
 extern int
 vec_materialized(

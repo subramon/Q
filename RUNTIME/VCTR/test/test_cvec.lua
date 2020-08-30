@@ -6,6 +6,7 @@ local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/qconsts'
+local cleanup = require 'Q/UTILS/lua/cleanup'
 local qmem    = require 'Q/UTILS/lua/qmem'
 qmem.init()
 local chunk_size = qmem.chunk_size
@@ -154,8 +155,8 @@ tests.t1 = function()
 end
 -- testing start_read/end_read, start_write, end_write
 -- testing writing the vector after open wih start_write
--- a few simple tests for master()
--- a few simple tests for unmaster and delete_chunk_file
+-- a few simple tests for backup_vec()
+-- a few simple tests for un_backup_vec and un_backup_chunk
 tests.t2 = function()
   local qtype = "I8"
   local width = qconsts.qtypes[qtype].width
@@ -235,7 +236,7 @@ tests.t2 = function()
     assert(lptr[i-1] == 2*i)
   end
   assert(v:end_read())
-  -- Checking flush_all and delete_master_file and delete_chunk_file
+  -- Checking flush_all and un_backup_vec and un_backup_chunk
   local width = qconsts.qtypes[qtype].width
   v:nop()
   for iter = 1, 10 do 
@@ -415,14 +416,14 @@ tests.t5 = function()
     else
       error("")
     end
-    local n = 2 * cVector.chunk_size() + 17 
+    local n = 2 * chunk_size+ 17 
     for i = 1, n do 
       local s = Scalar.new(i, "F4")
       v:put1(s)
     end
     assert(v:eov())
     assert(v:persist())
-    assert(v:master())
+    assert(v:backup_vec())
     local M, C = assert(v:me())
     M = ffi.cast("VEC_REC_TYPE *", M)
     local S = {}
@@ -497,18 +498,16 @@ tests.t6 = function()
     --=============================
     -- create master file, check it exists, 
     -- then delete it and verify its gone
-    assert(v:master())
+    assert(v:backup_vec())
     local M = v:me()
     M = ffi.cast("VEC_REC_TYPE *", M)
-    assert(M[0].is_file == true)
     assert(plpath.isfile(v:file_name()))
     --==================
-    assert(v:unmaster())
+    assert(v:un_backup_vec())
     assert(not plpath.isfile(v:file_name()))
     -- check isfile == false
     local M = v:me()
     M = ffi.cast("VEC_REC_TYPE *", M)
-    assert(M[0].is_file == false)
     --= flush all chunks and then verify that they have files 
     for i = 1, #C do
       v:backup_chunk(i-1)
@@ -521,7 +520,7 @@ tests.t6 = function()
     --=============================
     --= delete chunk files and then verify that are gone
     for i = 1, #C do
-      v:delete_chunk_file(i-1)
+      v:un_backup_chunk(i-1)
     end
     local V, C = assert(v:me())
     for i = 1, #C do
@@ -529,7 +528,11 @@ tests.t6 = function()
       assert(not chunk[0].is_file)
     end
     assert(v:check())
-    assert(cVector.check_qmem(cdata))
+    if ( mode == "cVector" ) then 
+      assert(cVector.check_qmem(cdata))
+    elseif ( mode == "lVector" ) then 
+      assert(v:check_qmem())
+    end
     --=============================
   end
   print("Successfully completed test t6")
@@ -554,9 +557,6 @@ tests.t7 = function()
     --=============
     local M = assert(v:me())
     M = ffi.cast("VEC_REC_TYPE *", M)
-    assert(
-      math.ceil(M[0].chunk_size_in_bytes / width) == 
-      math.floor(M[0].chunk_size_in_bytes / width))
     --=============
     local num_chunks = 1024
     local D = cmem.new({size = chunk_size * width, qtype=qtype})
@@ -586,7 +586,11 @@ tests.t7 = function()
       assert(M[0].num_elements == exp_num_elements)
 
       assert(v:check())
-      assert(cVector.check_qmem(cdata))
+      if ( mode == "cVector" ) then 
+        assert(cVector.check_qmem(cdata))
+      elseif ( mode == "lVector" ) then 
+        assert(v:check_qmem())
+      end
       
       local chk_D, nD
       if ( mode == "cVector" ) then
@@ -614,8 +618,7 @@ tests.t8 = function()
     local qtype = "I4"
     local width = qconsts.qtypes[qtype].width
     for _, mode in pairs(modes) do 
-      local v 
-    local cdata, g_S
+      local v, cdata 
       if ( mode == "cVector" ) then 
       cdata = qmem.cdata(); assert(type(cdata) == "CMEM")
         v = cVector.new( { qtype = qtype, width = width}, cdata )
@@ -625,17 +628,17 @@ tests.t8 = function()
         error("")
       end
       v:persist()
+      v:memo(true)
       --=============
       local M = v:me()
       M = ffi.cast("VEC_REC_TYPE *", M)
       assert(M[0].is_memo == true)
       assert(M[0].is_persist == true)
-      assert(chunk_size == math.floor(M[0].chunk_size_in_bytes / 
-        qconsts.qtypes[qtype].width))
       --=============
       local num_chunks = 1024
       local D = cmem.new({size = chunk_size * width, qtype = qtype})
-      for chunk_idx = 0, num_chunks-1 do 
+      for i = 1, num_chunks do 
+        local chunk_idx = i - 1
         -- assemble some known data  as 0, 1, 2, 3, ...
         local Dptr = get_ptr(D, qtype)
         local offset = chunk_idx * chunk_size
@@ -644,7 +647,7 @@ tests.t8 = function()
         end
         -- put a chunk of known data 
         if ( mode == "cVector" ) then 
-          cVector.put_chunk(v, D, chunk_size)
+          v:put_chunk(D, chunk_size)
         elseif ( mode == "lVector" ) then 
           v:put_chunk(D)
         else
@@ -677,15 +680,10 @@ tests.t8 = function()
       end
       if ( mode == "lVector" ) then 
         -- Create a vector with the information in y
-        local z = lVector(y)
+        local z = lVector(y) -- equivalebt to lVector.new(y)
         assert(type(z) == "lVector")
       end
-      -- clean up after yourself
-      local ddir = cVector.data_dir()
-      local pldir = require 'pl.dir'
-      pldir.rmtree(ddir)
-      pldir.makepath(ddir)
-      --=====================
+      cleanup() -- clean up after yourself
     end
   end
   print("Successfully completed test t8")
@@ -760,11 +758,7 @@ tests.t9 = function()
         error("")
       end
     end
-    -- clean up after yourself
-    local ddir = cVector.data_dir()
-    local pldir = require 'pl.dir'
-    pldir.rmtree(ddir)
-    pldir.makepath(ddir)
+    cleanup() -- clean up after yourself
   end
   --=====================
   print("Successfully completed test t9")
@@ -774,8 +768,8 @@ tests.t10 = function()
   local status
   -- make the base vector 
   local qtype = "F8"
-  local v = lVector.new( { qtype = qtype} )
-  local n = 2 * cVector.chunk_size() + 17 
+  local v = lVector.new( { qtype = qtype} ):memo(true)
+  local n = 2 * chunk_size + 17 
   for i = 1, n do 
     local s = Scalar.new(i, qtype)
     v:put1(s)
@@ -784,7 +778,7 @@ tests.t10 = function()
     -- make the nn vector 
     local qtype = "B1"
     local nn_v = lVector.new( { qtype = qtype} )
-    local n = 2 * cVector.chunk_size() + 17 
+    local n = 2 * chunk_size + 17 
     for i = 1, n do 
       local s 
       if ( ( i % 2 ) == 0 ) then 
@@ -805,18 +799,18 @@ tests.t10 = function()
   print("Successfully completed test t10")
 end
   --===========================
-tests.t4() -- PASSES 
---[[
 return tests
-tests.t1() -- PASSES
-tests.t2() -- PASSES
-tests.t3() -- PASSES
+--[[
+tests.t1() 
+tests.t2() 
+tests.t3() 
+tests.t4() 
+tests.t5() 
+tests.t6() 
+tests.t7() 
+tests.t8() 
+tests.t9() 
+tests.t10() 
 
-tests.t5() -- PASSES
-tests.t6() -- PASSES
-tests.t7() -- PASSES
-tests.t8() -- PASSES
-tests.t9() -- PASSES
-tests.t10() -- PASSES
 os.exit()
 --]]

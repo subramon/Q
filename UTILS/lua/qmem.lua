@@ -17,7 +17,6 @@ local chunk_dir
 local whole_vecs
 local whole_vec_dir
 local function init(X, P) 
-  print("calling init")
   if ( cdata ) then 
     print("qmem.cdata already initialized")
     return true 
