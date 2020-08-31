@@ -876,7 +876,7 @@ int luaopen_libcmem (lua_State *L) {
   luaL_register(L, NULL, cmem_methods);
 
   /* Register CMEM in types table */
-  int status = luaL_dostring(L, "return require 'Q/UTILS/lua/q_types'");
+  int status = luaL_dostring(L, "return require 'Q/UTILS/lua/register_type'");
   if (status != 0 ) {
     printf("Running require failed:  %s\n", lua_tostring(L, -1));
     exit(1);

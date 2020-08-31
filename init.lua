@@ -88,8 +88,8 @@ _G['g_time'] = {}
 _G['g_ctr']  = {}
 
 --=== Stuff to do at first load time 
-local cVector = require 'libvctr'
-cVector.init_globals({})
+local qmem = require 'Q/UTILS/lua/qmem'
+qmem.init()
 local reset      = os.getenv("Q_RESET")
 local reset_fn   = require 'Q/UTILS/lua/reset'
 local restore_fn = require 'Q/UTILS/lua/restore'

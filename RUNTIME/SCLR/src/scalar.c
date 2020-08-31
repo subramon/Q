@@ -802,17 +802,22 @@ static const struct luaL_Reg sclr_functions[] = {
 */
 
 int luaopen_libsclr (lua_State *L) {
+  int status = 0, nstack;
+  nstack = lua_gettop(L); 
+  if ( nstack != 1 ) { WHEREAMI; exit(1); }   
   /* Create the metatable and put it on the stack. */
   luaL_newmetatable(L, "Scalar");
+  nstack = lua_gettop(L); if ( nstack != 2 ) { WHEREAMI; exit(1); }   
   /* Duplicate the metatable on the stack (We know have 2). */
   lua_pushvalue(L, -1);
+  nstack = lua_gettop(L); if ( nstack != 3 ) { WHEREAMI; exit(1); }   
   /* Pop the first metatable off the stack and assign it to __index
    * of the second one. We set the metatable for the table to itself.
    * This is equivalent to the following in lua:
    * metatable = {}
    * metatable.__index = metatable
    */
-  lua_setfield(L, -2, "__index");
+  lua_setfield(L, -2, "__index"); nstack = lua_gettop(L); 
   lua_pushcfunction(L, l_sclr_to_str); lua_setfield(L, -2, "__tostring");
 
   lua_pushcfunction(L, l_sclr_eq); lua_setfield(L, -2, "__eq");
@@ -831,6 +836,14 @@ int luaopen_libsclr (lua_State *L) {
   // Will not work in 5.1 as per Indrajeet
   // TODO P2 Investigate why this does not work.
   lua_pushcfunction(L, l_sclr_to_num); lua_setfield(L, -2, "__tonumber");
+  /* See error below 
+> x = Q.Scalar.new(123)
+> =x
+123
+> y = tonumber(x)
+> =y
+nil
+*/
   // Above do not work currently
 
   /* Register the object.func functions into the table that is at the 
@@ -838,42 +851,61 @@ int luaopen_libsclr (lua_State *L) {
 
   /* Set the methods to the metatable that should be accessed via
    * object:func */
+  nstack = lua_gettop(L); if ( nstack != 2 ) { WHEREAMI; exit(1); }   
   luaL_register(L, NULL, sclr_methods);
 
-  /* Register Scalar in types table */
-  int status = luaL_dostring(L, "return require 'Q/UTILS/lua/q_types'");
+  /* Register Scalar in types table. Reason is as follows: */
+  /* Suppose we did not do this. When we do x = Scalar.new(123),
+   * type(x) == "userdata". But doing this allows us to get
+   * type(x) == "Scalar" */
+  status = luaL_dostring(L, "return require 'Q/UTILS/lua/register_type'");
   if (status != 0 ) {
     fprintf(stderr, "Running require failed:  %s\n", lua_tostring(L, -1));
     exit(1);
   } 
+  nstack = lua_gettop(L); if ( nstack != 3 ) { WHEREAMI; exit(1); }   
   luaL_getmetatable(L, "Scalar");
+  nstack = lua_gettop(L); if ( nstack != 4 ) { WHEREAMI; exit(1); }   
   lua_pushstring(L, "Scalar");
+  nstack = lua_gettop(L); if ( nstack != 5 ) { WHEREAMI; exit(1); }   
   status =  lua_pcall(L, 2, 0, 0);
   if (status != 0 ) {
      fprintf(stderr, "%d\n", status);
      fprintf(stderr, "Type registration failed: %s\n", lua_tostring(L, -1));
      exit(1);
   }
+  nstack = lua_gettop(L); if ( nstack != 2 ) { WHEREAMI; exit(1); }   
+#endif
   /* Register the object.func functions into the table that is at the
    op of the stack. */
   
   // Registering with Q
+  // This allows us to do 
+  // local Q = require 'Q'
+  // local x = Q.Scalar.new(123)
+  // in addition to 
+  // local Scalar = require 'libsclr'
+  // local x = Scalar.new(123)
   status = luaL_dostring(L, "return require('Q/q_export').export");
   if (status != 0 ) {
     fprintf(stderr, "Q registration require failed:  %s\n", lua_tostring(L, -1));
-    exit(1);
+    WHEREAMI; exit(1);
   }
+  nstack = lua_gettop(L); if ( nstack != 3 ) { WHEREAMI; exit(1); }   
   lua_pushstring(L, "Scalar");
-  lua_createtable(L, 0, 0);
-  // TODO P3: Use lua_newtable(L); instead
-  /* Creates a new empty table and pushes it onto the stack. 
-   * It is equivalent to lua_createtable(L, 0, 0).  */
+  nstack = lua_gettop(L); if ( nstack != 4 ) { WHEREAMI; exit(1); }   
+  lua_newtable(L); // instead of lua_createtable(L, 0, 0);
+  // lua_newtabe() Creates a new empty table and pushes it onto the stack. 
+  nstack = lua_gettop(L); if ( nstack != 5 ) { WHEREAMI; exit(1); }   
   luaL_register(L, NULL, sclr_functions);
   status = lua_pcall(L, 2, 1, 0);
   if (status != 0 ){
      fprintf(stderr, "%d\n", status);
      fprintf(stderr, "q_export registration failed: %s\n", lua_tostring(L, -1));
-     exit(1);
+     WHEREAMI; exit(1);
   }
-  return 1; // TODO P4: Why 1?
+  nstack = lua_gettop(L); if ( nstack != 3 ) { WHEREAMI; exit(1); }   
+  lua_pop(L, 1);
+  nstack = lua_gettop(L); if ( nstack != 2 ) { WHEREAMI; exit(1); }   
+  return 1; // You are returning 1 thing, a table. Hence the 1. 
 }

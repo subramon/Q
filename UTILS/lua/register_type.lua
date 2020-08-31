@@ -5,7 +5,7 @@ local function register_type(obj, name)
   type_map[obj] = name
 end
 
--- TODO P2 Luacheck complains: q_types.lua:8:1: setting read-only global variable type
+-- TODO P2 Luacheck complains: setting read-only global variable type
 type = function(obj)
   local m_table = getmetatable(obj)
   if m_table ~= nil then

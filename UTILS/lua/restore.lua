@@ -1,8 +1,9 @@
 local cutils  = require 'libcutils'
+local qmem    = require 'Q/UTILS/lua/qmem'
 local cVector = require 'libvctr'
 
 local function restore()
-  local data_dir = cVector.get_globals("data_dir") 
+  local data_dir = qmem.q_data_dir
   if ( not cutils.isdir(data_dir)) then
     print("Data directory missing: ", data_dir) return false
   end
@@ -31,7 +32,7 @@ local function restore()
   assert(type(T) == "table")
   local max_file_num = T.max_file_num
   assert(type(max_file_num) == "number")
-  assert(cVector.set_globals("max_file_num", max_file_num))
+  -- TODO TODO P0 assert(cVector.set_globals("max_file_num", max_file_num))
   return true
 end
 return require('Q/q_export').export('restore', restore)

@@ -1,7 +1,7 @@
 local qconsts         = require 'Q/UTILS/lua/q_consts'
 local cmem            = require 'libcmem'
 local cVector         = require 'libvctr'
-local register_type   = require 'Q/UTILS/lua/q_types'
+local register_type   = require 'Q/UTILS/lua/register_type'
 local qc              = require 'Q/UTILS/lua/qcore'
 local to_scalar       = require 'Q/UTILS/lua/to_scalar'
 local lVector         = require 'Q/RUNTIME/VCTR/lua/lVector'

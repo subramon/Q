@@ -1095,7 +1095,7 @@ int luaopen_libvctr (lua_State *L) {
    * object:func */
   luaL_register(L, NULL, vector_methods);
 
-  int status = luaL_dostring(L, "return require 'Q/UTILS/lua/q_types'");
+  int status = luaL_dostring(L, "return require 'Q/UTILS/lua/register_type'");
   if ( status != 0 ) {
     WHEREAMI;
     fprintf(stderr, "Running require failed:  %s\n", lua_tostring(L, -1));

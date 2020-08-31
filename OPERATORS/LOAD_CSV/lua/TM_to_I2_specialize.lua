@@ -1,4 +1,4 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 local function TM_to_I2_specialize(tm_fld)
   local subs = {}
   assert(type(tm_fld) == "string")

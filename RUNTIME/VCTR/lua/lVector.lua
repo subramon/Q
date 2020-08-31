@@ -7,7 +7,7 @@ local cmem		= require 'libcmem'
 local Scalar		= require 'libsclr'
 local cVector		= require 'libvctr'
 local to_scalar		= require 'Q/UTILS/lua/to_scalar'
-local register_type	= require 'Q/UTILS/lua/q_types'
+local register_type	= require 'Q/UTILS/lua/register_type'
 local H                 = require 'Q/RUNTIME/VCTR/lua/helpers'
 
 local qmem              = require 'Q/UTILS/lua/qmem'
