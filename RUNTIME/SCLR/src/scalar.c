@@ -829,6 +829,7 @@ int luaopen_libsclr (lua_State *L) {
 
   // Following do not work currently
   // Will not work in 5.1 as per Indrajeet
+  // TODO P2 Investigate why this does not work.
   lua_pushcfunction(L, l_sclr_to_num); lua_setfield(L, -2, "__tonumber");
   // Above do not work currently
 
@@ -864,6 +865,9 @@ int luaopen_libsclr (lua_State *L) {
   }
   lua_pushstring(L, "Scalar");
   lua_createtable(L, 0, 0);
+  // TODO P3: Use lua_newtable(L); instead
+  /* Creates a new empty table and pushes it onto the stack. 
+   * It is equivalent to lua_createtable(L, 0, 0).  */
   luaL_register(L, NULL, sclr_functions);
   status = lua_pcall(L, 2, 1, 0);
   if (status != 0 ){
