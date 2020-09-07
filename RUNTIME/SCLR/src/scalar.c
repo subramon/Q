@@ -858,23 +858,33 @@ nil
   /* Suppose we did not do this. When we do x = Scalar.new(123),
    * type(x) == "userdata". But doing this allows us to get
    * type(x) == "Scalar" */
+  printf("XXXXXXXXXXXXXXXXX\n");
   status = luaL_dostring(L, "return require 'Q/UTILS/lua/register_type'");
   if (status != 0 ) {
     fprintf(stderr, "Running require failed:  %s\n", lua_tostring(L, -1));
     exit(1);
   } 
+  printf(" check that top of stack is a function (register_type) \n");
+  if ( !lua_isfunction(L, -1)  ) { WHEREAMI; exit(1); }   
   nstack = lua_gettop(L); if ( nstack != 3 ) { WHEREAMI; exit(1); }   
+  //-- put metatable on stack 
   luaL_getmetatable(L, "Scalar");
   nstack = lua_gettop(L); if ( nstack != 4 ) { WHEREAMI; exit(1); }   
+  //--- put string "Scalar" on stack 
   lua_pushstring(L, "Scalar");
   nstack = lua_gettop(L); if ( nstack != 5 ) { WHEREAMI; exit(1); }   
-  status =  lua_pcall(L, 2, 0, 0);
-  if (status != 0 ) {
+  status =  lua_pcall(L, 2, 1, 0);
+  if ( status != 0 ) {
      fprintf(stderr, "%d\n", status);
      fprintf(stderr, "Type registration failed: %s\n", lua_tostring(L, -1));
      exit(1);
   }
-  nstack = lua_gettop(L); if ( nstack != 2 ) { WHEREAMI; exit(1); }   
+  nstack = lua_gettop(L); if ( nstack != 3 ) { WHEREAMI; exit(1); }   
+    // extract return value
+  luaL_checktype(L, 1, LUA_TBOOLEAN);
+  if ( ! lua_isboolean(L,  1) ) { WHEREAMI; return 1; }
+  bool rslt = lua_toboolean(L, 1);
+  if ( !rslt ) { WHEREAMI; exit(1); }
 
   /* Register the object.func functions into the table that is at the
    op of the stack. */
@@ -892,10 +902,13 @@ nil
     WHEREAMI; exit(1);
   }
   nstack = lua_gettop(L); if ( nstack != 3 ) { WHEREAMI; exit(1); }   
+  // check that top of stack is a function (q_export)
+  if ( !lua_isfunction(L, -1)  ) { WHEREAMI; exit(1); }   
+  // ------
   lua_pushstring(L, "Scalar");
   nstack = lua_gettop(L); if ( nstack != 4 ) { WHEREAMI; exit(1); }   
   lua_newtable(L); // instead of lua_createtable(L, 0, 0);
-  // lua_newtabe() Creates a new empty table and pushes it onto the stack. 
+  // lua_newtable() Creates a new empty table and pushes it onto the stack. 
   nstack = lua_gettop(L); if ( nstack != 5 ) { WHEREAMI; exit(1); }   
   luaL_register(L, NULL, sclr_functions);
   status = lua_pcall(L, 2, 1, 0);
