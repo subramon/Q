@@ -858,13 +858,12 @@ nil
   /* Suppose we did not do this. When we do x = Scalar.new(123),
    * type(x) == "userdata". But doing this allows us to get
    * type(x) == "Scalar" */
-  printf("XXXXXXXXXXXXXXXXX\n");
   status = luaL_dostring(L, "return require 'Q/UTILS/lua/register_type'");
   if (status != 0 ) {
     fprintf(stderr, "Running require failed:  %s\n", lua_tostring(L, -1));
     exit(1);
   } 
-  printf(" check that top of stack is a function (register_type) \n");
+  // that top of stack is a function (register_type) 
   if ( !lua_isfunction(L, -1)  ) { WHEREAMI; exit(1); }   
   nstack = lua_gettop(L); if ( nstack != 3 ) { WHEREAMI; exit(1); }   
   //-- put metatable on stack 
@@ -881,13 +880,16 @@ nil
   }
   nstack = lua_gettop(L); if ( nstack != 3 ) { WHEREAMI; exit(1); }   
     // extract return value
-  luaL_checktype(L, 1, LUA_TBOOLEAN);
-  if ( ! lua_isboolean(L,  1) ) { WHEREAMI; return 1; }
-  bool rslt = lua_toboolean(L, 1);
+  luaL_checktype(L, -1, LUA_TBOOLEAN);
+  if ( ! lua_isboolean(L,  -1) ) { WHEREAMI; return 1; }
+  bool rslt = lua_toboolean(L, -1);
   if ( !rslt ) { WHEREAMI; exit(1); }
+  lua_pop(L, 1); 
+  nstack = lua_gettop(L); if ( nstack != 2 ) { WHEREAMI; exit(1); }   
 
   /* Register the object.func functions into the table that is at the
    op of the stack. */
+  luaL_register(L, NULL, sclr_functions);
   
   // Registering with Q
   // This allows us to do 
@@ -901,11 +903,12 @@ nil
     fprintf(stderr, "Q registration require failed:  %s\n", lua_tostring(L, -1));
     WHEREAMI; exit(1);
   }
-  nstack = lua_gettop(L); if ( nstack != 3 ) { WHEREAMI; exit(1); }   
   // check that top of stack is a function (q_export)
+  nstack = lua_gettop(L); if ( nstack != 3 ) { WHEREAMI; exit(1); }   
   if ( !lua_isfunction(L, -1)  ) { WHEREAMI; exit(1); }   
   // ------
   lua_pushstring(L, "Scalar");
+  if ( !lua_isstring(L, -1)  ) { WHEREAMI; exit(1); }   
   nstack = lua_gettop(L); if ( nstack != 4 ) { WHEREAMI; exit(1); }   
   lua_newtable(L); // instead of lua_createtable(L, 0, 0);
   // lua_newtable() Creates a new empty table and pushes it onto the stack. 
