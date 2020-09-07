@@ -875,7 +875,7 @@ nil
      exit(1);
   }
   nstack = lua_gettop(L); if ( nstack != 2 ) { WHEREAMI; exit(1); }   
-#endif
+
   /* Register the object.func functions into the table that is at the
    op of the stack. */
   

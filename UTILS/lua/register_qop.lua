@@ -5,7 +5,7 @@ local function pack(...)
   return { n = select("#", ...), ... }
 end
 
-local function register(expander, qname, ...)
+local function register_qop(expander, qname, ...)
   assert(expander and (type(expander) == "string") and (#expander > 0))
   assert(qname    and (type(qname)    == "string") and (#qname    > 0))
   
@@ -34,4 +34,4 @@ local function register(expander, qname, ...)
   require('Q/q_export').export(qname, qfn)
   return qfn
 end
-return require('Q/q_export').export('register', register)
+return require('Q/q_export').export('register', register_qop)

@@ -1,4 +1,3 @@
--- If not, any other string will work but do not use __ as a prefix
 local ffi               = require 'ffi'
 local qconsts		= require 'Q/UTILS/lua/qconsts'
 local qcfg		= require 'Q/UTILS/lua/qcfg'
