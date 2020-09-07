@@ -24,7 +24,7 @@ RDTSC(
     void
     )
 {
-#ifdef RASPBERRY_PI
+#ifdef ARM
   return get_time_usec();
 #else
   unsigned int hi, lo;

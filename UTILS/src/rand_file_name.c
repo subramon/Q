@@ -11,7 +11,7 @@ static inline uint64_t RDTSC(
     void
     )
 {
-#ifdef RASPBERRY_PI
+#ifdef ARM
   struct timeval Tps; struct timezone Tpf;
   gettimeofday (&Tps, &Tpf);
   return ((uint64_t )Tps.tv_sec + 1000000* (uint64_t )Tps.tv_usec);

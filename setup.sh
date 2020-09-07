@@ -38,7 +38,7 @@ export QC_FLAGS="${QC_FLAGS:=$C_FLAGS}"
 lscpu | grep "Architecture" | grep "arm"
 IS_ARM="`echo $?`"
 if [ ${IS_ARM} -eq 0 ]; then 
-  export QC_FLAGS=" $QC_FLAGS -DRASPBERRY_PI"
+  export QC_FLAGS=" $QC_FLAGS -DARM"
   export Q_IS_ARM="true"
 fi
 echo "QC_FLAGS: $QC_FLAGS"

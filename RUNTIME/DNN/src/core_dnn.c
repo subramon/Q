@@ -8,7 +8,7 @@
 #define BITS_IN_VEC_REG 256
 #define MEMALIGN_BATCH 32
 
-#ifdef RASPBERRY_PI
+#ifdef ARM
 static uint64_t 
 get_time_usec(
     void
@@ -26,7 +26,7 @@ RDTSC(
     )
 //STOP_FUNC_DECL  
 {
-#ifdef RASPBERRY_PI
+#ifdef ARM
   return get_time_usec();
 #else
   unsigned int lo, hi;

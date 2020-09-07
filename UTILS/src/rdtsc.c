@@ -13,7 +13,7 @@ RDTSC(
     )
 //STOP_FUNC_DECL
 {
-#ifdef RASPBERRY_PI
+#ifdef ARM
   return get_time_usec();
 #else
   unsigned int lo, hi;
