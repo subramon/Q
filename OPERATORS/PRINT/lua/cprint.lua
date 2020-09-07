@@ -2,8 +2,8 @@ local cVector  = require 'libvctr'
 local cutils   = require 'libcutils'
 local cmem     = require 'libcmem'
 local ffi      = require 'ffi'
-local qc       = require 'Q/UTILS/lua/q_core'
-local qconsts  = require 'Q/UTILS/lua/q_consts'
+local qc       = require 'Q/UTILS/lua/qcore'
+local qconsts  = require 'Q/UTILS/lua/qconsts'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 
 local function cprint( 

@@ -2,7 +2,7 @@ local Q       = require 'Q/q_export'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local rev_lkp =  require 'Q/UTILS/lua/rev_lkp'
 

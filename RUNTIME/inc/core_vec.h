@@ -1,7 +1,7 @@
 #ifndef __CORE_VEC_H
 #define __CORE_VEC_H
 #include "cmem_struct.h"
-#include "core_vec_struct.h"
+#include "vctr_struct.h"
 
 extern void
 vec_reset_timers(

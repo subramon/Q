@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <sys/time.h>
+#include <time.h>
 #include "q_macros.h"
 //STOP_INCLUDES
 #include "get_time_usec.h"

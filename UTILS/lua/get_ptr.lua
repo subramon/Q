@@ -1,5 +1,5 @@
 local ffi = require 'ffi'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 
 local function ends_with(str, ending)
    return ending == "" or str:sub(-#ending) == ending

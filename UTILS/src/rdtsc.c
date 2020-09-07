@@ -1,3 +1,8 @@
+#include <ctype.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdint.h>
+#include "q_macros.h"
 #include "get_time_usec.h"
 #include "rdtsc.h"
 

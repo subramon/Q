@@ -3,7 +3,7 @@ local pldir  = require 'pl.dir'
 local plpath  = require 'pl.path'
 --=== Following to prune unwanted file
 local blacklist = require 'Q/TEST_RUNNER/blacklist'
-local qconsts	= require 'Q/UTILS/lua/q_consts'
+local qconsts	= require 'Q/UTILS/lua/qconsts'
 local q_src_root = qconsts.Q_SRC_ROOT
 
 local ignore_files = {}

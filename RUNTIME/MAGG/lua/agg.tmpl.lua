@@ -7,7 +7,7 @@ return require 'Q/UTILS/lua/code_gen' {
 #include "lauxlib.h"
 #include "lualib.h"
 // for other run time stuff
-#include "scalar_struct.h"
+#include "sclr_struct.h"
 #include "cmem_struct.h"
 // for hmap/aggregator stuff
 #include "hmap_common.h"
@@ -508,7 +508,7 @@ static const struct luaL_Reg aggregator_functions[] = {
      * object:func */
     luaL_register(L, NULL, aggregator_methods);
 
-    int status = luaL_dostring(L, "return require 'Q/UTILS/lua/q_types'");
+    int status = luaL_dostring(L, "return require 'Q/UTILS/lua/register_type'");
     if ( status != 0 ) {
       WHEREAMI;
       fprintf(stderr, "Running require failed:  %s\n", lua_tostring(L, -1));

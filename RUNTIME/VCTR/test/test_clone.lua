@@ -5,7 +5,7 @@ local ffi     = require 'ffi'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local pldir   = require 'pl.dir'
 

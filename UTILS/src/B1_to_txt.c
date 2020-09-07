@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include "q_macros.h"
 //STOP_INCLUDES
 #include "B1_to_txt.h"

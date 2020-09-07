@@ -9,6 +9,7 @@
 #include <libgen.h>
 #include <regex.h>
 #include <sys/stat.h>
+#include <stdint.h>
 
 #include "luaconf.h"
 #include "lua.h"
@@ -517,7 +518,7 @@ int luaopen_libcutils (lua_State *L) {
   luaL_register(L, NULL, cutils_methods);
 
   /* Register cutils in types table */
-  int status = luaL_dostring(L, "return require 'Q/UTILS/lua/q_types'");
+  int status = luaL_dostring(L, "return require 'Q/UTILS/lua/register_type'");
   if (status != 0 ) {
     printf("Running require failed:  %s\n", lua_tostring(L, -1));
     exit(1);

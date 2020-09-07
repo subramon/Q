@@ -1,5 +1,5 @@
 #!/usr/bin/env lua
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qcfg = require 'Q/UTILS/lua/qcfg'
 local tmpl = dofile 'txt_to_F.tmpl'
 local incdir = "UTILS/inc/"
 local srcdir = "UTILS/src/"
@@ -22,13 +22,13 @@ for k, v in pairs(subs) do
   tmpl.converter = v.converter
   -- print(tmpl 'declaration')
   doth = tmpl 'declaration'
-  local fname = qconsts.Q_SRC_ROOT .. incdir .. "" .. tmpl.fn .. ".h", "w"
+  local fname = qcfg.q_src_root .. incdir .. "" .. tmpl.fn .. ".h", "w"
   local f = assert(io.open(fname, "w"))
   f:write(doth)
   f:close()
   -- print(tmpl 'definition')
   dotc = tmpl 'definition'
-  local fname = qconsts.Q_SRC_ROOT .. srcdir .. "" .. tmpl.fn .. ".c", "w"
+  local fname = qcfg.q_src_root .. srcdir .. "" .. tmpl.fn .. ".c", "w"
   local f = assert(io.open(fname, "w"))
   f:write(dotc)
   f:close()

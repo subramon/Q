@@ -1,7 +1,11 @@
 //START_INCLUDES
+#include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "q_macros.h"
 //STOP_INCLUDES
 #include "get_file_size.h"

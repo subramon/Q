@@ -1,5 +1,5 @@
 local lVector = require 'Q/RUNTIME/lua/lVector'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 
 local function t5()
   -- print("Creating nascent vector with generator")

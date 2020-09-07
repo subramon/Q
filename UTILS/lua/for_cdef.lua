@@ -12,7 +12,7 @@
 --    #define
 -- 4) Return a string with the above
 
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qcfg = require 'Q/UTILS/lua/qcfg'
 local exec    = require 'Q/UTILS/lua/exec_and_capture_stdout'
 local cutils = require 'libcutils'
 -- local plpath = require 'pl.path'
@@ -23,14 +23,14 @@ local function for_cdef(
   subs
   )
   -- print("infile = ", infile)
-  local src_root = qconsts.Q_SRC_ROOT
+  local src_root = qcfg.q_src_root
   assert(type(infile) == "string")
   -- TODO P4: What if no forward slash in infile?
   if ( string.find(infile, "/") ~= 1 ) then
     -- we do not have fully qualified path
     infile = src_root .. "/" .. infile
   end
-  assert(cutils.isfile(infile), infile)
+  assert(cutils.isfile(infile), "File not found: " .. infile)
   -- assert(plpath.isfile(infile), infile)
   local cmd
   if ( incs ) then
@@ -85,5 +85,5 @@ local function for_cdef(
   return rslt
 end
 return for_cdef
--- x = for_cdef("RUNTIME/VCTR/inc/core_vec_struct.h", { "UTILS/inc/" })
+-- x = for_cdef("RUNTIME/VCTR/inc/vctr_struct.h", { "UTILS/inc/" })
 -- print(x)

@@ -1,0 +1,26 @@
+    // TODO P2 Add to chk_chunk, vec_check
+    /* This should be taken care of by qmem code, 
+     * And shoudl be possible to verify using vec_check->chk_chunk 
+    status = mk_file_name(chunk->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+    if ( isfile(file_name) ) { 
+      int64_t expected_file_size = get_exp_file_size(ptr_S, 
+          ptr_S->chunk_size, ptr_vec->field_width, ptr_vec->fldtype);
+      int64_t actual_file_size = get_file_size(file_name);
+      if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
+      chunk->is_file = true; 
+    }
+    */
+  }
+  //
+  // Note that we just accept the master file (after some checking)
+  // we do not "load" it into memory. We delay that until needed
+    /* This should be taken care of by qmem code, 
+     * And shoudl be possible to verify using vec_check->chk_chunk 
+  status = mk_file_name(ptr_vec->uqid, file_name, Q_MAX_LEN_FILE_NAME);
+  if ( isfile(file_name) ) { 
+    int64_t expected_file_size = get_exp_file_size(ptr_S, num_elements,
+        ptr_vec->field_width, ptr_vec->fldtype);
+    int64_t actual_file_size = get_file_size(file_name);
+    if ( actual_file_size != expected_file_size ) { go_BYE(-1); }
+    ptr_vec->file_size = actual_file_size;
+    ptr_vec->is_file = true; 

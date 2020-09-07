@@ -6,10 +6,10 @@ local is_so_file  = require 'Q/UTILS/lua/is_so_file'
 local ffi      = require 'ffi'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 local for_cdef = require 'Q/UTILS/lua/for_cdef'
-local qconsts  = require 'Q/UTILS/lua/q_consts'
+local qcfg  = require 'Q/UTILS/lua/qcfg'
 local cutils  = require 'libcutils'
-local Q_SRC_ROOT   = qconsts.Q_SRC_ROOT .. "/"
-assert(cutils.isdir(Q_SRC_ROOT))
+local q_src_root   = qcfg.q_src_root .. "/"
+assert(cutils.isdir(q_src_root))
 --==================
 
 -- to make sure we do not dynamically compile the same function twice

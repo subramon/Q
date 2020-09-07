@@ -13,6 +13,7 @@ qfns[0] = function () return nil end
 setDefault(qfns, qfns[0])
 
 qfns.export = function(fname, fn) 
+  -- print("type(fn) = ", type(fn))
   -- print("registering function with name ", fname)
   qfns[fname] = fn
   return fn

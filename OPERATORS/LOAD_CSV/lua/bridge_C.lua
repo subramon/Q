@@ -1,6 +1,6 @@
 local ffi     = require 'ffi'
-local qc      = require 'Q/UTILS/lua/q_core'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qc      = require 'Q/UTILS/lua/qcore'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 
 local function bridge_C(
   M, 

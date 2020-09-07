@@ -5,38 +5,44 @@ local ffi     = require 'ffi'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
+local qmem    = require 'Q/UTILS/lua/qmem'
+qmem.init()
+local chunk_size = qmem.chunk_size
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local initialized = false
 local function initialize()
---== cdef necessary stuff
-local for_cdef = require 'Q/UTILS/lua/for_cdef'
-
-local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
-local incs = { "UTILS/inc/" }
-local x = for_cdef(infile, incs)
-ffi.cdef(x)
-
-local infile = "RUNTIME/VCTR/inc/core_vec_struct.h"
-local incs = { "UTILS/inc/" }
-local x = for_cdef(infile, incs)
-ffi.cdef(x)
+ if ( initialized ) then return true end 
+  --== cdef necessary stuff
+  local for_cdef = require 'Q/UTILS/lua/for_cdef'
+  
+  local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
+  local incs = { "UTILS/inc/" }
+  local x = for_cdef(infile, incs)
+  ffi.cdef(x)
+  
+  local infile = "RUNTIME/VCTR/inc/vctr_struct.h"
+  local incs = { "UTILS/inc/" }
+  local x = for_cdef(infile, incs)
+  ffi.cdef(x)
+  initialized = true
 end
---=================================
-local chunk_size = 65536
-local params = { chunk_size = chunk_size, sz_chunk_dir = 4096, 
-    data_dir = qconsts.Q_DATA_DIR }
-cVector.init_globals(params)
 --=================================
 local tests = {}
 -- testing put1 and get1 
 
 tests.t0 = function(delta)
   initialize()
+  local cdata = qmem.cdata(); 
+  assert(type(cdata) == "CMEM")
+  local g_S = ffi.cast("const qmem_struct_t *", cdata:data())
   -- delta allows us to test more than just multiple of chunk size 
   if ( not  delta ) then delta = 0 end 
   local qtype = "SC"
   local width = 4 -- remember 1 byte reserved for nullc
-  local v = cVector.new( { qtype = qtype, width = width} )
+  local v = assert(cVector.new( { qtype = qtype, width = width}, cdata))
+  v:memo(true)
+  assert(v:is_memo() == true)
   --=============
   local n = chunk_size + delta 
   local exp_num_chunks = 0
@@ -61,6 +67,7 @@ tests.t0 = function(delta)
     local sp = ffi.cast("CMEM_REC_TYPE *", s)
     assert(sp.width == width)
     assert(ffi.string(sp.fldtype) == "SC")
+    -- print(i, ffi.string(sp.data))
         if ( ( i % 3 ) == 0 ) then assert(ffi.string(sp.data) == "ABC")
     elseif ( ( i % 3 ) == 1 ) then assert(ffi.string(sp.data) == "DEF")
     elseif ( ( i % 3 ) == 2 ) then assert(ffi.string(sp.data) == "GHI")
@@ -73,14 +80,14 @@ tests.t0 = function(delta)
   v:eov()
   local num_chunks=assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].num_chunks)
   local x = v:shutdown() 
-  assert(ffi.cast("VEC_REC_TYPE *", v:me())[0].is_dead)
   assert(type(x) == "string") 
   assert(#x > 0)
   local y = loadstring(x)()
   assert(type(y) == "table")
   assert(y.num_elements == n)
   assert(y.width == width)
-  local z = assert(cVector.rehydrate(y))
+  local z = assert(cVector.reincarnate(y, cdata))
+  assert(z:check())
   local M = assert(z:me())
   M = ffi.cast("VEC_REC_TYPE *", M)
   -- testing different style of access
@@ -102,8 +109,7 @@ tests.t0 = function(delta)
     elseif ( ( i % 3 ) == 2 ) then assert(ffi.string(sp.data) == "GHI")
     else error("") end 
   end
-  z:check()
-  cVector:check_chunks()
+  assert(z:check())
 
   print("Successfully completed test t0 with n = ", n )
   return true
@@ -122,5 +128,4 @@ return tests
 tests.t0() 
 tests.t1() 
 os.exit()
-
 --]]

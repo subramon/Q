@@ -1,4 +1,4 @@
-local qc		= require 'Q/UTILS/lua/q_core'
+local qc		= require 'Q/UTILS/lua/qcore'
 --====================================
 local function parse_params(params)
   assert(nil, "TODO")
