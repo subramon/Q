@@ -2,7 +2,9 @@
 INCS=-I. \
      	-I../inc/ \
 	-I../../../UTILS/gen_inc/ \
-	-I../../../UTILS/inc 
+	-I../../../UTILS/inc  \
+	-I/usr/include/lua5.1 \
+
 
 all: libcmem.so 
 	cp libcmem.so ${Q_ROOT}/lib/

@@ -3,6 +3,7 @@ INCS=-I. -I../inc/ \
 	-I../../../UTILS/gen_inc/ \
 	-I../../../UTILS/inc \
 	-I../../CMEM/inc \
+	-I/usr/include/lua5.1 \
 
 all: libsclr.so 
 	cp libsclr.so ${Q_ROOT}/lib/

@@ -2,7 +2,8 @@ CFLAGS=${QC_FLAGS}
 INCS=-I. \
      	-I../inc/ \
 	-I../../../UTILS/inc/ \
-	-I../../../UTILS/inc 
+	-I../../../UTILS/inc  \
+	-I/usr/include/lua5.1 \
 
 
 all: libcutils.so 

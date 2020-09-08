@@ -26,21 +26,23 @@ C_FLAGS+=" -Wmissing-declarations -Wredundant-decls -Wnested-externs "
 C_FLAGS+=" -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith "
 C_FLAGS+=" -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings "
 C_FLAGS+=" -Wold-style-definition -Wsuggest-attribute=noreturn "
-C_FLAGS+=" -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference "
-C_FLAGS+=" -Wduplicated-branches -Wrestrict "
+
 #
 # CFLAGS+= -fsanitize=address -fno-omit-frame-pointer 
 # CFLAGS+= -fsanitize=undefined
 # https://lemire.me/blog/2016/04/20/no-more-leaks-with-sanitize-flags-in-gcc-and-clang/
 # NOT DOING THIS BECUASE WILL HAVE TO REWRITE TOO MUCH -Wjump-misses-init
 # New GCC 6/7 flags:
-export QC_FLAGS="${QC_FLAGS:=$C_FLAGS}"
 lscpu | grep "Architecture" | grep "arm"
 IS_ARM="`echo $?`"
 if [ ${IS_ARM} -eq 0 ]; then 
-  export QC_FLAGS=" $QC_FLAGS -DARM"
+  C_FLAGS+=" -DARM "
   export Q_IS_ARM="true"
+else
+  C_FLAGS+=" -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference "
+  C_FLAGS+=" -Wduplicated-branches -Wrestrict "
 fi
+export QC_FLAGS="${QC_FLAGS:=$C_FLAGS}"
 echo "QC_FLAGS: $QC_FLAGS"
 #-----------------------------------
 QISPC_FLAGS=' --pic  ' #- TODO to be set  P2
