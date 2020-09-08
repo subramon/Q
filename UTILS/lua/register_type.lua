@@ -14,7 +14,6 @@ end
 -- However, we have to let this pass since we are re-defining 
 -- the function type to be this function shown below
 type = function(obj)
-  print("xxx")
   local m_table = getmetatable(obj)
   if m_table ~= nil then
     local d_type = type_map[m_table]

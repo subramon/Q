@@ -70,7 +70,7 @@ cd luaffi-master
 if [ "$Q_IS_ARM" == "true" ]; then 
   cp $Q_SRC_ROOT/EXTERNAL/call_arm.h /tmp/luaffi-master
 fi
-make
+make posix
 cp ffi.so $HOME/local/Q/lib/
 # following to protect ffi.so from accidental deletion
 cp -r /tmp/luaffi-master $HOME/local/Q/ 
