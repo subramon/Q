@@ -1,11 +1,12 @@
-local qc      = require 'Q/UTILS/lua/q_core'
+local qc      = require 'Q/UTILS/lua/qcore'
+local qmem    = require 'Q/UTILS/lua/qcore'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
-local cVector = require 'libvctr'
+local qmem   = require 'libvctr'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
-local csz    = cVector.chunk_size()
+local csz    = qmem.chunk_size
 
 return function (a, largs)
   -- Get name of specializer function. By convention

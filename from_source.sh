@@ -1,12 +1,11 @@
 #!/bin/bash
 set -e 
 #--- for ispc
-cd
-git clone https://github.com/ispc/ispc.git ispc
-cd ispc
-export ISPC_HOME=$PWD
-export LLVM_HOME=$PWD
-python3 alloy.py -b --version=10.0 --selfbuild
+# git clone https://github.com/ispc/ispc.git ispc
+# cd ispc
+# export ISPC_HOME=$PWD
+# export LLVM_HOME=$PWD
+# python3 alloy.py -b --version=10.0 --selfbuild
 #--- for curl 
 rm -r -f /tmp/curl/ \
  && cd /tmp/ \
@@ -70,9 +69,11 @@ cd luaffi-master
 if [ "$Q_IS_ARM" == "true" ]; then 
   cp $Q_SRC_ROOT/EXTERNAL/call_arm.h /tmp/luaffi-master
 fi
-make posix
-cp ffi.so $HOME/local/Q/lib/
+make
 # following to protect ffi.so from accidental deletion
+me=`whoami`
+cd ..
+chown -R $me luaffi-master
 cp -r /tmp/luaffi-master $HOME/local/Q/ 
 
 ### For bison for ispc

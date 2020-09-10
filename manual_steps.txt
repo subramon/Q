@@ -8,3 +8,7 @@ export PATH=$PATH:$HOME/ISPC/ispc-v1.13.0-linux/bin
 
 I have a hack in UTILS/build/Makefile to 
 cp ~/luaffi/ffi.so into $Q_ROOT/lib/
+
+#-----------------
+# export PATH=<path_to_where_llvm_is unpacked>/bin-10.0/bin:$PATH
+export PATH="$HOME/bin-10.0/bin:$PATH
