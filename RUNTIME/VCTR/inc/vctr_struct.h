@@ -2,7 +2,7 @@
 #define __VEC_STRUCT_H
 #include "qmem_struct.h"
 //START_FOR_CDEF
-#include "q_constants.h"
+#include "cmem_constants.h"
 
 typedef struct _vec_rec_type {
   char fldtype[Q_MAX_LEN_QTYPE_NAME+1]; // set by vec_new()

@@ -11,9 +11,9 @@ local qmem      = require 'Q/UTILS/lua/qmem'
 local chunk_size = qmem.chunk_size
 
 -- cdef the necessary struct within pcall to prevent error on second call
-local incs = { "UTILS/inc/" }
+local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
 qc.q_cdef("OPERATORS/S_TO_F/inc/seq_struct.h", incs)
-qc.q_cdef("RUNTIME/SCLR/inc/scalar_struct.h", incs)
+qc.q_cdef("RUNTIME/SCLR/inc/sclr_struct.h", incs)
 return function (
   largs
   )

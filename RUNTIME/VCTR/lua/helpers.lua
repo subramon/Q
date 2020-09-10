@@ -112,7 +112,7 @@ helpers.mk_boolean = function(inval, default_val)
   return inval
 end
 
-helpers.is_multiple_of_chunk_size = function(n, m)
+helpers.is_multiple = function(n, m)
   if ( n == 0 ) then return true end 
   assert(m > 0)
   if ( math.ceil(n / m ) == math.floor(n / m ) ) then

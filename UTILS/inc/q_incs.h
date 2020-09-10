@@ -31,7 +31,5 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-#include "q_constants.h"
 #include "q_macros.h"
-
 #endif

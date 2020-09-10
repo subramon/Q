@@ -1,3 +1,9 @@
+Remove cVector.chunk_size
+Use qcfg.ISPC 
+Move q_core   to qcore
+Move q_consts to q_consts
+
+
 F1S1OPF2
 How to use ispc for bits? See if this helps
 https://software.intel.com/content/www/us/en/develop/blogs/processing-arrays-of-bits-with-intel-advanced-vector-extensions-512-intel-avx-512.html

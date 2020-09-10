@@ -1,11 +1,11 @@
 local cutils    = require 'libcutils'
-local qconsts   = require 'Q/UTILS/lua/q_consts'
 local Reducer   = require 'Q/RUNTIME/RDCR/lua/Reducer'
-local qc        = require 'Q/UTILS/lua/q_core'
+local qconsts   = require 'Q/UTILS/lua/qconsts'
+local qc        = require 'Q/UTILS/lua/qcore'
+local qmem      = require 'Q/UTILS/lua/qmem'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
-local cVector   = require 'libvctr'
-local csz = cVector.chunk_size()
+local csz       = qmem.chunk_size
 
 return function (a, x, optargs)
   -- Return early if you have cached the result of a previous call

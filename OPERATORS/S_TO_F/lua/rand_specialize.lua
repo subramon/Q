@@ -6,14 +6,16 @@ local Scalar    = require 'libsclr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
-local qconsts   = require 'Q/UTILS/lua/q_consts'
-local qc        = require 'Q/UTILS/lua/q_core'
+local qconsts   = require 'Q/UTILS/lua/qconsts'
+local qc        = require 'Q/UTILS/lua/qcore'
+local qmem      = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 -- cdef the necessary struct within pcall to prevent error on second call
-local incs = { "UTILS/inc/" }
+local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
 qc.q_cdef("UTILS/inc/drand_struct.h")
 qc.q_cdef("OPERATORS/S_TO_F/inc/rand_struct.h", incs)
-qc.q_cdef("RUNTIME/SCLR/inc/scalar_struct.h", incs)
+qc.q_cdef("RUNTIME/SCLR/inc/sclr_struct.h", incs)
 return function (
   largs
   )
@@ -29,7 +31,7 @@ return function (
   subs.len = len
   subs.out_qtype = qtype
   subs.out_ctype = qconsts.qtypes[qtype].ctype
-  subs.out_buf_size = cVector.chunk_size() * qconsts.qtypes[qtype].width
+  subs.out_buf_size = chunk_size * qconsts.qtypes[qtype].width
   subs.cst_out_as = subs.out_ctype .. " * "
   --=======================
   -- set up args for C code

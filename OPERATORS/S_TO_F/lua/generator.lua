@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 local ffi      = require 'ffi'
-local qconsts  =  require 'Q/UTILS/lua/q_consts'
+local qconsts  =  require 'Q/UTILS/lua/qconsts'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 local check_subs = require 'Q/OPERATORS/S_TO_F/lua/check_subs'
 local plpath   = require "pl.path"

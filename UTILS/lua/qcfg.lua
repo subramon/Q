@@ -30,6 +30,10 @@ else
   qcfg.qc_flags	= assert(os.getenv("QC_FLAGS"))
 end
 --==================================
+qcfg.use_ispc = false
+if ( os.getenv("QISPC") ) then
+  qcfg.use_ispc = true
+end
 if ( not os.getenv("QISPC_FLAGS") ) then
   qcfg.qispc_flags = " --pic "
 else

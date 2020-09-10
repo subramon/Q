@@ -1,8 +1,9 @@
 -- Quick and dirty test
 require 'Q/UTILS/lua/strict'
 local Scalar  = require 'libsclr'
-local cVector = require 'libvctr'
+local qmem    = require 'Q/UTILS/lua/qmem'
 local Q       = require 'Q'
+local chunk_size = qmem.chunk_size
 local x, y, z, n1, n2
 --=====================================
 local T = {}
@@ -40,11 +41,11 @@ print("max ", n1, n2)
 n1, n2 = Q.sum(y):eval()
 print("sum ", n1, n2)
 
-local len = cVector.chunk_size() + 17
-x = Q.const({val = 1, qtype = "I1", len = len})
-y = Q.const({val = 1, qtype = "F4", len =  len})
+local len = chunk_size + 17
+x = Q.const({val = 1, qtype = "I1", len = len}):memo(true)
+y = Q.const({val = 1, qtype = "F4", len =  len}):memo(true)
 for i = 1, 10 do 
-  z = Q.vvadd(x, y)
+  z = Q.vvadd(x, y):memo(true)
   n1, n2 = Q.sum(z):eval()
   assert(n1 == Scalar.new(2*len))
 end

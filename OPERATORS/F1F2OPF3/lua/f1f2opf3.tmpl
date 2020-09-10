@@ -1,0 +1,47 @@
+return require 'Q/UTILS/lua/code_gen' {
+   declaration = [[
+#include <math.h>
+#include <omp.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+//START_FOR_CDEF
+extern int
+${fn}(  
+      ${f1_ctype} * const restrict in1,  
+      ${f2_ctype} * const restrict in2,  
+      uint32_t nR,  
+      void *dummy,
+      ${f3_ctype} * restrict out 
+      ) 
+;
+//STOP_FOR_CDEF
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+
+int
+${fn}(  
+      ${f1_ctype} * const restrict in1,  
+      ${f2_ctype} * const restrict in2,  
+      uint32_t nR,  
+      void *dummy,
+      ${f3_ctype} * restrict out 
+      )
+
+{ 
+  int status = 0;
+#pragma omp parallel for schedule(static)
+  for ( uint32_t i = 0; i < nR; i++ ) {  
+    ${f1_ctype} a = in1[i]; 
+    ${f2_ctype} b = in2[i]; 
+    ${f3_ctype} c;
+    ${code}
+    out[i] = c;
+  } 
+  return status;
+}
+   ]]
+}

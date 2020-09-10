@@ -1,4 +1,3 @@
-local qconsts   = require 'Q/UTILS/lua/q_consts'
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
 local Scalar    = require 'libsclr'
@@ -6,12 +5,13 @@ local lVector   = require 'Q/RUNTIME/VCTR/lua/lVector'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local rev_lkp   = require 'Q/UTILS/lua/rev_lkp'
-local qconsts   = require 'Q/UTILS/lua/q_consts'
+local qconsts   = require 'Q/UTILS/lua/qconsts'
+local qmem      = require 'Q/UTILS/lua/qmem'
 local good_qtypes = rev_lkp({ "I1", "I2", "I4", "I8", "F4", "F8"})
-local qc        = require 'Q/UTILS/lua/q_core'
+local qc        = require 'Q/UTILS/lua/qcore'
 
 qc.q_cdef("OPERATORS/F_TO_S/inc/minmax_struct.h", { "UTILS/inc/" })
-qc.q_cdef("RUNTIME/SCLR/inc/scalar_struct.h", { "UTILS/inc/" })
+qc.q_cdef("RUNTIME/SCLR/inc/sclr_struct.h", { "UTILS/inc/" })
 
 return function (operator, x, optargs)
   assert(type(operator) == "string")
@@ -69,6 +69,6 @@ return function (operator, x, optargs)
   subs.tmpl   = "OPERATORS/F_TO_S/lua/minmax.tmpl"
   subs.incs = { "UTILS/inc", "OPERATORS/F_TO_S/inc/", "OPERATORS/F_TO_S/gen_inc/", }
   subs.structs = { "OPERATORS/F_TO_S/inc/minmax_struct.h",
-                   "RUNTIME/SCLR/inc/scalar_struct.h" }
+                   "RUNTIME/SCLR/inc/sclr_struct.h" }
   return subs
 end

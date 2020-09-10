@@ -37,7 +37,6 @@ f1f2opf3_specializers: \
 	vvandnot_specialize.lua  \
 	\
 	vvrem_specialize.lua 
-	luajit gen_specializers.lua 
 
 
 #----------------------------------
@@ -68,42 +67,6 @@ clean :
 	rm -f _*
 	rm -f *.so
 		
-vvadd_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-vvsub_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-vvmul_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-vvdiv_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-#-------
-vvgeq_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-vvneq_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-vvleq_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-vveq_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-vvgt_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-vvlt_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-#-------
-vvrem_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-#-------
-vvand_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-vvor_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-vvxor_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-vvandnot_specialize.lua : f1f2opf3_specialize.tmpl
-	lua gen_specializers.lua 
-#-------
-#-------
-#-------
 #-------
 
 libf1f2opf3.so : _concat_files _arith_files _bop_files 

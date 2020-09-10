@@ -940,7 +940,7 @@ vec_put_chunk(
       // following to tell cmem that it is okay for data to be NULL
       // when its free is invoked
       strcpy(ptr_cmem->fldtype, "XXX");
-      strcpy(ptr_cmem->cell_name, "Uninitialized");
+      free_if_non_null(ptr_cmem->cell_name);
       //-----
       ptr_vec->num_elements += num_elements;
       return 0;

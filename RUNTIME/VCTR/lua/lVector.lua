@@ -15,7 +15,7 @@ local chunk_size        = qmem.chunk_size
 local cdata             = qmem.cdata()
 
 local qc                = require 'Q/UTILS/lua/qcore'
-qc.q_cdef( "RUNTIME/VCTR/inc/vctr_struct.h",{ "UTILS/inc/" })
+qc.q_cdef( "RUNTIME/VCTR/inc/vctr_struct.h",{ "RUNTIME/CMEM/inc", "UTILS/inc/" })
 -- TO DELETE TODO qc.q_cdef("UTILS/inc/qmem_struct.h")
 --====================================
 local lVector = {}

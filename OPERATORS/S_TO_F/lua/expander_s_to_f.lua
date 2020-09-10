@@ -1,9 +1,8 @@
 local qc      = require 'Q/UTILS/lua/qcore'
-local qmem    = require 'Q/UTILS/lua/qcore'
+local qmem    = require 'Q/UTILS/lua/qmem'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
-local qmem   = require 'libvctr'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 local csz    = qmem.chunk_size

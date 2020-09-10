@@ -7,6 +7,9 @@ unset Q_ROOT
 unset QC_FLAGS
 unset Q_DATA_DIR
 
+# TODO FIX Should not be hard coded here
+export QISPC="true"
+
 # Wont work with simlinks
 Q_SRC_ROOT="$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
 export Q_SRC_ROOT="${Q_SRC_ROOT}"
@@ -47,6 +50,7 @@ echo "QC_FLAGS: $QC_FLAGS"
 #-----------------------------------
 QISPC_FLAGS=' --pic  ' #- TODO to be set  P2
 echo "QISPC_FLAGS: $QISPC_FLAGS"
+echo "QISPC: $QISPC"
 #-----------------------------------
 # Default data directory
 mkdir -p $Q_ROOT/data

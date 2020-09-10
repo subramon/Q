@@ -1,14 +1,15 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
 local cVector = require 'libvctr'
 local cutils  = require 'libcutils'
 local plpath  = require 'pl.path'
 local ffi     = require 'ffi'
-local qc      = require 'Q/UTILS/lua/q_core'
+local qc      = require 'Q/UTILS/lua/qcore'
+local qconsts = require 'Q/UTILS/lua/qconsts'
+local qmem    = require 'Q/UTILS/lua/qmem'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local cmem    = require 'libcmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
-local chunk_size = cVector.chunk_size()
+local chunk_size = qmem.chunk_size
 
 local function expander_f1f2opf3(a, f1 , f2, optargs )
   local sp_fn_name = "Q/OPERATORS/F1F2OPF3/lua/" .. a .. "_specialize"

@@ -1,1 +1,4 @@
 Handle the case of B1 for comparison operators ==, != and so on
+
+Handle the case of QISPC for all operators
+
