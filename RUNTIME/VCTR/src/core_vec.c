@@ -1144,9 +1144,32 @@ vec_clone(
   status = vec_new(ptr_S, ptr_out_vec, ptr_in_vec->fldtype, 
       ptr_in_vec->field_width, 0, ptr_in_vec->num_chunks);
   cBYE(status);
-  if ( is_vec_file(ptr_S, ptr_in_vec) ) {
-    // TODO: Make a copy of this file for out_vec
+  //  If in vec has a master file, make one for out_vec
+  status = duplicate_vec_file(
+    ptr_in_vec->whole_vec_dir_idx, ptr_out_vec->whole_vec_dir_idx);
+  int
+  duplicate_vec_file(
+      uint32_t in_idx, 
+      uint32_t out_idx)
+  {
+    int status = 0;
+    char *in_file_name = NULL;
+    char *out_file_name = NULL;
+  WHOLE_VEC_REC_TYPE *in_w  = ptr_S->whole_vec_dir->whole_vecs + in_idx;
+  WHOLE_VEC_REC_TYPE *out_w = ptr_S->whole_vec_dir->whole_vecs + out_idx;
+  if ( in_w->uqid == out_w->uqid ) { go_BYE(-1); } 
+  if ( out_w->is_file ) { go_BYE(-1); } 
+  if ( in_w->is_file ) {  
+    status = mk_file_name(ptr_S, in_w->uqid, &in_file_name); cBYE(status);
+    status = mk_file_name(ptr_S, out_w->uqid, &out_file_name); cBYE(status);
+    status = copy_file(in_file_name, out_file_name); cBYE(status);
   }
+BYE:
+    free_if_non_null(in_file_name);
+    free_if_non_null(out_file_name);
+    return status;
+  }
+  //-------------------------
 
   ptr_out_vec->num_elements = ptr_in_vec->num_elements; 
   ptr_out_vec->num_chunks   = ptr_in_vec->num_chunks;

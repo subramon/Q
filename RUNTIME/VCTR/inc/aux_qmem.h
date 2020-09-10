@@ -141,3 +141,8 @@ load_chunk_from_vec(
     VEC_REC_TYPE *ptr_v, 
     uint32_t chunk_num
     );
+extern int
+duplicate_vec_file(
+      uint32_t in_idx, 
+      uint32_t out_idx
+      );

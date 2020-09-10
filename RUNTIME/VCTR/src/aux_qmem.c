@@ -743,3 +743,25 @@ is_chunk_file(
     ptr_S->chunk_dir->chunks + chunk_dir_idx;
   return c->is_file;
 }
+int
+duplicate_vec_file(
+    uint32_t in_idx, 
+    uint32_t out_idx)
+{
+  int status = 0;
+  char *in_file_name = NULL;
+  char *out_file_name = NULL;
+  WHOLE_VEC_REC_TYPE *in_w  = ptr_S->whole_vec_dir->whole_vecs + in_idx;
+  WHOLE_VEC_REC_TYPE *out_w = ptr_S->whole_vec_dir->whole_vecs + out_idx;
+  if ( in_w->uqid == out_w->uqid ) { go_BYE(-1); } 
+  if ( out_w->is_file ) { go_BYE(-1); } 
+  if ( in_w->is_file ) {  
+    status = mk_file_name(ptr_S, in_w->uqid, &in_file_name); cBYE(status);
+    status = mk_file_name(ptr_S, out_w->uqid, &out_file_name); cBYE(status);
+    status = copy_file(in_file_name, out_file_name); cBYE(status);
+  }
+BYE:
+  free_if_non_null(in_file_name);
+  free_if_non_null(out_file_name);
+  return status;
+}
