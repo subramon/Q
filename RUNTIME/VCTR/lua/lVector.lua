@@ -15,7 +15,8 @@ local chunk_size        = qmem.chunk_size
 local cdata             = qmem.cdata()
 
 local qc                = require 'Q/UTILS/lua/qcore'
-qc.q_cdef( "RUNTIME/VCTR/inc/vctr_struct.h",{ "RUNTIME/CMEM/inc", "UTILS/inc/" })
+local incs              = { "RUNTIME/CMEM/inc", "UTILS/inc/" }
+qc.q_cdef( "RUNTIME/VCTR/inc/vctr_struct.h", incs)
 -- TO DELETE TODO qc.q_cdef("UTILS/inc/qmem_struct.h")
 --====================================
 local lVector = {}
@@ -470,19 +471,14 @@ end
 
 function lVector:clone()
   local v2, nn_v2
-  local v1 = self._base_vec
-  assert(v1:is_eov())
-  cVector.master(v1, cdata)
-  local x, y = cVector.reincarnate(v1, cdata)
-  assert(x, y)
-  assert(type(x) == "string")
-  local y = loadstring(x)()
-  assert(type(y) == "table")
-  local v2 = lVector.new(y)
-  assert(type(v2) == "lVector")
-  if ( self._nn_vec ) then
-    error("TODO P1 Not implemented as yet")
-  end
+  local v1    = self._base_vec
+  local nn_v1 = self._nn_vec
+  v2 = cVector.clone(v1, cdata)
+  if ( not v2 ) then print("clone failed") return nil end 
+  if ( nn_v1 ) then 
+    nn_v2 = cVector.reincarnate(nn_v1, cdata)
+    if ( not nn_v2 ) then print("clone failed on nn_vec") return nil end 
+  end 
   return v2, nn_v2
 end
 

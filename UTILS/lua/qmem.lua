@@ -27,6 +27,7 @@ local function init(X, P)
     cst_cdata = ffi.cast("qmem_struct_t *", X:data())
     return true
   end
+  print("Initializing qmem")
   --================================
   local Q_CHUNK_SIZE         = 65536
   local Q_INITIAL_NUM_CHUNKS = 262144

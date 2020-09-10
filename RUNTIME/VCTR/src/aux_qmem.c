@@ -447,6 +447,9 @@ qmem_un_backup_vec(
       }
     }
   }
+  // When control come here, either 
+  // (1) is_hard == true or
+  // (2) chunks have data so no loss by deleting vector's file 
   status = mk_file_name(ptr_S, v->uqid, &file_name); cBYE(status);
   status = remove(file_name); cBYE(status);
   w->is_file = false;
@@ -682,9 +685,7 @@ qmem_delete_vec(
     ptr_S->whole_vec_dir->whole_vecs + ptr_vec->whole_vec_dir_idx;
   if ( w->uqid != ptr_vec->uqid ) { go_BYE(-1); } 
   
-
   status = qmem_un_backup_vec(ptr_S, ptr_vec, is_hard); cBYE(status);
-
   status = qmem_un_backup_chunks(ptr_S, ptr_vec, is_hard); cBYE(status);
   // clean out space in data structures
   memset(w, 0, sizeof(WHOLE_VEC_REC_TYPE));

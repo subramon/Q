@@ -20,7 +20,7 @@ local function initialize()
   local for_cdef = require 'Q/UTILS/lua/for_cdef'
   
   local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
-  local incs = { "UTILS/inc/" }
+  local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
   local x = for_cdef(infile, incs)
   ffi.cdef(x)
   initialized = true
@@ -680,7 +680,7 @@ tests.t8 = function()
       end
       if ( mode == "lVector" ) then 
         -- Create a vector with the information in y
-        local z = lVector(y) -- equivalebt to lVector.new(y)
+        local z = lVector(y) -- equivalent to lVector.new(y)
         assert(type(z) == "lVector")
       end
       cleanup() -- clean up after yourself

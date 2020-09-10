@@ -42,26 +42,6 @@ f1f2opf3_specializers: \
 #----------------------------------
 clean :
 	rm -f f1f2opf3.lua
-#-----------
-	rm -f vvadd_specialize.lua
-	rm -f vvsub_specialize.lua
-	rm -f vvmul_specialize.lua
-	rm -f vvdiv_specialize.lua 
-#-------------
-	rm -f vveq_specialize.lua
-	rm -f vvneq_specialize.lua
-	rm -f vvgeq_specialize.lua
-	rm -f vvleq_specialize.lua
-	rm -f vvgt_specialize.lua
-	rm -f vvlt_specialize.lua
-#-------------
-	rm -f vvrem_specialize.lua
-#-------------
-	rm -f vvand_specialize.lua
-	rm -f vvor_specialize.lua
-	rm -f vvxor_specialize.lua
-	rm -f vvandnot_specialize.lua
-#-------------
 	rm -r -f ../gen_src; 
 	rm -r -f ../gen_inc; 
 	rm -f _*

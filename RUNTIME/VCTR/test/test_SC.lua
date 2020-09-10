@@ -17,12 +17,12 @@ local function initialize()
   local for_cdef = require 'Q/UTILS/lua/for_cdef'
   
   local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
-  local incs = { "UTILS/inc/" }
+  local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
   local x = for_cdef(infile, incs)
   ffi.cdef(x)
   
   local infile = "RUNTIME/VCTR/inc/vctr_struct.h"
-  local incs = { "UTILS/inc/" }
+  local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
   local x = for_cdef(infile, incs)
   ffi.cdef(x)
   initialized = true

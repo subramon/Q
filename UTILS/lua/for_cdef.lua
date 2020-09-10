@@ -80,7 +80,7 @@ local function for_cdef(
 
   -- check that you do not get back empty string
   local chk = string.gsub(rslt, "%s", "")
-  assert(#chk > 0, tmpfile, infile)
+  assert(#chk > 0, "infile = " .. infile)
   --==============
   return rslt
 end

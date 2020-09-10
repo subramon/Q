@@ -17,12 +17,12 @@ local initialized = false
 local function initialize()
   if ( initialized ) then return true end 
   local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
-  local incs = { "UTILS/inc/" }
+  local incs = { "RUNTIME/CMEM/inc", "UTILS/inc/" }
   local x = for_cdef(infile, incs)
   ffi.cdef(x)
   
   local infile = "RUNTIME/VCTR/inc/vctr_struct.h"
-  local incs = { "UTILS/inc/" }
+  local incs = { "RUNTIME/CMEM/inc", "UTILS/inc/" }
   local x = for_cdef(infile, incs)
   ffi.cdef(x)
   initialized = true 
@@ -38,18 +38,7 @@ tests.t0 = function(incr)
   local qtype = "B1"
   local width = 1
   local cdata = qmem.cdata(); assert(type(cdata) == "CMEM")
-  local g_S = ffi.cast("const qmem_struct_t *", cdata:data())
   
-  --[[
-  print(g_S)
-  print(g_S[0].max_mem_KB)
-  print(g_S[0].now_mem_KB)
-  print(ffi.string(g_S[0].q_data_dir))
-  print("n  = ", g_S[0].chunk_dir[0].n)
-  print("sz = ", g_S[0].chunk_dir[0].sz)
-  print("n  = ", g_S[0].whole_vec_dir[0].n)
-  print("sz = ", g_S[0].whole_vec_dir[0].sz)
-  --]]
 
   local v = assert(cVector.new({ qtype = qtype, width = width }, cdata))
   v:memo(true)
@@ -119,6 +108,18 @@ tests.t0 = function(incr)
   else
     assert(#y.chunk_uqids == 1 ) 
   end
+
+--[[
+  local g_S = ffi.cast("const qmem_struct_t *", cdata:data())
+  print(g_S)
+  print(g_S[0].max_mem_KB)
+  print(g_S[0].now_mem_KB)
+  print(ffi.string(g_S[0].q_data_dir))
+  print("n  = ", g_S[0].chunk_dir[0].n)
+  print("sz = ", g_S[0].chunk_dir[0].sz)
+  print("n  = ", g_S[0].whole_vec_dir[0].n)
+  print("sz = ", g_S[0].whole_vec_dir[0].sz)
+  --]]
 
   local z = assert(cVector.reincarnate(y, cdata))
   assert(z:check())

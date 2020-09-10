@@ -40,7 +40,7 @@ return function (
   assert(is_inttype[f3_qtype])
   
 
-  subs.fn = "vvrem_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
+  subs.fn = "vvand_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
 
   subs.f1_ctype = qconsts.qtypes[f1_qtype].ctype
@@ -56,7 +56,7 @@ return function (
   subs.cargs = nil
   subs.cst_cargs = ffi.NULL
 
-  subs.code = " c = a  b; "
+  subs.code = " c = a & b; "
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"

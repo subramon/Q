@@ -156,11 +156,6 @@ extern char *
 vec_get_buf(
   VEC_REC_TYPE *ptr_vec
 );
-extern int 
-vec_clone(
-    VEC_REC_TYPE *ptr_old_vec,
-    VEC_REC_TYPE *ptr_new_vec
-    );
 extern int
 vec_delete(
     qmem_struct_t *ptr_S,
@@ -229,5 +224,11 @@ vec_make_chunk_files(
 extern int
 vec_check_qmem(
     qmem_struct_t *ptr_S
+    );
+extern int 
+vec_clone(
+    qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *ptr_in_vec,
+    VEC_REC_TYPE *ptr_out_vec
     );
 #endif

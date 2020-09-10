@@ -138,8 +138,12 @@ vec_free(
     return status; // TODO P4 Should this be an error?
   }
   // delete all resources for this vector (modulo what is_persist says)
-  status = qmem_delete_vec(ptr_S, ptr_vec, false); cBYE(status);
+  bool is_hard;
+  if ( ptr_vec->is_persist ) { is_hard = false; } else { is_hard = true; }
+  status = qmem_delete_vec(ptr_S, ptr_vec, is_hard);
+  cBYE(status);
   free_if_non_null(ptr_vec->name); 
+  free_if_non_null(ptr_vec->chunks); 
   memset(ptr_vec, '\0', sizeof(VEC_REC_TYPE));
   ptr_vec->is_dead = true;
   // Don't do this in C. Lua will do it: free(ptr_vec);
@@ -1118,6 +1122,57 @@ vec_reincarnate(
   ptr_vec->is_memo    = true;
   ptr_vec->is_persist = true;
   ptr_vec->g_S        = ptr_S;
+  //------------
+BYE:
+  return status;
+}
+int 
+vec_clone(
+    qmem_struct_t *ptr_S,
+    VEC_REC_TYPE *ptr_in_vec,
+    VEC_REC_TYPE *ptr_out_vec
+    )
+{
+  int status = 0;
+
+  if ( ptr_in_vec  == NULL ) { go_BYE(-1); }
+  if ( ptr_out_vec == NULL ) { go_BYE(-1); }
+  if ( ptr_in_vec->is_dead ) { go_BYE(-1); }
+  if ( !ptr_in_vec->is_eov ) { go_BYE(-1); }
+  //----------------
+
+  status = vec_new(ptr_S, ptr_out_vec, ptr_in_vec->fldtype, 
+      ptr_in_vec->field_width, 0, ptr_in_vec->num_chunks);
+  cBYE(status);
+  if ( is_vec_file(ptr_S, ptr_in_vec) ) {
+    // TODO: Make a copy of this file for out_vec
+  }
+
+  ptr_out_vec->num_elements = ptr_in_vec->num_elements; 
+  ptr_out_vec->num_chunks   = ptr_in_vec->num_chunks;
+  for ( uint32_t i = 0; i < ptr_in_vec->num_chunks; i++ ) {
+    uint32_t out_chunk_dir_idx;
+    uint32_t in_chunk_dir_idx = ptr_in_vec->chunks[i];
+    // Note that we reserve a location for the chunk in chunk_dir_idx
+    // but we do not malloc the data inside it 
+    status = allocate_chunk(ptr_S, ptr_out_vec, i, &out_chunk_dir_idx, 
+        false, 0);
+    cBYE(status); 
+    chk_chunk_dir_idx(out_chunk_dir_idx); 
+    ptr_out_vec->chunks[i] = out_chunk_dir_idx;
+    CHUNK_REC_TYPE *out_chunk = ptr_S->chunk_dir->chunks + out_chunk_dir_idx;
+    CHUNK_REC_TYPE *in_chunk = ptr_S->chunk_dir->chunks + in_chunk_dir_idx;
+    if ( is_chunk_file(ptr_S, ptr_in_vec, i) )  {
+      // TODO: Make a copy of the chunk file for out_vec
+    }
+    if ( in_chunk->data != NULL ) { 
+      // TODO: Make a copy of the chunk data for out_vec
+    }
+  }
+  ptr_out_vec->is_eov     = true;
+  ptr_out_vec->is_memo    = true;
+  ptr_out_vec->is_persist = true;
+  ptr_out_vec->g_S        = ptr_S;
   //------------
 BYE:
   return status;

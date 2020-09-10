@@ -804,6 +804,30 @@ BYE:
   return 2;
 }
 
+static int l_vec_clone( lua_State *L) 
+{
+  int status = 0;
+  VEC_REC_TYPE *ptr_out_vec = NULL;
+  //--- get args passed from Lua 
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  VEC_REC_TYPE *ptr_in_vec=(VEC_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
+  qmem_struct_t * g_S  = (qmem_struct_t *)(ptr_c->data);
+  //------------------
+  ptr_out_vec = (VEC_REC_TYPE *)lua_newuserdata(L, sizeof(VEC_REC_TYPE));
+  return_if_malloc_failed(ptr_out_vec);
+  memset(ptr_out_vec, '\0', sizeof(VEC_REC_TYPE));
+  luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
+  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+
+  status = vec_clone(g_S, ptr_in_vec, ptr_out_vec);
+  cBYE(status);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
 static int l_vec_reincarnate( lua_State *L) 
 {
   int status = 0;
@@ -998,6 +1022,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "me", l_vec_me },
     { "meta", l_vec_meta },
     //--------------------------------
+    { "clone", l_vec_clone },
     { "new", l_vec_new },
     { "reincarnate", l_vec_reincarnate},
     { "same_state", l_vec_same_state },
@@ -1053,6 +1078,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "me", l_vec_me },
     { "meta", l_vec_meta },
     //--------------------------------
+    { "clone", l_vec_clone },
     { "new", l_vec_new },
     { "reincarnate", l_vec_reincarnate},
     { "same_state", l_vec_same_state },

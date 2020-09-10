@@ -23,24 +23,17 @@ return function (
   assert(type(f2) == "lVector"); assert(not f2:has_nulls())
   local f1_qtype = f1:qtype();   
   local f2_qtype = f2:qtype();   
-  assert(is_inttype[f1_qtype]); assert(is_inttype[f2_qtype]); 
+  assert(is_basetype[f1_qtype]); assert(is_basetype[f2_qtype]); 
 
-  local f3_qtype 
-  local sz1 = qconsts.qtypes[f1_qtype].width
-  local sz2 = qconsts.qtypes[f2_qtype].width
-  if ( sz1 < sz2 ) then 
-    f3_qtype = f1_qtype
-  else
-    f3_qtype = f2_qtype
-  end
+  local f3_qtype = promote(f1_qtype, f2_qtype)
   if ( optargs ) then
     assert(type(optargs) == "table")
     f3_qtype = optargs.f3_qtype or f3_qtype
   end
-  assert(is_inttype[f3_qtype])
+  assert(is_basetype[f3_qtype])
   
 
-  subs.fn = "vvrem_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
+  subs.fn = "vvmul_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
 
   subs.f1_ctype = qconsts.qtypes[f1_qtype].ctype
@@ -56,7 +49,7 @@ return function (
   subs.cargs = nil
   subs.cst_cargs = ffi.NULL
 
-  subs.code = " c = a  b; "
+  subs.code = " c = a * b; "
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
