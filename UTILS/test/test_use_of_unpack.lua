@@ -1,7 +1,5 @@
-local strict		= require 'Q/UTILS/lua/strict'
-local Q = require 'Q'
-local qconsts		= require 'Q/UTILS/lua/q_consts'
-
+require 'Q/UTILS/lua/strict'
+local Q       = require 'Q'
 local tests = {}
 
 -- does Lua's unpack() built-in function causes error,

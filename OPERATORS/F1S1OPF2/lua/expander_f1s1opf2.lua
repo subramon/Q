@@ -1,17 +1,17 @@
-local qconsts  = require 'Q/UTILS/lua/q_consts'
 local ffi      = require 'ffi' 
-local cVector  = require 'libvctr' 
 local cutils   = require 'libcutils' 
-local qc       = require 'Q/UTILS/lua/q_core'
+local qc       = require 'Q/UTILS/lua/qcore'
+local qconsts  = require 'Q/UTILS/lua/qconsts'
 local lVector  = require 'Q/RUNTIME/VCTR/lua/lVector'
 local cmem     = require 'libcmem'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local record_time = require 'Q/UTILS/lua/record_time'
 local is_in    = require 'Q/UTILS/lua/is_in'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local no_scalar_ops = { "vnot", "incr", "decr", "exp", "log", "sqrt" }
-local chunk_size = cVector.chunk_size()
 
 local function expander_f1s1opf2(a, f1, sclr, optargs )
   local sp_fn_name = "Q/OPERATORS/F1S1OPF2/lua/" .. a .. "_specialize"

@@ -1,7 +1,6 @@
 -- This version supports chunking in load_csv
 local ffi           = require 'ffi'
 local cutils        = require 'libcutils'
-local cVector       = require 'libvctr'
 local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
 local validate_meta = require "Q/OPERATORS/LOAD_CSV/lua/validate_meta"
 local get_ptr       = require "Q/UTILS/lua/get_ptr"
@@ -12,6 +11,8 @@ local malloc_buffers_for_data =
 local F             = require "Q/OPERATORS/LOAD_CSV/lua/malloc_aux"
 local bridge_C      = require "Q/OPERATORS/LOAD_CSV/lua/bridge_C"
 local record_time   = require 'Q/UTILS/lua/record_time'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
  --======================================
 local function setup_ptrs(M, databuf, nn_databuf, cdata, nn_cdata)
@@ -67,7 +68,7 @@ local function load_csv(
   M,  -- metadata (table)
   opt_args
   )
-  local chunk_size = cVector.chunk_size()
+  local chunk_size = chunk_size
   assert( type(infile) == "string")
   assert(cutils.isfile(infile))
   assert(tonumber(cutils.getsize(infile)) > 0)

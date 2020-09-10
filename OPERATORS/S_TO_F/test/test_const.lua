@@ -1,14 +1,15 @@
 -- FUNCTIONAL 
 local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local cVector = require 'libvctr'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 local Scalar  = require 'libsclr'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local tests = {}
 tests.t1 = function() 
   local val = (2048*1048576)-1
-  local len = cVector.chunk_size() * 2 + 3
+  local len = chunk_size * 2 + 3
   local qtype = "I4"
   local c1 = Q.const( {val = val, qtype = qtype, len = len }):memo(true)
   c1:eval()
@@ -22,7 +23,7 @@ tests.t1 = function()
   print("Test t1 succeeded")
 end
 tests.t2 = function() 
-  local len = cVector.chunk_size() * 3 + 1941;
+  local len = chunk_size * 3 + 1941;
   local vals = { true, false }
   local qtype = "B1"
   for _, val in pairs(vals) do 
@@ -40,17 +41,17 @@ end
 tests.t3 = function() -- this is a stress test 
   local val = 1
   local num_chunks = 1000 -- set this very large for a stress test
-  local len = num_chunks * cVector.chunk_size() 
+  local len = num_chunks * chunk_size 
   local qtype = "I4"
   local c1 = Q.const( {val = val, qtype = qtype, len = len }):memo(false)
   for i = 1, num_chunks do 
     local chunk_len = c1:get_chunk(i-1)
-    assert(chunk_len == cVector.chunk_size())
+    assert(chunk_len == chunk_size)
     if ( ( i % 1000000 ) == 0 ) then print("i = ", i) end 
     c1:unget_chunk(i-1)
     local n1, n2 = c1:num_elements()
     assert(not n2)
-    assert(n1 ==  i * cVector.chunk_size())
+    assert(n1 ==  i * chunk_size)
     collectgarbage()
   end
   c1:get_chunk(num_chunks)

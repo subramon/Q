@@ -1,11 +1,12 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
-local cVector = require 'libvctr'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 local tests = {}
 
 tests.t1 = function()
-  local csz = cVector.chunk_size()
+  local csz = chunk_size
   local len = 2 * csz + 17
   local start = 1
   local by = 2

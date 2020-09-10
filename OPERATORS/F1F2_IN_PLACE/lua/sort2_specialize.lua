@@ -1,4 +1,4 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 return function(f1, f2, optargs)
   assert(type(f1) == "lVector", "error")
   assert(type(f2) == "lVector", "error")

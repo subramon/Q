@@ -1,8 +1,8 @@
 require 'Q/UTILS/lua/strict'
-local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local Q       = require 'Q'
-local csz = cVector.chunk_size()
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local tests = {}
 

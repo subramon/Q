@@ -1,6 +1,6 @@
 local ffi = require 'ffi'
 local mk_config = require 'Q/CSERVER/src/lua/mk_config'
-local q_consts  = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 require  'Q/CSERVER/src/lua/to_cdef'
 
 

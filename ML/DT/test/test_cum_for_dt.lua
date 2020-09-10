@@ -1,14 +1,13 @@
 require 'Q/UTILS/lua/strict'
-local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local cum_for_dt = require 'Q/ML/DT/lua/cum_for_dt'
 local pr         = require 'Q/OPERATORS/PRINT/lua/print_csv'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 _G['g_time']  = {}
 _G['g_ctr']  = {}
-
-local chunk_size = cVector.chunk_size()
 
 local tests = {}
 tests.t1 = function()

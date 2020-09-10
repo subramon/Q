@@ -1,11 +1,12 @@
 local ffi     = require 'ffi'
-local cVector = require 'libvctr'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local qc      = require 'Q/UTILS/lua/q_core'
+local qconsts = require 'Q/UTILS/lua/qconsts'
+local qc      = require 'Q/UTILS/lua/qcore'
 local cmem    = require 'libcmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local function expander_f1opf2f3(op, x, optargs)
   -- Verification
@@ -28,7 +29,6 @@ local function expander_f1opf2f3(op, x, optargs)
   assert(qc[func_name], "Symbol not defined " .. func_name)
   
   local shift  = subs.shift
-  local chunk_size = cVector.chunk_size()
   local out_qtype = subs.out_qtype
   local bufsz = chunk_size * qconsts.qtypes[out_qtype].width
   local bufs = {}

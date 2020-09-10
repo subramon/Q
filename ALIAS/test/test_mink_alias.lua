@@ -1,5 +1,5 @@
 local Q = require 'Q'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 
 local tests = {}
 

@@ -1,8 +1,8 @@
 local strict  = require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local cVector = require 'libvctr'
-local chunk_size = cVector.chunk_size()
+local qconsts = require 'Q/UTILS/lua/qconsts'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local tests = {}
 

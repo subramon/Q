@@ -1,6 +1,5 @@
 local Q = require 'Q'
 local Scalar = require 'libsclr'
-local qconsts = require 'Q/UTILS/lua/q_consts'
 local tests = {}
 
 local qtypes = { "B1", "I1", "I2", "I4", "I8", "F4", "F8" }

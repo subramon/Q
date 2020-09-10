@@ -3,9 +3,10 @@ local lVector  = require 'Q/RUNTIME/VCTR/lua/lVector'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 local qc       = require 'Q/UTILS/lua/q_core'
 local cmem     = require 'libcmem'
-local cVector  = require 'libvctr'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local function put_others(my_name, vectors, outbufs, num_rows)
   assert(type(my_name)  == "string")
@@ -52,7 +53,6 @@ local function cum_for_dt(f, g, ng)
   local cst_f_as = subs.f_ctype .. " * "
   local cst_g_as = subs.g_ctype .. " * "
   --=================================
-  local chunk_size = cVector.chunk_size()
 
   local v_qtype = subs.v_qtype
   local v_buf_sz = chunk_size * subs.v_width

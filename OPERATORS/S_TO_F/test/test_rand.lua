@@ -1,14 +1,15 @@
 -- FUNCTIONAL 
 local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local cVector = require 'libvctr'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 local Scalar  = require 'libsclr'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local tests = {}
 --========================================
 tests.t1 = function()
-  local csz = cVector.chunk_size()
+  local csz = chunk_size
   local len = csz * 19 + 3
   local probability = 0.25;
   local qtype = "B1"
@@ -33,7 +34,7 @@ tests.t1 = function()
   print("Test t1 succeeded")
 end
 tests.t2 = function()
-  local csz = cVector.chunk_size()
+  local csz = chunk_size
   local len = csz * 19 + 3
   local lb = 17
   local ub = 1023

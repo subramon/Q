@@ -1,14 +1,15 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
-local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local tests = {}
 tests.t1 = function( to_memo)
   if ( type(to_memo) == "nil" ) then to_memo = false end 
 
-  local chunk_size = cVector.chunk_size()
+  local chunk_size = chunk_size
   local len = 2 * chunk_size + 17
   local x, y, z 
   local qtype = "I4"

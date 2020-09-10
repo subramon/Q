@@ -1,9 +1,8 @@
 local Q           = require 'Q'
-local cVector     = require 'libvctr'
-cVector.init_globals({})
 local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
 local lAggregator = require 'Q/RUNTIME/MAGG/lua/lAggregator'
-local chunk_size  = cVector.chunk_size()
+local qmem        = require 'Q/UTILS/lua/qmem'
+local chunk_size  = qmem.chunk_size
 
 local tests = {}
 tests.t1 = function(n, niters)

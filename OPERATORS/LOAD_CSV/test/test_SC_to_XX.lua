@@ -1,7 +1,7 @@
 require 'Q/UTILS/lua/strict'
 local plpath    = require 'pl.path'
 local Q         = require 'Q'
-local qconsts   = require 'Q/UTILS/lua/q_consts'
+local qconsts   = require 'Q/UTILS/lua/qconsts'
 local converter = require 'Q/OPERATORS/LOAD_CSV/test/converter_1'
 --=======================================================
 local tests = {}

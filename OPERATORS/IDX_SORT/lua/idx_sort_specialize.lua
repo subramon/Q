@@ -1,6 +1,6 @@
 local tmpl = qconsts.Q_SRC_ROOT .. "/OPERATORS/IDX_SORT/lua/idx_qsort.tmpl"
+local qconsts = require 'Q/UTILS/lua/qconsts'
 return function(idx_qtype, val_qtype, ordr)
-  local qconsts = require 'Q/UTILS/lua/q_consts'
   assert(type(ordr) == "string", "Sort order should be a string")
   assert( ( ( ordr == "asc") or ( ordr == "dsc") ), 
   "Sort order should be asc or dsc")

@@ -1,6 +1,6 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
 local ffi     = require 'ffi'
-local qc      = require 'Q/UTILS/lua/q_core'
+local qc      = require 'Q/UTILS/lua/qcore'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local is_in   = require 'Q/UTILS/lua/is_in'
 local cmem    = require 'libcmem'

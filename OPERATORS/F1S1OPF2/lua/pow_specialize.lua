@@ -1,9 +1,10 @@
-local cVector = require 'libvctr'
-local qconsts       = require "Q/UTILS/lua/q_consts"
+local qc            = require "Q/UTILS/lua/qcore"
+local qconsts       = require "Q/UTILS/lua/qconsts"
 local get_ptr       = require "Q/UTILS/lua/get_ptr"
 local chk_inputs    = require 'Q/OPERATORS/F1S1OPF2/lua/chk_inputs'
-local qc            = require "Q/UTILS/lua/q_core"
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 return function (
   f1,
@@ -27,7 +28,7 @@ return function (
   subs.f2_ctype   = subs.f1_ctype
 
   local f2_width  = qconsts.qtypes[subs.f2_qtype].width
-  subs.f2_buf_sz  = cVector.chunk_size() * f2_width
+  subs.f2_buf_sz  = chunk_size * f2_width
 
   subs.cst_f1_as = subs.f1_ctype  .. "*" 
   subs.cst_f2_as = subs.f2_ctype .. "*" 

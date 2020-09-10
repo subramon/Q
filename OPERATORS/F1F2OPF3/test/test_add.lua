@@ -2,9 +2,9 @@
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local Scalar  = require 'libsclr'
-local cVector = require 'libvctr'
 local plpath  = require 'pl.path'
-local chunk_size = cVector.chunk_size()
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local tests = {}
 tests.t1 = function()

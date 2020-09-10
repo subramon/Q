@@ -1,6 +1,6 @@
 local Q = require 'Q'
 local Scalar = require 'libsclr'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 local function referrer(r) -- r = referrer
   assert(type(r) == "lVector")
   local s = Q.where(r, Q.vsgeq(r, Scalar.new(0, r:fldtype())))

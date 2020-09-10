@@ -1,7 +1,7 @@
 -- WARNING! If this line is in a .lua file, it is auto-generated
 local ffi     = require 'ffi'
 local Scalar  = require 'libsclr'
-local qconsts       = require "Q/UTILS/lua/q_consts"
+local qconsts       = require "Q/UTILS/lua/qconsts"
 local basetypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
 local is_basetype = {}
 for _, basetype in ipairs(basetypes) do

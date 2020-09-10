@@ -4,9 +4,10 @@ local Reducer  = require 'Q/RUNTIME/RDCR/lua/Reducer'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 local qc       = require 'Q/UTILS/lua/q_core'
 local cmem     = require 'libcmem'
-local cVector  = require 'libvctr'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local function evan_dt_benefit(
   V, -- V = values vector 
@@ -51,7 +52,6 @@ local function evan_dt_benefit(
   local cst_S_as = subs.S_ctype .. " * "
   local cst_C_as = subs.C_ctype .. " * "
   --=================================
-  local chunk_size = cVector.chunk_size()
   local l_chunk_num = 0
 
   local function lgen(chunk_num)

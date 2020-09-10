@@ -1,11 +1,12 @@
 local qc          = require 'Q/UTILS/lua/qcore'
 local ffi         = require 'ffi'
 local cmem        = require 'libcmem'
-local cVector     = require 'libvctr'
 local qconsts     = require 'Q/UTILS/lua/qconsts'
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 local function SC_to_TM(
   invec, 
   format,
@@ -26,7 +27,7 @@ local function SC_to_TM(
   -- subs.srcs = {}
   qc.q_add(subs)
   
-  local chunk_size = cVector.chunk_size()
+  local chunk_size = chunk_size
   local out_qtype = "TM"
   local out_ctype = qconsts.qtypes[out_qtype].ctype
   local out_width = qconsts.qtypes[out_qtype].width

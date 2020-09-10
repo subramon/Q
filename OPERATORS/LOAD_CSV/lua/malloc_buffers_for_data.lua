@@ -2,7 +2,8 @@ local qconsts       = require 'Q/UTILS/lua/qconsts'
 local ffi           = require 'ffi'
 local get_ptr       = require 'Q/UTILS/lua/get_ptr'
 local cmem          = require 'libcmem'
-local cVector       = require 'libvctr'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local function malloc_buffers_for_data(M)
   local cdata, nn_cdata
@@ -18,7 +19,7 @@ local function malloc_buffers_for_data(M)
   for _, v in ipairs(M) do
     local qtype = v.qtype
     local ctype = qconsts.qtypes[qtype].ctype
-    local bufsz = v.width * cVector.chunk_size()
+    local bufsz = v.width * chunk_size
     if ( v.is_load ) then 
       databuf[v.name] = cmem.new(
       { size = bufsz, qtype = qtype, name = v.name})

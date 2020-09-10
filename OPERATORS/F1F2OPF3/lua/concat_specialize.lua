@@ -2,9 +2,9 @@ local ffi     = require 'ffi'
 local cmem    = require 'libcmem'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
-local qconsts = require 'Q/UTILS/lua/q_consts'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local qc      = require 'Q/UTILS/lua/q_core'
+local qc      = require 'Q/UTILS/lua/qcore'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 local inttypes = { "I1", "I2", "I4", "I8" }
 local is_inttype = {}
 for _, inttype in ipairs(inttypes) do

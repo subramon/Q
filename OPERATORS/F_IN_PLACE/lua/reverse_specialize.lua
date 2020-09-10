@@ -1,4 +1,4 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 
 return function(invec)
   assert(type(invec) == "lVector")

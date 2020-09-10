@@ -1,4 +1,4 @@
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 local ffi = require 'ffi'
 local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
 local plfile = require 'pl.file'

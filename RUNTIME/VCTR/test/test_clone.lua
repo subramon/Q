@@ -6,17 +6,14 @@ local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/qconsts'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local pldir   = require 'pl.dir'
 
 local tests = {}
 lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 --=================================
-local chunk_size = 65536
-local params = { chunk_size = chunk_size, sz_chunk_dir = 4096, 
-      data_dir = qconsts.Q_DATA_DIR }
-cVector.init_globals(params)
-assert(cVector.chunk_size() == chunk_size)
 --=================================
 -- testing put1 and get1 and clone 
 tests.t1 = function()

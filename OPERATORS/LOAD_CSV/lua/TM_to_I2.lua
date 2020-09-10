@@ -2,11 +2,12 @@ local Q           = require 'Q/q_export'
 local qc          = require 'Q/UTILS/lua/qcore'
 local ffi         = require 'ffi'
 local cmem        = require 'libcmem'
-local cVector     = require 'libvctr'
 local qconsts     = require 'Q/UTILS/lua/qconsts'
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local function TM_to_I2(
   invec, 
@@ -26,7 +27,7 @@ local function TM_to_I2(
   qc.q_add(subs)
 
 
-  local chunk_size = cVector.chunk_size()
+  local chunk_size = chunk_size
   local in_ctype = qconsts.qtypes[in_qtype].ctype
   local cst_in_as = in_ctype .. " *"
 

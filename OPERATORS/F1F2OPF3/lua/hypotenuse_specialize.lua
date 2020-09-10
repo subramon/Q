@@ -33,7 +33,7 @@ return function (
   assert(is_basetype[f3_qtype])
   
 
-  subs.fn = "radius_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
+  subs.fn = "hypotenuse_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
 
   subs.f1_ctype = qconsts.qtypes[f1_qtype].ctype

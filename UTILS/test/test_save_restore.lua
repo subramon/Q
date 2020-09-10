@@ -4,7 +4,9 @@ local Q = require 'Q'
 local Scalar = require 'libsclr'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local cVector = require 'libvctr'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local tests = {}
 
@@ -48,7 +50,7 @@ end
 -- marked as memo = false and whose size exceeds chunk size
 tests.t3 = function()
   local qtype = "F4"
-  local n = cVector.chunk_size() + 1 
+  local n = chunk_size + 1 
   vec = lVector({qtype = qtype}):memo(false)
   for i = 1, n do 
     vec:put1(Scalar.new(i, qtype))

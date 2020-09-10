@@ -1,10 +1,11 @@
-local cVector  = require 'libvctr'
 local cutils   = require 'libcutils'
 local cmem     = require 'libcmem'
 local ffi      = require 'ffi'
 local qc       = require 'Q/UTILS/lua/qcore'
 local qconsts  = require 'Q/UTILS/lua/qconsts'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 local function cprint( 
   opfile, -- file for destination fo print
@@ -33,7 +34,7 @@ local function cprint(
   local function min(x, y) if x < y then return x else return y end end
   local function max(x, y) if x > y then return x else return y end end
   local nC = #V -- determine number of columns to be printed
-  local chunk_size = cVector.chunk_size()
+  local chunk_size = chunk_size
   local chunk_num = math.floor(lb / chunk_size) -- first usable chunk
   -- C = pointers to data to be printed
   local sz = nC * ffi.sizeof("void *")

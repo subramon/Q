@@ -1,7 +1,7 @@
-local ffi = require 'ffi'
+local ffi     = require 'ffi'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qconsts = require 'Q/UTILS/lua/qconsts'
 local basetypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
 local is_basetype = {}
 for _, basetype in ipairs(basetypes) do

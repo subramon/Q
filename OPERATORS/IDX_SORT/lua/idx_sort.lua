@@ -1,12 +1,12 @@
-local function idx_sort(idx, val, ordr)
-  local Q       = require 'Q/q_export'
-  local qc = require 'Q/UTILS/lua/q_core'
-  local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-  local get_ptr = require 'Q/UTILS/lua/get_ptr'
- local ffi = require 'ffi' 
-  local qconsts = require 'Q/UTILS/lua/q_consts'
+local Q       = require 'Q/q_export'
+local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local ffi     = require 'ffi' 
+local qconsts = require 'Q/UTILS/lua/qconsts'
+local qc      = require 'Q/UTILS/lua/qcore'
+local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 
   assert(type(idx) == "lVector", "error")
+local function idx_sort(idx, val, ordr)
   -- Check the vector idx for eval(), if not then call eval()
   if not idx:is_eov() then
     idx:eval()

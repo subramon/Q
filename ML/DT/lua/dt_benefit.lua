@@ -4,9 +4,10 @@ local Reducer  = require 'Q/RUNTIME/RDCR/lua/Reducer'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 local qc       = require 'Q/UTILS/lua/q_core'
 local cmem     = require 'libcmem'
-local cVector  = require 'libvctr'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
+local qmem    = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 
 -- Currently, can only accept goals with 2 values
 local function dt_benefit(f, gT, gH, 
@@ -50,7 +51,6 @@ local function dt_benefit(f, gT, gH,
   local cst_f_as = subs.f_ctype .. " * "
   local cst_g_as = subs.g_ctype .. " * "
   --=================================
-  local chunk_size = cVector.chunk_size()
   local l_chunk_num = 0
 
   local function lgen(chunk_num)

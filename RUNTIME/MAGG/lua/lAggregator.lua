@@ -1,12 +1,13 @@
-local qconsts         = require 'Q/UTILS/lua/q_consts'
+local qconsts         = require 'Q/UTILS/lua/qconsts'
 local cmem            = require 'libcmem'
-local cVector         = require 'libvctr'
 local register_type   = require 'Q/UTILS/lua/register_type'
 local qc              = require 'Q/UTILS/lua/qcore'
 local to_scalar       = require 'Q/UTILS/lua/to_scalar'
 local lVector         = require 'Q/RUNTIME/VCTR/lua/lVector'
 local libgen          = require 'Q/RUNTIME/MAGG/lua/libgen'
 local Aggregator      -- will be set in instantiate()
+local qmem       = require 'Q/UTILS/lua/qmem'
+local chunk_size = qmem.chunk_size
 --====================================
 local lAggregator = {}
 lAggregator.__index = lAggregator
@@ -37,7 +38,7 @@ end
 function lAggregator:bufferize()
   assert ( self._is_instantiated == true)
   assert ( self._is_bufferized == false)
-  assert(Aggregator.bufferize(self._agg, cVector.chunk_size()))
+  assert(Aggregator.bufferize(self._agg, chunk_size))
   self._is_bufferized = true
   return self
 end
@@ -259,7 +260,7 @@ function lAggregator:consume()
 
   local status = Aggregator.putn(self._agg, kchunk, klen, num_threads, vchunks)
   self._chunk_idx = self._chunk_idx + 1
-  if ( klen < cVector.chunk_size() ) then 
+  if ( klen < chunk_size ) then 
     self._is_eov = true
     assert(Aggregator.unbufferize(self._agg))
     self._is_bufferized = false
@@ -348,7 +349,7 @@ function lAggregator:set_produce(keyvec)
         first_call = false
         for k, v in ipairs(self._params.vals) do
           local valtype = v.valtype
-          local bufsz = cVector.chunk_size() * qconsts.qtypes[valtype].width
+          local bufsz = chunk_size * qconsts.qtypes[valtype].width
           val_bufs[k] = assert(cmem.new({size = bufsz, qtype = valtype}))
         end
       end
@@ -369,7 +370,7 @@ function lAggregator:set_produce(keyvec)
         if ( k ~= myk ) then 
           -- put the chunk for other vectors and delete their buffers
           val_vecs[k]:put_chunk(val_bufs[k], nil, num_keys) 
-          if ( num_keys < cVector.chunk_size() ) then 
+          if ( num_keys < chunk_size ) then 
             val_vecs[k]:eov()
             val_bufs[k]:delete()
           end
