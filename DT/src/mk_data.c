@@ -1,31 +1,31 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "incs.h"
+#include "mk_data.h"
 
 int 
 mk_data(
     float ***ptr_X, /* [m][n] */
-    int m,
+    uint32_t m,
     uint32_t n,
-    int **ptr_g
+    uint8_t **ptr_g
    )
 {
   int status = 0;
   uint32_t maxn = 1; maxn = maxn << 31;
   if ( n  >= maxn ) { go_BYE(-1); }
   float **X = NULL;
-  int *g = NULL;
+  uint8_t *g = NULL;
   X = malloc(m * sizeof(float *));
-  for ( int j = 0; j < m; j++ ) { 
+  for ( uint32_t j = 0; j < m; j++ ) { 
     X[j] = malloc(n * sizeof(float));
   }
-  g = malloc(m * sizeof(int));
+  g = malloc(n * sizeof(uint8_t));
 
-  for ( int j = 0; j < m; j++ ) { 
-    for ( int i = 0; i < n; i++ ) { 
-      X[j][i] = random();
+  for ( uint32_t j = 0; j < m; j++ ) { 
+    for ( uint32_t i = 0; i < n; i++ ) { 
+      X[j][i] = (float)( random() % 1000 );
     }
   }
-  for ( int i = 0; i < n; i++ ) { 
+  for ( uint32_t i = 0; i < n; i++ ) { 
     g[i] = random() & 0x1;
   }
   *ptr_X = X;

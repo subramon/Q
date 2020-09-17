@@ -1,5 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "incs.h"
+#include "preproc_j.h"
+#include "split.h"
 
 int 
 split(
@@ -7,13 +8,13 @@ split(
     uint32_t lb,
     uint32_t ub,
     uint32_t n,
-    int m,
-    int *g,
+    uint32_t m,
+    uint8_t *g,
     uint32_t ***ptr_Y
    )
 {
   int status = 0;
-  if ( ub - lb <= min_leaf_size ) { return status; }
+  if ( ub - lb <= MIN_LEAF_SIZE ) { return status; }
 
   // just for now 
   int split_k = random() % m;
@@ -22,8 +23,8 @@ split(
 
   uint32_t **Y = NULL;
   Y = malloc(m * sizeof(uint32_t *));
-  for ( int j = 0; j < m; j++ ) { 
-    status = preproc_j(X[j], n, g,  &(Y[j]));  cBYE(status);
+  for ( uint32_t j = 0; j < m; j++ ) { 
+//    status = preproc_j(X[j], n, g,  &(Y[j]));  cBYE(status);
   }
   *ptr_Y = Y;
 BYE:

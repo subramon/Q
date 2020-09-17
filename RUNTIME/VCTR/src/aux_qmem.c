@@ -744,9 +744,11 @@ is_chunk_file(
   return c->is_file;
 }
 int
-duplicate_vec_file(
+duplicate_vec(
+    qmem_struct_t *ptr_S,
     uint32_t in_idx, 
-    uint32_t out_idx)
+    uint32_t out_idx
+    )
 {
   int status = 0;
   char *in_file_name = NULL;
@@ -759,6 +761,33 @@ duplicate_vec_file(
     status = mk_file_name(ptr_S, in_w->uqid, &in_file_name); cBYE(status);
     status = mk_file_name(ptr_S, out_w->uqid, &out_file_name); cBYE(status);
     status = copy_file(in_file_name, out_file_name); cBYE(status);
+  }
+BYE:
+  free_if_non_null(in_file_name);
+  free_if_non_null(out_file_name);
+  return status;
+}
+
+int
+duplicate_chunk(
+    qmem_struct_t *ptr_S,
+    uint32_t in_idx, 
+    uint32_t out_idx
+    )
+{
+  int status = 0;
+  char *in_file_name = NULL;
+  char *out_file_name = NULL;
+  CHUNK_REC_TYPE *in_c  = ptr_S->chunk_dir->chunks + in_idx;
+  CHUNK_REC_TYPE *out_c = ptr_S->chunk_dir->chunks + out_idx;
+  if ( out_c->is_file ) { go_BYE(-1); } 
+  if ( out_c->data != NULL ) { go_BYE(-1); } 
+  if ( in_c->is_file ) {  
+    status = mk_file_name(ptr_S, in_c->uqid, &in_file_name); cBYE(status);
+    status = mk_file_name(ptr_S, out_c->uqid, &out_file_name); cBYE(status);
+    status = copy_file(in_file_name, out_file_name); cBYE(status);
+  }
+  if ( in_c->data != NULL ) {  
   }
 BYE:
   free_if_non_null(in_file_name);

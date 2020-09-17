@@ -11,11 +11,13 @@ CFLAGS+= -Wsuggest-attribute=noreturn
 CFLAGS+= -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference
 CFLAGS+= -Wduplicated-branches -Wrestrict
 
-INCS = -I../inc/
+INCS = -I./inc/
 all: dt
 
 SRCS = \
+       ./src/main.c	\
        ./src/mk_data.c	\
+       ./src/pr_data.c	\
        ./src/preproc.c	\
        ./src/preproc_j.c	\
        ./src/split.c

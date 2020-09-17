@@ -142,7 +142,14 @@ load_chunk_from_vec(
     uint32_t chunk_num
     );
 extern int
-duplicate_vec_file(
-      uint32_t in_idx, 
-      uint32_t out_idx
-      );
+duplicate_vec(
+    qmem_struct_t *ptr_S,
+    uint32_t in_idx, 
+    uint32_t out_idx
+    );
+extern int
+duplicate_chunk(
+    qmem_struct_t *ptr_S,
+    uint32_t in_idx, 
+    uint32_t out_idx
+    );
