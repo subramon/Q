@@ -1,0 +1,127 @@
+# This is a comment
+FROM ubuntu:16.04
+# FROM instruction specifies the Parent Image from which you are building
+
+LABEL author ramesh_subramonian
+# ARON: Do we need a .dockerignore file?
+
+# libjansson-dev # Is this needed? ARON
+# psmisc added for fuser 
+# net-tools added for netstat
+# man-db for man pages
+# lsof for networking
+USER 0
+RUN apt-get update && apt-get install -y apt-utils software-properties-common
+ENV DEBIAN_FRONTEND  noninteractive
+RUN apt update
+RUN apt-get -y install tzdata
+RUN apt-get update -y \
+    && apt-get install -y \
+    autoconf \
+    bc \
+    cmake \
+    cppcheck \
+    dc \
+    gcc \
+    git \
+    libcurl4-openssl-dev \
+    libgsl0-dev \
+    libncurses5-dev \
+    libreadline-dev \
+    liblapacke-dev \
+    liblapack-dev  \
+    lsof \
+    luarocks \
+    make \
+    man-db \
+    net-tools \
+    psmisc \
+    telnet \
+    valgrind \
+    unzip \
+    vim \
+    wget \
+    && apt-get clean all
+
+# Got following Error: Could not find header file for CURL
+# No file curl/curl.h in /usr/local/include
+# You may have to install CURL in your system and/or pass CURL_DIR or CURL_INCDIR to the luarocks command.
+# Example: luarocks install lua-curl CURL_DIR=/usr/local
+# The command '/bin/sh -c luarocks install lua-curl CURL_D
+# Hence, we install curl from source 
+RUN rm -r -f /tmp/curl/ \
+ && cd /tmp/ \
+ && git clone https://github.com/curl/curl.git \
+ && cd /tmp/curl/ \
+ && ./buildconf \
+ && ./configure \
+ && make \
+ && make install
+
+RUN luarocks install luacheck 
+RUN luarocks install lpeg 
+RUN luarocks install luafilesystem 
+RUN luarocks install penlight 
+# RUN luarocks install Lua-cURL CURL_DIR=/usr/local/
+RUN luarocks install lua-curl CURL_DIR=/usr/local/
+
+# Install lua-simdjson from source
+RUN rm -r -f /tmp/simdjson/ \
+&& cd /tmp/ \
+&& git clone https://github.com/FourierTransformer/lua-simdjson \
+&& cd /tmp/simdjson/ \
+&& luarocks make lua-simdjson-scm-0.rockspec \
+&& rm -r -f /tmp/simdjson/
+
+
+## lua
+RUN wget -O /tmp/lua-5.1.5.tar.gz "https://www.lua.org/ftp/lua-5.1.5.tar.gz" \
+&& cd /tmp/  \
+&& echo "2e115fe26e435e33b0d5c022e4490567 lua-5.1.5.tar.gz" | md5sum -c - \
+&& mkdir -p /tmp/lua/ \
+&& tar -zxvf /tmp/lua-5.1.5.tar.gz -C /tmp/lua/ --strip-components=1 \
+&& cd /tmp/lua/ \
+&& make linux \
+&& make install \
+&& rm -rf /tmp/lua*gz /tmp/lua/
+
+## libevent
+RUN wget -O /tmp/libevent.tar.gz "https://github.com/libevent/libevent/releases/download/release-2.1.11-stable/libevent-2.1.11-stable.tar.gz" \
+ &&  cd /tmp/ \
+ &&  mkdir -p /tmp/libevent/ \
+ &&  tar -zxf /tmp/libevent.tar.gz -C /tmp/libevent/ --strip-components=1  \
+ &&  cd /tmp/libevent/ \
+ &&  ./configure  \
+ &&  make  \
+## TODO &&  make check  \
+ &&  make install  \
+ &&  rm -rf /tmp/libevent.tar.gz  \
+ &&  rm -rf /tmp/libevent/ 
+
+## LuaJIT
+RUN wget -O /tmp/LuaJIT-2.1.0-beta3.tar.gz "https://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz" \
+ &&   cd /tmp \
+ &&  echo "eae40bc29d06ee5e3078f9444fcea39b LuaJIT-2.1.0-beta3.tar.gz" | md5sum -c - \ 
+ && mkdir -p /tmp/LuaJIT \
+ &&  tar -zxvf /tmp/LuaJIT-2.1.0-beta3.tar.gz -C /tmp/LuaJIT --strip-components=1  \
+ &&  cd /tmp/LuaJIT/ \
+ &&  make  \
+ &&  make install  \
+ &&  ln -sf luajit-2.1.0-beta3 /usr/local/bin/luajit \
+ &&  rm -rf /tmp/LuaJIT*gz /tmp/LuaJIT 
+
+## For Q
+RUN mkdir -p /local/
+RUN mkdir -p /local/Q/
+RUN mkdir -p /local/Q/data/
+RUN mkdir -p /local/Q/include
+RUN mkdir -p /local/Q/lib/
+RUN mkdir -p /local/Q/meta/
+
+ENV TERM vt100
+
+# We put some entry point that doesn't stop because otherwise
+# container will start up and shut down right away
+ENTRYPOINT tail -f /dev/null
+
+# docker exec -it q_q1_1 /bin/bash
