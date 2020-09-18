@@ -1,6 +1,22 @@
 #include "incs.h"
 #include "mk_data.h"
 
+/* Source: https://en.wikipedia.org/wiki/Random_permutation */
+
+static void 
+init_and_permute(
+    float *X,
+    uint32_t n
+    )
+{
+  for ( uint32_t i = 0; i <= n-2; i++) {
+    /* A random integer such that i ≤ j < n */
+    unsigned j = i + (random() % (n-i));
+    /* Swap the randomly picked element with permutation[i] */
+    float tmp = X[i]; X[i] = X[j]; X[j] = tmp; 
+  }
+}
+
 int 
 mk_data(
     float ***ptr_X, /* [m][n] */
@@ -21,9 +37,7 @@ mk_data(
   g = malloc(n * sizeof(uint8_t));
 
   for ( uint32_t j = 0; j < m; j++ ) { 
-    for ( uint32_t i = 0; i < n; i++ ) { 
-      X[j][i] = (float)( random() % 1000 );
-    }
+    init_and_permute(X[j], n);
   }
   for ( uint32_t i = 0; i < n; i++ ) { 
     g[i] = random() & 0x1;
