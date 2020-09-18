@@ -29,16 +29,19 @@ preproc_j(
     uint32_t n,
     uint8_t *g,
     uint32_t **ptr_Yj,
-    uint32_t **ptr_to
+    uint32_t **ptr_to,
+    uint32_t **ptr_from
    )
 {
   int status = 0;
   uint32_t *Yj = NULL;
   uint32_t *to = NULL;
+  uint32_t *from = NULL;
   comp_key_t *C = NULL;
   // allocate Y and idx 
   Yj  = malloc(n * sizeof(uint32_t));
   to  = malloc(n * sizeof(uint32_t));
+  from  = malloc(n * sizeof(uint32_t));
   C   = malloc(n * sizeof(comp_key_t));
   for ( uint32_t i = 0; i < n; i++ ) { 
     C[i].idx  = i;
@@ -62,6 +65,7 @@ preproc_j(
   }
   *ptr_Yj = Yj;
   *ptr_to = to;
+  *ptr_from = from;
 BYE:
   free_if_non_null(C);
   return status;
