@@ -25,10 +25,13 @@ BYE:
 
 int 
 pr_data_i(
+    float **X, /* [m][n] */
     uint32_t **Y, /* [m][n] */
+    uint32_t **from, /* [m][n] */
     uint32_t **to, /* [m][n] */
     uint32_t m,
     uint32_t n,
+    uint8_t *lr,
     uint8_t *g,
     uint32_t lb,
     uint32_t ub
@@ -37,10 +40,12 @@ pr_data_i(
   int status = 0;
   for ( uint32_t i = lb; i < ub; i++ ) { 
     for ( uint32_t j = 0; j < m; j++ ) { 
-      uint64_t mask = 1; mask = mask << 31;
-      uint8_t gval = Y[j][i] & mask;
-      uint8_t yval = Y[j][i] & ~mask;
-      printf("(%d,%4u,%4u),", gval, to[j][i], yval);
+      uint32_t mask = 1; mask = mask << 31; mask = ~mask;
+      uint8_t gval = Y[j][i] >> 31;
+      uint32_t yval = Y[j][i] & mask;
+      float xval = X[j][i];
+      printf("(%1u,%4u,%4u,%4u,%4.1f),", lr[i], to[j][i], from[j][i], yval, xval);
+      if ( gval != g[i] ) { go_BYE(-1); }
     }
     printf("%d\n", g[i]); // to check 
   }

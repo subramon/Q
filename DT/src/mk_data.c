@@ -37,6 +37,9 @@ mk_data(
   g = malloc(n * sizeof(uint8_t));
 
   for ( uint32_t j = 0; j < m; j++ ) { 
+    for ( uint32_t i = 0; i < n; i++ ) { 
+      X[j][i] = i+1;
+    }
     init_and_permute(X[j], n);
   }
   for ( uint32_t i = 0; i < n; i++ ) { 

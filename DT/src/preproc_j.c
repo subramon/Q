@@ -53,7 +53,7 @@ preproc_j(
   // create Y 
   float xval = C[0].xval;
   uint32_t yval = 1;
-  to[0] = C[0].idx;
+  from[0] = C[0].idx;
   Yj[0] = yval | (((uint64_t)g[0]) << 31); 
   for ( uint32_t i = 1; i < n; i++ ) { 
     if ( C[i].xval != xval ) {
@@ -61,12 +61,24 @@ preproc_j(
       yval++;
     }
     Yj[i] = yval | (((uint64_t)g[i]) << 31); 
-    to[i] = C[i].idx;
+    if ( C[i].idx >= n ){ go_BYE(-1); }
+    from[i] = C[i].idx;
+  }
+  //--------------------------------------
+  for ( uint32_t i = 0; i < n; i++ ) { 
+    uint32_t pos = from[i];
+    if ( pos >= n ) { go_BYE(-1); }
+    to[pos] = i;
   }
   *ptr_Yj = Yj;
   *ptr_to = to;
   *ptr_from = from;
 BYE:
   free_if_non_null(C);
+  if ( status < 0 ) { 
+    free_if_non_null(Yj);
+    free_if_non_null(to);
+    free_if_non_null(from);
+  }
   return status;
 }

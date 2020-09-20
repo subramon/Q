@@ -19,6 +19,7 @@ preproc(
   uint32_t **from = NULL;
   Y  = malloc(m * sizeof(uint32_t *));
   to = malloc(m * sizeof(uint32_t *));
+  from = malloc(m * sizeof(uint32_t *));
   for ( uint32_t j = 0; j < m; j++ ) { 
     status = preproc_j(X[j], n, g,  &(Y[j]), &(to[j]), &(from[j]));  
     cBYE(status);
