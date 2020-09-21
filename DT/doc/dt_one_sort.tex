@@ -1,0 +1,40 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\usepackage{hyperref}
+\usepackage{fancyheadings}
+\pagestyle{fancy}
+\usepackage{pmc}
+\usepackage{graphicx}
+\setlength\textwidth{6.5in}
+\setlength\textheight{9.0in}
+\begin{document}
+\title{Computing Decision Trees with a Single Sort}
+\author{Tara Mirmira and Ramesh Subramonian}
+\maketitle
+\thispagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{}
+\lfoot{}
+\cfoot{Decision Trees}
+\rfoot{{\small \thepage}}
+
+\begin{abstract}
+  A typical computational strategy for building decision trees (as evidenced in
+  scikit-learn) is as follows. Each feature is sorted and then traversed in
+  ascending order to determine the best split point. The best split point over
+  all features is selcted and used to partition the data into two. This
+  process is repeated recursively until some stopping criterion is reached e.g., number of instances
+  too small. 
+\end{abstract}
+
+\section{Introduction}
+\TBC
+
+\section{Conclusion}
+\TBC
+\bibliographystyle{alpha}
+\bibliography{../../DOC/Q_PAPER/ref}
+\end{document}
