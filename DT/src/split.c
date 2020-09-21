@@ -2,6 +2,34 @@
 #include "preproc_j.h"
 #include "split.h"
 
+static int 
+set_equal(
+    uint32_t *X,
+    uint32_t *Y,
+    uint32_t lb,
+    uint32_t ub,
+    uint32_t n,
+    bool *ptr_is_eq
+    )
+{
+  int status = 0;
+  // make this n log n instead of n^2
+  for ( uint32_t i = lb; i < ub; i++ ) {
+    uint32_t x_i = X[i];
+    bool found = false;
+    for ( uint32_t j = lb; j < ub; j++ ) {
+      if ( Y[j] == x_i ) { found = true; break; }
+    }
+    if ( !found ) { *ptr_is_eq = false; return status; }
+  }
+  *ptr_is_eq = true;
+BYE:
+  return status;
+}
+
+
+
+
 int 
 split(
     uint32_t **to, /* [m][n] */
@@ -15,12 +43,20 @@ split(
 {
   int status = 0;
   bool *pos_seen = NULL;
+  uint32_t *tos = NULL;
   static uint32_t split_j = 0;
   if ( ub - lb <= MIN_LEAF_SIZE ) { return status; }
   pos_seen = malloc(n * sizeof(bool));
-  for ( uint32_t i = lb; i < ub; i++ ) { pos_seen[i] = false; }
 
   // some checking 
+  for ( uint32_t j = 1; j < m; j++ ) {
+    bool is_eq = false;
+    status = set_equal(to[j-1], to[j], lb, ub, n, &is_eq); cBYE(status);
+    if ( !is_eq ) { go_BYE(-1);
+    }
+  }
+  // TODO repeat above check for froms
+  
   for ( uint32_t j = 0; j < m; j++ ) {
     for ( uint32_t i = lb+1; i < ub; i++ ) { 
       uint32_t yval_i_1 = get_yval(Y[j][i-1]);
@@ -62,11 +98,9 @@ split(
       uint32_t to_i   = to[split_j][from_i];
       if ( to_i < split_i ) { // this data point went left
         idx = lidx; tmpY[lidx++] = Yj[i]; 
-        printf("Putting %u on left in position %u \n", yval_i, lidx); 
       }
       else { // this data point went right
         idx = ridx; tmpY[ridx++] = Yj[i]; 
-        printf("Putting %u on right in position %u \n", yval_i, lidx); 
       }
       to[j][from_i] = idx;
     }
@@ -87,5 +121,6 @@ split(
 
 BYE:
   free_if_non_null(pos_seen);
+  free_if_non_null(tos);
   return status;
 }
