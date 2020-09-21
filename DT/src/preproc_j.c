@@ -1,6 +1,20 @@
 #include "incs.h"
 #include "preproc_j.h"
 
+static uint64_t x_mk_comp_val(
+    uint64_t from,
+    uint64_t goal,
+    uint64_t yval
+    )
+{
+  uint64_t tmp1 = from << 32;
+  uint64_t tmp2 = goal << 31;
+  uint64_t tmp3 = tmp1 | tmp2; 
+  uint64_t tmp4 = tmp3 | yval;
+  return tmp4;
+}
+
+
 typedef struct _comp_key_t { 
   float xval;
   uint32_t idx;
@@ -22,10 +36,6 @@ sortfn(
     return 1;
   }
 }
-// #define mk_comp_val(x, y, z ) { ( x << 32 ) | ( z < 31 )  | y }
-// #define get_from(x) { x >> 32 } 
-// #define get_goal(x) { ( x >> 31 ) & 0x1 } 
-
 int 
 preproc_j(
     float *Xj, /* [m][n] */
@@ -55,23 +65,25 @@ preproc_j(
   float xval = C[i].xval;
   uint32_t yval = 1;
   uint32_t from_i = C[i].idx;
-  Yj[i] = mk_comp_val(from_i, g[i], yval); 
+  uint8_t  g_i    = C[i].g;
+  Yj[i] = x_mk_comp_val(from_i, g_i, yval); 
   //-------------------------------------------
   uint32_t chk_yval = get_yval(Yj[i]);
   if ( chk_yval != yval ) { go_BYE(-1); }
   uint8_t  chk_goal = get_goal(Yj[i]);
-  if ( chk_goal != g[i] ) { go_BYE(-1); }
+  if ( chk_goal != g_i ) { go_BYE(-1); }
   uint32_t chk_from = get_from(Yj[i]);
   if ( chk_from != from_i ) { go_BYE(-1); }
   //-------------------------------------------
 
   for ( i = 1; i < n; i++ ) { 
+    g_i    = C[i].g;
     if ( C[i].xval != xval ) {
       xval = C[i].xval;
       yval++;
     }
     from_i = C[i].idx;
-    Yj[i] = mk_comp_val(from_i, yval, g[i]);
+    Yj[i] = x_mk_comp_val(from_i, g_i, yval);
   }
   //--------------------------------------
   for ( i = 0; i < n; i++ ) { 

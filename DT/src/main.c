@@ -24,10 +24,7 @@ main(
   tmpY = malloc(n * sizeof(uint64_t));
 
   status = preproc(X, m, n, g, &Y, &to); cBYE(status);
-  status = pr_data_i(X, Y, to, m, n, g, lb, ub); 
-  status = split(to, lb, ub, n, m, Y, tmpY); cBYE(status);
-  status = pr_data_i(X, Y, to, m, n, g, lb, ub); 
-  cBYE(status);
+  status = split(to, g, lb, ub, n, m, Y, tmpY); cBYE(status);
 BYE:
   if ( X != NULL ) { 
     for ( uint32_t j = 0; j < m; j++ ) { 

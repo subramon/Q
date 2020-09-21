@@ -25,12 +25,10 @@ BYE:
 
 int 
 pr_data_i(
-    float **X, /* [m][n] */
     uint64_t **Y, /* [m][n] */
     uint32_t **to, /* [m][n] */
     uint32_t m,
     uint32_t n,
-    uint8_t *g,
     uint32_t lb,
     uint32_t ub
    )
@@ -44,11 +42,11 @@ pr_data_i(
       uint8_t g_i = get_goal(Y[j][i]);
       uint8_t from_i = get_from(Y[j][i]);
       uint8_t y_i   = get_yval(Y[j][i]);
-      float xval = X[j][i];
       printf("(%1u,%4u,%4u,%4u),", g_i, to[j][i], from_i, y_i);
     }
     printf("\n");
   }
+  printf("\n==============================\n");
 BYE:
   return status;
 }

@@ -15,6 +15,7 @@ INCS = -I./inc/
 all: dt
 
 SRCS = \
+       ./src/check.c	\
        ./src/main.c	\
        ./src/mk_data.c	\
        ./src/pr_data.c	\
