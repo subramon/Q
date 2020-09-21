@@ -18,15 +18,17 @@ split(
   int status = 0;
   static uint32_t split_j = 0;
   if ( ub - lb <= MIN_LEAF_SIZE ) { return status; }
+#ifdef DEBUG
   printf("Splitting %u to %u \n", lb, ub);
   status = check(to, g, lb, ub, n, m, Y); cBYE(status);
+#endif
 
   //-----------------------------------------
   // START: Decide which feature, which value is best split 
   uint32_t split_i = lb + ((ub - lb)/2); // just for now 
   //---------------------------------------------------
   for ( uint32_t j = 0; j < m; j++ ) {
-    uint32_t idx, lidx = 0, ridx = split_i;
+    uint32_t idx, lidx = lb, ridx = split_i;
     uint64_t *Yj = Y[j];
     // TODO Uncomment this: if ( j == split_j ) { continue; }
     for ( uint32_t i = lb; i < ub; i++ ) { 

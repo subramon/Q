@@ -56,26 +56,19 @@ check(
    )
 {
   int status = 0;
-  bool *pos_seen = NULL;
   uint32_t *tos = NULL;
   uint32_t *chk_from_i = NULL;
   uint32_t *chk_from_j = NULL;
+  uint8_t **goals = NULL;
   if ( ub - lb <= MIN_LEAF_SIZE ) { return status; }
   if ( ub > n ) { go_BYE(-1); }
-  pos_seen = malloc(n * sizeof(bool));
   chk_from_i = malloc((ub-lb) * sizeof(uint32_t));
   chk_from_j = malloc((ub-lb) * sizeof(uint32_t));
 
-  status = pr_data_i(Y, to, m, n, lb, ub); cBYE(status);
-  // some checking 
-  /*
-  for ( uint32_t j = 1; j < m; j++ ) {
-    bool is_eq = false;
-    status = chk_set_equality(to[j-1], to[j], lb, ub, n, &is_eq); cBYE(status);
-    if ( !is_eq ) { go_BYE(-1);
-    }
-  }
-  */
+  status = pr_data_i(Y, to, m, lb, ub); cBYE(status);
+
+  // The "froms" for all attributes should be the same 
+  // Of course, the order in which they occur might be different
   for ( uint32_t j1 = 0; j1 < m; j1++ ) {
     int idx = 0;
     for ( unsigned int i = lb; i < ub; i++ ) { 
@@ -94,6 +87,7 @@ check(
     }
   }
 
+  // Check each attribute in sorted order 
   for ( uint32_t j = 0; j < m; j++ ) {
     for ( uint32_t i = lb+1; i < ub; i++ ) { 
       uint32_t yval_i_1 = get_yval(Y[j][i-1]);
@@ -101,7 +95,9 @@ check(
       if ( yval_i_1 > yval_i_2 ) { go_BYE(-1);
       }
     }
+  }
     // check uniqueness of from
+  for ( uint32_t j = 0; j < m; j++ ) {
     int idx = 0;
     for ( uint32_t i = lb; i < ub; i++ ) { 
       chk_from_i[idx++] = get_from(Y[j][i]);
@@ -109,12 +105,53 @@ check(
     bool b_is_unique;
     status = chk_is_unique(chk_from_i, ub-lb, &b_is_unique);
     if ( !b_is_unique ) { go_BYE(-1); }
-    // check uniqueness of tos
-    // TODO 
+  }
+  // check goal counts for each attribute. Should be same.
+  goals = malloc(m * sizeof(uint32_t *));
+  for ( uint32_t j = 0; j < m; j++ ) {
+    goals[j] = malloc(2 * sizeof(uint32_t)); // goal is either 0 or 1 
+    for ( uint32_t k = 0; k < 2; k++ ) {
+      goals[j][k] = 0;
+    }
+  }
+  for ( uint32_t j = 0; j < m; j++ ) {
+    for ( uint32_t i = lb; i < ub; i++ ) { 
+      uint8_t goal_i = get_goal(Y[j][i]);
+      if ( goal_i > 1 ) { go_BYE(-1); }
+      goals[j][goal_i]++;
+    }
+  }
+  for ( uint32_t j1 = 0; j1 < m; j1++ ) {
+    for ( uint32_t j2 = j1+1; j2 < m; j2++ ) {
+      for ( uint32_t k = 0; k < 2; k++ ) {
+        if ( goals[j1][k] != goals[j2][k] ) { go_BYE(-1); }
+      }
+    }
+  }
+  // check that from and to match up
+  for ( uint32_t j = 0; j < m; j++ ) {
+    for ( uint32_t i = lb; i < ub; i++ ) { 
+      uint32_t from_i = get_from(Y[j][i]);
+      uint32_t to_i = to[j][from_i];
+      if ( to_i != i ) { go_BYE(-1); }
+    }
+  }
+  // check that from and goal match up
+  for ( uint32_t j = 0; j < m; j++ ) {
+    for ( uint32_t i = lb; i < ub; i++ ) { 
+      uint32_t from_i = get_goal(Y[j][i]);
+      uint8_t  goal_i = get_goal(Y[j][i]);
+      if ( g[from_i] != goal_i ) { go_BYE(-1); }
+    }
   }
   printf("++++++++++++++++++++++++++\n");
 BYE:
-  free_if_non_null(pos_seen);
+  if ( goals != NULL ) { 
+    for ( uint32_t j = 0; j < m; j++ ) {
+      free_if_non_null(goals[j]);
+    }
+    free_if_non_null(goals);
+  }
   free_if_non_null(tos);
   free_if_non_null(chk_from_i);
   free_if_non_null(chk_from_j);

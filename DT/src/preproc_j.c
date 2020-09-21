@@ -46,13 +46,16 @@ preproc_j(
    )
 {
   int status = 0;
-  uint64_t *Yj = NULL;
-  uint32_t *to = NULL;
-  comp_key_t *C = NULL;
+  uint64_t *Yj = NULL; // [n]
+  uint32_t *to = NULL; // [n]
+  comp_key_t *C = NULL; // [n]
   // allocate Y and idx 
   Yj  = malloc(n * sizeof(uint64_t));
+  return_if_malloc_failed(Yj);
   to  = malloc(n * sizeof(uint32_t));
+  return_if_malloc_failed(to);
   C   = malloc(n * sizeof(comp_key_t));
+  return_if_malloc_failed(C);
   for ( uint32_t i = 0; i < n; i++ ) { 
     C[i].idx  = i;
     C[i].g    = g[i];
@@ -60,7 +63,12 @@ preproc_j(
   }
   // sort X, idx, g
   qsort(C, n, sizeof(comp_key_t), sortfn);
-  // create Y 
+  for ( uint32_t i = 1; i < n; i++ ) { 
+    if ( C[i].xval < C[i-1].xval ) { go_BYE(-1);
+    }
+  }
+  // create Y. 
+  // bits 0 to 30 for yval, bit 31 for goal, bits 32 to 63 for from
   uint32_t i = 0;
   float xval = C[i].xval;
   uint32_t yval = 1;
@@ -68,14 +76,15 @@ preproc_j(
   uint8_t  g_i    = C[i].g;
   Yj[i] = x_mk_comp_val(from_i, g_i, yval); 
   //-------------------------------------------
+#ifdef DEBUG
   uint32_t chk_yval = get_yval(Yj[i]);
   if ( chk_yval != yval ) { go_BYE(-1); }
   uint8_t  chk_goal = get_goal(Yj[i]);
   if ( chk_goal != g_i ) { go_BYE(-1); }
   uint32_t chk_from = get_from(Yj[i]);
   if ( chk_from != from_i ) { go_BYE(-1); }
+#endif
   //-------------------------------------------
-
   for ( i = 1; i < n; i++ ) { 
     g_i    = C[i].g;
     if ( C[i].xval != xval ) {
@@ -86,11 +95,13 @@ preproc_j(
     Yj[i] = x_mk_comp_val(from_i, g_i, yval);
   }
   //--------------------------------------
+  // Create the "to" data structure 
   for ( i = 0; i < n; i++ ) { 
     uint32_t pos = get_from(Yj[i]);
     if ( pos >= n ) { go_BYE(-1); }
     to[pos] = i;
   }
+  //--------------------------------------
   *ptr_Yj = Yj;
   *ptr_to = to;
 BYE:

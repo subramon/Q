@@ -23,7 +23,7 @@ SRCS = \
        ./src/preproc_j.c	\
        ./src/split.c
 
-DFLAGS = -g
+DFLAGS = -g -DDEBUG
 
 dt : ./src/*.c  ./inc/*.h 
 	gcc ${CFLAGS} ${DFLAGS}  ${SRCS} ${INCS} \
