@@ -139,9 +139,10 @@ check(
   // check that from and goal match up
   for ( uint32_t j = 0; j < m; j++ ) {
     for ( uint32_t i = lb; i < ub; i++ ) { 
-      uint32_t from_i = get_goal(Y[j][i]);
+      uint32_t from_i = get_from(Y[j][i]);
       uint8_t  goal_i = get_goal(Y[j][i]);
-      if ( g[from_i] != goal_i ) { go_BYE(-1); }
+      if ( g[from_i] != goal_i ) { 
+        go_BYE(-1); }
     }
   }
   printf("++++++++++++++++++++++++++\n");

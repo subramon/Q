@@ -6,6 +6,7 @@
 \usepackage{fancyheadings}
 \pagestyle{fancy}
 \usepackage{pmc}
+\input{../../DOC/latex/styles/ramesh_abbreviations}
 \usepackage{graphicx}
 \setlength\textwidth{6.5in}
 \setlength\textheight{9.0in}
@@ -22,19 +23,119 @@
 \rfoot{{\small \thepage}}
 
 \begin{abstract}
-  A typical computational strategy for building decision trees (as evidenced in
+A typical computational strategy for building decision trees (as evidenced in
   scikit-learn) is as follows. Each feature is sorted and then traversed in
   ascending order to determine the best split point. The best split point over
   all features is selcted and used to partition the data into two. This
-  process is repeated recursively until some stopping criterion is reached e.g., number of instances
-  too small. 
+  process is repeated recursively until some stopping criterion is reached e.g.,
+  the number of instances is
+  too small. The contribution of this paper is to provide a novel indexing
+  strategy that requires a single sort at the beginning. After that, maintaining
+  the sorted order is accomplished by a linear scan of the data.
 \end{abstract}
 
 \section{Introduction}
-\TBC
+
+
+\section{Algorithm}
+
+\section{Results}
+
+\subsection{Assumptions}
+Our current implementation makes the following assumptions. These are purely for
+the sake of convenience --- conceptually these limitations are not inherent to
+the approach.
+
+\be
+\item The goal attribute can be encoded as 0 or 1
+\item The values of the attributes used to build the decision tree are ordered and can be
+  represented as floating point numbers
+\item \(n \leq 2^{32}\), where \(n\) is the number of instances
+\item The number of unique values for each instance is \(< 2^{31}\)
+\item There are no missing values. Or, if any exist, they have been redressed
+  by imputing values to them. 
+\ee
+
+\subsection{Data Structures}
+
+\be
+\item Let \(n\) be the number of instances
+\item Let \(m\) be the number of features. 
+\item Let \(X[m][n]\) be the input data. \(X[j]\), also denoted as \(X_j\),  is a column vector containg
+  the values of feature \(j\)
+\item Let \(g[n]\) be the values of the goal attribute
+\item Let \(Y[m][n]\) be the transformed data where input data has been
+  ``position-encoded'' 
+  by its position in the sort order (ascending). A sample mapping from 
+  X-values to Y-values is shown below.
+\begin{displaymath}
+[11, 32, 47, 11, 17, 28, 32, 55] \Rightarrow [1, 4, 5, 1, 2, 4, 6]
+\end{displaymath}
+
+Further, for efficiency, each element of Y is encoded as a 64-bit integer where 
+\bi
+\item bits \([0..30]\) represent the Y-value itself. 
+  We refer to this as \(Y_j[i].y\)
+\item bit 31 represent the goal value
+  We refer to this as \(Y_j[[i].g\)
+\item bits \([32..63]\) represent the ``from'' value, explained later
+  We refer to this as \(Y_j[i].f\)
+  \ei
+\(Y_j\) is sorted so that \(Y_j[i].y \leq Y_j[i+1].y\)
+In order to record the original position of this value, we use the {\tt from}
+field. The inter-relationship is specified as follows
+\bi
+\item \(x = X_j[k]\)
+\item \(k = Y_j[i].f\)
+\item \(y = Y_j[i].y\)
+\item Then, \(y\) is the position-encoded value of \(x\)
+  \ei
+
+\item Let \(T[m][n]\) be a data structure used to record the ``to'' indexing. In
+  other words, it tells us {\bf to} which position a datum in the original set
+  has been permuted. Its interlinking with the ``from'' field is best explained
+  in Invariant~\ref{from_to}
+  \ee
+
+\begin{invariant}
+  \label{from_to}
+  Let \(p = Y_j[i].f\). Then \(T_j[p] = i\)
+
+\end{invariant}
+
+\section{Algorithm}
+
+The algorithm is motivated with a simple example where
+\be
+\item \(n= 16\)
+\item \(m= 2\)
+\item The \(x\)-values and their corresponding position-encoded \(y\)-values are the same
+\item Column {\bf P} represents position
+\item Column {\bf L} is a label (not used by the algorithm)
+\item Column {\bf F1} is the values of feature 1 
+\item Column {\bf F2} is the values of feature 2
+\item Column {\bf G} is the values of the goal
+\item Column {\bf Y1} is the sorted, encoded values of F1. Values in the column
+  are a tuple \((f,g,y)\), where 
+  \be
+\item \(f\) --- the position of this value in the original data set, F1.
+\item \(g\) --- the value of the goal feature for this instance
+\item \(y\) --- the position-encoded value for this feature
+  \ee
+\item Column {\bf Y2} is the sorted, encoded values of F2
+\item Column {\bf T1} is the {\tt to} data structure for F1
+\item Column {\bf T2} is the {\tt to} data structure for F2
+  \ee
+
+  Assume that 
+
+\subsection{Example}
+
+
+
 
 \section{Conclusion}
-\TBC
+
 \bibliographystyle{alpha}
 \bibliography{../../DOC/Q_PAPER/ref}
 \end{document}
