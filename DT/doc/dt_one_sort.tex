@@ -36,14 +36,32 @@ A typical computational strategy for building decision trees (as evidenced in
 
 \section{Introduction}
 
+\TBC
+
+\subsection{Motivation}
+Notwithstanding the growing popularity of neural networks, decision trees and
+random forests continue to be a widely used machine learning technique.
+Efficient training of decision trees becomes important when 
+\be
+\item the data set sizes become large
+\item there is a large hyper-parameter space over which to tune
+\item a random forest may employ a large number of decision  trees
+\ee
+
+This calls for an efficient algorithm and implementation for the kernel of the
+computation. This can be summarized as 
+\be
+\item scanning all the distinct values of all the features to see how they
+  partition the data in terms of the goal attribute
+\item computing the metric of interest (gini impurity, entropy, \ldots) for 
+ each of the
+  candidate split points
+  \ee
 
 \section{Algorithm}
-
-\section{Results}
-
 \subsection{Assumptions}
 Our current implementation makes the following assumptions. These are purely for
-the sake of convenience --- conceptually these limitations are not inherent to
+the sake of convenience --- these are not conceptual limitations inherent in
 the approach.
 
 \be
@@ -52,8 +70,7 @@ the approach.
   represented as floating point numbers
 \item \(n \leq 2^{32}\), where \(n\) is the number of instances
 \item The number of unique values for each instance is \(< 2^{31}\)
-\item There are no missing values. Or, if any exist, they have been redressed
-  by imputing values to them. 
+\item There are no missing values. 
 \ee
 
 \subsection{Data Structures}
@@ -78,12 +95,12 @@ Further, for efficiency, each element of Y is encoded as a 64-bit integer where
   We refer to this as \(Y_j[i].y\)
 \item bit 31 represent the goal value
   We refer to this as \(Y_j[[i].g\)
-\item bits \([32..63]\) represent the ``from'' value, explained later
+\item bits \([32..63]\) represent the {\bf from} value, explained later
   We refer to this as \(Y_j[i].f\)
   \ei
 \(Y_j\) is sorted so that \(Y_j[i].y \leq Y_j[i+1].y\)
-In order to record the original position of this value, we use the {\tt from}
-field. The inter-relationship is specified as follows
+In order to record the original position of this value, we use the {\bf from}
+field. The inter-relationship is specified as follows:
 \bi
 \item \(x = X_j[k]\)
 \item \(k = Y_j[i].f\)
@@ -91,9 +108,9 @@ field. The inter-relationship is specified as follows
 \item Then, \(y\) is the position-encoded value of \(x\)
   \ei
 
-\item Let \(T[m][n]\) be a data structure used to record the ``to'' indexing. In
-  other words, it tells us {\bf to} which position a datum in the original set
-  has been permuted. Its interlinking with the ``from'' field is best explained
+\item Let \(T[m][n]\) be a data structure used to record the ``to'' indexing.
+  Intuitively, it tells us {\bf to} which position a datum in the original set
+  has been permuted. Its interlinking with the {\bf from} field is best explained
   in Invariant~\ref{from_to}
   \ee
 
@@ -103,8 +120,6 @@ field. The inter-relationship is specified as follows
 
 \end{invariant}
 
-\section{Algorithm}
-
 The algorithm is motivated with a simple example where
 \be
 \item \(n= 16\)
@@ -112,29 +127,42 @@ The algorithm is motivated with a simple example where
 \item The \(x\)-values and their corresponding position-encoded \(y\)-values are the same
 \item Column {\bf P} represents position
 \item Column {\bf L} is a label (not used by the algorithm)
-\item Column {\bf F1} is the values of feature 1 
-\item Column {\bf F2} is the values of feature 2
+\item Column \(F_1\) is the values of feature 1 
+\item Column \(F_2\) is the values of feature 2
 \item Column {\bf G} is the values of the goal
-\item Column {\bf Y1} is the sorted, encoded values of F1. Values in the column
+\item Column \(Y_1\) is the sorted, encoded values of \(F_1\). Values in the column
   are a tuple \((f,g,y)\), where 
   \be
 \item \(f\) --- the position of this value in the original data set, F1.
 \item \(g\) --- the value of the goal feature for this instance
 \item \(y\) --- the position-encoded value for this feature
   \ee
-\item Column {\bf Y2} is the sorted, encoded values of F2
-\item Column {\bf T1} is the {\tt to} data structure for F1
-\item Column {\bf T2} is the {\tt to} data structure for F2
+\item Column \(Y_2\) is the sorted, encoded values of \(F_2\)
+\item Column \(T_1\) is the {\bf to} data structure for \(F_1\)
+\item Column \(T_2\) is the {\bf to} data structure for \(F_2\)
   \ee
 
+  \begin{table}
+    \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|} \hline \hline
+      {\bf P} & {\bf L} & \(F_1\) & \(F_2\) & {\bf G} & \(Y_1\) &  %
+      \(Y_2\) & \(T_1\) & \(T_2\) & \(Y'_2\) & \(T'_2\) \\ \hline \hline
+      \input{table}
+      \hline
+    \end{tabular}
+  \end{table}
 
 \subsection{Example}
 
-Let us assume that the best split is using feature \(F_1\) such that \(F_1 \leq
-8\) is the data for the left child. XXXXX TODO XXXX Define i_L Then,
+Let us assume that the best split is using feature \(F_1\) such that the 
+first \(i_L = 8\) 8
+elements are assigned to the left sub-tree and the remaining to the rest.
+In other words, \(F_1 \leq 8\) selects the data for the left child, with the
+balance to the right.
 \bi
-\item The instances for the left sub-treee have labels \(\{X, Y, \Z\}\)
-\item The instances for the right sub-treee have labels \(\{X, Y, \Z\}\)
+\item The instances for the left sub-treee have labels 
+  \(\{D, P, B, N, F, I, J, A\}\)
+\item The instances for the right sub-treee have labels 
+  \(\{K, E, H, C, G, L, M, O\}\)
 \ei
 When we move to processing the left and right sub-trees, no
 additional processing needs to be done for feature \(F_1\) because it already in the the correct sorted order. 
@@ -147,7 +175,6 @@ to}. If \(q \leq i_L = 8\), then we know that it goes to the left sub-tree; else
 it goes to the right sub -tree. Since the \(Y_2\) column was sorted, and we
 build the left and right trees by scanning \(Y_2\) in order, the left
 and right trees continue to be in sorted order. 
-
 This allows us to build the \(Y'_2\) column. 
 \item 
 There is one last detail to consider. Which is that the \(T'_2\) field needs to
@@ -160,9 +187,29 @@ This is done as follows. Assume \(Y_2[i]\) is to be moved to positon \(k\). Let
 Note that we need to keep \(Y_2, T_2\) until we have built \(Y'_2, T'_2\) at
 which point we can replace them with \(Y'_2, T'_2\)
 
+As a quick sanity check, notice that the values of \(F_2\) in left and right
+sub-trees are sorted as:
+\begin{description}
+  \item [left] 
+\([1, 2, 7, 8, 10, 12, 14, 16]\), see rows 0 to 7 of column \(Y'_2\).
+\item [right] 
+\([3, 4, 5, 6, 9, 11, 13, 15]\) , see rows 8 to 15 of column \(Y'_2\).
+\end{description}
+
+\subsection{The Algorithm}
+
+The key insight that drives the algorithm is that preserving the sorted order of
+the features {\em not} chosen for the current split does {\em not} require a
+re-sort. Instead, as long as we can identify whether an element should be
+assigned to the left or right sub-tree, then we can scan the elements in order
+and add them to the left/right sub-trees. This preserves the sorted order and
+allows us to maintain the doubly-indexed data structures and sets us up for a
+recursive solution.
 
 
 \section{Conclusion}
+
+\TBC
 
 \bibliographystyle{alpha}
 \bibliography{../../DOC/Q_PAPER/ref}

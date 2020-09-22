@@ -1,3 +1,4 @@
+#include "incs.h"
 int
 accumulate(
       const uint64_t * restrict Y, // [n_in]
