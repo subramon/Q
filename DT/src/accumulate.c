@@ -56,6 +56,8 @@ accumulate(
       M[nbuf-1].cnt[goal_i]++;
     }
   }
+  if ( nbuf > BUFSZ ) { go_BYE(-1); }
+  *ptr_nbuf = nbuf; // number of elements in buffer
   *ptr_lb = ub; // we have consumed up to ub
 BYE:
   return status;

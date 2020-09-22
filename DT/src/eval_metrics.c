@@ -7,7 +7,8 @@ eval_metrics(
     )
 {
   int status = 0;
-  for ( int i = 0; i < nbuf; i++ ) { 
+  if ( nbuf > BUFSZ ) { go_BYE(-1); }
+  for ( uint32_t i = 0; i < nbuf; i++ ) { 
     M[i].metric = (random() % 1000000 )  / 1000000.0; // TODO
   }
 BYE:

@@ -38,8 +38,7 @@ search(
       best_split_yidx    = yidx[j];  
     }
   }
-  if ( best_split_feature_yidx >= m ) { go_BYE(-1); } 
-  if ( best_feature_yval >= n ) { go_BYE(-1); } 
+  if ( best_feature_yidx >= m ) { go_BYE(-1); } 
   if ( best_split_yidx >= ub ) { go_BYE(-1); } 
   if ( best_split_yidx <  lb ) { go_BYE(-1); } 
 

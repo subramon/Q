@@ -1,6 +1,6 @@
 #include "incs.h"
 #include "accumulate.h"
-// #include "best_metric.h"
+#include "calc_best_metric.h"
 #include "eval_metrics.h"
 #include "search_j.h"
 
@@ -29,7 +29,7 @@ search_j(
     lb = new_lb;
     status = eval_metrics(M, nbuf); cBYE(status);
     uint32_t loc = 0;
-    // status = best_metric(M, nbuf, &loc); cBYE(status);
+    status = calc_best_metric(M, nbuf, &loc); cBYE(status);
     if ( M[loc].metric > best_metric ) { 
       best_metric = M[loc].metric;
       best_yval   = M[loc].yval;

@@ -49,7 +49,7 @@ split(
         go_BYE(-1); 
       }
       uint32_t to_i   = to[split_j][from_i];
-      if ( to_i < split_i ) { // this data point went left
+      if ( to_i < split_yidx ) { // this data point went left
         idx = lidx; tmpY[lidx++] = Yj[i]; 
       }
       else { // this data point went right
@@ -57,7 +57,7 @@ split(
       }
       to[j][from_i] = idx;
     }
-    if ( lidx != split_i ) { go_BYE(-1); }
+    if ( lidx != split_yidx ) { go_BYE(-1); }
     if ( ridx != ub ) { go_BYE(-1); }
     if ( j == split_j ) { 
 #ifdef DEBUG
@@ -73,8 +73,8 @@ split(
     }
   }
 
-  status = split(to, g, lb, split_i, n, m, Y, tmpY); cBYE(status);
-  status = split(to, g, split_i, ub, n, m, Y, tmpY); cBYE(status);
+  status = split(to, g, lb, split_yidx, n, m, Y, tmpY); cBYE(status);
+  status = split(to, g, split_yidx, ub, n, m, Y, tmpY); cBYE(status);
 
 BYE:
   return status;
