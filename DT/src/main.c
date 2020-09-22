@@ -1,5 +1,6 @@
 #include "incs.h"
 #include "mk_data.h"
+#include "read_data.h"
 #include "pr_data.h"
 #include "preproc.h"
 #include "split.h"
@@ -17,10 +18,10 @@ main(
   uint64_t *tmp_Yj  = NULL; // [n]
   uint32_t **to = NULL; // [m][n]
   uint8_t *g = NULL; // [n]
-  uint32_t nT = 0;
-  uint32_t nH = 0;
+  uint32_t nT = 0; uint32_t nH = 0;
   uint32_t lb = 0; uint32_t ub = n;
   //-----------------------------------------------
+  status = read_data(&X, m, n, &g); cBYE(status); 
   status = mk_data(&X, m, n, &g); cBYE(status);
   status = pr_data_f(X, m, g, lb, ub); cBYE(status);
   status = preproc(X, m, n, g, &nT, &nH, &Y, &to, &tmp_Yj); cBYE(status);

@@ -19,7 +19,8 @@ all: dt
 CSRCS := $(wildcard ./src/*.c)
 COBJS = $(CSRCS:.c=.o)
 
-DFLAGS = -g -DDEBUG -DFAKE -fopenmp
+# DFLAGS = -g -DDEBUG -DFAKE -fopenmp
+DFLAGS = -g -DDEBUG -fopenmp
 
 .c.o : 
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS) $(DFLAGS)
@@ -30,4 +31,4 @@ dt : $(CSRCS) ./inc/*.h $(COBJS)
 	  -o dt
 
 clean:
-	rm -f _* *.o dt
+	rm -f _* *.o ./src/*.o dt

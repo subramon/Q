@@ -26,4 +26,12 @@
 #include <unistd.h>
 #include "macros.h"
 #include "constants.h"
+
+typedef struct _metrics_t {  
+  uint32_t yval;
+  uint32_t yidx;
+  uint32_t cnt[2];
+  double metric;
+} metrics_t; 
+
 #endif

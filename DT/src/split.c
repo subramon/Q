@@ -22,7 +22,7 @@ split(
   static 
 #endif
   uint32_t split_j = -1;
-  uint32_t split_i, split_val;
+  uint32_t split_yidx, split_yval;
 #ifdef DEBUG
   printf("Splitting %u to %u \n", lb, ub);
   status = check(to, g, lb, ub, n, m, Y); cBYE(status);
@@ -30,17 +30,19 @@ split(
 
   //-----------------------------------------
 #ifdef FAKE
-  split_j++; if ( split_j == m ) { split_j = 0; }  // TODO FIX 
-  split_i = lb + ((ub - lb)/2); // just for now 
+  split_j++; if ( split_j == m ) { split_j = 0; }
+  split_yidx = lb + ((ub - lb)/2); // just for now 
 #else
-  status = search(lb, ub, m, Y, &split_j, &split_val,  &split_i); 
+  status = search(Y, lb, ub, m, &split_j, &split_yval,  &split_yidx); 
   cBYE(status); 
 #endif
   //---------------------------------------------------
   for ( uint32_t j = 0; j < m; j++ ) {
-    uint32_t idx, lidx = lb, ridx = split_i;
+    uint32_t idx, lidx = lb, ridx = split_yidx;
     uint64_t *Yj = Y[j];
-    // TODO Uncomment this: if ( j == split_j ) { continue; }
+#ifdef DEBUG
+    if ( j == split_j ) { continue; }
+#endif
     for ( uint32_t i = lb; i < ub; i++ ) { 
       uint32_t from_i = get_from(Y[j][i]);
       if ( from_i >= n ) { 
@@ -58,9 +60,11 @@ split(
     if ( lidx != split_i ) { go_BYE(-1); }
     if ( ridx != ub ) { go_BYE(-1); }
     if ( j == split_j ) { 
+#ifdef DEBUG
       for ( uint32_t i = lb; i < ub; i++ ) { 
         if ( Yj[i] != tmpY[i] ) { go_BYE(-1); }
       }
+#endif
     }
     else {
       for ( uint32_t i = lb; i < ub; i++ ) { 
