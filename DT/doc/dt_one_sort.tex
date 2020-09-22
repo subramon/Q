@@ -127,10 +127,38 @@ The algorithm is motivated with a simple example where
 \item Column {\bf T2} is the {\tt to} data structure for F2
   \ee
 
-  Assume that 
 
 \subsection{Example}
 
+Let us assume that the best split is using feature \(F_1\) such that \(F_1 \leq
+8\) is the data for the left child. XXXXX TODO XXXX Define i_L Then,
+\bi
+\item The instances for the left sub-treee have labels \(\{X, Y, \Z\}\)
+\item The instances for the right sub-treee have labels \(\{X, Y, \Z\}\)
+\ei
+When we move to processing the left and right sub-trees, no
+additional processing needs to be done for feature \(F_1\) because it already in the the correct sorted order. 
+However,  \(F_2\) needs to be re-arranged so that it is in sorted order. This is
+done as follows
+\be
+\item traverse the \(Y_2\) column in order. Use \(p = Y_2[i].f\) to figure out where
+this item came {\em from}. Use \(q = T_1[p]\) to decide where this item went {\bf
+to}. If \(q \leq i_L = 8\), then we know that it goes to the left sub-tree; else
+it goes to the right sub -tree. Since the \(Y_2\) column was sorted, and we
+build the left and right trees by scanning \(Y_2\) in order, the left
+and right trees continue to be in sorted order. 
+
+This allows us to build the \(Y'_2\) column. 
+\item 
+There is one last detail to consider. Which is that the \(T'_2\) field needs to
+be updated to reflect the reordering of the values of \(F_2\) in \(Y'_2\).
+
+This is done as follows. Assume \(Y_2[i]\) is to be moved to positon \(k\). Let
+\(f = Y_2[i].f\). Then, \(T'_2[f] \leftarrow k\)
+\ee
+
+Note that we need to keep \(Y_2, T_2\) until we have built \(Y'_2, T'_2\) at
+which point we can replace them with \(Y'_2, T'_2\)
 
 
 
