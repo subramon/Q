@@ -22,9 +22,11 @@ SRCS = \
        ./src/pr_data.c	\
        ./src/preproc.c	\
        ./src/preproc_j.c	\
+       ./src/search.c \
+       ./src/search_j.c \
        ./src/split.c
 
-DFLAGS = -g -DDEBUG
+DFLAGS = -g -DDEBUG -fopenmp
 
 dt : ./src/*.c  ./inc/*.h 
 	gcc ${CFLAGS} ${DFLAGS}  ${SRCS} ${INCS} \
