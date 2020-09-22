@@ -17,11 +17,13 @@ main(
   uint64_t *tmp_Yj  = NULL; // [n]
   uint32_t **to = NULL; // [m][n]
   uint8_t *g = NULL; // [n]
+  uint32_t nT = 0;
+  uint32_t nH = 0;
   uint32_t lb = 0; uint32_t ub = n;
   //-----------------------------------------------
   status = mk_data(&X, m, n, &g); cBYE(status);
   status = pr_data_f(X, m, g, lb, ub); cBYE(status);
-  status = preproc(X, m, n, g, &Y, &to, &tmp_Yj); cBYE(status);
+  status = preproc(X, m, n, g, &nT, &nH, &Y, &to, &tmp_Yj); cBYE(status);
   status = split(to, g, lb, ub, n, m, Y, tmp_Yj); cBYE(status);
 BYE:
   for ( uint32_t j = 0; j < m; j++ ) { 

@@ -1,5 +1,6 @@
 #include "incs.h"
 #include "accumulate.h"
+#include "best_metric.h"
 #include "search_j.h"
 
 int 
@@ -13,14 +14,15 @@ search_j(
    )
 {
   int status = 0;
-  uint32_t bufsz = 1024;
-  uint32_t yvals[bufsz];
-  uint32_t cnts[2][bufsz]; // on stack allocation
+  uint32_t nbuf;
+  uint32_t yvals[BUFSZ];
+  uint32_t cnts[2][BUFSZ]; // on stack allocation
+  double metric; uint32_t loc;
 
   uint32_t processed_lb = lb;
   for ( ; ; ) { 
     if ( processed_lb >= ub ) { break; }
-    status = accumulate(Yj, lb, ub, yval, cnts, bufsz, &nbuf, 
+    status = accumulate(Yj, lb, ub, yvals, cnts, BUFSZ, &nbuf, 
         &processed_lb);
     cBYE(status);
     status = best_metric(cnts, nbuf, &metric, &loc); cBYE(status);

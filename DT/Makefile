@@ -1,3 +1,5 @@
+CC=gcc
+
 CFLAGS = -g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable -Wunused-parameter -Wno-pedantic -Wno-unused-label 
 CFLAGS+= -fsanitize=address -fno-omit-frame-pointer # for address sanitizer
 CFLAGS+= -fsanitize=undefined
@@ -24,7 +26,7 @@ DFLAGS = -g -DDEBUG -DFAKE -fopenmp
 
 
 dt : $(CSRCS) ./inc/*.h $(COBJS)
-	gcc ${CFLAGS} ${DFLAGS}  ${COBJ} ${INCS} \
+	gcc ${CFLAGS} ${DFLAGS}  ${COBJS} ${INCS} \
 	  -o dt
 
 clean:
