@@ -7,8 +7,8 @@ accumulate(
       uint32_t ub,
       uint32_t *yvals, // [bufsz] 
       uint32_t **cnts, // [2][bufsz] 
-      uint64_t bufsz,
-      uint64_t *ptr_nbuf, // how many in buffer when returning
+      uint32_t bufsz,
+      uint32_t *ptr_nbuf, // how many in buffer when returning
       uint32_t *ptr_lb // how many consumed when returning.
       )
 {

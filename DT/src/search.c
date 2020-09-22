@@ -5,10 +5,10 @@
 #include "search.h"
 int 
 search(
+    uint64_t **Y, /* [m][n] */
     uint32_t lb,
     uint32_t ub,
     uint32_t m,
-    uint64_t **Y, /* [m][n] */
     uint32_t *ptr_split_feature_idx,
     uint32_t *ptr_yval,
     uint32_t *ptr_yidx
@@ -20,8 +20,8 @@ search(
   uint32_t yidx[NUM_FEATURES];
 #pragma omp parallel for
   for ( uint32_t j = 0; j < m; j++ ) { 
-    int x;
-    x = search_j(lb, ub, Y[j], &(yval[j]), &(yidx[j]), &(metrics[j])); 
+    int x; // used because we cannot break out of omp loop
+    x = search_j(Y[j], lb, ub, &(yval[j]), &(yidx[j]), &(metrics[j])); 
     if ( x < 0 ) { status = x; }
   }
   uint32_t best_feature = 0;  

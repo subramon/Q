@@ -14,22 +14,17 @@ CFLAGS+= -Wduplicated-branches -Wrestrict
 INCS = -I./inc/
 all: dt
 
-SRCS = \
-       ./src/accumulate.c	\
-       ./src/check.c	\
-       ./src/main.c	\
-       ./src/mk_data.c	\
-       ./src/pr_data.c	\
-       ./src/preproc.c	\
-       ./src/preproc_j.c	\
-       ./src/search_j.c \
-       ./src/search.c \
-       ./src/split.c \
+CSRCS := $(wildcard ./src/*.c)
+COBJS = $(CSRCS:.c=.o)
 
-DFLAGS = -g -DDEBUG -fopenmp
+DFLAGS = -g -DDEBUG -DFAKE -fopenmp
 
-dt : ./src/*.c  ./inc/*.h 
-	gcc ${CFLAGS} ${DFLAGS}  ${SRCS} ${INCS} \
+.c.o : 
+	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS) $(DFLAGS)
+
+
+dt : $(CSRCS) ./inc/*.h $(COBJS)
+	gcc ${CFLAGS} ${DFLAGS}  ${COBJ} ${INCS} \
 	  -o dt
 
 clean:

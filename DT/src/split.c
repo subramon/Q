@@ -19,20 +19,23 @@ split(
   int status = 0;
   if ( ub - lb <= MIN_LEAF_SIZE ) { return status; }
 #ifdef FAKE
-  static uint32_t split_j = 0; 
-  uint32_t split_i = lb + ((ub - lb)/2); // just for now 
-#else
-  uint32_t split_i, split_j;
+  static 
 #endif
+  uint32_t split_j = -1;
+  uint32_t split_i, split_val;
 #ifdef DEBUG
   printf("Splitting %u to %u \n", lb, ub);
   status = check(to, g, lb, ub, n, m, Y); cBYE(status);
 #endif
 
   //-----------------------------------------
-  // START: Decide which feature, which value is best split 
+#ifdef FAKE
+  split_j++; if ( split_j == m ) { split_j = 0; }  // TODO FIX 
+  split_i = lb + ((ub - lb)/2); // just for now 
+#else
   status = search(lb, ub, m, Y, &split_j, &split_val,  &split_i); 
   cBYE(status); 
+#endif
   //---------------------------------------------------
   for ( uint32_t j = 0; j < m; j++ ) {
     uint32_t idx, lidx = lb, ridx = split_i;
@@ -65,7 +68,6 @@ split(
       }
     }
   }
-  split_j++; if ( split_j == m ) { split_j = 0; }  // TODO FIX 
 
   status = split(to, g, lb, split_i, n, m, Y, tmpY); cBYE(status);
   status = split(to, g, split_i, ub, n, m, Y, tmpY); cBYE(status);
