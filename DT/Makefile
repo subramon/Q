@@ -1,4 +1,4 @@
-CFLAGS = -g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable -Wunused-parameter -Wno-pedantic -mavx2 -mfma -Wno-unused-label 
+CFLAGS = -g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable -Wunused-parameter -Wno-pedantic -Wno-unused-label 
 CFLAGS+= -fsanitize=address -fno-omit-frame-pointer # for address sanitizer
 CFLAGS+= -fsanitize=undefined
 CFLAGS+= -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith
@@ -22,7 +22,10 @@ SRCS = \
        ./src/pr_data.c	\
        ./src/preproc.c	\
        ./src/preproc_j.c	\
-       ./src/split.c
+       ./src/search_j.c \
+       ./src/search.c \
+       ./src/split.c \
+
 
 DFLAGS = -g -DDEBUG
 
