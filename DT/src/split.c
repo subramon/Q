@@ -2,6 +2,7 @@
 #include "preproc_j.h"
 #include "check.h"
 #include "split.h"
+#include "search.h"
 
 int 
 split(
@@ -16,8 +17,13 @@ split(
    )
 {
   int status = 0;
-  static uint32_t split_j = 0;
   if ( ub - lb <= MIN_LEAF_SIZE ) { return status; }
+#ifdef FAKE
+  static uint32_t split_j = 0; 
+  uint32_t split_i = lb + ((ub - lb)/2); // just for now 
+#else
+  uint32_t split_i, split_j;
+#endif
 #ifdef DEBUG
   printf("Splitting %u to %u \n", lb, ub);
   status = check(to, g, lb, ub, n, m, Y); cBYE(status);
@@ -25,7 +31,8 @@ split(
 
   //-----------------------------------------
   // START: Decide which feature, which value is best split 
-  uint32_t split_i = lb + ((ub - lb)/2); // just for now 
+  status = search(lb, ub, m, Y, &split_j, &split_val,  &split_i); 
+  cBYE(status); 
   //---------------------------------------------------
   for ( uint32_t j = 0; j < m; j++ ) {
     uint32_t idx, lidx = lb, ridx = split_i;
