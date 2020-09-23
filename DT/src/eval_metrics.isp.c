@@ -1,17 +1,15 @@
-// TODO Convert to ispc 
-#include "incs.h"
+#include "constants.h"
+#include "ispc_types.h"
 
-export int
+export void 
 eval_metrics(
-    metrics_t M[BUFSZ],
-    uint32_t nbuf
+    uniform metrics_t M[BUFSZ],
+    uniform int32 nbuf,
+    uniform double metrics[]
     )
 {
   int status = 0;
-  if ( nbuf > BUFSZ ) { go_BYE(-1); }
-  for ( uint32_t i = 0; i < nbuf; i++ ) { 
-    M[i].metric = (random() % 1000000 )  / 1000000.0; // TODO
+  foreach ( i = 0 ... nbuf ) {
+    metrics[i] = M[i].cnt[0] + M[i].cnt[1];
   }
-BYE:
-  return status;
 }

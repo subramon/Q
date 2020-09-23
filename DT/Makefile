@@ -23,6 +23,12 @@ COBJS = $(CSRCS:.c=.o)
 # DFLAGS = -g -DDEBUG -DFAKE -fopenmp
 DFLAGS = -g -DDEBUG -fopenmp
 
+./inc/ispc_types.h : 
+	cat ./inc/types.h | sed s'/uint32_t/uint32/'g > ./inc/ispc_types.h
+
+eval_metrics.isp.o : ./inc/ispc_types.h
+	ispc ./src/eval_metrics.isp.c -o ./src/eval_metrics.isp.o -I../inc/
+
 .c.o : 
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS) $(DFLAGS)
 
