@@ -50,6 +50,8 @@ check(
     uint8_t *g, // for debugging 
     uint32_t lb,
     uint32_t ub,
+    uint32_t nT,
+    uint32_t nH,
     uint32_t n,
     uint32_t m,
     uint64_t **Y /* [m][n] */
@@ -62,6 +64,7 @@ check(
   uint8_t **goals = NULL;
   if ( ub - lb <= MIN_LEAF_SIZE ) { return status; }
   if ( ub > n ) { go_BYE(-1); }
+  if ( ( nT + nH ) != ( ub - lb ) ) { go_BYE(-1); }
   chk_from_i = malloc((ub-lb) * sizeof(uint32_t));
   chk_from_j = malloc((ub-lb) * sizeof(uint32_t));
 

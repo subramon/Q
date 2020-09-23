@@ -5,6 +5,8 @@ accumulate(
       const uint64_t * restrict Y, // [n_in]
       uint32_t lb,
       uint32_t ub,
+      uint32_t prev0,
+      uint32_t prev1,
       metrics_t M[BUFSZ],
       uint32_t *ptr_nbuf, // how many in buffer when returning
       uint32_t *ptr_lb // how many consumed when returning.
@@ -26,8 +28,8 @@ accumulate(
   M[nbuf-1].metric = -1; // initialize to bad value 
   M[nbuf-1].yidx = lb;
   M[nbuf-1].yval = yval_i;
-  M[nbuf-1].cnt[0] = 0;
-  M[nbuf-1].cnt[1] = 0;
+  M[nbuf-1].cnt[0] = prev0;
+  M[nbuf-1].cnt[1] = prev1;
   M[nbuf-1].cnt[goal_i]++;
   i++;
 
@@ -46,8 +48,8 @@ accumulate(
       M[nbuf].metric = -1; 
       M[nbuf].yidx = i;
       M[nbuf].yval = yval_i;
-      M[nbuf].cnt[0] = 0;
-      M[nbuf].cnt[1] = 0;
+      M[nbuf].cnt[0] = M[nbuf-1].cnt[0]; // counts are cumulative
+      M[nbuf].cnt[1] = M[nbuf-1].cnt[1];
       M[nbuf].cnt[goal_i]++;
       nbuf++;
     }

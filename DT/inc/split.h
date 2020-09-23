@@ -4,6 +4,8 @@ split(
     uint8_t *g, // for debugging 
     uint32_t lb,
     uint32_t ub,
+    uint32_t nT,
+    uint32_t nH,
     uint32_t n,
     uint32_t m,
     uint64_t **Y, /* [m][n] */

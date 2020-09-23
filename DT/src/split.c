@@ -10,6 +10,8 @@ split(
     uint8_t *g, // for debugging 
     uint32_t lb,
     uint32_t ub,
+    uint32_t nT, // number of tails in this data set 
+    uint32_t nH, // number of heads in this data set 
     uint32_t n,
     uint32_t m,
     uint64_t **Y, /* [m][n] */
@@ -17,6 +19,7 @@ split(
    )
 {
   int status = 0;
+  four_nums_t num4; memset(&num4, 0, sizeof(four_nums_t));
   if ( ub - lb <= MIN_LEAF_SIZE ) { return status; }
 #ifdef FAKE
   static 
@@ -25,7 +28,7 @@ split(
   uint32_t split_yidx, split_yval;
 #ifdef DEBUG
   printf("Splitting %u to %u \n", lb, ub);
-  status = check(to, g, lb, ub, n, m, Y); cBYE(status);
+  status = check(to, g, lb, ub, nT, nH, n, m, Y); cBYE(status);
 #endif
 
   //-----------------------------------------
@@ -33,7 +36,8 @@ split(
   split_j++; if ( split_j == m ) { split_j = 0; }
   split_yidx = lb + ((ub - lb)/2); // just for now 
 #else
-  status = search(Y, lb, ub, m, &split_j, &split_yval,  &split_yidx); 
+  status = search(Y, lb, ub, nT, nH, m, 
+       &split_j, &split_yval,  &split_yidx, &num4); 
   cBYE(status); 
 #endif
   //---------------------------------------------------
@@ -73,8 +77,8 @@ split(
     }
   }
 
-  status = split(to, g, lb, split_yidx, n, m, Y, tmpY); cBYE(status);
-  status = split(to, g, split_yidx, ub, n, m, Y, tmpY); cBYE(status);
+  status = split(to, g, lb, split_yidx, num4.n_T_L, num4.n_H_L, n, m, Y, tmpY); cBYE(status);
+  status = split(to, g, split_yidx, ub, num4.n_T_R, num4.n_H_R, n, m, Y, tmpY); cBYE(status);
 
 BYE:
   return status;
