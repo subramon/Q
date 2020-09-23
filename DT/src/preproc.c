@@ -12,46 +12,51 @@ preproc(
     uint32_t *ptr_nH, // encoded as 1
     uint64_t ***ptr_Y, 
     uint32_t ***ptr_to,
-    uint64_t **ptr_tmp_Yj
+    uint64_t ***ptr_tmpY
    )
 {
   int status = 0;
   uint64_t **Y = NULL; // [m][n]
   uint32_t **to = NULL; // [m][n]
-  uint64_t *tmp_Yj = NULL; // [n]
+  uint64_t **tmpY = NULL; // [n]
   uint32_t nT = 0;
   uint32_t nH = 0;
 
-  tmp_Yj = malloc(n * sizeof(uint64_t));
-  return_if_malloc_failed(tmp_Yj);
   Y      = malloc(m * sizeof(uint64_t *));
   return_if_malloc_failed(Y);
+  tmpY   = malloc(m * sizeof(uint64_t *));
+  return_if_malloc_failed(tmpY);
   to     = malloc(m * sizeof(uint32_t *));
   return_if_malloc_failed(to);
 
   for ( uint32_t j = 0; j < m; j++ ) { 
     status = preproc_j(X[j], n, g,  &(Y[j]), &(to[j]));
     cBYE(status);
+    tmpY[j] = malloc(n * sizeof(uint64_t));
+    return_if_malloc_failed(tmpY[j]);
   }
   for ( uint32_t i = 0; i < n; i++ ) { 
     if ( g[i] == 0 ) { nT++; } else { nH++; }
   }
-  *ptr_Y      = Y;
-  *ptr_tmp_Yj = tmp_Yj;
-  *ptr_to     = to;
-  *ptr_nT = nT;
-  *ptr_nH = nH;
+  *ptr_Y    = Y;
+  *ptr_tmpY = tmpY;
+  *ptr_to   = to;
+  *ptr_nT   = nT;
+  *ptr_nH   = nH;
 BYE:
   if ( status < 0 ) { 
     if ( Y != NULL ) { 
       for ( uint32_t j = 0; j < m; j++ ) { free_if_non_null(Y[j]); }
+    }
+    if ( tmpY != NULL ) { 
+      for ( uint32_t j = 0; j < m; j++ ) { free_if_non_null(tmpY[j]); }
     }
     if ( to != NULL ) { 
       for ( uint32_t j = 0; j < m; j++ ) { free_if_non_null(to[j]); }
     }
     free_if_non_null(Y); 
     free_if_non_null(to); 
-    free_if_non_null(tmp_Yj); 
+    free_if_non_null(tmpY); 
   }
   return status;
 }

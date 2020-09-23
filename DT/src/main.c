@@ -15,7 +15,7 @@ main(
   uint8_t  m = NUM_FEATURES;
   float **X = NULL;  // [m][n]
   uint64_t **Y  = NULL; // [m][n]
-  uint64_t *tmp_Yj  = NULL; // [n]
+  uint64_t **tmpY  = NULL; // [n]
   uint32_t **to = NULL; // [m][n]
   uint8_t *g = NULL; // [n]
   uint32_t nT = 0; uint32_t nH = 0;
@@ -24,17 +24,18 @@ main(
   status = read_data(&X, m, n, &g); cBYE(status); 
   status = mk_data(&X, m, n, &g); cBYE(status);
   status = pr_data_f(X, m, g, lb, ub); cBYE(status);
-  status = preproc(X, m, n, g, &nT, &nH, &Y, &to, &tmp_Yj); cBYE(status);
-  status = split(to, g, lb, ub, nT, nH, n, m, Y, tmp_Yj); cBYE(status);
+  status = preproc(X, m, n, g, &nT, &nH, &Y, &to, &tmpY); cBYE(status);
+  status = split(to, g, lb, ub, nT, nH, n, m, Y, tmpY); cBYE(status);
 BYE:
   for ( uint32_t j = 0; j < m; j++ ) { 
     if ( X != NULL ) { free_if_non_null(X[j]); }
     if ( Y != NULL ) { free_if_non_null(Y[j]); }
+    if ( tmpY != NULL ) { free_if_non_null(tmpY[j]); }
     if ( to != NULL ) { free_if_non_null(to[j]); }
   }
   free_if_non_null(X);
   free_if_non_null(Y);
-  free_if_non_null(tmp_Yj);
+  free_if_non_null(tmpY);
   free_if_non_null(to);
   free_if_non_null(g);
   return status;

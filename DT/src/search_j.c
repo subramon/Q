@@ -41,7 +41,9 @@ search_j(
       }
     }
 #endif
+    // start ispc 
     status = eval_metrics(M, nbuf); cBYE(status);
+    // stop  ispc 
     uint32_t loc = 0;
     status = calc_best_metric(M, nbuf, &loc); cBYE(status);
     if ( M[loc].metric > best_metric ) { 

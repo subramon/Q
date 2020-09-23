@@ -17,6 +17,7 @@ INCS = -I./inc/
 all: dt
 
 CSRCS := $(wildcard ./src/*.c)
+CSRCS := $(filter-out ./src/eval_metrics.isp.c, $(CSRCS))
 COBJS = $(CSRCS:.c=.o)
 
 # DFLAGS = -g -DDEBUG -DFAKE -fopenmp

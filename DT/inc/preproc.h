@@ -8,5 +8,5 @@ preproc(
     uint32_t *ptr_nH, // encoded as 1
     uint64_t ***ptr_Y, 
     uint32_t ***ptr_to,
-    uint64_t **ptr_tmp_Yj
+    uint64_t ***ptr_tmpY
     );
