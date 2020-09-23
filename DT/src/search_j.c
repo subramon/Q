@@ -26,12 +26,21 @@ search_j(
   uint32_t best_yidx; 
 
   memset(&M, 0, (BUFSZ * sizeof(metrics_t)));
+  uint32_t original_lb = lb;
   uint32_t new_lb = lb;
   uint32_t prev0 = 0, prev1 = 0;
   for ( ; ; ) { 
     if ( new_lb >= ub ) { break; }
     status = accumulate(Yj, lb, ub, prev0, prev1, M, &nbuf, &new_lb); cBYE(status);
     lb = new_lb;
+    if ( nbuf == 0 ) { break; }
+#ifdef DEBUG
+    for ( uint32_t i = 0; i < nbuf; i++ ) { 
+      if ( (M[i].yidx+1-original_lb) != (M[i].cnt[0] + M[i].cnt[1])  ) { 
+        go_BYE(-1); 
+      }
+    }
+#endif
     status = eval_metrics(M, nbuf); cBYE(status);
     uint32_t loc = 0;
     status = calc_best_metric(M, nbuf, &loc); cBYE(status);

@@ -22,7 +22,7 @@ search(
   uint32_t yval[NUM_FEATURES];
   uint32_t yidx[NUM_FEATURES];
   four_nums_t num4[NUM_FEATURES];
-// TODO #pragma omp parallel for
+#pragma omp parallel for
   for ( uint32_t j = 0; j < m; j++ ) { 
     int x; // used because we cannot break out of omp loop
     x = search_j(Y[j], lb, ub, nT, nH, 

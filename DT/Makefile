@@ -27,7 +27,7 @@ DFLAGS = -g -DDEBUG -fopenmp
 
 
 dt : $(CSRCS) ./inc/*.h $(COBJS)
-	gcc ${CFLAGS} ${DFLAGS}  ${COBJS} ${INCS} \
+	gcc ${CFLAGS} ${DFLAGS}  ${COBJS} ${INCS} -lm -lgomp \
 	  -o dt
 
 clean:
