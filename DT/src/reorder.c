@@ -14,8 +14,8 @@ reorder(
     )
 {
   int status = 0; 
-  uint32_t lidx = *ptr_lidx;
-  uint32_t ridx = *ptr_ridx;
+  register uint32_t lidx = *ptr_lidx;
+  register uint32_t ridx = *ptr_ridx;
   /* start ispc */
   for ( uint32_t i = lb; i < ub; i++ ) { 
     uint32_t idx;

@@ -55,16 +55,16 @@ split(
     if ( status < 0 ) { WHEREAMI; status = -1; continue; }
     if ( lidx != split_yidx ) { WHEREAMI; status = -1; continue; }
     if ( ridx != ub ) { WHEREAMI; status = -1; continue; }
-    if ( j == split_j ) { 
+    if ( j != split_j ) { 
+      // SLOW: for ( uint32_t i = lb; i < ub; i++ ) { Yj[i] = tmpYj[i]; }
+      memcpy(Yj+lb, tmpYj+lb, (ub-lb) * sizeof(uint64_t)); // FAST
+    }
+    else { // no need to re-order feature chosen for split 
 #ifdef DEBUG
       for ( uint32_t i = lb; i < ub; i++ ) { 
         if ( Yj[i] != tmpYj[i] ) { WHEREAMI; status = -1; continue; }
       }
 #endif
-    }
-    else {
-      // SLOW: for ( uint32_t i = lb; i < ub; i++ ) { Yj[i] = tmpYj[i]; }
-      memcpy(Yj+lb, tmpYj+lb, (ub-lb) * sizeof(uint64_t)); // FAST
     }
   }
 

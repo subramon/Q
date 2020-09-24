@@ -14,11 +14,16 @@ CFLAGS+= -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference
 CFLAGS+= -Wduplicated-branches -Wrestrict
 
 INCS = -I./inc/
-all: dt
+all: dt ispdt
 
 CSRCS := $(wildcard ./src/*.c)
 CSRCS := $(filter-out ./src/eval_metrics.isp.c, $(CSRCS))
 COBJS = $(CSRCS:.c=.o)
+
+XSRCS := $(wildcard ./src/*.c)
+XSRCS := $(filter-out ./src/eval_metrics.isp.c, $(CSRCS))
+XSRCS := $(filter-out ./src/eval_metrics.c, $(CSRCS))
+XOBJS = $(XSRCS:.c=.o)
 
 # DFLAGS = -g -DDEBUG -DFAKE -fopenmp
 DFLAGS = -g -DDEBUG -fopenmp
@@ -26,16 +31,20 @@ DFLAGS = -g -DDEBUG -fopenmp
 ./inc/ispc_types.h : 
 	cat ./inc/types.h | sed s'/uint32_t/uint32/'g > ./inc/ispc_types.h
 
-eval_metrics.isp.o : ./inc/ispc_types.h
-	ispc ./src/eval_metrics.isp.c -o ./src/eval_metrics.isp.o -I../inc/
+src/eval_metrics.isp.o : ./inc/ispc_types.h
+	ispc -I./inc/ ./src/eval_metrics.isp.c -o ./src/eval_metrics.isp.o 
 
 .c.o : 
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS) $(DFLAGS)
 
 
-dt : $(CSRCS) ./inc/*.h $(COBJS)
-	gcc ${CFLAGS} ${DFLAGS}  ${COBJS} ${INCS} -lm -lgomp \
-	  -o dt
+dt : $(CSRCS) ./inc/*.h $(COBJS) 
+	gcc ${CFLAGS} ${DFLAGS}  ${COBJS} \
+	${INCS} -lm -lgomp -o dt
+
+ispdt : $(XSRCS) ./inc/*.h $(XOBJS) src/eval_metrics.isp.o 
+	gcc ${CFLAGS} ${DFLAGS}  ${XOBJS} src/eval_metrics.isp.o \
+	${INCS} -lm -lgomp -o dt
 
 clean:
 	rm -f _* *.o ./src/*.o dt
