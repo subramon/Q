@@ -7,7 +7,10 @@ accumulate(
       uint32_t ub,
       uint32_t prev0,
       uint32_t prev1,
-      metrics_t M[BUFSZ],
+      uint32_t M_yval[BUFSZ],
+      uint32_t M_yidx[BUFSZ],
+      uint32_t M_nT[BUFSZ],
+      uint32_t M_nH[BUFSZ],
       uint32_t *ptr_nbuf, // how many in buffer when returning
       uint32_t *ptr_lb // how many consumed when returning.
       )
@@ -25,12 +28,11 @@ accumulate(
   uint32_t yval_i = get_yval(Y_i);
   uint8_t goal_i  = get_goal(Y_i);
   uint64_t curr_yval = yval_i;
-  M[nbuf-1].metric = -1; // initialize to bad value 
-  M[nbuf-1].yidx = lb;
-  M[nbuf-1].yval = yval_i;
-  M[nbuf-1].cnt[0] = prev0;
-  M[nbuf-1].cnt[1] = prev1;
-  M[nbuf-1].cnt[goal_i]++;
+  M_yidx[nbuf-1] = lb;
+  M_yval[nbuf-1] = yval_i;
+  M_nT[nbuf-1]   = prev0;
+  M_nH[nbuf-1]   = prev1;
+  if ( goal_i == 0 ) { M_nT[nbuf-1]++; } else { M_nH[nbuf-1]++; } 
   i++;
 
   for ( ; i < ub; i++ ) {
@@ -45,17 +47,16 @@ accumulate(
       }
       // we have space in buffer
       curr_yval = yval_i;
-      M[nbuf].metric = -1; 
-      M[nbuf].yidx = i;
-      M[nbuf].yval = yval_i;
-      M[nbuf].cnt[0] = M[nbuf-1].cnt[0]; // counts are cumulative
-      M[nbuf].cnt[1] = M[nbuf-1].cnt[1];
-      M[nbuf].cnt[goal_i]++;
+      M_yidx[nbuf]  = i;
+      M_yval[nbuf]  = yval_i;
+      M_nT[nbuf]   = M_nT[nbuf-1]; // counts are cumulative
+      M_nH[nbuf]   = M_nH[nbuf-1]; // counts are cumulative
+      if ( goal_i == 0 ) { M_nT[nbuf]++; } else { M_nH[nbuf]++; } 
       nbuf++;
     }
     else {
-      M[nbuf-1].yidx = i;
-      M[nbuf-1].cnt[goal_i]++;
+      M_yidx[nbuf-1] = i;
+      if ( goal_i == 0 ) { M_nT[nbuf-1]++; } else { M_nH[nbuf-1]++; } 
     }
   }
   if ( nbuf > BUFSZ ) { go_BYE(-1); }

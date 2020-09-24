@@ -1,5 +1,5 @@
 extern int
 eval_metrics(
-    metrics_t M[BUFSZ],
+    double M_metric[BUFSZ],
     uint32_t nbuf
     );

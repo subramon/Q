@@ -1,8 +1,9 @@
 #include "incs.h"
-#include "preproc_j.h"
 #include "check.h"
-#include "split.h"
+#include "preproc_j.h"
+#include "reorder.h"
 #include "search.h"
+#include "split.h"
 
 int 
 split(
@@ -43,26 +44,15 @@ split(
   //---------------------------------------------------
 #pragma omp parallel for 
   for ( uint32_t j = 0; j < m; j++ ) {
-    uint32_t idx, lidx = lb, ridx = split_yidx;
+    uint32_t lidx = lb, ridx = split_yidx;
     uint64_t *Yj = Y[j];
     uint64_t *tmpYj = tmpY[j];
 #ifndef DEBUG
     if ( j == split_j ) { continue; }
 #endif
-    /* start ispc */
-    for ( uint32_t i = lb; i < ub; i++ ) { 
-      uint32_t from_i = get_from(Y[j][i]);
-      if ( from_i >= n ) { WHEREAMI; status = -1; continue; }
-      uint32_t to_i   = to[split_j][from_i];
-      if ( to_i < split_yidx ) { // this data point went left
-        idx = lidx; tmpYj[lidx++] = Yj[i]; 
-      }
-      else { // this data point went right
-        idx = ridx; tmpYj[ridx++] = Yj[i]; 
-      }
-      to[j][from_i] = idx;
-    }
-    /* stop  ispc */
+    status = reorder(Y[j], tmpY[j], to[j], to[split_j], lb, ub,
+        split_yidx, &lidx, &ridx);
+    if ( status < 0 ) { WHEREAMI; status = -1; continue; }
     if ( lidx != split_yidx ) { WHEREAMI; status = -1; continue; }
     if ( ridx != ub ) { WHEREAMI; status = -1; continue; }
     if ( j == split_j ) { 
