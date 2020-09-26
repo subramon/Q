@@ -27,8 +27,8 @@ split(
 #endif
   uint32_t split_j = -1;
   uint32_t split_yidx, split_yval;
-#ifdef DEBUG
   printf("Splitting %u to %u \n", lb, ub);
+#ifdef DEBUG
   status = check(to, g, lb, ub, nT, nH, n, m, Y); cBYE(status);
 #endif
 

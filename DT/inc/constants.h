@@ -9,7 +9,7 @@
 #define PERF_TEST
 #ifdef PERF_TEST
 #define MIN_LEAF_SIZE 64
-#define NUM_FEATURES  128
-#define NUM_INSTANCES 1048576
+#define NUM_FEATURES  32
+#define NUM_INSTANCES 524288
 #define BUFSZ         1024
 #endif

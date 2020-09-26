@@ -25,7 +25,7 @@ search(
 #pragma omp parallel for
   for ( uint32_t j = 0; j < m; j++ ) { 
     int x; // used because we cannot break out of omp loop
-    x = search_j(Y[j], lb, ub, nT, nH, 
+    x = search_j(Y[j], j, lb, ub, nT, nH, 
         &(num4[j]), &(yval[j]), &(yidx[j]), &(metrics[j])); 
     if ( x < 0 ) { status = x; }
   }

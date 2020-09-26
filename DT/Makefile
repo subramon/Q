@@ -1,6 +1,6 @@
 CC=gcc
 
-CFLAGS = -g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable -Wunused-parameter -Wno-pedantic -Wno-unused-label 
+CFLAGS = -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable -Wunused-parameter -Wno-pedantic -Wno-unused-label 
 # CFLAGS+= -fsanitize=address -fno-omit-frame-pointer # for address sanitizer
 # CFLAGS+= -fsanitize=undefined
 CFLAGS+= -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith
@@ -29,10 +29,8 @@ XOBJS = $(XSRCS:.c=.o)
 # DFLAGS = -g -DDEBUG -DFAKE -fopenmp
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
-DFLAGS = -O4 -fopenmp -DVECTOR
+DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -O4 -fopenmp -DSCALAR
-
-src/search_j.o : ./inc/eval_metrics.isp.h ./inc/calc_best_metric.isp.h 
 
 ./inc/types.isp.h : 
 	cat ./inc/types.h | sed s'/uint32_t/uint32/'g > ./inc/types.isp.h

@@ -15,11 +15,11 @@ typedef struct _metrics_t {
 } metrics_t; 
 */
 typedef struct _metrics_t {  
-  uint32_t yval[BUFSZ];
-  uint32_t yidx[BUFSZ];
-  uint32_t nT[BUFSZ];
-  uint32_t nH[BUFSZ];
-  double metric[BUFSZ];
+  uint32_t *yval;
+  uint32_t *yidx;
+  uint32_t *nT;
+  uint32_t *nH;
+  double   *metric;
 } metrics_t; 
 
 #endif

@@ -68,8 +68,9 @@ check(
   chk_from_i = malloc((ub-lb) * sizeof(uint32_t));
   chk_from_j = malloc((ub-lb) * sizeof(uint32_t));
 
+#ifdef VERBOSE
   status = pr_data_i(Y, to, m, lb, ub); cBYE(status);
-
+#endif
   // The "froms" for all attributes should be the same 
   // Of course, the order in which they occur might be different
   for ( uint32_t j1 = 0; j1 < m; j1++ ) {
