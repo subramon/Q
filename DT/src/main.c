@@ -23,7 +23,9 @@ main(
   //-----------------------------------------------
   status = read_data(&X, m, n, &g); cBYE(status); 
   status = mk_data(&X, m, n, &g); cBYE(status);
+#ifdef VERBOSE
   status = pr_data_f(X, m, g, lb, ub); cBYE(status);
+#endif
   status = preproc(X, m, n, g, &nT, &nH, &Y, &to, &tmpY); cBYE(status);
   status = split(to, g, lb, ub, nT, nH, n, m, Y, tmpY); cBYE(status);
 BYE:

@@ -1,4 +1,4 @@
-#define MIN_LEAF_SIZE 2
+#define MIN_LEAF_SIZE 32
 #define NUM_FEATURES  2
-#define NUM_INSTANCES 64
+#define NUM_INSTANCES 1024
 #define BUFSZ  3

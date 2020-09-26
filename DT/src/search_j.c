@@ -1,10 +1,11 @@
 #include "incs.h"
 #include "accumulate.h"
-#include "calc_best_metric.h"
 #ifdef SCALAR
+#include "calc_best_metric.h"
 #include "eval_metrics.h"
 #endif
 #ifdef VECTOR
+#include "calc_best_metric.isp.h"
 #include "eval_metrics.isp.h"
 #endif
 #include "search_j.h"
@@ -58,11 +59,17 @@ search_j(
 
 #ifdef VECTOR
     eval_metrics(M.nT, M.nH, nT, nH, M.metric, nbuf); 
+    calc_best_metric(M.metric, nbuf, &loc); cBYE(status);
 #endif
 #ifdef SCALAR
     status = eval_metrics(M.nT, M.nH, nT, nH, M.metric, nbuf); cBYE(status);
-#endif
     status = calc_best_metric(&M, nbuf, &loc); cBYE(status);
+#endif
+#ifdef DEBUG
+    for ( uint32_t i= 0; i < nbuf; i++ ) { 
+      if ( M.metric[i] < 0 ) { go_BYE(-1); }
+    }
+#endif
 
     // stop  ispc 
     if ( M.metric[loc] > best_metric ) { 

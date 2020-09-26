@@ -1,5 +1,6 @@
 *.o
 dt
+ispdt
 inc/ispc_types.h
 inc/*.isp.h
 doc/.meta

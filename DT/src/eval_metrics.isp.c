@@ -1,5 +1,5 @@
 #include "constants.h"
-#include "ispc_types.h"
+#include "types.isp.h"
 
 #define mcr_sqr(x) ( (x) * (x) )
 export void 

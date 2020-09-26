@@ -1,8 +1,8 @@
 CC=gcc
 
 CFLAGS = -g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable -Wunused-parameter -Wno-pedantic -Wno-unused-label 
-CFLAGS+= -fsanitize=address -fno-omit-frame-pointer # for address sanitizer
-CFLAGS+= -fsanitize=undefined
+# CFLAGS+= -fsanitize=address -fno-omit-frame-pointer # for address sanitizer
+# CFLAGS+= -fsanitize=undefined
 CFLAGS+= -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith
 CFLAGS+= -Wmissing-declarations -Wredundant-decls -Wnested-externs
 CFLAGS+= -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings
@@ -22,28 +22,37 @@ CSRCS := $(filter-out ./src/calc_best_metric.isp.c, $(CSRCS))
 COBJS = $(CSRCS:.c=.o)
 
 XSRCS := $(wildcard ./src/*.c)
-XSRCS := $(filter-out ./src/eval_metrics.c, $(CSRCS))
-XSRCS := $(filter-out ./src/calc_best_metric.c, $(CSRCS))
+XSRCS := $(filter-out ./src/eval_metrics.c, $(XSRCS))
+XSRCS := $(filter-out ./src/calc_best_metric.c, $(XSRCS))
 XOBJS = $(XSRCS:.c=.o)
 
 # DFLAGS = -g -DDEBUG -DFAKE -fopenmp
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
+DFLAGS = -O4 -fopenmp -DVECTOR
 
-./inc/ispc_types.h : 
-	cat ./inc/types.h | sed s'/uint32_t/uint32/'g > ./inc/ispc_types.h
+src/search_j.o : ./inc/eval_metrics.isp.h ./inc/calc_best_metric.isp.h 
 
+./inc/types.isp.h : 
+	cat ./inc/types.h | sed s'/uint32_t/uint32/'g > ./inc/types.isp.h
+
+#---------------------------------------------
 ./inc/eval_metrics.isp.h : ./src/eval_metrics.isp.c
 	ispc -I./inc/  src/eval_metrics.isp.c -h inc/eval_metrics.isp.h
 
-./src/eval_metrics.isp.o : ./inc/ispc_types.h \
+./src/eval_metrics.isp.o : ./inc/types.isp.h \
   	./src/eval_metrics.isp.c ./inc/eval_metrics.isp.h
 	ispc -I./inc/ ./src/eval_metrics.isp.c -o ./src/eval_metrics.isp.o 
 
-src/search_j.o : ./inc/eval_metrics.isp.h 
+#---------------------------------------------
+./inc/calc_best_metric.isp.h : ./src/calc_best_metric.isp.c
+	ispc -I./inc/  src/calc_best_metric.isp.c -h inc/calc_best_metric.isp.h
 
-src/calc_best_metric.isp.o : ./inc/ispc_types.h
+./src/calc_best_metric.isp.o : ./inc/types.isp.h \
+	./src/calc_best_metric.isp.c ./inc/calc_best_metric.isp.h
 	ispc -I./inc/ ./src/calc_best_metric.isp.c -o ./src/calc_best_metric.isp.o 
+
+#---------------------------------------------
 
 .c.o : 
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS) $(DFLAGS)
@@ -53,11 +62,10 @@ dt : $(CSRCS) $(COBJS)
 	gcc ${CFLAGS} ${DFLAGS} -DSCALAR  ${COBJS} \
 	${INCS} -lm -lgomp -o dt
 
-ispdt : $(XSRCS) $(XOBJS) \
-  	./src/eval_metrics.isp.o
+ispdt : $(XSRCS) $(XOBJS) 
 	gcc ${CFLAGS} ${DFLAGS} -DVECTOR  \
-  	${XOBJS} src/eval_metrics.isp.o \
-	${INCS} -lm -lgomp -o dt
+  	${XOBJS} \
+	${INCS} -lm -lgomp -o ispdt
 
 clean:
 	rm -f _* *.o ./src/*.o dt
