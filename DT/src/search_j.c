@@ -56,7 +56,12 @@ search_j(
 #endif
     uint32_t loc = 0;
 
-    status = eval_metrics(&M, nbuf); cBYE(status);
+#ifdef VECTOR
+    eval_metrics(M.nT, M.nH, nT, nH, M.metric, nbuf); 
+#endif
+#ifdef SCALAR
+    status = eval_metrics(M.nT, M.nH, nT, nH, M.metric, nbuf); cBYE(status);
+#endif
     status = calc_best_metric(&M, nbuf, &loc); cBYE(status);
 
     // stop  ispc 

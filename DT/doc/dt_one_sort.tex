@@ -25,13 +25,14 @@
 \begin{abstract}
 A typical computational strategy for building decision trees (as evidenced in
   scikit-learn) is as follows. Each feature is sorted and then traversed in
-  ascending order to determine the best split point. The best split point over
-  all features is selcted and used to partition the data into two. This
+  order to determine the best split point. The best split point over
+  all features is selected and used to partition the data into two. This
   process is repeated recursively until some stopping criterion is reached e.g.,
   the number of instances is
   too small. The contribution of this paper is to provide a novel indexing
-  strategy that requires a single sort at the beginning. After that, maintaining
-  the sorted order is accomplished by a linear scan of the data.
+  strategy that requires only a single sort at the beginning. After that, no
+  further sorting is required. A linear scan of the data, with the values
+  reordered and the indexes updated as we go, is sufficient to maintain the sorted order.
 \end{abstract}
 
 \section{Introduction}
@@ -79,7 +80,7 @@ the approach.
 \item Let \(n\) be the number of instances
 \item Let \(m\) be the number of features. 
 \item Let \(X[m][n]\) be the input data. \(X[j]\), also denoted as \(X_j\),  is a column vector containg
-  the values of feature \(j\)
+  the \(n\) values of feature \(j\)
 \item Let \(g[n]\) be the values of the goal attribute
 \item Let \(Y[m][n]\) be the transformed data where input data has been
   ``position-encoded'' 

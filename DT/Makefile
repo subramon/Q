@@ -18,33 +18,47 @@ all: dt ispdt
 
 CSRCS := $(wildcard ./src/*.c)
 CSRCS := $(filter-out ./src/eval_metrics.isp.c, $(CSRCS))
+CSRCS := $(filter-out ./src/calc_best_metric.isp.c, $(CSRCS))
 COBJS = $(CSRCS:.c=.o)
 
 XSRCS := $(wildcard ./src/*.c)
-XSRCS := $(filter-out ./src/eval_metrics.isp.c, $(CSRCS))
 XSRCS := $(filter-out ./src/eval_metrics.c, $(CSRCS))
+XSRCS := $(filter-out ./src/calc_best_metric.c, $(CSRCS))
 XOBJS = $(XSRCS:.c=.o)
 
 # DFLAGS = -g -DDEBUG -DFAKE -fopenmp
-DFLAGS = -g -DDEBUG -fopenmp
+DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
+DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
 
 ./inc/ispc_types.h : 
 	cat ./inc/types.h | sed s'/uint32_t/uint32/'g > ./inc/ispc_types.h
 
-src/eval_metrics.isp.o : ./inc/ispc_types.h
+./inc/eval_metrics.isp.h : ./src/eval_metrics.isp.c
+	ispc -I./inc/  src/eval_metrics.isp.c -h inc/eval_metrics.isp.h
+
+./src/eval_metrics.isp.o : ./inc/ispc_types.h \
+  	./src/eval_metrics.isp.c ./inc/eval_metrics.isp.h
 	ispc -I./inc/ ./src/eval_metrics.isp.c -o ./src/eval_metrics.isp.o 
+
+src/search_j.o : ./inc/eval_metrics.isp.h 
+
+src/calc_best_metric.isp.o : ./inc/ispc_types.h
+	ispc -I./inc/ ./src/calc_best_metric.isp.c -o ./src/calc_best_metric.isp.o 
 
 .c.o : 
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS) $(DFLAGS)
 
 
-dt : $(CSRCS) ./inc/*.h $(COBJS) 
-	gcc ${CFLAGS} ${DFLAGS}  ${COBJS} -DSCALAR \
+dt : $(CSRCS) $(COBJS) 
+	gcc ${CFLAGS} ${DFLAGS} -DSCALAR  ${COBJS} \
 	${INCS} -lm -lgomp -o dt
 
-ispdt : $(XSRCS) ./inc/*.h $(XOBJS) src/eval_metrics.isp.o 
-	gcc ${CFLAGS} ${DFLAGS}  ${XOBJS} -DVECTOR src/eval_metrics.isp.o \
+ispdt : $(XSRCS) $(XOBJS) \
+  	./src/eval_metrics.isp.o
+	gcc ${CFLAGS} ${DFLAGS} -DVECTOR  \
+  	${XOBJS} src/eval_metrics.isp.o \
 	${INCS} -lm -lgomp -o dt
 
 clean:
 	rm -f _* *.o ./src/*.o dt
+	rm -f ./inc/eval_metrics.isp.h 
