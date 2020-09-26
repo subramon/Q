@@ -30,6 +30,7 @@ XOBJS = $(XSRCS:.c=.o)
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
 DFLAGS = -O4 -fopenmp -DVECTOR
+DFLAGS = -O4 -fopenmp -DSCALAR
 
 src/search_j.o : ./inc/eval_metrics.isp.h ./inc/calc_best_metric.isp.h 
 
