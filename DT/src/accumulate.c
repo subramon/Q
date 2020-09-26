@@ -5,12 +5,9 @@ accumulate(
       const uint64_t * restrict Y, // [n_in]
       uint32_t lb,
       uint32_t ub,
-      uint32_t prev0,
-      uint32_t prev1,
-      uint32_t M_yval[BUFSZ],
-      uint32_t M_yidx[BUFSZ],
-      uint32_t M_nT[BUFSZ],
-      uint32_t M_nH[BUFSZ],
+      uint32_t prev_nT,
+      uint32_t prev_nH,
+      metrics_t *M,
       uint32_t *ptr_nbuf, // how many in buffer when returning
       uint32_t *ptr_lb // how many consumed when returning.
       )
@@ -28,11 +25,11 @@ accumulate(
   uint32_t yval_i = get_yval(Y_i);
   uint8_t goal_i  = get_goal(Y_i);
   uint64_t curr_yval = yval_i;
-  M_yidx[nbuf-1] = lb;
-  M_yval[nbuf-1] = yval_i;
-  M_nT[nbuf-1]   = prev0;
-  M_nH[nbuf-1]   = prev1;
-  if ( goal_i == 0 ) { M_nT[nbuf-1]++; } else { M_nH[nbuf-1]++; } 
+  M->yidx[nbuf-1] = lb;
+  M->yval[nbuf-1] = yval_i;
+  M->nT[nbuf-1]   = prev_nT;
+  M->nH[nbuf-1]   = prev_nH;
+  if ( goal_i == 0 ) { M->nT[nbuf-1]++; } else { M->nH[nbuf-1]++; } 
   i++;
 
   for ( ; i < ub; i++ ) {
@@ -47,16 +44,16 @@ accumulate(
       }
       // we have space in buffer
       curr_yval = yval_i;
-      M_yidx[nbuf]  = i;
-      M_yval[nbuf]  = yval_i;
-      M_nT[nbuf]   = M_nT[nbuf-1]; // counts are cumulative
-      M_nH[nbuf]   = M_nH[nbuf-1]; // counts are cumulative
-      if ( goal_i == 0 ) { M_nT[nbuf]++; } else { M_nH[nbuf]++; } 
+      M->yidx[nbuf]  = i;
+      M->yval[nbuf]  = yval_i;
+      M->nT[nbuf]   = M->nT[nbuf-1]; // counts are cumulative
+      M->nH[nbuf]   = M->nH[nbuf-1]; // counts are cumulative
+      if ( goal_i == 0 ) { M->nT[nbuf]++; } else { M->nH[nbuf]++; } 
       nbuf++;
     }
     else {
-      M_yidx[nbuf-1] = i;
-      if ( goal_i == 0 ) { M_nT[nbuf-1]++; } else { M_nH[nbuf-1]++; } 
+      M->yidx[nbuf-1] = i;
+      if ( goal_i == 0 ) { M->nT[nbuf-1]++; } else { M->nH[nbuf-1]++; } 
     }
   }
   if ( nbuf > BUFSZ ) { go_BYE(-1); }

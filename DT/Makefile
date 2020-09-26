@@ -39,11 +39,11 @@ src/eval_metrics.isp.o : ./inc/ispc_types.h
 
 
 dt : $(CSRCS) ./inc/*.h $(COBJS) 
-	gcc ${CFLAGS} ${DFLAGS}  ${COBJS} \
+	gcc ${CFLAGS} ${DFLAGS}  ${COBJS} -DSCALAR \
 	${INCS} -lm -lgomp -o dt
 
 ispdt : $(XSRCS) ./inc/*.h $(XOBJS) src/eval_metrics.isp.o 
-	gcc ${CFLAGS} ${DFLAGS}  ${XOBJS} src/eval_metrics.isp.o \
+	gcc ${CFLAGS} ${DFLAGS}  ${XOBJS} -DVECTOR src/eval_metrics.isp.o \
 	${INCS} -lm -lgomp -o dt
 
 clean:
