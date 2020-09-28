@@ -150,6 +150,7 @@ duplicate_vec(
 extern int
 duplicate_chunk(
     qmem_struct_t *ptr_S,
+    uint32_t field_width,
     uint32_t in_idx, 
     uint32_t out_idx
     );

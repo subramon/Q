@@ -49,6 +49,9 @@ search_j(
   uint32_t original_lb = lb;
   uint32_t new_lb = lb;
   uint32_t prev_nT = 0, prev_nH = 0;
+  if ( ( j == 0 ) && ( lb == 0 ) && ( ub == 34 ) ) {
+    printf("hello world\n");
+  }
   for ( ; ; ) { 
     if ( new_lb >= ub ) { break; }
     status = accumulate(Yj, lb, ub, prev_nT, prev_nH, &M, &nbuf, &new_lb); 
@@ -74,7 +77,11 @@ search_j(
 #endif
 #ifdef DEBUG
     for ( uint32_t i = 0; i < nbuf; i++ ) { 
-      if ( M.metric[i] < 0 ) { go_BYE(-1); }
+      if ( M.metric[i] < 0 ) { 
+        if ( M.metric[i] != -1 ) { // known bad value
+          go_BYE(-1); 
+        }
+      }
     }
 #endif
     if ( M.metric[loc] > best_metric ) { 
@@ -86,7 +93,7 @@ search_j(
       ptr_num4->n_T_R = nT - ptr_num4->n_T_L;
       ptr_num4->n_H_R = nH - ptr_num4->n_H_L;
     }
-    if ( best_yval == 0 ) { 
+    if ( ( best_metric != -1 ) && ( best_yval == 0 ) ) { 
       go_BYE(-1); 
     }
     if ( nbuf < g_M_bufsz ) { break; }

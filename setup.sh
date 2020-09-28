@@ -36,9 +36,11 @@ C_FLAGS+=" -Wold-style-definition -Wsuggest-attribute=noreturn "
 # https://lemire.me/blog/2016/04/20/no-more-leaks-with-sanitize-flags-in-gcc-and-clang/
 # NOT DOING THIS BECUASE WILL HAVE TO REWRITE TOO MUCH -Wjump-misses-init
 # New GCC 6/7 flags:
-lscpu | grep "Architecture" | grep "arm"
-IS_ARM="`echo $?`"
-if [ ${IS_ARM} -eq 0 ]; then 
+lscpu | grep "Architecture" | grep "arm" 1>/dev/null 2>&1
+IS_ARM_32="`echo $?`"
+lscpu | grep "Architecture" | grep "aarch64" 1>/dev/null 2>&1
+IS_ARM_64="`echo $?`"
+if [ $IS_ARM_32 == 0 ] || [ $IS_ARM_64 == 0 ]; then 
   C_FLAGS+=" -DARM "
   export Q_IS_ARM="true"
 else
@@ -47,6 +49,8 @@ else
 fi
 export QC_FLAGS="${QC_FLAGS:=$C_FLAGS}"
 echo "QC_FLAGS: $QC_FLAGS"
+
+echo "Q_IS_ARM: $Q_IS_ARM"
 #-----------------------------------
 QISPC_FLAGS=' --pic  ' #- TODO to be set  P2
 echo "QISPC_FLAGS: $QISPC_FLAGS"

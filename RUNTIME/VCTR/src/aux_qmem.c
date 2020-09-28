@@ -753,6 +753,7 @@ duplicate_vec(
   int status = 0;
   char *in_file_name = NULL;
   char *out_file_name = NULL;
+  if ( in_idx == out_idx ) { go_BYE(-1); }
   WHOLE_VEC_REC_TYPE *in_w  = ptr_S->whole_vec_dir->whole_vecs + in_idx;
   WHOLE_VEC_REC_TYPE *out_w = ptr_S->whole_vec_dir->whole_vecs + out_idx;
   if ( in_w->uqid == out_w->uqid ) { go_BYE(-1); } 
@@ -761,6 +762,7 @@ duplicate_vec(
     status = mk_file_name(ptr_S, in_w->uqid, &in_file_name); cBYE(status);
     status = mk_file_name(ptr_S, out_w->uqid, &out_file_name); cBYE(status);
     status = copy_file(in_file_name, out_file_name); cBYE(status);
+    out_w->is_file = true;
   }
 BYE:
   free_if_non_null(in_file_name);
@@ -771,6 +773,7 @@ BYE:
 int
 duplicate_chunk(
     qmem_struct_t *ptr_S,
+    uint32_t field_width,
     uint32_t in_idx, 
     uint32_t out_idx
     )
@@ -778,16 +781,25 @@ duplicate_chunk(
   int status = 0;
   char *in_file_name = NULL;
   char *out_file_name = NULL;
+  if ( in_idx == out_idx ) { go_BYE(-1); }
   CHUNK_REC_TYPE *in_c  = ptr_S->chunk_dir->chunks + in_idx;
   CHUNK_REC_TYPE *out_c = ptr_S->chunk_dir->chunks + out_idx;
+  // out_c better not have a file or memory. in_c better have data 
   if ( out_c->is_file ) { go_BYE(-1); } 
   if ( out_c->data != NULL ) { go_BYE(-1); } 
+  if ( ( in_c->is_file == false ) && ( in_c->data == NULL ) ) {go_BYE(-1);}
+  //---------------------
   if ( in_c->is_file ) {  
     status = mk_file_name(ptr_S, in_c->uqid, &in_file_name); cBYE(status);
     status = mk_file_name(ptr_S, out_c->uqid, &out_file_name); cBYE(status);
     status = copy_file(in_file_name, out_file_name); cBYE(status);
+    out_c->is_file = true;
   }
-  if ( in_c->data != NULL ) {  
+  else { // => in_c->data != NULL 
+    size_t sz = ptr_S->chunk_size * field_width;
+    out_c->data = l_malloc(sz);
+    return_if_malloc_failed(out_c->data);
+    memcpy(out_c->data, in_c->data, sz);
   }
 BYE:
   free_if_non_null(in_file_name);

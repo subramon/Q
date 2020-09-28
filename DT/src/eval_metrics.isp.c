@@ -23,17 +23,22 @@ eval_metrics(
 
     double nR  = nTR + nHR;
     double nL  = nTL + nHL;
-    //--------------------
-    double    xLT = mcr_sqr(nTL / nL);
-    double    xLH = mcr_sqr(nHL / nL);
-    double    giniL = 1.0 - xLT - xLH;
-    //--------------------
-    double    xRT = mcr_sqr(nTR / nR);
-    double    xRH = mcr_sqr(nHR / nR);
-    double    giniR = 1.0 - xRT - xRH;
-    //--------------------
-    double gini = (nL/n) * giniL + (nR/n) * giniR;
-    //--------------------
-    metric[i] = gini;
+    if ( ( nR == 0 )  || ( nL == 0 ) ) { 
+      metric[i] = -1;
+    }
+    else {
+      //--------------------
+      double    xLT = mcr_sqr(nTL / nL);
+      double    xLH = mcr_sqr(nHL / nL);
+      double    giniL = 1.0 - xLT - xLH;
+      //--------------------
+      double    xRT = mcr_sqr(nTR / nR);
+      double    xRH = mcr_sqr(nHR / nR);
+      double    giniR = 1.0 - xRT - xRH;
+      //--------------------
+      double gini = (nL/n) * giniL + (nR/n) * giniR;
+      //--------------------
+      metric[i] = gini;
+    }
   }
 }

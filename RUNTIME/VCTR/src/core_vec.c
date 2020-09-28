@@ -169,9 +169,10 @@ vec_new(
     qmem_struct_t *ptr_S,
     VEC_REC_TYPE *ptr_vec,
     const char * const fldtype,
-    uint32_t field_width,
-    uint64_t vec_uqid,
-    uint32_t num_chunks_to_allocate
+    uint32_t field_width, 
+    uint64_t vec_uqid, // send in 0 if you want it to be set by this fn
+    // Recall that 0 is never a valid value for vec_uqid
+    uint32_t num_chunks_to_allocate // send in 0 if you don't know
     )
 {
   int status = 0;
@@ -1158,14 +1159,14 @@ vec_clone(
     cBYE(status); 
     chk_chunk_dir_idx(out_chunk_dir_idx); 
     ptr_out_vec->chunks[i] = out_chunk_dir_idx;
-    status = duplicate_chunk(ptr_S, in_chunk_dir_idx, out_chunk_dir_idx);
+    status = duplicate_chunk(ptr_S, ptr_in_vec->field_width, 
+        in_chunk_dir_idx, out_chunk_dir_idx);
     cBYE(status); 
   }
   ptr_out_vec->num_elements = ptr_in_vec->num_elements; 
   ptr_out_vec->num_chunks   = ptr_in_vec->num_chunks;
   ptr_out_vec->is_eov     = true;
   ptr_out_vec->is_memo    = true;
-  ptr_out_vec->is_persist = true;
   ptr_out_vec->g_S        = ptr_S;
   //------------
 BYE:

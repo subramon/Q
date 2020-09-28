@@ -27,10 +27,13 @@ XSRCS := $(filter-out ./src/calc_best_metric.c, $(XSRCS))
 XOBJS = $(XSRCS:.c=.o)
 
 # DFLAGS = -g -DDEBUG -DFAKE -fopenmp
-DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
-DFLAGS = -O4 -fopenmp -DSCALAR
+DFLAGS = -g -DDEBUG -DSCALAR
+DFLAGS = -O4 -fopenmp -DSCALAR 
+# to run gprof, add -pg to DFLAGS
+# ./dt
+# gprof ./dt > _outputfile
 
 ./inc/types.isp.h : 
 	cat ./inc/types.h | sed s'/uint32_t/uint32/'g > ./inc/types.isp.h

@@ -18,6 +18,9 @@ accumulate(
   if ( lb >= ub ) { return status; } // nothing to do 
   //-------------------------------
 
+  uint32_t consumed_so_far = prev_nT + prev_nH;
+  uint32_t left_to_consume = (ub-lb) - consumed_so_far;
+
   uint32_t nbuf = 1;
   uint32_t i = lb;
 
@@ -31,12 +34,16 @@ accumulate(
   M->nH[nbuf-1]   = prev_nH;
   if ( goal_i == 0 ) { M->nT[nbuf-1]++; } else { M->nH[nbuf-1]++; } 
   i++;
+  consumed_so_far++;
+  left_to_consume--;
 
   for ( ; i < ub; i++ ) {
     Y_i = Y[i];
     yval_i = get_yval(Y_i);
     goal_i = get_goal(Y_i);
-    if ( yval_i != curr_yval ) {
+    if ( ( yval_i != curr_yval ) && 
+         ( consumed_so_far >= MIN_PARTITION_SIZE ) && 
+         ( left_to_consume >= MIN_PARTITION_SIZE ) ) {
       if ( nbuf == BUFSZ ) { // no more space
         *ptr_lb = i;
         *ptr_nbuf = nbuf;
@@ -55,6 +62,8 @@ accumulate(
       M->yidx[nbuf-1] = i;
       if ( goal_i == 0 ) { M->nT[nbuf-1]++; } else { M->nH[nbuf-1]++; } 
     }
+    consumed_so_far++;
+    left_to_consume--;
   }
   if ( nbuf > BUFSZ ) { go_BYE(-1); }
   *ptr_nbuf = nbuf; // number of elements in buffer

@@ -149,7 +149,6 @@ check(
         go_BYE(-1); }
     }
   }
-  printf("++++++++++++++++++++++++++\n");
 BYE:
   if ( goals != NULL ) { 
     for ( uint32_t j = 0; j < m; j++ ) {

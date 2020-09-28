@@ -1,4 +1,5 @@
 #include "incs.h"
+#include "check_tree.h"
 #include "mk_data.h"
 #include "read_data.h"
 #include "pr_data.h"
@@ -9,6 +10,9 @@ metrics_t *g_M;  // [g_M_m][g_M_bufsz]
 uint32_t g_M_m;
 uint32_t g_M_bufsz;
 
+node_t *g_tree; // this is where the decision tree is created
+int g_n_tree;
+int g_sz_tree;
 int
 main(
     void
@@ -39,6 +43,21 @@ main(
     g_M[j].nH     = malloc(g_M_bufsz * sizeof(uint32_t));
     g_M[j].metric = malloc(g_M_bufsz * sizeof(double));
   }
+  // we are taking short-cut of allocating g_tree at beginning
+  // Ideally, we would allocate a "reasonable" size and re-alloc
+  // if we need more space 
+  g_tree = NULL; // this is where the decision tree is created
+  g_n_tree = 0;
+  g_sz_tree = MAX_NUM_NODES_DT;
+  g_tree = malloc(g_sz_tree * sizeof(node_t));
+  return_if_malloc_failed(g_tree);
+  for ( int i = 0; i < g_sz_tree; i++ ) { 
+    g_tree[i].nT = g_tree[i].nH = g_tree[i].yval = 0;
+    g_tree[i].lchild_id = g_tree[i].rchild_id = g_tree[i].yidx = -1;
+    g_tree[i].parent_id = -1; 
+    g_tree[i].xval = 0; 
+  }
+
   //-----------------------------------------------
   status = read_data(&X, m, n, &g); cBYE(status); 
   status = mk_data(&X, m, n, &g); cBYE(status);
@@ -48,7 +67,13 @@ main(
   printf("Generated data \n");
   status = preproc(X, m, n, g, &nT, &nH, &Y, &to, &tmpY); cBYE(status);
   printf("Pre-processed data \n");
+  // create leaf node 
+  g_tree[g_n_tree].nT = nT;
+  g_tree[g_n_tree].nH = nH;
+  g_n_tree++;
+  // start splitting
   status = split(to, g, lb, ub, nT, nH, n, m, Y, tmpY); cBYE(status);
+  status = check_tree(g_tree, g_n_tree); cBYE(status);
 BYE:
   for ( uint32_t j = 0; j < m; j++ ) { 
     if ( X != NULL ) { free_if_non_null(X[j]); }
@@ -61,5 +86,6 @@ BYE:
   free_if_non_null(tmpY);
   free_if_non_null(to);
   free_if_non_null(g);
+  free_if_non_null(g_tree);
   return status;
 }

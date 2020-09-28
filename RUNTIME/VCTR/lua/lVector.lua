@@ -476,7 +476,7 @@ function lVector:clone()
   v2 = cVector.clone(v1, cdata)
   if ( not v2 ) then print("clone failed") return nil end 
   if ( nn_v1 ) then 
-    nn_v2 = cVector.reincarnate(nn_v1, cdata)
+    nn_v2 = cVector.clone(nn_v1, cdata)
     if ( not nn_v2 ) then print("clone failed on nn_vec") return nil end 
   end 
   return v2, nn_v2

@@ -1,9 +1,14 @@
 #include "incs.h"
 #include "check.h"
+#include "check_tree.h"
 #include "preproc_j.h"
 #include "reorder.h"
 #include "search.h"
 #include "split.h"
+
+extern node_t *g_tree; // this is where the decision tree is created
+extern int g_n_tree;
+extern int g_sz_tree;
 
 int 
 split(
@@ -21,7 +26,7 @@ split(
 {
   int status = 0;
   four_nums_t num4; memset(&num4, 0, sizeof(four_nums_t));
-  if ( ub - lb <= MIN_LEAF_SIZE ) { return status; }
+  if ( (ub - lb) <= MIN_LEAF_SIZE ) { return status; }
 #ifdef FAKE
   static 
 #endif
@@ -70,9 +75,45 @@ split(
     }
   }
 
-  status = split(to, g, lb, split_yidx, num4.n_T_L, num4.n_H_L, n, m, Y, tmpY); cBYE(status);
-  status = split(to, g, split_yidx, ub, num4.n_T_R, num4.n_H_R, n, m, Y, tmpY); cBYE(status);
-
+  int parent_id = g_n_tree - 1;
+  if ( g_n_tree >= g_sz_tree ) {
+    fprintf(stderr, "No space in tree. Returning... \n"); return status;
+  }
+  if ( ( split_yidx - lb ) >= 2*MIN_PARTITION_SIZE ) { 
+    // set parent to lchild pointer and lchild to parent pointer
+    g_tree[g_n_tree-1].lchild_id = g_n_tree;
+    g_tree[g_n_tree].parent_id = parent_id;
+    // set nH and nT for this newly created left child 
+    g_tree[g_n_tree].nT = num4.n_T_L;
+    g_tree[g_n_tree].nH = num4.n_H_L;
+    g_n_tree++;
+    // split the left child
+    status = split(to, g, lb, split_yidx, num4.n_T_L, num4.n_H_L, 
+        n, m, Y, tmpY); 
+    cBYE(status);
+  }
+#ifdef DEBUG
+  status = check_tree(g_tree, g_n_tree); cBYE(status);
+#endif
+  if ( g_n_tree >= g_sz_tree ) {
+    fprintf(stderr, "No space in tree. Returning... \n"); return status;
+  }
+  if ( ( ub - split_yidx ) >= 2*MIN_PARTITION_SIZE ) { 
+    // set parent to rchild pointer and rchild to parent pointer
+    g_tree[parent_id].rchild_id = g_n_tree;
+    g_tree[g_n_tree].parent_id = parent_id; 
+    // set nH and nT for this newly created right child 
+    g_tree[g_n_tree].nT = num4.n_T_R;
+    g_tree[g_n_tree].nH = num4.n_H_R;
+    g_n_tree++;
+    // split the right child
+    status = split(to, g, split_yidx, ub, num4.n_T_R, num4.n_H_R, 
+        n, m, Y, tmpY); 
+    cBYE(status);
+  }
+#ifdef DEBUG
+  status = check_tree(g_tree, g_n_tree); cBYE(status);
+#endif
 BYE:
   return status;
 }

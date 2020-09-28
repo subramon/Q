@@ -22,4 +22,15 @@ typedef struct _metrics_t {
   double   *metric;
 } metrics_t; 
 
+typedef struct _node_t { 
+  int lchild_id;
+  int rchild_id;
+  int parent_id;
+  int yidx;
+  uint32_t yval; // remember this is position-encoded value
+  float xval;
+  uint32_t nH;
+  uint32_t nT;
+} node_t;
+
 #endif

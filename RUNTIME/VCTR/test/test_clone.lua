@@ -7,6 +7,7 @@ local Scalar  = require 'libsclr'
 local cmem    = require 'libcmem'
 local qconsts = require 'Q/UTILS/lua/qconsts'
 local qmem    = require 'Q/UTILS/lua/qmem'
+qmem.init()
 local chunk_size = qmem.chunk_size
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local pldir   = require 'pl.dir'
@@ -18,16 +19,14 @@ lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 -- testing put1 and get1 and clone 
 tests.t1 = function()
   for _, qtype in ipairs({"I1","I2", "I4","I8", "F4", "F8"}) do 
-    local width = qconsts.qtypes[qtype].width
-    local v = lVector.new( { qtype = qtype, width = width} )
-    
+    local v = lVector.new({ qtype = qtype})
     local n = chunk_size + 3
     local val = 0
     for i = 1, n do 
       local s = Scalar.new(val, qtype)
       v:put1(s)
       val = val + 1
-      if ( val == 50 ) then val = 0 end 
+      if ( val == 127 ) then val = 0 end 
     end
     -- cannot clone until eov tru 
     local status, msg = pcall(v.clone, v)
@@ -35,8 +34,10 @@ tests.t1 = function()
     ----
     v:eov()
     local w = v:clone()
-    assert(w:is_eov())
     assert(type(w) == "lVector")
+    assert(w:is_eov())
+    assert(w:is_persist() == false)
+    assert(w:is_memo())
     for i = 1, n do 
       assert(w:get1(i-1) == v:get1(i-1))
     end
@@ -108,4 +109,5 @@ tests.t4 = function()
   end
   print("Test t4 completed")
 end
-return tests
+tests.t1()
+-- return tests
