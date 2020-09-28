@@ -136,11 +136,8 @@ alias cleanso='find . -name "*.so" -print -exec rm -f {} \;'
 # Lua init
 # export LUA_INIT="@$HOME/.lua/init.lua"
 #---------------
-alias ghub='cat /home/subramon/GitHubtoken.txt'
 alias netstart='sudo ifdown --exclude=lo -a && sudo ifup --exclude=lo -a '
 source $HOME/Q/setup.sh
-alias LJT='luajit  $Q_SRC_ROOT/TEST_RUNNER/q_testrunner.lua'
-alias LJ="luajit -l Q/TEST_RUNNER/q_testrunner_auxsummary $Q_SRC_ROOT/TEST_RUNNER/q_testrunner.lua"
+alias LJT='luajit  $Q_SRC_ROOT/TEST_RUNNER/runtest.lua'
 
 alias pbcopy="xclip -sel clip"
-alias dbg_luajit="$HOME/DBG_LUAJIT/LuaJIT-2.1.0-beta3/src/luajit "
