@@ -1,19 +1,19 @@
-#include "incs.h"
+#define get_from(x) ( x >> 32 )
 export void
 reorder(
-    uint64 *Yj,
-    uint64 *tmpYj,
-    uint32 *to_j,
-    uint32 *to_split_j,
-    uint32 lb,
-    uint32 ub,
-    uint32 split_yidx,
-    uint32 *ptr_lidx,
-    uint32 *ptr_ridx
+    uniform uint64 Yj[],
+    uniform uint64 tmpYj[],
+    uniform uint32 to_j[],
+    uniform uint32 to_split_j[],
+    uniform uint32 lb,
+    uniform uint32 ub,
+    uniform uint32 split_yidx,
+    uniform uint32 ptr_lidx[],
+    uniform uint32 ptr_ridx[]
     )
 {
-  uint32 lidx = *ptr_lidx;
-  uint32 ridx = *ptr_ridx;
+  uint32 lidx = ptr_lidx[0];
+  uint32 ridx = ptr_ridx[0];
   /* start ispc */
   for ( uint32 i = lb; i < ub; i++ ) { 
     uint32 idx;
@@ -30,6 +30,6 @@ reorder(
     }
     to_j[from_i] = idx;
   }
-  *ptr_lidx = lidx;
-  *ptr_ridx = ridx;
+  ptr_lidx[0] = lidx;
+  ptr_ridx[0] = ridx;
 }

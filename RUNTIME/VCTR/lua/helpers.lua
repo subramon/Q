@@ -95,12 +95,17 @@ end
 
 helpers.extract_field = function(base_vec, nn_vec, key, valtype)
   assert(type(key) == "string")
-  assert(type(base_vec) == "Vector")
-  if ( nn_vec ) then assert(type(nn_vec) == "Vector") end 
   assert(#key > 0)
+  assert(type(base_vec) == "Vector")
   local base_val = get_val(base_vec, key, valtype)
-  local nn_val   = get_val(nn_vec,   key, valtype)
-  return base_val, nn_val
+
+  if ( nn_vec ) then 
+    assert(type(nn_vec) == "Vector") 
+    nn_val   = get_val(nn_vec,   key, valtype)
+    return base_val, nn_val
+  else
+    return base_val
+  end
 end
 
 helpers.mk_boolean = function(inval, default_val)

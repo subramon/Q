@@ -681,6 +681,7 @@ qmem_delete_vec(
     )
 {
   int status = 0;
+  if ( ptr_S == NULL ) { return status; } // means we have a bogus vector
   WHOLE_VEC_REC_TYPE *w = 
     ptr_S->whole_vec_dir->whole_vecs + ptr_vec->whole_vec_dir_idx;
   if ( w->uqid != ptr_vec->uqid ) { go_BYE(-1); } 

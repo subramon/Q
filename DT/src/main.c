@@ -74,6 +74,7 @@ main(
   // start splitting
   status = split(to, g, lb, ub, nT, nH, n, m, Y, tmpY); cBYE(status);
   status = check_tree(g_tree, g_n_tree); cBYE(status);
+  printf("Number of nodes = %d \n", g_n_tree);
 BYE:
   for ( uint32_t j = 0; j < m; j++ ) { 
     if ( X != NULL ) { free_if_non_null(X[j]); }

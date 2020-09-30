@@ -30,6 +30,7 @@ XOBJS = $(XSRCS:.c=.o)
 DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -DSCALAR
+DFLAGS = -O4 -fopenmp -DVECTOR
 DFLAGS = -O4 -fopenmp -DSCALAR 
 # to run gprof, add -pg to DFLAGS
 # ./dt
@@ -44,7 +45,7 @@ DFLAGS = -O4 -fopenmp -DSCALAR
 
 ./src/eval_metrics.isp.o : ./inc/types.isp.h \
   	./src/eval_metrics.isp.c ./inc/eval_metrics.isp.h
-	ispc -I./inc/ ./src/eval_metrics.isp.c -o ./src/eval_metrics.isp.o 
+	ispc --pic -I./inc/ ./src/eval_metrics.isp.c -o ./src/eval_metrics.isp.o 
 
 #---------------------------------------------
 ./inc/calc_best_metric.isp.h : ./src/calc_best_metric.isp.c
@@ -52,7 +53,7 @@ DFLAGS = -O4 -fopenmp -DSCALAR
 
 ./src/calc_best_metric.isp.o : ./inc/types.isp.h \
 	./src/calc_best_metric.isp.c ./inc/calc_best_metric.isp.h
-	ispc -I./inc/ ./src/calc_best_metric.isp.c -o ./src/calc_best_metric.isp.o 
+	ispc --pic -I./inc/ ./src/calc_best_metric.isp.c -o ./src/calc_best_metric.isp.o 
 
 #---------------------------------------------
 

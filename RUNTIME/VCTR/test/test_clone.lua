@@ -29,17 +29,26 @@ tests.t1 = function()
       if ( val == 127 ) then val = 0 end 
     end
     -- cannot clone until eov tru 
-    local status, msg = pcall(v.clone, v)
-    assert(not status)
+    print(">>> start deliberate error")
+    local vprime = v:clone()
+    assert(not vprime)
+    print(">>> stop deliberate error")
     ----
     v:eov()
     local w = v:clone()
-    assert(type(w) == "lVector")
+    assert(type(w) == "Vector")
     assert(w:is_eov())
-    assert(w:is_persist() == false)
     assert(w:is_memo())
+    assert(w:check())
+    print(v:length())
+    print(w:length())
+    assert(w:length() == v:length())
+    assert(w:qtype()  == v:qtype())
     for i = 1, n do 
-      assert(w:get1(i-1) == v:get1(i-1))
+      local wval = w:get1(i-1)
+      local vval = v:get1(i-1)
+      
+      assert(wval == vval)
     end
     -- Now modify the w vector by doubling every element 
     local chk_n, cmem, nn_cmem = w:start_write()
@@ -51,10 +60,10 @@ tests.t1 = function()
     w:end_write()
     -- Now confirm that w vector is twice the v vector 
     for i = 1, n do 
-      local w1 = w:get1(i-1)
-      local v1 = v:get1(i-1)
-      local v2 = Scalar.new(2) * v1
-      assert(w1 == v2)
+      local wval = w:get1(i-1)
+      local vval = v:get1(i-1)
+      vval = Scalar.new(2) * vval
+      assert(wval == vval)
     end
   end
   print("Test t1 completed")

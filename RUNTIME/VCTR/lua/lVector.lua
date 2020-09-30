@@ -50,7 +50,9 @@ end
 
 -- Earlier, we would return nil if eov == false, have changed that
 function lVector:num_elements()
-  return H.extract_field(self._base_vec, self._nn_vec, "num_elements", "number")
+  local n1, n2 = H.extract_field(self._base_vec, self._nn_vec, "num_elements", "number")
+  if ( n2 ) then assert(n1 == n2) end 
+  return n1
 end
 
 function lVector:get_name()
@@ -78,9 +80,10 @@ function lVector:field_width()
 end
 
 function lVector:length()
-  -- TODO P2 Why does following not work 
-  -- return lVector:num_elements()
-  return H.extract_field(self._base_vec, self._nn_vec, "num_elements", "number")
+  print("XXXXXXXXXXXXXXX")
+  local n1, n2 = H.extract_field(self._base_vec, self._nn_vec, "num_elements", "number")
+  if ( n2 ) then assert(n1 == n2) end 
+  return n1
 end
 
 function lVector:qtype()
