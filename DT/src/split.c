@@ -10,6 +10,8 @@ extern node_t *g_tree; // this is where the decision tree is created
 extern int g_n_tree;
 extern int g_sz_tree;
 
+extern int g_nP;
+
 int 
 split(
     uint32_t **to, /* [m][n] */
@@ -49,7 +51,7 @@ split(
   cBYE(status); 
 #endif
   //---------------------------------------------------
-#pragma omp parallel for 
+#pragma omp parallel for schedule(static, 1) num_threads(g_nP)
   for ( uint32_t j = 0; j < m; j++ ) {
     uint32_t lidx = lb, ridx = split_yidx;
     uint64_t *Yj = Y[j];
@@ -77,7 +79,8 @@ split(
 
   int parent_id = g_n_tree - 1;
   if ( g_n_tree >= g_sz_tree ) {
-    fprintf(stderr, "No space in tree. Returning... \n"); return status;
+    // fprintf(stderr, "No space in tree. Returning... \n"); 
+    return status;
   }
   if ( ( split_yidx - lb ) >= 2*MIN_PARTITION_SIZE ) { 
     // set parent to lchild pointer and lchild to parent pointer
@@ -96,7 +99,8 @@ split(
   status = check_tree(g_tree, g_n_tree); cBYE(status);
 #endif
   if ( g_n_tree >= g_sz_tree ) {
-    fprintf(stderr, "No space in tree. Returning... \n"); return status;
+    // fprintf(stderr, "No space in tree. Returning... \n"); 
+return status;
   }
   if ( ( ub - split_yidx ) >= 2*MIN_PARTITION_SIZE ) { 
     // set parent to rchild pointer and rchild to parent pointer

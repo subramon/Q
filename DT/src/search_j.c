@@ -49,9 +49,6 @@ search_j(
   uint32_t original_lb = lb;
   uint32_t new_lb = lb;
   uint32_t prev_nT = 0, prev_nH = 0;
-  if ( ( j == 0 ) && ( lb == 0 ) && ( ub == 34 ) ) {
-    printf("hello world\n");
-  }
   for ( ; ; ) { 
     if ( new_lb >= ub ) { break; }
     status = accumulate(Yj, lb, ub, prev_nT, prev_nH, &M, &nbuf, &new_lb); 

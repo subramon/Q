@@ -1,11 +1,13 @@
 #include "incs.h"
 #include "check_tree.h"
+#include "get_time_usec.h"
 #include "mk_data.h"
 #include "read_data.h"
 #include "pr_data.h"
 #include "preproc.h"
 #include "split.h"
 
+#include <omp.h>
 metrics_t *g_M;  // [g_M_m][g_M_bufsz] 
 uint32_t g_M_m;
 uint32_t g_M_bufsz;
@@ -13,6 +15,8 @@ uint32_t g_M_bufsz;
 node_t *g_tree; // this is where the decision tree is created
 int g_n_tree;
 int g_sz_tree;
+
+int g_nP;
 int
 main(
     void
@@ -43,6 +47,9 @@ main(
     g_M[j].nH     = malloc(g_M_bufsz * sizeof(uint32_t));
     g_M[j].metric = malloc(g_M_bufsz * sizeof(double));
   }
+  g_nP = omp_get_num_procs();  
+  if ( g_nP > m ) { g_nP = m; }
+  printf("Using %d cores \n", g_nP);
   // we are taking short-cut of allocating g_tree at beginning
   // Ideally, we would allocate a "reasonable" size and re-alloc
   // if we need more space 
@@ -72,9 +79,13 @@ main(
   g_tree[g_n_tree].nH = nH;
   g_n_tree++;
   // start splitting
+  uint64_t t1, t2;
+t1 = get_time_usec();
   status = split(to, g, lb, ub, nT, nH, n, m, Y, tmpY); cBYE(status);
+t2 = get_time_usec();
   status = check_tree(g_tree, g_n_tree); cBYE(status);
-  printf("Number of nodes = %d \n", g_n_tree);
+  printf("Num nodes = %d \n", g_n_tree); 
+  printf("Time      = %lf\n", (t2-t1)/1000000.0);
 BYE:
   for ( uint32_t j = 0; j < m; j++ ) { 
     if ( X != NULL ) { free_if_non_null(X[j]); }

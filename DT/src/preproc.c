@@ -29,9 +29,14 @@ preproc(
   to     = malloc(m * sizeof(uint32_t *));
   return_if_malloc_failed(to);
 
+#pragma omp parallel for
   for ( uint32_t j = 0; j < m; j++ ) { 
-    status = preproc_j(X[j], n, g,  &(Y[j]), &(to[j]));
-    cBYE(status);
+    status = preproc_j(X[j], n, g,  &(Y[j]), &(to[j])); 
+    if ( status < 0 ) { WHEREAMI; }
+  }
+  cBYE(status); 
+  //-----------------------------------------
+  for ( uint32_t j = 0; j < m; j++ ) { 
     tmpY[j] = malloc(n * sizeof(uint64_t));
     return_if_malloc_failed(tmpY[j]);
   }

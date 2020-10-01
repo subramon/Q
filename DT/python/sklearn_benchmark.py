@@ -2,9 +2,9 @@ import numpy as np
 from sklearn import tree
 import time
 
-num_features = 32
-min_leaf_size = 64
-num_instances = 65536
+num_features  = 128
+min_leaf_size = 128
+num_instances = 1024 * 1024
 min_partition_size = min_leaf_size
 max_num_nodes_dt = num_instances / min_leaf_size
 

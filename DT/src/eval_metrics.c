@@ -30,15 +30,19 @@ eval_metrics(
     }
     else {
       //--------------------
-      double    xLT = mcr_sqr(nTL / nL);
-      double    xLH = mcr_sqr(nHL / nL);
+      double    xLT = (nTL / nL);
+      xLT *= xLT;
+      double    xLH = (nHL / nL);
+      xLH *= xLH;
       double    giniL = 1.0 - xLT - xLH;
       //--------------------
-      double    xRT = mcr_sqr(nTR / nR);
-      double    xRH = mcr_sqr(nHR / nR);
+      double    xRT = (nTR / nR);
+      xRT *= xRT;
+      double    xRH = (nHR / nR);
+      xRH *= xRH;
       double    giniR = 1.0 - xRT - xRH;
       //--------------------
-      double gini = (nL/n) * giniL + (nR/n) * giniR;
+      double gini = ((nL/n) * giniL) + ((nR/n) * giniR);
       //--------------------
       metric[i] = gini;
     }

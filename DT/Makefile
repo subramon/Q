@@ -1,6 +1,6 @@
 CC=gcc
 
-CFLAGS = -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable -Wunused-parameter -Wno-pedantic -Wno-unused-label 
+CFLAGS =  -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable -Wunused-parameter -Wno-pedantic -Wno-unused-label 
 # CFLAGS+= -fsanitize=address -fno-omit-frame-pointer # for address sanitizer
 # CFLAGS+= -fsanitize=undefined
 CFLAGS+= -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith
@@ -10,8 +10,8 @@ CFLAGS+= -Wold-style-definition
 CFLAGS+= -Wsuggest-attribute=noreturn 
 # NOT DOING THIS BECUASE WILL HAVE TO REWRITE TOO MUCH -Wjump-misses-init
 # New GCC 6/7 flags:
-CFLAGS+= -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference
-CFLAGS+= -Wduplicated-branches -Wrestrict
+# CFLAGS+= -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference
+# CFLAGS+= -Wduplicated-branches -Wrestrict
 
 INCS = -I./inc/
 all: dt ispdt
@@ -19,6 +19,7 @@ all: dt ispdt
 CSRCS := $(wildcard ./src/*.c)
 CSRCS := $(filter-out ./src/eval_metrics.isp.c, $(CSRCS))
 CSRCS := $(filter-out ./src/calc_best_metric.isp.c, $(CSRCS))
+CSRCS := $(filter-out ./src/reorder.isp.c, $(CSRCS))
 COBJS = $(CSRCS:.c=.o)
 
 XSRCS := $(wildcard ./src/*.c)
@@ -30,8 +31,8 @@ XOBJS = $(XSRCS:.c=.o)
 DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -DSCALAR
-DFLAGS = -O4 -fopenmp -DVECTOR
-DFLAGS = -O4 -fopenmp -DSCALAR 
+DFLAGS = -O4 -fopenmp -DVECTOR -pg
+DFLAGS = -O4 -fopenmp -DSCALAR -pg
 # to run gprof, add -pg to DFLAGS
 # ./dt
 # gprof ./dt > _outputfile
@@ -45,7 +46,7 @@ DFLAGS = -O4 -fopenmp -DSCALAR
 
 ./src/eval_metrics.isp.o : ./inc/types.isp.h \
   	./src/eval_metrics.isp.c ./inc/eval_metrics.isp.h
-	ispc --pic -I./inc/ ./src/eval_metrics.isp.c -o ./src/eval_metrics.isp.o 
+	ispc -O3 --pic -I./inc/ ./src/eval_metrics.isp.c -o ./src/eval_metrics.isp.o 
 
 #---------------------------------------------
 ./inc/calc_best_metric.isp.h : ./src/calc_best_metric.isp.c
@@ -53,7 +54,7 @@ DFLAGS = -O4 -fopenmp -DSCALAR
 
 ./src/calc_best_metric.isp.o : ./inc/types.isp.h \
 	./src/calc_best_metric.isp.c ./inc/calc_best_metric.isp.h
-	ispc --pic -I./inc/ ./src/calc_best_metric.isp.c -o ./src/calc_best_metric.isp.o 
+	ispc -O3 --pic -I./inc/ ./src/calc_best_metric.isp.c -o ./src/calc_best_metric.isp.o 
 
 #---------------------------------------------
 
@@ -70,6 +71,10 @@ ispdt : $(XSRCS) $(XOBJS)
   	${XOBJS} \
 	${INCS} -lm -lgomp -o ispdt
 
+qclean:
+	rm -f _* *.o ./src/*.o
+
 clean:
 	rm -f _* *.o ./src/*.o dt
 	rm -f ./inc/eval_metrics.isp.h 
+	rm -f ./inc/calc_best_metrics.isp.h 
