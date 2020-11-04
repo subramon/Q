@@ -18,34 +18,28 @@ reorder(
   uniform uint32 ridx = *ptr_ridx;
   /* start ispc */
   for ( uint32 i = lb; i < ub; i++ ) {
-    int pos, is_left, is_right;
     uint32 from_i = Yj[i] >> 32; // get_from(Yj[i]);
     uint32 to_i   = to_split_j[from_i];
     //-----------------------------------------
-    is_left = 0;
     if ( to_i < split_yidx ) { // this data point went left
-      is_left = 1;
-      pos = lidx + exclusive_scan_add(is_left);
-      tmpYj[pos] = Yj[i];
-      to_j[from_i] = pos;
-      /* Following is an experiment based on ISPC documentation
-       * uniform float a[] = ...;
-       int index = ...;
-       float * ptr = &a[index];
-       *ptr = 1;
-       */
-      uint32 * ptr = &(to_j[from_i]);
-      *ptr = pos;
+      uniform uint32 * uniform Yd = (uint32 *)tmpYj; 
+      Yd += 2*lidx;
+
+      uint32 Yj_i = (Yj[i] >> 32);
+      uniform int num_left =  packed_store_active(Yd, Yj_i);
+
+      Yj_i = Yj[i] & 0xFFFFFFFF;
+      num_left =  packed_store_active(Yd, Yj_i);
+
+      int pos = exclusive_scan_add(1);
+      lidx += num_left;
+      // TODO: to_j[from_i] = pos;
     }
-    lidx += reduce_add(is_left);
-    //------------------------
-    is_right = ~is_left;
-    if ( is_right == 1 ) {  // this data point went right
-      pos = ridx + exclusive_scan_add(is_right);
-      tmpYj[pos] = Yj[i];
-      to_j[from_i] = pos;
+    else {
+      uniform int num_right =  packed_store_active(tmpYj + ridx, Yj[i]);
+      int pos = exclusive_scan_add(1);
+      ridx += num_right;
     }
-    ridx += reduce_add(is_right);
     //------------------------
   }
   ptr_lidx[0] = lidx;
