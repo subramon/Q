@@ -80,9 +80,9 @@ main(
   g_n_tree++;
   // start splitting
   uint64_t t1, t2;
-t1 = get_time_usec();
+  t1 = get_time_usec();
   status = split(to, g, lb, ub, nT, nH, n, m, Y, tmpY); cBYE(status);
-t2 = get_time_usec();
+  t2 = get_time_usec();
   status = check_tree(g_tree, g_n_tree); cBYE(status);
   printf("Num nodes = %d \n", g_n_tree); 
   printf("Time      = %lf\n", (t2-t1)/1000000.0);

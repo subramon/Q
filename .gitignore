@@ -1,3 +1,10 @@
+# Stuff from make
+local/Q/ispc*
+local/luaf#i*
+local/Q/bin/ispc
+local/Q/lib/*.so
+local/Q/data/
+local/Q/meta/
 # Compiled Lua sources
 luac.out
 

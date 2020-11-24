@@ -28,15 +28,18 @@ services:
         target: /Q
       - type: bind
         source: ./local/
-        target: /Q/local/
+        target: /root/local/
     environment:
-      LD_LIBRARY_PATH: /Q/:/usr/local/lib/:/local/Q/lib/
+      PATH : "$PATH:/root/local/Q/bin/"
+      LD_LIBRARY_PATH: /usr/local/lib/:/root/local/Q/lib/
       LUA_PATH: /?.lua;/?/init.lua;;
-      LUA_CPATH: /local/Q/lib/?.so;;
+      LUA_CPATH: /root/local/Q/lib/?.so;;
       Q_SRC_ROOT: /Q/
-      Q_ROOT: /local/Q/
+      Q_ROOT: /root/local/Q/
       Q_RESET: "true"
-      Q_DATA_DIR: /local/Q/data/
+      Q_DATA_DIR: /root/local/Q/data/
+      Q_ISPC : "true"
+      QISPC_FLAGS : "--pic"
       QC_FLAGS:  -g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wno-unused-parameter -pedantic -fopenmp -mavx2 -mfma -Wno-implicit-fallthrough
 
   dev1 : 

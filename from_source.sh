@@ -61,31 +61,20 @@ mkdir -p $HOME/local/Q/meta/
 ## LuaFFI
 ## TODO Hard-coded location of TGZ file
 ## had to remove -Werror and change lua5.2 to lua5.1 in Makefile
-test -f $HOME/Q/EXTERNAL/luaffi-master.tgz
-cp $HOME/Q/EXTERNAL/luaffi-master.tgz /tmp/
-cd /tmp/
-tar -zxvf luaffi-master.tgz
-cd luaffi-master
 if [ "$Q_IS_ARM" == "true" ]; then 
-  cp $Q_SRC_ROOT/EXTERNAL/call_arm.h /tmp/luaffi-master
+  test -f $Q_SRC_ROOT/EXTERNAL/luaffi-master.tgz
+  cp $Q_SRC_ROOT/EXTERNAL/luaffi-master.tgz /tmp/
+  cd /tmp/
+  tar -zxvf luaffi-master.tgz
+  cd luaffi-master
+  make
+  # following to protect ffi.so from accidental deletion
+  me=`whoami`
+  cd ..
+  chown -R $me luaffi-master
+  cp -r /tmp/luaffi-master $HOME/local/Q/ 
 fi
-make
-# following to protect ffi.so from accidental deletion
-me=`whoami`
-cd ..
-chown -R $me luaffi-master
-cp -r /tmp/luaffi-master $HOME/local/Q/ 
 
-### For bison for ispc
-# wget http://ftp.gnu.org/gnu/bison/bison-3.7.tar.gz -O /tmp/bison.tar.gz
-# cd /tmp/
-# tar -zxvf bison.tar.gz
-# cd /tmp/bison-3.7/
-# ./configure
-# make
-# make install
-# cd /tmp/
-# rm -r -f bison-3.7*
 #------------------------------------------------
 # Install lua-simdjson from source
 rm -r -f /tmp/simdjson/ 

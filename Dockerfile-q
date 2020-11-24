@@ -1,15 +1,11 @@
 # This is a comment
-FROM ubuntu
+FROM ubuntu:16.04
 # FROM instruction specifies the Parent Image from which you are building
 
 LABEL author ramesh_subramonian
 # ARON: Do we need a .dockerignore file?
 
-# libjansson-dev # Is this needed? ARON
-# psmisc added for fuser 
-# net-tools added for netstat
 # man-db for man pages
-# lsof for networking
 USER 0
 RUN apt-get update && apt-get install -y apt-utils software-properties-common
 ENV DEBIAN_FRONTEND  noninteractive
@@ -18,10 +14,8 @@ RUN apt-get -y install tzdata
 RUN apt-get update -y \
     && apt-get install -y \
     autoconf \
-    bc \
     cmake \
     cppcheck \
-    dc \
     gcc \
     git \
     libcurl4-openssl-dev \
@@ -30,12 +24,9 @@ RUN apt-get update -y \
     libreadline-dev \
     liblapacke-dev \
     liblapack-dev  \
-    lsof \
     luarocks \
     make \
     man-db \
-    net-tools \
-    psmisc \
     telnet \
     valgrind \
     unzip \
@@ -58,24 +49,7 @@ RUN rm -r -f /tmp/curl/ \
  && make \
  && make install
 
-RUN luarocks install luacheck 
-RUN luarocks install lpeg 
-RUN luarocks install luafilesystem 
-RUN luarocks install penlight 
-# RUN luarocks install Lua-cURL CURL_DIR=/usr/local/
-RUN luarocks install lua-curl CURL_DIR=/usr/local/
-
-# Install lua-simdjson from source
-RUN rm -r -f /tmp/simdjson/ \
-&& cd /tmp/ \
-&& git clone https://github.com/FourierTransformer/lua-simdjson \
-&& cd /tmp/simdjson/ \
-&& luarocks make lua-simdjson-scm-0.rockspec \
-&& rm -r -f /tmp/simdjson/
-
-
-## lua
-RUN wget -O /tmp/lua-5.1.5.tar.gz "https://www.lua.org/ftp/lua-5.1.5.tar.gz" \
+RUN wget --no-check-certificate -O /tmp/lua-5.1.5.tar.gz "https://www.lua.org/ftp/lua-5.1.5.tar.gz" \
 && cd /tmp/  \
 && echo "2e115fe26e435e33b0d5c022e4490567 lua-5.1.5.tar.gz" | md5sum -c - \
 && mkdir -p /tmp/lua/ \
@@ -86,7 +60,7 @@ RUN wget -O /tmp/lua-5.1.5.tar.gz "https://www.lua.org/ftp/lua-5.1.5.tar.gz" \
 && rm -rf /tmp/lua*gz /tmp/lua/
 
 ## libevent
-RUN wget -O /tmp/libevent.tar.gz "https://github.com/libevent/libevent/releases/download/release-2.1.11-stable/libevent-2.1.11-stable.tar.gz" \
+RUN wget --no-check-certificate -O /tmp/libevent.tar.gz "https://github.com/libevent/libevent/releases/download/release-2.1.11-stable/libevent-2.1.11-stable.tar.gz" \
  &&  cd /tmp/ \
  &&  mkdir -p /tmp/libevent/ \
  &&  tar -zxf /tmp/libevent.tar.gz -C /tmp/libevent/ --strip-components=1  \
@@ -99,7 +73,7 @@ RUN wget -O /tmp/libevent.tar.gz "https://github.com/libevent/libevent/releases/
  &&  rm -rf /tmp/libevent/ 
 
 ## LuaJIT
-RUN wget -O /tmp/LuaJIT-2.1.0-beta3.tar.gz "https://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz" \
+RUN wget --no-check-certificate -O /tmp/LuaJIT-2.1.0-beta3.tar.gz "https://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz" \
  &&   cd /tmp \
  &&  echo "eae40bc29d06ee5e3078f9444fcea39b LuaJIT-2.1.0-beta3.tar.gz" | md5sum -c - \ 
  && mkdir -p /tmp/LuaJIT \
@@ -110,13 +84,33 @@ RUN wget -O /tmp/LuaJIT-2.1.0-beta3.tar.gz "https://luajit.org/download/LuaJIT-2
  &&  ln -sf luajit-2.1.0-beta3 /usr/local/bin/luajit \
  &&  rm -rf /tmp/LuaJIT*gz /tmp/LuaJIT 
 
-## For Q
-RUN mkdir -p /local/
-RUN mkdir -p /local/Q/
-RUN mkdir -p /local/Q/data/
-RUN mkdir -p /local/Q/include
-RUN mkdir -p /local/Q/lib/
-RUN mkdir -p /local/Q/meta/
+## ispc
+RUN rm -r -f /tmp/ispc* \
+#&& wget https://github.com/ispc/ispc/releases/download/v1.14.1/ispc-v1.14.1-linux.tar.gz -O /tmp/ispc.tgz \
+cp /Q/EXTERNAL/ispc-v1.14.1-linux.tar.gz /tmp/ispc.tgz \
+&& cd /tmp/ \
+&& tar -zxvf ispc.tgz \
+&& mv ispc*linux /root/local/Q/ \
+&& cp /root//local/Q/ispc*/bin/ispc /root/local/Q/bin/  
+
+# luaffi
+RUN rm -r -f /tmp/luaffi* \
+cp /Q/EXTERNAL/luaffi-master.tgz /tmp/ \
+&& cd /tmp/ \
+&& tar -zxvf luaffi-master.tgz \
+&& cd luaffi-master \
+%% make \ 
+&& cp /tmp/luaffi-master/ffi.so /root/local/Q/lib/ \
+&& cp /tmp/luaffi-master/ffi.so /root/local/Q/luaffi-master/
+
+## lua
+RUN luarocks install lpeg 
+RUN luarocks install luacheck 
+RUN luarocks install luafilesystem 
+RUN luarocks install md5 
+RUN luarocks install penlight 
+RUN luarocks install lua-curl CURL_DIR=/usr/local/
+
 
 ENV TERM vt100
 

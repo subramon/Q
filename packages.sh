@@ -14,13 +14,10 @@ apt-get  --yes install make
 apt-get  --yes install valgrind
 apt-get  --yes install wget
 #-----
-# apt-get  --yes install g++ # experimental 
-#-----
 apt-get  --yes install bc
 apt-get  --yes install dc
 apt-get  --yes install jq
 apt-get  --yes install telnet
 apt-get  --yes install unzip
 apt-get  --yes install vim
-#-- Do we need following?
-# apt-get  --yes install imagemagick
+apt-get clean all
