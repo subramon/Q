@@ -101,7 +101,7 @@ helpers.extract_field = function(base_vec, nn_vec, key, valtype)
 
   if ( nn_vec ) then 
     assert(type(nn_vec) == "Vector") 
-    nn_val   = get_val(nn_vec,   key, valtype)
+    local nn_val   = get_val(nn_vec,   key, valtype)
     return base_val, nn_val
   else
     return base_val
