@@ -84,24 +84,18 @@ RUN wget --no-check-certificate -O /tmp/LuaJIT-2.1.0-beta3.tar.gz "https://luaji
  &&  ln -sf luajit-2.1.0-beta3 /usr/local/bin/luajit \
  &&  rm -rf /tmp/LuaJIT*gz /tmp/LuaJIT 
 
-## ispc
-RUN rm -r -f /tmp/ispc* \
 #&& wget https://github.com/ispc/ispc/releases/download/v1.14.1/ispc-v1.14.1-linux.tar.gz -O /tmp/ispc.tgz \
-cp /Q/EXTERNAL/ispc-v1.14.1-linux.tar.gz /tmp/ispc.tgz \
-&& cd /tmp/ \
-&& tar -zxvf ispc.tgz \
-&& mv ispc*linux /root/local/Q/ \
-&& cp /root//local/Q/ispc*/bin/ispc /root/local/Q/bin/  
+## ispc
+RUN rm -r -f /tmp/ispc* 
+COPY EXTERNAL/ispc-v1.14.1-linux.tar.gz /tmp/ispc.tgz 
+RUN tar -zxvf /tmp/ispc.tgz -C /tmp/
+COPY /tmp/ispc-v1.14.1-linux/bin/ispc /usr/local/bin/
 
 # luaffi
-RUN rm -r -f /tmp/luaffi* \
-cp /Q/EXTERNAL/luaffi-master.tgz /tmp/ \
-&& cd /tmp/ \
-&& tar -zxvf luaffi-master.tgz \
-&& cd luaffi-master \
-%% make \ 
-&& cp /tmp/luaffi-master/ffi.so /root/local/Q/lib/ \
-&& cp /tmp/luaffi-master/ffi.so /root/local/Q/luaffi-master/
+RUN rm -r -f /tmp/luaffi* 
+COPY EXTERNAL/luaffi-master.tgz /tmp/ 
+RUN tar -zxvf luaffi-master.tgz -C /tmp/
+COPY cp /tmp/luaffi-master/ffi.so /usr/local/lib/luaffi.so
 
 ## lua
 RUN luarocks install lpeg 

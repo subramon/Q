@@ -4,7 +4,8 @@ all :
 	make -C ${Q_SRC_ROOT}/RUNTIME/CMEM/src/ 
 	make -C ${Q_SRC_ROOT}/RUNTIME/SCLR/src/ 
 	make -C ${Q_SRC_ROOT}/RUNTIME/VCTR/src/ 
-	cp ${Q_ROOT}/luaffi-master/ffi.so ~/local/Q/lib/ 
+	bash copy_if_exists.sh ${Q_ROOT}/luaffi-master/ffi.so ~/local/Q/lib/ffi.so 
+	bash copy_if_exists.sh /usr/local/lib/luaffi.so ~/local/Q/lib/ffi.so
 
 	make -C ${Q_SRC_ROOT}/OPERATORS/S_TO_F/lua s_to_f.lua
 	make -C ${Q_SRC_ROOT}/OPERATORS/F_TO_S/lua f_to_s.lua
