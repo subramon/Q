@@ -19,6 +19,8 @@ typedef struct _hmap_t {
   uint64_t hashkey;
   uint32_t minsize;
   uint32_t maxsize;
+  bool take_over_mem; // true => memory is handed over to hashmap
+  // false => hashmap makes a copy
 } hmap_t;
 
 #endif

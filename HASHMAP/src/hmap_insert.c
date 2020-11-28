@@ -5,14 +5,13 @@ hmap_insert(
     hmap_t *ptr_hmap, 
     void *key,
     uint16_t len,
-    uint32_t hash
+    void *val
     )
 {
   int status = 0;
   if ( key == NULL ) { return status; } // not a valid key 
-  if ( hash == 0 ) { // not a valid hash 
-    hash = murmurhash3(key, len, ptr_hmap->hashkey);
-  }
+  if ( len == 0    ) { return status; } // not a valid key 
+  uint32_t hash = murmurhash3(key, len, ptr_hmap->hashkey);
   register uint32_t probe_loc; // location where we probe
   register uint32_t size = ptr_hmap->size;
   uint64_t divinfo = ptr_hmap->divinfo;
@@ -30,7 +29,15 @@ hmap_insert(
    // set up the bucket entry 
   bkt_t entry;
   memset(&entry, '\0', sizeof(bkt_t));
-  entry.key = key;
+  if ( ptr_hmap->take_over_mem ) { 
+    entry.key = key;
+  }
+  else {
+    entry.key = malloc(len);
+    return_if_malloc_failed(entry.key);
+    memcpy(entry.key, key, len);
+  }
+  entry.len = len;
   register uint32_t num_probes = 0;
   //-----------
   register bkt_t *bkts  = ptr_hmap->bkts;
@@ -44,7 +51,7 @@ hmap_insert(
     if ( this_key != NULL ) { // If there is a key in the bucket.
       if ( ( this_len == len ) && ( this_hash == hash ) && 
            ( memcmp(key, this_key, len) == 0 ) ) { 
-        // TODO: Do the aggregation
+        bkts[probe_loc] = val; // simple assignment 
         break;
       }
       //-----------------------

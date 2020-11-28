@@ -12,8 +12,9 @@
 int
 hmap_put(
     hmap_t *ptr_hmap, 
-    uint64_t  key, 
-    uint32_t  hash
+    void *key, 
+    uint16_t len,
+    void *val
     )
 {
   int status = 0;
@@ -21,16 +22,13 @@ hmap_put(
 
   if ( ptr_hmap->nitems > (double)ptr_hmap->size * HIGH_WATER_MARK ) {
     status = calc_new_size(ptr_hmap->nitems, ptr_hmap->minsize, 
-    ptr_hmap->maxsize,ptr_hmap->size, &newsize, &resize);
-    if ( status < 0 ) { 
-      ptr_hmap->is_approx = true; 
-      status = -1; goto BYE;
-    }
+    ptr_hmap->maxsize, ptr_hmap->size, &newsize, &resize);
+    cBYE(status);
   }
   if ( resize ) { 
     status = hmap_resize(ptr_hmap, newsize); cBYE(status);
   }
-  status = hmap_insert(ptr_hmap, key, hash); cBYE(status);
+  status = hmap_insert(ptr_hmap, key, len, val); cBYE(status);
 BYE:
   return status;
 }
