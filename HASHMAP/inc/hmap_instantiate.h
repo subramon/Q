@@ -3,7 +3,6 @@
 extern int 
 hmap_instantiate(
     hmap_t *ptr_hmap,
-    size_t minsize,
-    size_t maxsize
+    config_t *ptr_config
     );
 #endif

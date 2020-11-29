@@ -4,5 +4,7 @@ hmap_put(
     hmap_t *ptr_hmap, 
     void *key, 
     uint16_t len,
-    void *val
+    bool steal, // true => steal key; else make a copy
+    val_t val,
+    dbg_t *ptr_dbg
     );

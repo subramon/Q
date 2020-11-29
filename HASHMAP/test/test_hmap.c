@@ -7,25 +7,30 @@
 
 int
 main(
-    int argc,
-    char **argv
+    void
     )
 {
   int status = 0;
-  uint32_t minsize = 1024;
-  uint32_t maxsize = 8192;
   hmap_t hmap;
+  dbg_t dbg; memset(&dbg, 0, sizeof(dbg_t));
+  config_t config; memset(&config, 0, sizeof(config_t));
+  config.min_size = 1024;
+  config.max_size = 8192;
+  bool steal = false;
+  char keybuf[16];
+
   uint32_t occupancy = 0;
-  uint32_t nitems = maxsize * 0.75;
-  status = hmap_instantiate(&hmap, minsize, maxsize); cBYE(status);
+  uint32_t nitems = config.max_size * 0.75;
+  status = hmap_instantiate(&hmap, &config); cBYE(status);
   for ( int iter = 0; iter < 10; iter++ ) { 
+    printf("Iter = %d \n", iter); 
+    val_t val = iter+1;
     for ( uint32_t i = 0; i < nitems; i++ ) {
-      status = hmap_put(&hmap, i, 0); cBYE(status);
+      printf("i = %d \n", i); 
+      sprintf(keybuf, "%d", i); size_t len = strlen(keybuf);
+      status = hmap_put(&hmap, keybuf, len, steal, val, &dbg); cBYE(status);
       if ( iter == 0 ) { 
-        uint32_t chk; bool chk_is_approx;
-        status = hmap_nitems(&hmap, &chk, &chk_is_approx); cBYE(status);
-        if ( chk != (i+1) ) { go_BYE(-1); }
-        if ( chk_is_approx ) { go_BYE(-1) ;} 
+        if ( hmap.nitems != (i+1) ) { go_BYE(-1); } 
       }
       else { 
         if ( hmap.nitems != occupancy ) { go_BYE(-1); }
@@ -36,28 +41,8 @@ main(
     }
   }
   printf("occupancy = %d \n", hmap.nitems);
-  printf("maxsize = %d \n", maxsize);
+  printf("size      = %d \n", hmap.size);
   hmap_destroy(&hmap);
-  //--------------------------
-  status = hmap_instantiate(&hmap, minsize, maxsize); cBYE(status);
-  nitems = 2 * maxsize;
-  uint32_t chk, prev_chk; bool chk_is_approx;
-  bool maxed_out = false;
-  for ( uint32_t i = 0; i < nitems; i++ ) {
-    status = hmap_put(&hmap, i, 0); 
-    if ( i == 6143 ) {
-    }
-    if ( status < 0 ) { 
-      maxed_out = true;
-    }
-    status = hmap_nitems(&hmap, &chk, &chk_is_approx); cBYE(status);
-    if ( maxed_out ) { 
-      if ( prev_chk != chk ) { go_BYE(-1); }
-    }
-    prev_chk = chk;
-  }
-  hmap_destroy(&hmap);
-  //--------------------------
   fprintf(stderr, "Unit test succeeded\n");
 BYE:
   return status;

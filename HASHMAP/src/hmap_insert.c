@@ -5,16 +5,37 @@ hmap_insert(
     hmap_t *ptr_hmap, 
     void *key,
     uint16_t len,
-    void *val
+    bool steal, // true => steal key; else make a copy
+    val_t val,
+    dbg_t *ptr_dbg
     )
 {
   int status = 0;
-  if ( key == NULL ) { return status; } // not a valid key 
-  if ( len == 0    ) { return status; } // not a valid key 
-  uint32_t hash = murmurhash3(key, len, ptr_hmap->hashkey);
+  if ( key == NULL ) { go_BYE(-1); } // not a valid key 
+  if ( len == 0    ) { go_BYE(-1); } // not a valid key 
+  //----------------------------------------------
+  register uint32_t hash;
+  if ( ptr_dbg != NULL ) { 
+    if ( ptr_dbg->hash == 0 ) { 
+      hash = murmurhash3(key, len, ptr_hmap->hashkey);
+    }
+    else { 
+      hash = ptr_dbg->hash;
+    }
+  }
+  //---------------------------------
   register uint32_t probe_loc; // location where we probe
   register uint32_t size = ptr_hmap->size;
   uint64_t divinfo = ptr_hmap->divinfo;
+  if ( ptr_dbg != NULL ) { 
+    if ( ptr_dbg->probe_loc == 0 ) { 
+      probe_loc = fast_rem32(hash, size, divinfo);
+    }
+    else {
+      probe_loc = ptr_dbg->probe_loc;
+    }
+  }
+  //---------------------------------------------
 
   /*
    * From the paper: "when inserting, if a record probes a location
@@ -29,29 +50,23 @@ hmap_insert(
    // set up the bucket entry 
   bkt_t entry;
   memset(&entry, '\0', sizeof(bkt_t));
-  if ( ptr_hmap->take_over_mem ) { 
-    entry.key = key;
-  }
-  else {
-    entry.key = malloc(len);
-    return_if_malloc_failed(entry.key);
-    memcpy(entry.key, key, len);
-  }
-  entry.len = len;
+  entry.key  = key;
+  entry.len  = len;
+  entry.hash = hash;
   register uint32_t num_probes = 0;
   //-----------
   register bkt_t *bkts  = ptr_hmap->bkts;
-  probe_loc = fast_rem32(hash, size, divinfo);
   if ( probe_loc >= size ) { go_BYE(-1); }
   for ( ; ; ) {
     if ( num_probes >= size ) { go_BYE(-1); }
-    void *this_key = bkts[probe_loc].key;
-    uint16_t this_len  = bkts[probe_loc].len;
-    uint16_t this_hash = bkts[probe_loc].hash;
+    register bkt_t *this_bkt = bkts + probe_loc;
+    void *this_key     = this_bkt->key;
+    uint16_t this_len  = this_bkt->len;
+    uint16_t this_hash = this_bkt->hash;
     if ( this_key != NULL ) { // If there is a key in the bucket.
       if ( ( this_len == len ) && ( this_hash == hash ) && 
            ( memcmp(key, this_key, len) == 0 ) ) { 
-        bkts[probe_loc] = val; // simple assignment 
+        this_bkt->val = val; // simple assignment 
         break;
       }
       //-----------------------
@@ -68,11 +83,24 @@ hmap_insert(
       probe_loc++;
       if ( probe_loc == size ) { probe_loc = 0; }
     }
-    else {
-      bkts[probe_loc] = entry;
-      ptr_hmap->nitems++;
+    else { // spot is empty, grab it 
+      *this_bkt = entry;
+      ptr_hmap->nitems++; // one more item in hash table 
+      // make a copy of key for the hash table  if necessary
+      if ( steal == false ) {  
+        this_bkt->key = malloc(len);
+        return_if_malloc_failed(this_bkt->key);
+        memcpy(this_bkt->key, key, len);
+      }
+      else {
+        this_bkt->key = key;
+      }
+      //--------------
       break;
     }
+  }
+  if ( ptr_dbg != NULL ) { 
+    ptr_dbg->num_probes += num_probes;
   }
 BYE:
   return status;

@@ -16,12 +16,11 @@
 #define	Q_RHM_SET  1
 #define	Q_RHM_ADD 2
 
-#define	HASH_INIT_SIZE		(1024)
+#define	HASH_MIN_SIZE		(1024)
+#define	HASH_MAX_SIZE		(0) // 0 => no max
 #define	MAX_GROWTH_STEP		(1024U * 1024)
 
-#define	LOW_WATER_MARK 0.4
+#define	LOW_WATER_MARK  0.2
 #define	HIGH_WATER_MARK 0.85
-
-#define RH_CHUNK_SIZE 1024
 
 #endif

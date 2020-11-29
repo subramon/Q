@@ -1,6 +1,7 @@
 #include "hmap_common.h"
 #include "hmap_resize.h"
 #include "hmap_insert.h"
+#include "hmap_aux.h"
 
 int
 hmap_resize(
@@ -25,14 +26,17 @@ hmap_resize(
 
    // generate a new hash key/seed every time we resize the hash table.
   ptr_hmap->divinfo = fast_div32_init(newsize);
-  ptr_hmap->hashkey ^= random() | (random() << 32);
+  ptr_hmap->hashkey = mk_hmap_key();
 
+  bool steal = true;
+  printf("resize started\n");
   for ( uint32_t i = 0; i < oldsize; i++) {
-    bool updated = false;
     if ( bkts[i].key == 0 ) { continue; } // skip empty slots
-    hmap_insert(ptr_hmap, bkts[i].key, 0); 
-    if ( updated ) { go_BYE(-1); }
+    status = hmap_insert(ptr_hmap, bkts[i].key, bkts[i].len, 
+        steal, bkts[i].val, NULL);
+    cBYE(status);
   }
+  printf("resize stopped\n");
   free_if_non_null(bkts);
 BYE:
   return status;

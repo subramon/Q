@@ -1,7 +1,19 @@
 #ifndef __HMAP_STRUCT_H
 #define __HMAP_STRUCT_H
 
-typedef int64_t val_t;
+typedef struct _config_t { 
+  uint32_t min_size;
+  uint32_t max_size;
+  uint64_t max_growth_step;
+} config_t; 
+
+typedef struct _dbg_t { 
+  uint32_t hash;
+  uint32_t probe_loc;
+  uint64_t num_probes;
+} dbg_t; 
+
+typedef uint64_t val_t;
 typedef struct _bkt_t { 
   void    *key; // keys
   uint64_t hash; // hash of key
@@ -17,10 +29,9 @@ typedef struct _hmap_t {
   uint64_t divinfo;
   bkt_t  *bkts;  
   uint64_t hashkey;
-  uint32_t minsize;
-  uint32_t maxsize;
-  bool take_over_mem; // true => memory is handed over to hashmap
-  // false => hashmap makes a copy
+  uint32_t min_size;
+  uint32_t max_size;
+  uint32_t max_growth_step;
 } hmap_t;
 
 #endif
