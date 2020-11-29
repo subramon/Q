@@ -14,8 +14,8 @@ main(
   hmap_t hmap;
   dbg_t dbg; memset(&dbg, 0, sizeof(dbg_t));
   config_t config; memset(&config, 0, sizeof(config_t));
-  config.min_size = 1024;
-  config.max_size = 8192;
+  config.min_size = 8;
+  config.max_size = 8*8;
   bool steal = false;
   char keybuf[16];
 
@@ -26,7 +26,6 @@ main(
     printf("Iter = %d \n", iter); 
     val_t val = iter+1;
     for ( uint32_t i = 0; i < nitems; i++ ) {
-      printf("i = %d \n", i); 
       sprintf(keybuf, "%d", i); size_t len = strlen(keybuf);
       status = hmap_put(&hmap, keybuf, len, steal, val, &dbg); cBYE(status);
       if ( iter == 0 ) { 

@@ -15,25 +15,21 @@ hmap_insert(
   if ( len == 0    ) { go_BYE(-1); } // not a valid key 
   //----------------------------------------------
   register uint32_t hash;
-  if ( ptr_dbg != NULL ) { 
-    if ( ptr_dbg->hash == 0 ) { 
-      hash = murmurhash3(key, len, ptr_hmap->hashkey);
-    }
-    else { 
-      hash = ptr_dbg->hash;
-    }
+  if ( ( ptr_dbg == NULL ) || ( ptr_dbg->hash == 0 ) ) { 
+    hash = murmurhash3(key, len, ptr_hmap->hashkey);
+  }
+  else { 
+    hash = ptr_dbg->hash;
   }
   //---------------------------------
   register uint32_t probe_loc; // location where we probe
   register uint32_t size = ptr_hmap->size;
   uint64_t divinfo = ptr_hmap->divinfo;
-  if ( ptr_dbg != NULL ) { 
-    if ( ptr_dbg->probe_loc == 0 ) { 
-      probe_loc = fast_rem32(hash, size, divinfo);
-    }
-    else {
-      probe_loc = ptr_dbg->probe_loc;
-    }
+  if ( ( ptr_dbg == NULL ) || ( ptr_dbg->probe_loc == 0 ) ) { 
+    probe_loc = fast_rem32(hash, size, divinfo);
+  }
+  else {
+    probe_loc = ptr_dbg->probe_loc;
   }
   //---------------------------------------------
 
@@ -47,7 +43,7 @@ hmap_insert(
    * being inserted is greater than PSL of the element in the bucket,
    * then swap them and continue.
    */
-   // set up the bucket entry 
+  // set up the bucket entry 
   bkt_t entry;
   memset(&entry, '\0', sizeof(bkt_t));
   entry.key  = key;
@@ -57,6 +53,9 @@ hmap_insert(
   //-----------
   register bkt_t *bkts  = ptr_hmap->bkts;
   if ( probe_loc >= size ) { go_BYE(-1); }
+  if ( strcmp((char *)key, "0") == 0 ) { 
+    printf("%u,%u\n", hash, probe_loc);
+  }
   for ( ; ; ) {
     if ( num_probes >= size ) { go_BYE(-1); }
     register bkt_t *this_bkt = bkts + probe_loc;
@@ -65,7 +64,7 @@ hmap_insert(
     uint16_t this_hash = this_bkt->hash;
     if ( this_key != NULL ) { // If there is a key in the bucket.
       if ( ( this_len == len ) && ( this_hash == hash ) && 
-           ( memcmp(key, this_key, len) == 0 ) ) { 
+          ( memcmp(key, this_key, len) == 0 ) ) { 
         this_bkt->val = val; // simple assignment 
         break;
       }
@@ -84,6 +83,9 @@ hmap_insert(
       if ( probe_loc == size ) { probe_loc = 0; }
     }
     else { // spot is empty, grab it 
+      if ( strcmp((char *)key, "0") == 0 ) { 
+        printf("Inserted %s  at %u \n", (char *)key, probe_loc);
+      }
       *this_bkt = entry;
       ptr_hmap->nitems++; // one more item in hash table 
       // make a copy of key for the hash table  if necessary
