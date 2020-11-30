@@ -14,7 +14,7 @@ hmap_put(
     hmap_t *ptr_hmap, 
     void *key, 
     uint16_t len,
-    bool steal, // true => steal key; else make a copy
+    bool malloc_key, // true => make a copy
     val_t val,
     dbg_t *ptr_dbg
     )
@@ -31,7 +31,7 @@ hmap_put(
   if ( resize ) { 
     status = hmap_resize(ptr_hmap, newsize); cBYE(status);
   }
-  status = hmap_insert(ptr_hmap, key, len, steal, val, ptr_dbg); 
+  status = hmap_insert(ptr_hmap, key, len, malloc_key, val, ptr_dbg); 
   cBYE(status);
 BYE:
   return status;

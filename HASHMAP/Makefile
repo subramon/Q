@@ -7,8 +7,11 @@ INCS = -I ./src/ -I../UTILS/inc/ -I./inc/
 all: hmap.so test_hmap
 
 SRCS = \
-	  ./src/get_time_usec.c  \
+	  ../UTILS/src/get_time_usec.c  \
+	  ../UTILS/src/spooky_hash.c  \
+	  ../UTILS/src/rdtsc.c  \
 	  ./src/hmap_aux.c  \
+	  ./src/hmap_chk.c  \
 	  ./src/hmap_instantiate.c  \
 	  ./src/hmap_insert.c  \
 	  ./src/hmap_put.c  \

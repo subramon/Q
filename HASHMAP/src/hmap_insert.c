@@ -5,7 +5,7 @@ hmap_insert(
     hmap_t *ptr_hmap, 
     void *key,
     uint16_t len,
-    bool steal, // true => steal key; else make a copy
+    bool malloc_key, // true => make a copy of the key 
     val_t val,
     dbg_t *ptr_dbg
     )
@@ -49,19 +49,17 @@ hmap_insert(
   entry.key  = key;
   entry.len  = len;
   entry.hash = hash;
+  bool key_copied = false; // means we have not copied the key 
   register uint32_t num_probes = 0;
   //-----------
   register bkt_t *bkts  = ptr_hmap->bkts;
   if ( probe_loc >= size ) { go_BYE(-1); }
-  if ( strcmp((char *)key, "0") == 0 ) { 
-    printf("%u,%u\n", hash, probe_loc);
-  }
   for ( ; ; ) {
     if ( num_probes >= size ) { go_BYE(-1); }
     register bkt_t *this_bkt = bkts + probe_loc;
     void *this_key     = this_bkt->key;
     uint16_t this_len  = this_bkt->len;
-    uint16_t this_hash = this_bkt->hash;
+    uint32_t this_hash = this_bkt->hash;
     if ( this_key != NULL ) { // If there is a key in the bucket.
       if ( ( this_len == len ) && ( this_hash == hash ) && 
           ( memcmp(key, this_key, len) == 0 ) ) { 
@@ -75,6 +73,15 @@ hmap_insert(
         tmp = entry;
         entry = bkts[probe_loc];
         bkts[probe_loc] = tmp;
+        if ( ( key_copied == false ) && ( malloc_key == true ) ) { 
+          bkts[probe_loc].key = malloc(len); 
+          return_if_malloc_failed(bkts[probe_loc].key);
+          memcpy(bkts[probe_loc].key, key, len); 
+          key_copied = true;
+        }
+        len  = entry.len;
+        key  = entry.key;
+        hash = entry.hash;
       }
       entry.psl++;
       /* Continue to the next bucket. */
@@ -83,16 +90,14 @@ hmap_insert(
       if ( probe_loc == size ) { probe_loc = 0; }
     }
     else { // spot is empty, grab it 
-      if ( strcmp((char *)key, "0") == 0 ) { 
-        printf("Inserted %s  at %u \n", (char *)key, probe_loc);
-      }
       *this_bkt = entry;
       ptr_hmap->nitems++; // one more item in hash table 
       // make a copy of key for the hash table  if necessary
-      if ( steal == false ) {  
+      if ( ( key_copied == false ) && ( malloc_key == true ) ) { 
         this_bkt->key = malloc(len);
         return_if_malloc_failed(this_bkt->key);
         memcpy(this_bkt->key, key, len);
+        key_copied = true;
       }
       else {
         this_bkt->key = key;
