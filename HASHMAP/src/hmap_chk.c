@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -33,7 +34,8 @@ BYE:
 //-----------------------------------------------------
 int
 hmap_chk(
-    hmap_t *ptr_hmap
+    hmap_t *ptr_hmap,
+    bool reset_called
     )
 {
   int status = 0;
@@ -66,7 +68,9 @@ hmap_chk(
      if ( hashes[i].hash == 0 ) { go_BYE(-1); }
     for ( uint32_t j = i+1; j < chk_nitems; j++ ) { 
       if ( hashes[i].hash == hashes[j].hash ) { 
-        go_BYE(-1);
+        fprintf(stderr, "Positions %lu and %lu have same hash \n",
+            (unsigned long)hashes[i].idx, (unsigned long)hashes[j].idx);
+            go_BYE(-1);
       }
     }
   }
@@ -80,9 +84,11 @@ hmap_chk(
     else {
       if ( bkts[i].len != 0 ) { go_BYE(-1); }
       if ( bkts[i].hash != 0 ) { go_BYE(-1); }
+      if ( !reset_called ) { 
+        if ( bkts[i].cnt != 0 ) { go_BYE(-1); }
+      }
     }
     // TODO: What about psl?
-    // TODO: What about cnt?
   }
 
 BYE:

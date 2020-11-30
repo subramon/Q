@@ -1,5 +1,8 @@
 #include "hmap_common.h"
+#include "hmap_aux.h"
 #include "hmap_insert.h"
+
+
 int
 hmap_insert(
     hmap_t *ptr_hmap, 
@@ -13,25 +16,8 @@ hmap_insert(
   int status = 0;
   if ( key == NULL ) { go_BYE(-1); } // not a valid key 
   if ( len == 0    ) { go_BYE(-1); } // not a valid key 
-  //----------------------------------------------
-  register uint32_t hash;
-  if ( ( ptr_dbg == NULL ) || ( ptr_dbg->hash == 0 ) ) { 
-    hash = murmurhash3(key, len, ptr_hmap->hashkey);
-  }
-  else { 
-    hash = ptr_dbg->hash;
-  }
-  //---------------------------------
-  register uint32_t probe_loc; // location where we probe
-  register uint32_t size = ptr_hmap->size;
-  uint64_t divinfo = ptr_hmap->divinfo;
-  if ( ( ptr_dbg == NULL ) || ( ptr_dbg->probe_loc == 0 ) ) { 
-    probe_loc = fast_rem32(hash, size, divinfo);
-  }
-  else {
-    probe_loc = ptr_dbg->probe_loc;
-  }
-  //---------------------------------------------
+  register uint32_t hash = set_hash(key, len, ptr_hmap, ptr_dbg);
+  register uint32_t probe_loc = set_probe_loc(hash, ptr_hmap, ptr_dbg);
 
   /*
    * From the paper: "when inserting, if a record probes a location
@@ -49,13 +35,14 @@ hmap_insert(
   entry.key  = key;
   entry.len  = len;
   entry.hash = hash;
+  entry.val  = val;
   bool key_copied = false; // means we have not copied the key 
   register uint32_t num_probes = 0;
   //-----------
   register bkt_t *bkts  = ptr_hmap->bkts;
-  if ( probe_loc >= size ) { go_BYE(-1); }
+  if ( probe_loc >= ptr_hmap->size ) { go_BYE(-1); }
   for ( ; ; ) {
-    if ( num_probes >= size ) { go_BYE(-1); }
+    if ( num_probes >= ptr_hmap->size ) { go_BYE(-1); }
     register bkt_t *this_bkt = bkts + probe_loc;
     void *this_key     = this_bkt->key;
     uint16_t this_len  = this_bkt->len;
@@ -87,7 +74,7 @@ hmap_insert(
       /* Continue to the next bucket. */
       num_probes++;
       probe_loc++;
-      if ( probe_loc == size ) { probe_loc = 0; }
+      if ( probe_loc == ptr_hmap->size ) { probe_loc = 0; }
     }
     else { // spot is empty, grab it 
       *this_bkt = entry;

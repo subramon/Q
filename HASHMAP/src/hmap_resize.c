@@ -37,7 +37,6 @@ hmap_resize(
     status = hmap_insert(ptr_hmap, bkts[i].key, bkts[i].len, 
         malloc_key, bkts[i].val, NULL);
     cBYE(status);
-    status = hmap_chk(ptr_hmap); cBYE(status);
   }
   if ( ptr_hmap->nitems != chk_nitems ) { go_BYE(-1); }
   free_if_non_null(bkts);

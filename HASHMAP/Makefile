@@ -12,10 +12,11 @@ SRCS = \
 	  ../UTILS/src/rdtsc.c  \
 	  ./src/hmap_aux.c  \
 	  ./src/hmap_chk.c  \
-	  ./src/hmap_instantiate.c  \
-	  ./src/hmap_insert.c  \
-	  ./src/hmap_put.c  \
 	  ./src/hmap_destroy.c  \
+	  ./src/hmap_get.c  \
+	  ./src/hmap_insert.c  \
+	  ./src/hmap_instantiate.c  \
+	  ./src/hmap_put.c  \
 	  ./src/hmap_resize.c  \
 	  ./src/calc_new_size.c  \
 	  ./src/murmurhash.c  \
