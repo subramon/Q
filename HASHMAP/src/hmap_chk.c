@@ -8,7 +8,9 @@
 #include "rdtsc.h"
 #include "spooky_struct.h"
 #include "spooky_hash.h"
+#include "hmap_aux.h"
 #include "hmap_chk.h"
+#include "hmap_get.h"
 
 typedef struct _chk_t { 
   uint32_t idx;
@@ -91,7 +93,36 @@ hmap_chk(
     }
     // TODO: What about psl?
   }
-
+  //-- make sure no holes between initial probe_loc and current position
+  for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
+    if ( bkts[i].key == NULL ) { continue; }
+    val_t val; bool is_found; uint32_t where_found; 
+    void *key    = bkts[i].key;
+    uint16_t len = bkts[i].len;
+    status = hmap_get(ptr_hmap, key, len, &val, &is_found, 
+        &where_found, NULL);
+    cBYE(status);
+    if ( !is_found ) { go_BYE(-1); }
+    uint32_t hash = set_hash(key, len, ptr_hmap, NULL);
+    uint32_t probe_loc = set_probe_loc(hash, ptr_hmap, NULL);
+    if ( probe_loc == i ) { 
+      // this key was placed with no searching 
+      continue;
+    }
+    uint32_t start_from = i;
+    for ( uint32_t num_searches = 0 ; ; num_searches++ ) { 
+      if ( num_searches == ptr_hmap->size ) { go_BYE(-1); }
+      if ( bkts[start_from].key == NULL ) { 
+        go_BYE(-1); }
+      if ( start_from == 0 ) { 
+        start_from = ptr_hmap->size - 1;
+      }
+      else {
+        start_from--;
+      }
+      if ( start_from == probe_loc ) { break; }
+    }
+  }
 BYE:
   free_if_non_null(hashes);
   return status;

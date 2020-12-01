@@ -1,11 +1,13 @@
 #ifndef __HMAP_STRUCT_H
 #define __HMAP_STRUCT_H
 
-typedef struct _config_t { 
+typedef struct _hmap_config_t { 
   uint32_t min_size;
   uint32_t max_size;
   uint64_t max_growth_step;
-} config_t; 
+  float low_water_mark;
+  float high_water_mark;
+} hmap_config_t; 
 
 typedef struct _dbg_t { 
   uint32_t hash;
@@ -29,9 +31,7 @@ typedef struct _hmap_t {
   uint64_t divinfo;
   bkt_t  *bkts;  
   uint64_t hashkey;
-  uint32_t min_size;
-  uint32_t max_size;
-  uint32_t max_growth_step;
+  hmap_config_t config;
 } hmap_t;
 
 #endif

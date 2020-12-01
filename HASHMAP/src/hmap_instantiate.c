@@ -4,7 +4,7 @@
 int 
 hmap_instantiate(
     hmap_t *ptr_hmap,
-    config_t *ptr_config
+    hmap_config_t *ptr_config
     )
 {
   int status = 0;
@@ -30,6 +30,32 @@ hmap_instantiate(
   }
   else {
     ptr_hmap->max_growth_step = ptr_config->max_growth_step;
+  }
+  //----------------------------------------
+  if ( ptr_config->low_water_mark <= 0 ) { 
+    ptr_hmap->loq_water_mark = LOW_WATER_MARK;
+  }
+  else {
+    ptr_hmap->low_water_mark = ptr_config->low_water_mark;
+  }
+  if ( ( ptr_hmap->low_water_mark <= 0 ) || 
+       ( ptr_hmap->low_water_mark >= 1 ) ) {
+    go_BYE(-1);
+  }
+  //----------------------------------------
+  if ( ptr_config->high_water_mark <= 0 ) { 
+    ptr_hmap->loq_water_mark = HIGH_WATER_MARK;
+  }
+  else {
+    ptr_hmap->high_water_mark = ptr_config->high_water_mark;
+  }
+  if ( ( ptr_hmap->high_water_mark <= 0 ) || 
+       ( ptr_hmap->high_water_mark >= 1 ) ) {
+    go_BYE(-1);
+  }
+  //----------------------------------------
+  if ( ptr_hmap->low_water_mark > ptr_hmap->high_water_mark ) {
+    go_BYE(-1);
   }
   //----------------------------------------
 

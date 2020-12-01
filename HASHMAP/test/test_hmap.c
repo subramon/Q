@@ -17,7 +17,7 @@ main(
   int num_iterations = 3; 
   hmap_t hmap; memset(&hmap, 0, sizeof(hmap_t));
   dbg_t dbg; memset(&dbg, 0, sizeof(dbg_t));
-  config_t config; memset(&config, 0, sizeof(config_t));
+  hmap_config_t config; memset(&config, 0, sizeof(config_t));
   config.min_size = 32;
   config.max_size = 8*config.min_size;
   bool malloc_key = true;
@@ -32,12 +32,14 @@ main(
   for ( int iter = 0; iter < num_iterations; iter++ ) { 
     val_t chk_val;
     val_t val = iter+1;
-    bool is_found;
+    bool is_found; uint32_t where_found;
     for ( uint32_t i = 0; i < nitems; i++ ) {
+      memset(keybuf, 0, 16);
       sprintf(keybuf, "%d", i); size_t len = strlen(keybuf);
       status = hmap_put(&hmap, keybuf, len, malloc_key, val, &dbg); 
       cBYE(status);
-      status = hmap_get(&hmap, keybuf, len, &chk_val, &is_found, &dbg); 
+      status = hmap_get(&hmap, keybuf, len, &chk_val, &is_found, 
+          &where_found, &dbg); 
       cBYE(status);
       if ( !is_found ) { go_BYE(-1); }
       if ( chk_val != val ) { go_BYE(-1); }
@@ -62,7 +64,7 @@ main(
   for ( int iter = 0; iter < num_iterations; iter++ ) { 
     val_t chk_val;
     val_t val = num_iterations;
-    bool is_found;
+    bool is_found; uint32_t where_found;
     for ( uint32_t i = 0; i < nitems; i++ ) {
       sprintf(keybuf, "%d", i); size_t len = strlen(keybuf);
       status = hmap_del(&hmap, keybuf, len, &chk_val, &is_found, &dbg); 
@@ -71,7 +73,8 @@ main(
       if ( iter == 0 ) { if ( !is_found ) { go_BYE(-1); } } 
       if ( iter  > 0 ) { if (  is_found ) { go_BYE(-1); } } 
 
-      status = hmap_get(&hmap, keybuf, len, &chk_val, &is_found, &dbg); 
+      status = hmap_get(&hmap, keybuf, len, &chk_val, &is_found, 
+          &where_found, &dbg); 
       cBYE(status);
       if ( is_found ) { go_BYE(-1); }
       if ( iter == 0 ) { if ( chk_val != val ) { go_BYE(-1); } }

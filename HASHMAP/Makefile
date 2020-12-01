@@ -22,7 +22,10 @@ SRCS = \
 	  ./src/calc_new_size.c  \
 	  ./src/murmurhash.c  \
 
-hmap.so: ./src/*.c  ./inc/*.h 
+.c.o : 
+	$(CC) -c -o $@ $< $(QC_FLAGS)  $(INCS) 
+
+hmap.so: ${SRCS}  ./inc/*.h 
 	gcc ${QC_FLAGS} ${SRCS} ${INCS} \
 	  -shared -o hmap.so 
 
