@@ -32,7 +32,7 @@ hmap_get(
 
     if ( ( this_bkt->hash == hash ) && ( this_bkt->len == len ) &&
         ( memcmp(this_bkt->key, key, len) == 0) ) {
-      *ptr_val = this_bkt->val; 
+      if ( ptr_val != NULL ) { *ptr_val = this_bkt->val; }
       *ptr_where_found = probe_loc;
       *ptr_is_found = true;
     }

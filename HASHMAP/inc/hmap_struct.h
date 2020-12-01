@@ -1,6 +1,18 @@
 #ifndef __HMAP_STRUCT_H
 #define __HMAP_STRUCT_H
 
+#include "val_struct.h"
+
+typedef struct _hmap_multi_t { 
+  int num_procs; 
+  int num_at_once; 
+  uint32_t *idxs;   // [num_at_once ]
+  uint32_t *hashes; // [num_at_once ]
+  uint16_t *locs;   // [num_at_once ]
+  uint8_t *tids;   // [num_at_once ]
+  bool *exists;   // [num_at_once ]
+} hmap_multi_t;
+
 typedef struct _hmap_config_t { 
   uint32_t min_size;
   uint32_t max_size;
@@ -15,7 +27,6 @@ typedef struct _dbg_t {
   uint64_t num_probes;
 } dbg_t; 
 
-typedef uint64_t val_t;
 typedef struct _bkt_t { 
   void    *key; // keys
   uint64_t hash; // hash of key

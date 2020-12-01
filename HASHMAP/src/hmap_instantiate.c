@@ -12,54 +12,54 @@ hmap_instantiate(
   memset(ptr_hmap, 0, sizeof(hmap_t));
   //----------------------------------------
   if ( ptr_config->min_size == 0 ) { 
-    ptr_hmap->min_size = HASH_MIN_SIZE;
+    ptr_hmap->config.min_size = HASH_MIN_SIZE;
   }
   else {
-    ptr_hmap->min_size = ptr_config->min_size;
+    ptr_hmap->config.min_size = ptr_config->min_size;
   }
   //----------------------------------------
   if ( ptr_config->max_size == 0 ) { 
-    ptr_hmap->max_size = HASH_MIN_SIZE;
+    ptr_hmap->config.max_size = HASH_MIN_SIZE;
   }
   else {
-    ptr_hmap->max_size = ptr_config->max_size;
+    ptr_hmap->config.max_size = ptr_config->max_size;
   }
   //----------------------------------------
   if ( ptr_config->max_growth_step == 0 ) { 
-    ptr_hmap->max_growth_step = HASH_MIN_SIZE;
+    ptr_hmap->config.max_growth_step = HASH_MIN_SIZE;
   }
   else {
-    ptr_hmap->max_growth_step = ptr_config->max_growth_step;
+    ptr_hmap->config.max_growth_step = ptr_config->max_growth_step;
   }
   //----------------------------------------
   if ( ptr_config->low_water_mark <= 0 ) { 
-    ptr_hmap->loq_water_mark = LOW_WATER_MARK;
+    ptr_hmap->config.low_water_mark = LOW_WATER_MARK;
   }
   else {
-    ptr_hmap->low_water_mark = ptr_config->low_water_mark;
+    ptr_hmap->config.low_water_mark = ptr_config->low_water_mark;
   }
-  if ( ( ptr_hmap->low_water_mark <= 0 ) || 
-       ( ptr_hmap->low_water_mark >= 1 ) ) {
+  if ( ( ptr_hmap->config.low_water_mark <= 0 ) || 
+       ( ptr_hmap->config.low_water_mark >= 1 ) ) {
     go_BYE(-1);
   }
   //----------------------------------------
   if ( ptr_config->high_water_mark <= 0 ) { 
-    ptr_hmap->loq_water_mark = HIGH_WATER_MARK;
+    ptr_hmap->config.high_water_mark = HIGH_WATER_MARK;
   }
   else {
-    ptr_hmap->high_water_mark = ptr_config->high_water_mark;
+    ptr_hmap->config.high_water_mark = ptr_config->high_water_mark;
   }
-  if ( ( ptr_hmap->high_water_mark <= 0 ) || 
-       ( ptr_hmap->high_water_mark >= 1 ) ) {
+  if ( ( ptr_hmap->config.high_water_mark <= 0 ) || 
+       ( ptr_hmap->config.high_water_mark >= 1 ) ) {
     go_BYE(-1);
   }
   //----------------------------------------
-  if ( ptr_hmap->low_water_mark > ptr_hmap->high_water_mark ) {
+  if ( ptr_hmap->config.low_water_mark > ptr_hmap->config.high_water_mark ) {
     go_BYE(-1);
   }
   //----------------------------------------
 
-  ptr_hmap->size = ptr_hmap->min_size;
+  ptr_hmap->size = ptr_hmap->config.min_size;
   ptr_hmap->bkts = calloc(ptr_hmap->size, sizeof(bkt_t)); 
   return_if_malloc_failed(ptr_hmap->bkts);
 

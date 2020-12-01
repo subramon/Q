@@ -3,6 +3,6 @@
 extern int 
 hmap_instantiate(
     hmap_t *ptr_hmap,
-    config_t *ptr_config
+    hmap_config_t *ptr_config
     );
 #endif

@@ -17,6 +17,7 @@ SRCS = \
 	  ./src/hmap_get.c  \
 	  ./src/hmap_insert.c  \
 	  ./src/hmap_instantiate.c  \
+	  ./src/hmap_mput.c  \
 	  ./src/hmap_put.c  \
 	  ./src/hmap_resize.c  \
 	  ./src/calc_new_size.c  \
@@ -29,8 +30,8 @@ hmap.so: ${SRCS}  ./inc/*.h
 	gcc ${QC_FLAGS} ${SRCS} ${INCS} \
 	  -shared -o hmap.so 
 
-test_hmap : hmap.so ./test/*.c 
-	gcc ${QC_FLAGS} ${INCS} \
+test_hmap : hmap.so ./test/test_hmap.c src/val_update.c 
+	gcc ${QC_FLAGS} src/val_update.c ${INCS} \
 	./test/test_hmap.c  \
 	hmap.so -o test_hmap 
 

@@ -24,7 +24,7 @@ hmap_put(
   uint64_t threshold = (uint64_t)(HIGH_WATER_MARK * (double)ptr_hmap->size);
 
   if ( ptr_hmap->nitems > threshold ) { 
-    status = calc_new_size(ptr_hmap->nitems, ptr_hmap->max_size, 
+    status = calc_new_size(ptr_hmap->nitems, ptr_hmap->config.max_size, 
         ptr_hmap->size, &newsize, &resize);
     cBYE(status);
   }

@@ -1,6 +1,7 @@
 #include "hmap_common.h"
 #include "hmap_aux.h"
 #include "hmap_insert.h"
+#include "val_update.h"
 
 
 int
@@ -50,7 +51,7 @@ hmap_insert(
     if ( this_key != NULL ) { // If there is a key in the bucket.
       if ( ( this_len == len ) && ( this_hash == hash ) && 
           ( memcmp(key, this_key, len) == 0 ) ) { 
-        this_bkt->val = val; // simple assignment 
+        status = val_update(&(this_bkt->val), &val); 
         break;
       }
       //-----------------------
