@@ -12,6 +12,7 @@ SRCS = \
 	  ../UTILS/src/rdtsc.c  \
 	  ./src/hmap_aux.c  \
 	  ./src/hmap_chk.c  \
+	  ./src/hmap_del.c  \
 	  ./src/hmap_destroy.c  \
 	  ./src/hmap_get.c  \
 	  ./src/hmap_insert.c  \

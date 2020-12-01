@@ -2,6 +2,7 @@
 #include "hmap_common.h"
 #include "hmap_instantiate.h"
 #include "hmap_chk.h"
+#include "hmap_del.h"
 #include "hmap_destroy.h"
 #include "hmap_get.h"
 #include "hmap_nitems.h"
@@ -51,12 +52,35 @@ main(
       occupancy = hmap.nitems;
     }
     printf("Iter = %d, Probes = %" PRIu64 "\n",iter,(long)dbg.num_probes); 
-    status = hmap_chk(&hmap, reset_called); 
-    cBYE(status); 
+    status = hmap_chk(&hmap, reset_called); cBYE(status); 
   }
+  uint32_t n = hmap.nitems;
   printf("occupancy = %d \n", hmap.nitems);
   printf("size      = %d \n", hmap.size);
   fprintf(stderr, "Unit test succeeded\n");
+  // now delete every item (more than once)
+  for ( int iter = 0; iter < num_iterations; iter++ ) { 
+    val_t chk_val;
+    val_t val = num_iterations;
+    bool is_found;
+    for ( uint32_t i = 0; i < nitems; i++ ) {
+      sprintf(keybuf, "%d", i); size_t len = strlen(keybuf);
+      status = hmap_del(&hmap, keybuf, len, &chk_val, &is_found, &dbg); 
+      cBYE(status);
+
+      if ( iter == 0 ) { if ( !is_found ) { go_BYE(-1); } } 
+      if ( iter  > 0 ) { if (  is_found ) { go_BYE(-1); } } 
+
+      status = hmap_get(&hmap, keybuf, len, &chk_val, &is_found, &dbg); 
+      cBYE(status);
+      if ( is_found ) { go_BYE(-1); }
+      if ( iter == 0 ) { if ( chk_val != val ) { go_BYE(-1); } }
+
+      if ( iter == 0 ) { if ( hmap.nitems != (n - i - 1) ) { go_BYE(-1); } }
+      if ( iter  > 0 ) { if ( hmap.nitems != 0 ) { go_BYE(-1); }  }
+    }
+    status = hmap_chk(&hmap, reset_called); cBYE(status); 
+  }
 BYE:
   hmap_destroy(&hmap);
   return status;

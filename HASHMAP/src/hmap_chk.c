@@ -83,7 +83,8 @@ hmap_chk(
     }
     else {
       if ( bkts[i].len != 0 ) { go_BYE(-1); }
-      if ( bkts[i].hash != 0 ) { go_BYE(-1); }
+      if ( bkts[i].hash != 0 ) { 
+        go_BYE(-1); }
       if ( !reset_called ) { 
         if ( bkts[i].cnt != 0 ) { go_BYE(-1); }
       }
