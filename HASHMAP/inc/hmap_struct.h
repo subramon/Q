@@ -8,7 +8,7 @@ typedef struct _hmap_multi_t {
   int num_at_once; 
   uint32_t *idxs;   // [num_at_once ]
   uint32_t *hashes; // [num_at_once ]
-  uint16_t *locs;   // [num_at_once ]
+  uint32_t *locs;   // [num_at_once ]
   uint8_t *tids;   // [num_at_once ]
   bool *exists;   // [num_at_once ]
 } hmap_multi_t;

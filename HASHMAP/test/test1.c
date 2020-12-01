@@ -5,7 +5,6 @@
 #include "hmap_del.h"
 #include "hmap_destroy.h"
 #include "hmap_get.h"
-#include "hmap_nitems.h"
 #include "hmap_put.h"
 
 int
@@ -27,8 +26,6 @@ main(
   uint32_t occupancy = 0;
   uint32_t nitems = config.max_size * 0.75;
   status = hmap_instantiate(&hmap, &config); cBYE(status);
-  hmap.divinfo = 4294967556;
-  hmap.hashkey = 1941628627;
   for ( int iter = 0; iter < num_iterations; iter++ ) { 
     val_t chk_val;
     val_t val = iter+1;

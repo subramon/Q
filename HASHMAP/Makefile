@@ -4,7 +4,7 @@
 
 
 INCS = -I ./src/ -I../UTILS/inc/ -I./inc/
-all: hmap.so test_hmap
+all: hmap.so test1 test2
 
 SRCS = \
 	  ../UTILS/src/get_time_usec.c  \
@@ -30,10 +30,15 @@ hmap.so: ${SRCS}  ./inc/*.h
 	gcc ${QC_FLAGS} ${SRCS} ${INCS} \
 	  -shared -o hmap.so 
 
-test_hmap : hmap.so ./test/test_hmap.c src/val_update.c 
+test1 : hmap.so ./test/test1.c src/val_update.c 
 	gcc ${QC_FLAGS} src/val_update.c ${INCS} \
-	./test/test_hmap.c  \
-	hmap.so -o test_hmap 
+	./test/test1.c  \
+	hmap.so -o test1 
+
+test2 : hmap.so ./test/test2.c src/val_update.c 
+	gcc ${QC_FLAGS} src/val_update.c ${INCS} \
+	./test/test2.c  \
+	hmap.so -o test2  -lm
 
 clean:
 	rm -f *.o test_hmap *.so
