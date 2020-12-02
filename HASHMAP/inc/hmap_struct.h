@@ -1,8 +1,6 @@
 #ifndef __HMAP_STRUCT_H
 #define __HMAP_STRUCT_H
 
-#include "val_struct.h"
-
 typedef struct _hmap_multi_t { 
   int num_procs; 
   int num_at_once; 
@@ -33,7 +31,7 @@ typedef struct _bkt_t {
   uint16_t len; // length of key
   uint16_t psl; // probe sequence length 
   uint32_t cnt; // count number of times key was inserted
-  val_t val;   
+  void * val;   
 } bkt_t;
 
 typedef struct _hmap_t {

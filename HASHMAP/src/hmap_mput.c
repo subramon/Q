@@ -12,7 +12,7 @@ hmap_mput(
     void **keys,  // [nkeys] 
     uint32_t nkeys,
     uint16_t *lens, // [nkeys] 
-    val_t *vals // [nkeys] 
+    void **vals // [nkeys] 
     )
 {
   int status = 0;

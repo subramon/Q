@@ -4,6 +4,6 @@ hmap_insert(
     void *key,
     uint16_t len,
     bool steal, // true => steal key; else make a copy
-    val_t val,
+    void * val,
     dbg_t *ptr_dbg
     );

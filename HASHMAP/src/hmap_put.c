@@ -15,7 +15,7 @@ hmap_put(
     void *key, 
     uint16_t len,
     bool malloc_key, // true => make a copy
-    val_t val,
+    void *val,
     dbg_t *ptr_dbg
     )
 {

@@ -1,5 +1,5 @@
 extern int
 val_update(
-    val_t *ptr_dst_val,
-    val_t *ptr_src_val
+    void **ptr_dst_val,
+    void *ptr_src_val
     );

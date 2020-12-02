@@ -7,7 +7,7 @@ hmap_get(
     hmap_t *ptr_hmap, 
     const void * const key, 
     size_t len,
-    val_t *ptr_val,
+    void **ptr_val,
     bool *ptr_is_found,
     uint32_t *ptr_where_found,
     dbg_t *ptr_dbg
@@ -24,6 +24,7 @@ hmap_get(
   register uint32_t my_psl = 0;
   register uint32_t num_probes = 0;
   *ptr_is_found = false;
+  *ptr_val = NULL;
 
   // Lookup is a linear probe.
   for ( ; ; ) { 

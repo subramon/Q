@@ -6,12 +6,12 @@
 #include "hmap_aux.h"
 #include "hmap_resize.h"
 #include "hmap_del.h"
+#include "val_free.h"
 int
 hmap_del(
     hmap_t *ptr_hmap, 
     const void *key, 
     size_t len,
-    val_t *ptr_val,
     bool *ptr_is_found,
     dbg_t *ptr_dbg
     )
@@ -53,7 +53,7 @@ hmap_del(
 
    // Free the bucket.
   free_if_non_null(this_bkt->key);
-  *ptr_val = this_bkt->val;
+  val_free(&(this_bkt->val));
   ptr_hmap->nitems--;
 
   /*

@@ -1,4 +1,4 @@
 extern int
 val_free(
-    val_t *ptr_val
+    void **ptr_val
     );

@@ -10,7 +10,7 @@ hmap_insert(
     void *key,
     uint16_t len,
     bool malloc_key, // true => make a copy of the key 
-    val_t val,
+    void *val,
     dbg_t *ptr_dbg
     )
 {
@@ -51,7 +51,7 @@ hmap_insert(
     if ( this_key != NULL ) { // If there is a key in the bucket.
       if ( ( this_len == len ) && ( this_hash == hash ) && 
           ( memcmp(key, this_key, len) == 0 ) ) { 
-        status = val_update(&(this_bkt->val), &val); 
+        status = val_update(&(this_bkt->val), val); 
         break;
       }
       //-----------------------
@@ -90,6 +90,7 @@ hmap_insert(
       else {
         this_bkt->key = key;
       }
+      status = val_update(&(this_bkt->val), val); 
       //--------------
       break;
     }

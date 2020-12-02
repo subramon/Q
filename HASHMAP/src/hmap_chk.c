@@ -82,8 +82,10 @@ hmap_chk(
     if ( bkts[i].key != NULL ) {
       if ( bkts[i].len == 0 ) { go_BYE(-1); }
       if ( bkts[i].hash == 0 ) { go_BYE(-1); }
+      if ( bkts[i].val == NULL ) { go_BYE(-1); }
     }
     else {
+      if ( bkts[i].val != NULL ) { go_BYE(-1); }
       if ( bkts[i].len != 0 ) { go_BYE(-1); }
       if ( bkts[i].hash != 0 ) { 
         go_BYE(-1); }
@@ -96,13 +98,15 @@ hmap_chk(
   //-- make sure no holes between initial probe_loc and current position
   for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
     if ( bkts[i].key == NULL ) { continue; }
-    val_t val; bool is_found; uint32_t where_found; 
+    void *val; bool is_found; uint32_t where_found; 
     void *key    = bkts[i].key;
     uint16_t len = bkts[i].len;
     status = hmap_get(ptr_hmap, key, len, &val, &is_found, 
         &where_found, NULL);
     cBYE(status);
     if ( !is_found ) { go_BYE(-1); }
+    if ( ( is_found ) && ( val == NULL ) ) { go_BYE(-1); }
+    if ( ( !is_found ) && ( val != NULL ) ) { go_BYE(-1); }
     uint32_t hash = set_hash(key, len, ptr_hmap, NULL);
     uint32_t probe_loc = set_probe_loc(hash, ptr_hmap, NULL);
     if ( probe_loc == i ) { 
