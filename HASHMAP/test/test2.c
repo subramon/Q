@@ -9,7 +9,8 @@
 
 int
 main(
-    void
+    int argc,
+    char **argv
     )
 {
   int status = 0;
@@ -68,13 +69,48 @@ main(
     cBYE(status);
     if ( hmap.nitems > n3 ) { go_BYE(-1); }
     status = hmap_chk(&hmap, false); cBYE(status);
-    printf("i = %d \n", i);
   }
+  hmap_destroy(&hmap);
+  status = hmap_instantiate(&hmap, &config); cBYE(status);
+  if ( hmap.nitems != 0 ) { go_BYE(-1); }
+  // Delete every batch of keys entered 
+  for ( uint32_t i = 0; i < n2; i++ ) {
+    // set up a batch of keys 
+    for ( uint32_t j = 0; j < n1; j++ ) {
+      memset(keys[j], 0, max_key_len);
+      sprintf(keys[j], "%d", (int)(random() % n3)); 
+      lens[j] = strlen(keys[j]);
+      vals[j] = (i*n1) + j;
+    }
+    // do an mput 
+    status = hmap_mput(&hmap, &M, (void **)keys, n1, lens, vals); 
+    cBYE(status);
+    if ( hmap.nitems > n3 ) { go_BYE(-1); }
+    status = hmap_chk(&hmap, false); cBYE(status);
+    // delete all of them 
+    for ( uint32_t j = 0; j < n1; j++ ) {
+      val_t chk_val;
+      bool is_found;
+      status = hmap_del(&hmap, keys[j], lens[j], &chk_val, &is_found, NULL);
+      cBYE(status);
+    }
+    if ( hmap.nitems != 0 ) { go_BYE(-1); }
+    status = hmap_chk(&hmap, false); cBYE(status);
+  }
+  fprintf(stdout, "Test %s completed successfully\n", argv[0]); 
 BYE:
   free_if_non_null(M.idxs);
   free_if_non_null(M.hashes);
   free_if_non_null(M.locs);
   free_if_non_null(M.tids);
   free_if_non_null(M.exists); 
+  if ( keys != NULL ) { 
+    for ( uint32_t i = 0; i < n1; i++ ) {
+      free_if_non_null(keys[i]); 
+    }
+  }
+  free_if_non_null(keys); 
+  free_if_non_null(lens);
+  free_if_non_null(vals);
   hmap_destroy(&hmap);
 }

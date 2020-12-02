@@ -40,11 +40,12 @@ hmap_mput(
           exists+j, idxs+j, NULL); 
       hashes[j] = set_hash(keys[i], lens[i], ptr_hmap, NULL);
       locs[j] = set_probe_loc(hashes[j], ptr_hmap, NULL);
-      tids[j] = hashes[i] % num_procs; // TODO use fast_rem32()
+      tids[j] = hashes[j] % num_procs; // TODO use fast_rem32()
       if ( !exists[j] ) { continue; }
       if ( tids[j] != tid ) { continue; }
       // status = hmap_update(ptr_hmap, idxs[i], vals[i]); 
     }
+    // this must be a sequential loop
     for ( uint32_t i = lb; i < ub; i++ ) { 
       uint32_t j = i - lb; // offset for M 
       if ( exists[j] ) { continue; }
