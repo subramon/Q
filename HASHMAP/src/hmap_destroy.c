@@ -8,9 +8,10 @@ hmap_destroy(
 {
   if ( ptr_hmap == NULL ) { return; }
   for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
-    if( ptr_hmap->bkts[i].key == NULL ) { continue; }
     free_if_non_null(ptr_hmap->bkts[i].key);
-    val_free(&(ptr_hmap->bkts[i].val));
+    if ( ptr_hmap->bkts[i].val != NULL ) { 
+      val_free(&(ptr_hmap->bkts[i].val));
+    }
   }
   free_if_non_null(ptr_hmap->bkts);
   memset(ptr_hmap, '\0', sizeof(hmap_t));

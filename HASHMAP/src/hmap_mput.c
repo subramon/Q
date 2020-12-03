@@ -46,9 +46,6 @@ hmap_mput(
       if ( lstatus != 0 ) { if ( status == 0 ) { status = lstatus; } }
 
       if ( !exists[j] ) { continue; } // new key=> insert in next loop
-      if ( idxs[j] >= ptr_hmap->size ) { 
-        printf("hello world\n"); 
-      }
 
       hashes[j] = set_hash(keys[i], lens[i], ptr_hmap, NULL);
       locs[j] = set_probe_loc(hashes[j], ptr_hmap, NULL);

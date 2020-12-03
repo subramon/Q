@@ -7,7 +7,7 @@
 #include "hmap_mput.h"
 #include "hmap_put.h"
 
-typedef uint64_t val_t;
+#include "val_struct_1.h"
 
 int
 main(

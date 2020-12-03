@@ -7,7 +7,7 @@
 #include "hmap_get.h"
 #include "hmap_put.h"
 
-typedef uint64_t val_t;
+#include "val_struct_1.h"
 // int num_frees; int num_mallocs;;
 int
 main(

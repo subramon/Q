@@ -1,9 +1,9 @@
 // update the value 
 #include "q_incs.h"
 #include "q_macros.h"
+#include "val_struct_1.h"
 #include "val_update.h"
 
-typedef uint64_t val_t;
 // extern int num_mallocs;
 // extern int num_frees;
 

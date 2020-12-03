@@ -4,7 +4,7 @@
 
 
 INCS = -I ./src/ -I../UTILS/inc/ -I./inc/
-all: hmap.so test1 test2
+all: hmap.so test1 test2 test3
 
 V1SRCS = \
 	src/val_update_1.c \
