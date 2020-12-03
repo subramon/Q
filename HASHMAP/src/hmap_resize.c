@@ -33,6 +33,7 @@ hmap_resize(
   bool malloc_key = false;
   for ( uint32_t i = 0; i < oldsize; i++) {
     if ( bkts[i].key == 0 ) { continue; } // skip empty slots
+    if ( bkts[i].val == NULL ) { go_BYE(-1); }
     // printf("Re-inserting %s \n", (char *)bkts[i].key);
     status = hmap_insert(ptr_hmap, bkts[i].key, bkts[i].len, 
         malloc_key, bkts[i].val, NULL);

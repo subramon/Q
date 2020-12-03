@@ -24,7 +24,7 @@ hmap_get(
   register uint32_t my_psl = 0;
   register uint32_t num_probes = 0;
   *ptr_is_found = false;
-  *ptr_val = NULL;
+  if ( ptr_val != NULL ) { *ptr_val = NULL; }
 
   // Lookup is a linear probe.
   for ( ; ; ) { 

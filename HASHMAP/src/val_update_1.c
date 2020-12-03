@@ -4,8 +4,8 @@
 #include "val_update.h"
 
 typedef uint64_t val_t;
-extern int num_mallocs;
-extern int num_frees;
+// extern int num_mallocs;
+// extern int num_frees;
 
 int
 val_update(
@@ -18,15 +18,12 @@ val_update(
   if ( ptr_dst_val == NULL ) { go_BYE(-1); }
   if ( ptr_src_val == NULL ) { go_BYE(-1); }
 
-  if ( *ptr_dst_val != NULL ) { 
-    free(*ptr_dst_val); 
-    num_frees++; 
-  }
+  // if ( *ptr_dst_val != NULL ) { num_frees++; }
   free_if_non_null(*ptr_dst_val); 
   val_t src_val = *((val_t *)ptr_src_val);
   val_t *dst_val = malloc(sizeof(val_t));
-  printf("malloc'd %" PRIu64 "\n", ((uint64_t *)dst_val)[0]); 
-  num_mallocs++;
+  // printf("malloc'd %" PRIu64 "\n", ((uint64_t *)dst_val)); 
+  // num_mallocs++;
   return_if_malloc_failed(dst_val);
   *dst_val = src_val; 
   *ptr_dst_val = dst_val;

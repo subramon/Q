@@ -37,7 +37,7 @@ hmap_insert(
   entry.len  = len;
   entry.hash = hash;
   entry.val  = val;
-  bool key_copied = false; // means we have not copied the key 
+  bool key_copied = false; // means we have not copied the key or val
   register uint32_t num_probes = 0;
   //-----------
   register bkt_t *bkts  = ptr_hmap->bkts;
@@ -51,7 +51,7 @@ hmap_insert(
     if ( this_key != NULL ) { // If there is a key in the bucket.
       if ( ( this_len == len ) && ( this_hash == hash ) && 
           ( memcmp(key, this_key, len) == 0 ) ) { 
-        status = val_update(&(this_bkt->val), val); 
+        status = val_update(&(this_bkt->val), val);  cBYE(status);
         break;
       }
       //-----------------------
@@ -65,10 +65,13 @@ hmap_insert(
           bkts[probe_loc].key = malloc(len); 
           return_if_malloc_failed(bkts[probe_loc].key);
           memcpy(bkts[probe_loc].key, key, len); 
+          bkts[probe_loc].val = NULL;
+          status = val_update(&(this_bkt->val), val);  cBYE(status);
           key_copied = true;
         }
         len  = entry.len;
         key  = entry.key;
+        val  = entry.val;
         hash = entry.hash;
       }
       entry.psl++;
@@ -85,12 +88,10 @@ hmap_insert(
         this_bkt->key = malloc(len);
         return_if_malloc_failed(this_bkt->key);
         memcpy(this_bkt->key, key, len);
+        this_bkt->val = NULL;
+        status = val_update(&(this_bkt->val), val);  cBYE(status);
         key_copied = true;
       }
-      else {
-        this_bkt->key = key;
-      }
-      status = val_update(&(this_bkt->val), val); 
       //--------------
       break;
     }

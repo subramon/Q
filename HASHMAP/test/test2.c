@@ -7,6 +7,8 @@
 #include "hmap_mput.h"
 #include "hmap_put.h"
 
+typedef uint64_t val_t;
+
 int
 main(
     int argc,
@@ -21,8 +23,8 @@ main(
 
   int max_key_len = 8;
 
-  char **keys = NULL;
-  val_t *vals = NULL;
+  char **keys    = NULL;
+  val_t **vals   = NULL;
   uint16_t *lens = NULL;
 
   uint32_t n1 = 1000; // batch for mput
@@ -52,8 +54,12 @@ main(
   lens = malloc(n1 * sizeof(uint16_t));
   return_if_malloc_failed(lens); 
   //--------------------------------------
-  vals = malloc(n1 * sizeof(val_t));
+  vals = malloc(n1 * sizeof(val_t *));
   return_if_malloc_failed(vals); 
+  for ( uint32_t i = 0; i < n1; i++ ) {
+    vals[i] = malloc(1 * sizeof(val_t));
+    return_if_malloc_failed(vals[i]); 
+  }
   //--------------------------------------
 
   for ( uint32_t i = 0; i < n2; i++ ) {
@@ -62,10 +68,10 @@ main(
       memset(keys[j], 0, max_key_len);
       sprintf(keys[j], "%d", (int)(random() % n3)); 
       lens[j] = strlen(keys[j]);
-      vals[j] = (i*n1) + j;
+      vals[j][0] = (i*n1) + j;
     }
     // do an mput 
-    status = hmap_mput(&hmap, &M, (void **)keys, n1, lens, vals); 
+    status = hmap_mput(&hmap, &M, (void **)keys, n1, lens, (void **)vals); 
     cBYE(status);
     if ( hmap.nitems > n3 ) { go_BYE(-1); }
     status = hmap_chk(&hmap, false); cBYE(status);
@@ -80,18 +86,17 @@ main(
       memset(keys[j], 0, max_key_len);
       sprintf(keys[j], "%d", (int)(random() % n3)); 
       lens[j] = strlen(keys[j]);
-      vals[j] = (i*n1) + j;
+      vals[j][0] = (i*n1) + j;
     }
     // do an mput 
-    status = hmap_mput(&hmap, &M, (void **)keys, n1, lens, vals); 
+    status = hmap_mput(&hmap, &M, (void **)keys, n1, lens, (void **)vals); 
     cBYE(status);
     if ( hmap.nitems > n3 ) { go_BYE(-1); }
     status = hmap_chk(&hmap, false); cBYE(status);
     // delete all of them 
     for ( uint32_t j = 0; j < n1; j++ ) {
-      val_t chk_val;
       bool is_found;
-      status = hmap_del(&hmap, keys[j], lens[j], &chk_val, &is_found, NULL);
+      status = hmap_del(&hmap, keys[j], lens[j], &is_found, NULL);
       cBYE(status);
     }
     if ( hmap.nitems != 0 ) { go_BYE(-1); }
@@ -111,6 +116,11 @@ BYE:
   }
   free_if_non_null(keys); 
   free_if_non_null(lens);
+  if ( vals != NULL ) { 
+    for ( uint32_t i = 0; i < n1; i++ ) {
+      free_if_non_null(vals[i]); 
+    }
+  }
   free_if_non_null(vals);
   hmap_destroy(&hmap);
 }

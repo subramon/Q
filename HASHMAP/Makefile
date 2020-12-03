@@ -28,6 +28,7 @@ SRCS = \
 	  ./src/hmap_mput.c  \
 	  ./src/hmap_put.c  \
 	  ./src/hmap_resize.c  \
+	  ./src/hmap_update.c  \
 	  ./src/calc_new_size.c  \
 	  ./src/murmurhash.c  \
 

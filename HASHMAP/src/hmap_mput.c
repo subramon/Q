@@ -5,6 +5,7 @@
 #include "hmap_get.h"
 #include "hmap_put.h"
 #include "hmap_mput.h"
+#include "hmap_update.h"
 int
 hmap_mput(
     hmap_t *ptr_hmap, 
@@ -32,19 +33,32 @@ hmap_mput(
   for ( int iter = 0; ; iter++ ) { 
     ub = lb + M->num_at_once;
     if ( ub > nkeys ) { ub = nkeys; }
-// #pragma omp parallel for num_threads(num_procs)
+// TODO #pragma omp parallel for num_threads(num_procs)
     for ( uint32_t i = lb; i < ub; i++ ) { 
+      int lstatus = 0;
       uint32_t j = i - lb; // offset for M 
       int tid = omp_get_thread_num();
-      status = hmap_get(ptr_hmap, keys[i], lens[i], NULL, 
+      idxs[j] = UINT_MAX; // bad value 
+      lstatus = hmap_get(ptr_hmap, keys[i], lens[i], NULL, 
           exists+j, idxs+j, NULL); 
+      // do not exist if bad status, this is an omp loop
+      cBYE(status);
+      if ( lstatus != 0 ) { if ( status == 0 ) { status = lstatus; } }
+
+      if ( !exists[j] ) { continue; } // new key=> insert in next loop
+      if ( idxs[j] >= ptr_hmap->size ) { 
+        printf("hello world\n"); 
+      }
+
       hashes[j] = set_hash(keys[i], lens[i], ptr_hmap, NULL);
       locs[j] = set_probe_loc(hashes[j], ptr_hmap, NULL);
       tids[j] = hashes[j] % num_procs; // TODO use fast_rem32()
-      if ( !exists[j] ) { continue; }
-      if ( tids[j] != tid ) { continue; }
-      // status = hmap_update(ptr_hmap, idxs[i], vals[i]); 
+      if ( tids[j] != tid ) { continue; } // not mine, skip
+      lstatus = hmap_update(ptr_hmap, idxs[j], vals[i]);  
+      // do not exist if bad status, this is an omp loop
+      if ( lstatus != 0 ) { if ( status == 0 ) { status = lstatus; } }
     }
+    cBYE(status); // exit if any thread had a problem
     // this must be a sequential loop
     for ( uint32_t i = lb; i < ub; i++ ) { 
       uint32_t j = i - lb; // offset for M 
