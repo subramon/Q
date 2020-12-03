@@ -31,7 +31,7 @@ typedef struct _bkt_t {
   uint16_t len; // length of key
   uint16_t psl; // probe sequence length 
   uint32_t cnt; // count number of times key was inserted
-  void * val;   
+  void * val;    // value that is aggregated, NOT input value
 } bkt_t;
 
 typedef struct _hmap_t {

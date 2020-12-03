@@ -9,14 +9,16 @@
 
 int
 val_update(
-    void **ptr_dst_val,
-    void *ptr_src_val
+    void **in_ptr_dst_val,
+    void *in_ptr_src_val
     )
 {
   int status = 0;
 
-  if ( ptr_dst_val == NULL ) { go_BYE(-1); }
-  if ( ptr_src_val == NULL ) { go_BYE(-1); }
+  if ( in_ptr_dst_val == NULL ) { go_BYE(-1); }
+  if ( in_ptr_src_val == NULL ) { go_BYE(-1); }
+  agg_val_t **ptr_dst_val = (agg_val_t **)in_ptr_dst_val;
+  val_t     **ptr_src_val = (    val_t **)in_ptr_src_val;
 
   // if ( *ptr_dst_val != NULL ) { num_frees++; }
   free_if_non_null(*ptr_dst_val); 

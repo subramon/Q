@@ -8,7 +8,7 @@
 #include "hmap_put.h"
 
 #include "val_struct_1.h"
-// int num_frees; int num_mallocs;;
+int num_frees; int num_mallocs;;
 int
 main(
     void
@@ -30,7 +30,7 @@ main(
   uint32_t nitems = config.max_size * 0.75;
   status = hmap_instantiate(&hmap, &config); cBYE(status);
   for ( int iter = 0; iter < num_iterations; iter++ ) { 
-    val_t *ptr_chk_val;
+    agg_val_t *ptr_agg_val;
     val_t val = iter+1;
     bool is_found; uint32_t where_found;
     for ( uint32_t i = 0; i < nitems; i++ ) {
@@ -38,11 +38,11 @@ main(
       sprintf(keybuf, "%d", i); size_t len = strlen(keybuf);
       status = hmap_put(&hmap, keybuf, len, malloc_key, &val, &dbg); 
       cBYE(status);
-      status = hmap_get(&hmap, keybuf, len, (void **)&ptr_chk_val, 
+      status = hmap_get(&hmap, keybuf, len, (void **)&ptr_agg_val, 
           &is_found, &where_found, &dbg); 
       cBYE(status);
       if ( !is_found ) { go_BYE(-1); }
-      if ( *ptr_chk_val != val ) { go_BYE(-1); }
+      if ( *ptr_agg_val != val ) { go_BYE(-1); }
       if ( iter == 0 ) { 
         if ( hmap.nitems != (i+1) ) { go_BYE(-1); } 
       }
@@ -61,7 +61,7 @@ main(
   printf("size      = %d \n", hmap.size);
   // now delete every item (more than once)
   for ( int iter = 0; iter < num_iterations; iter++ ) { 
-    val_t *ptr_chk_val;
+    val_t *ptr_agg_val;
     bool is_found; uint32_t where_found;
     for ( uint32_t i = 0; i < nitems; i++ ) {
       memset(keybuf, 0, 16);
@@ -72,11 +72,11 @@ main(
       if ( iter == 0 ) { if ( !is_found ) { go_BYE(-1); } } 
       if ( iter  > 0 ) { if (  is_found ) { go_BYE(-1); } } 
 
-      status = hmap_get(&hmap, keybuf, len, (void **)&ptr_chk_val, 
+      status = hmap_get(&hmap, keybuf, len, (void **)&ptr_agg_val, 
           &is_found, &where_found, &dbg); 
       cBYE(status);
       if ( is_found ) { go_BYE(-1); }
-      if ( ptr_chk_val != NULL ) { go_BYE(-1); }
+      if ( ptr_agg_val != NULL ) { go_BYE(-1); }
 
       if ( iter == 0 ) { if ( hmap.nitems != (n - i - 1) ) { go_BYE(-1); } }
       if ( iter  > 0 ) { if ( hmap.nitems != 0 ) { go_BYE(-1); }  }

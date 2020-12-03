@@ -8,7 +8,7 @@
 #include "hmap_put.h"
 #include "val_struct_2.h"
 
-int num_frees; int num_mallocs;;
+int num_frees; int num_mallocs;
 int
 main(
     void
@@ -66,6 +66,8 @@ main(
   uint32_t n = hmap.nitems;
   printf("occupancy = %d \n", hmap.nitems);
   printf("size      = %d \n", hmap.size);
+  printf("1: num_frees = %d \n", num_frees);
+  printf("1: num_mallocs = %d \n", num_mallocs);
   // now delete every item (more than once)
   for ( int iter = 0; iter < num_iterations; iter++ ) { 
     val_t *ptr_chk_val;
@@ -91,8 +93,8 @@ main(
     status = hmap_chk(&hmap, reset_called); cBYE(status); 
   }
   hmap_destroy(&hmap);
-  printf("num_frees = %d \n", num_frees);
-  printf("num_mallocs = %d \n", num_mallocs);
+  printf("2: num_frees = %d \n", num_frees);
+  printf("2: num_mallocs = %d \n", num_mallocs);
 #ifdef XXX
 
   // this test is a bunch of random inserts and deletes 

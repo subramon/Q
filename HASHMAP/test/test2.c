@@ -9,6 +9,7 @@
 
 #include "val_struct_1.h"
 
+int num_frees, num_mallocs;
 int
 main(
     int argc,
@@ -16,6 +17,7 @@ main(
     )
 {
   int status = 0;
+  num_frees =  num_mallocs = 0;
   hmap_t hmap; memset(&hmap, 0, sizeof(hmap_t));
   dbg_t dbg; memset(&dbg, 0, sizeof(dbg_t));
   hmap_config_t config; memset(&config, 0, sizeof(hmap_config_t));
