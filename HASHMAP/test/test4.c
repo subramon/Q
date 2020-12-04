@@ -6,7 +6,7 @@
 #include "hmap_destroy.h"
 #include "hmap_get.h"
 #include "hmap_put.h"
-#include "val_struct_2.h"
+#include "val_struct_3.h"
 
 int num_frees; int num_mallocs;
 int
@@ -16,7 +16,10 @@ main(
 {
   int status = 0;
   num_frees = num_mallocs = 0; 
-  int num_iterations = 4; 
+  int num_iterations = 1024 * 1024;
+  int num_items      = 1024;
+  agg_val_t *chk_agg = NULL;
+
   hmap_t hmap; memset(&hmap, 0, sizeof(hmap_t));
   dbg_t dbg; memset(&dbg, 0, sizeof(dbg_t));
   hmap_config_t config; memset(&config, 0, sizeof(hmap_config_t));
@@ -24,53 +27,28 @@ main(
   config.max_size = 8*config.min_size;
   bool malloc_key = true;
   bool reset_called = false;
-  char keybuf[16];
 
-  uint32_t occupancy = 0;
-  uint32_t nitems = config.max_size * 0.75;
+  agg_val_t *chk_agg = NULL;
+  chk_agg = malloc(num_items * sizeof(agg_val_t));
+  return_if_malloc_failed(chk_agg);
+  memset(chk_agg, 0,  (num_items * sizeof(agg_val_t)));
   status = hmap_instantiate(&hmap, &config); cBYE(status);
+
+  srand48(random());
   for ( int iter = 0; iter < num_iterations; iter++ ) {
-    val_t *ptr_chk_val;
-    val_t val;
-    memset(&val, 0, sizeof(val_t));
-    val.str = malloc(32);
-    memset(val.str, 0, 32);
-    sprintf(val.str, "%ld", random());
-    val.len = strlen(val.str)+1;
-    bool is_found; uint32_t where_found;
-    for ( uint32_t i = 0; i < nitems; i++ ) {
-      memset(keybuf, 0, 16);
-      sprintf(keybuf, "%d", i); size_t len = strlen(keybuf);
-      status = hmap_put(&hmap, keybuf, len, malloc_key, &val, &dbg); 
-      cBYE(status);
-      status = hmap_get(&hmap, keybuf, len, (void **)&ptr_chk_val, 
-          &is_found, &where_found, &dbg); 
-      cBYE(status);
-      if ( !is_found ) { go_BYE(-1); }
-      if ( ptr_chk_val->len != val.len ) { go_BYE(-1); }
-      // TODO str check 
-      if ( iter == 0 ) { 
-        if ( hmap.nitems != (i+1) ) { go_BYE(-1); } 
-      }
-      else { 
-        if ( hmap.nitems != occupancy ) { go_BYE(-1); }
-      }
-    }
-    if ( iter == 0 ) { 
-      occupancy = hmap.nitems;
-    }
-    printf("Iter = %d, Probes = %" PRIu64 "\n",iter,(long)dbg.num_probes); 
-    status = hmap_chk(&hmap, reset_called); cBYE(status); 
-    free_if_non_null(val.str);
+    int key = (int)(random() % num_items);
+    in_val_t val = drand48(); 
+    //-- START: independent calculation of aggregation
+    status = hmap_put(&hmap, &key, sizeof(int), malloc_key, &val, &dbg); 
+    //-- STOP : independent calculation of aggregation
+    cBYE(status);
   }
-  uint32_t n = hmap.nitems;
+  status = hmap_chk(&hmap, reset_called); cBYE(status); 
+  printf("Iter = %d, Probes = %" PRIu64 "\n",iter,(long)dbg.num_probes); 
   printf("occupancy = %d \n", hmap.nitems);
   printf("size      = %d \n", hmap.size);
-  printf("1: num_frees = %d \n", num_frees);
-  printf("1: num_mallocs = %d \n", num_mallocs);
-  // now delete every item (more than once)
-  for ( int iter = 0; iter < num_iterations; iter++ ) { 
-    val_t *ptr_chk_val;
+
+  // now confirm that every item has the aggregated value that it should
     bool is_found; uint32_t where_found;
     for ( uint32_t i = 0; i < nitems; i++ ) {
       memset(keybuf, 0, 16);
