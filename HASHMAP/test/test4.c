@@ -75,6 +75,7 @@ main(
   hmap_destroy(&hmap);
   fprintf(stdout, "Test %s completed successfully\n", argv[0]);
 BYE:
+  free_if_non_null(chk_agg);
   hmap_destroy(&hmap);
   return status;
 }
