@@ -1,7 +1,7 @@
 // update the value 
 #include "q_incs.h"
 #include "q_macros.h"
-#include "val_struct_2.h"
+#include "val_struct_3.h"
 #include "val_free.h"
 extern int num_frees; extern int num_mallocs;
 int

@@ -53,7 +53,7 @@ main(
     if ( iter == 0 ) { 
       occupancy = hmap.nitems;
     }
-    printf("Iter = %d, Probes = %" PRIu64 "\n",iter,(long)dbg.num_probes); 
+    printf("Iter = %d, Probes = %" PRIu64 "\n",iter, dbg.num_probes); 
     status = hmap_chk(&hmap, reset_called); cBYE(status); 
   }
   uint32_t n = hmap.nitems;

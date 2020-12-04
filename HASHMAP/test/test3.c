@@ -6,7 +6,7 @@
 #include "hmap_destroy.h"
 #include "hmap_get.h"
 #include "hmap_put.h"
-#include "val_struct_2.h"
+#include "val_struct_3.h"
 
 int num_frees; int num_mallocs;
 int
@@ -59,7 +59,7 @@ main(
     if ( iter == 0 ) { 
       occupancy = hmap.nitems;
     }
-    printf("Iter = %d, Probes = %" PRIu64 "\n",iter,(long)dbg.num_probes); 
+    printf("Iter = %d, Probes = %" PRIu64 "\n",iter, dbg.num_probes); 
     status = hmap_chk(&hmap, reset_called); cBYE(status); 
     free_if_non_null(val.str);
   }

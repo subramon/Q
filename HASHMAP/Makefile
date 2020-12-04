@@ -4,15 +4,19 @@
 
 
 INCS = -I ./src/ -I../UTILS/inc/ -I./inc/
-all: hmap.so test1 test2 test3
+all: hmap.so test1 test2 test3 test4
 
 V1SRCS = \
 	src/val_update_1.c \
 	src/val_free_1.c 
 
-V2SRCS = \
-	src/val_update_2.c \
-	src/val_free_2.c 
+V3SRCS = \
+	src/val_update_3.c \
+	src/val_free_3.c 
+
+V4SRCS = \
+	src/val_update_4.c \
+	src/val_free_4.c 
 
 SRCS = \
 	  ../UTILS/src/get_time_usec.c  \
@@ -36,27 +40,35 @@ SRCS = \
 	$(CC) -c -o $@ $< $(QC_FLAGS)  $(INCS) 
 
 libval1.so: ${V1SRCS}  ./inc/*.h 
-	gcc -DCASEA ${QC_FLAGS} ${V1SRCS} ${INCS} \
+	gcc  ${QC_FLAGS} ${V1SRCS} ${INCS} \
 	  -shared -o libval1.so 
 
-libval2.so: ${V2SRCS}  ./inc/*.h 
-	gcc -DCASEB ${QC_FLAGS} ${V2SRCS} ${INCS} \
-	  -shared -o libval2.so 
+libval3.so: ${V3SRCS}  ./inc/*.h 
+	gcc  ${QC_FLAGS} ${V2SRCS} ${INCS} \
+	  -shared -o libval3.so 
+
+libval4.so: ${V4SRCS}  ./inc/*.h 
+	gcc  ${QC_FLAGS} ${V4SRCS} ${INCS} \
+	  -shared -o libval4.so 
 
 hmap.so: ${SRCS}  ./inc/*.h 
-	gcc -DCASEA ${QC_FLAGS} ${SRCS} ${INCS} -shared -o hmap.so 
+	gcc  ${QC_FLAGS} ${SRCS} ${INCS} -shared -o hmap.so 
 
 test1 : hmap.so ./test/test1.c ${V1SRCS} libval1.so 
-	gcc -DCASEA ${QC_FLAGS} ${INCS} ./test/test1.c \
+	gcc  ${QC_FLAGS} ${INCS} ./test/test1.c \
 	hmap.so libval1.so -o test1 
 
 test2 : hmap.so ./test/test2.c ${V1SRCS}  libval1.so 
-	gcc -DCASEA ${QC_FLAGS} ${INCS} ./test/test2.c \
+	gcc  ${QC_FLAGS} ${INCS} ./test/test2.c \
 	hmap.so libval1.so -o test2  -lm
 
-test3 : hmap.so ./test/test3.c ${V2SRCS}  libval2.so 
-	gcc -DCASEB ${QC_FLAGS} ${INCS} ./test/test3.c \
-	hmap.so libval2.so -o test3  -lm
+test3 : hmap.so ./test/test3.c ${V3SRCS}  libval3.so 
+	gcc  ${QC_FLAGS} ${INCS} ./test/test3.c \
+	hmap.so libval3.so -o test3  -lm
+
+test4 : hmap.so ./test/test4.c ${e2SRCS}  libval4.so 
+	gcc  ${QC_FLAGS} ${INCS} ./test/test4.c \
+	hmap.so libval4.so -o test4  -lm
 
 clean:
 	rm -f *.o test_hmap *.so
