@@ -44,7 +44,7 @@ libval1.so: ${V1SRCS}  ./inc/*.h
 	  -shared -o libval1.so 
 
 libval3.so: ${V3SRCS}  ./inc/*.h 
-	gcc  ${QC_FLAGS} ${V2SRCS} ${INCS} \
+	gcc  ${QC_FLAGS} ${V3SRCS} ${INCS} \
 	  -shared -o libval3.so 
 
 libval4.so: ${V4SRCS}  ./inc/*.h 
