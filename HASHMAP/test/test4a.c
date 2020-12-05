@@ -21,8 +21,8 @@ main(
 {
   int status = 0;
   num_frees = num_mallocs = num_updates = 0; 
-  int N = 4096 * 4096; // number of insertions performed 
-  uint32_t num_items      = 4096;
+  int N = 2048 * 2048; // number of insertions performed 
+  uint32_t num_items      = 2048;
   val_t *chk_agg = NULL;
   uint16_t *lens = NULL;
   void **keys = NULL;
@@ -72,7 +72,7 @@ main(
   status = hmap_instantiate(&hmap, &config); cBYE(status);
 
   //-----------------------------
-  multi_init(&M, 1024);
+  multi_init(&M, 2048);
   //-----------------------------
   for ( int i = 0; i < N; i++ ) {
     //-- START: independent calculation of aggregation
