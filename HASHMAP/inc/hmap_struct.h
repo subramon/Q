@@ -7,7 +7,7 @@ typedef struct _hmap_multi_t {
   uint32_t *idxs;   // [num_at_once ]
   uint32_t *hashes; // [num_at_once ]
   uint32_t *locs;   // [num_at_once ]
-  uint8_t *tids;   // [num_at_once ]
+  int8_t *tids;   // [num_at_once ]
   bool *exists;   // [num_at_once ]
 } hmap_multi_t;
 
@@ -30,7 +30,6 @@ typedef struct _bkt_t {
   uint64_t hash; // hash of key
   uint16_t len; // length of key
   uint16_t psl; // probe sequence length 
-  uint32_t cnt; // count number of times key was inserted
   void * val;    // value that is aggregated, NOT input value
 } bkt_t;
 

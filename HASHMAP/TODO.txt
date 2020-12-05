@@ -1,4 +1,3 @@
 Test the reset functionality
 
-decide whether cnt should be part of bucket or not
-Maybe user should make it part of agg_val if they so desire?
+have a version of hmap_get which uses probe_loc and hash as inputs

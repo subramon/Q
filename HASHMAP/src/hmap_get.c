@@ -15,7 +15,8 @@ hmap_get(
 {
   int status = 0;
 
-  if ( key == NULL ) { go_BYE(-1); } // not a valid key 
+  if ( key == NULL ) { 
+    go_BYE(-1); } // not a valid key 
   if ( len == 0    ) { go_BYE(-1); } // not a valid key 
 
   register uint32_t hash = set_hash(key, len, ptr_hmap, ptr_dbg);

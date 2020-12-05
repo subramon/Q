@@ -8,7 +8,7 @@
 #include "hmap_put.h"
 
 #include "val_struct_1.h"
-int num_frees; int num_mallocs;;
+int num_frees; int num_mallocs;
 int
 main(
     void

@@ -7,6 +7,7 @@
 #include "hmap_common.h"
 #include "hmap_struct.h"
 #include "hmap_aux.h"
+#include "val_pr.h"
 
 uint32_t
 mk_hmap_key(
@@ -54,3 +55,61 @@ set_probe_loc(
   }
   return probe_loc;
 }
+
+int
+hmap_pr(
+    hmap_t *ptr_hmap
+    )
+{
+  int status = 0;
+  bkt_t *bkts = ptr_hmap->bkts;
+  for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
+    if ( bkts[i].key == NULL ) { continue; }
+    status = key_pr(bkts[i].key, stdout); cBYE(status);
+    status = val_pr(bkts[i].val, stdout); cBYE(status);
+  }
+BYE:
+  return status;
+}
+
+void multi_free(
+    hmap_multi_t *ptr_M
+    )
+{
+  free_if_non_null(ptr_M->idxs);
+  free_if_non_null(ptr_M->hashes);
+  free_if_non_null(  ptr_M->locs);
+  free_if_non_null(ptr_M->tids);
+  free_if_non_null(ptr_M->exists);
+}
+
+int multi_init(
+    hmap_multi_t *ptr_M,
+    int n
+    )
+{
+  int status = 0;
+  if ( ptr_M == NULL ) { go_BYE(-1); }
+  memset(ptr_M, 0, sizeof(hmap_multi_t));
+  if ( n <= 0 ) { go_BYE(-1); }
+  ptr_M->num_at_once = n;
+
+  ptr_M->idxs = malloc(n * sizeof(uint32_t));
+  return_if_malloc_failed(ptr_M->idxs);
+
+  ptr_M->hashes = malloc(n * sizeof(uint32_t));
+  return_if_malloc_failed(ptr_M->hashes);
+
+  ptr_M->locs = malloc(n * sizeof(uint32_t));
+  return_if_malloc_failed(  ptr_M->locs);
+  
+  ptr_M->tids = malloc(n * sizeof(int8_t));
+  return_if_malloc_failed(ptr_M->tids);
+  
+  ptr_M->exists = malloc(n * sizeof(bool));
+  return_if_malloc_failed(ptr_M->exists);
+BYE:
+  if ( status < 0 ) { if ( ptr_M != NULL ) { multi_free(ptr_M); } }
+  return status;
+}
+  //-----------------------------

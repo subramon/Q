@@ -15,3 +15,14 @@ set_probe_loc(
     hmap_t *ptr_hmap,
     dbg_t *ptr_dbg
     );
+extern int
+hmap_pr(
+    hmap_t *ptr_hmap
+    );
+extern void multi_free(
+    hmap_multi_t *ptr_M
+    );
+extern  int multi_init(
+    hmap_multi_t *ptr_M,
+    int num_at_once
+    );

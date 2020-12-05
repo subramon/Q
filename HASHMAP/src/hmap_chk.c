@@ -18,23 +18,6 @@ typedef struct _chk_t {
 } chk_t; 
 //-----------------------------------------------------
 int
-hmap_pr(
-    hmap_t *ptr_hmap
-    )
-{
-  int status = 0;
-  bkt_t *bkts = ptr_hmap->bkts;
-  for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
-    if ( bkts[i].key != NULL ) {
-      printf("%d,%s,%d\n", i, (char *)bkts[i].key, bkts[i].len);
-    }
-  }
-  printf("==================\n");
-BYE:
-  return status;
-}
-//-----------------------------------------------------
-int
 hmap_chk(
     hmap_t *ptr_hmap,
     bool reset_called
@@ -89,9 +72,6 @@ hmap_chk(
       if ( bkts[i].len != 0 ) { go_BYE(-1); }
       if ( bkts[i].hash != 0 ) { 
         go_BYE(-1); }
-      if ( !reset_called ) { 
-        if ( bkts[i].cnt != 0 ) { go_BYE(-1); }
-      }
     }
     // TODO: What about psl?
   }

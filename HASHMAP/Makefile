@@ -4,19 +4,22 @@
 
 
 INCS = -I ./src/ -I../UTILS/inc/ -I./inc/
-all: hmap.so test1 test2 test3 test4
+all: hmap.so test1 test1a test3 test4 test4a
 
 V1SRCS = \
 	src/val_update_1.c \
-	src/val_free_1.c 
+	src/val_free_1.c  \
+	src/val_pr_4.c  \
 
 V3SRCS = \
 	src/val_update_3.c \
-	src/val_free_3.c 
+	src/val_free_3.c  \
+	src/val_pr_3.c  \
 
 V4SRCS = \
 	src/val_update_4.c \
-	src/val_free_4.c 
+	src/val_free_4.c  \
+	src/val_pr_4.c  \
 
 SRCS = \
 	  ../UTILS/src/get_time_usec.c  \
@@ -58,9 +61,9 @@ test1 : hmap.so ./test/test1.c ${V1SRCS} libval1.so
 	gcc  ${QC_FLAGS} ${INCS} ./test/test1.c \
 	hmap.so libval1.so -o test1 
 
-test2 : hmap.so ./test/test2.c ${V1SRCS}  libval1.so 
-	gcc  ${QC_FLAGS} ${INCS} ./test/test2.c \
-	hmap.so libval1.so -o test2  -lm
+test1a : hmap.so ./test/test1a.c ${V1SRCS}  libval1.so 
+	gcc  ${QC_FLAGS} ${INCS} ./test/test1a.c \
+	hmap.so libval1.so -o test1a  -lm
 
 test3 : hmap.so ./test/test3.c ${V3SRCS}  libval3.so 
 	gcc  ${QC_FLAGS} ${INCS} ./test/test3.c \
@@ -69,6 +72,10 @@ test3 : hmap.so ./test/test3.c ${V3SRCS}  libval3.so
 test4 : hmap.so ./test/test4.c ${e2SRCS}  libval4.so 
 	gcc  ${QC_FLAGS} ${INCS} ./test/test4.c \
 	hmap.so libval4.so -o test4  -lm
+
+test4a : hmap.so ./test/test4a.c ${e2SRCS}  libval4.so 
+	gcc  ${QC_FLAGS} ${INCS} ./test/test4a.c \
+	hmap.so libval4.so -o test4a  -lm
 
 clean:
 	rm -f *.o test_hmap *.so
