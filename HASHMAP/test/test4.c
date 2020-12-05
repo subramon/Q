@@ -28,7 +28,6 @@ main(
   config.min_size = 32;
   config.max_size = 2 * num_items;
   bool malloc_key = true;
-  bool reset_called = false;
 
   chk_agg = malloc(num_items * sizeof(val_t));
   return_if_malloc_failed(chk_agg);
@@ -53,7 +52,7 @@ main(
     status = hmap_put(&hmap, &key, sizeof(int), malloc_key, &val, &dbg); 
     cBYE(status);
   }
-  status = hmap_chk(&hmap, reset_called); cBYE(status); 
+  status = hmap_chk(&hmap); cBYE(status); 
   printf("occupancy = %d \n", hmap.nitems);
   printf("size      = %d \n", hmap.size);
 

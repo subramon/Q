@@ -32,7 +32,6 @@ main(
   hmap_t hmap; memset(&hmap, 0, sizeof(hmap_t));
   dbg_t dbg; memset(&dbg, 0, sizeof(dbg_t));
   hmap_multi_t M; memset(&M, 0, sizeof(hmap_multi_t));
-  bool reset_called = false;
 
   lens = malloc(N * sizeof(uint16_t));
   return_if_malloc_failed(lens);
@@ -85,7 +84,7 @@ main(
     //-- STOP : independent calculation of aggregation
   }
   status = hmap_mput(&hmap, &M, keys, N, lens, vals); cBYE(status);
-  status = hmap_chk(&hmap, reset_called); cBYE(status); 
+  status = hmap_chk(&hmap); cBYE(status); 
   printf("occupancy = %d \n", hmap.nitems);
   printf("size      = %d \n", hmap.size);
   // status = hmap_pr(&hmap); cBYE(status);

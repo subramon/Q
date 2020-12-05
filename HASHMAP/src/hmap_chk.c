@@ -19,8 +19,7 @@ typedef struct _chk_t {
 //-----------------------------------------------------
 int
 hmap_chk(
-    hmap_t *ptr_hmap,
-    bool reset_called
+    hmap_t *ptr_hmap
     )
 {
   int status = 0;

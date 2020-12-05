@@ -9,6 +9,7 @@ typedef struct _hmap_multi_t {
   uint32_t *locs;   // [num_at_once ]
   int8_t *tids;   // [num_at_once ]
   bool *exists;   // [num_at_once ]
+  bool *set; // [num_at_once ] // TODO For debugging, delete later
 } hmap_multi_t;
 
 typedef struct _hmap_config_t { 

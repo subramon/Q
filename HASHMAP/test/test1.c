@@ -23,7 +23,6 @@ main(
   config.min_size = 32;
   config.max_size = 8*config.min_size;
   bool malloc_key = true;
-  bool reset_called = false;
   char keybuf[16];
 
   uint32_t occupancy = 0;
@@ -54,7 +53,7 @@ main(
       occupancy = hmap.nitems;
     }
     printf("Iter = %d, Probes = %" PRIu64 "\n",iter, dbg.num_probes); 
-    status = hmap_chk(&hmap, reset_called); cBYE(status); 
+    status = hmap_chk(&hmap); cBYE(status); 
   }
   uint32_t n = hmap.nitems;
   printf("occupancy = %d \n", hmap.nitems);
@@ -81,7 +80,7 @@ main(
       if ( iter == 0 ) { if ( hmap.nitems != (n - i - 1) ) { go_BYE(-1); } }
       if ( iter  > 0 ) { if ( hmap.nitems != 0 ) { go_BYE(-1); }  }
     }
-    status = hmap_chk(&hmap, reset_called); cBYE(status); 
+    status = hmap_chk(&hmap); cBYE(status); 
   }
   hmap_destroy(&hmap);
   //printf("num_frees = %d \n", num_frees);
@@ -107,7 +106,7 @@ main(
     }
     cBYE(status);
     if ( ( i % n3 ) == 0 ) {
-      status = hmap_chk(&hmap, reset_called); cBYE(status); 
+      status = hmap_chk(&hmap); cBYE(status); 
     }
   }
 

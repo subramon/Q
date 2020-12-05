@@ -76,7 +76,7 @@ main(
     status = hmap_mput(&hmap, &M, (void **)keys, n1, lens, (void **)vals); 
     cBYE(status);
     if ( hmap.nitems > n3 ) { go_BYE(-1); }
-    status = hmap_chk(&hmap, false); cBYE(status);
+    status = hmap_chk(&hmap); cBYE(status);
   }
   hmap_destroy(&hmap);
   status = hmap_instantiate(&hmap, &config); cBYE(status);
@@ -94,7 +94,7 @@ main(
     status = hmap_mput(&hmap, &M, (void **)keys, n1, lens, (void **)vals); 
     cBYE(status);
     if ( hmap.nitems > n3 ) { go_BYE(-1); }
-    status = hmap_chk(&hmap, false); cBYE(status);
+    status = hmap_chk(&hmap); cBYE(status);
     // delete all of them 
     for ( uint32_t j = 0; j < n1; j++ ) {
       bool is_found;
@@ -102,7 +102,7 @@ main(
       cBYE(status);
     }
     if ( hmap.nitems != 0 ) { go_BYE(-1); }
-    status = hmap_chk(&hmap, false); cBYE(status);
+    status = hmap_chk(&hmap); cBYE(status);
   }
   fprintf(stdout, "Test %s completed successfully\n", argv[0]); 
 BYE:

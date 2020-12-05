@@ -81,6 +81,7 @@ void multi_free(
   free_if_non_null(  ptr_M->locs);
   free_if_non_null(ptr_M->tids);
   free_if_non_null(ptr_M->exists);
+  free_if_non_null(ptr_M->set);
 }
 
 int multi_init(
@@ -108,6 +109,9 @@ int multi_init(
   
   ptr_M->exists = malloc(n * sizeof(bool));
   return_if_malloc_failed(ptr_M->exists);
+
+  ptr_M->set = malloc(n * sizeof(bool));
+  return_if_malloc_failed(ptr_M->set);
 BYE:
   if ( status < 0 ) { if ( ptr_M != NULL ) { multi_free(ptr_M); } }
   return status;
