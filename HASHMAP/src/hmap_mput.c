@@ -29,7 +29,6 @@ hmap_mput(
   if ( nP <= 0 ) { 
     nP = omp_get_num_procs();
   }
-  nP = 1;
   printf("nP = %d \n", nP);
 
   uint32_t lb = 0, ub;
