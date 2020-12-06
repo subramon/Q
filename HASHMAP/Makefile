@@ -4,7 +4,7 @@
 
 
 INCS = -I ./src/ -I../UTILS/inc/ -I./inc/
-all: hmap.so test1 test1a test3 test4 test4a
+all: libhmap.so test1 test1a test3 test4 test4a test4b
 
 V1SRCS = \
 	src/val_update_1.c \
@@ -54,28 +54,32 @@ libval4.so: ${V4SRCS}  ./inc/*.h
 	gcc  ${QC_FLAGS} ${V4SRCS} ${INCS} \
 	  -shared -o libval4.so 
 
-hmap.so: ${SRCS}  ./inc/*.h 
-	gcc  ${QC_FLAGS} ${SRCS} ${INCS} -shared -o hmap.so 
+libhmap.so: ${SRCS}  ./inc/*.h 
+	gcc  ${QC_FLAGS} ${SRCS} ${INCS} -shared -o libhmap.so 
 
-test1 : hmap.so ./test/test1.c ${V1SRCS} libval1.so 
+test1 : libhmap.so ./test/test1.c ${V1SRCS} libval1.so 
 	gcc  ${QC_FLAGS} ${INCS} ./test/test1.c \
-	hmap.so libval1.so -o test1 
+	libhmap.so libval1.so -o test1 
 
-test1a : hmap.so ./test/test1a.c ${V1SRCS}  libval1.so 
+test1a : libhmap.so ./test/test1a.c ${V1SRCS}  libval1.so 
 	gcc  ${QC_FLAGS} ${INCS} ./test/test1a.c \
-	hmap.so libval1.so -o test1a  -lm
+	libhmap.so libval1.so -o test1a  -lm
 
-test3 : hmap.so ./test/test3.c ${V3SRCS}  libval3.so 
+test3 : libhmap.so ./test/test3.c ${V3SRCS}  libval3.so 
 	gcc  ${QC_FLAGS} ${INCS} ./test/test3.c \
-	hmap.so libval3.so -o test3  -lm
+	libhmap.so libval3.so -o test3  -lm
 
-test4 : hmap.so ./test/test4.c ${e2SRCS}  libval4.so 
+test4 : libhmap.so ./test/test4.c ${e2SRCS}  libval4.so 
 	gcc  ${QC_FLAGS} ${INCS} ./test/test4.c \
-	hmap.so libval4.so -o test4  -lm
+	libhmap.so libval4.so -o test4  -lm
 
-test4a : hmap.so ./test/test4a.c ${e2SRCS}  libval4.so 
+test4a : libhmap.so ./test/test4a.c ${e2SRCS}  libval4.so 
 	gcc  ${QC_FLAGS} ${INCS} ./test/test4a.c \
-	hmap.so libval4.so -o test4a  -lm
+	libhmap.so libval4.so -o test4a  -lm
+
+test4b : libhmap.so ./test/test4b.c ${e2SRCS}  libval4.so 
+	gcc  ${QC_FLAGS} ${INCS} ./test/test4b.c \
+	libhmap.so libval4.so -o test4b  -lm
 
 clean:
 	rm -f *.o test_hmap *.so

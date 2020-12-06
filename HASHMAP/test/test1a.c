@@ -1,9 +1,10 @@
 #include "hmap_utils.h"
 #include "hmap_common.h"
-#include "hmap_instantiate.h"
+#include "hmap_aux.h"
 #include "hmap_chk.h"
 #include "hmap_del.h"
 #include "hmap_destroy.h"
+#include "hmap_instantiate.h"
 #include "hmap_mput.h"
 #include "hmap_put.h"
 
@@ -37,13 +38,7 @@ main(
   config.max_size = 2*config.min_size;
   status = hmap_instantiate(&hmap, &config); cBYE(status);
   //-----------------------------
-  M.num_at_once = n1 / 4; 
-  int n = M.num_at_once;
-  M.idxs = malloc(n * sizeof(uint32_t));
-  M.hashes = malloc(n * sizeof(uint32_t));
-  M.locs = malloc(n * sizeof(uint32_t));
-  M.tids = malloc(n * sizeof(uint8_t));
-  M.exists = malloc(n * sizeof(bool));
+  status = multi_init(&M, n1/4); cBYE(status);
   //-----------------------------
 
   keys = malloc(n1 * sizeof(char *));
@@ -73,7 +68,8 @@ main(
       vals[j][0] = (i*n1) + j;
     }
     // do an mput 
-    status = hmap_mput(&hmap, &M, (void **)keys, n1, lens, (void **)vals); 
+    status = hmap_mput(&hmap, &M, (void **)keys, lens, 
+        NULL, 0, n1, (void **)vals, NULL, 0); 
     cBYE(status);
     if ( hmap.nitems > n3 ) { go_BYE(-1); }
     status = hmap_chk(&hmap); cBYE(status);
@@ -91,7 +87,8 @@ main(
       vals[j][0] = (i*n1) + j;
     }
     // do an mput 
-    status = hmap_mput(&hmap, &M, (void **)keys, n1, lens, (void **)vals); 
+    status = hmap_mput(&hmap, &M, (void **)keys, lens,
+        NULL, 0, n1, (void **)vals, NULL, 0); 
     cBYE(status);
     if ( hmap.nitems > n3 ) { go_BYE(-1); }
     status = hmap_chk(&hmap); cBYE(status);
@@ -106,11 +103,7 @@ main(
   }
   fprintf(stdout, "Test %s completed successfully\n", argv[0]); 
 BYE:
-  free_if_non_null(M.idxs);
-  free_if_non_null(M.hashes);
-  free_if_non_null(M.locs);
-  free_if_non_null(M.tids);
-  free_if_non_null(M.exists); 
+  multi_free(&M); 
   if ( keys != NULL ) { 
     for ( uint32_t i = 0; i < n1; i++ ) {
       free_if_non_null(keys[i]); 

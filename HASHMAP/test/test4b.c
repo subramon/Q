@@ -1,4 +1,5 @@
 // Similar to test4 but using mput instead 
+// and using alt_keys instead of keys in mput
 #include "hmap_utils.h"
 #include "hmap_common.h"
 #include "hmap_instantiate.h"
@@ -24,36 +25,25 @@ main(
   int N = 2048 * 2048; // number of insertions performed 
   uint32_t num_items      = 2048;
   val_t *chk_agg = NULL;
-  uint16_t *lens = NULL;
-  void **keys = NULL;
-  void **vals = NULL;
+  int  *alt_keys = NULL; int key_len = sizeof(int);
+  float  *alt_vals = NULL; int val_len = sizeof(int);
 
   if ( argc != 1 ) { go_BYE(-1); }
   hmap_t hmap; memset(&hmap, 0, sizeof(hmap_t));
   dbg_t dbg; memset(&dbg, 0, sizeof(dbg_t));
   hmap_multi_t M; memset(&M, 0, sizeof(hmap_multi_t));
 
-  lens = malloc(N * sizeof(uint16_t));
-  return_if_malloc_failed(lens);
+  alt_keys = malloc(N * sizeof(int));
+  return_if_malloc_failed(alt_keys);
 
-  keys = malloc(N * sizeof(void *));
-  return_if_malloc_failed(keys);
-
-  vals = malloc(N * sizeof(void *));
-  return_if_malloc_failed(vals);
+  alt_vals = malloc(N * sizeof(float));
+  return_if_malloc_failed(alt_vals);
 
   srandom(get_time_usec());
   srand48(random());
   for ( int i = 0; i < N; i++ ) { 
-    lens[i] = sizeof(int);
-
-    keys[i] = malloc(sizeof(int));
-    return_if_malloc_failed(keys[i]);
-    *((int *)keys[i]) = (int)(random() % num_items);
-
-    vals[i] = malloc(sizeof(in_val_t));
-    return_if_malloc_failed(vals[i]);
-    *((in_val_t *)vals[i]) = drand48(); 
+    alt_keys[i] = (int)(random() % num_items);
+    alt_vals[i] = drand48(); 
      
   }
 
@@ -75,16 +65,17 @@ main(
   //-----------------------------
   for ( int i = 0; i < N; i++ ) {
     //-- START: independent calculation of aggregation
-    int key = *((int *)keys[i]);
-    in_val_t val = *((in_val_t *)vals[i]);
+    int key = alt_keys[i];
+    float val = alt_vals[i];
     if ( chk_agg[key].minval > val ) { chk_agg[key].minval = val; }
     if ( chk_agg[key].maxval < val ) { chk_agg[key].maxval = val; }
     chk_agg[key].sumval += val;
     chk_agg[key].cnt++;
     //-- STOP : independent calculation of aggregation
   }
-  status = hmap_mput(&hmap, &M, keys, lens, NULL, 0, N, vals, NULL, 0); 
-  cBYE(status);
+  status = hmap_mput(&hmap, &M, NULL, NULL, alt_keys, key_len, N, 
+      NULL, alt_vals, val_len);
+      cBYE(status);
   status = hmap_chk(&hmap); cBYE(status); 
   printf("occupancy = %d \n", hmap.nitems);
   printf("size      = %d \n", hmap.size);
@@ -114,20 +105,8 @@ main(
   fprintf(stdout, "Test %s completed successfully\n", argv[0]);
 BYE:
   free_if_non_null(chk_agg);
-  free_if_non_null(lens);
-  if ( keys != NULL ) { 
-    for ( int i = 0; i < N; i++ ) {
-      free_if_non_null(keys[i]);
-    }
-  }
-  free_if_non_null(keys);
-
-  if ( vals != NULL ) { 
-    for ( int i = 0; i < N; i++ ) {
-      free_if_non_null(vals[i]);
-    }
-  }
-  free_if_non_null(keys);
+  free_if_non_null(alt_keys);
+  free_if_non_null(alt_vals);
   multi_free(&M);
 
   hmap_destroy(&hmap);
