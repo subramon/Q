@@ -6,6 +6,9 @@
 #include "hmap_put.h"
 #include "hmap_mput.h"
 #include "hmap_update.h"
+
+#define  DEBUG
+
 int
 hmap_mput(
     hmap_t *ptr_hmap, 
@@ -59,6 +62,7 @@ hmap_mput(
   if ( nP <= 0 ) { 
     nP = omp_get_num_procs();
   }
+  uint64_t proc_divinfo = fast_div32_init(nP);
 
   uint32_t lb = 0, ub;
   register uint64_t hashkey = ptr_hmap->hashkey;
@@ -104,12 +108,17 @@ hmap_mput(
         tids[j] = -1; // assigned to nobody, done in sequential loop
       }
       else {
-        tids[j] = hashes[j] % nP; // TODO use fast_rem32()
+        tids[j] = hashes[j] % nP; // Use fast_rem32()
+#ifdef DEBUG
+        uint8_t chk = fast_rem32(hashes[j], nP, proc_divinfo);
+        if ( chk != tids[j] ) {  
+          WHEREAMI; if ( status != 0 ) { status = -1; } 
+        }
+#endif
       }
       set[j] = true;
     }
     cBYE(status); 
-#define  DEBUG
 #ifdef  DEBUG
     for ( uint32_t j = 0; j < niters; j++ ) { 
       if ( !set[j] ) { 

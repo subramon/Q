@@ -8,4 +8,6 @@ test1a
 test3
 test4
 test4a
+test4b
+test_fastrem
 echo "Completed Successfully"

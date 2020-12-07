@@ -8,7 +8,13 @@
 #ifndef _HMAP_H
 #define _HMAP_H
 
-#include "q_incs.h"
+#include <string.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #include "fastdiv.h"
 #include "hmap_struct.h"
 #include "hmap_utils.h"

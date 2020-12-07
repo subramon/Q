@@ -64,8 +64,7 @@ hmap_instantiate(
   return_if_malloc_failed(ptr_hmap->bkts);
 
   ptr_hmap-> divinfo = fast_div32_init(ptr_hmap->size);
-  // ptr_hmap->hashkey = mk_hmap_key();
-  ptr_hmap->hashkey = 849173491;
+  ptr_hmap->hashkey = mk_hmap_key();
 BYE:
   return status;
 }

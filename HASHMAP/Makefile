@@ -4,7 +4,8 @@
 
 
 INCS = -I ./src/ -I../UTILS/inc/ -I./inc/
-all: libhmap.so test1 test1a test3 test4 test4a test4b
+all: libhmap.so test1 test1a test3 test4 test4a test4b \
+  	test_fastrem
 
 V1SRCS = \
 	src/val_update_1.c \
@@ -80,6 +81,11 @@ test4a : libhmap.so ./test/test4a.c ${e2SRCS}  libval4.so
 test4b : libhmap.so ./test/test4b.c ${e2SRCS}  libval4.so 
 	gcc  ${QC_FLAGS} ${INCS} ./test/test4b.c \
 	libhmap.so libval4.so -o test4b  -lm
+
+test_fastrem : ./test/test_fastrem.c 
+	gcc  ${QC_FLAGS} ${INCS} ./test/test_fastrem.c \
+	  src/get_time_usec.c \
+	-o test_fastrem
 
 clean:
 	rm -f *.o test_hmap *.so
