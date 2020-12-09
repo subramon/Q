@@ -1,5 +1,5 @@
 #include "incs.h"
-#include "mk_data.h"
+#include "make_data.h"
 
 /* Source: https://en.wikipedia.org/wiki/Random_permutation */
 
@@ -18,7 +18,7 @@ init_and_permute(
 }
 
 int 
-mk_data(
+make_data(
     float ***ptr_X, /* [m][n] */
     uint32_t m,
     uint32_t n,

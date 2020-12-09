@@ -1,6 +1,6 @@
 #include "incs.h"
 #include "check.h"
-#include "pr_data.h"
+#include "prnt_data.h"
 
 int 
 chk_is_unique(
@@ -69,7 +69,7 @@ check(
   chk_from_j = malloc((ub-lb) * sizeof(uint32_t));
 
 #ifdef VERBOSE
-  status = pr_data_i(Y, to, m, lb, ub); cBYE(status);
+  status = prnt_data_i(Y, to, m, lb, ub); cBYE(status);
 #endif
   // The "froms" for all attributes should be the same 
   // Of course, the order in which they occur might be different

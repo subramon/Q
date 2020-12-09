@@ -11,10 +11,10 @@
 
 static void *
 set_key(
-    keys, 
-    i, 
-    alt_keys, 
-    key_len
+    void **keys, 
+    uint32_t i, 
+    void *alt_keys, 
+    uint32_t key_len
     )
 {
   void *key_i;
@@ -27,11 +27,12 @@ set_key(
   return key_i;
 }
 //--------------------------------
-void *set_val(
-    vals, 
-    i, 
-    alt_vals, 
-    val_len
+static void *
+set_val(
+    void **vals, 
+    uint32_t i, 
+    void *alt_vals, 
+    uint32_t val_len
     )
 {
   void *val_i;
@@ -44,11 +45,11 @@ void *set_val(
   return val_i;
 }
 //--------------------------------
-uint16_t 
+static uint16_t 
 set_key_len(
-    key_lens, 
-    i, 
-    key_len
+    uint16_t *key_lens, 
+    uint32_t i, 
+    uint32_t key_len
     ) 
 {
   uint16_t key_len_i;
@@ -129,7 +130,6 @@ hmap_mput(
 #pragma omp parallel for num_threads(nP) schedule(dynamic, chnk_sz)
     for ( uint32_t j = 0; j < niters; j++ ) {
       uint32_t i = j + lb;
-
       //--------------------------------
       void *key_i = set_key(keys, i, alt_keys, key_len);
       uint16_t key_len_i = set_key_len(key_lens, i, key_len);

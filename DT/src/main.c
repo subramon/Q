@@ -1,9 +1,13 @@
 #include "incs.h"
 #include "check_tree.h"
 #include "get_time_usec.h"
-#include "mk_data.h"
+
+// TODO #include "dump_data.h"
+#include "make_data.h"
 #include "read_data.h"
-#include "pr_data.h"
+#include "prnt_data.h"
+// TODO #include "unmp_data.h"
+
 #include "preproc.h"
 #include "split.h"
 
@@ -23,8 +27,12 @@ main(
     )
 {
   int status = 0;
+  // following are configurable 
   uint32_t n = NUM_INSTANCES;
   uint8_t  m = NUM_FEATURES;
+  char *bin_file_prefix = "_bin_data_";
+  bool use_bin_data = false;
+
   float **X = NULL;  // [m][n]
   uint64_t **Y  = NULL; // [m][n]
   uint64_t **tmpY  = NULL; // [n]
@@ -66,10 +74,17 @@ main(
   }
 
   //-----------------------------------------------
-  status = read_data(&X, m, n, &g); cBYE(status); 
-  status = mk_data(&X, m, n, &g); cBYE(status);
+  if ( use_bin_data ) { 
+    /*
+    status = dump_data(X, m, n, g, bin_file_prefix); cBYE(status);
+    status = read_data(&X, m, n, &g); cBYE(status); 
+    */
+  }
+  else { 
+    status = make_data(&X, m, n, &g); cBYE(status);
+  }
 #ifdef VERBOSE
-  status = pr_data_f(X, m, g, lb, ub); cBYE(status);
+  status = prnt_data_f(X, m, g, lb, ub); cBYE(status);
 #endif
   printf("Generated data \n");
   status = preproc(X, m, n, g, &nT, &nH, &Y, &to, &tmpY); cBYE(status);
@@ -87,6 +102,7 @@ main(
   printf("Num nodes = %d \n", g_n_tree); 
   printf("Time      = %lf\n", (t2-t1)/1000000.0);
 BYE:
+  // TODO status = unmp_data(m, bin_file_prefix); cBYE(status);
   for ( uint32_t j = 0; j < m; j++ ) { 
     if ( X != NULL ) { free_if_non_null(X[j]); }
     if ( Y != NULL ) { free_if_non_null(Y[j]); }

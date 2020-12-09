@@ -1,4 +1,4 @@
-#undef DEVELOPMENT
+#define DEVELOPMENT
 #ifdef DEVELOPMENT
 #define MIN_LEAF_SIZE 32
 #define NUM_FEATURES  4
@@ -8,7 +8,7 @@
 #define MAX_NUM_NODES_DT (NUM_INSTANCES / MIN_LEAF_SIZE)
 #endif
 
-#define PERF_TEST
+#undef PERF_TEST
 #ifdef PERF_TEST
 #define MIN_LEAF_SIZE 128
 #define NUM_FEATURES  128

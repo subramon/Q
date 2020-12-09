@@ -1,8 +1,8 @@
 #include "incs.h"
-#include "pr_data.h"
+#include "prnt_data.h"
 
 int 
-pr_data_f(
+prnt_data_f(
     float **X, /* [m][n] */
     uint32_t m,
     uint8_t *g,
@@ -23,7 +23,7 @@ BYE:
 
 
 int 
-pr_data_i(
+prnt_data_i(
     uint64_t **Y, /* [m][n] */
     uint32_t **to, /* [m][n] */
     uint32_t m,

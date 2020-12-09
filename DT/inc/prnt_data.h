@@ -1,5 +1,5 @@
 extern int 
-pr_data_f(
+prnt_data_f(
     float **X, /* [m][n] */
     uint32_t m,
     uint8_t *g,
@@ -7,7 +7,7 @@ pr_data_f(
     uint32_t ub
    );
 extern int 
-pr_data_i(
+prnt_data_i(
     uint64_t **Y, /* [m][n] */
     uint32_t **to, /* [m][n] */
     uint32_t m,
