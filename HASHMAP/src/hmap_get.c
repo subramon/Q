@@ -15,8 +15,7 @@ hmap_get(
 {
   int status = 0;
 
-  if ( key == NULL ) { 
-    go_BYE(-1); } // not a valid key 
+  if ( key == NULL ) { go_BYE(-1); } // not a valid key 
   if ( len == 0    ) { go_BYE(-1); } // not a valid key 
 
   register uint32_t hash = set_hash(key, len, ptr_hmap, ptr_dbg);
@@ -33,12 +32,16 @@ hmap_get(
     if ( num_probes >= ptr_hmap->size ) { go_BYE(-1); }
     register bkt_t *this_bkt = bkts + probe_loc;
 
-    if ( ( this_bkt->hash == hash ) && ( this_bkt->len == len ) &&
-        ( memcmp(this_bkt->key, key, len) == 0) ) {
-      if ( ptr_val != NULL ) { *ptr_val = this_bkt->val; }
-      *ptr_where_found = probe_loc;
-      *ptr_is_found = true;
+    if ( this_bkt->hash != hash ) { goto keep_searching; }  // mismatch 
+    if ( this_bkt->len  != len  ) { goto keep_searching; }  // mismatch 
+    if ( memcmp(this_bkt->key, key, len) != 0 ) { // mismatch 
+      goto keep_searching;   
     }
+    if ( ptr_val != NULL ) { *ptr_val = this_bkt->val; }
+    *ptr_where_found = probe_loc;
+    *ptr_is_found = true;
+    break;
+keep_searching:
     /*
      * Stop probing if we hit an empty bucket; also, if we hit a
      * bucket with PSL lower than the distance from the base location,
@@ -47,10 +50,9 @@ hmap_get(
      * point of the algorithm in the insertion function.
      */
     if ( ( this_bkt->key == NULL ) || ( my_psl > this_bkt->psl ) ) {
-      goto BYE;
+      break;
     }
     my_psl++;
-
     /* Continue to the next bucket. */
     probe_loc++;
     if ( probe_loc == ptr_hmap->size ) { probe_loc = 0; }

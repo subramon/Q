@@ -35,7 +35,7 @@ hmap_del(
     // same probing logic as in lookup function.
     if ( ( this_bkt->key == NULL ) || ( my_psl > this_bkt->psl) ) { 
       // key does not exist 
-      goto BYE; 
+      break;
     }
 
     if ( ( this_bkt->hash == hash ) && ( this_bkt->len == len ) &&

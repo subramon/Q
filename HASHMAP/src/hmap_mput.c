@@ -9,6 +9,59 @@
 
 #define  DEBUG
 
+static void *
+set_key(
+    keys, 
+    i, 
+    alt_keys, 
+    key_len
+    )
+{
+  void *key_i;
+  if ( keys != NULL ) { 
+    key_i = keys[i];
+  }
+  else {
+    key_i = (void *)((char *)alt_keys + (i*key_len));
+  }
+  return key_i;
+}
+//--------------------------------
+void *set_val(
+    vals, 
+    i, 
+    alt_vals, 
+    val_len
+    )
+{
+  void *val_i;
+  if ( vals != NULL ) { 
+    val_i = vals[i];
+  }
+  else {
+    val_i = (void *)((char *)alt_vals + (i*val_len));
+  }
+  return val_i;
+}
+//--------------------------------
+uint16_t 
+set_key_len(
+    key_lens, 
+    i, 
+    key_len
+    ) 
+{
+  uint16_t key_len_i;
+  if ( key_lens != NULL ) { 
+    key_len_i = key_lens[i];
+  }
+  else {
+    key_len_i = key_len;
+  }
+  return key_len_i;
+}
+
+      //--------------------------------
 int
 hmap_mput(
     hmap_t *ptr_hmap, 
@@ -78,23 +131,8 @@ hmap_mput(
       uint32_t i = j + lb;
 
       //--------------------------------
-      void *key_i;
-      if ( keys != NULL ) { 
-        key_i = keys[i];
-      }
-      else {
-        key_i = (void *)((char *)alt_keys + (i*key_len));
-      }
-      //--------------------------------
-      uint16_t key_len_i;
-      if ( key_lens != NULL ) { 
-        key_len_i = key_lens[i];
-      }
-      else {
-        key_len_i = key_len;
-      }
-
-      //--------------------------------
+      void *key_i = set_key(keys, i, alt_keys, key_len);
+      uint16_t key_len_i = set_key_len(key_lens, i, key_len);
       dbg_t dbg;
       idxs[j]   = UINT_MAX; // bad value 
       hashes[j] = murmurhash3(key_i, key_len_i, hashkey);
@@ -144,14 +182,7 @@ hmap_mput(
         if ( tids[j] != tid ) { continue; } // not mine, skip
         uint32_t i = j + lb;
         //--------------------------------
-        void *val_i;
-        if ( vals != NULL ) { 
-          val_i = vals[i];
-        }
-        else {
-          val_i = (void *)((char *)alt_vals + (i*val_len));
-        }
-        //--------------------------------
+        void *val_i = set_val(vals, i, alt_vals, val_len);
         int lstatus = hmap_update(ptr_hmap, idxs[j], val_i);  
         // do not exist if bad status, this is an omp loop
         if ( lstatus != 0 ) { if ( status == 0 ) { status = lstatus; } }
@@ -164,29 +195,9 @@ hmap_mput(
       if ( exists[j] ) { continue; }
       uint32_t i = j + lb;
       //--------------------------------
-      void *key_i;
-      if ( keys != NULL ) { 
-        key_i = keys[i];
-      }
-      else {
-        key_i = (void *)((char *)alt_keys + (i*key_len));
-      }
-      //--------------------------------
-      void *val_i;
-      if ( vals != NULL ) { 
-        val_i = vals[i];
-      }
-      else {
-        val_i = (void *)((char *)alt_vals + (i*val_len));
-      }
-      //--------------------------------
-      uint16_t key_len_i;
-      if ( key_lens != NULL ) { 
-        key_len_i = key_lens[i];
-      }
-      else {
-        key_len_i = key_len;
-      }
+      void *key_i = set_key(keys, i, alt_keys, key_len);
+      uint16_t key_len_i = set_key_len(key_lens, i, key_len);
+      void *val_i = set_val(vals, i, alt_vals, val_len);
       //--------------------------------
       status = hmap_put(ptr_hmap, key_i, key_len_i, true, val_i, NULL);
       cBYE(status);
