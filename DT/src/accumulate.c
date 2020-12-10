@@ -1,5 +1,6 @@
 #include "incs.h"
 #include "accumulate.h"
+extern config_t g_C;
 int
 accumulate(
       const uint64_t * restrict Y, // [n_in]
@@ -42,9 +43,9 @@ accumulate(
     yval_i = get_yval(Y_i);
     goal_i = get_goal(Y_i);
     if ( ( yval_i != curr_yval ) && 
-         ( consumed_so_far >= MIN_PARTITION_SIZE ) && 
-         ( left_to_consume >= MIN_PARTITION_SIZE ) ) {
-      if ( nbuf == BUFSZ ) { // no more space
+         ( consumed_so_far >= g_C.min_partition_size ) && 
+         ( left_to_consume >= g_C.min_partition_size ) ) {
+      if ( nbuf == g_C.metrics_buffer_size ) { // no more space
         *ptr_lb = i;
         *ptr_nbuf = nbuf;
         return status;
@@ -65,7 +66,7 @@ accumulate(
     consumed_so_far++;
     left_to_consume--;
   }
-  if ( nbuf > BUFSZ ) { go_BYE(-1); }
+  if ( nbuf > g_C.metrics_buffer_size ) { go_BYE(-1); }
   *ptr_nbuf = nbuf; // number of elements in buffer
   *ptr_lb = ub; // we have consumed up to ub
 BYE:

@@ -33,4 +33,13 @@ typedef struct _node_t {
   uint32_t nT;
 } node_t;
 
+typedef struct _config_t { 
+  uint32_t min_leaf_size;
+  uint32_t num_features;
+  uint32_t num_instances;
+  uint32_t metrics_buffer_size;
+  uint32_t min_partition_size;
+  uint32_t max_nodes_in_tree;
+  uint32_t num_cores; // <=0 in config file => get from omp
+} config_t;
 #endif

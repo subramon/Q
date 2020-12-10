@@ -3,7 +3,8 @@
 #include "check.h"
 #include "search_j.h"
 #include "search.h"
-extern int g_nP;
+extern config_t g_C;
+#define NUM_FEATURES 4
 int 
 search(
     uint64_t **Y, /* [m][lb..ub-1] */
@@ -23,7 +24,10 @@ search(
   uint32_t yval[NUM_FEATURES];
   uint32_t yidx[NUM_FEATURES];
   four_nums_t num4[NUM_FEATURES];
-#pragma omp parallel for schedule(static, 1) num_threads(g_nP)
+  int nP = g_C.num_cores;
+#ifndef SEQUENTIAL
+#pragma omp parallel for schedule(static, 1) num_threads(nP)
+#endif
   for ( uint32_t j = 0; j < m; j++ ) { 
     int x; // used because we cannot break out of omp loop
     x = search_j(Y[j], j, lb, ub, nT, nH, 

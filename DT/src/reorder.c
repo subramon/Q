@@ -1,5 +1,8 @@
 #include "incs.h"
 #include "reorder.h"
+#ifdef SEQUENTIAL 
+extern int g_num_swaps;
+#endif
 int
 reorder(
     uint64_t *Yj,
@@ -28,6 +31,9 @@ reorder(
       idx = ridx; tmpYj[ridx++] = Yj[i]; 
     }
     to_j[from_i] = idx;
+#ifdef SEQUENTIAL
+    g_num_swaps++;
+#endif
   }
   *ptr_lidx = lidx;
   *ptr_ridx = ridx;

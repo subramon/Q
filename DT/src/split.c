@@ -9,8 +9,8 @@
 extern node_t *g_tree; // this is where the decision tree is created
 extern int g_n_tree;
 extern int g_sz_tree;
+extern config_t g_C;
 
-extern int g_nP;
 
 int 
 split(
@@ -28,10 +28,7 @@ split(
 {
   int status = 0;
   four_nums_t num4; memset(&num4, 0, sizeof(four_nums_t));
-  if ( (ub - lb) <= MIN_LEAF_SIZE ) { return status; }
-#ifdef FAKE
-  static 
-#endif
+  if ( (ub - lb) <= g_C.min_leaf_size ) { return status; }
   uint32_t split_j = -1;
   uint32_t split_yidx, split_yval;
 #ifdef VERBOSE
@@ -42,16 +39,13 @@ split(
 #endif
 
   //-----------------------------------------
-#ifdef FAKE
-  split_j++; if ( split_j == m ) { split_j = 0; }
-  split_yidx = lb + ((ub - lb)/2); // just for now 
-#else
   status = search(Y, lb, ub, nT, nH, m, 
        &split_j, &split_yval,  &split_yidx, &num4); 
   cBYE(status); 
-#endif
   //---------------------------------------------------
+#ifndef SEQUENTIAL
 #pragma omp parallel for schedule(static, 1) num_threads(g_nP)
+#endif
   for ( uint32_t j = 0; j < m; j++ ) {
     uint32_t lidx = lb, ridx = split_yidx;
     uint64_t *Yj = Y[j];
@@ -82,7 +76,7 @@ split(
     // fprintf(stderr, "No space in tree. Returning... \n"); 
     return status;
   }
-  if ( ( split_yidx - lb ) >= 2*MIN_PARTITION_SIZE ) { 
+  if ( ( split_yidx - lb ) >= 2*g_C.min_partition_size ) { 
     // set parent to lchild pointer and lchild to parent pointer
     g_tree[g_n_tree-1].lchild_id = g_n_tree;
     g_tree[g_n_tree].parent_id = parent_id;
@@ -94,15 +88,18 @@ split(
     status = split(to, g, lb, split_yidx, num4.n_T_L, num4.n_H_L, 
         n, m, Y, tmpY); 
     cBYE(status);
-  }
 #ifdef DEBUG
-  status = check_tree(g_tree, g_n_tree); cBYE(status);
+    if ( g_n_tree == 21 ) { 
+      printf("hello world\n");
+    }
+    status = check_tree(g_tree, g_n_tree, m); cBYE(status);
 #endif
+  }
   if ( g_n_tree >= g_sz_tree ) {
     // fprintf(stderr, "No space in tree. Returning... \n"); 
-return status;
+    return status;
   }
-  if ( ( ub - split_yidx ) >= 2*MIN_PARTITION_SIZE ) { 
+  if ( ( ub - split_yidx ) >= 2*g_C.min_partition_size ) { 
     // set parent to rchild pointer and rchild to parent pointer
     g_tree[parent_id].rchild_id = g_n_tree;
     g_tree[g_n_tree].parent_id = parent_id; 
@@ -114,9 +111,12 @@ return status;
     status = split(to, g, split_yidx, ub, num4.n_T_R, num4.n_H_R, 
         n, m, Y, tmpY); 
     cBYE(status);
-  }
+    if ( g_n_tree == 21 ) { 
+      printf("hello world\n");
+    }
 #ifdef DEBUG
-  status = check_tree(g_tree, g_n_tree); cBYE(status);
+    status = check_tree(g_tree, g_n_tree, m); cBYE(status);
+  }
 #endif
 BYE:
   return status;

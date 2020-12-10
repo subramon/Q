@@ -14,7 +14,7 @@ CFLAGS+= -Wsuggest-attribute=noreturn
 # CFLAGS+= -Wduplicated-branches -Wrestrict
 
 INCS = -I./inc/
-all: dt ispdt
+all: dt 
 
 CSRCS := $(wildcard ./src/*.c)
 CSRCS := $(filter-out ./src/eval_metrics.isp.c, $(CSRCS))
@@ -27,12 +27,12 @@ XSRCS := $(filter-out ./src/eval_metrics.c, $(XSRCS))
 XSRCS := $(filter-out ./src/calc_best_metric.c, $(XSRCS))
 XOBJS = $(XSRCS:.c=.o)
 
-# DFLAGS = -g -DDEBUG -DFAKE -fopenmp
 DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -DSCALAR
 DFLAGS = -O4 -fopenmp -DVECTOR -pg
 DFLAGS = -O4 -fopenmp -DSCALAR -pg
+DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 # to run gprof, add -pg to DFLAGS
 # ./dt
 # gprof ./dt > _outputfile

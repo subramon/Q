@@ -1,20 +1,21 @@
 // TODO Convert to ispc 
 #include "incs.h"
 #include "eval_metrics.h"
+extern config_t g_C;
 
 #define mcr_sqr(x) ( (x) * (x) )
 int
 eval_metrics(
-    uint32_t in_nTL[BUFSZ],
-    uint32_t in_nHL[BUFSZ],
+    uint32_t *in_nTL, // [g_C.metrics_buffer_size]
+    uint32_t *in_nHL, // [g_C.metrics_buffer_size]
     uint32_t nT,
     uint32_t nH,
-    double   metric[BUFSZ],
+    double   *metric, // [g_C.metrics_buffer_size]
     uint32_t nbuf
     )
 {
   int status = 0;
-  if ( nbuf > BUFSZ ) { go_BYE(-1); }
+  if ( nbuf > g_C.metrics_buffer_size ) { go_BYE(-1); }
   register double n  = nT + nH;
   for ( uint32_t i = 0; i < nbuf; i++ ) { 
     double nTL = in_nTL[i];

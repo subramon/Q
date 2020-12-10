@@ -2,6 +2,7 @@
 #include "check.h"
 #include "prnt_data.h"
 
+extern config_t g_C;
 int 
 chk_is_unique(
     uint32_t *X,
@@ -62,7 +63,7 @@ check(
   uint32_t *chk_from_i = NULL;
   uint32_t *chk_from_j = NULL;
   uint8_t **goals = NULL;
-  if ( ub - lb <= MIN_LEAF_SIZE ) { return status; }
+  if ( ub - lb <= g_C.min_leaf_size ) { return status; }
   if ( ub > n ) { go_BYE(-1); }
   if ( ( nT + nH ) != ( ub - lb ) ) { go_BYE(-1); }
   chk_from_i = malloc((ub-lb) * sizeof(uint32_t));
