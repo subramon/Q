@@ -8,13 +8,22 @@ int read_config(
 {
   int status = 0;
 
-  ptr_C->min_leaf_size = 32;
-  ptr_C->num_features = 4;
-  ptr_C->num_instances = 32 * 1024;
+  ptr_C->min_percentage_improvement = 0; // TODO P3
+
+  ptr_C->dump_binary_data = true;
+  ptr_C->read_binary_data = false;
+  /*
+  ptr_C->dump_binary_data = false;
+  ptr_C->read_binary_data = true;
+  */
+  ptr_C->max_depth           = 16;
+  ptr_C->min_leaf_size       = 32;
+  ptr_C->num_features        = 4;
+  ptr_C->num_instances       = 32 * 1024;
   ptr_C->metrics_buffer_size = 8;
-  ptr_C->min_partition_size = 32;
-  ptr_C->max_nodes_in_tree = 4096;
-  ptr_C->num_cores = -1; // <=0 in config file => get from omp
+  ptr_C->min_partition_size  = 32;
+  ptr_C->max_nodes_in_tree   = 4096;
+  ptr_C->num_cores           = 0; // <=0 in config file => get from omp
   if ( ptr_C->num_cores == 0 ) { 
     ptr_C->num_cores = omp_get_num_procs();  
     if ( ptr_C->num_cores > ptr_C->num_features ) { 

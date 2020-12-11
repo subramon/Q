@@ -1,16 +1,14 @@
 #include "incs.h"
 #include "check_tree.h"
 #include "get_time_usec.h"
-
 #ifdef SEQUENTIAL
-int g_num_swaps;  // for debugging 
-uint64_t g_exp_num_swaps;  // for debugging 
+uint64_t g_num_swaps;
 #endif
-// TODO #include "dump_data.h"
+
+#include "dump_data.h"
 #include "make_data.h"
 #include "read_data.h"
 #include "prnt_data.h"
-// TODO #include "unmp_data.h"
 
 #include "read_config.h"
 #include "preproc.h"
@@ -33,32 +31,30 @@ main(
     )
 {
   int status = 0;
-  float **X = NULL;  // [m][n]
+  float **X = NULL;  // [m][n] features for classification
   uint64_t **Y  = NULL; // [m][n]
   uint64_t **tmpY  = NULL; // [n]
   uint32_t **to = NULL; // [m][n]
-  uint8_t *g = NULL; // [n]
+  uint8_t *g = NULL; // [n] goal ttribute 
   g_tree = NULL; g_n_tree = 0; g_sz_tree = 0;
-  g_M = NULL;
+  g_M    = NULL; g_M_m    = 0; g_M_bufsz = 0;
+  char *config_file = NULL;
 
-  if ( argc != 2 ) { go_BYE(-1); }
-  char *config_file = argv[1];
-  // globals for debugging 
+  if ( argc >= 2 ) { config_file = argv[1]; }
 #ifdef SEQUENTIAL
-  g_num_swaps = 0;
+  g_num_swaps = 0; // globals for debugging 
 #endif
+  // read configurations 
   status = read_config(&g_C, config_file);  cBYE(status);
   // following are configurable 
   uint32_t n = g_C.num_instances;
   uint8_t  m = g_C.num_features;
-  char *bin_file_prefix = "_bin_data_";
-  bool use_bin_data = false;
+  const char *bin_file_prefix = "_bin_data_";
 
   uint32_t nT = 0; uint32_t nH = 0;
   uint32_t lb = 0; uint32_t ub = n;
   //-----------------------------------------------
   // One time allocation for later use 
-  g_M = NULL;
   g_M_m = m;
   g_M_bufsz = g_C.metrics_buffer_size;
   g_M = malloc(g_M_m * sizeof(metrics_t));
@@ -84,16 +80,20 @@ main(
     g_tree[i].lchild_id = g_tree[i].rchild_id = g_tree[i].yidx = -1;
     g_tree[i].parent_id = -1; 
     g_tree[i].xval = 0; 
+    g_tree[i].depth = -1;
   }
   //-----------------------------------------------
-  if ( use_bin_data ) { 
-    // status = read_data(&X, m, n, &g, bin_file_prefix); cBYE(status); 
+  if ( g_C.read_binary_data ) { 
+    status = read_data(&X, m, n, &g, bin_file_prefix); cBYE(status); 
     printf("Read pre-computed data \n");
   }
   else { 
     status = make_data(&X, m, n, &g); cBYE(status);
-    // status = dump_data(X, m, n, g, bin_file_prefix); cBYE(status);
     printf("Generated data \n");
+    if ( g_C.dump_binary_data ) { 
+      status = dump_data(X, m, n, g, bin_file_prefix); cBYE(status);
+      printf("Dumped    data \n");
+    }
   }
 #ifdef VERBOSE
   status = prnt_data_f(X, m, g, lb, ub); cBYE(status);
@@ -103,20 +103,25 @@ main(
   // create leaf node 
   g_tree[g_n_tree].nT = nT;
   g_tree[g_n_tree].nH = nH;
+  g_tree[g_n_tree].depth = 0;
   g_n_tree++;
   // start splitting
   uint64_t t1, t2;
   t1 = get_time_usec();
-  status = split(to, g, lb, ub, nT, nH, n, m, Y, tmpY); cBYE(status);
+  status = split(to, g, lb, ub, nT, nH, n, m, Y, tmpY, 0); cBYE(status);
   t2 = get_time_usec();
   status = check_tree(g_tree, g_n_tree, m); cBYE(status);
   printf("Num nodes = %d \n", g_n_tree); 
   printf("Time      = %lf\n", (t2-t1)/1000000.0);
   printf("num_rows  = %d\n", n);
 BYE:
-  // TODO status = unmp_data(m, bin_file_prefix); cBYE(status);
   for ( uint32_t j = 0; j < m; j++ ) { 
-    if ( X != NULL ) { free_if_non_null(X[j]); }
+    if ( !g_C.read_binary_data ) { 
+      if ( X != NULL ) { free_if_non_null(X[j]); }
+    }
+    else {
+      munmap(X[j], n * sizeof(float));
+    }
     if ( Y != NULL ) { free_if_non_null(Y[j]); }
     if ( tmpY != NULL ) { free_if_non_null(tmpY[j]); }
     if ( to != NULL ) { free_if_non_null(to[j]); }
@@ -125,7 +130,12 @@ BYE:
   free_if_non_null(Y);
   free_if_non_null(tmpY);
   free_if_non_null(to);
-  free_if_non_null(g);
+  if ( !g_C.read_binary_data ) { 
+    free_if_non_null(g);
+  }
+  else {
+    munmap(g, n * sizeof(uint8_t));
+  }
   free_if_non_null(g_tree);
   return status;
 }

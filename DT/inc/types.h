@@ -20,9 +20,11 @@ typedef struct _metrics_t {
   uint32_t *nT;
   uint32_t *nH;
   double   *metric;
+  four_nums_t *num4;
 } metrics_t; 
 
 typedef struct _node_t { 
+  int depth; 
   int lchild_id;
   int rchild_id;
   int parent_id;
@@ -34,6 +36,10 @@ typedef struct _node_t {
 } node_t;
 
 typedef struct _config_t { 
+  float min_percentage_improvement;  // TODO P3
+  bool dump_binary_data;
+  bool read_binary_data;
+  uint32_t max_depth; 
   uint32_t min_leaf_size;
   uint32_t num_features;
   uint32_t num_instances;

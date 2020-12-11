@@ -1,8 +1,8 @@
 extern int 
-read_data(
-    float ***ptr_X, /* [m][n] */
+dump_data(
+    float **X, /* [m][n] */
     uint32_t m,
     uint32_t n,
-    uint8_t **ptr_g,
+    uint8_t *g,
     const char * const bin_file_prefix
    );

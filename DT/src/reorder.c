@@ -3,6 +3,7 @@
 #ifdef SEQUENTIAL 
 extern int g_num_swaps;
 #endif
+extern int g_n_tree; // TODO Delete later 
 int
 reorder(
     uint64_t *Yj,
@@ -35,6 +36,7 @@ reorder(
     g_num_swaps++;
 #endif
   }
+  // printf("%d,%d\n", g_n_tree, g_num_swaps);
   *ptr_lidx = lidx;
   *ptr_ridx = ridx;
 BYE:

@@ -34,6 +34,7 @@ search(
         &(num4[j]), &(yval[j]), &(yidx[j]), &(metrics[j])); 
     if ( x < 0 ) { status = x; }
   }
+  cBYE(status);
   // start by assuming 0 is the best feature 
   uint32_t best_feature_idx = 0;   // identifies feature
   double best_metric         = metrics[0];  // metric for that feature
@@ -59,7 +60,6 @@ search(
   *ptr_split_yidx = best_split_yidx + 1;
   // Above +1 is important. Because we calculate as inclusive
   // but when we use as an upper bound it is exclusive
-
 BYE:
   return status;
 }
