@@ -29,6 +29,8 @@ preproc(
   to     = malloc(m * sizeof(uint32_t *));
   return_if_malloc_failed(to);
 
+  //  may want to do this sequentiall to reduce amount of 
+  //  memory allocateed in the process of creating Y
 #pragma omp parallel for
   for ( uint32_t j = 0; j < m; j++ ) { 
     status = preproc_j(X[j], n, g,  &(Y[j]), &(to[j])); 
@@ -36,10 +38,12 @@ preproc(
   }
   cBYE(status); 
   //-----------------------------------------
+  // allocate a buffer (same size as Y) for intermediate storage
   for ( uint32_t j = 0; j < m; j++ ) { 
     tmpY[j] = malloc(n * sizeof(uint64_t));
     return_if_malloc_failed(tmpY[j]);
   }
+  // compute the number of heads and tails in the training seet
   for ( uint32_t i = 0; i < n; i++ ) { 
     if ( g[i] == 0 ) { nT++; } else { nH++; }
   }

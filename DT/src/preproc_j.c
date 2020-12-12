@@ -1,6 +1,10 @@
 #include "incs.h"
 #include "preproc_j.h"
 
+// make a composite key
+// top 32 bits used for from
+// bit 31 used for goal
+// bits 0..30 used for the encoded value (yval, not xval)
 static uint64_t x_mk_comp_val(
     uint64_t from,
     uint64_t goal,
@@ -16,9 +20,9 @@ static uint64_t x_mk_comp_val(
 
 
 typedef struct _comp_key_t { 
-  float xval;
-  uint32_t idx;
-  uint8_t g;
+  float xval;   // this is the actual data value 
+  uint32_t idx; // this is the index where it was located
+  uint8_t g;    // value of goal attribute for that instance 
 } comp_key_t;
 
 static int
@@ -46,6 +50,7 @@ preproc_j(
    )
 {
   int status = 0;
+  bool *taken  = NULL; // [n] for debugging 
   uint64_t *Yj = NULL; // [n]
   uint32_t *to = NULL; // [n]
   comp_key_t *C = NULL; // [n]
@@ -63,15 +68,28 @@ preproc_j(
   }
   // sort X, idx, g
   qsort(C, n, sizeof(comp_key_t), sortfn);
+#ifdef DEBUG
+  // check sorted order
   for ( uint32_t i = 1; i < n; i++ ) { 
     if ( C[i].xval < C[i-1].xval ) { go_BYE(-1);
     }
   }
+#endif
   // create Y. 
   // bits 0 to 30 for yval, bit 31 for goal, bits 32 to 63 for from
+  // here is the connection between xval (actual value) and yval (encoded)
+  // The insight is that the "actual" value is irrelevant for the purposes
+  // of creating a decision tree, what is important is the "relative" value
+  // So, the smallest actual value is given the encoded value 1, the next
+  // largest actual value is given the encoded value 2 and so on
+  // So, if a feature had the actual values 4, 5, 3, 4, 3, 5, 
+  // then the corresponding encoded values would be 2, 3, 1, 2, 1, 3
+  // IMPORTANT: We assume that there are no more than 2^31 unique values
+  // In principle, there is no reason why we could not allocate more bits
+  // Its just the assumption that *this* implementation makes.
   uint32_t i = 0;
-  float xval = C[i].xval;
-  uint32_t yval = 1;
+  float xval      = C[i].xval;
+  uint32_t yval   = 1;
   uint32_t from_i = C[i].idx;
   uint8_t  g_i    = C[i].g;
   Yj[i] = x_mk_comp_val(from_i, g_i, yval); 
@@ -87,6 +105,8 @@ preproc_j(
   //-------------------------------------------
   for ( i = 1; i < n; i++ ) { 
     g_i    = C[i].g;
+    // Notice that every time we encounter a new xval, we make a new yval
+    // Also, recall that that xvals are encountered in sorted order (asc)
     if ( C[i].xval != xval ) {
       xval = C[i].xval;
       yval++;
@@ -101,10 +121,27 @@ preproc_j(
     if ( pos >= n ) { go_BYE(-1); }
     to[pos] = i;
   }
+#ifdef DEBUG
+  // Check that the values in "to" are 1..n
+  taken = malloc(n * sizeof(bool));
+  return_if_malloc_failed(taken);
+  for ( i = 0; i < n; i++ ) { 
+    taken[i] = false;
+  }
+  for ( i = 0; i < n; i++ ) { 
+    taken[to[i]] = true;
+  }
+  for ( i = 0; i < n; i++ ) { 
+    if ( !taken[i] ) { go_BYE(-1);
+    }
+  }
+#endif
+  
   //--------------------------------------
   *ptr_Yj = Yj;
   *ptr_to = to;
 BYE:
+  free_if_non_null(taken);
   free_if_non_null(C);
   if ( status < 0 ) { 
     free_if_non_null(Yj);

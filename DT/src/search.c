@@ -4,6 +4,10 @@
 #include "search_j.h"
 #include "search.h"
 extern config_t g_C;
+extern double *g_best_metrics;
+extern uint32_t *g_best_yval;
+extern uint32_t *g_best_yidx;
+extern four_nums_t *g_best_num4;
 #define NUM_FEATURES 4
 int 
 search(
@@ -20,10 +24,10 @@ search(
    )
 {
   int status = 0;
-  double metrics[NUM_FEATURES];
-  uint32_t yval[NUM_FEATURES];
-  uint32_t yidx[NUM_FEATURES];
-  four_nums_t num4[NUM_FEATURES];
+  double *metrics   = g_best_metrics;
+  uint32_t *yval    = g_best_yval;
+  uint32_t *yidx    = g_best_yidx;
+  four_nums_t *num4 = g_best_num4;
   int nP = g_C.num_cores;
 #ifndef SEQUENTIAL
 #pragma omp parallel for schedule(static, 1) num_threads(nP)

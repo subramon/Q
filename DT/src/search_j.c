@@ -36,6 +36,7 @@ search_j(
   double   best_metric = -1; 
   uint32_t best_yval = 0; // this is an invalid value 
   uint32_t best_yidx = 0; 
+  four_nums_t best_num4; memset(&best_num4, 0, sizeof(four_nums_t));
 
   if ( j >= g_M_m ) { go_BYE(-1); }
   metrics_t M = g_M[j];
@@ -85,10 +86,10 @@ search_j(
       best_metric = M.metric[loc];
       best_yval   = M.yval[loc];
       best_yidx   = M.yidx[loc];
-      ptr_num4->n_T_L = M.nT[loc];
-      ptr_num4->n_H_L = M.nH[loc];
-      ptr_num4->n_T_R = nT - ptr_num4->n_T_L;
-      ptr_num4->n_H_R = nH - ptr_num4->n_H_L;
+      best_num4.n_T_L = M.nT[loc];
+      best_num4.n_H_L = M.nH[loc];
+      best_num4.n_T_R = nT - best_num4.n_T_L;
+      best_num4.n_H_R = nH - best_num4.n_H_L;
     }
     if ( ( best_metric != -1 ) && ( best_yval == 0 ) ) { 
       go_BYE(-1); 
@@ -97,9 +98,10 @@ search_j(
     prev_nT = M.nT[nbuf-1];
     prev_nH = M.nH[nbuf-1];
   }
-  *ptr_yval = best_yval;
-  *ptr_yidx = best_yidx;
-  *ptr_metric  = best_metric;
+  *ptr_yval   = best_yval;
+  *ptr_yidx   = best_yidx;
+  *ptr_metric = best_metric;
+  *ptr_num4   = best_num4;
 BYE:
   return status;
 }

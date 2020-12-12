@@ -28,15 +28,29 @@ split(
    )
 {
   int status = 0;
-  four_nums_t num4; memset(&num4, 0, sizeof(four_nums_t));
-  if ( (ub - lb) <= g_C.min_leaf_size ) { return status; }
-  uint32_t split_j = -1;
-  uint32_t split_yidx, split_yval;
 
-  if ( depth >= g_C.max_depth ) {  // too deep, no more splitting
+  // No point splitting if it would create more nodes than permissible
+  if ( g_n_tree >= g_sz_tree ) { 
+    // fprintf(stderr, "No space in tree. Returning... \n"); 
+    return status;
+  }
+
+  // if a split would cause one of the children to be smaller
+  // size than permissible, no point splitting 
+  if ( (ub - lb) < 2 * g_C.min_leaf_size ) { return status; }
+
+  // If a split would cause one of the children to be of greater
+  // depth than permissible, no point splitting 
+  if ( depth >= g_C.max_depth ) {  
     // fprintf(stderr, "Tree too deep. Cannot split further \n");
     return status;
   }
+
+  four_nums_t num4; memset(&num4, 0, sizeof(four_nums_t));
+
+  uint32_t split_j = m+1; // set to some bad value 
+  uint32_t split_yidx, split_yval;
+
 #ifdef VERBOSE
   printf("Splitting %u to %u \n", lb, ub);
 #endif
@@ -55,7 +69,10 @@ split(
     uint64_t *Yj = Y[j];
     uint64_t *tmpYj = tmpY[j];
 #ifndef DEBUG
+    // the order of the attribute chosen for split is unchanged
+    // Hence, we can skip reordering it 
     if ( j == split_j ) { continue; }
+
 #endif
     status = reorder(Y[j], tmpY[j], to[j], to[split_j], lb, ub,
         split_yidx, &lidx, &ridx);
@@ -64,7 +81,7 @@ split(
     if ( ridx != ub ) { WHEREAMI; status = -1; continue; }
     if ( j != split_j ) { 
       // SLOW: for ( uint32_t i = lb; i < ub; i++ ) { Yj[i] = tmpYj[i]; }
-      memcpy(Yj+lb, tmpYj+lb, (ub-lb) * sizeof(uint64_t)); // FAST
+      memcpy(Yj+lb, tmpYj+lb, (ub-lb) * sizeof(uint64_t)); 
     }
     else { // no need to re-order feature chosen for split 
 #ifdef DEBUG
@@ -76,11 +93,7 @@ split(
   }
 
   int parent_id = g_n_tree - 1;
-  if ( g_n_tree >= g_sz_tree ) { // no more space in tree 
-    // fprintf(stderr, "No space in tree. Returning... \n"); 
-    return status;
-  }
-  if ( ( split_yidx - lb ) >= 2*g_C.min_partition_size ) {
+  if ( ( split_yidx - lb ) >= g_C.min_partition_size ) {
     // set parent to lchild pointer and lchild to parent pointer
     g_tree[g_n_tree-1].lchild_id = g_n_tree;
     g_tree[g_n_tree].parent_id = parent_id;
@@ -97,11 +110,14 @@ split(
     status = check_tree(g_tree, g_n_tree, m); cBYE(status);
 #endif
   }
-  if ( g_n_tree >= g_sz_tree ) {
+  // This check needs to be repeated because of left child creation
+  // No point splitting if it would create more nodes than permissible
+  if ( g_n_tree >= g_sz_tree ) { 
     // fprintf(stderr, "No space in tree. Returning... \n"); 
     return status;
   }
-  if ( ( ub - split_yidx ) >= 2*g_C.min_partition_size ) {
+
+  if ( ( ub - split_yidx ) >= g_C.min_partition_size ) {
     // set parent to rchild pointer and rchild to parent pointer
     g_tree[parent_id].rchild_id = g_n_tree;
     g_tree[g_n_tree].parent_id = parent_id; 
@@ -114,9 +130,6 @@ split(
     status = split(to, g, split_yidx, ub, num4.n_T_R, num4.n_H_R, 
         n, m, Y, tmpY, depth+1); 
     cBYE(status);
-    if ( g_n_tree == 21 ) { 
-      printf("hello world\n");
-    }
 #ifdef DEBUG
     status = check_tree(g_tree, g_n_tree, m); cBYE(status);
 #endif

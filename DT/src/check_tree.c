@@ -33,13 +33,14 @@ check_tree(
   if ( tree[0].parent_id != -1 ) { go_BYE(-1); }
   for ( int i = 0; i < n_tree; i++ ) { 
     int depth = tree[i].depth;
-    int n_T = tree[i].nT;
-    int n_H = tree[i].nH;
+    uint32_t nT = tree[i].nT;
+    uint32_t nH = tree[i].nH;
     int lchild_id = tree[i].lchild_id;
     int rchild_id = tree[i].rchild_id;
     int parent_id = tree[i].parent_id;
 
-    if ( ( depth < 0 ) || ( depth > g_C.max_depth ) ) {
+    if ( nT + nH < g_C.min_partition_size ) { go_BYE(-1); }
+    if ( ( depth < 0 ) || ( depth > (int)g_C.max_depth ) ) {
       go_BYE(-1);
     }
     if ( ( lchild_id < 0 ) && ( rchild_id < 0 ) ) { 
@@ -47,7 +48,7 @@ check_tree(
     }
     else {
       num_interior++;
-      exp_num_swaps += ( (n_T + n_H) * m);
+      exp_num_swaps += ( (nT + nH) * m);
     }
     if ( i == 0 ) { // Location 0 reserved for root.
       if ( parent_id != -1 ) { go_BYE(-1); }

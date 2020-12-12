@@ -20,7 +20,6 @@ typedef struct _metrics_t {
   uint32_t *nT;
   uint32_t *nH;
   double   *metric;
-  four_nums_t *num4;
 } metrics_t; 
 
 typedef struct _node_t { 

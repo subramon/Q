@@ -3,6 +3,22 @@
 #include "prnt_data.h"
 
 extern config_t g_C;
+static int
+sortfn(
+    const void *p1, 
+    const void *p2
+    )
+{
+  const uint32_t *r1 = (const uint32_t *)p1;
+  const uint32_t *r2 = (const uint32_t *)p2;
+  if ( *r1 < *r2 ) { 
+    return -1;
+  }
+  else  {
+    return 1;
+  }
+}
+
 int 
 chk_is_unique(
     uint32_t *X,
@@ -11,15 +27,29 @@ chk_is_unique(
     )
 {
   int status = 0;
-  // make this n log n instead of n^2
+  uint32_t *tmpX = NULL;
+  *ptr_is_unique = true;
+  //------------------------------------------
+  tmpX = malloc(n * sizeof(uint32_t));
+  return_if_malloc_failed(tmpX);
+  for ( uint32_t i = 0; i < n; i++ ) {
+    tmpX[i] = X[i];
+  }
+  qsort(tmpX, n, sizeof(uint32_t), sortfn);
+  //------------------------------------------
+  for ( uint32_t i = 1; i < n; i++ ) {
+    if ( X[i] == X[i-1] ) { *ptr_is_unique = false; return status; }
+  }
+#ifdef OLD 
   for ( uint32_t i = 0; i < n; i++ ) {
     uint32_t x_i = X[i];
     for ( uint32_t j = i+1; j < n; j++ ) {
       if ( X[j] == x_i ) { *ptr_is_unique = false; return status; }
     }
   }
-  *ptr_is_unique = true;
+#endif
 BYE:
+  free_if_non_null(tmpX);
   return status;
 }
 int 
@@ -31,7 +61,30 @@ chk_set_equality(
     )
 {
   int status = 0;
-  // make this n log n instead of n^2
+  uint32_t *tmpX = NULL;
+  uint32_t *tmpY = NULL;
+
+  *ptr_is_eq = true;
+
+  //------------------------------------------
+  tmpX = malloc(n * sizeof(uint32_t));
+  return_if_malloc_failed(tmpX);
+  for ( uint32_t i = 0; i < n; i++ ) {
+    tmpX[i] = X[i];
+  }
+  qsort(tmpX, n, sizeof(uint32_t), sortfn);
+  //------------------------------------------
+  tmpY = malloc(n * sizeof(uint32_t));
+  return_if_malloc_failed(tmpY);
+  for ( uint32_t i = 0; i < n; i++ ) {
+    tmpY[i] = Y[i];
+  }
+  qsort(tmpY, n, sizeof(uint32_t), sortfn);
+  //------------------------------------------
+  for ( uint32_t i = 0; i < n; i++ ) {
+    if ( tmpX[i] != tmpY[i] ) { *ptr_is_eq = false; return status; }
+  }
+#ifdef OLD 
   for ( uint32_t i = 0; i < n; i++ ) {
     uint32_t x_i = X[i];
     bool found = false;
@@ -40,8 +93,10 @@ chk_set_equality(
     }
     if ( !found ) { *ptr_is_eq = false; return status; }
   }
-  *ptr_is_eq = true;
+#endif
 BYE:
+  free_if_non_null(tmpX);
+  free_if_non_null(tmpY);
   return status;
 }
 

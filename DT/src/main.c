@@ -20,6 +20,11 @@ metrics_t *g_M;  // [g_M_m][g_M_bufsz]
 uint32_t g_M_m;
 uint32_t g_M_bufsz;
 
+double *g_best_metrics;
+uint32_t *g_best_yval;
+uint32_t *g_best_yidx;
+four_nums_t *g_best_num4;
+
 node_t *g_tree; // this is where the decision tree is created
 int g_n_tree;
 int g_sz_tree;
@@ -38,6 +43,10 @@ main(
   uint8_t *g = NULL; // [n] goal ttribute 
   g_tree = NULL; g_n_tree = 0; g_sz_tree = 0;
   g_M    = NULL; g_M_m    = 0; g_M_bufsz = 0;
+  g_best_metrics = NULL;
+  g_best_yval = NULL;
+  g_best_yidx = NULL;
+  g_best_num4 = NULL;
   char *config_file = NULL;
 
   if ( argc >= 2 ) { config_file = argv[1]; }
@@ -67,6 +76,11 @@ main(
     g_M[j].nH     = malloc(g_M_bufsz * sizeof(uint32_t));
     g_M[j].metric = malloc(g_M_bufsz * sizeof(double));
   }
+  // One time allocation for later use 
+  g_best_metrics = malloc(m * sizeof(double));
+  g_best_yval    = malloc(m * sizeof(uint32_t));
+  g_best_yidx    = malloc(m * sizeof(uint32_t));
+  g_best_num4    = malloc(m * sizeof(four_nums_t));
   // we are taking short-cut of allocating g_tree at beginning
   // Ideally, we would allocate a "reasonable" size and re-alloc
   // if we need more space 
@@ -137,5 +151,22 @@ BYE:
     munmap(g, n * sizeof(uint8_t));
   }
   free_if_non_null(g_tree);
+  //----------------------------------
+  if ( g_M != NULL ) { 
+    for ( uint32_t j = 0; j < g_M_m; j++ ) { 
+      free_if_non_null(g_M[j].yval);
+      free_if_non_null(g_M[j].yidx);
+      free_if_non_null(g_M[j].nT);
+      free_if_non_null(g_M[j].nH);
+      free_if_non_null(g_M[j].metric);
+    }
+  }
+  free_if_non_null(g_M);
+  //----------------------------------
+  free_if_non_null(g_best_metrics);
+  free_if_non_null(g_best_yval);
+  free_if_non_null(g_best_yidx);
+  free_if_non_null(g_best_num4);
+  //----------------------------------
   return status;
 }

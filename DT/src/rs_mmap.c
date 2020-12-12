@@ -1,9 +1,11 @@
 //START_INCLUDES
+#include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/mman.h>
-#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "macros.h"
 //STOP_INCLUDES
 #include "rs_mmap.h"
