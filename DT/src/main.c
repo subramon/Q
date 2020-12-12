@@ -16,8 +16,7 @@ uint64_t g_num_swaps;
 
 #include <omp.h>
 config_t g_C; // configuration
-metrics_t *g_M;  // [g_M_m][g_M_bufsz] 
-uint32_t g_M_m;
+metrics_t *g_M;  // [m][g_M_bufsz] 
 uint32_t g_M_bufsz;
 
 double *g_best_metrics;
@@ -42,7 +41,7 @@ main(
   uint32_t **to = NULL; // [m][n]
   uint8_t *g = NULL; // [n] goal ttribute 
   g_tree = NULL; g_n_tree = 0; g_sz_tree = 0;
-  g_M    = NULL; g_M_m    = 0; g_M_bufsz = 0;
+  g_M    = NULL;               g_M_bufsz = 0;
   g_best_metrics = NULL;
   g_best_yval = NULL;
   g_best_yidx = NULL;
@@ -64,12 +63,11 @@ main(
   uint32_t lb = 0; uint32_t ub = n;
   //-----------------------------------------------
   // One time allocation for later use 
-  g_M_m = m;
   g_M_bufsz = g_C.metrics_buffer_size;
-  g_M = malloc(g_M_m * sizeof(metrics_t));
+  g_M = malloc(m * sizeof(metrics_t));
   return_if_malloc_failed(g_M);
-  memset(g_M, 0,  (g_M_m * sizeof(metrics_t)));
-  for ( uint32_t j = 0; j < g_M_m; j++ ) { 
+  memset(g_M, 0,  (m * sizeof(metrics_t)));
+  for ( uint32_t j = 0; j < m; j++ ) { 
     g_M[j].yval   = malloc(g_M_bufsz * sizeof(uint32_t));
     g_M[j].yidx   = malloc(g_M_bufsz * sizeof(uint32_t));
     g_M[j].nT     = malloc(g_M_bufsz * sizeof(uint32_t));
@@ -153,7 +151,7 @@ BYE:
   free_if_non_null(g_tree);
   //----------------------------------
   if ( g_M != NULL ) { 
-    for ( uint32_t j = 0; j < g_M_m; j++ ) { 
+    for ( uint32_t j = 0; j < m; j++ ) { 
       free_if_non_null(g_M[j].yval);
       free_if_non_null(g_M[j].yidx);
       free_if_non_null(g_M[j].nT);

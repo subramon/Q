@@ -4,11 +4,11 @@
 #define mcr_sqr(x) ( (x) * (x) )
 export void 
 eval_metrics(
-    uniform uint32 in_nTL[BUFSZ],
-    uniform uint32 in_nHL[BUFSZ],
+    uniform uint32 in_nTL[],
+    uniform uint32 in_nHL[],
     uniform uint32 nT,
     uniform uint32 nH,
-    uniform double   metric[BUFSZ],
+    uniform double   metric[],
     uniform uint32 nbuf
     )
 {

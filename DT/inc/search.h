@@ -6,6 +6,7 @@ search(
     uint32_t nT,
     uint32_t nH,
     uint32_t m,
+    uint32_t n,
     uint32_t *ptr_split_feature_idx,
     uint32_t *ptr_yval,
     uint32_t *ptr_yidx,

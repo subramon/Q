@@ -59,7 +59,7 @@ split(
 #endif
 
   //-----------------------------------------
-  status = search(Y, lb, ub, nT, nH, m, 
+  status = search(Y, lb, ub, nT, nH, m, n,
        &split_j, &split_yval,  &split_yidx, &num4); 
   cBYE(status); 
   //---------------------------------------------------
