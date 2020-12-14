@@ -1,6 +1,6 @@
 CC=gcc
 
-CFLAGS = -g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable -Wunused-parameter -Wno-pedantic -Wno-unused-label 
+CFLAGS = -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable -Wunused-parameter -Wno-pedantic -Wno-unused-label 
 # CFLAGS+= -fsanitize=address -fno-omit-frame-pointer # for address sanitizer
 # CFLAGS+= -fsanitize=undefined
 CFLAGS+= -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith
@@ -43,10 +43,10 @@ ISP_OBJS = $(ISP_SRCS:.c=.o)
 DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -DSCALAR
-DFLAGS = -O4 -fopenmp -DVECTOR -pg
 DFLAGS = -g -DDEBUG -DVECTOR -fopenmp
 DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 DFLAGS = -O4 -fopenmp -DSCALAR -pg
+DFLAGS = -O4 -fopenmp -DVECTOR -pg
 # to run gprof, add -pg to DFLAGS
 # ./dt
 # gprof ./dt > _outputfile
@@ -125,6 +125,7 @@ ut_eval_metrics : ${UT2_OBJS} ./inc/eval_metrics_isp.h
 UT3_SRCS := src/ut_reorder.c 
 UT3_SRCS += src/reorder.c
 UT3_SRCS += src/preproc_j.c
+UT3_SRCS += src/check.c
 UT3_SRCS += src/get_time_usec.c
 UT3_OBJS = $(UT3_SRCS:.c=.o)
 UT3_OBJS += ./src/reorder_isp.o

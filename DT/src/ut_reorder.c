@@ -1,11 +1,13 @@
 #include "incs.h"
 #include "preproc_j.h"
+#include "check.h"
 #include "reorder.h"
 #include "reorder_isp.h"
 #include "get_time_usec.h"
 #ifdef SEQUENTIAL
 int g_num_swaps;
 #endif
+config_t g_C;
 int
 main(
     int argc,
@@ -20,6 +22,14 @@ main(
   uint32_t *yval = NULL;
   uint8_t  *goal = NULL;
   uint32_t *from = NULL;
+  
+  uint32_t *pre_yval = NULL;
+  uint8_t  *pre_goal = NULL;
+  uint32_t *pre_from = NULL;
+  
+  uint32_t *post_yval = NULL;
+  uint8_t  *post_goal = NULL;
+  uint32_t *post_from = NULL;
   
   uint32_t *to   = NULL;
   uint32_t *isp_to   = NULL;
@@ -44,6 +54,14 @@ main(
   yval = malloc(n * sizeof(uint32_t));
   from = malloc(n * sizeof(uint32_t));
   goal = malloc(n * sizeof(uint8_t));
+
+  pre_yval = malloc(n * sizeof(uint32_t));
+  pre_from = malloc(n * sizeof(uint32_t));
+  pre_goal = malloc(n * sizeof(uint8_t));
+
+  post_yval = malloc(n * sizeof(uint32_t));
+  post_from = malloc(n * sizeof(uint32_t));
+  post_goal = malloc(n * sizeof(uint8_t));
 
   to   = malloc(n * sizeof(uint32_t));
   isp_to   = malloc(n * sizeof(uint32_t));
@@ -70,18 +88,29 @@ main(
   status = reorder(Y, tmpY, to, to_split, lb, ub, split_yidx, &lidx, &ridx);
   cBYE(status);
   for ( uint32_t i = 0; i < n; i++ ) { 
-    uint32_t pre_from_i = get_from(Y[i]);
-    uint32_t pre_goal_i = get_goal(Y[i]);
-    uint32_t pre_yval_i = get_yval(Y[i]);
-    uint32_t post_from_i = get_from(tmpY[i]);
-    uint32_t post_goal_i = get_goal(tmpY[i]);
-    uint32_t post_yval_i = get_yval(tmpY[i]);
+    pre_from[i] = get_from(Y[i]);
+    pre_goal[i] = get_goal(Y[i]);
+    pre_yval[i] = get_yval(Y[i]);
+    post_from[i] = get_from(tmpY[i]);
+    post_goal[i] = get_goal(tmpY[i]);
+    post_yval[i] = get_yval(tmpY[i]);
     /*
     fprintf(stdout, "%d,%d,%d||%d,%d,%d\n", 
-      pre_from_i, pre_goal_i, pre_yval_i, 
-      post_from_i, post_goal_i, post_yval_i);
+      pre_from[i], pre_goal[i], pre_yval[i], 
+      post_from[i], post_goal[i], post_yval[i]);
       */
   }
+  bool is_eq;
+  status = chk_set_equality(pre_from, post_from, n, &is_eq); cBYE(status);
+  if ( !is_eq ) { go_BYE(-1); }
+  status = chk_set_equality(pre_yval, post_yval, n, &is_eq); cBYE(status);
+  if ( !is_eq ) { go_BYE(-1); }
+  int cnt1 = 0, cnt2 = 0;
+  for ( uint32_t i = 0; i < n; i++ ) { 
+    cnt1 += pre_goal[i];
+    cnt2 += pre_goal[i];
+  }
+  if ( cnt1 != cnt2 ) { go_BYE(-1); }
   if ( lidx != n / 2 ) { go_BYE(-1); }
   if ( ridx != n     ) { go_BYE(-1); }
   //--- run ISP version
@@ -106,6 +135,14 @@ BYE:
   free_if_non_null(yval);
   free_if_non_null(goal);
   free_if_non_null(from);
+  
+  free_if_non_null(pre_yval);
+  free_if_non_null(pre_goal);
+  free_if_non_null(pre_from);
+  
+  free_if_non_null(post_yval);
+  free_if_non_null(post_goal);
+  free_if_non_null(post_from);
   
   free_if_non_null(to);
   free_if_non_null(isp_to);

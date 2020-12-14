@@ -50,7 +50,9 @@ search_j(
   //-------------------------------------
   if ( lb >= ub ) { go_BYE(-1); }
   if ( ub >  n ) { go_BYE(-1); }
+#ifdef DEBUG
   uint32_t original_lb = lb;
+#endif
   uint32_t new_lb = lb;
   uint32_t prev_nT = 0, prev_nH = 0;
   // This loop is written somewhat unusually, let's explain

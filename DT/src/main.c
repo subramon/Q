@@ -47,6 +47,7 @@ main(
   g_best_yidx = NULL;
   g_best_num4 = NULL;
   char *config_file = NULL;
+  uint32_t n = 0; uint8_t  m = 0;
 
   if ( argc >= 2 ) { config_file = argv[1]; }
 #ifdef SEQUENTIAL
@@ -55,8 +56,8 @@ main(
   // read configurations 
   status = read_config(&g_C, config_file);  cBYE(status);
   // following are configurable 
-  uint32_t n = g_C.num_instances;
-  uint8_t  m = g_C.num_features;
+  n = g_C.num_instances;
+  m = g_C.num_features;
   const char *bin_file_prefix = "_bin_data_";
 
   uint32_t nT = 0; uint32_t nH = 0;

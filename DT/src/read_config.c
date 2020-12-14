@@ -31,11 +31,11 @@ int read_config(
 #ifdef PERF_TEST
   ptr_C->max_depth           = 32;
   ptr_C->min_leaf_size       = 32;
-  ptr_C->num_features        = 128;
+  ptr_C->num_features        = 16;
   ptr_C->num_instances       = 1024 * 1024; 
   ptr_C->metrics_buffer_size = 1024; 
   ptr_C->min_partition_size  = 32;
-  ptr_C->max_nodes_in_tree   = 65536;
+  ptr_C->max_nodes_in_tree   = 32768;
 #endif
 
   ptr_C->num_cores           = 0; // <=0 in config file => get from omp
