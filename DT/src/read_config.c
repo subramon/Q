@@ -10,9 +10,12 @@ int read_config(
 
   ptr_C->min_percentage_improvement = 0; // TODO P3
 
-  ptr_C->dump_binary_data = true;
+  ptr_C->dump_binary_data = false;
   ptr_C->read_binary_data = false;
   /*
+  ptr_C->dump_binary_data = true;
+  ptr_C->read_binary_data = false;
+
   ptr_C->dump_binary_data = false;
   ptr_C->read_binary_data = true;
   */
