@@ -1,14 +1,10 @@
-#ifndef __Q_INCS
-#define __Q_INCS
 #include <ctype.h>
 #include <errno.h>
-#include <fcntl.h>
+// #include <fcntl.h>
 #include <float.h>
 #include <inttypes.h>
 #include <limits.h>
-// TODO P4 do not think this is needed:#include <malloc.h>
 #include <math.h>
-#include <memory.h>
 #include <omp.h>
 #include <string.h>
 #include <stdbool.h>
@@ -23,6 +19,4 @@
 #include <time.h>
 #include <unistd.h>
 #include "macros.h"
-#include "constants.h"
 #include "types.h"
-#endif

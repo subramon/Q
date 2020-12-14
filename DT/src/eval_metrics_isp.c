@@ -1,9 +1,7 @@
-#include "constants.h"
-#include "types.isp.h"
 
 #define mcr_sqr(x) ( (x) * (x) )
 export void 
-eval_metrics(
+eval_metrics_isp(
     uniform uint32 in_nTL[],
     uniform uint32 in_nHL[],
     uniform uint32 nT,

@@ -3,7 +3,6 @@
 #ifdef SEQUENTIAL 
 extern int g_num_swaps;
 #endif
-extern int g_n_tree; // TODO Delete later 
 int
 reorder(
     uint64_t *Yj,
@@ -20,7 +19,7 @@ reorder(
   int status = 0; 
   register uint32_t lidx = *ptr_lidx;
   register uint32_t ridx = *ptr_ridx;
-  /* start ispc */
+
   for ( uint32_t i = lb; i < ub; i++ ) { 
     uint32_t idx;
     uint32_t from_i = get_from(Yj[i]);
@@ -36,7 +35,12 @@ reorder(
     g_num_swaps++;
 #endif
   }
-  // printf("%d,%d\n", g_n_tree, g_num_swaps);
+#ifdef DEBUG
+  if ( ( ( lidx - ptr_lidx[0] ) + ( ridx - ptr_ridx[0] ) ) 
+      != ( ub - lb ) ) { 
+    go_BYE(-1);
+  }
+#endif 
   *ptr_lidx = lidx;
   *ptr_ridx = ridx;
 BYE:

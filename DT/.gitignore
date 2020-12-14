@@ -2,5 +2,8 @@
 dt
 ispdt
 inc/ispc_types.h
-inc/*.isp.h
+inc/*_isp.h
 doc/.meta
+ut_calc_best_metric
+ut_eval_metrics
+ut_reorder

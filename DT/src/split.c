@@ -2,7 +2,12 @@
 #include "check.h"
 #include "check_tree.h"
 #include "preproc_j.h"
+#ifdef SCALAR
 #include "reorder.h"
+#endif
+#ifdef VECTOR
+#include "reorder_isp.h"
+#endif
 #include "search.h"
 #include "split.h"
 
@@ -65,6 +70,7 @@ split(
   //---------------------------------------------------
 #pragma omp parallel for schedule(static, 1) num_threads(g_C.num_cores)
   for ( uint32_t j = 0; j < m; j++ ) {
+    int lstatus; 
     uint32_t lidx = lb, ridx = split_yidx;
     uint64_t *Yj = Y[j];
     uint64_t *tmpYj = tmpY[j];
@@ -74,9 +80,15 @@ split(
     if ( j == split_j ) { continue; }
 
 #endif
-    status = reorder(Y[j], tmpY[j], to[j], to[split_j], lb, ub,
+#ifdef SCALAR
+    lstatus = reorder(Y[j], tmpY[j], to[j], to[split_j], lb, ub,
         split_yidx, &lidx, &ridx);
-    if ( status < 0 ) { WHEREAMI; status = -1; continue; }
+#endif
+#ifdef VECTOR
+    reorder_isp(Y[j], tmpY[j], to[j], to[split_j], lb, ub,
+        split_yidx, &lidx, &ridx, &lstatus);
+#endif
+    if ( lstatus < 0 ) { WHEREAMI; status = -1; continue; }
     if ( lidx != split_yidx ) { WHEREAMI; status = -1; continue; }
     if ( ridx != ub ) { WHEREAMI; status = -1; continue; }
     if ( j != split_j ) { 

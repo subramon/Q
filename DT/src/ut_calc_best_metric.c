@@ -32,7 +32,7 @@ main(
       metrics[j] = drand48();
     }
     status = calc_best_metric(&M, n, &loc1); cBYE(status);
-    calc_best_metric_ispc(metrics, n, &loc2);  
+    calc_best_metric_isp(metrics, n, &loc2);  
     if ( loc1 != loc2 ) { 
       go_BYE(-1);
     }

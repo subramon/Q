@@ -1,3 +1,9 @@
+extern uint64_t 
+x_mk_comp_val(
+    uint64_t from,
+    uint64_t goal,
+    uint64_t yval
+    );
 extern int 
 preproc_j(
     float *Xj, /* [m][n] */

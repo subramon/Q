@@ -5,7 +5,7 @@
 // top 32 bits used for from
 // bit 31 used for goal
 // bits 0..30 used for the encoded value (yval, not xval)
-static uint64_t x_mk_comp_val(
+uint64_t x_mk_comp_val(
     uint64_t from,
     uint64_t goal,
     uint64_t yval

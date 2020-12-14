@@ -1,6 +1,5 @@
-#include "constants.h"
 export void
-calc_best_metric_ispc(
+calc_best_metric_isp(
     uniform double metrics[],
     uniform uint32 nbuf,
     uniform uint32 loc[]

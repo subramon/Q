@@ -5,8 +5,8 @@
 #include "eval_metrics.h"
 #endif
 #ifdef VECTOR
-#include "calc_best_metric.isp.h"
-#include "eval_metrics.isp.h"
+#include "calc_best_metric_isp.h"
+#include "eval_metrics_isp.h"
 #endif
 #include "search_j.h"
 
@@ -84,8 +84,8 @@ search_j(
     uint32_t loc = 0;
 
 #ifdef VECTOR
-    eval_metrics(M.nT, M.nH, nT, nH, M.metric, nbuf); 
-    calc_best_metric(M.metric, nbuf, &loc); cBYE(status);
+    eval_metrics_isp(M.nT, M.nH, nT, nH, M.metric, nbuf); 
+    calc_best_metric_isp(M.metric, nbuf, &loc); cBYE(status);
 #endif
 #ifdef SCALAR
     status = eval_metrics(M.nT, M.nH, nT, nH, M.metric, nbuf); cBYE(status);
