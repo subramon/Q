@@ -7,7 +7,7 @@
 #include "hmap_mput.h"
 #include "hmap_update.h"
 
-#define  DEBUG
+#undef  DEBUG
 
 static void *
 set_key(
@@ -116,6 +116,8 @@ hmap_mput(
   if ( nP <= 0 ) { 
     nP = omp_get_num_procs();
   }
+  // nP = 1;
+  fprintf(stderr, "Using %d cores \n", nP);
   uint64_t proc_divinfo = fast_div32_init(nP);
 
   uint32_t lb = 0, ub;
@@ -126,6 +128,7 @@ hmap_mput(
     if ( ub > nkeys ) { ub = nkeys; }
     uint32_t niters = ub - lb;
     int chnk_sz = 16; // so that no false sharing on write
+    bool do_sequential_loop = false;
     for ( int k = 0; k < M->num_at_once; k++ ) { set[k] = false; }
 #pragma omp parallel for num_threads(nP) schedule(dynamic, chnk_sz)
     for ( uint32_t j = 0; j < niters; j++ ) {
@@ -144,6 +147,9 @@ hmap_mput(
       if ( lstatus != 0 ) { if ( status == 0 ) { status = lstatus; } }
       if ( !exists[j] ) { // new key=> insert in sequential loop
         tids[j] = -1; // assigned to nobody, done in sequential loop
+        if ( do_sequential_loop == false ) { 
+        do_sequential_loop = true;
+        }
       }
       else {
         tids[j] = hashes[j] % nP; // Use fast_rem32()
@@ -191,17 +197,19 @@ hmap_mput(
     }
     cBYE(status); // exit if any thread had a problem
     // this must be a sequential loop
-    for ( uint32_t j = 0; j < niters; j++ ) { 
-      if ( exists[j] ) { continue; }
-      uint32_t i = j + lb;
-      //--------------------------------
-      void *key_i = set_key(keys, i, alt_keys, key_len);
-      uint16_t key_len_i = set_key_len(key_lens, i, key_len);
-      void *val_i = set_val(vals, i, alt_vals, val_len);
-      //--------------------------------
-      status = hmap_put(ptr_hmap, key_i, key_len_i, true, val_i, NULL);
-      cBYE(status);
-      // n2++; // Only for sequential testing 
+    if ( do_sequential_loop ) { 
+      for ( uint32_t j = 0; j < niters; j++ ) {
+        if ( exists[j] ) { continue; }
+        uint32_t i = j + lb;
+        //--------------------------------
+        void *key_i = set_key(keys, i, alt_keys, key_len);
+        uint16_t key_len_i = set_key_len(key_lens, i, key_len);
+        void *val_i = set_val(vals, i, alt_vals, val_len);
+        //--------------------------------
+        status = hmap_put(ptr_hmap, key_i, key_len_i, true, val_i, NULL);
+        cBYE(status);
+        // n2++; // Only for sequential testing 
+      }
     }
     if ( ub >= nkeys ) { break; }
     lb += M->num_at_once;

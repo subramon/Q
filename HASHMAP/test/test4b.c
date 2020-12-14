@@ -22,8 +22,8 @@ main(
 {
   int status = 0;
   num_frees = num_mallocs = num_updates = 0; 
-  int N = 2048 * 2048; // number of insertions performed 
-  uint32_t num_items      = 2048;
+  int N = 16 * 1024 * 1024; // number of insertions performed 
+  uint32_t num_items      = 1024 * 1024; 
   val_t *chk_agg = NULL;
   int  *alt_keys = NULL; int key_len = sizeof(int);
   float  *alt_vals = NULL; int val_len = sizeof(int);
@@ -56,13 +56,14 @@ main(
   }
 
   hmap_config_t config; memset(&config, 0, sizeof(hmap_config_t));
-  config.min_size = 2 * num_items;
+  config.min_size = 1.5 * num_items;
   config.max_size = 4 * num_items;
   status = hmap_instantiate(&hmap, &config); cBYE(status);
 
   //-----------------------------
-  multi_init(&M, 2048);
+  multi_init(&M, 6*4096); // TODO Improve this initialization
   //-----------------------------
+  uint64_t t1 = get_time_usec();
   for ( int i = 0; i < N; i++ ) {
     //-- START: independent calculation of aggregation
     int key = alt_keys[i];
@@ -76,6 +77,8 @@ main(
   status = hmap_mput(&hmap, &M, NULL, NULL, alt_keys, key_len, N, 
       NULL, alt_vals, val_len);
       cBYE(status);
+  uint64_t t2 = get_time_usec();
+  printf("time      = %lf \n", (t2-t1)/1000000.0);
   status = hmap_chk(&hmap); cBYE(status); 
   printf("occupancy = %d \n", hmap.nitems);
   printf("size      = %d \n", hmap.size);
