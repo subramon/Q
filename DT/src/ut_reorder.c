@@ -29,7 +29,9 @@ main(
   uint32_t n = 100; // size of buffer
   uint32_t lb = 0; uint32_t ub = n;
 
+#ifdef SEQUENTIAL
   g_num_swaps = 0;
+#endif
   if ( argc >= 2 ) { 
     n = atoi(argv[1]);
   }

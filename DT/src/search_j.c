@@ -74,7 +74,7 @@ search_j(
     lb = new_lb;
     if ( nbuf == 0 ) { break; }
 #ifdef DEBUG
-    if ( nbuf >= g_M_bufsz ) { go_BYE(-1); } 
+    if ( nbuf > g_M_bufsz ) { go_BYE(-1); } 
     for ( uint32_t i = 0; i < nbuf; i++ ) { 
       if ( (M.yidx[i]+1-original_lb) != (M.nT[i] + M.nH[i])  ) { 
         go_BYE(-1); 

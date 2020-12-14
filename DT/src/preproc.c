@@ -31,7 +31,8 @@ preproc(
 
   //  may want to do this sequentiall to reduce amount of 
   //  memory allocateed in the process of creating Y
-#pragma omp parallel for
+  // TODO: Think about this
+// #pragma omp parallel for
   for ( uint32_t j = 0; j < m; j++ ) { 
     status = preproc_j(X[j], n, g,  &(Y[j]), &(to[j])); 
     if ( status < 0 ) { WHEREAMI; }

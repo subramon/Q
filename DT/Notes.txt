@@ -1,0 +1,56 @@
+The code here contains the kernel needed to build decision trees efficiently.
+The reason we call it a "kernel" is that there is plenty that needs to be bolted
+on before it can actually produce a decision tree. For example, we have used the
+"gini" metric to determinee the quality of a split. Several other metrics could
+be used instead. 
+
+Our focus has beeen on the core computations necessary. In this respect, we have
+focused on performance and correctness. I believe the core code is solid and can
+be adapted with relative ease to make a fully-fledged decision tree package.
+
+There are 2 key innovations in this implementation
+1) It performs a single sort and does not re-sort the data as we descend down
+the tree. 
+2) It uses ISPC to generate code that efficiently uses vector instructions.
+
+====================== The ISPC portion ==============
+There are 3 parts of the code that use ISPC. Hence, they have 2 implementatons,
+one in C and one in iSPC. These are 
+reorder.c and reorder_isp.c
+eval_metrics.c and eval_metrics_isp.c
+calc_best_metric.c and calc_best_metric_isp.c
+
+In order to verify their correctness, there are unit tests written for each.The
+unit tests compares the output of the C implementation to that of ISPC. If they
+match, we conclude that the ISPC code is correct. Currently, all tests pass.
+
+verfication that the C code is correct is handled in check.c and check_tree.c.
+We have written a large number of invariants (but by no means complete) which
+examine the data to see if the code is doing the right thing.
+
+To build the unit tests, edit Makefile so that DFLAGS is set to
+DFLAGS = -g -DDEBUG -DSEQUENTIAL  
+Then, 
+make clean
+make ut_calc_best_metric 
+make ut_eval_metrics 
+make ut_reorder
+
+============ Building the code ===================
+Start with make clean
+To build  the C version of the code, set following in Makefile
+DFLAGS = -O4 -fopenmp -DSCALAR 
+make dt
+To build  the ISPC version of the code, set following in Makefile
+DFLAGS = -O3 -fopenmp -DVECTOR
+make ispdt
+
+============ Running the code ===================
+Ideally, we would use a config file to set the configuration  for the run.
+We have bypassed this step for now, hard-coding it in read_config.c
+Some sample values for basic testing and for performance runs are there.
+Feel free to modify as you desire but remember to re-build.
+
+
+
+

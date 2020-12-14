@@ -44,9 +44,9 @@ DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -DSCALAR
 DFLAGS = -O4 -fopenmp -DVECTOR -pg
-DFLAGS = -O4 -fopenmp -DSCALAR -pg
 DFLAGS = -g -DDEBUG -DVECTOR -fopenmp
 DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
+DFLAGS = -O4 -fopenmp -DSCALAR -pg
 # to run gprof, add -pg to DFLAGS
 # ./dt
 # gprof ./dt > _outputfile
@@ -57,7 +57,7 @@ DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 
 ./src/reorder_isp.o : ./inc/types_isp.h \
   	./src/reorder_isp.c ./inc/reorder_isp.h
-	ispc -g --pic -I./inc/ ./src/reorder_isp.c -o ./src/reorder_isp.o 
+	ispc -O3 --pic -I./inc/ ./src/reorder_isp.c -o ./src/reorder_isp.o 
 
 #---------------------------------------------
 ./inc/eval_metrics_isp.h : ./src/eval_metrics_isp.c
@@ -65,7 +65,7 @@ DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 
 ./src/eval_metrics_isp.o : ./inc/types_isp.h \
   	./src/eval_metrics_isp.c ./inc/eval_metrics_isp.h
-	ispc -g --pic -I./inc/ ./src/eval_metrics_isp.c -o ./src/eval_metrics_isp.o 
+	ispc -O3 --pic -I./inc/ ./src/eval_metrics_isp.c -o ./src/eval_metrics_isp.o 
 
 #---------------------------------------------
 ./inc/calc_best_metric_isp.h : ./src/calc_best_metric_isp.c
@@ -73,7 +73,7 @@ DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 
 ./src/calc_best_metric_isp.o : ./inc/types_isp.h \
 	./src/calc_best_metric_isp.c ./inc/calc_best_metric_isp.h
-	ispc -g --pic -I./inc/ ./src/calc_best_metric_isp.c -o ./src/calc_best_metric_isp.o 
+	ispc -O3 --pic -I./inc/ ./src/calc_best_metric_isp.c -o ./src/calc_best_metric_isp.o 
 
 ./inc/types_isp.h : ./inc/types.h 
 	cat ./inc/types.h | \
