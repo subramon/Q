@@ -59,7 +59,8 @@ hmap_instantiate(
   }
   //----------------------------------------
 
-  ptr_hmap->size = ptr_hmap->config.min_size;
+  // get smallest prime bigger than min size
+  ptr_hmap->size = prime_geq(ptr_hmap->config.min_size);
   ptr_hmap->bkts = calloc(ptr_hmap->size, sizeof(bkt_t)); 
   return_if_malloc_failed(ptr_hmap->bkts);
 

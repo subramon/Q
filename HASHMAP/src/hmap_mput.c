@@ -4,12 +4,12 @@
 #include "hmap_aux.h"
 #include "hmap_get.h"
 #include "hmap_put.h"
-#include "hmap_mput.h"
+#include "fasthash.h"
 #include "hmap_update.h"
+#include "hmap_mput.h"
 
-#undef  DEBUG
 
-static void *
+static inline void *
 set_key(
     void **keys, 
     uint32_t i, 
@@ -27,7 +27,7 @@ set_key(
   return key_i;
 }
 //--------------------------------
-static void *
+static inline void *
 set_val(
     void **vals, 
     uint32_t i, 
@@ -45,7 +45,7 @@ set_val(
   return val_i;
 }
 //--------------------------------
-static uint16_t 
+static inline uint16_t 
 set_key_len(
     uint16_t *key_lens, 
     uint32_t i, 
@@ -105,6 +105,9 @@ hmap_mput(
     if ( val_len != 0 ) { go_BYE(-1); } 
   }
   //-------------------------------------------------
+#ifdef SEQUENTIAL
+  int n1, n2 = 0;
+#endif
 
   uint32_t *idxs   = M->idxs;
   uint32_t *hashes = M->hashes;
@@ -113,10 +116,13 @@ hmap_mput(
   bool *exists     = M->exists;
   bool *set        = M->set;
   int nP = M->num_procs;
+#ifdef SEQUENTIAL 
+  nP = 1;
+#else
   if ( nP <= 0 ) { 
     nP = omp_get_num_procs();
   }
-  // nP = 1;
+#endif
   fprintf(stderr, "Using %d cores \n", nP);
   uint64_t proc_divinfo = fast_div32_init(nP);
 
@@ -138,7 +144,8 @@ hmap_mput(
       uint16_t key_len_i = set_key_len(key_lens, i, key_len);
       dbg_t dbg;
       idxs[j]   = UINT_MAX; // bad value 
-      hashes[j] = murmurhash3(key_i, key_len_i, hashkey);
+      // hashes[j] = murmurhash3(key_i, key_len_i, hashkey);
+      hashes[j] = fasthash32(key_i, key_len_i, hashkey);
       locs[j]   = fast_rem32(hashes[j], ptr_hmap->size, divinfo);
       dbg.hash  = hashes[j]; dbg.probe_loc = locs[j];
       int lstatus = hmap_get(ptr_hmap, key_i, key_len_i, NULL, 
@@ -148,15 +155,15 @@ hmap_mput(
       if ( !exists[j] ) { // new key=> insert in sequential loop
         tids[j] = -1; // assigned to nobody, done in sequential loop
         if ( do_sequential_loop == false ) { 
-        do_sequential_loop = true;
+          do_sequential_loop = true;
         }
       }
       else {
-        tids[j] = hashes[j] % nP; // Use fast_rem32()
+        tids[j] = fast_rem32(hashes[j], nP, proc_divinfo);
 #ifdef DEBUG
-        uint8_t chk = fast_rem32(hashes[j], nP, proc_divinfo);
+        uint8_t chk = hashes[j] % nP; 
         if ( chk != tids[j] ) {  
-          WHEREAMI; if ( status != 0 ) { status = -1; } 
+          WHEREAMI; if ( status == 0 ) { status = -1; } 
         }
 #endif
       }
@@ -180,10 +187,15 @@ hmap_mput(
 #endif
     //-----------------------------------
 
-    // int n1, n2 = 0;// Only for sequential testing 
+    // This loop does parallel updates 
 #pragma omp parallel 
     {
-      int tid = omp_get_thread_num();
+      int tid;
+#ifdef SEQUENTIAL
+      tid = 1;
+#else
+      tid = omp_get_thread_num();
+#endif
       for ( uint32_t j = 0; j < niters; j++ ) {
         if ( tids[j] != tid ) { continue; } // not mine, skip
         uint32_t i = j + lb;
@@ -192,12 +204,15 @@ hmap_mput(
         int lstatus = hmap_update(ptr_hmap, idxs[j], val_i);  
         // do not exist if bad status, this is an omp loop
         if ( lstatus != 0 ) { if ( status == 0 ) { status = lstatus; } }
-        // n1++; // Only for sequential testing 
+#ifdef SEQUENTIAL 
+        n1++; 
+#endif
       }
     }
     cBYE(status); // exit if any thread had a problem
-    // this must be a sequential loop
-    if ( do_sequential_loop ) { 
+    // This loop does sequential inserts
+    if ( do_sequential_loop ) {
+      dbg_t dbg;
       for ( uint32_t j = 0; j < niters; j++ ) {
         if ( exists[j] ) { continue; }
         uint32_t i = j + lb;
@@ -206,14 +221,20 @@ hmap_mput(
         uint16_t key_len_i = set_key_len(key_lens, i, key_len);
         void *val_i = set_val(vals, i, alt_vals, val_len);
         //--------------------------------
-        status = hmap_put(ptr_hmap, key_i, key_len_i, true, val_i, NULL);
+        dbg.hash  = hashes[j]; dbg.probe_loc = locs[j];
+        status = hmap_put(ptr_hmap, key_i, key_len_i, true, val_i, &dbg);
         cBYE(status);
-        // n2++; // Only for sequential testing 
+#ifdef SEQUENTIAL 
+        n2++; 
+#endif
       }
     }
     if ( ub >= nkeys ) { break; }
     lb += M->num_at_once;
   }
+#ifdef SEQUENTIAL 
+  if ( ( n1 + n2 ) != nkeys ) { go_BYE(-1); } 
+#endif
 BYE:
   return status;
 }

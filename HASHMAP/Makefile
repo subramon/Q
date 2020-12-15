@@ -1,9 +1,25 @@
 
-#CC = icc -O3 -std=c99 
-#LINKOPTIONS = -ipp -DIPP -DCILK -lm -g
+CFLAGS := -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align 
+CFLAGS += -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings 
+CFLAGS += -Wunused-variable -Wunused-parameter -Wno-pedantic 
+CFLAGS += -Wno-unused-label 
+# CFLAGS := -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined 
+CFLAGS += -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith 
+CFLAGS += -Wmissing-declarations -Wredundant-decls -Wnested-externs 
+CFLAGS += -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings 
+CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn 
+# CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
+# CFLAGS += -Wduplicated-branches -Wrestrict
 
+DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
+DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
+DFLAGS = -g -DDEBUG -DVECTOR -fopenmp
+DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
+DFLAGS = -O4 -fopenmp -DVECTOR -pg
+DFLAGS = -O4 -fopenmp -DSCALAR -pg
+DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 
-INCS = -I ./src/ -I../UTILS/inc/ -I./inc/
+INCS = -I./src/ -I../UTILS/inc/ -I./inc/
 all: libhmap.so test1 test1a test3 test4 test4a test4b \
   	test_fastrem
 
@@ -39,51 +55,52 @@ SRCS = \
 	  ./src/hmap_update.c  \
 	  ./src/calc_new_size.c  \
 	  ./src/murmurhash.c  \
+	  ./src/fasthash.c  \
 
 .c.o : 
-	$(CC) -c -o $@ $< $(QC_FLAGS)  $(INCS) 
+	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
 
 libval1.so: ${V1SRCS}  ./inc/*.h 
-	gcc  ${QC_FLAGS} ${V1SRCS} ${INCS} \
+	gcc  ${CFLAGS} ${DFLAGS} ${V1SRCS} ${INCS} \
 	  -shared -o libval1.so 
 
 libval3.so: ${V3SRCS}  ./inc/*.h 
-	gcc  ${QC_FLAGS} ${V3SRCS} ${INCS} \
+	gcc  ${CFLAGS} ${DFLAGS} ${V3SRCS} ${INCS} \
 	  -shared -o libval3.so 
 
 libval4.so: ${V4SRCS}  ./inc/*.h 
-	gcc  ${QC_FLAGS} ${V4SRCS} ${INCS} \
+	gcc  ${CFLAGS} ${DFLAGS} ${V4SRCS} ${INCS} \
 	  -shared -o libval4.so 
 
 libhmap.so: ${SRCS}  ./inc/*.h 
-	gcc  ${QC_FLAGS} ${SRCS} ${INCS} -shared -o libhmap.so 
+	gcc  ${CFLAGS} ${DFLAGS} ${SRCS} ${INCS} -shared -lm -o libhmap.so  
 
 test1 : libhmap.so ./test/test1.c ${V1SRCS} libval1.so 
-	gcc  ${QC_FLAGS} ${INCS} ./test/test1.c \
+	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test1.c \
 	libhmap.so libval1.so -o test1 
 
 test1a : libhmap.so ./test/test1a.c ${V1SRCS}  libval1.so 
-	gcc  ${QC_FLAGS} ${INCS} ./test/test1a.c \
+	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test1a.c \
 	libhmap.so libval1.so -o test1a  -lm
 
 test3 : libhmap.so ./test/test3.c ${V3SRCS}  libval3.so 
-	gcc  ${QC_FLAGS} ${INCS} ./test/test3.c \
+	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test3.c \
 	libhmap.so libval3.so -o test3  -lm
 
 test4 : libhmap.so ./test/test4.c ${e2SRCS}  libval4.so 
-	gcc  ${QC_FLAGS} ${INCS} ./test/test4.c \
+	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test4.c \
 	libhmap.so libval4.so -o test4  -lm
 
 test4a : libhmap.so ./test/test4a.c ${e2SRCS}  libval4.so 
-	gcc  ${QC_FLAGS} ${INCS} ./test/test4a.c \
+	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test4a.c \
 	libhmap.so libval4.so -o test4a  -lm
 
 test4b : libhmap.so ./test/test4b.c ${e2SRCS}  libval4.so 
-	gcc  ${QC_FLAGS} ${INCS} ./test/test4b.c \
+	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test4b.c \
 	libhmap.so libval4.so -o test4b  -lm
 
 test_fastrem : ./test/test_fastrem.c 
-	gcc  ${QC_FLAGS} ${INCS} ./test/test_fastrem.c \
+	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_fastrem.c \
 	  src/get_time_usec.c \
 	-o test_fastrem
 

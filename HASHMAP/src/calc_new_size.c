@@ -1,4 +1,5 @@
 #include "hmap_common.h"
+#include "hmap_aux.h"
 #include "calc_new_size.h"
 /* Checks whether resize is needed. If so, calculates newsize */
 /* Resize needed when occupancy is too high */
@@ -33,7 +34,7 @@ calc_new_size(
   double max_newsize = UINT_MAX * 0.85;
   if ( newsize > max_newsize ) { go_BYE(-1); }
   if ( ( maxsize > 0 ) && ( newsize > maxsize ) ) { go_BYE(-1); }
-  *ptr_newsize = newsize;
+  *ptr_newsize = prime_geq(newsize);
 BYE:
   return status;
 }

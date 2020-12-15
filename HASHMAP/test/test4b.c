@@ -22,8 +22,8 @@ main(
 {
   int status = 0;
   num_frees = num_mallocs = num_updates = 0; 
-  int N = 16 * 1024 * 1024; // number of insertions performed 
-  uint32_t num_items      = 1024 * 1024; 
+  int N = 32 *1024; // number of insertions performed 
+  uint32_t num_items      = 1024; 
   val_t *chk_agg = NULL;
   int  *alt_keys = NULL; int key_len = sizeof(int);
   float  *alt_vals = NULL; int val_len = sizeof(int);

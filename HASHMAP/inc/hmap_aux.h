@@ -26,3 +26,7 @@ extern  int multi_init(
     hmap_multi_t *ptr_M,
     int num_at_once
     );
+extern uint32_t 
+prime_geq(
+    uint32_t n
+    );
