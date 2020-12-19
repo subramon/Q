@@ -33,7 +33,8 @@ calc_new_size(
   }
   double max_newsize = UINT_MAX * 0.85;
   if ( newsize > max_newsize ) { go_BYE(-1); }
-  if ( ( maxsize > 0 ) && ( newsize > maxsize ) ) { go_BYE(-1); }
+  if ( ( maxsize > 0 ) && ( newsize > maxsize ) ) { 
+    go_BYE(-1); }
   *ptr_newsize = prime_geq(newsize);
 BYE:
   return status;

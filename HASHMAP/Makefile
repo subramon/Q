@@ -16,8 +16,10 @@ DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -DVECTOR -fopenmp
 DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 DFLAGS = -O4 -fopenmp -DVECTOR -pg
-DFLAGS = -O4 -fopenmp -DSCALAR -pg
 DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
+DFLAGS = -O4 -fopenmp -DSCALAR 
+DFLAGS = -O4 -fopenmp -DVECTOR 
+# Add -pg for grpof 
 
 INCS = -I./src/ -I../UTILS/inc/ -I./inc/
 all: libhmap.so test1 test1a test3 test4 test4a test4b \
@@ -103,6 +105,13 @@ test_fastrem : ./test/test_fastrem.c
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_fastrem.c \
 	  src/get_time_usec.c \
 	-o test_fastrem
+
+./inc/hmap_struct_isp.h : ./inc/hmap_struct.h 
+	cat ./inc/hmap_struct.h | \
+	  sed s'/int8_t/int8/'g | \
+	  sed s'/int16_t/int16/'g | \
+	  sed s'/int32_t/int32/'g | \
+	  sed s'/int64_t/int64/'g > ./inc/hmap_struct_isp.h 
 
 clean:
 	rm -f *.o test_hmap *.so

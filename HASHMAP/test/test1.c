@@ -21,7 +21,7 @@ main(
   dbg_t dbg; memset(&dbg, 0, sizeof(dbg_t));
   hmap_config_t config; memset(&config, 0, sizeof(hmap_config_t));
   config.min_size = 32;
-  config.max_size = 8*config.min_size;
+  config.max_size = 0;
   bool malloc_key = true;
   char keybuf[16];
 

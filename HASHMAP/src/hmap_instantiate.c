@@ -18,12 +18,7 @@ hmap_instantiate(
     ptr_hmap->config.min_size = ptr_config->min_size;
   }
   //----------------------------------------
-  if ( ptr_config->max_size == 0 ) { 
-    ptr_hmap->config.max_size = HASH_MIN_SIZE;
-  }
-  else {
-    ptr_hmap->config.max_size = ptr_config->max_size;
-  }
+  ptr_hmap->config.max_size = ptr_config->max_size;
   //----------------------------------------
   if ( ptr_config->max_growth_step == 0 ) { 
     ptr_hmap->config.max_growth_step = HASH_MIN_SIZE;

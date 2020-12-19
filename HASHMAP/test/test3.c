@@ -21,12 +21,12 @@ main(
   dbg_t dbg; memset(&dbg, 0, sizeof(dbg_t));
   hmap_config_t config; memset(&config, 0, sizeof(hmap_config_t));
   config.min_size = 32;
-  config.max_size = 8*config.min_size;
+  config.max_size = 0;
   bool malloc_key = true;
   char keybuf[16];
 
   uint32_t occupancy = 0;
-  uint32_t nitems = config.max_size * 0.75;
+  uint32_t nitems = 65536;
   status = hmap_instantiate(&hmap, &config); cBYE(status);
   for ( int iter = 0; iter < num_iterations; iter++ ) {
     val_t *ptr_chk_val;

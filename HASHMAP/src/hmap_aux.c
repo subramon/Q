@@ -84,6 +84,8 @@ void multi_free(
   free_if_non_null(ptr_M->tids);
   free_if_non_null(ptr_M->exists);
   free_if_non_null(ptr_M->set);
+  free_if_non_null(ptr_M->m_key_len);
+  free_if_non_null(ptr_M->m_key);
 }
 
 int multi_init(
@@ -114,6 +116,12 @@ int multi_init(
 
   ptr_M->set = malloc(n * sizeof(bool));
   return_if_malloc_failed(ptr_M->set);
+
+  ptr_M->m_key_len = malloc(n * sizeof(uint16_t));
+  return_if_malloc_failed(ptr_M->m_key_len);
+
+  ptr_M->m_key = malloc(n * sizeof(void *));
+  return_if_malloc_failed(ptr_M->m_key);
 BYE:
   if ( status < 0 ) { if ( ptr_M != NULL ) { multi_free(ptr_M); } }
   return status;

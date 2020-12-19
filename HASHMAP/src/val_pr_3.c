@@ -28,5 +28,6 @@ key_pr(
     FILE *fp
     )
 {
+  return 0;
 }
 

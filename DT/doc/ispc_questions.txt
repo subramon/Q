@@ -1,0 +1,25 @@
+Dmitry
+Thanks for trying out the code and giving me the performance numbers.
+
+A number of questions come to mind. Can we schedule some time to discuss them?  
+
+To make our session more efficient, I am writing them down in no particular order.
+
+1. I am a newbie to ISPC. Can you point out any inefficiencies or lack of understanding in my usage of ISPC?
+
+2. I found the style of writing 2 implementations - one in C and one in ISPC - and a unit test for them to be a very effective way of validating the ISPC code.  Any thoughts on this approach?
+
+3. Performance is always a tricky thing and results rarely conform to intuition.  Nonetheless, I was surprised that the performance gain from ISPC was not higher.
+
+Is that a fundamental characteristic of this problem? For example, maybe floating point computations would have seen greater speedup?
+
+Would writing it using intrinsics have produced higher speedup? I have some familiarity with intrinsicis - in general I find it quite painful - but would it have made a difference?
+
+Is there any "rule of thumb" as to what kind of code is likely to see better speedup? For example, we discussed binary search where each SIMD lane is doing an independent search against a common data structure? If one assumes that every search takes exactly log n iterations, can one expect speedup to be close to the number of lanes?
+
+The ispc compiler did give me warnings about scatter and gather in the reorder code. But I could not see any way out. As the name of the function suggests, it is "reordering" the data.
+
+4. One of the things I *really* like about ISPC is that it makes logical sense - you can almost "see" the instructions it will generate. Granted, my usage is not very advanced, but it was a pleasure to use ISPC. 
+
+As a tangential note, in their paper, Matt Pharr refers to the MasPar as a source of inspiration. I have actually written SIMD code for the MasPar MP-2, although that was in 1993, almost 27 years ago! Technology seems to go in cycles.
+

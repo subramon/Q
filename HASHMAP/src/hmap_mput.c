@@ -8,6 +8,21 @@
 #include "hmap_update.h"
 #include "hmap_mput.h"
 
+#define mcr_set_key(keys, i, alt_keys, key_len) ( \
+    (keys != NULL) ? \
+    (keys[i]) : \
+    ((void *)((char *)alt_keys + (i*key_len))) \
+    )
+#define mcr_set_val(vals, i, alt_vals, val_len) ( \
+  ( vals != NULL ) ? \
+    (vals[i]) : \
+    ((void *)((char *)alt_vals + (i*val_len))) \
+    )
+#define mcr_set_key_len(key_lens, i, key_len) ( \
+  ( key_lens != NULL ) ? \
+    (key_lens[i]) : \
+    (key_len) \
+    )
 
 static inline void *
 set_key(
@@ -105,16 +120,15 @@ hmap_mput(
     if ( val_len != 0 ) { go_BYE(-1); } 
   }
   //-------------------------------------------------
-#ifdef SEQUENTIAL
-  int n1, n2 = 0;
-#endif
 
-  uint32_t *idxs   = M->idxs;
-  uint32_t *hashes = M->hashes;
-  uint32_t *locs   = M->locs;
-  int8_t *tids     = M->tids;
-  bool *exists     = M->exists;
-  bool *set        = M->set;
+  uint32_t *idxs    = M->idxs;
+  uint32_t *hashes  = M->hashes;
+  uint32_t *locs    = M->locs;
+  int8_t *tids      = M->tids;
+  bool *exists      = M->exists;
+  bool *set         = M->set;
+  uint16_t *m_key_len = M->m_key_len;
+  void **m_key      = M->m_key;
   int nP = M->num_procs;
 #ifdef SEQUENTIAL 
   nP = 1;
@@ -123,7 +137,7 @@ hmap_mput(
     nP = omp_get_num_procs();
   }
 #endif
-  fprintf(stderr, "Using %d cores \n", nP);
+  // fprintf(stderr, "Using %d cores \n", nP);
   uint64_t proc_divinfo = fast_div32_init(nP);
 
   uint32_t lb = 0, ub;
@@ -140,15 +154,15 @@ hmap_mput(
     for ( uint32_t j = 0; j < niters; j++ ) {
       uint32_t i = j + lb;
       //--------------------------------
-      void *key_i = set_key(keys, i, alt_keys, key_len);
-      uint16_t key_len_i = set_key_len(key_lens, i, key_len);
+      m_key[j] = mcr_set_key(keys, i, alt_keys, key_len);
+      m_key_len[j] = mcr_set_key_len(key_lens, i, key_len);
       dbg_t dbg;
       idxs[j]   = UINT_MAX; // bad value 
-      // hashes[j] = murmurhash3(key_i, key_len_i, hashkey);
-      hashes[j] = fasthash32(key_i, key_len_i, hashkey);
+      // hashes[j] = murmurhash3(m_key[j], m_key_len[j], hashkey);
+      hashes[j] = fasthash32(m_key[j], m_key_len[j], hashkey);
       locs[j]   = fast_rem32(hashes[j], ptr_hmap->size, divinfo);
       dbg.hash  = hashes[j]; dbg.probe_loc = locs[j];
-      int lstatus = hmap_get(ptr_hmap, key_i, key_len_i, NULL, 
+      int lstatus = hmap_get(ptr_hmap, m_key[j], m_key_len[j], NULL, 
           exists+j, idxs+j, &dbg);
       // do not exist if bad status, this is an omp loop
       if ( lstatus != 0 ) { if ( status == 0 ) { status = lstatus; } }
@@ -187,12 +201,27 @@ hmap_mput(
 #endif
     //-----------------------------------
 
-    // This loop does parallel updates 
+#ifdef SEQUENTIAL
+    uint32_t num_updates = 0, num_inserts = 0;
+    int exp_num_updates = 0, exp_num_inserts = 0;
+    for ( uint32_t j = 0; j < niters; j++ ) { 
+      if ( exists[j] ) { 
+        exp_num_updates++;
+      }
+      else {
+        exp_num_inserts++;
+      }
+    }
+    if ( ( exp_num_updates + exp_num_inserts ) != niters ) {
+      go_BYE(-1);
+    }
+#endif
+    // This loop does all the updates that can be done in parallel 
 #pragma omp parallel 
     {
       int tid;
 #ifdef SEQUENTIAL
-      tid = 1;
+      tid = 0;
 #else
       tid = omp_get_thread_num();
 #endif
@@ -200,12 +229,12 @@ hmap_mput(
         if ( tids[j] != tid ) { continue; } // not mine, skip
         uint32_t i = j + lb;
         //--------------------------------
-        void *val_i = set_val(vals, i, alt_vals, val_len);
+        void *val_i = mcr_set_val(vals, i, alt_vals, val_len);
         int lstatus = hmap_update(ptr_hmap, idxs[j], val_i);  
         // do not exist if bad status, this is an omp loop
         if ( lstatus != 0 ) { if ( status == 0 ) { status = lstatus; } }
-#ifdef SEQUENTIAL 
-        n1++; 
+#ifdef SEQUENTIAL
+        num_updates++;
 #endif
       }
     }
@@ -216,25 +245,23 @@ hmap_mput(
       for ( uint32_t j = 0; j < niters; j++ ) {
         if ( exists[j] ) { continue; }
         uint32_t i = j + lb;
-        //--------------------------------
-        void *key_i = set_key(keys, i, alt_keys, key_len);
-        uint16_t key_len_i = set_key_len(key_lens, i, key_len);
-        void *val_i = set_val(vals, i, alt_vals, val_len);
-        //--------------------------------
+        void *val_i = mcr_set_val(vals, i, alt_vals, val_len);
         dbg.hash  = hashes[j]; dbg.probe_loc = locs[j];
-        status = hmap_put(ptr_hmap, key_i, key_len_i, true, val_i, &dbg);
+        status = hmap_put(ptr_hmap, m_key[j], m_key_len[j], true, val_i, &dbg);
         cBYE(status);
-#ifdef SEQUENTIAL 
-        n2++; 
+#ifdef SEQUENTIAL
+        num_inserts++;
 #endif
       }
     }
+#ifdef SEQUENTIAL
+    if ( ( num_updates + num_inserts ) != niters ) {
+      go_BYE(-1);
+    }
+#endif
     if ( ub >= nkeys ) { break; }
     lb += M->num_at_once;
   }
-#ifdef SEQUENTIAL 
-  if ( ( n1 + n2 ) != nkeys ) { go_BYE(-1); } 
-#endif
 BYE:
   return status;
 }

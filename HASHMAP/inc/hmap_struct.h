@@ -1,6 +1,7 @@
 #ifndef __HMAP_STRUCT_H
 #define __HMAP_STRUCT_H
 
+// hmap_multi_t is used to avoid recomputing stuff in hmap_mput
 typedef struct _hmap_multi_t { 
   int num_procs; 
   int num_at_once; 
@@ -10,6 +11,8 @@ typedef struct _hmap_multi_t {
   int8_t *tids;   // [num_at_once ]
   bool *exists;   // [num_at_once ]
   bool *set; // [num_at_once ] // TODO For debugging, delete later
+  uint16_t *m_key_len; // [num_at_once ] 
+  void **m_key; // [num_at_once] 
 } hmap_multi_t;
 
 typedef struct _hmap_config_t { 
