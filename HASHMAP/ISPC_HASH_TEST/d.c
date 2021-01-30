@@ -5,7 +5,7 @@
 #include <inttypes.h>
 
 #include "fasthash.h"
-#include "m_fasthash.h"
+// #include "m_fasthash.h"
 static  uint64_t
 RDTSC(
     void
@@ -42,7 +42,7 @@ main()
     chk_hashes[i] = fasthash64(keys[i], lens[i], seed);
   }
   uint64_t t2 = RDTSC();
-  m_fasthash((uint8_t **)keys, lens, nkeys, seed, hashes);
+  // m_fasthash((uint8_t **)keys, lens, nkeys, seed, hashes);
   uint64_t t3 = RDTSC();
   /*
   for ( int i = 0; i < nkeys; i++) { 

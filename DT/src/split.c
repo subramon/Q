@@ -88,9 +88,11 @@ split(
     reorder_isp(Y[j], tmpY[j], to[j], to[split_j], lb, ub,
         split_yidx, &lidx, &ridx, &lstatus);
 #endif
+#ifdef DEBUG
     if ( lstatus < 0 ) { WHEREAMI; status = -1; continue; }
     if ( lidx != split_yidx ) { WHEREAMI; status = -1; continue; }
     if ( ridx != ub ) { WHEREAMI; status = -1; continue; }
+#endif
     if ( j != split_j ) { 
       // SLOW: for ( uint32_t i = lb; i < ub; i++ ) { Yj[i] = tmpYj[i]; }
       memcpy(Yj+lb, tmpYj+lb, (ub-lb) * sizeof(uint64_t)); 
