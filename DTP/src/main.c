@@ -52,11 +52,15 @@ main(
   printf("Inputs read\n");
   for ( ; ; ) { // debugging loop 
     // read a point 
-    bool all_done; float *point = NULL; 
-    status = read_point(&point, num_features, &all_done); 
+    bool all_done; float *point = NULL;  int label; 
+    status = read_point(&point, &label, num_features, &all_done); 
     if ( all_done ) { break; } 
     if ( status != 0 ) { continue; } 
     // perform updates 
+    /*
+    status = delete_point(point, label, tree, meta, bff, 
+        num_nodes, num_interior_nodes, num_features, n_bff); 
+    */
     free_if_non_null(point);
   }
 BYE:

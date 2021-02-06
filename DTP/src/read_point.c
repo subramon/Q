@@ -4,6 +4,7 @@
 int
 read_point(
         float **ptr_point,
+        int *ptr_label,
         int num_features,
         bool *ptr_all_done
         )
@@ -24,13 +25,13 @@ read_point(
   point = malloc(num_features * sizeof(float));
   return_if_malloc_failed(point);
   bool invalid = false;
+  // read label 
+  cptr = strtok(line, ",");
+  int label = atoi(cptr); 
+  if ( ( label != 0 ) && ( label != 1 ) ) { go_BYE(-1); }
+  //---------------------------------
   for ( int i = 0; i < num_features; i++ ) { 
-    if ( i == 0 ) { 
-      cptr = strtok(line, ",");
-    }
-    else {
-      cptr = strtok(NULL, ",");
-    }
+    cptr = strtok(NULL, ",");
     if ( cptr == NULL ) { invalid = true; break; }
     point[i] = atof(cptr);
   }
@@ -45,6 +46,7 @@ read_point(
   }
   printf("]\n");
   *ptr_point = point;
+  *ptr_label = label;
 BYE:
   return status;
 }
