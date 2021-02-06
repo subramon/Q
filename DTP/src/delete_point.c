@@ -17,6 +17,18 @@ delete_point(
     )
 {
   int status =  0; 
+  int node_idx = 0; // start from root
+  for ( ; ; ) { 
+
+  }
+  // determine whether retrain node is a leaf or not 
+  if ( tree[node_idx].feature_idx < 0 ) {
+    *ptr_is_leaf = true; 
+  }
+  else
+    *ptr_is_leaf = false; 
+  }
+
 BYE:
   return status;
 }

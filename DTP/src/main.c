@@ -52,15 +52,15 @@ main(
   printf("Inputs read\n");
   for ( ; ; ) { // debugging loop 
     // read a point 
+    int retrain_node_idx; bool is_leaf;
     bool all_done; float *point = NULL;  int label; 
     status = read_point(&point, &label, num_features, &all_done); 
     if ( all_done ) { break; } 
     if ( status != 0 ) { continue; } 
     // perform updates 
-    /*
     status = delete_point(point, label, tree, meta, bff, 
-        num_nodes, num_interior_nodes, num_features, n_bff); 
-    */
+        num_nodes, num_interior_nodes, num_features, n_bff,
+        &retrain_node_idx, &is_leaf); 
     free_if_non_null(point);
   }
 BYE:
