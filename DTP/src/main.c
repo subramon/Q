@@ -4,7 +4,7 @@
 #include "read_meta.h"
 #include "read_point.h"
 #include "read_bin_data.h"
-// #include "read_data.h"
+#include "read_data.h"
 //
 #include "chck_tree.h"
 // #include "chck_meta.h"
@@ -19,13 +19,14 @@ main(
   int status = 0;
   char *tree_file = NULL;
   char *meta_file = NULL;
-  char *data_file = NULL;
+  char *counts_file = NULL;
   int num_features; 
   node_t *tree = NULL; // [num_nodes] 
   meta_t *meta = NULL; // [num_nodes] 
   int num_nodes;
   bff_t *bff = NULL; // [n_bff]
   int n_bff = 0; 
+  int num_lines = 32; // TODO hard coded for now. Undo 
 
   // Normally, Use getopt to parse arguments. This is too simple for getopt.
   if ( argc != 6 ) { go_BYE(-1); }
@@ -33,16 +34,18 @@ main(
   num_features = atoi(argv[2]); if ( num_features <= 1 ) { go_BYE(-1); }
   tree_file = argv[3];
   meta_file = argv[4];
-  data_file = argv[5];
+  counts_file = argv[5];
   status = read_tree(tree_file, num_features, num_nodes, &tree); 
   cBYE(status); 
   int num_interior_nodes = num_non_leaf(tree, num_nodes);
-  status = read_meta(meta_file, num_features, num_interior_nodes, &meta, &tree); 
+  status = read_meta(meta_file, num_features, num_interior_nodes, &meta, 
+      tree, num_nodes); 
   cBYE(status); 
-  // status = read_data(data_file, &bff, &n_bff); cBYE(status);
-  // status = read_bin_data(data_file, &bff, &n_bff); cBYE(status);
+  status = read_data(counts_file, num_lines, &bff, &n_bff); cBYE(status);
+  // status = read_bin_data(counts_file, &bff, &n_bff); cBYE(status);
   status = chck_tree(tree, num_features ,num_nodes); cBYE(status); 
   // status = chck_meta(meta, num_features ,num_nodes); cBYE(status); 
+  printf("Inputs read\n");
   for ( ; ; ) { // debugging loop 
     // read a point 
     bool all_done; float *point = NULL; 

@@ -4,7 +4,8 @@ read_meta(
     int num_features, 
     int num_interior_nodes, 
     meta_t **ptr_meta,
-    node_t **ptr_tree
+    node_t *tree, // [num_nodes]
+    int num_nodes
     );
 extern void
 free_meta(

@@ -1,2 +1,2 @@
-#define MAXLINE 1024-1
-  char line[MAXLINE+1];
+    node_t *tree, // [num_nodes]
+    int num_nodes

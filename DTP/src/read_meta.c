@@ -7,7 +7,8 @@ read_meta(
     int num_features, 
     int num_interior_nodes, 
     meta_t **ptr_meta,
-    node_t **ptr_tree
+    node_t *tree, // [num_nodes]
+    int num_nodes
     )
 {
   int status = 0;
@@ -46,7 +47,11 @@ read_meta(
     //-----------------------------
     cptr = strtok(line, ",");
     if ( cptr == NULL ) { go_BYE(-1); } 
-    meta[i].node_idx = atoi(cptr); 
+    int node_idx = atoi(cptr); 
+    //-----------------------------
+    if ( ( node_idx < 0 ) || ( node_idx > num_nodes ) ) { go_BYE(-1); } 
+    tree[node_idx].meta_offset = num_lines;
+    meta[i].node_idx = node_idx;
     //-----------------------------
     for ( int j = 0; j < num_features; j++ ) { 
       meta[num_lines].start_feature[j] = atoi(strtok(NULL, ","));
