@@ -31,8 +31,8 @@ search(
   four_nums_t *num4 = g_best_num4;
 #ifndef SEQUENTIAL
   int nP            = g_C.num_cores;
-#pragma omp parallel for schedule(static, 1) num_threads(nP)
 #endif
+#pragma omp parallel for schedule(static, 1) num_threads(nP)
   for ( uint32_t j = 0; j < m; j++ ) { 
     int lstatus; // used because we cannot break out of omp loop
     lstatus = search_j(Y[j], j, lb, ub, m, n, nT, nH, 

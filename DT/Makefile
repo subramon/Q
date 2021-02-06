@@ -44,8 +44,8 @@ DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -DSCALAR
 DFLAGS = -g -DDEBUG -DVECTOR -fopenmp
-DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 DFLAGS = -O4 -fopenmp -DVECTOR -pg
+DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 DFLAGS = -O4 -fopenmp -DSCALAR -pg
 # to run gprof, add -pg to DFLAGS
 # ./dt

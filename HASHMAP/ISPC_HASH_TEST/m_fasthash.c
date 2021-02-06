@@ -87,3 +87,9 @@ m_fasthash(
   }
 }
 
+
+// targets specified as a 3-tuple, see below as example
+// avx2-i32-x8 (8 elements in vector, optimized for 32 bit data)
+// gpu version of ispc supports gen9 (currently in most laptops/desktops)
+// support tigerlake graphics 
+// really aiming for intel GPUs server grade 

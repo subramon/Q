@@ -21,9 +21,9 @@ reorder(
   register uint32_t ridx = *ptr_ridx;
 
   for ( uint32_t i = lb; i < ub; i++ ) { 
-    uint32_t idx;
-    uint32_t from_i = get_from(Yj[i]);
-    uint32_t to_i   = to_split_j[from_i];
+    register uint32_t idx;
+    register uint32_t from_i = get_from(Yj[i]);
+    register uint32_t to_i   = to_split_j[from_i];
     if ( to_i < split_yidx ) { // this data point went left
       idx = lidx; tmpYj[lidx++] = Yj[i]; 
     }
