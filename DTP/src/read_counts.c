@@ -1,9 +1,9 @@
 #include "incs.h"
 #include "rs_mmap.h"
-#include "read_data.h"
+#include "read_counts.h"
 
 int
-read_data(
+read_counts(
     const char * const counts_file,
     int num_lines,
     bff_t **ptr_bff,
