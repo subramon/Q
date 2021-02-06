@@ -15,6 +15,16 @@ chck_tree(
 
   for ( int i = 0; i < num_nodes; i++ ) { 
     if ( tree[i].feature_idx >= num_features ) { go_BYE(-1); }
+    // must have both children or no children
+    // if no left child and right child => error 
+    if ( ( tree[i].lchild_idx < 0 ) && ( tree[i].rchild_idx >= 0 ) ) {
+      go_BYE(-1);
+    }
+    // if no right child and left child => error 
+    if ( ( tree[i].rchild_idx < 0 ) && ( tree[i].lchild_idx >= 0 ) ) {
+      go_BYE(-1);
+    }
+    // ----------------------------------
     if ( ( tree[i].lchild_idx < 0 ) && 
          ( tree[i].rchild_idx < 0 ) ) { /* leaf */
       if ( tree[i].feature_idx >= 0 ) { go_BYE(-1); }
