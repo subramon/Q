@@ -1,14 +1,15 @@
 #include "incs.h"
 #include "get_time_usec.h"
+
 #include "read_tree.h"
 #include "read_meta.h"
 #include "read_point.h"
 #include "read_bin_data.h"
 #include "read_counts.h"
-//
+
 #include "chck_tree.h"
-// #include "chck_meta.h"
-// #include "chck_counts.h"
+#include "chck_meta.h"
+#include "chck_counts.h"
 
 int
 main(
@@ -44,7 +45,10 @@ main(
   status = read_counts(counts_file, num_lines, &bff, &n_bff); cBYE(status);
   // status = read_bin_data(counts_file, &bff, &n_bff); cBYE(status);
   status = chck_tree(tree, num_features ,num_nodes); cBYE(status); 
-  // status = chck_meta(meta, num_features ,num_nodes); cBYE(status); 
+  status = chck_meta(num_features, meta, num_interior_nodes, 
+    tree, num_nodes);
+  cBYE(status);
+  status = chck_counts(bff, n_bff); cBYE(status);
   printf("Inputs read\n");
   for ( ; ; ) { // debugging loop 
     // read a point 
