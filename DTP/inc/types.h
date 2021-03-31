@@ -18,7 +18,7 @@ typedef struct _meta_t {
 } meta_t;
 
 typedef struct _bff_t { 
-  float threshold; 
+  double threshold; 
   int count_L0; 
   int count_L1; 
 } bff_t;

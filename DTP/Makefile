@@ -24,7 +24,8 @@ CSRCS := $(wildcard ./src/*.c)
 # CSRCS := $(filter-out ./src/eval_metrics_isp.c, $(CSRCS))
 COBJS = $(CSRCS:.c=.o)
 #---------------------------------------------------
-DFLAGS = -g -DDEBUG -fopenmp
+DFLAGS = -g -O4 -fopenmp -pg
+DFLAGS = -g -DDEBUG -fopenmp -pg
 # to run gprof, add -pg to DFLAGS
 # ./dt
 # gprof ./dt > _outputfile

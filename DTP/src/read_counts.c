@@ -13,6 +13,7 @@ read_counts(
   int status = 0; 
   FILE *fp = NULL;
   bff_t *bff = NULL;
+  int num_errors = 0; 
 
   bff = malloc(num_lines * sizeof(bff_t));
   return_if_malloc_failed(bff);
@@ -24,7 +25,11 @@ read_counts(
   for ( int i = 0; !feof(fp); i++, num_lines_read++ ) { 
     float t, n0, n1; 
     int nr = fscanf(fp, "%f,%f,%f\n", &t, &n0, &n1);
-    if ( nr != 3 )  { go_BYE(-1); }
+    if ( nr != 3 )  { 
+      printf("Line %d, read %d values\n", i, nr); 
+      num_errors++; 
+      // go_BYE(-1); 
+    }
     bff[i].threshold = t;
     bff[i].count_L0 = (int)n0;
     bff[i].count_L1 = (int)n1;
