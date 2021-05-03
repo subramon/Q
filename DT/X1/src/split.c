@@ -26,6 +26,7 @@ split(
 {
   int status = 0;
   comp_key_t *ck = NULL; 
+  uint32_t j = 0;
 
   int lchild_id = g_T->nodes[node_id].lchild_id;
   int rchild_id = g_T->nodes[node_id].rchild_id;
@@ -40,16 +41,21 @@ split(
   }
 
   int fidx = g_T->nodes[node_id].fidx;
-  float fval = g_T->nodes[node_id].fval;
+  float  *data = g_D->fval[fidx];
+
   ck = malloc(n_ck * sizeof(comp_key_t));
   return_if_malloc_failed(ck);
   memset(ck, 0,  n_ck * sizeof(comp_key_t));
-  float  *data = g_D->fval[fidx];
+  j = 0;
   for ( uint32_t i = Plb; i < Pub; i++ ) { 
-    uint32_t p = ck[i].p = g_P[i];
-    ck[i].fval = data[p];
+    uint32_t p = ck[j].p = g_P[i];
+    ck[j].fval = data[p];
+    j++;
   }
   qsort(ck, n_ck, sizeof(comp_key_t), sortfn);
+  // DANGEROUS!!!!! update fval because this is fake data
+  float fval = g_T->nodes[node_id].fval = ck[n_ck/2].fval;
+  // TODO Undo above as soon as you have a real tree
   //-- find how many go left and how many go right 
   uint32_t left_ub = 0;
   for ( int i = 0; i < n_ck; i++ ) { 
@@ -61,7 +67,7 @@ split(
   g_T->nodes[rchild_id].Plb = Plb + left_ub;
   g_T->nodes[rchild_id].Pub = Pub;
   //----- update P 
-  uint32_t j = 0;
+  j = 0;
   for ( uint32_t i = Plb; i < Pub; i++ ) { 
     g_P[i] = ck[j++].p;
   }
