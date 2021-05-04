@@ -24,6 +24,7 @@ COBJS = $(CSRCS:.c=.o)
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS) $(DFLAGS)
 #---------------------------------------------------
 DFLAGS = -g -DDEBUG 
+DFLAGS = -O3
 dt : $(CSRCS) $(COBJS) 
 	gcc ${CFLAGS} ${DFLAGS} ${COBJS} ${INCS} -lm -o dt
 

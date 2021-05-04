@@ -10,8 +10,8 @@ make_rand_data(
 {
   int status = 0;
   memset(D, 0, sizeof(data_t));
-  D->nI = 1024; 
-  D->nK = 16; 
+  D->nI = 1024 * 1024;  // TODO undo hard code 
+  D->nK = 64;   // TODO undo hard code 
   float **fval = NULL;
   fval = malloc(D->nK * sizeof(float *));
   return_if_malloc_failed(fval);
@@ -26,7 +26,7 @@ make_rand_data(
   }
   for ( uint32_t k = 0; k < D->nK; k++ ) {
     for ( uint32_t i = 0; i < D->nI;  i++ ) { 
-      if ( fval[k][i] >= MAX_VAL ) {
+      if ( fval[k][i] > MAX_VAL ) { // TODO P4 why does >= fail?
         go_BYE(-1);
       }
     }
@@ -42,8 +42,8 @@ free_rand_data(
     )
 {
   int status = 0;
+  if ( D == NULL ) { return status; } 
   if ( D->fval != NULL ) { 
-    return_if_malloc_failed(D->fval);
     for ( uint32_t k = 0; k < D->nK; k++ ) {
       free_if_non_null(D->fval[k]);
     }

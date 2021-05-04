@@ -22,7 +22,10 @@ main(
   }
   g_T.nodes[0].Plb = 0;
   g_T.nodes[0].Pub = g_D.nI;
+  uint64_t t_start = get_time_usec();
   status = split(&g_D, &g_T, g_P, 0); cBYE(status);
+  uint64_t t_stop  = get_time_usec();
+  printf("time = %lf \n", ((double)t_stop - (double)t_start)/1000.0);
 BYE:
   status = free_rand_data(&g_D);  cBYE(status);
   status = free_rand_tree(&g_T);  cBYE(status);

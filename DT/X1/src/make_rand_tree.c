@@ -11,7 +11,15 @@ make_rand_tree(
 {
   int status = 0;
   memset(T, 0, sizeof(tree_t));
-  T->num_nodes = 8 + 4 + 2 + 1 ;
+  int num_levels = 7; // TODO undo hard code 
+  int num_nodes = 1; int num_at_level = 1;
+  for ( int i = 0; i < num_levels; i++ ) { 
+    num_at_level *= 2;
+    num_nodes += num_at_level;
+  }
+  T->num_nodes = num_nodes;
+  printf("num_nodes = %d \n", num_nodes);
+
 
   T->nodes = malloc(T->num_nodes * sizeof(node_t));
   return_if_malloc_failed(T->nodes);
