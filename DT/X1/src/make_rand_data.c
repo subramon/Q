@@ -10,8 +10,8 @@ make_rand_data(
 {
   int status = 0;
   memset(D, 0, sizeof(data_t));
-  D->nI = 1024 * 1024;  // TODO undo hard code 
-  D->nK = 64;   // TODO undo hard code 
+  D->nI = 512 * 1024;  // TODO undo hard code 
+  D->nK = 54;   // TODO undo hard code 
   float **fval = NULL;
   fval = malloc(D->nK * sizeof(float *));
   return_if_malloc_failed(fval);

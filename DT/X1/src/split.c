@@ -36,9 +36,7 @@ split(
   if ( ( lchild_id < 0 ) || ( rchild_id < 0 ) ) { return status; }
 
   int n_ck = Pub - Plb;
-  if ( n_ck <= 0 ) { 
-    go_BYE(-1); 
-  }
+  if ( n_ck <= 0 ) { go_BYE(-1); }
 
   int fidx = g_T->nodes[node_id].fidx;
   float  *data = g_D->fval[fidx];
