@@ -14,7 +14,11 @@ CFLAGS+= -Wsuggest-attribute=noreturn
 # CFLAGS+= -Wduplicated-branches -Wrestrict
 
 INCS = -I./inc/
-all: dt ut_calc_best_metric ut_eval_metrics ut_reorder
+all: dt \
+	ut_calc_best_metric \
+	ut_eval_metrics \
+	ut_reorder \
+	ut_accumulate
 
 #---------------------------------------------------
 CSRCS := $(wildcard ./src/*.c)
@@ -26,6 +30,7 @@ CSRCS := $(filter-out ./src/reorder_isp.c, $(CSRCS))
 CSRCS := $(filter-out ./src/ut_eval_metrics.c, $(CSRCS))
 CSRCS := $(filter-out ./src/ut_calc_best_metric.c, $(CSRCS))
 CSRCS := $(filter-out ./src/ut_reorder.c, $(CSRCS))
+CSRCS := $(filter-out ./src/ut_accumulate.c, $(CSRCS))
 COBJS = $(CSRCS:.c=.o)
 #---------------------------------------------------
 ISP_SRCS := $(wildcard ./src/*.c)
@@ -42,11 +47,11 @@ ISP_OBJS = $(ISP_SRCS:.c=.o)
 
 DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
-DFLAGS = -g -DDEBUG -DSCALAR
 DFLAGS = -g -DDEBUG -DVECTOR -fopenmp
 DFLAGS = -O4 -fopenmp -DVECTOR -pg
 DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 DFLAGS = -O4 -fopenmp -DSCALAR -pg
+DFLAGS = -g -fopenmp -DDEBUG -DSCALAR
 # to run gprof, add -pg to DFLAGS
 # ./dt
 # gprof ./dt > _outputfile
@@ -91,7 +96,7 @@ ISP_INCS += ./inc/eval_metrics_isp.h
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS) $(DFLAGS)
 
 
-dt : $(CSRCS) $(COBJS) 
+dt : $(COBJS) 
 	gcc ${CFLAGS} ${DFLAGS} -DSCALAR  ${COBJS} \
 	${INCS} -lm -lgomp -o dt
 
@@ -124,6 +129,7 @@ ut_eval_metrics : ${UT2_OBJS} ./inc/eval_metrics_isp.h
 #-------------------------------------------
 UT3_SRCS := src/ut_reorder.c 
 UT3_SRCS += src/reorder.c
+UT3_SRCS += src/prnt_data.c
 UT3_SRCS += src/preproc_j.c
 UT3_SRCS += src/check.c
 UT3_SRCS += src/get_time_usec.c
@@ -135,6 +141,14 @@ UT3_OBJS += ./src/reorder_isp.o
 ut_reorder : ${UT3_OBJS} ./inc/reorder_isp.h 
 	gcc ${CFLAGS} ${DFLAGS} -DVECTOR ${UT3_OBJS} \
 	${INCS} -lm -lgomp -o ut_reorder
+
+UT4_SRCS := src/accumulate.c 
+UT4_SRCS += src/ut_accumulate.c 
+UT4_SRCS += src/read_config.c 
+UT4_OBJS = $(UT4_SRCS:.c=.o)
+ut_accumulate : ${UT4_OBJS} 
+	gcc ${CFLAGS} ${DFLAGS} ${UT4_OBJS} ${INCS} -o ut_accumulate
+
 #-------------------------------------------
 
 qclean:

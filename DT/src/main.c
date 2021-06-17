@@ -1,9 +1,8 @@
 #include "incs.h"
 #include "check_tree.h"
 #include "get_time_usec.h"
-#ifdef SEQUENTIAL
-uint64_t g_num_swaps;
-#endif
+
+uint64_t g_num_swaps; // for debugging when single-threaded
 
 #include "dump_data.h"
 #include "make_data.h"
@@ -15,7 +14,10 @@ uint64_t g_num_swaps;
 #include "split.h"
 
 #include <omp.h>
-config_t g_C; // configuration
+config_t  g_C; // configuration
+// m = number of features. Where is it defined?
+// n = number of instances. Where is it defined?
+// TODO DOC What is bufsz and why do we nd it? Where is it set?
 metrics_t *g_M;  // [m][g_M_bufsz] 
 uint32_t g_M_bufsz;
 
@@ -25,8 +27,8 @@ uint32_t *g_best_yidx;
 four_nums_t *g_best_num4;
 
 node_t *g_tree; // this is where the decision tree is created
-int g_n_tree;
-int g_sz_tree;
+int g_n_tree;   // number of nodes in the treee
+int g_sz_tree;  // allocated space for nodes => g_n_tree <= g_sz_tree
 
 int
 main(
@@ -35,24 +37,28 @@ main(
     )
 {
   int status = 0;
+  uint32_t n = 0; // number of instances
+  uint8_t  m = 0; // number of features 
   float **X = NULL;  // [m][n] features for classification
   uint64_t **Y  = NULL; // [m][n]
-  uint64_t **tmpY  = NULL; // [n]
+  uint64_t **tmpY  = NULL; // [XX][n]  TODO DOC 
   uint32_t **to = NULL; // [m][n]
-  uint8_t *g = NULL; // [n] goal ttribute 
-  g_tree = NULL; g_n_tree = 0; g_sz_tree = 0;
-  g_M    = NULL;               g_M_bufsz = 0;
-  g_best_metrics = NULL;
-  g_best_yval = NULL;
-  g_best_yidx = NULL;
-  g_best_num4 = NULL;
+  uint8_t *g = NULL; // [n] goal attribute 
   char *config_file = NULL;
-  uint32_t n = 0; uint8_t  m = 0;
+  // START: Initialize globals 
+  g_M            = NULL;               
+  g_M_bufsz      = 0;
+  g_best_metrics = NULL;
+  g_best_yval    = NULL;
+  g_best_yidx    = NULL;
+  g_best_num4    = NULL;
+  g_tree         = NULL; 
+  g_n_tree       = 0; 
+  g_sz_tree      = 0;
+  // STOP: Initialize globals 
 
   if ( argc >= 2 ) { config_file = argv[1]; }
-#ifdef SEQUENTIAL
-  g_num_swaps = 0; // globals for debugging 
-#endif
+  g_num_swaps = 0; // globals for debugging, only for single-threaded
   // read configurations 
   status = read_config(&g_C, config_file);  cBYE(status);
   // following are configurable 
@@ -83,8 +89,6 @@ main(
   // we are taking short-cut of allocating g_tree at beginning
   // Ideally, we would allocate a "reasonable" size and re-alloc
   // if we need more space 
-  g_tree = NULL; // this is where the decision tree is created
-  g_n_tree = 0;
   g_sz_tree = g_C.max_nodes_in_tree;
   g_tree = malloc(g_sz_tree * sizeof(node_t));
   return_if_malloc_failed(g_tree);
@@ -108,12 +112,12 @@ main(
       printf("Dumped    data \n");
     }
   }
-#ifdef VERBOSE
-  status = prnt_data_f(X, m, g, lb, ub); cBYE(status);
-#endif
+  if ( g_C.is_verbose ) { 
+    status = prnt_data_f(X, m, g, lb, ub); cBYE(status);
+  }
   status = preproc(X, m, n, g, &nT, &nH, &Y, &to, &tmpY); cBYE(status);
   printf("Pre-processed data \n");
-  // create leaf node 
+  // create root node 
   g_tree[g_n_tree].nT = nT;
   g_tree[g_n_tree].nH = nH;
   g_tree[g_n_tree].depth = 0;
@@ -124,9 +128,10 @@ main(
   status = split(to, g, lb, ub, nT, nH, n, m, Y, tmpY, 0); cBYE(status);
   t2 = get_time_usec();
   status = check_tree(g_tree, g_n_tree, m); cBYE(status);
-  printf("Num nodes = %d \n", g_n_tree); 
-  printf("Time      = %lf\n", (t2-t1)/1000000.0);
-  printf("num_rows  = %d\n", n);
+  printf("Num tree nodes = %d \n", g_n_tree); 
+  printf("Time           = %lf\n", (t2-t1)/1000000.0);
+  printf("Num features   = %d\n", m);
+  printf("Num instances  = %d\n", n);
 BYE:
   for ( uint32_t j = 0; j < m; j++ ) { 
     if ( !g_C.read_binary_data ) { 
@@ -166,6 +171,7 @@ BYE:
   free_if_non_null(g_best_yval);
   free_if_non_null(g_best_yidx);
   free_if_non_null(g_best_num4);
+  free_if_non_null(g_C.bin_file_prefix);
   //----------------------------------
   return status;
 }

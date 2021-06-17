@@ -1,8 +1,6 @@
 #include "incs.h"
 #include "reorder.h"
-#ifdef SEQUENTIAL 
 extern int g_num_swaps;
-#endif
 int
 reorder(
     uint64_t *Yj,

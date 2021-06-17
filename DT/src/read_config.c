@@ -1,5 +1,6 @@
 #include "incs.h"
 #include "read_config.h"
+// TODO P1 This is a fake. Read from real config file 
   // START: read configuration
 int read_config(
     config_t *ptr_C,
@@ -7,11 +8,13 @@ int read_config(
     )
 {
   int status = 0;
+  memset(ptr_C, 0, sizeof(config_t));
 
   ptr_C->min_percentage_improvement = 0; // TODO P3
 
   ptr_C->dump_binary_data = false;
   ptr_C->read_binary_data = false;
+  ptr_C->is_verbose       = false;
   /*
   ptr_C->dump_binary_data = true;
   ptr_C->read_binary_data = false;
@@ -19,8 +22,8 @@ int read_config(
   ptr_C->dump_binary_data = false;
   ptr_C->read_binary_data = true;
   */
-#undef BASIC_TEST
-#define  PERF_TEST
+#define BASIC_TEST
+#undef  PERF_TEST
 
 #ifdef BASIC_TEST
   ptr_C->max_depth           = 16;

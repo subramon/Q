@@ -1,8 +1,11 @@
 #include "incs.h"
+#include "check.h"
 #include "preproc_j.h"
 
+extern config_t g_C;
+
 // make a composite key
-// top 32 bits used for from
+// top 32 bits used for "from"
 // bit 31 used for goal
 // bits 0..30 used for the encoded value (yval, not xval)
 uint64_t x_mk_comp_val(
@@ -50,7 +53,7 @@ preproc_j(
    )
 {
   int status = 0;
-  bool *taken  = NULL; // [n] for debugging 
+  uint32_t *alt_to  = NULL; // [n] for debugging 
   uint64_t *Yj = NULL; // [n]
   uint32_t *to = NULL; // [n]
   comp_key_t *C = NULL; // [n]
@@ -94,14 +97,14 @@ preproc_j(
   uint8_t  g_i    = C[i].g;
   Yj[i] = x_mk_comp_val(from_i, g_i, yval); 
   //-------------------------------------------
-#ifdef DEBUG
-  uint32_t chk_yval = get_yval(Yj[i]);
-  if ( chk_yval != yval ) { go_BYE(-1); }
-  uint8_t  chk_goal = get_goal(Yj[i]);
-  if ( chk_goal != g_i ) { go_BYE(-1); }
-  uint32_t chk_from = get_from(Yj[i]);
-  if ( chk_from != from_i ) { go_BYE(-1); }
-#endif
+  if ( g_C.is_debug ) { 
+    uint32_t chk_yval = get_yval(Yj[i]);
+    if ( chk_yval != yval ) { go_BYE(-1); }
+    uint8_t  chk_goal = get_goal(Yj[i]);
+    if ( chk_goal != g_i ) { go_BYE(-1); }
+    uint32_t chk_from = get_from(Yj[i]);
+    if ( chk_from != from_i ) { go_BYE(-1); }
+  }
   //-------------------------------------------
   for ( i = 1; i < n; i++ ) { 
     g_i    = C[i].g;
@@ -114,34 +117,35 @@ preproc_j(
     from_i = C[i].idx;
     Yj[i] = x_mk_comp_val(from_i, g_i, yval);
   }
-  //--------------------------------------
+  free_if_non_null(C);
+  //----------------------------------------------------------
   // Create the "to" data structure 
+  // to[x] == y => 
+  // value in the xth position of Xj is now in the yth position of Yj
   for ( i = 0; i < n; i++ ) { 
     uint32_t pos = get_from(Yj[i]);
     if ( pos >= n ) { go_BYE(-1); }
     to[pos] = i;
   }
-#ifdef DEBUG
-  // Check that the values in "to" are 1..n
-  taken = malloc(n * sizeof(bool));
-  return_if_malloc_failed(taken);
-  for ( i = 0; i < n; i++ ) { 
-    taken[i] = false;
-  }
-  for ( i = 0; i < n; i++ ) { 
-    taken[to[i]] = true;
-  }
-  for ( i = 0; i < n; i++ ) { 
-    if ( !taken[i] ) { go_BYE(-1);
+  //----------------------------------------------------------
+  if ( g_C.is_debug ) { 
+    // Check that the values in "to" are 1..n
+    alt_to = malloc(n * sizeof(uint32_t));
+    for ( uint32_t j = 0; j < n; j++ ) { 
+      alt_to[i] = j+1;
     }
+    bool is_eq;
+    status = chk_set_equality(to, alt_to, n, &is_eq);
+    cBYE(status);
+    if ( !is_eq ) { go_BYE(-1); }
+    free_if_non_null(alt_to);
   }
-#endif
-  
+
   //--------------------------------------
   *ptr_Yj = Yj;
   *ptr_to = to;
 BYE:
-  free_if_non_null(taken);
+  free_if_non_null(alt_to);
   free_if_non_null(C);
   if ( status < 0 ) { 
     free_if_non_null(Yj);

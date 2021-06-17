@@ -4,6 +4,9 @@ ispdt
 inc/ispc_types.h
 inc/*_isp.h
 doc/.meta
+
+ut_accumulate
 ut_calc_best_metric
 ut_eval_metrics
 ut_reorder
+.gdb_history

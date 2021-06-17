@@ -1,0 +1,2 @@
+(1) Convert config file to use Lua and a real config file 
+  (see lustre/benchmark)

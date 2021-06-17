@@ -8,7 +8,6 @@ extern double      *g_best_metrics;
 extern uint32_t    *g_best_yval;
 extern uint32_t    *g_best_yidx;
 extern four_nums_t *g_best_num4;
-#define NUM_FEATURES 4
 int 
 search(
     uint64_t **Y, /* [m][lb..ub-1] */
@@ -21,7 +20,7 @@ search(
     uint32_t *ptr_split_feature_idx,
     uint32_t *ptr_split_feature_yval,
     uint32_t *ptr_split_yidx,
-    four_nums_t *ptr_num4
+    four_nums_t *ptr_split_num4
    )
 {
   int status = 0;
@@ -29,11 +28,12 @@ search(
   uint32_t *yval    = g_best_yval;
   uint32_t *yidx    = g_best_yidx;
   four_nums_t *num4 = g_best_num4;
-#ifndef SEQUENTIAL
   int nP            = g_C.num_cores;
+#ifdef SEQUENTIAL 
+  nP = 1;
 #endif
 #pragma omp parallel for schedule(static, 1) num_threads(nP)
-  for ( uint32_t j = 0; j < m; j++ ) { 
+  for ( uint32_t j = 0; j < m; j++ ) { // search each feature
     int lstatus; // used because we cannot break out of omp loop
     lstatus = search_j(Y[j], j, lb, ub, m, n, nT, nH, 
         &(num4[j]), &(yval[j]), &(yidx[j]), &(metrics[j])); 
@@ -47,7 +47,7 @@ search(
   double best_metric         = metrics[0];  // metric for that feature
   uint32_t best_feature_yval = yval[0]; // split val for that feature
   uint32_t best_split_yidx   = yidx[0];   // split idx for that feature
-  memcpy(ptr_num4, &(num4[0]), sizeof(four_nums_t));
+  four_nums_t best_num4      = num4[0];
   // now compare with other features
   for ( uint32_t j = 1; j < m; j++ ) { 
     if ( metrics[j] > best_metric ) { 
@@ -55,16 +55,19 @@ search(
       best_metric        = metrics[j]; 
       best_feature_yval  = yval[j];;  
       best_split_yidx    = yidx[j];  
-      memcpy(ptr_num4, &(num4[j]), sizeof(four_nums_t));
+      memcpy(&best_num4, &(num4[j]), sizeof(four_nums_t));
     }
   }
-  if ( best_feature_idx >= m ) { go_BYE(-1); } 
-  if ( best_split_yidx >= ub ) { go_BYE(-1); } 
-  if ( best_split_yidx <  lb ) { go_BYE(-1); } 
+  if ( g_C.is_debug ) { 
+    if ( best_feature_idx >= m ) { go_BYE(-1); } 
+    if ( best_split_yidx >= ub ) { go_BYE(-1); } 
+    if ( best_split_yidx <  lb ) { go_BYE(-1); } 
+  }
 
-  *ptr_split_feature_idx = best_feature_idx;
+  *ptr_split_feature_idx  = best_feature_idx;
   *ptr_split_feature_yval = best_feature_yval;
-  *ptr_split_yidx = best_split_yidx + 1;
+  *ptr_split_yidx         = best_split_yidx + 1;
+  *ptr_split_num4         = best_num4;
   // Above +1 is important. Because we calculate as inclusive
   // but when we use as an upper bound it is exclusive
 BYE:

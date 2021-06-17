@@ -1,7 +1,9 @@
 #include "incs.h"
+#include "check.h"
 #include "preproc_j.h"
 #include "preproc.h"
 
+extern config_t g_C;
 int 
 preproc(
     float ** restrict X, /* [m][n] */
@@ -19,35 +21,50 @@ preproc(
   uint64_t **Y = NULL; // [m][n]
   uint32_t **to = NULL; // [m][n]
   uint64_t **tmpY = NULL; // [n]
-  uint32_t nT = 0;
-  uint32_t nH = 0;
 
   Y      = malloc(m * sizeof(uint64_t *));
   return_if_malloc_failed(Y);
-  tmpY   = malloc(m * sizeof(uint64_t *));
-  return_if_malloc_failed(tmpY);
   to     = malloc(m * sizeof(uint32_t *));
   return_if_malloc_failed(to);
 
   //  may want to do this sequentiall to reduce amount of 
   //  memory allocateed in the process of creating Y
   // TODO: Think about this
-// #pragma omp parallel for
+  // #pragma omp parallel for
+  // pre-process features one at a time 
   for ( uint32_t j = 0; j < m; j++ ) { 
-    status = preproc_j(X[j], n, g,  &(Y[j]), &(to[j])); 
-    if ( status < 0 ) { WHEREAMI; }
+    status = preproc_j(X[j], n, g,  &(Y[j]), &(to[j]));  cBYE(status);
   }
   cBYE(status); 
   //-----------------------------------------
   // allocate a buffer (same size as Y) for intermediate storage
+  tmpY   = malloc(m * sizeof(uint64_t *));
+  return_if_malloc_failed(tmpY);
   for ( uint32_t j = 0; j < m; j++ ) { 
     tmpY[j] = malloc(n * sizeof(uint64_t));
     return_if_malloc_failed(tmpY[j]);
   }
   // compute the number of heads and tails in the training seet
+  uint32_t nH = 0;
+#pragma omp simd reduction(+:nH)
   for ( uint32_t i = 0; i < n; i++ ) { 
-    if ( g[i] == 0 ) { nT++; } else { nH++; }
+    nH += g[i];
   }
+  uint32_t nT = n - nH;
+  if ( g_C.is_debug ) { 
+    uint32_t chk_nT = 0;
+    uint32_t chk_nH = 0;
+    for ( uint32_t i = 0; i < n; i++ ) { 
+      if ( g[i] == 0 ) { nT++; } else { nH++; }
+    }
+    if ( chk_nT != nT ) { go_BYE(-1); }
+    if ( chk_nH != nH ) { go_BYE(-1); }
+  }
+  //---------------------------------
+  if ( g_C.is_debug ) { 
+    status = check(to, g, 0, n, nT, nH, n, m, Y); cBYE(status);
+  }
+  //---------------------------------
   *ptr_Y    = Y;
   *ptr_tmpY = tmpY;
   *ptr_to   = to;

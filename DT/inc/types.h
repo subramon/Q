@@ -38,6 +38,8 @@ typedef struct _config_t {
   float min_percentage_improvement;  // TODO P3
   bool dump_binary_data;
   bool read_binary_data;
+  bool is_verbose;
+  bool is_debug;
   uint32_t max_depth; 
   uint32_t min_leaf_size;
   uint32_t num_features;
@@ -46,5 +48,6 @@ typedef struct _config_t {
   uint32_t min_partition_size;
   uint32_t max_nodes_in_tree;
   uint32_t num_cores; // <=0 in config file => get from omp
+  char *bin_file_prefix; // TODO DOC
 } config_t;
 #endif

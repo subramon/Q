@@ -56,13 +56,12 @@ split(
   uint32_t split_j = m+1; // set to some bad value 
   uint32_t split_yidx, split_yval;
 
-#ifdef VERBOSE
-  printf("Splitting %u to %u \n", lb, ub);
-#endif
-#ifdef DEBUG
-  status = check(to, g, lb, ub, nT, nH, n, m, Y); cBYE(status);
-#endif
-
+  if ( g_C.is_verbose ) { 
+    printf("Splitting %u to %u \n", lb, ub);
+  }
+  if ( g_C.is_debug ) { 
+    status = check(to, g, lb, ub, nT, nH, n, m, Y); cBYE(status);
+  }
   //-----------------------------------------
   status = search(Y, lb, ub, nT, nH, m, n,
        &split_j, &split_yval,  &split_yidx, &num4); 
