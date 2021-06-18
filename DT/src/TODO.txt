@@ -1,2 +1,4 @@
+* How do we mark a feature as not worth splitting?
+* How do we know whether search produced anything at all?
 (1) Convert config file to use Lua and a real config file 
   (see lustre/benchmark)

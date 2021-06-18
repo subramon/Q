@@ -50,7 +50,10 @@ split(
     // fprintf(stderr, "Tree too deep. Cannot split further \n");
     return status;
   }
-
+  // If all instances have same goal 
+  if ( ( nH == 0 ) || ( nT == 0 ) ) {
+    return status;
+  }
   four_nums_t num4; memset(&num4, 0, sizeof(four_nums_t));
 
   uint32_t split_j = m+1; // set to some bad value 
@@ -64,9 +67,11 @@ split(
   }
   //-----------------------------------------
   status = search(Y, lb, ub, nT, nH, m, n,
-       &split_j, &split_yval,  &split_yidx, &num4); 
+       &split_j, &split_yval, &split_yidx, &num4); 
   cBYE(status); 
+  // TODO P1: Under what circumstances do we bail at this point?
   //---------------------------------------------------
+  // START: Re-order the data based on the best split found in search()
 #pragma omp parallel for schedule(static, 1) num_threads(g_C.num_cores)
   for ( uint32_t j = 0; j < m; j++ ) {
     int lstatus; 
@@ -104,6 +109,7 @@ split(
 #endif
     }
   }
+  // STOP : Re-order the data based on the best split found in search()
 
   int parent_id = g_n_tree - 1;
   if ( ( split_yidx - lb ) >= g_C.min_partition_size ) {

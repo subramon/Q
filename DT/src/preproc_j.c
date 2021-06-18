@@ -5,9 +5,9 @@
 extern config_t g_C;
 
 // make a composite key
-// top 32 bits used for "from"
-// bit 31 used for goal
-// bits 0..30 used for the encoded value (yval, not xval)
+// Bits [32..63] used for "from" => < 2^32 values in data set 
+// Bit 31 used for goal
+// Bits [0..30] used for the encoded value (yval, not xval)
 uint64_t x_mk_comp_val(
     uint64_t from,
     uint64_t goal,
