@@ -1,3 +1,0 @@
-    status = delete_point(point, label, tree, meta, bff, 
-        num_nodes, num_interior_nodes, num_features, n_bff,
-        &retrain_node_idx, &is_leaf); 

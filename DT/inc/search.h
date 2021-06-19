@@ -10,5 +10,6 @@ search(
     uint32_t *ptr_split_feature_idx,
     uint32_t *ptr_yval,
     uint32_t *ptr_yidx,
-    four_nums_t *ptr_num4
+    four_nums_t *ptr_num4,
+    bool *ptr_is_splittable
    );

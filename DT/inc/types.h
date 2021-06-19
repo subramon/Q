@@ -15,11 +15,11 @@ typedef struct _metrics_t {
 } metrics_t; 
 */
 typedef struct _metrics_t {  
-  uint32_t *yval;
-  uint32_t *yidx;
-  uint32_t *nT;
-  uint32_t *nH;
-  double   *metric;
+  uint32_t *yval;   // [g_M_bufsz]
+  uint32_t *yidx;   // [g_M_bufsz]
+  uint32_t *nT;     // [g_M_bufsz]
+  uint32_t *nH;     // [g_M_bufsz]
+  double   *metric; // [g_M_bufsz]
 } metrics_t; 
 
 typedef struct _node_t { 

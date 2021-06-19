@@ -58,6 +58,8 @@ split(
 
   uint32_t split_j = m+1; // set to some bad value 
   uint32_t split_yidx, split_yval;
+  bool is_splittable = false; 
+  // above is set by search(). tells us whether split_idx/yval are any good
 
   if ( g_C.is_verbose ) { 
     printf("Splitting %u to %u \n", lb, ub);
@@ -67,12 +69,17 @@ split(
   }
   //-----------------------------------------
   status = search(Y, lb, ub, nT, nH, m, n,
-       &split_j, &split_yval, &split_yidx, &num4); 
+      &split_j, &split_yval, &split_yidx, &num4, &is_splittable); 
   cBYE(status); 
-  // TODO P1: Under what circumstances do we bail at this point?
+  if ( !is_splittable ) {  // none of the features offer a valid split
+    return status;
+  }
   //---------------------------------------------------
   // START: Re-order the data based on the best split found in search()
-#pragma omp parallel for schedule(static, 1) num_threads(g_C.num_cores)
+  // Note that some iterations are no-ops. This happens if 
+  // (a) iteration corresponds to feature selected for split
+  // (b) all values of feature are the same
+#pragma omp parallel for schedule(dynamic, 1) num_threads(g_C.num_cores)
   for ( uint32_t j = 0; j < m; j++ ) {
     int lstatus; 
     uint32_t lidx = lb, ridx = split_yidx;
@@ -82,6 +89,10 @@ split(
     // the order of the attribute chosen for split is unchanged
     // Hence, we can skip reordering it 
     if ( j == split_j ) { continue; }
+    // Quick return if all values are the same
+    // This *may* mess up some of my invariants but won't affect
+    // correctness of tree
+    if ( Y[j][lb] == Y[j][ub-1] ) { continue; }
 
 #endif
 #ifdef SCALAR

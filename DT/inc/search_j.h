@@ -11,5 +11,6 @@ search_j(
     four_nums_t *ptr_num4,
     uint32_t *ptr_yval,
     uint32_t *ptr_yidx,
-    double *ptr_metric
+    double *ptr_metric,
+    bool *ptr_is_splittable
    );

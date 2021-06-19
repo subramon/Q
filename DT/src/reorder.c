@@ -18,6 +18,9 @@ reorder(
   register uint32_t lidx = *ptr_lidx;
   register uint32_t ridx = *ptr_ridx;
 
+  // following condition should have been checked by caller
+  if ( Yj[lb] == Yj[ub-1] ) { go_BYE(-1); }
+
   for ( uint32_t i = lb; i < ub; i++ ) { 
     register uint32_t idx;
     register uint32_t from_i = get_from(Yj[i]);

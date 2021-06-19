@@ -5,7 +5,7 @@ accumulate(
       uint32_t ub,
       uint32_t prev_nT,
       uint32_t prev_nH,
-      metrics_t *M,
+      const metrics_t *M,
       uint32_t *ptr_nbuf, // how many in buffer when returning
       uint32_t *ptr_lb // how many consumed when returning.
       );

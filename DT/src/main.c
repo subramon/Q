@@ -21,15 +21,20 @@ config_t  g_C; // configuration
 metrics_t *g_M;  // [m][g_M_bufsz] 
 uint32_t g_M_bufsz;
 
-double *g_best_metrics;
-uint32_t *g_best_yval;
-uint32_t *g_best_yidx;
-four_nums_t *g_best_num4;
+// The only reason that these are allocated here is so that
+// search() does not have to allocate them.
+double *g_best_metrics;   // [m] 
+uint32_t *g_best_yvals;    // [m] 
+uint32_t *g_best_yidxs;    // [m] 
+four_nums_t *g_best_num4s; // [m] 
+bool *g_is_splittables;    // [m]
 
 node_t *g_tree; // this is where the decision tree is created
 int g_n_tree;   // number of nodes in the treee
 int g_sz_tree;  // allocated space for nodes => g_n_tree <= g_sz_tree
 
+// following for statistics gathering
+uint32_t g_num_gini_calc;
 int
 main(
     int argc,
@@ -46,12 +51,15 @@ main(
   uint8_t *g = NULL; // [n] goal attribute 
   char *config_file = NULL;
   // START: Initialize globals 
-  g_M            = NULL;               
-  g_M_bufsz      = 0;
-  g_best_metrics = NULL;
-  g_best_yval    = NULL;
-  g_best_yidx    = NULL;
-  g_best_num4    = NULL;
+  g_M              = NULL;               
+  g_M_bufsz        = 0;
+  //-------------------
+  g_best_metrics   = NULL;
+  g_best_yvals     = NULL;
+  g_best_yidxs     = NULL;
+  g_best_num4s     = NULL;
+  g_is_splittables = NULL;
+  //-------------------
   g_tree         = NULL; 
   g_n_tree       = 0; 
   g_sz_tree      = 0;
@@ -82,10 +90,11 @@ main(
     g_M[j].metric = malloc(g_M_bufsz * sizeof(double));
   }
   // One time allocation for later use 
-  g_best_metrics = malloc(m * sizeof(double));
-  g_best_yval    = malloc(m * sizeof(uint32_t));
-  g_best_yidx    = malloc(m * sizeof(uint32_t));
-  g_best_num4    = malloc(m * sizeof(four_nums_t));
+  g_best_metrics   = malloc(m * sizeof(double));
+  g_best_yvals     = malloc(m * sizeof(uint32_t));
+  g_best_yidxs     = malloc(m * sizeof(uint32_t));
+  g_best_num4s     = malloc(m * sizeof(four_nums_t));
+  g_is_splittables = malloc(m * sizeof(bool));
   // we are taking short-cut of allocating g_tree at beginning
   // Ideally, we would allocate a "reasonable" size and re-alloc
   // if we need more space 
@@ -99,6 +108,9 @@ main(
     g_tree[i].xval = 0; 
     g_tree[i].depth = -1;
   }
+
+  // for statistics gathering
+  g_num_gini_calc = 0;
   //-----------------------------------------------
   if ( g_C.read_binary_data ) { 
     status = read_data(&X, m, n, &g, bin_file_prefix); cBYE(status); 
@@ -128,10 +140,11 @@ main(
   status = split(to, g, lb, ub, nT, nH, n, m, Y, tmpY, 0); cBYE(status);
   t2 = get_time_usec();
   status = check_tree(g_tree, g_n_tree, m); cBYE(status);
-  printf("Num tree nodes = %d \n", g_n_tree); 
-  printf("Time           = %lf\n", (t2-t1)/1000000.0);
-  printf("Num features   = %d\n", m);
-  printf("Num instances  = %d\n", n);
+  printf("Num tree nodes    = %d \n", g_n_tree); 
+  printf("Time              = %lf\n", (t2-t1)/1000000.0);
+  printf("Num features      = %d\n", m);
+  printf("Num instances     = %d\n", n);
+  printf("Gini calculations = %u\n", g_num_gini_calc);
 BYE:
   for ( uint32_t j = 0; j < m; j++ ) { 
     if ( !g_C.read_binary_data ) { 
@@ -168,10 +181,11 @@ BYE:
   free_if_non_null(g_M);
   //----------------------------------
   free_if_non_null(g_best_metrics);
-  free_if_non_null(g_best_yval);
-  free_if_non_null(g_best_yidx);
-  free_if_non_null(g_best_num4);
-  free_if_non_null(g_C.bin_file_prefix);
+  free_if_non_null(g_best_yvals);
+  free_if_non_null(g_best_yidxs);
+  free_if_non_null(g_best_num4s);
+  free_if_non_null(g_is_splittables);
   //----------------------------------
+  free_if_non_null(g_C.bin_file_prefix);
   return status;
 }

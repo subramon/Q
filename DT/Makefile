@@ -50,8 +50,8 @@ DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -DVECTOR -fopenmp
 DFLAGS = -O4 -fopenmp -DVECTOR -pg
 DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
-DFLAGS = -O4 -fopenmp -DSCALAR -pg
 DFLAGS = -g -fopenmp -DDEBUG -DSCALAR
+DFLAGS = -O4 -fopenmp -DSCALAR -pg
 # to run gprof, add -pg to DFLAGS
 # ./dt
 # gprof ./dt > _outputfile

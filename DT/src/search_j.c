@@ -10,12 +10,14 @@
 #endif
 #include "search_j.h"
 
+extern uint32_t g_num_gini_calc;
+extern config_t g_C;
 extern metrics_t *g_M;  // [m][g_M_bufsz] 
 extern uint32_t g_M_bufsz;
 
 int 
 search_j(
-    uint64_t *Yj, /* [m][n] */
+    uint64_t * restrict Yj, /* [m][n] */
     uint32_t j,
     uint32_t lb, // 0 <= lb < n */
     uint32_t ub, // lb < ub < n */
@@ -23,10 +25,12 @@ search_j(
     uint32_t n,
     uint32_t nT,
     uint32_t nH,
-    four_nums_t *ptr_num4,
-    uint32_t *ptr_yval, // split value for this feature 
-    uint32_t *ptr_yidx, // split idx for this feature 
-    double *ptr_metric  // metric for this feature 
+    four_nums_t *ptr_num4, // output
+    uint32_t *ptr_yval, // output: split value for this feature 
+    uint32_t *ptr_yidx, // output: split idx for this feature 
+    double *ptr_metric, // output: metric for this split of this feature 
+    // whether this interval for this feature can be split at all 
+    bool *ptr_is_splittable
    )
 {
   int status = 0;
@@ -34,19 +38,29 @@ search_j(
   //---------------------------
   // had to discontinue this because of ispc: metrics_t M[BUFSZ];
   //----------------------------------------
+  // Initialize to "bad" values where possible
   double   best_metric = -1; 
-  uint32_t best_yval = 0; // this is an invalid value 
+  uint32_t best_yval = 0; 
   uint32_t best_yidx = 0; 
   four_nums_t best_num4; memset(&best_num4, 0, sizeof(four_nums_t));
+  // If we have too little to work with, return early
+  if ( (ub-lb) <= g_C.min_leaf_size ) { 
+    *ptr_is_splittable = false; return status; 
+  }
+  // If all values are the same, return early
+  if ( Yj[lb] == Yj[ub-1] ) { 
+    *ptr_is_splittable = false; return status; 
+  }
 
   if ( j >= m ) { go_BYE(-1); }
-  metrics_t M = g_M[j];
+  metrics_t Mj = g_M[j];
 
-  memset(M.yval,   0, (g_M_bufsz * sizeof(uint32_t)));
-  memset(M.yidx,   0, (g_M_bufsz * sizeof(uint32_t)));
-  memset(M.nT,     0, (g_M_bufsz * sizeof(uint32_t)));
-  memset(M.nH,     0, (g_M_bufsz * sizeof(uint32_t)));
-  memset(M.metric, 0, (g_M_bufsz * sizeof(double)));
+  memset(Mj.yval,   0, (g_M_bufsz * sizeof(uint32_t)));
+  memset(Mj.yidx,   0, (g_M_bufsz * sizeof(uint32_t)));
+  memset(Mj.nT,     0, (g_M_bufsz * sizeof(uint32_t)));
+  memset(Mj.nH,     0, (g_M_bufsz * sizeof(uint32_t)));
+  memset(Mj.metric, 0, (g_M_bufsz * sizeof(double)));
+  *ptr_is_splittable = true;
   //-------------------------------------
   if ( lb >= ub ) { go_BYE(-1); }
   if ( ub >  n ) { go_BYE(-1); }
@@ -69,34 +83,39 @@ search_j(
   // We accumulate up to g_M_bufsz candidates, then evaluate all at once
   // keep the best seen and then continue to create more candidates
   // TODO: See bottom of file 
-  for ( ; ; ) { 
+  for ( int iter = 0; ; iter++ ) {
     if ( new_lb >= ub ) { break; }
-    status = accumulate(Yj, lb, ub, prev_nT, prev_nH, &M, &nbuf, &new_lb); 
+    status = accumulate(Yj, lb, ub, prev_nT, prev_nH, &Mj, &nbuf, &new_lb); 
     cBYE(status);
-    lb = new_lb;
-    if ( nbuf == 0 ) { break; }
+    if ( nbuf == 0 ) { go_BYE(-1); } // TODO P2 Is this assertion valid?
+    if ( nbuf == 0 ) { break; } // TODO Which is it? break or bye?
+    if ( ( iter == 0 ) && ( nbuf <= 1 ) ) {
+      // Means this interval is not splittable
+      *ptr_is_splittable = false;
+      break;
+    }
 #ifdef DEBUG
     if ( nbuf > g_M_bufsz ) { go_BYE(-1); } 
     for ( uint32_t i = 0; i < nbuf; i++ ) { 
-      if ( (M.yidx[i]+1-original_lb) != (M.nT[i] + M.nH[i])  ) { 
+      if ( (Mj.yidx[i]+1-original_lb) != (Mj.nT[i] + Mj.nH[i])  ) { 
         go_BYE(-1); 
       }
     }
 #endif
     uint32_t loc = 0;
-
+    __atomic_add_fetch (&g_num_gini_calc, nbuf, 0);
 #ifdef VECTOR
-    eval_metrics_isp(M.nT, M.nH, nT, nH, M.metric, nbuf); 
-    calc_best_metric_isp(M.metric, nbuf, &loc); cBYE(status);
+    eval_metrics_isp(Mj.nT, Mj.nH, nT, nH, Mj.metric, nbuf); 
+    calc_best_metric_isp(Mj.metric, nbuf, &loc); cBYE(status);
 #endif
 #ifdef SCALAR
-    status = eval_metrics(M.nT, M.nH, nT, nH, M.metric, nbuf); cBYE(status);
-    status = calc_best_metric(&M, nbuf, &loc); cBYE(status);
+    status = eval_metrics(Mj.nT, Mj.nH, nT, nH, Mj.metric, nbuf); cBYE(status);
+    status = calc_best_metric(&Mj, nbuf, &loc); cBYE(status);
 #endif
 #ifdef DEBUG
     for ( uint32_t i = 0; i < nbuf; i++ ) { 
-      if ( M.metric[i] < 0 ) { 
-        if ( M.metric[i] != -1 ) { // known bad value
+      if ( Mj.metric[i] < 0 ) { 
+        if ( Mj.metric[i] != -1 ) { // known bad value
           go_BYE(-1); 
         }
       }
@@ -105,18 +124,21 @@ search_j(
       go_BYE(-1); 
     }
 #endif
-    if ( M.metric[loc] > best_metric ) { 
-      best_metric = M.metric[loc];
-      best_yval   = M.yval[loc];
-      best_yidx   = M.yidx[loc];
-      best_num4.n_T_L = M.nT[loc];
-      best_num4.n_H_L = M.nH[loc];
+    if ( Mj.metric[loc] > best_metric ) { 
+      best_metric = Mj.metric[loc];
+      best_yval   = Mj.yval[loc];
+      best_yidx   = Mj.yidx[loc];
+      best_num4.n_T_L = Mj.nT[loc];
+      best_num4.n_H_L = Mj.nH[loc];
       best_num4.n_T_R = nT - best_num4.n_T_L;
       best_num4.n_H_R = nH - best_num4.n_H_L;
     }
+    // If you could not fill up buffer => no more data 
     if ( nbuf < g_M_bufsz ) { break; }
-    prev_nT = M.nT[nbuf-1];
-    prev_nH = M.nH[nbuf-1];
+    // Set up for next iteration
+    lb = new_lb;
+    prev_nT = Mj.nT[nbuf-1];
+    prev_nH = Mj.nH[nbuf-1];
   }
   *ptr_yval   = best_yval;
   *ptr_yidx   = best_yidx;
