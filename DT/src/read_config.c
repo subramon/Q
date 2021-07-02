@@ -22,8 +22,8 @@ int read_config(
   ptr_C->dump_binary_data = false;
   ptr_C->read_binary_data = true;
   */
-#undef BASIC_TEST
-#define  PERF_TEST
+#define BASIC_TEST
+#undef  PERF_TEST
 
 #ifdef BASIC_TEST
   ptr_C->max_depth           = 16;

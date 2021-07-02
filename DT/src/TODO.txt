@@ -1,3 +1,4 @@
+* Consider micro-benchmark for how much better reorder is over sort
 * How do we mark a feature as not worth splitting?
 * How do we know whether search produced anything at all?
 * Convert config file to use Lua and a real config file 

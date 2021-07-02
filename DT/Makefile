@@ -46,12 +46,12 @@ ISP_OBJS = $(ISP_SRCS:.c=.o)
 #---------------------------------------------------
 
 DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
-DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -g -DDEBUG -DVECTOR -fopenmp
 DFLAGS = -O4 -fopenmp -DVECTOR -pg
 DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 DFLAGS = -g -fopenmp -DDEBUG -DSCALAR
 DFLAGS = -O4 -fopenmp -DSCALAR -pg
+DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 # to run gprof, add -pg to DFLAGS
 # ./dt
 # gprof ./dt > _outputfile

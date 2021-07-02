@@ -39,6 +39,7 @@ accumulate(
   left_to_consume--;
 
   for ( ; i < ub; i++ ) {
+    __builtin_prefetch(Y+i+32); // 32 is a guess
     Y_i = Y[i];
     yval_i = get_yval(Y_i);
     goal_i = get_goal(Y_i);

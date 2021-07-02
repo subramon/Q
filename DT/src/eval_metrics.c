@@ -18,6 +18,8 @@ eval_metrics(
   if ( nbuf > g_C.metrics_buffer_size ) { go_BYE(-1); }
   register double n  = nT + nH;
   for ( uint32_t i = 0; i < nbuf; i++ ) { 
+    __builtin_prefetch(in_nTL+i+32); // 32 is a guess
+    __builtin_prefetch(in_nHL+i+32); // 32 is a guess
     double nTL = in_nTL[i];
     double nHL = in_nHL[i];
 

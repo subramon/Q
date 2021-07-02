@@ -21,15 +21,22 @@ reorder(
   // following condition should have been checked by caller
   if ( Yj[lb] == Yj[ub-1] ) { go_BYE(-1); }
 
+  // 32 is just a guess
   for ( uint32_t i = lb; i < ub; i++ ) { 
+    __builtin_prefetch(Yj+i+32, 0, 0);
+    
     register uint32_t idx;
     register uint32_t from_i = get_from(Yj[i]);
     register uint32_t to_i   = to_split_j[from_i];
     if ( to_i < split_yidx ) { // this data point went left
-      idx = lidx; tmpYj[lidx++] = Yj[i]; 
+      idx = lidx; 
+      __builtin_prefetch(tmpYj+lidx+32, 1, 0);
+      tmpYj[lidx++] = Yj[i]; 
     }
     else { // this data point went right
-      idx = ridx; tmpYj[ridx++] = Yj[i]; 
+      idx = ridx; 
+      __builtin_prefetch(tmpYj+ridx+32, 1, 0);
+      tmpYj[ridx++] = Yj[i]; 
     }
     to_j[from_i] = idx;
 #ifdef SEQUENTIAL
