@@ -23,7 +23,9 @@ reorder(
 
   // 32 is just a guess
   for ( uint32_t i = lb; i < ub; i++ ) { 
-    __builtin_prefetch(Yj+i+32, 0, 0);
+    __builtin_prefetch(Yj+i+32, 0, 0);       // input 
+    __builtin_prefetch(tmpYj+lidx+32, 1, 0); // output 
+    __builtin_prefetch(tmpYj+ridx+32, 1, 0); // output 
     
     register uint32_t idx;
     register uint32_t from_i = get_from(Yj[i]);

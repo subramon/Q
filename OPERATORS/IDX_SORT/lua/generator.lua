@@ -1,12 +1,14 @@
+local qcfg    = require 'Q/UTILS/lua/qcfg'
 local qconsts = require 'Q/UTILS/lua/qconsts'
-local incdir = "../gen_inc/"
-local srcdir = "../gen_src/"
-local plpath = require 'pl.path'
+local incdir  = "../gen_inc/"
+local srcdir  = "../gen_src/"
+local plpath  = require 'pl.path'
 if ( not plpath.isdir(srcdir) ) then plpath.mkdir(srcdir) end
 if ( not plpath.isdir(incdir) ) then plpath.mkdir(incdir) end
 local gen_code = require 'Q/UTILS/lua/gen_code'
 
-local tmpl = qconsts.Q_SRC_ROOT .. '/OPERATORS/IDX_SORT/lua/idx_qsort.tmpl'
+--OLD local tmpl = qconsts.Q_SRC_ROOT .. '/OPERATORS/IDX_SORT/lua/idx_qsort.tmpl'
+local tmpl = qcfg.q_src_root .. '/OPERATORS/IDX_SORT/lua/idx_qsort.tmpl'
 
   ordrs = { 'asc', 'dsc' }
   val_qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
@@ -16,6 +18,8 @@ local tmpl = qconsts.Q_SRC_ROOT .. '/OPERATORS/IDX_SORT/lua/idx_qsort.tmpl'
     for j, val_qtype in ipairs(val_qtypes) do 
       for k, idx_qtype in ipairs(idx_qtypes) do 
         local subs = {}
+        subs.srcdir = "OPERATORS/IDX_SORT/gen_src/"
+        subs.incdir = "OPERATORS/IDX_SORT/gen_inc/"
         subs.fn = qsort_
         subs.srt_ordr = ordr
         subs.val_qtype = val_qtype
@@ -30,8 +34,8 @@ local tmpl = qconsts.Q_SRC_ROOT .. '/OPERATORS/IDX_SORT/lua/idx_qsort.tmpl'
         subs.comparator = c
         subs.tmpl = tmpl
         --======================
-        gen_code.doth(subs, incdir)
-        gen_code.dotc(subs, srcdir)
+        gen_code.doth(subs, subs.incdir)
+        gen_code.dotc(subs, subs.srcdir)
       end
     end
   end

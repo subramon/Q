@@ -9,4 +9,5 @@ ut_accumulate
 ut_calc_best_metric
 ut_eval_metrics
 ut_reorder
+ut_sort
 .gdb_history

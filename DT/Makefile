@@ -31,6 +31,7 @@ CSRCS := $(filter-out ./src/ut_eval_metrics.c, $(CSRCS))
 CSRCS := $(filter-out ./src/ut_calc_best_metric.c, $(CSRCS))
 CSRCS := $(filter-out ./src/ut_reorder.c, $(CSRCS))
 CSRCS := $(filter-out ./src/ut_accumulate.c, $(CSRCS))
+CSRCS := $(filter-out ./src/ut_sort.c, $(CSRCS))
 COBJS = $(CSRCS:.c=.o)
 #---------------------------------------------------
 ISP_SRCS := $(wildcard ./src/*.c)
@@ -42,6 +43,7 @@ ISP_SRCS := $(filter-out ./src/reorder.c, $(ISP_SRCS))
 ISP_SRCS := $(filter-out ./src/ut_eval_metrics.c, $(ISP_SRCS))
 ISP_SRCS := $(filter-out ./src/ut_calc_best_metric.c, $(ISP_SRCS))
 ISP_SRCS := $(filter-out ./src/ut_reorder.c, $(ISP_SRCS))
+ISP_SRCS := $(filter-out ./src/ut_sort.c, $(ISP_SRCS))
 ISP_OBJS = $(ISP_SRCS:.c=.o)
 #---------------------------------------------------
 
@@ -148,6 +150,12 @@ UT4_SRCS += src/read_config.c
 UT4_OBJS = $(UT4_SRCS:.c=.o)
 ut_accumulate : ${UT4_OBJS} 
 	gcc ${CFLAGS} ${DFLAGS} ${UT4_OBJS} ${INCS} -o ut_accumulate
+
+UT5_SRCS := src/ut_sort.c 
+UT5_SRCS += src/qsort_asc_val_F4_idx_I1.c
+UT5_OBJS = $(UT5_SRCS:.c=.o)
+ut_sort : ${UT5_OBJS} 
+	gcc ${CFLAGS} ${DFLAGS} ${UT5_OBJS} ${INCS} -o ut_sort
 
 #-------------------------------------------
 
