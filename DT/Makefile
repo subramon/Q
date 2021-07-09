@@ -18,7 +18,9 @@ all: dt \
 	ut_calc_best_metric \
 	ut_eval_metrics \
 	ut_reorder \
-	ut_accumulate
+	ut_accumulate \
+	ut_sort \
+	ut_mt_reorder \
 
 #---------------------------------------------------
 CSRCS := $(wildcard ./src/*.c)
@@ -32,6 +34,8 @@ CSRCS := $(filter-out ./src/ut_calc_best_metric.c, $(CSRCS))
 CSRCS := $(filter-out ./src/ut_reorder.c, $(CSRCS))
 CSRCS := $(filter-out ./src/ut_accumulate.c, $(CSRCS))
 CSRCS := $(filter-out ./src/ut_sort.c, $(CSRCS))
+CSRCS := $(filter-out ./src/benchmark_sort.c, $(CSRCS))
+CSRCS := $(filter-out ./src/ut_mt_reorder.c, $(CSRCS))
 COBJS = $(CSRCS:.c=.o)
 #---------------------------------------------------
 ISP_SRCS := $(wildcard ./src/*.c)
@@ -44,6 +48,8 @@ ISP_SRCS := $(filter-out ./src/ut_eval_metrics.c, $(ISP_SRCS))
 ISP_SRCS := $(filter-out ./src/ut_calc_best_metric.c, $(ISP_SRCS))
 ISP_SRCS := $(filter-out ./src/ut_reorder.c, $(ISP_SRCS))
 ISP_SRCS := $(filter-out ./src/ut_sort.c, $(ISP_SRCS))
+CSRCS := $(filter-out ./src/ut_mt_reorder.c, $(CSRCS))
+ISP_SRCS := $(filter-out ./src/benchmark_sort.c, $(ISP_SRCS))
 ISP_OBJS = $(ISP_SRCS:.c=.o)
 #---------------------------------------------------
 
@@ -52,8 +58,9 @@ DFLAGS = -g -DDEBUG -DVECTOR -fopenmp
 DFLAGS = -O4 -fopenmp -DVECTOR -pg
 DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 DFLAGS = -g -fopenmp -DDEBUG -DSCALAR
-DFLAGS = -O4 -fopenmp -DSCALAR -pg
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
+DFLAGS = -O4 -fopenmp -DSCALAR -pg
+DFLAGS = -O4
 # to run gprof, add -pg to DFLAGS
 # ./dt
 # gprof ./dt > _outputfile
@@ -100,11 +107,11 @@ ISP_INCS += ./inc/eval_metrics_isp.h
 
 dt : $(COBJS) 
 	gcc ${CFLAGS} ${DFLAGS} -DSCALAR  ${COBJS} \
-	${INCS} -lm -lgomp -o dt
+	${INCS} -lm  -o dt -lpthread -lgomp
 
 ispdt : $(ISP_INCS) $(ISP_SRCS) $(ISP_OBJS) 
 	gcc ${CFLAGS} ${DFLAGS} -DVECTOR  ${ISP_OBJS} \
-	${INCS} -lm -lgomp -o ispdt
+	${INCS} -lm -o ispdt -lpthread -lgomp
 
 #-------------------------------------------
 UT1_SRCS := src/ut_calc_best_metric.c 
@@ -135,6 +142,7 @@ UT3_SRCS += src/prnt_data.c
 UT3_SRCS += src/preproc_j.c
 UT3_SRCS += src/check.c
 UT3_SRCS += src/get_time_usec.c
+UT5_SRCS += src/qsort_asc_val_F4_idx_I1.c
 UT3_OBJS = $(UT3_SRCS:.c=.o)
 UT3_OBJS += ./src/reorder_isp.o
 
@@ -144,20 +152,39 @@ ut_reorder : ${UT3_OBJS} ./inc/reorder_isp.h
 	gcc ${CFLAGS} ${DFLAGS} -DVECTOR ${UT3_OBJS} \
 	${INCS} -lm -lgomp -o ut_reorder
 
+#-------------------------------------------
 UT4_SRCS := src/accumulate.c 
 UT4_SRCS += src/ut_accumulate.c 
 UT4_SRCS += src/read_config.c 
 UT4_OBJS = $(UT4_SRCS:.c=.o)
 ut_accumulate : ${UT4_OBJS} 
-	gcc ${CFLAGS} ${DFLAGS} ${UT4_OBJS} ${INCS} -o ut_accumulate
+	gcc ${CFLAGS} ${DFLAGS} ${UT4_OBJS} ${INCS} -o ut_accumulate -lgomp
 
+#-------------------------------------------
 UT5_SRCS := src/ut_sort.c 
-UT5_SRCS += src/qsort_asc_val_F4_idx_I1.c
+# UT5_SRCS += src/qsort_asc_val_F4_idx_I1.c
+UT5_SRCS += src/qsort_asc_val_F4_idx_I2.c
 UT5_OBJS = $(UT5_SRCS:.c=.o)
 ut_sort : ${UT5_OBJS} 
 	gcc ${CFLAGS} ${DFLAGS} ${UT5_OBJS} ${INCS} -o ut_sort
 
 #-------------------------------------------
+UT6_SRCS := src/ut_mt_reorder.c 
+UT6_SRCS += src/reorder.c
+UT6_SRCS += src/prnt_data.c
+UT6_SRCS += src/preproc_j.c
+UT6_SRCS += src/check.c
+UT6_SRCS += src/get_time_usec.c
+UT5_SRCS += src/qsort_asc_val_F4_idx_I1.c
+UT6_OBJS = $(UT6_SRCS:.c=.o)
+UT6_OBJS += ./src/reorder_isp.o
+
+./src/ut_reorder.o : inc/reorder_isp.h 
+
+ut_mt_reorder : ${UT6_OBJS} ./inc/reorder_isp.h 
+	gcc ${CFLAGS} ${DFLAGS} -DVECTOR ${UT6_OBJS} \
+	${INCS} -lm -o ut_mt_reorder -lpthread -lgomp
+
 
 qclean:
 	rm -f _* *.o ./src/*.o

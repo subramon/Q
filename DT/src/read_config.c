@@ -1,5 +1,6 @@
 #include "incs.h"
 #include "read_config.h"
+#include <omp.h>
 // TODO P1 This is a fake. Read from real config file 
   // START: read configuration
 int read_config(

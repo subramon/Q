@@ -11,7 +11,7 @@ main(
 {
   int status = 0;
   metrics_t M;
-  double *metrics; 
+  double *metrics = NULL; 
   uint32_t loc1, loc2;
   int m = 100; // number of trials 
   int n = 100; // size of buffer

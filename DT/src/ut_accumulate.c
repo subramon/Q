@@ -15,11 +15,12 @@ main(
   // read configurations 
   status = read_config(&g_C, "");  cBYE(status);
   // create some bogus data
-  int n = 1024;
+  uint32_t n = 1024;
+  if ( argc == 2 ) { n = atoi(argv[1]); }
   uint32_t yval = 10; // some bogus *constant* value 
   Y = malloc(n * sizeof(uint64_t));
   uint32_t g = 1;
-  for ( int i = 0; i < n; i++ ) { 
+  for ( uint32_t i = 0; i < n; i++ ) { 
     Y[i] = yval;
     Y[i] = Y[i] | ( g << 31 );
     if ( g == 1 ) { g = 0; } else { g = 1; }

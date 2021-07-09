@@ -16,10 +16,10 @@ main(
     )
 {
   int status = 0;
-  double *metric1; // [n] 
-  double *metric2; // [n] 
-  uint32_t *in_nTL; // [n] 
-  uint32_t *in_nHL; // [n] 
+  double *metric1 = NULL; // [n] 
+  double *metric2 = NULL; // [n] 
+  uint32_t *in_nTL = NULL; // [n] 
+  uint32_t *in_nHL = NULL; // [n] 
   int m = 100; // number of trials 
   int n = 100; // size of buffer
   int l = 100; // nT + nH
