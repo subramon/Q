@@ -62,3 +62,5 @@ _*.h
 # binary files
 _*.bin
 
+# miscellaneous
+.gdb_history
