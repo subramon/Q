@@ -1,0 +1,77 @@
+Assume that the algorithm fundmentally requires a gather from or a
+scatter to non-contiguous and unpredictable memory locations.
+Question: In such cases, is trying to write vector code using ispc the
+wrong choice? Stated another way, should one just write scalar code and 
+let gcc do its best.
+
+Examples of such cases are re-ordering data when building a decision tree.
+The .c code and the .ispc code are attached. I can provide a small driver
+program that exercises these functions if that will help.
+The scalar code is 4x to 5x faster than the vector code 
+
+===============================
+ISPC Documentation states
+
+Since the index i is a varying value, the program instances in the
+gang will in general be reading different locations in the array
+x. Because not all CPUs have a "gather" instruction, the ispc compiler
+has to serialize these memory reads, performing a separate memory load
+for each running program instance, packing the result into f.
+
+Question: Is there *any* CPU on which gather will not slow down?
+
+===============================
+
+ISPC Documentation: Avoid 64-bit Addressing Calculations When Possible
+
+Even when compiling to a 64-bit architecture target, ispc does many of
+the addressing calculations in 32-bit precision by default
+
+Question: Under what circumstances does 64-bit addressing come into play?
+What about if you mmap a large file?
+
+ISPC Documentation states: Avoid Computation With 8 and 16-bit Integer Types
+
+Question: Is it worth storing as 8/16 bit if they neeed to be promoted
+to 32-bit for performance and then down again for storage?
+
+====================
+
+Question: Should one even bother with specifying target if the system
+one runs on is the same as the system one builds on?
+
+Question: How does one use info from /proc/cpuinfo to set arch flags?
+
+===============================
+
+Question: How to get vim to recognize ispc?
+
+===============================
+
+Question: Has been easy to incorporate ispc into my worflow. Is it as
+simple to do so with icc? What about Intel Performance Primitives?
+===============================
+
+Consider the following use case that arises in
+(1) binary search
+(2) inferencing (not building) with a decision tree
+
+Assume that there are m input points, Y, that need to be processed.
+
+Assume that there are n data points, X, stored in sorted order.
+
+We want to know, for each input point, the index where it occurs in X
+or -1 if it does not occur.
+
+This is easy to vectorize but the problem. But, in each step, each
+SIMD lane will be accessing some unprecitable location of X.
+
+
+
+
+
+
+
+
+
+
