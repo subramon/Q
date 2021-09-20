@@ -1,27 +1,21 @@
 #include "incs.h"
 #include <pthread.h>
 #include "preproc_j.h"
-#include "check.h"
 #include "reorder.h"
 #include "reorder_isp.h"
 #include "get_time_usec.h"
-#include "qsort_asc_val_F4_idx_I1.c"
 
 #define REORDER     1
 #define REORDER_ISP 2
-#define RE_SORT     3
-
 
 typedef struct _task_info_t {
   int tid;
   uint64_t t_start;
   uint64_t t_stop;
-  int what_work_to_do; // 1 => reorder 2=> reorder_isp 3=> re-sort
+  int what_work_to_do; // 1 => reorder 2=> reorder_isp 
   int n; // problem size
   int nT; // number of threads
 } task_info_t;
-
-config_t g_C;
 
 typedef struct _composite_t { 
   float val;
@@ -51,7 +45,6 @@ hammer(
   int status = 0;
   task_info_t *tinfo = (task_info_t *)targs;
   float *X = NULL; // for re-sort timing comparison
-  composite_t *tmpXg = NULL; // for re-sort timing comparison
   uint8_t *g = NULL; // for re-sort timing comparison
 
   uint64_t *Y    = NULL;
@@ -79,9 +72,6 @@ hammer(
   uint32_t lb = 0; 
   uint32_t ub = n;
 
-#ifdef SEQUENTIAL
-  g_num_swaps = 0;
-#endif
   //-----------------------------------------
   Y    = malloc(n * sizeof(uint64_t));
   tmpY = malloc(n * sizeof(uint64_t));
@@ -123,8 +113,7 @@ hammer(
   //-----------------------------------------
   if ( tinfo->what_work_to_do == REORDER ) { 
     tinfo->t_start = get_time_usec();
-    status=reorder(Y, tmpY, to, to_split, lb, ub, split_yidx, &lidx, &ridx);
-    cBYE(status);
+    reorder(Y, tmpY, to, to_split, lb, ub, split_yidx, &lidx, &ridx);
     tinfo->t_stop = get_time_usec();
   }
   //--- run ISP version
@@ -137,74 +126,28 @@ hammer(
     cBYE(status);
     tinfo->t_stop = get_time_usec();
   }
-  X = malloc(n * sizeof(float));
-  return_if_malloc_failed(X);
-  tmpXg = malloc(n * sizeof(composite_t));
-  return_if_malloc_failed(tmpXg);
-  g = malloc(n * sizeof(uint8_t));
-  return_if_malloc_failed(g);
-  // set some random values for X
-  for ( uint32_t i = 0; i < n; i++ ) { 
-    X[i] = random();
-    g[i] = random() & 0x1; // randomly set to 0 or 1 
-  }
-  if ( tinfo->what_work_to_do == RE_SORT ) {
-    tinfo->t_start = get_time_usec();
-    // Using a buffer, tmpXg
-    // move the left points to one side and the right points to the other
-    lidx = 0;
-    ridx = n/2;
-    bool is_left = true;
-    for ( uint32_t i = 0; i < n; i++ ) { 
-      if ( is_left ) { 
-        tmpXg[lidx].val  = X[i];
-        tmpXg[lidx].goal = g[i];
-        lidx++;
-        is_left = false;
-      }
-      else {
-        tmpXg[ridx].val  = X[i];
-        tmpXg[ridx].goal = g[i];
-        ridx++;
-        is_left = true;
-      }
-    }
-    // sort the buffer
-    qsort (tmpXg, n, sizeof(composite_t), sortfn);
-    // move the points back from the buffer
-    for ( uint32_t i = 0; i < n; i++ ) { 
-      X[i] = tmpXg[i].val;
-      g[i] = tmpXg[i].goal;
-    }
-    tinfo->t_stop = get_time_usec();
-  }
-
 BYE:
-  free_if_non_null(X);
-  free_if_non_null(g);
-  free_if_non_null(tmpXg);
-
   // Free stuff so that we have space for re-sort test 
-  free_if_non_null(Y);
-  free_if_non_null(tmpY);
-  free_if_non_null(isp_tmpY);
+  free(Y);
+  free(tmpY);
+  free(isp_tmpY);
 
-  free_if_non_null(yval);
-  free_if_non_null(goal);
-  free_if_non_null(from);
+  free(yval);
+  free(goal);
+  free(from);
   
-  free_if_non_null(pre_yval);
-  free_if_non_null(pre_goal);
-  free_if_non_null(pre_from);
+  free(pre_yval);
+  free(pre_goal);
+  free(pre_from);
   
-  free_if_non_null(post_yval);
-  free_if_non_null(post_goal);
-  free_if_non_null(post_from);
+  free(post_yval);
+  free(post_goal);
+  free(post_from);
   
-  free_if_non_null(to);
-  free_if_non_null(isp_to);
+  free(to);
+  free(isp_to);
 
-  free_if_non_null(to_split);
+  free(to_split);
   //-------------------------------
   return NULL;
 }
@@ -218,18 +161,41 @@ main(
   int status = 0;
   task_info_t *tinfo = NULL;
   pthread_t *threads = NULL;
-  uint32_t n = 16*1048576;
+  uint32_t n = 1048576;
   int nT = 4;
   int what_work_to_do = 1;
 
-  if ( argc >= 2 ) { n  = atoi(argv[1]); }
-  if ( argc >= 3 ) { nT = atoi(argv[2]); }
-  if ( argc >= 4 ) { what_work_to_do = atoi(argv[3]); }
-
-  if ( argc == 2 ) { nT = atoi(argv[1]); }
+  if ( argc >= 2 ) { 
+    n  = atoi(argv[1]); 
+  }
+  else {
+    n = 1048576; // default 
+  }
+  //---------------------
+  if ( argc >= 3 ) { 
+    nT = atoi(argv[2]); 
+  }
+  else {
+    nT = 1; // default
+  }
+  //---------------------
+  if ( argc >= 4 ) { 
+    if ( strcmp(argv[3], "scalar") == 0 ) { 
+      what_work_to_do = 1; // default 
+    }
+    else if ( strcmp(argv[3], "vector") == 0 ) { 
+      what_work_to_do = 2;
+    }
+    else {
+      go_BYE(-1);
+    }
+  }
+  else {
+      what_work_to_do = 1;
+  }
+  //---------------------
 
   threads = malloc(nT * sizeof(pthread_t));
-  return_if_malloc_failed(threads);
   memset(threads, '\0', nT * sizeof(pthread_t));
 
   tinfo = malloc(nT * sizeof(task_info_t));
@@ -260,18 +226,16 @@ main(
   // fprintf(stderr, "Actual Time = %lf seconds\n", t_actual/1000000.0);
   fprintf(stdout, "n=%d,", n);
   fprintf(stdout, "nT=%d,", nT);
-  fprintf(stdout, "=%d,", nT);
   switch ( what_work_to_do ) { 
-    case REORDER     : fprintf(stdout, "mode=reorder");  break;
-    case REORDER_ISP : fprintf(stdout, "mode=reorder_isp"); break; 
-    case RE_SORT     : fprintf(stdout, "mode=re_sort");  break;
-    default : go_BYE(-1); break;
+    case REORDER     : fprintf(stdout, "mode=scalar");  break;
+    case REORDER_ISP : fprintf(stdout, "mode=vector"); break; 
+    default : exit(1); break;
   }
   fprintf(stdout, ",time=%lf\n", t_actual/1000000.0);
 
   //--------------------------------------------
 BYE:
-  free_if_non_null(tinfo);
-  free_if_non_null(threads);
+  free(tinfo);
+  free(threads);
   return status;
 }
