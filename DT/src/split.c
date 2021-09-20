@@ -81,7 +81,7 @@ split(
   // (b) all values of feature are the same
 #pragma omp parallel for schedule(dynamic, 1) num_threads(g_C.num_cores)
   for ( uint32_t j = 0; j < m; j++ ) {
-    int lstatus; 
+    int lstatus = 0; 
     uint32_t lidx = lb, ridx = split_yidx;
     uint64_t *Yj = Y[j];
     uint64_t *tmpYj = tmpY[j];

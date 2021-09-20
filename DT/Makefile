@@ -21,6 +21,8 @@ all: dt \
 	ut_accumulate \
 	ut_sort \
 	ut_mt_reorder \
+	vec_dt_eval \
+
 
 #---------------------------------------------------
 CSRCS := $(wildcard ./src/*.c)
@@ -60,6 +62,7 @@ DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 DFLAGS = -g -fopenmp -DDEBUG -DSCALAR
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -O4 -fopenmp -DSCALAR -pg
+DFLAGS = -g -DDEBUG
 DFLAGS = -O4
 # to run gprof, add -pg to DFLAGS
 # ./dt
@@ -163,6 +166,7 @@ ut_accumulate : ${UT4_OBJS}
 #-------------------------------------------
 UT5_SRCS := src/ut_sort.c 
 # UT5_SRCS += src/qsort_asc_val_F4_idx_I1.c
+UT5_SRCS += src/qsort_asc_val_F4_idx_I1.c
 UT5_SRCS += src/qsort_asc_val_F4_idx_I2.c
 UT5_OBJS = $(UT5_SRCS:.c=.o)
 ut_sort : ${UT5_OBJS} 
@@ -175,15 +179,40 @@ UT6_SRCS += src/prnt_data.c
 UT6_SRCS += src/preproc_j.c
 UT6_SRCS += src/check.c
 UT6_SRCS += src/get_time_usec.c
-UT5_SRCS += src/qsort_asc_val_F4_idx_I1.c
 UT6_OBJS = $(UT6_SRCS:.c=.o)
 UT6_OBJS += ./src/reorder_isp.o
-
-./src/ut_reorder.o : inc/reorder_isp.h 
 
 ut_mt_reorder : ${UT6_OBJS} ./inc/reorder_isp.h 
 	gcc ${CFLAGS} ${DFLAGS} -DVECTOR ${UT6_OBJS} \
 	${INCS} -lm -o ut_mt_reorder -lpthread -lgomp
+
+#-------------------------------------------
+# vector evaluation of decision tree
+VEC_EVAL_SRCS := dt_eval/main.c
+VEC_EVAL_SRCS += dt_eval/sclr_eval.c
+# VEC_EVAL_SRCS += dt_eval/vctr_eval.c
+VEC_EVAL_SRCS += src/reorder.c
+VEC_EVAL_SRCS += src/preproc_j.c
+VEC_EVAL_SRCS += src/check.c
+VEC_EVAL_SRCS += src/prnt_data.c
+VEC_EVAL_SRCS += src/get_time_usec.c
+VEC_EVAL_OBJS = $(VEC_EVAL_SRCS:.c=.o)
+VEC_EVAL_OBJS += ./src/vctr_eval_isp.o
+
+INCS += -I./dt_eval/
+
+#---------------------------------------------
+./dt_eval/vctr_eval_isp.h : ./dt_eval/vctr_eval_isp.c
+	ispc -I./inc/  dt_eval/vctr_eval_isp.c -h dt_eval/vctr_eval_isp.h
+
+./dt_eval/vctr_eval_isp.o : ./inc/types_isp.h \
+  	./dt_eval/vctr_eval_isp.c ./dt_eval/vctr_eval_isp.h
+	ispc -O3 --pic $(INCS) ./dt_eval/vctr_eval_isp.c -o ./dt_eval/vctr_eval_isp.o 
+
+#---------------------------------------------
+vec_dt_eval : ${VEC_EVAL_OBJS} ./inc/reorder_isp.h 
+	gcc ${CFLAGS} ${DFLAGS} ${VEC_EVAL_OBJS} \
+	${INCS} -lm -o vec_dt_eval -lpthread -lgomp
 
 
 qclean:
@@ -191,6 +220,7 @@ qclean:
 
 clean:
 	rm -f _* *.o ./src/*.o dt
+	rm -f ./dt_eval/*.o
 	rm -f ./inc/reorder_isp.h 
 	rm -f ./inc/eval_metrics_isp.h 
 	rm -f ./inc/calc_best_metrics_isp.h 
