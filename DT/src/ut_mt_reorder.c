@@ -259,12 +259,11 @@ main(
   // fprintf(stderr, "Total  Time = %lf seconds\n", secs);
   // fprintf(stderr, "Actual Time = %lf seconds\n", t_actual/1000000.0);
   fprintf(stdout, "n=%d,", n);
-  fprintf(stdout, "nT=%d,", nT);
-  fprintf(stdout, "=%d,", nT);
+  fprintf(stdout, "p=%d,", nT);
   switch ( what_work_to_do ) { 
-    case REORDER     : fprintf(stdout, "mode=reorder");  break;
-    case REORDER_ISP : fprintf(stdout, "mode=reorder_isp"); break; 
-    case RE_SORT     : fprintf(stdout, "mode=re_sort");  break;
+    case REORDER     : fprintf(stdout, "mode=scalar");  break;
+    case REORDER_ISP : fprintf(stdout, "mode=vector"); break; 
+    case RE_SORT     : fprintf(stdout, "mode=resort");  break;
     default : go_BYE(-1); break;
   }
   fprintf(stdout, ",time=%lf\n", t_actual/1000000.0);
