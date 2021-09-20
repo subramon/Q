@@ -22,16 +22,6 @@ typedef struct _metrics_t {
   double   *metric; // [g_M_bufsz]
 } metrics_t; 
 
-// orig_node_t is minimal node with no encoding of values
-typedef struct _orig_node_t { 
-  int lchild_id;
-  int rchild_id;
-  int fidx; // feature index: which feature for this decision 
-  float fval; // feature value: which value to be compared against
-  int nH;
-  int nT;
-} orig_node_t;
-
 typedef struct _node_t { 
   int depth; 
   int lchild_id;

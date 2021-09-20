@@ -1,15 +1,15 @@
-#include "types_isp.h"
+#include "node_struct.h"
 
 export void 
-sclr_eval(
+vctr_eval_isp(
     uniform int nH[], // [n] 
     uniform int nT[], // [n] 
-    uniform float X[][], // [m][n]
+    uniform float X[], 
     uniform int m, // number of features
     uniform int n, // number of data points to be classified
-    uniform orig_node_t * dt,
-    int n_dt, // for debugging 
-    int depth // for debugging 
+    uniform orig_node_t dt[],
+    uniform int n_dt, // for debugging 
+    uniform int depth // for debugging 
     )
 {
   int status = 0;
@@ -28,7 +28,9 @@ sclr_eval(
       // get feature
       int fidx = dt[node_id].fidx;
       float fval = dt[node_id].fval;
-      float xval = X[fidx][i];
+      // float xval = X[fidx][i];
+      int xidx = (fidx * n) + i;
+      float xval = X[xidx];
       if ( xval <= fval ) {
         node_id = lchild_id;
       }
@@ -37,6 +39,6 @@ sclr_eval(
       }
     }
   }
-  return NULL;
+  return;
 }
 

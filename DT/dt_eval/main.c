@@ -1,5 +1,7 @@
 #include "incs.h"
+#include "node_struct.h"
 #include "sclr_eval.h"
+extern void vctr_eval_isp(int32_t * nH, int32_t * nT, float * X, int32_t m, int32_t n, struct _orig_node_t * dt, int32_t n_dt, int32_t depth);
 #include "get_time_usec.h"
 
 config_t g_C;
@@ -9,27 +11,24 @@ static int
 make_fake_data(
     int num_features,
     int num_instances, 
-    float ***ptr_X // [num_features][num_instances]
+    float **ptr_X // [num_features*num_instances]
     )
 {
   int status = 0;
-  float **X = NULL;
-  X = malloc(num_features * sizeof(float *));
+  float *X = NULL;
+  X = malloc(num_features * num_instances * sizeof(float *));
   return_if_malloc_failed(X);
-  for ( int i =  0; i < num_features; i++ ) { 
-    X[i] = malloc(num_instances * sizeof(float));
-    return_if_malloc_failed(X[i]);
-  }
+  *ptr_X = X;
   srandom(time(NULL));
-  for ( int i =  0; i < num_features; i++ ) { 
-    for ( int j =  0; j < num_instances; j++ ) { 
+  for ( int fidx =  0; fidx < num_features; fidx++ ) { 
+    for ( int ridx =  0; ridx < num_instances; ridx++ ) { 
       int r = random();
       r = r & 0x00FFFFFF;
       float range = 1 << 24;
-      X[i][j] = (float)r / range; 
+      *X = (float)r / range; 
+      X++;
     }
   }
-  *ptr_X = X;
 BYE:
   return status;
 }
@@ -91,11 +90,11 @@ main(
   // start configuration parameters
   int depth = 16;
   int num_features = 64;
-  int num_instances = 16*1048576;
+  int num_instances = 4 * 1048576;
   //--------------------
   orig_node_t *dt = NULL; // [n_dt]
   int n_dt = 0;
-  float **X = NULL; // [num_deatures][num_instances]
+  float *X = NULL; // [num_features * num_instances]
   int *nH = NULL; // [num_instances]
   int *nT = NULL; // [num_instances]
   //-------------------
@@ -112,23 +111,24 @@ main(
   nT = malloc(num_instances * sizeof(int));
   return_if_malloc_failed(nT);
   // perform inferencing
+  printf("n = %d \n", num_instances);
+  printf("m = %d \n", num_features);
+  printf("d = %d \n", depth);
   uint64_t t_start = get_time_usec();
   status = sclr_eval(nH, nT, X, num_features, num_instances,
       dt, n_dt, depth); 
   cBYE(status);
   uint64_t t_stop  = get_time_usec();
-  printf("n = %d \n", num_instances);
-  printf("m = %d \n", num_features);
-  printf("d = %d \n", depth);
-  printf("T = %lf\n", (t_stop - t_start)/1000000.0);
+  printf("T (scalar) = %lf\n", (t_stop - t_start)/1000000.0);
+
+  t_start = get_time_usec();
+  vctr_eval_isp(nH, nT, X, num_features, num_instances,
+      dt, n_dt, depth); 
+  t_stop  = get_time_usec();
+  printf("T (vector) = %lf\n", (t_stop - t_start)/1000000.0);
 
 BYE:
-  if ( X != NULL ) { 
-    for ( int i = 0; i  < num_features; i++ ) { 
-      free_if_non_null(X[i]);
-    }
-    free_if_non_null(X);
-  }
+  free_if_non_null(X);
   free_if_non_null(dt);
   free_if_non_null(nH);
   free_if_non_null(nT);

@@ -21,7 +21,7 @@ all: dt \
 	ut_accumulate \
 	ut_sort \
 	ut_mt_reorder \
-	vec_dt_eval \
+	run_dt_eval \
 
 
 #---------------------------------------------------
@@ -197,7 +197,7 @@ VEC_EVAL_SRCS += src/check.c
 VEC_EVAL_SRCS += src/prnt_data.c
 VEC_EVAL_SRCS += src/get_time_usec.c
 VEC_EVAL_OBJS = $(VEC_EVAL_SRCS:.c=.o)
-VEC_EVAL_OBJS += ./src/vctr_eval_isp.o
+VEC_EVAL_OBJS += ./dt_eval/vctr_eval_isp.o
 
 INCS += -I./dt_eval/
 
@@ -210,16 +210,16 @@ INCS += -I./dt_eval/
 	ispc -O3 --pic $(INCS) ./dt_eval/vctr_eval_isp.c -o ./dt_eval/vctr_eval_isp.o 
 
 #---------------------------------------------
-vec_dt_eval : ${VEC_EVAL_OBJS} ./inc/reorder_isp.h 
+run_dt_eval : ${VEC_EVAL_OBJS} ./inc/reorder_isp.h 
 	gcc ${CFLAGS} ${DFLAGS} ${VEC_EVAL_OBJS} \
-	${INCS} -lm -o vec_dt_eval -lpthread -lgomp
+	${INCS} -lm -o run_dt_eval -lpthread -lgomp
 
 
 qclean:
 	rm -f _* *.o ./src/*.o
 
 clean:
-	rm -f _* *.o ./src/*.o dt
+	rm -f _* *.o ./src/*.o dt run_dt_eval
 	rm -f ./dt_eval/*.o
 	rm -f ./inc/reorder_isp.h 
 	rm -f ./inc/eval_metrics_isp.h 

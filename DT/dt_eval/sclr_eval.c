@@ -1,11 +1,12 @@
 #include "incs.h"
+#include "node_struct.h"
 #include "sclr_eval.h"
 
 int
 sclr_eval(
     uint32_t *nH, // [n] 
     uint32_t *nT, // [n] 
-    float **X, // [m][n]
+    float *X, 
     int m, // number of features
     int n, // number of data points to be classified
     const orig_node_t * const dt,
@@ -36,7 +37,12 @@ sclr_eval(
       if ( ( fidx < 0 ) || ( fidx >= m ) ) { go_BYE(-1); }
 #endif
       float fval = dt[node_id].fval;
-      float xval = X[fidx][i];
+      int xidx = (fidx * n) + i;
+      float xval = X[xidx];
+#ifdef DEBUG
+      if ( ( xidx < 0 ) || ( xidx > (m*n) ) ) { go_BYE(-1); }
+#endif
+      // float xval = X[fidx][i];
       if ( xval <= fval ) {
         node_id = lchild_id;
       }
