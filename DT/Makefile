@@ -22,6 +22,7 @@ all: dt \
 	ut_sort \
 	ut_mt_reorder \
 	run_dt_eval \
+	run_mt_dt_eval \
 
 
 #---------------------------------------------------
@@ -55,15 +56,15 @@ ISP_SRCS := $(filter-out ./src/benchmark_sort.c, $(ISP_SRCS))
 ISP_OBJS = $(ISP_SRCS:.c=.o)
 #---------------------------------------------------
 
-DFLAGS = -g -DDEBUG -fopenmp -DVECTOR
 DFLAGS = -g -DDEBUG -DVECTOR -fopenmp
 DFLAGS = -O4 -fopenmp -DVECTOR -pg
 DFLAGS = -g -DDEBUG -DSCALAR -DSEQUENTIAL
 DFLAGS = -g -fopenmp -DDEBUG -DSCALAR
 DFLAGS = -g -DDEBUG -fopenmp -DSCALAR
 DFLAGS = -O4 -fopenmp -DSCALAR -pg
-DFLAGS = -g -DDEBUG
 DFLAGS = -O4
+DFLAGS = -g -DDEBUG
+DFLAGS = -g -DDEBUG -fopenmp 
 # to run gprof, add -pg to DFLAGS
 # ./dt
 # gprof ./dt > _outputfile
@@ -190,7 +191,6 @@ ut_mt_reorder : ${UT6_OBJS} ./inc/reorder_isp.h
 # vector evaluation of decision tree
 VEC_EVAL_SRCS := dt_eval/main.c
 VEC_EVAL_SRCS += dt_eval/sclr_eval.c
-# VEC_EVAL_SRCS += dt_eval/vctr_eval.c
 VEC_EVAL_SRCS += src/reorder.c
 VEC_EVAL_SRCS += src/preproc_j.c
 VEC_EVAL_SRCS += src/check.c
@@ -199,6 +199,16 @@ VEC_EVAL_SRCS += src/get_time_usec.c
 VEC_EVAL_OBJS = $(VEC_EVAL_SRCS:.c=.o)
 VEC_EVAL_OBJS += ./dt_eval/vctr_eval_isp.o
 
+# multi-threaded vector evaluation of decision tree
+MT_VEC_EVAL_SRCS := dt_eval/mt_main.c
+MT_VEC_EVAL_SRCS += dt_eval/sclr_eval.c
+MT_VEC_EVAL_SRCS += src/reorder.c
+MT_VEC_EVAL_SRCS += src/preproc_j.c
+MT_VEC_EVAL_SRCS += src/check.c
+MT_VEC_EVAL_SRCS += src/prnt_data.c
+MT_VEC_EVAL_SRCS += src/get_time_usec.c
+MT_VEC_EVAL_OBJS = $(MT_VEC_EVAL_SRCS:.c=.o)
+MT_VEC_EVAL_OBJS += ./dt_eval/vctr_eval_isp.o
 INCS += -I./dt_eval/
 
 #---------------------------------------------
@@ -214,12 +224,17 @@ run_dt_eval : ${VEC_EVAL_OBJS} ./inc/reorder_isp.h
 	gcc ${CFLAGS} ${DFLAGS} ${VEC_EVAL_OBJS} \
 	${INCS} -lm -o run_dt_eval -lpthread -lgomp
 
+run_mt_dt_eval : ${MT_VEC_EVAL_OBJS} ./inc/reorder_isp.h 
+	gcc ${CFLAGS} ${DFLAGS} ${MT_VEC_EVAL_OBJS} \
+	${INCS} -lm -o run_mt_dt_eval -lpthread -lgomp
+
+
 
 qclean:
 	rm -f _* *.o ./src/*.o
 
 clean:
-	rm -f _* *.o ./src/*.o dt run_dt_eval
+	rm -f _* *.o ./src/*.o dt run_dt_eval run_mt_dt_eval
 	rm -f ./dt_eval/*.o
 	rm -f ./inc/reorder_isp.h 
 	rm -f ./inc/eval_metrics_isp.h 

@@ -51,7 +51,10 @@ sclr_eval(
       }
     }
 #ifdef DEBUG
-    if ( num_searches >= depth ) { go_BYE(-1); }
+    // TODO P2 Should this be > or >= ?
+    if ( num_searches > depth ) { 
+      printf("num_searches = %d \n", num_searches); go_BYE(-1); 
+    }
 #endif
   }
 
