@@ -13,4 +13,5 @@ ut_reorder
 ut_mt_reorder
 ut_sort
 run_dt_eval
+run_mt_dt_eval
 .gdb_history
