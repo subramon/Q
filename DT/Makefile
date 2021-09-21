@@ -198,6 +198,8 @@ VEC_EVAL_SRCS += src/prnt_data.c
 VEC_EVAL_SRCS += src/get_time_usec.c
 VEC_EVAL_OBJS = $(VEC_EVAL_SRCS:.c=.o)
 VEC_EVAL_OBJS += ./dt_eval/vctr_eval_isp.o
+VEC_EVAL_OBJS += ./dt_eval/make_fake_tree.o
+VEC_EVAL_OBJS += ./dt_eval/make_fake_data.o
 
 # multi-threaded vector evaluation of decision tree
 MT_VEC_EVAL_SRCS := dt_eval/mt_main.c
@@ -209,6 +211,8 @@ MT_VEC_EVAL_SRCS += src/prnt_data.c
 MT_VEC_EVAL_SRCS += src/get_time_usec.c
 MT_VEC_EVAL_OBJS = $(MT_VEC_EVAL_SRCS:.c=.o)
 MT_VEC_EVAL_OBJS += ./dt_eval/vctr_eval_isp.o
+MT_VEC_EVAL_OBJS += ./dt_eval/make_fake_tree.o
+MT_VEC_EVAL_OBJS += ./dt_eval/make_fake_data.o
 INCS += -I./dt_eval/
 
 #---------------------------------------------
