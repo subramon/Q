@@ -1,0 +1,334 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\usepackage{hyperref}
+\usepackage{fancyheadings}
+\pagestyle{fancy}
+\usepackage{pmc}
+\input{../../DOC/latex/styles/ramesh_abbreviations}
+\usepackage{graphicx}
+\setlength\textwidth{6.5in}
+\setlength\textheight{9.0in}
+% \newcommand{\bd}{\begin{description}}
+% \newcommand{\ed}{\end{description}}
+\begin{document}
+\title{When and where to rebuild a decision tree \\
+with constant space/time overhead}
+\author{Tara Mirmira and Ramesh Subramonian}
+\maketitle
+\thispagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{}
+\lfoot{}
+\cfoot{Decision Trees}
+\rfoot{{\small \thepage}}
+
+\begin{abstract}
+I Incremental/Decremental on Decision Trees
+\end{abstract}
+
+\section{Introduction}
+
+\TBC
+
+\subsection{Motivation}
+\TBC
+
+\section{Algorithm}
+
+\subsection{Intuition}
+
+The key intuition behind this algorithm is that the cost of reordering is
+significantly less
+than the cost of the computation of the metric (e.g., gini) used to determine
+the best split. This allows us to store just one additional integer for 
+each data value and yet be able to efficiently determine whether and where retraining is
+required. For a data set with \(m\) features and \(n\) instances, we need \(m
+\times n\) additional integers. In contrast, \TBC \cite{Brophy2021}
+% The size of the integers depends on \(n\). 
+% So, a 32-bit integer is sufficient when \(n \leq 2^{32}\).
+\subsection{Assumptions}
+
+Our current implementation makes the following assumptions. These are purely for
+the sake of convenience --- these are not conceptual limitations inherent in
+the approach.
+
+\be
+\item The goal attribute can be encoded as 0 or 1. We
+  refer to the 0 value as Tails and the 1 value as Heads.
+% \item The maximum depth of the decision tree is 64
+\item There are no missing values. 
+\ee
+
+\subsection{Definitions}
+\be
+\item Let \(n\) be the number of instances or data points
+\item Let \(n^H\) be the number of instances with goal value = 1 (Heads)
+\item Let \(n^T\) be the number of instances with goal value = 0 (Tails)
+\item Clearly, \(n = n^H+n^T\)
+\item Let \(m\) be the number of features or attributes
+\ee
+
+\begin{definition}
+\label{decision_path}
+We define \(D(x, T) = \{l_0, l_1, \ldots\}\) the {\bf decision path} of a data point \(x\) with
+  respect to a tree \(T\) as the sequence of decisions made, starting from the root and ending up at a leaf.
+  \TBC
+\end{definition}
+
+
+\begin{definition}
+\label{leaf_node}
+We define \(L(x, T)\), the {\bf leaf node} of a data point, \(x\) with 
+respect to a tree \(T\) as the leaf node at which it lands up \TBC 
+\end{definition}
+
+Cleatly, for all points \(x\), the first node of the decision path 
+is the root and the last node of the path is the leaf node, \(L(x, T)\)
+
+
+We will use the term virtual columns to denote columns that are not
+materialized. However, assuming that they do exist simplifies the description of
+the algorithm.
+
+
+\subsection{Data Structures}
+There are three principal data structures we use ---  \(X, Y, T\).
+The example in Section~\ref{example_data_structures} will hopefully make the
+formal description less daunting.
+\subsubsection{X}
+This represents the input data, which is 
+stored in columnar fashion. The columns (of length \(n\)) are:
+  \be
+\item \(z\), deletion flag. \(X[i].z = \mathrm{false} \Rightarrow X[i]\) has been
+  deleted. 
+\item \(i\), representing the index of the data point--- values are \(0, 1,
+  \ldots n-1\) . Virtual
+\item \(X_1, X_2, \ldots X_m\) representing the \(m\) features.
+  So, \(X_j[i]\) is the value of the \(j^{th}\) feature of the \(i^{th}\) data
+  point.
+\item \(g\), goal attribute
+\item \(l\), the leaf node (Definition~\ref{leaf_node}). 
+  {\bf QUESTION:} {\em Should this be a virtual column?}
+\ee
+
+\subsubsection{Y}
+\(Y\) consists of \(m\) data structures, \(\{Y_j\}\). \(Y_j\)
+represents the data for feature \(j\) stored as a set of columns 
+(of length \(n\)). These are 
+\be
+\item \(z\), deletion flag, boolean, false means deleted. Virtual
+\item \(v\), feature value. Virtual
+\item \(g\), goal value. Virtual
+\item \(l\), leaf node. Virtual
+\item \(h\), cumulative number of positive instances, run time computation
+\item \(t\), cumulative number of negative instances, run time computation
+\item \(i\), index belonging to corresponding data point
+\ee
+The explanation of the above columns is provided below:
+\be
+\item \(Y_j[i].v \leq Y_j[i+1].v\)
+\item \(Y_j.i\) is a permutation of \(0, \ldots, n-1\)
+\item Virtual columns are created as follows, where \(Y_j[k].i = k'\)
+  \be
+\item \(Y_j[k].v = X_j[k']\) 
+\item \(Y_j[k].g = X.g[k']\) 
+\item \(Y_j[k].z = X.z[k']\) 
+\item \(Y_j[k].l = X.l[k']\) 
+\item \(Y_j.h, Y_j.t\) are constructed to give us is the number of 
+Heads and Tails to the left of each data point for feature \(j\), as shown in
+Figure~\ref{code_nH_nT}
+\ee
+\ee
+
+
+\begin{figure}
+\centering
+\fbox{
+  \begin{minipage}{8 cm}
+  \centering
+  \begin{tabbing} \hspace*{0.25in} \= \hspace*{0.25in} \= %
+    \hspace*{0.25in} \= \kill
+Let \(k' = Y_j[k].i\) \\
+    Let \(h[k] \leftarrow 1\) if (\(X.g[k'] = 1\) {\bf and} \(X.z[k'] = 1\)) and 0 otherwise \\
+    Let \(h[k] \leftarrow 1\) if (\(X.g[k'] = 1\) {\bf and} \(X.z[k'] = 1\)) and 0 otherwise \\
+\(Y_j.h[0] \leftarrow h[0]\) \\
+\(k > 0 \Rightarrow Y_j.h[k] \leftarrow Y_j.h[k-1] + h[k]\) \\
+    Let \(t[k] \leftarrow 1\) if (\(X.g[k'] = 0\) {\bf and} \(X.z[k'] = 1\)) and 0 otherwise \\
+\(Y_j.t[0] \leftarrow t[0]\) \\
+\(k > 0 \Rightarrow Y_j.t[k] \leftarrow Y_j.t[k-1] + t[k]\) 
+  \end{tabbing}
+    \caption{Pseudo code for computing \(Y_j.h, Y_j.t\)}
+  \label{code_nH_nT}
+  \end{minipage}
+}
+\end{figure}
+
+\subsubsection{T}
+This is the decision tree represented as an array, where each element has the
+following fields 
+  \be
+\item \(z\), deletion flag, boolean, false means deleted.
+\item \(p\), parent
+\item \(l\), left child 
+\item \(r\), left child 
+\item \(n\), number of data instances whose decision path includes this node.
+  Before any data items  are deleted, \(Z[0].n = n\) indicating that {\bf all}
+  data points pass through the root.
+\item \(d\), depth. \(Z[0].d = 0\) indicating that the root is at depth 0 
+\item \(m\), best metric 
+\item \(f\), feature with best metric 
+\item \(v\), best split value of feature with best metric 
+% \item \(P\), the path taken by this data point from the root to the
+%   leaf node, stored as a bit mask. For example, say \(d = 3\) and the
+%   bit-pattern
+%   of \(P = 010\). Then, reading the bit pattern from least significant bit to
+%   most significant bit, this node is the left child of the right child of the left child of the root.
+  \ee
+
+\subsubsection{An example}
+\label{example_data_structures}
+
+An example of the inter-relationship between \(X\) and \(Y\) is provided in
+Table~\ref{tbl_example_data_structures}.
+
+\begin{table}
+  \centering
+  \begin{tabular}{|l|l|l|l|l||l|l|l|l||l|l|l|l|} \hline \hline
+    \(i\) & \(X_1\) & \(X_2\) & \(g\) & \(z\) & %
+    \(Y_1.i\) & \(Y_1.v\) & \(Y_1.h\) & \(Y_1.t\) & 
+    \(Y_2.i\) & \(Y_2.v\) & \(Y_2.h\) & \(Y_2.t\) \\ \hline \hline
+    0 & 4  & 1  & 1 & 1 & 4 & 1  & 0 & 0 & 0 & 1  & 1 & 0 \\ \hline
+    1 & 9  & 9  & 1 & 1 & 9 & 2  & 0 & 0 & 7 & 2  & 1 & 1 \\ \hline
+    2 & 5  & 4  & 0 & 1 & 5 & 3  & 0 & 1 & 5 & 3  & 1 & 2 \\ \hline
+    3 & 7  & 6  & 1 & 1 & 0 & 4  & 1 & 1 & 2 & 4  & 1 & 3 \\ \hline
+    4 & 1  & 5  & 1 & 0 & 2 & 5  & 1 & 2 & 4 & 5  & 1 & 3 \\ \hline
+    5 & 3  & 3  & 0 & 1 & 8 & 6  & 1 & 3 & 3 & 6  & 2 & 3 \\ \hline
+    6 & 10 & 7  & 0 & 1 & 3 & 7  & 2 & 3 & 6 & 7  & 2 & 4 \\ \hline
+    7 & 8  & 2  & 0 & 1 & 7 & 8  & 2 & 4 & 9 & 8  & 2 & 4 \\ \hline
+    8 & 6  & 10 & 0 & 1 & 1 & 9  & 3 & 4 & 1 & 9  & 3 & 4 \\ \hline
+    9 & 2  & 8  & 1 & 0 & 6 & 10 & 3 & 5 & 8 & 10 & 3 & 5 \\ \hline
+    \hline
+  \end{tabular}
+  \caption{Example of Data Structures}
+\label{tbl_example_data_structures}
+\end{table}
+
+\section{Deletion}
+We first provide the intuition behind the algorithm.  Let's describe what 
+happens upon deletion of a data point with index \(i\). 
+We start by considering the impact of this deletion on node \(l' = 0\), the
+root.
+
+We use \(Y\) to evaluate the best metric for each feature, 
+{\em after} this deletion has been factored in. This is described in 
+Section~\ref{Metric_Computation}.
+
+If the new best metric improves upon \(T[l'].m\), 
+the sub-tree rooted at \(l'\) needs to be discarded and recomputed and grafted
+back on to the original tree. This is described in Section~\ref{Grafting}.
+
+If none of the features realize a better metric, then we determine whether this
+data point would have next visited the left child or the right child of \(l'\). 
+
+need to recursively
+perform the same test at node \(l_{i+1}\). 
+In order to make the recursion possible, we need to
+create \(Y'\) from \(Y\). This is done by 
+\(Y' \leftarrow Create(Y, l_{i+1}\), described in Section~\ref{ReCreate_Y}.
+
+The recursion stops when a sub-tree needs to be recomputed or we arrive at a
+leaf. 
+
+\section{Metric Computation}
+\label{Metric_Computation}
+
+Let \(h = Y_j.h, t = Y_j.t\) for some feature \(j\). 
+Figure~\ref{code_metric_comp} shows how
+the gini metric is computed for each possible split point. 
+\begin{figure}
+\centering
+\fbox{
+  \begin{minipage}{8 cm}
+  \centering
+  \begin{tabbing} \hspace*{0.25in} \= \hspace*{0.25in} \= %
+    \hspace*{0.25in} \= \kill
+    {\bf function} \(\mathrm{BestGini}(h, t)\) \+ \\
+      \(n^H_L = h[0], n^T_L = t[0]\) \\
+      \(m = \mathrm{Gini}(n^H_L, n^T_L, n^H, n^T)\) \\ 
+      {\bf for} \(i = 1\) {\bf to} \(n-1\) {\bf do} \+ \\
+        \(n^H_L = n^H_L + h[i], n^T_L = n^T_L + h[i]\) \\ 
+        \(m = \mathrm{min}(m, \mathrm{Gini}(n^H_L, n^T_L, n^H, n^T))\) \- \\
+     {\bf endfor} \\ 
+     {\bf return} \(m\) \- \\
+   {\bf end} \\
+  \end{tabbing}
+  \caption{Pseudo code for metric computation}
+  \label{code_metric_comp}
+  \end{minipage}
+}
+\end{figure}
+
+Gini computation is in Figure~\ref{gini_comp}
+\begin{figure}
+\centering
+\fbox{
+  \begin{minipage}{8 cm}
+  \centering
+  \begin{tabbing} \hspace*{0.25in} \= \hspace*{0.25in} \= %
+    \hspace*{0.25in} \= \kill
+    {\bf function} \(\mathrm{Gini}( n^H_L, n^T_L, n^H, n^T))\) \+ \\
+      \TBC \\
+      {\bf return} \(x\) \- \\
+    {\bf end} \\
+  \end{tabbing}
+  \caption{Pseudo code for gini computation}
+  \label{gini_comp}
+  \end{minipage}
+}
+\end{figure}
+
+\section{Re-Create Y}
+\label{ReCreate_Y}
+
+See Figure~\ref{pseudo_code_recreate_Y}.
+\begin{figure}
+\centering
+\fbox{
+  \begin{minipage}{12 cm}
+   \centering
+   \begin{tabbing} \hspace*{0.25in} \= \hspace*{0.25in} \= %
+     \hspace*{0.25in} \= \kill
+     {\bf function} \(\mathrm{CreateY}(l, Y)\) \+ \\ 
+       Let \(n_Y\) be size of \(Y\) \\ 
+       Allocate space for \(Y'\). Space needed = \(n_Y'= T[l].n\) \\
+       {\bf for} \(i \leftarrow 0\) {\bf to} \(n_Y-1\) {\bf do} \+ \\
+           \TBC \- \\ 
+       {\bf endfor} \\
+       {\bf return} \(Y'\) \- \\
+     {\bf end} \\
+   \end{tabbing}
+     \caption{Pseudo code for creating Y on recursive step}
+   \label{pseudo_code_recreate_Y}
+  \end{minipage}
+}
+\end{figure}
+
+
+\section{Grafting}
+\label{Grafting}
+
+the sub-tree rooted at \(l\) needs to be discarded (\(z \leftarrow
+\mathrm{false}\) for all such nodes) `and replaced by a
+new sub-tree built using all points with index \(i\) such that \(X[i].l\) is a descendant of
+\(l'\)
+
+\section{Conclusion}
+
+\TBC
+
+\bibliographystyle{alpha}
+\bibliography{../../DOC/Q_PAPER/ref}
+\end{document}
