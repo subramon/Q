@@ -1,0 +1,67 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\usepackage{hyperref}
+\usepackage{fancyheadings}
+\pagestyle{fancy}
+% TODO \usepackage{pmc}
+\input{../../DOC/latex/styles/ramesh_abbreviations}
+\usepackage{graphicx}
+\setlength\textwidth{6.5in}
+\setlength\textheight{9.0in}
+% \newcommand{\bd}{\begin{description}}
+% \newcommand{\ed}{\end{description}}
+\begin{document}
+\title{Accelerating Decision Trees with SIMD}
+\author{Tara Mirmira and Ramesh Subramonian}
+\maketitle
+\thispagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{}
+\lfoot{}
+\cfoot{Decision Trees}
+\rfoot{{\small \thepage}}
+
+\begin{abstract}
+In this paper we show the benefits and limitations of using SIMD techniques to
+  accelerate decision trees, in both the building phase and the inference phase. 
+\end{abstract}
+
+\section{Introduction}
+
+\TBC
+
+\subsection{ISPC}
+
+We chose to use ISPC for ``SIMD-fication''. The Intel® Implicit SPMD Program
+Compiler (Intel® ISPC) is a compiler for writing SPMD (single program multiple
+data) programs to run on the CPU and GPU.
+Our reasons for doing so are best stated by the documentation itself
+{\em 
+\be
+\item 
+Build a variant of the C programming language that delivers good performance to performance-oriented programmers who want to run SPMD programs on CPUs and GPUs.
+\item 
+Provide a thin abstraction layer between the programmer and the hardware--in particular, to follow the lesson from C for serial programs of having an execution and data model where the programmer can cleanly reason about the mapping of their source program to compiled assembly language and the underlying hardware.
+\item 
+Harness the computational power of the Single Program, Multiple Data (SIMD) vector units without the extremely low-programmer-productivity activity of directly writing intrinsics.
+\item 
+Explore opportunities from close-coupling between C/C++ application code and SPMD ispc code running on the same processor--lightweight function calls between the two languages, sharing data directly via pointers without copying or reformatting, etc.
+\ee
+}
+
+\subsection{Inferencing}
+
+Given a decision tree, \(T\), and a set of data points \(X = \{x_1, x_2,
+\ldots\}\), the goal is to create \(Y = \{y_1, y_2, \ldots\}\) where \(y_i\) is
+the leaf to which \(x_i\) is assigned.
+
+
+
+\subsubsection{Random Forests}
+
+\bibliographystyle{alpha}
+\bibliography{../../DOC/Q_PAPER/ref}
+\end{document}
