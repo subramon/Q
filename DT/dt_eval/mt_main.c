@@ -21,7 +21,7 @@ main(
   int num_features = 64;
   int num_instances = 4 * 1048576;
   int nDT = 4; // number of parallel decision trees to evaluate 
-  int nP =  2; // number of cores used 
+  int nP =  4; // number of cores used 
   //--------------------
   orig_node_t **p_dt = NULL; // [nDT][n_dt]
   int *p_n_dt = NULL;
@@ -63,9 +63,11 @@ main(
     return_if_malloc_failed(p_nT[i]);
   }
   // perform inferencing
-  printf("n = %d \n", num_instances);
-  printf("m = %d \n", num_features);
-  printf("d = %d \n", depth);
+  printf("n   = %d \n", num_instances);
+  printf("m   = %d \n", num_features);
+  printf("d   = %d \n", depth);
+  printf("nDT = %d \n", nDT);
+  printf("nP  = %d \n", nP);
   uint64_t t_start = get_time_usec();
 #pragma omp parallel for num_threads(nP)
   for ( int i = 0; i < nDT; i++ ) { 
