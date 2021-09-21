@@ -35,12 +35,19 @@ ISPC Documentation states: Avoid Computation With 8 and 16-bit Integer Types
 Question: Is it worth storing as 8/16 bit if they neeed to be promoted
 to 32-bit for performance and then down again for storage?
 
+This is for older platforms. ispc needs to emulate mask
+
+but not relevant for newer patforms like AVX 512
 ====================
 
 Question: Should one even bother with specifying target if the system
 one runs on is the same as the system one builds on?
 
 Question: How does one use info from /proc/cpuinfo to set arch flags?
+
+calls frm one ispc file to anotheer means same ISA and width to be specifieid
+
+but 2 kernsls from C can be done with different targete
 
 ===============================
 
