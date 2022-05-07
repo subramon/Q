@@ -2,7 +2,7 @@ require 'Q/UTILS/lua/strict'
 local is_in = require 'Q/UTILS/lua/is_in'
 local plpath = require 'pl.path'
 local plfile = require 'pl.file'
-cutils = require 'libcutils'
+local cutils = require 'libcutils'
 
 local rootdir = os.getenv("Q_SRC_ROOT")
 plpath.isdir(rootdir)
@@ -55,7 +55,7 @@ tests.t1 = function()
   y = cutils.read("/tmp/_x")
   assert(y == "hello world\n")
   --==============
-  cutils.copyfile("/tmp/_x", "/tmp/_y");
+  assert(cutils.copyfile("/tmp/_x", "/tmp/_y"))
   y = cutils.read("/tmp/_y")
   assert(y == "hello world\n")
   --============

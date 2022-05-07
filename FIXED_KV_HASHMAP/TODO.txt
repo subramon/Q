@@ -1,0 +1,3 @@
+Test the reset functionality
+
+have a version of hmap_get which uses probe_loc and hash as inputs

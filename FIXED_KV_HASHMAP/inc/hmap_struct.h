@@ -23,6 +23,8 @@ typedef struct _hmap_config_t {
   float high_water_mark;
   int key_len; // used when keys of fixed size
   int val_len; // used when vals of fixed size
+  void *update_fn_ptr; // function to update value 
+  void *key_cmp_fn_ptr; // function to compare 2 keys 
 } hmap_config_t; 
 
 typedef struct _dbg_t { 
@@ -32,11 +34,10 @@ typedef struct _dbg_t {
 } dbg_t; 
 
 typedef struct _bkt_t { 
-  void    *key; // keys
-  uint64_t hash; // hash of key
-  uint16_t len; // length of key
+  key_t key; 
+  bool this_key_exists;
   uint16_t psl; // probe sequence length 
-  void * val;    // value that is aggregated, NOT input value
+  val_t val;    // value that is aggregated, NOT input value
 } bkt_t;
 
 typedef struct _hmap_t {
