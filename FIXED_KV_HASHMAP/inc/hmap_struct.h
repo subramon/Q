@@ -2,7 +2,13 @@
 #define __HMAP_STRUCT_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "custom_types.h" // CUSTOM 
+
+typedef struct _hmap_kv_t { 
+  hmap_key_t key;
+  hmap_val_t val;
+} hmap_kv_t;
 
 typedef bool (*key_cmp_fn_t )(const void * const , const void * const );
 typedef int (*val_update_fn_t )(void *, const void * const);

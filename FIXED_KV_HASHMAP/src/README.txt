@@ -1,0 +1,6 @@
+externally callable routines are
+hmap_instantiate
+hmap_put
+hmap_get
+hmap_chk
+hmap_destroy

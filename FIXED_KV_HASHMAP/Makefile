@@ -34,6 +34,7 @@ SRCS +=	./src/hmap_insert.c
 SRCS +=	./src/hmap_instantiate.c  
 SRCS +=	./src/hmap_put.c  
 SRCS +=	./src/hmap_resize.c  
+SRCS +=	./src/hmap_bindmp.c  
 SRCS +=	./src/calc_new_size.c  
 SRCS +=	./src/murmurhash.c  
 SRCS +=	./src/fasthash.c  
@@ -43,6 +44,7 @@ OBJS = $(SRCS:.c=.o)
 CUSTOM_SRCS +=	./CASE1/src/pr.c  
 CUSTOM_SRCS +=	./CASE1/src/key_cmp.c  
 CUSTOM_SRCS +=	./CASE1/src/val_update.c  
+CUSTOM_SRCS +=	./CASE1/src/key_ordr.c  
 
 CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
 
@@ -66,4 +68,5 @@ test_fastrem : ./test/test_fastrem.c
 	-o test_fastrem
 
 clean:
-	rm -f *.o test_hmap *.so ./src/*.o
+	rm -f *.o test_hmap *.so ./src/*.o test_kUI8_vUI4
+	rm -f ./CASE1/src/*.o

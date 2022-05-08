@@ -1,6 +1,5 @@
 #include "hmap_common.h"
 #include "hmap_struct.h"
-#include "hmap_utils.h"
 #include "hmap_instantiate.h"
 #include "hmap_chk.h"
 #include "hmap_destroy.h"
