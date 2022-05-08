@@ -4,27 +4,17 @@ mk_hmap_key(
     );
 extern uint32_t
 set_hash(
-    const void *const key,
-    uint16_t len,
-    hmap_t *ptr_hmap,
-    dbg_t *ptr_dbg
+    const hmap_key_t * const ptr_key,
+    const hmap_t * const ptr_hmap
     );
 extern uint32_t
 set_probe_loc(
     uint32_t hash,
-    hmap_t *ptr_hmap,
-    dbg_t *ptr_dbg
+    hmap_t *ptr_hmap
     );
 extern int
 hmap_pr(
     hmap_t *ptr_hmap
-    );
-extern void multi_free(
-    hmap_multi_t *ptr_M
-    );
-extern  int multi_init(
-    hmap_multi_t *ptr_M,
-    int num_at_once
     );
 extern uint32_t 
 prime_geq(

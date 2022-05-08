@@ -5,6 +5,7 @@
  * => Otherwise, on successful insert, return the given value.
  */
  #include "hmap_common.h"
+ #include "hmap_struct.h"
  #include "hmap_put.h"
  #include "calc_new_size.h"
  #include "hmap_resize.h"
@@ -12,10 +13,8 @@
 int
 hmap_put(
     hmap_t *ptr_hmap, 
-    key_t *key, 
-    key_t *val,
-    void *update_fn_ptr, // function pointer 
-    dbg_t *ptr_dbg
+    const void  * const ptr_key, 
+    const void * const ptr_val
     )
 {
   int status = 0;
@@ -28,10 +27,10 @@ hmap_put(
     cBYE(status);
   }
   if ( resize ) { 
+    printf("Resizing to %u \n", newsize);
     status = hmap_resize(ptr_hmap, newsize); cBYE(status);
   }
-  status = hmap_insert(ptr_hmap, key, val, update_fn_ptr, ptr_dbg); 
-  cBYE(status);
+  status = hmap_insert(ptr_hmap, ptr_key, ptr_val); cBYE(status);
 BYE:
   return status;
 }

@@ -1,7 +1,7 @@
 # This script is used to compare the efficiency of the following:
 # scalar reorder of data based on a split
 # vector reorder of data based on a split
-# rsorting  data based on a split
+# re-sorting  data based on a split
 #!/bin/bash
 #max_n=33554432
 max_n=16777216

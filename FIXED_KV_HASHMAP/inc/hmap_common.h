@@ -16,7 +16,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "fastdiv.h"
-#include "hmap_struct.h"
 #include "hmap_utils.h"
 
 #define	HASH_MIN_SIZE		(1024)

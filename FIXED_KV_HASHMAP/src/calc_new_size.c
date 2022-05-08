@@ -1,4 +1,5 @@
 #include "hmap_common.h"
+#include "hmap_struct.h"
 #include "hmap_aux.h"
 #include "calc_new_size.h"
 /* Checks whether resize is needed. If so, calculates newsize */

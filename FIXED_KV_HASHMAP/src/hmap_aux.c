@@ -8,7 +8,8 @@
 #include "hmap_struct.h"
 #include "hmap_aux.h"
 #include "fasthash.h"
-#include "val_pr.h"
+
+#include "pr.h" // custom 
 
 uint32_t
 mk_hmap_key(
@@ -22,39 +23,26 @@ mk_hmap_key(
 
 uint32_t
 set_hash(
-    const void *const key,
-    uint16_t len,
-    hmap_t *ptr_hmap,
-    dbg_t *ptr_dbg
+    const hmap_key_t * const ptr_key,
+    const hmap_t * const ptr_hmap
     )
 {
   uint32_t hash;
-  if ( ( ptr_dbg == NULL ) || ( ptr_dbg->hash == 0 ) ) { 
     // hash = murmurhash3(key, len, ptr_hmap->hashkey);
-    hash = fasthash32(key, len, ptr_hmap->hashkey);
-  }
-  else { 
-    hash = ptr_dbg->hash;
-  }
+  hash = fasthash32(ptr_key, sizeof(hmap_key_t), ptr_hmap->hashkey);
   return hash;
 }
 //----------------------------------------------
 uint32_t
 set_probe_loc(
     uint32_t hash,
-    hmap_t *ptr_hmap,
-    dbg_t *ptr_dbg
+    hmap_t *ptr_hmap
     )
 {
   uint32_t probe_loc;
   register uint32_t size = ptr_hmap->size;
   uint64_t divinfo = ptr_hmap->divinfo;
-  if ( ( ptr_dbg == NULL ) || ( ptr_dbg->probe_loc == 0 ) ) { 
-    probe_loc = fast_rem32(hash, size, divinfo);
-  }
-  else {
-    probe_loc = ptr_dbg->probe_loc;
-  }
+  probe_loc = fast_rem32(hash, size, divinfo);
   return probe_loc;
 }
 
@@ -65,65 +53,13 @@ hmap_pr(
 {
   int status = 0;
   bkt_t *bkts = ptr_hmap->bkts;
+  bool *bkt_full = ptr_hmap->bkt_full;
   for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
-    if ( bkts[i].key == NULL ) { continue; }
-    status = key_pr(bkts[i].key, stdout); cBYE(status);
-    status = val_pr(bkts[i].val, stdout); cBYE(status);
+    if ( !bkt_full[i] ) { continue; }
+    pr_key(&(bkts[i].key), stdout); cBYE(status);
+    pr_val(&(bkts[i].val), stdout); cBYE(status);
   }
 BYE:
-  return status;
-}
-
-void multi_free(
-    hmap_multi_t *ptr_M
-    )
-{
-  free_if_non_null(ptr_M->idxs);
-  free_if_non_null(ptr_M->hashes);
-  free_if_non_null(  ptr_M->locs);
-  free_if_non_null(ptr_M->tids);
-  free_if_non_null(ptr_M->exists);
-  free_if_non_null(ptr_M->set);
-  free_if_non_null(ptr_M->m_key_len);
-  free_if_non_null(ptr_M->m_key);
-}
-
-int multi_init(
-    hmap_multi_t *ptr_M,
-    int n
-    )
-{
-  int status = 0;
-  if ( ptr_M == NULL ) { go_BYE(-1); }
-  memset(ptr_M, 0, sizeof(hmap_multi_t));
-  if ( n <= 0 ) { go_BYE(-1); }
-  ptr_M->num_at_once = n;
-
-  ptr_M->idxs = malloc(n * sizeof(uint32_t));
-  return_if_malloc_failed(ptr_M->idxs);
-
-  ptr_M->hashes = malloc(n * sizeof(uint32_t));
-  return_if_malloc_failed(ptr_M->hashes);
-
-  ptr_M->locs = malloc(n * sizeof(uint32_t));
-  return_if_malloc_failed(  ptr_M->locs);
-  
-  ptr_M->tids = malloc(n * sizeof(int8_t));
-  return_if_malloc_failed(ptr_M->tids);
-  
-  ptr_M->exists = malloc(n * sizeof(bool));
-  return_if_malloc_failed(ptr_M->exists);
-
-  ptr_M->set = malloc(n * sizeof(bool));
-  return_if_malloc_failed(ptr_M->set);
-
-  ptr_M->m_key_len = malloc(n * sizeof(uint16_t));
-  return_if_malloc_failed(ptr_M->m_key_len);
-
-  ptr_M->m_key = malloc(n * sizeof(void *));
-  return_if_malloc_failed(ptr_M->m_key);
-BYE:
-  if ( status < 0 ) { if ( ptr_M != NULL ) { multi_free(ptr_M); } }
   return status;
 }
 uint32_t 

@@ -1,16 +1,14 @@
+#include "hmap_common.h"
 #include "hmap_struct.h"
 #include "hmap_utils.h"
-#include "hmap_common.h"
 #include "hmap_instantiate.h"
 #include "hmap_chk.h"
-#include "hmap_del.h"
 #include "hmap_destroy.h"
-#include "new_hmap_get.h"
-#include "new_hmap_put.h"
+#include "hmap_get.h"
+#include "hmap_put.h"
+#include "key_cmp.h"
+#include "val_update.h"
 
-#include "kUI8_vUI4_types.h"
-int num_frees;  // for debugging 
-int num_mallocs; // for debugging 
 int
 main(
     void
@@ -18,101 +16,64 @@ main(
 {
   int status = 0;
   // num_frees = num_mallocs = 0; 
-  int num_iterations = 3; 
+  int num_iterations = 8; 
   hmap_t hmap; memset(&hmap, 0, sizeof(hmap_t));
-  dbg_t dbg; memset(&dbg, 0, sizeof(dbg_t));
   //---------------------------
-  hmap_config_t config; memset(&config, 0, sizeof(hmap_config_t));
-  config.min_size = 32;
-  config.max_size = 0;
-  uint32_t occupancy = 0;
-  uint32_t nitems = config.max_size * 0.75;
-  status = hmap_instantiate(&hmap, &config); cBYE(status);
-  hmap.config.key_len = sizeof(uint64_t);
-  hmap.config.val_len = sizeof(uint32_t);
+  hmap.config.min_size = 32;
+  hmap.config.max_size = 0;
+  hmap.config.key_cmp_fn = key_cmp;
+  hmap.config.val_update_fn = val_update;
+  uint32_t nitems = 4*1048576;
+  status = hmap_instantiate(&hmap); cBYE(status);
   //-----------------------------------------------------------
+  hmap_val_t sum_val = 0;
   for ( int iter = 0; iter < num_iterations; iter++ ) { 
-    val_t val = iter+1;
+    hmap_val_t val = iter+1;
+    sum_val += val;
     bool is_found; uint32_t where_found;
     for ( uint32_t i = 0; i < nitems; i++ ) {
-      key_t key = i; 
-      val_t chk_val; 
-      void *update_fn_ptr = NULL;
-      status = hmap_put(&hmap, &key, &val, update_fn_ptr, &dbg); 
-      cBYE(status);
-      status = new_hmap_get(&hmap, &key, &chk_val, &is_found, 
-          &where_found, &dbg); 
+      hmap_key_t key = (i+1)*10; 
+      hmap_val_t chk_val; 
+      status = hmap_put(&hmap, &key, &val); cBYE(status);
+      status = hmap_get(&hmap, &key, &chk_val, &is_found, &where_found);
       cBYE(status);
       if ( !is_found ) { go_BYE(-1); }
-      if ( *ptr_agg_val != val ) { go_BYE(-1); }
+      if ( chk_val != sum_val ) { go_BYE(-1); }
       if ( iter == 0 ) { 
         if ( hmap.nitems != (i+1) ) { go_BYE(-1); } 
       }
       else { 
-        if ( hmap.nitems != occupancy ) { go_BYE(-1); }
+        if ( hmap.nitems != nitems ) { go_BYE(-1); }
       }
     }
-    if ( iter == 0 ) { 
-      occupancy = hmap.nitems;
-    }
-    printf("Iter = %d, Probes = %" PRIu64 "\n",iter, dbg.num_probes); 
+    if ( hmap.nitems < 4096 ) { 
+      // This is an expensive check 
     status = hmap_chk(&hmap); cBYE(status); 
+    }
   }
-  uint32_t n = hmap.nitems;
+  // The following works only for this particular Key/Val updates
+  uint32_t chk_n1 = 0, chk_n2 = 0;
+  for ( uint32_t i = 0; i < hmap.size; i++ ) { 
+     if ( hmap.bkts[i].key != 0 ) { chk_n1++; }
+     if ( hmap.bkts[i].val != 0 ) { chk_n2++; }
+    if ( hmap.bkt_full[i] ) { 
+       if ( hmap.bkts[i].key == 0 ) { 
+         go_BYE(-1); }
+       if ( hmap.bkts[i].val == 0 ) { go_BYE(-1); }
+    }
+    else {
+       if ( hmap.bkts[i].key != 0 ) { go_BYE(-1); }
+       if ( hmap.bkts[i].val != 0 ) { go_BYE(-1); }
+    }
+  }
+  if ( chk_n1 != hmap.nitems ) { go_BYE(-1); }
+  if ( chk_n2 != hmap.nitems ) { go_BYE(-1); }
+
   printf("occupancy = %d \n", hmap.nitems);
   printf("size      = %d \n", hmap.size);
-  // now delete every item (more than once)
-  for ( int iter = 0; iter < num_iterations; iter++ ) { 
-    val_t *ptr_agg_val;
-    bool is_found; uint32_t where_found;
-    for ( uint32_t i = 0; i < nitems; i++ ) {
-      memset(keybuf, 0, 16);
-      sprintf(keybuf, "%d", i); size_t len = strlen(keybuf);
-      status = hmap_del(&hmap, keybuf, len, &is_found, &dbg); 
-      cBYE(status);
-
-      if ( iter == 0 ) { if ( !is_found ) { go_BYE(-1); } } 
-      if ( iter  > 0 ) { if (  is_found ) { go_BYE(-1); } } 
-
-      status = hmap_get(&hmap, keybuf, len, (void **)&ptr_agg_val, 
-          &is_found, &where_found, &dbg); 
-      cBYE(status);
-      if ( is_found ) { go_BYE(-1); }
-      if ( ptr_agg_val != NULL ) { go_BYE(-1); }
-
-      if ( iter == 0 ) { if ( hmap.nitems != (n - i - 1) ) { go_BYE(-1); } }
-      if ( iter  > 0 ) { if ( hmap.nitems != 0 ) { go_BYE(-1); }  }
-    }
-    status = hmap_chk(&hmap); cBYE(status); 
-  }
   hmap_destroy(&hmap);
   //printf("num_frees = %d \n", num_frees);
   //printf("num_mallocs = %d \n", num_mallocs);
-
-  // this test is a bunch of random inserts and deletes 
-  // with checks thrown in every so often
-  status = hmap_instantiate(&hmap, &config); cBYE(status);
-  int n1 = 100000;
-  int n2 = 100;
-  int n3 = 100;
-  for ( int i = 0; i < n1; i++ ) { 
-    bool is_found;
-    val_t val = 0; 
-    memset(keybuf, 0, 16);
-    sprintf(keybuf, "%d", (int)(random() % n2)); 
-    size_t len = strlen(keybuf);
-    if ( ( random() & 0x1 ) == 0 ) { 
-      status = hmap_put(&hmap, keybuf, len, malloc_key, &val, &dbg); 
-    }
-    else {
-      status = hmap_del(&hmap, keybuf, len, &is_found, &dbg); 
-    }
-    cBYE(status);
-    if ( ( i % n3 ) == 0 ) {
-      status = hmap_chk(&hmap); cBYE(status); 
-    }
-  }
-
 
   fprintf(stderr, "Unit test succeeded\n");
 BYE:
