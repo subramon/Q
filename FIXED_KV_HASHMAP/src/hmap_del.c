@@ -49,7 +49,7 @@ hmap_del(
     // check if key matches incoming one 
     if ( key_cmp_fn(&(bkts[probe_loc].key), ptr_key) ) { 
       *ptr_is_found = true;
-      if ( ptr_val != NULL ) { 
+      if ( ptr_val != NULL ) {  // return value of deleted key
         *ptr_val = bkts[probe_loc].val; 
       }
       break;
@@ -71,6 +71,7 @@ hmap_del(
    * Use the backwards-shifting method to maintain low variance.
    */
   bkt_t *this_bkt  = &(bkts[probe_loc]);
+  uint32_t prev_probe_loc = probe_loc; 
   for ( ; ; ) {
     // mark this bucket as empty
     memset(&(bkts[probe_loc]), 0, sizeof(bkt_t));
@@ -89,6 +90,8 @@ hmap_del(
     next_bkt->psl--;
     *this_bkt = *next_bkt;
     this_bkt = next_bkt;
+    bkt_full[prev_probe_loc] = bkt_full[probe_loc];
+    prev_probe_loc = probe_loc; 
   }
 
   /*

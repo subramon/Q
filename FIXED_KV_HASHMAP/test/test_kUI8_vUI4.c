@@ -23,7 +23,7 @@ main(
   hmap.config.max_size = 0;
   hmap.config.key_cmp_fn = key_cmp;
   hmap.config.val_update_fn = val_update;
-  uint32_t nitems = 64;
+  uint32_t nitems = 1048576;
   status = hmap_instantiate(&hmap); cBYE(status);
   //-----------------------------------------------------------
   hmap_val_t sum_val = 0;
@@ -71,6 +71,7 @@ main(
 
   // Now delete the items one by one 
   // All items have the same value: let us determine what it is 
+  // sum_val is the value for all keys 
   sum_val = 0;
   for ( int iter = 0; iter < num_iterations; iter++ ) { 
     hmap_val_t val = iter+1;
@@ -80,6 +81,7 @@ main(
   for ( uint32_t i = 0; i < nitems; i++ ) {
     bool is_found;
     hmap_key_t key = (i+1)*10; 
+    // printf("%d deleteting %lu \n", i, key);
     hmap_val_t chk_val; 
     status = hmap_del(&hmap, &key, &chk_val, &is_found); cBYE(status);
     if ( !is_found ) { go_BYE(-1); }
@@ -90,6 +92,10 @@ main(
       // This is an expensive check 
       status = hmap_chk(&hmap); cBYE(status); 
     }
+    // delete again just for kicks 
+    status = hmap_del(&hmap, &key, &chk_val, &is_found); cBYE(status);
+    if ( is_found ) { go_BYE(-1); }
+    if ( chk_val != 0 ) { go_BYE(-1); }
   }
   if ( hmap.nitems != 0 ) { go_BYE(-1); } 
   // Now delete items again. Should have no impact 

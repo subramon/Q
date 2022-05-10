@@ -27,7 +27,6 @@ hmap_put(
     cBYE(status);
   }
   if ( resize ) { 
-    printf("Resizing to %u \n", newsize);
     status = hmap_resize(ptr_hmap, newsize); cBYE(status);
   }
   status = hmap_insert(ptr_hmap, ptr_key, ptr_val); cBYE(status);

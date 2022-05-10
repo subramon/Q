@@ -1,2 +1,2 @@
-export LD_LIBRARY_PATH="$HOME/RBC/src/:$PWD"
-export PATH=$PWD:$PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD
+export PATH=$PATH:$PWD

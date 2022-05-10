@@ -11,8 +11,8 @@ CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn
 # CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
 # CFLAGS += -Wduplicated-branches -Wrestrict
 
-# DFLAGS = -g -DDEBUG 
-DFLAGS = -O4
+DFLAGS = -g -DDEBUG 
+# DFLAGS = -O4
 # Add -pg for grpof 
 
 INCS := -I../inc/
