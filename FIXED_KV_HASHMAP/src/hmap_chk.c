@@ -16,6 +16,25 @@ typedef struct _chk_t {
   uint32_t idx;
   uint64_t hash;
 } chk_t; 
+
+static int
+sortcompare(
+    const void *in1,
+    const void *in2
+    )
+{
+  const chk_t  *u1 = (const chk_t *)in1;
+  const chk_t  *u2 = (const chk_t *)in2;
+  uint64_t h1 = u1->hash;
+  uint64_t h2 = u2->hash;
+  if ( h1 < h2 ) {
+    return -1;
+  }
+  else {
+    return 1;
+  }
+}
+
 //-----------------------------------------------------
 int
 hmap_chk(
@@ -43,6 +62,7 @@ hmap_chk(
   uint64_t seed = RDTSC() ^ random();
   for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
     if ( bkt_full[i] ) {
+     if ( hash_cnt >= chk_nitems ) { go_BYE(-1); }
       hashes[hash_cnt].hash = spooky_hash64(
           &(bkts[i].key), sizeof(hmap_key_t), seed);
       hashes[hash_cnt].idx = i;
@@ -50,6 +70,7 @@ hmap_chk(
     }
   }
   if ( hash_cnt != chk_nitems ) { go_BYE(-1); }
+  if ( chk_nitems < 1024 ) { 
   for ( uint32_t i = 0; i < chk_nitems; i++ ) { 
      if ( hashes[i].hash == 0 ) { go_BYE(-1); }
     for ( uint32_t j = i+1; j < chk_nitems; j++ ) { 
@@ -58,6 +79,13 @@ hmap_chk(
             (unsigned long)hashes[i].idx, (unsigned long)hashes[j].idx);
             go_BYE(-1);
       }
+    }
+  }
+  }
+  else {
+    qsort(hashes, hash_cnt, sizeof(chk_t), sortcompare);
+    for ( uint32_t i = 1; i < chk_nitems; i++ ) { 
+      if ( hashes[i].hash == hashes[i-1].hash ) { go_BYE(-1); }
     }
   }
   //-----------------------

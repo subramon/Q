@@ -46,7 +46,7 @@ main(
         if ( hmap.nitems != nitems ) { go_BYE(-1); }
       }
     }
-    if ( hmap.nitems < 4096 ) { 
+    if ( hmap.nitems < 65536 ) { 
       // This is an expensive check 
       status = hmap_chk(&hmap); cBYE(status); 
     }
@@ -88,7 +88,7 @@ main(
     if ( chk_val != sum_val ) { go_BYE(-1); }
     chk_nitems--; 
     if ( hmap.nitems != chk_nitems ) { go_BYE(-1); } 
-    if ( hmap.nitems < 4096 ) { 
+    if ( hmap.nitems < 65536 ) { 
       // This is an expensive check 
       status = hmap_chk(&hmap); cBYE(status); 
     }
@@ -109,8 +109,8 @@ main(
   }
   //--------------------------------------------------
 
-  printf("occupancy = %d \n", hmap.nitems);
-  printf("size      = %d \n", hmap.size);
+  printf("hmap occupancy = %d \n", hmap.nitems);
+  printf("hmap size      = %d \n", hmap.size);
   hmap_destroy(&hmap);
   //printf("num_frees = %d \n", num_frees);
   //printf("num_mallocs = %d \n", num_mallocs);
