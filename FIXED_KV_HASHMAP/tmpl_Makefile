@@ -15,13 +15,13 @@ DFLAGS = -g -DDEBUG
 # DFLAGS = -O4
 # Add -pg for grpof 
 
+CUSTOM=CASE1
 INCS += -I./inc/ 
-INCS += -I./CASE1/inc/ 
+INCS += -I./${CUSTOM}/inc/ 
 
-all: libhmap.so test_kUI8_vUI4 
+all: libhmap_${CUSTOM}.so test_kUI8_vUI4 
 
 SRCS :=	./src/spooky_hash.c  
-SRCS +=	./src/rdtsc.c  
 SRCS +=	./src/hmap_aux.c  
 SRCS +=	./src/hmap_chk.c  
 SRCS +=	./src/hmap_del.c  
@@ -39,26 +39,22 @@ SRCS +=	./src/fasthash.c
 
 OBJS = $(SRCS:.c=.o)
 
-CUSTOM_SRCS +=	./CASE1/src/pr.c  
-CUSTOM_SRCS +=	./CASE1/src/key_cmp.c  
-CUSTOM_SRCS +=	./CASE1/src/val_update.c  
-CUSTOM_SRCS +=	./CASE1/src/key_ordr.c  
+CUSTOM_SRCS +=	./${CUSTOM}/src/pr.c  
+CUSTOM_SRCS +=	./${CUSTOM}/src/key_cmp.c  
+CUSTOM_SRCS +=	./${CUSTOM}/src/val_update.c  
+CUSTOM_SRCS +=	./${CUSTOM}/src/key_ordr.c  
 
 CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
 
 .c.o : 
 	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
 
-libcustom1.so: ${CUSTOM_OBJS}  ./inc/*.h 
-	gcc  ${CFLAGS} ${DFLAGS} ${CUSTOM_OBJS} ${INCS} \
-		-shared -lm -o libcustom1.so  
+libhmap_${CUSTOM}.so: ${OBJS} ${CUSTOM_OBJS}  ./inc/*.h 
+	gcc  ${CFLAGS} ${DFLAGS} ${OBJS} ${CUSTOM_OBJ} ${INCS} -shared -lm -o libhmap_${CUSTOM}.so  
 
-libhmap.so: ${OBJS}  ./inc/*.h 
-	gcc  ${CFLAGS} ${DFLAGS} ${OBJS} ${INCS} -shared -lm -o libhmap.so  
-
-test_kUI8_vUI4 : libhmap.so ./test/test_kUI8_vUI4.c libcustom1.so
+test_kUI8_vUI4 : libhmap_${CUSTOM{.so ./test/test_kUI8_vUI4.c 
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_kUI8_vUI4.c \
-	libcustom1.so libhmap.so -o test_kUI8_vUI4 
+	libhmap_${CUSTOM}.so -o test_kUI8_vUI4 
 
 test_fastrem : ./test/test_fastrem.c 
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_fastrem.c \
@@ -67,4 +63,4 @@ test_fastrem : ./test/test_fastrem.c
 
 clean:
 	rm -f *.o test_hmap *.so ./src/*.o test_kUI8_vUI4
-	rm -f ./CASE1/src/*.o
+	rm -f ./${CUSTOM}/src/*.o
