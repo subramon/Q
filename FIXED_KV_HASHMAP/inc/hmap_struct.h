@@ -5,11 +5,6 @@
 #include <stdint.h>
 #include "custom_types.h" // CUSTOM 
 
-typedef struct _hmap_kv_t { 
-  hmap_key_t key;
-  hmap_val_t val;
-} hmap_kv_t;
-
 typedef bool (*key_cmp_fn_t )(const void * const , const void * const );
 typedef int (*val_update_fn_t )(void *, const void * const);
 
@@ -19,7 +14,11 @@ typedef struct _hmap_config_t {
   uint64_t max_growth_step;
   float low_water_mark;
   float high_water_mark;
+
+  char *str_key_cmp_fn; 
   key_cmp_fn_t key_cmp_fn; // function to compare 2 keys
+
+  char *str_val_update_fn; 
   val_update_fn_t val_update_fn; // function to update value 
 } hmap_config_t; 
 

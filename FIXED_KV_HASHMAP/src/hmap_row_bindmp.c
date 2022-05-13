@@ -1,11 +1,12 @@
 /*
- * Dumps the contents of the hmap in binary 
+ * Dumps the contents of the hmap in binary in row order
  */
  #include "hmap_common.h"
  #include "hmap_struct.h"
- #include "hmap_bindmp.h"
+ #include "hmap_row_bindmp.h"
+
 int
-hmap_bindmp(
+hmap_row_bindmp(
     hmap_t *ptr_hmap, 
     hmap_kv_t **ptr_K,
     uint32_t *ptr_nK
