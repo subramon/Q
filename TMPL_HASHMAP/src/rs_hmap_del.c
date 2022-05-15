@@ -61,6 +61,7 @@ rs_hmap_del(
     if ( probe_loc == ptr_hmap->size ) { probe_loc = 0; }
     num_probes++;
   }
+
   // if key does not exist, we should have returned by now 
   if ( *ptr_is_found == false ) { go_BYE(-1); }
 
@@ -99,10 +100,10 @@ rs_hmap_del(
    * If the load factor is less than threshold, then shrink by
    * halving the size, but not more than the minimum size.
    */
-  size_t threshold = LOW_WATER_MARK * ptr_hmap->size;
+  size_t threshold = LOW_WATER_MARK * (double)ptr_hmap->size;
   if ( ( ptr_hmap->nitems > ptr_hmap->config.min_size ) && 
        ( ptr_hmap->nitems < threshold ) ) {
-    size_t new_size = ptr_hmap->size >> 1;
+    size_t new_size = (double)ptr_hmap->nitems / IDEAL_WATER_MARK;
     if ( new_size < ptr_hmap->config.min_size ) { 
       new_size = ptr_hmap->config.min_size;
     }

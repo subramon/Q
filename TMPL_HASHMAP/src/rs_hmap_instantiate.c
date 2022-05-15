@@ -57,7 +57,7 @@ rs_hmap_instantiate(
   H->bkt_full = calloc(H->size, sizeof(bool)); 
   return_if_malloc_failed(H->bkt_full);
 
-  H-> divinfo = fast_div32_init(H->size);
+  H->divinfo = fast_div32_init(H->size);
   H->hashkey = mk_hmap_key();
 
   /* TODO 
@@ -65,6 +65,27 @@ rs_hmap_instantiate(
   if ( H->config.val_update_fn == NULL ) { go_BYE(-1); }
   */
 
+  if ( ( so_file == NULL ) || ( *so_file == '\0' ) ) { go_BYE(-1); }
+  H->config.so_file = strdup(so_file); 
+  H->config.so_handle = dlopen(so_file, RTLD_NOW); 
+  if ( H->config.so_handle == NULL ) { go_BYE(-1); }
+
+  H->put = (put_fn_t) dlsym(H->config.so_handle, "rs_hmap_put"); 
+  H->get = (get_fn_t) dlsym(H->config.so_handle, "rs_hmap_get"); 
+  H->del = (del_fn_t) dlsym(H->config.so_handle, "rs_hmap_del"); 
+  H->chk = (chk_fn_t) dlsym(H->config.so_handle, "rs_hmap_chk"); 
+  H->destroy = (destroy_fn_t) dlsym(H->config.so_handle, "rs_hmap_destroy"); 
+
+  rs_hmap_int_config_t *IC = malloc(1 * sizeof(rs_hmap_int_config_t));
+  IC->key_cmp_fn = (key_cmp_fn_t) 
+    dlsym(H->config.so_handle, "key_cmp"); 
+  if ( IC->key_cmp_fn == NULL ) { go_BYE(-1); }
+
+  IC->val_update_fn = (val_update_fn_t) 
+    dlsym(H->config.so_handle, "val_update"); 
+  if ( IC->val_update_fn == NULL ) { go_BYE(-1); }
+
+  H->int_config = IC;
 BYE:
   return status;
 }

@@ -22,6 +22,7 @@
 #define	HASH_MAX_SIZE		(0) // 0 => no max
 #define	MAX_GROWTH_STEP		(1024U * 1024)
 #define	LOW_WATER_MARK  0.2
+#define IDEAL_WATER_MARK 0.6
 #define	HIGH_WATER_MARK 0.85
 
 #endif //  _RS_HMAP_H

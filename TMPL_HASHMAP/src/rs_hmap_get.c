@@ -21,7 +21,9 @@ rs_hmap_get(
   const rs_hmap_key_t * const ptr_key = (const rs_hmap_key_t * const)in_ptr_key;
   rs_hmap_val_t *ptr_val = (rs_hmap_val_t *)in_ptr_val;
   rs_hmap_int_config_t *int_config = (rs_hmap_int_config_t *)ptr_hmap->int_config;
+  if ( int_config == NULL ) { go_BYE(-1); }
   key_cmp_fn_t key_cmp_fn = int_config->key_cmp_fn;
+  if ( key_cmp_fn == NULL ) { go_BYE(-1); }
   
   register uint32_t hash = set_hash(ptr_key, ptr_hmap);
   register uint32_t probe_loc = set_probe_loc(hash, ptr_hmap);

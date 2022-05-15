@@ -16,9 +16,9 @@ rs_hmap_insert(
   const rs_hmap_val_t * const ptr_val = (const rs_hmap_val_t * const )in_ptr_val;
   register uint32_t hash = set_hash(ptr_key, ptr_hmap);
   register uint32_t probe_loc = set_probe_loc(hash, ptr_hmap);
-  rs_hmap_int_config_t *C = (rs_hmap_int_config_t *)ptr_hmap->int_config;
-  register key_cmp_fn_t key_cmp_fn = C->key_cmp_fn;
-  register val_update_fn_t val_update_fn = C->val_update_fn;
+  rs_hmap_int_config_t *IC = (rs_hmap_int_config_t *)ptr_hmap->int_config;
+  register key_cmp_fn_t key_cmp_fn = IC->key_cmp_fn;
+  register val_update_fn_t val_update_fn = IC->val_update_fn;
 
 
   /*

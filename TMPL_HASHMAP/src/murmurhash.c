@@ -9,7 +9,7 @@
  */
 
 #include "q_incs.h"
-#include "hmap_utils.h"
+#include "rs_hmap_utils.h"
 uint32_t
 murmurhash3(
       const void *key, 

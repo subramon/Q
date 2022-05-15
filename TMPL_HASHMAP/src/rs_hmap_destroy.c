@@ -14,6 +14,7 @@ rs_hmap_destroy(
     int status = dlclose(ptr_hmap->config.so_handle);
     if ( status != 0 ) { WHEREAMI; }
   }
-  free_if_non_null(ptr_hmap->config.so_name);
+  free_if_non_null(ptr_hmap->config.so_file);
+  free_if_non_null(ptr_hmap->int_config);
   memset(ptr_hmap, '\0', sizeof(rs_hmap_t));
 }
