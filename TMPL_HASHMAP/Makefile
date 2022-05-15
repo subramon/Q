@@ -8,8 +8,8 @@ CFLAGS += -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith
 CFLAGS += -Wmissing-declarations -Wredundant-decls -Wnested-externs 
 CFLAGS += -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings 
 CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn 
-# CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
-# CFLAGS += -Wduplicated-branches -Wrestrict
+CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
+CFLAGS += -Wduplicated-branches -Wrestrict
 
 DFLAGS = -g -DDEBUG 
 # DFLAGS = -O4

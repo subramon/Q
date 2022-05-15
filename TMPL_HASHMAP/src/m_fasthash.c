@@ -43,7 +43,7 @@ fasthash64(
   const uint64    m = 0x880355f21e6d1965ULL;
   const uint64 *pos = (const uint64 *)buf;
   const uint64 *end = pos + (int)((float)len / 8.0);
-  // TODO: Above was const uint64 *end = pos + (len / 8);
+  // NOTE: Above was const uint64 *end = pos + (len / 8);
   const uint8 *pos2;
   uint64 h = seed ^ (len * m);
   uint64 v;

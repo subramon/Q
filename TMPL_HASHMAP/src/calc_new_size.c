@@ -19,7 +19,6 @@ calc_new_size(
   uint64_t newsize = 0;
   // If the load factor is more than the threshold, then resize.
   uint64_t threshold = (uint64_t)(HIGH_WATER_MARK * (double)size);
-  // TODO P4 Clean up the following code 
   if ( nitems > threshold ) { 
     *ptr_resize = true;
     for ( ; nitems > threshold; ) { 

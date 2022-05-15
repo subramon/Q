@@ -63,13 +63,6 @@ rs_hmap_insert(
         entry = bkts[probe_loc];
         bkts[probe_loc] = tmp;
         //--------------
-        /*
-        if ( key_copied == false ) {
-          // I do not understand the following TODO P1
-          status = val_update_fn(&(bkts[probe_loc].val), ptr_val);  
-          key_copied = true;
-        }
-        */
         key  = entry.key;
         val  = entry.val;
       }

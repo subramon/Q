@@ -55,7 +55,6 @@
  * Find first bit.
  */
 
-// #define fls // I do not think we need fls() below TODO THINK
 #ifndef fls
 static inline int
 fls(int x)

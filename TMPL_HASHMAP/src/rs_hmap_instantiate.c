@@ -60,11 +60,6 @@ rs_hmap_instantiate(
   H->divinfo = fast_div32_init(H->size);
   H->hashkey = mk_hmap_key();
 
-  /* TODO 
-  if ( H->config.key_cmp_fn == NULL ) { go_BYE(-1); }
-  if ( H->config.val_update_fn == NULL ) { go_BYE(-1); }
-  */
-
   if ( ( so_file == NULL ) || ( *so_file == '\0' ) ) { go_BYE(-1); }
   H->config.so_file = strdup(so_file); 
   H->config.so_handle = dlopen(so_file, RTLD_NOW); 
