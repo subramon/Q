@@ -20,7 +20,7 @@ INCS += -I./CASE1/inc/
 
 TMPL=CASE1
 
-all: libhmap_${TMPL}.so test_${TMPL}
+all: libhmap_${TMPL}.so test_${TMPL} test_merge_${TMPL}
 
 SRCS :=	./src/spooky_hash.c  
 SRCS +=	./src/rdtsc.c  
@@ -32,6 +32,7 @@ SRCS +=	./src/rs_hmap_del.c
 SRCS +=	./src/rs_hmap_destroy.c  
 SRCS +=	./src/rs_hmap_get.c  
 SRCS +=	./src/rs_hmap_insert.c  
+SRCS +=	./src/rs_hmap_merge.c  
 SRCS +=	./src/rs_hmap_put.c  
 SRCS +=	./src/rs_hmap_resize.c  
 SRCS +=	./src/rs_hmap_row_bindmp.c  
@@ -58,6 +59,10 @@ libhmap_${TMPL}.so: ${OBJS} ${CUSTOM_OBJS}   ./inc/*.h
 test_${TMPL} : libhmap_${TMPL}.so ./test/test_${TMPL}.c 
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_${TMPL}.c \
 	libhmap_${TMPL}.so -o test_${TMPL} -ldl
+
+test_merge_${TMPL} : libhmap_${TMPL}.so ./test/test_merge_${TMPL}.c 
+	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_merge_${TMPL}.c \
+	libhmap_${TMPL}.so -o test_merge_${TMPL} -ldl
 
 test_fastrem : ./test/test_fastrem.c 
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_fastrem.c \

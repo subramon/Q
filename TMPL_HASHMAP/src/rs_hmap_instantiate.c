@@ -59,9 +59,10 @@ rs_hmap_instantiate(
   H->divinfo = fast_div32_init(H->size);
   H->hashkey = mk_hmap_key();
 
-  const char * const so_file = HC->so_file; 
-  if ( ( so_file == NULL ) || ( *so_file == '\0' ) ) { go_BYE(-1); }
-  H->config.so_handle = dlopen(so_file, RTLD_NOW); 
+  if ( ( HC->so_file == NULL ) || ( *HC->so_file == '\0' ) ) { go_BYE(-1); }
+  H->config.so_file = HC->so_file;
+  HC->so_file = NULL;  // control handed over 
+  H->config.so_handle = dlopen(H->config.so_file, RTLD_NOW); 
   if ( H->config.so_handle == NULL ) { go_BYE(-1); }
 
   H->put = (put_fn_t) dlsym(H->config.so_handle, "rs_hmap_put"); 
