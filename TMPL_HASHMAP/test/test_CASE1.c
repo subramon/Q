@@ -19,11 +19,11 @@ main(
   int num_iterations = 8; 
   rs_hmap_t H; memset(&H, 0, sizeof(rs_hmap_t));
   //---------------------------
-  rs_hmap_config_t C; memset(&C, 0, sizeof(rs_hmap_config_t));
-  C.min_size = 32;
-  C.max_size = 0;
-  status = rs_hmap_instantiate(&H, &C, "libhmap_CASE1.so"); 
-  cBYE(status);
+  rs_hmap_config_t HC; memset(&HC, 0, sizeof(rs_hmap_config_t));
+  HC.min_size = 32;
+  HC.max_size = 0;
+  HC.so_file = strdup("libhmap_CASE1.so"); 
+  status = rs_hmap_instantiate(&H, &HC); cBYE(status);
   //-----------------------------------------------------------
   rs_hmap_val_t sum_val = 0;
   uint32_t nitems = 1048576;

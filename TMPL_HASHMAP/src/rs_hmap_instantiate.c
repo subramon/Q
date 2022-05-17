@@ -6,28 +6,27 @@
 int 
 rs_hmap_instantiate(
     rs_hmap_t *H, 
-    rs_hmap_config_t *C,
-    const char * const so_file
+    rs_hmap_config_t *HC
     )
 {
   int status = 0;
   //----------------------------------------
-  if ( C->min_size == 0 ) { 
+  if ( HC->min_size == 0 ) { 
     H->config.min_size = HASH_MIN_SIZE;
   }
   else {
-    H->config.min_size = C->min_size;
+    H->config.min_size = HC->min_size;
   }
   //----------------------------------------
-  if ( C->max_size != 0 ) { 
-    H->config.max_size = C->max_size;
+  if ( HC->max_size != 0 ) { 
+    H->config.max_size = HC->max_size;
   }
   //----------------------------------------
-  if ( C->max_growth_step == 0 ) { 
+  if ( HC->max_growth_step == 0 ) { 
     H->config.max_growth_step = MAX_GROWTH_STEP;
   }
   //----------------------------------------
-  if ( C->low_water_mark == 0 ) { 
+  if ( HC->low_water_mark == 0 ) { 
     H->config.low_water_mark = LOW_WATER_MARK;
   }
   if ( ( H->config.low_water_mark <= 0 ) || 
@@ -35,7 +34,7 @@ rs_hmap_instantiate(
     go_BYE(-1);
   }
   //----------------------------------------
-  if ( C->high_water_mark == 0 ) { 
+  if ( HC->high_water_mark == 0 ) { 
     H->config.high_water_mark = HIGH_WATER_MARK;
   }
   if ( ( H->config.high_water_mark <= 0 ) || 
@@ -60,8 +59,8 @@ rs_hmap_instantiate(
   H->divinfo = fast_div32_init(H->size);
   H->hashkey = mk_hmap_key();
 
+  const char * const so_file = HC->so_file; 
   if ( ( so_file == NULL ) || ( *so_file == '\0' ) ) { go_BYE(-1); }
-  H->config.so_file = strdup(so_file); 
   H->config.so_handle = dlopen(so_file, RTLD_NOW); 
   if ( H->config.so_handle == NULL ) { go_BYE(-1); }
 
