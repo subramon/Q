@@ -39,8 +39,7 @@ hmap_del(
       goto BYE;
     }
 
-    if ( ( this_bkt->hash == hash ) && 
-        ( H->key_cmp(this_bkt->key, key) ) ) {
+    if (( this_bkt->hash == hash ) && ( H->key_cmp(this_bkt->key, key) )) {
       *ptr_is_found = true;
       break;
     }
@@ -81,13 +80,13 @@ hmap_del(
   }
 
   /*
-   * If the load factor is less than threshold, then shrink by
-   * halving the size, but not more than the minimum size.
+   * If the load factor is less than threshold, then shrink the hash table
+   * However, don't go below minimum size
    */
   size_t threshold = LOW_WATER_MARK * H->size;
   if ( ( H->nitems > H->config.min_size ) && 
        ( H->nitems < threshold ) ) {
-    size_t new_size = H->size >> 1;
+    size_t new_size = ((LOW_WATER_MARK+HIGH_WATER_MARK)/2.0)*H->nitems;
     if ( new_size < H->config.min_size ) { 
       new_size = H->config.min_size;
     }

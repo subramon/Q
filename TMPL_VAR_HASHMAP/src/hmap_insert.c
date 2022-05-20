@@ -97,15 +97,12 @@ hmap_insert(
     else { // spot is empty, grab it 
       *this_bkt = entry;
       H->nitems++; // one more item in hash table 
-      if ( kv_copied == false ) { 
+      if ( ( kv_copied == false ) && ( is_resize == falase ) ) { 
         // When resizing, we just take over the pointers
         // Else, we need to allocate memory for key/val
-        if ( !is_resize ) { 
-          this_bkt->key = H->key_copy(key); 
-          this_bkt->val = H->inval_copy(val); 
-          kv_copied = true;
-        }
-
+        this_bkt->key = H->key_copy(key); 
+        this_bkt->val = H->inval_copy(val); 
+        kv_copied = true;
       }
       break;
     }

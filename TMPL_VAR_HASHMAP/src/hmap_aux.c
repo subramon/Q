@@ -15,11 +15,9 @@ mk_hmap_key(
     void
     )
 {
-  /* TODO P0
   uint64_t r1 = random() ^ RDTSC();
   uint64_t r2 = random() ^ RDTSC();
   return (uint32_t)( r1 | ( r2 << 32 )  );
-  */
   return 1299827;
 }
 

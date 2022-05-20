@@ -2,7 +2,6 @@
 #include "hmap_common.h"
 #include "hmap_aux.h"
 #include "hmap_get.h"
-#define REGISTER 
 
 int
 hmap_get(
@@ -16,25 +15,25 @@ hmap_get(
 {
   int status = 0;
 
-  REGISTER uint32_t num_probes = 0;
+  register uint32_t num_probes = 0;
   if ( key == NULL ) { go_BYE(-1); } // not a valid key 
 
   uint16_t len_to_hash; char *str_to_hash = NULL; bool free_to_hash;
   status = H->key_hash(key, &str_to_hash, &len_to_hash, &free_to_hash); 
-  REGISTER uint32_t hash = set_hash(str_to_hash, len_to_hash, 
+  register uint32_t hash = set_hash(str_to_hash, len_to_hash, 
       H, ptr_dbg);
   if ( free_to_hash ) { free(str_to_hash); str_to_hash = NULL; }
 
-  REGISTER uint32_t probe_loc = set_probe_loc(hash, H, ptr_dbg);
-  REGISTER bkt_t *bkts = H->bkts;
-  REGISTER uint32_t my_psl = 0;
+  register uint32_t probe_loc = set_probe_loc(hash, H, ptr_dbg);
+  register bkt_t *bkts = H->bkts;
+  register uint32_t my_psl = 0;
   *ptr_is_found = false;
   *ptr_where_found = UINT_MAX; // bad value
 
   // Lookup is a linear probe.
   for ( ; ; ) { 
     if ( num_probes >= H->size ) { go_BYE(-1); }
-    REGISTER bkt_t *this_bkt = bkts + probe_loc;
+    register bkt_t *this_bkt = bkts + probe_loc;
 
     if ( this_bkt->hash != hash ) { goto keep_searching; }  // mismatch 
     if ( !H->key_cmp(this_bkt->key, key) ) { // mismatch 
