@@ -26,6 +26,7 @@ main(
   hmap_config_t config; memset(&config, 0, sizeof(hmap_config_t));
   config.min_size = 32 ; 
   config.max_size = 0;
+  config.so_file = "libhmap_CUSTOM1.so";
 
   uint32_t occupancy = 0;
   status = hmap_instantiate(&hmap, &config); cBYE(status);
@@ -147,7 +148,7 @@ main(
     cBYE(status);
     if ( ( i % n3 ) == 0 ) {
       status = hmap_chk(&hmap); cBYE(status); 
-      printf("size = %4u, %6d out of %d \n", hmap.nitems, i, n1);
+      // printf("size = %4u, %6d out of %d \n", hmap.nitems, i, n1);
     }
     free_if_non_null(key.str_val);
   }

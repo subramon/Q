@@ -14,5 +14,10 @@ hmap_destroy(
     }
   }
   free_if_non_null(H->bkts);
+  free_if_non_null(H->config.so_file);
+  if ( H->so_handle != NULL ) { 
+    int status = dlclose(H->so_handle);
+    if ( status != 0 ) { WHEREAMI; }
+  }
   memset(H, '\0', sizeof(hmap_t));
 }

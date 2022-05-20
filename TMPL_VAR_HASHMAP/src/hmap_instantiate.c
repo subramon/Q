@@ -1,3 +1,4 @@
+#include <dlfcn.h>
 #include "hmap_common.h"
 #include "hmap_aux.h"
 #include "hmap_instantiate.h"

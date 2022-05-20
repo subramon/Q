@@ -51,8 +51,7 @@ libhmap_${TMPL}.so:
 
 libhmap.so: ${OBJS}  ./inc/*.h 
 	gcc  ${CFLAGS} ${DFLAGS} ${OBJS} ${INCS} \
-		-shared -lm -o libhmap.so   \
-		libhmap_${TMPL}.so 
+		-shared -lm -ldl -o libhmap.so   
 
 test1 : libhmap.so ./test/test1.c libhmap_${TMPL}.so
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test1.c \
