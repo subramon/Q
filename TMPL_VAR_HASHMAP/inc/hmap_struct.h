@@ -1,62 +1,50 @@
 #ifndef __HMAP_STRUCT_H
 #define __HMAP_STRUCT_H
+#include <stdint.h>
 
 // START: TO BE PROVIDED BY CUSTOM .so file 
-extern int
-inval_update(
+typedef int (*inval_update_fn_t)(
     void * dst,
     const void * const src
     );
-extern int
-val_update(
+typedef int (*val_update_fn_t)(
     void * dst,
     const void * const src
     );
-extern bool
-key_chk(
+typedef bool (*key_chk_fn_t)(
     const void * const x
     );
-extern bool
-inval_chk(
+typedef bool (*inval_chk_fn_t)(
     const void * const x
     );
-extern bool
-val_chk(
+typedef bool (*val_chk_fn_t)(
     const void * const x
     );
-extern int 
-key_free(
+typedef int (*key_free_fn_t)(
     void *x
     );
-extern int 
-val_free(
+typedef int (*val_free_fn_t)(
     void *x
     );
-extern void *
-inval_copy(
+typedef void * (*inval_copy_fn_t)(
     const  void * const src
     );
-extern void *
-val_copy(
+typedef void * (*val_copy_fn_t)(
     const  void * const src
     );
-extern int 
-key_hash(
+typedef int (*key_hash_fn_t)(
     const void * const key,
     char **ptr_str_to_hash,
     uint16_t *ptr_len_to_hash,
     bool *ptr_free_to_hash
     );
-extern void *
-key_copy(
+typedef void * (*key_copy_fn_t)(
     const void * const key
     );
-extern uint16_t 
-key_len(
+typedef uint16_t (*key_len_fn_t)(
     const void * const key
     );
-extern bool
-key_cmp(
+typedef bool (*key_cmp_fn_t)(
     const void * const ptr_key1,
     const void * const ptr_key2
     );
@@ -68,6 +56,7 @@ typedef struct _hmap_config_t {
   uint64_t max_growth_step;
   float low_water_mark;
   float high_water_mark;
+  char *so_file; // for custom .so file 
 } hmap_config_t; 
 
 typedef struct _dbg_t { 
@@ -90,6 +79,22 @@ typedef struct _hmap_t {
   bkt_t  *bkts;  
   uint64_t hashkey;
   hmap_config_t config;
+  void *so_handle;  // for dlopen() custom .so file 
+  //-- START: function pointers to be loaded from custom .so
+  inval_update_fn_t inval_update;
+  val_update_fn_t val_update;
+  key_chk_fn_t key_chk;
+  inval_chk_fn_t inval_chk;
+  val_chk_fn_t val_chk;
+  key_free_fn_t key_free;
+  val_free_fn_t val_free;
+  inval_copy_fn_t inval_copy;
+  val_copy_fn_t val_copy;
+  key_hash_fn_t key_hash;
+  key_copy_fn_t key_copy;
+  key_len_fn_t key_len;
+  key_cmp_fn_t key_cmp;
+  //-- STOP : function pointers to be loaded from custom .so
 } hmap_t;
 
 #endif

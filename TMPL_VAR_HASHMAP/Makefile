@@ -35,7 +35,6 @@ SRCS = \
 	  ./src/hmap_instantiate.c  \
 	  ./src/hmap_put.c  \
 	  ./src/hmap_resize.c  \
-	  ./src/hmap_update.c  \
 	  ./src/calc_new_size.c  \
 	  ./src/murmurhash.c  \
 	  ./src/fasthash.c  \
@@ -51,7 +50,9 @@ libhmap_${TMPL}.so:
 	cp ${TMPL}/libhmap_${TMPL}.so .
 
 libhmap.so: ${OBJS}  ./inc/*.h 
-	gcc  ${CFLAGS} ${DFLAGS} ${OBJS} ${INCS} -shared -lm -o libhmap.so  
+	gcc  ${CFLAGS} ${DFLAGS} ${OBJS} ${INCS} \
+		-shared -lm -o libhmap.so   \
+		libhmap_${TMPL}.so 
 
 test1 : libhmap.so ./test/test1.c libhmap_${TMPL}.so
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test1.c \

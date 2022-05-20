@@ -6,7 +6,7 @@
 
 int
 hmap_get(
-    hmap_t *ptr_hmap, 
+    hmap_t *H, 
     const void * const key, 
     void **ptr_val,
     bool *ptr_is_found,
@@ -20,28 +20,28 @@ hmap_get(
   if ( key == NULL ) { go_BYE(-1); } // not a valid key 
 
   uint16_t len_to_hash; char *str_to_hash = NULL; bool free_to_hash;
-  status = key_hash(key, &str_to_hash, &len_to_hash, &free_to_hash); 
+  status = H->key_hash(key, &str_to_hash, &len_to_hash, &free_to_hash); 
   REGISTER uint32_t hash = set_hash(str_to_hash, len_to_hash, 
-      ptr_hmap, ptr_dbg);
+      H, ptr_dbg);
   if ( free_to_hash ) { free(str_to_hash); str_to_hash = NULL; }
 
-  REGISTER uint32_t probe_loc = set_probe_loc(hash, ptr_hmap, ptr_dbg);
-  REGISTER bkt_t *bkts = ptr_hmap->bkts;
+  REGISTER uint32_t probe_loc = set_probe_loc(hash, H, ptr_dbg);
+  REGISTER bkt_t *bkts = H->bkts;
   REGISTER uint32_t my_psl = 0;
   *ptr_is_found = false;
   *ptr_where_found = UINT_MAX; // bad value
 
   // Lookup is a linear probe.
   for ( ; ; ) { 
-    if ( num_probes >= ptr_hmap->size ) { go_BYE(-1); }
+    if ( num_probes >= H->size ) { go_BYE(-1); }
     REGISTER bkt_t *this_bkt = bkts + probe_loc;
 
     if ( this_bkt->hash != hash ) { goto keep_searching; }  // mismatch 
-    if ( !key_cmp(this_bkt->key, key) ) { // mismatch 
+    if ( !H->key_cmp(this_bkt->key, key) ) { // mismatch 
       goto keep_searching;   
     }
     if ( ptr_val != NULL ) { 
-      *ptr_val = val_copy(this_bkt->val); 
+      *ptr_val = H->val_copy(this_bkt->val); 
       if ( ptr_val == NULL ) {go_BYE(-1); }
     }
     *ptr_where_found = probe_loc;
@@ -61,7 +61,7 @@ keep_searching:
     my_psl++;
     /* Continue to the next bucket. */
     probe_loc++;
-    if ( probe_loc == ptr_hmap->size ) { probe_loc = 0; }
+    if ( probe_loc == H->size ) { probe_loc = 0; }
     num_probes++;
   }
 BYE:

@@ -4,7 +4,7 @@
 
 int
 hmap_insert(
-    hmap_t *ptr_hmap, 
+    hmap_t *H, 
     void * key,
     void * val,
     bool is_resize,
@@ -13,12 +13,12 @@ hmap_insert(
 {
   int status = 0;
   uint16_t len_to_hash; char *str_to_hash = NULL; bool free_to_hash;
-  status = key_hash(key, &str_to_hash, &len_to_hash, &free_to_hash); 
+  status = H->key_hash(key, &str_to_hash, &len_to_hash, &free_to_hash); 
   register uint32_t hash = set_hash(str_to_hash, len_to_hash, 
-      ptr_hmap, ptr_dbg);
+      H, ptr_dbg);
   if ( free_to_hash ) { free(str_to_hash); str_to_hash = NULL; }
 
-  register uint32_t probe_loc = set_probe_loc(hash, ptr_hmap, ptr_dbg);
+  register uint32_t probe_loc = set_probe_loc(hash, H, ptr_dbg);
 
   /*
    * From the paper: "when inserting, if a record probes a location
@@ -42,33 +42,33 @@ hmap_insert(
   }
   register uint32_t num_probes = 0;
 #ifdef DEBUG
-  if ( !key_chk(key) ) { go_BYE(-1); }
+  if ( !H->key_chk(key) ) { go_BYE(-1); }
   if ( is_resize ) {
-    if ( !val_chk(val) ) { go_BYE(-1); }
+    if ( !H->val_chk(val) ) { go_BYE(-1); }
   }
   else {
-    if ( !inval_chk(val) ) { go_BYE(-1); }
+    if ( !H->inval_chk(val) ) { go_BYE(-1); }
   }
 #endif
   //-----------
-  register bkt_t *bkts  = ptr_hmap->bkts;
-  if ( probe_loc >= ptr_hmap->size ) { go_BYE(-1); }
+  register bkt_t *bkts  = H->bkts;
+  if ( probe_loc >= H->size ) { go_BYE(-1); }
   for ( ; ; ) {
-    if ( num_probes >= ptr_hmap->size ) { go_BYE(-1); }
+    if ( num_probes >= H->size ) { go_BYE(-1); }
     register bkt_t *this_bkt = bkts + probe_loc;
     void *this_key     = this_bkt->key;
     uint32_t this_hash = this_bkt->hash;
     if ( this_key != NULL ) { // If there is a key in the bucket.
       // If you are are the key in this bucket 
-      if ( ( this_hash == hash ) && ( key_cmp(this_key, key) ) ) { 
+      if ( ( this_hash == hash ) && ( H->key_cmp(this_key, key) ) ) { 
         // When resizing, you can't see same key twice 
         if ( is_resize ) { go_BYE(-1); }
         //------------------------
         if ( kv_copied ) { 
-          status = val_update(this_bkt->val, val);  
+          status = H->val_update(this_bkt->val, val);  
         }
         else {
-          status = inval_update(this_bkt->val, val);  
+          status = H->inval_update(this_bkt->val, val);  
         }
         cBYE(status);
         break;
@@ -80,8 +80,8 @@ hmap_insert(
         entry = bkts[probe_loc];
         bkts[probe_loc] = tmp;
         if ( kv_copied == false ) { 
-          bkts[probe_loc].key = key_copy(key); 
-          bkts[probe_loc].val = inval_copy(val); 
+          bkts[probe_loc].key = H->key_copy(key); 
+          bkts[probe_loc].val = H->inval_copy(val); 
           kv_copied = true;
         }
         key  = entry.key;
@@ -92,17 +92,17 @@ hmap_insert(
       /* Continue to the next bucket. */
       num_probes++;
       probe_loc++;
-      if ( probe_loc == ptr_hmap->size ) { probe_loc = 0; }
+      if ( probe_loc == H->size ) { probe_loc = 0; }
     }
     else { // spot is empty, grab it 
       *this_bkt = entry;
-      ptr_hmap->nitems++; // one more item in hash table 
+      H->nitems++; // one more item in hash table 
       if ( kv_copied == false ) { 
         // When resizing, we just take over the pointers
         // Else, we need to allocate memory for key/val
         if ( !is_resize ) { 
-          this_bkt->key = key_copy(key); 
-          this_bkt->val = inval_copy(val); 
+          this_bkt->key = H->key_copy(key); 
+          this_bkt->val = H->inval_copy(val); 
           kv_copied = true;
         }
 

@@ -19,33 +19,33 @@ typedef struct _chk_t {
 //-----------------------------------------------------
 int
 hmap_chk(
-    hmap_t *ptr_hmap
+    hmap_t *H
     )
 {
   int status = 0;
   void *val = NULL;
   chk_t *hashes = NULL;
-  // status = hmap_pr(ptr_hmap); cBYE(status);
+  // status = hmap_pr(H); cBYE(status);
   // check that number of items is correct
   uint32_t chk_nitems = 0;
-  bkt_t *bkts = ptr_hmap->bkts;
-  for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
+  bkt_t *bkts = H->bkts;
+  for ( uint32_t i = 0; i < H->size; i++ ) { 
     if ( bkts[i].key != NULL ) {
       chk_nitems++;
     }
   }
-  if ( ptr_hmap->nitems != chk_nitems ) { go_BYE(-1); }
+  if ( H->nitems != chk_nitems ) { go_BYE(-1); }
   // check that each key is unique 
   hashes = malloc(chk_nitems * sizeof(chk_t));
   return_if_malloc_failed(hashes);
   memset(hashes, 0, chk_nitems * sizeof(chk_t));
   uint32_t hash_cnt = 0;
   uint64_t seed = RDTSC() ^ random();
-  for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
+  for ( uint32_t i = 0; i < H->size; i++ ) { 
     void * key = bkts[i].key;
     if ( key != NULL ) {
       uint16_t len_to_hash; char *str_to_hash = NULL; bool free_to_hash;
-      status = key_hash(key, &str_to_hash, &len_to_hash, &free_to_hash); 
+      status = H->key_hash(key, &str_to_hash, &len_to_hash, &free_to_hash); 
       hashes[hash_cnt].hash = spooky_hash64(str_to_hash, len_to_hash, seed);
       hashes[hash_cnt].idx = i;
       hash_cnt++;
@@ -65,9 +65,9 @@ hmap_chk(
   }
   //-----------------------
   //-- check that each record is internally consistent 
-  for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
+  for ( uint32_t i = 0; i < H->size; i++ ) { 
     if ( bkts[i].key != NULL ) {
-      uint16_t len_i = key_len(bkts[i].key);
+      uint16_t len_i = H->key_len(bkts[i].key);
       if ( len_i == 0 ) { go_BYE(-1); }
       if ( bkts[i].hash == 0 ) { go_BYE(-1); }
       if ( bkts[i].val == NULL ) { go_BYE(-1); }
@@ -79,15 +79,15 @@ hmap_chk(
     // TODO: What about psl?
   }
   //-- make sure no holes between initial probe_loc and current position
-  for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
+  for ( uint32_t i = 0; i < H->size; i++ ) { 
     if ( bkts[i].key == NULL ) { continue; }
     val = NULL; bool is_found; uint32_t where_found; 
     void *key    = bkts[i].key;
-    status = hmap_get(ptr_hmap, key, &val, &is_found, 
+    status = hmap_get(H, key, &val, &is_found, 
         &where_found, NULL);
     cBYE(status);
-    if ( !key_chk(key) ) { go_BYE(-1); }
-    if ( !val_chk(val) ) { go_BYE(-1); }
+    if ( !H->key_chk(key) ) { go_BYE(-1); }
+    if ( !H->val_chk(val) ) { go_BYE(-1); }
     if ( !is_found ) { go_BYE(-1); }
     if ( ( is_found ) && ( val == NULL ) ) { go_BYE(-1); }
     if ( ( !is_found ) && ( val != NULL ) ) { go_BYE(-1); }
@@ -95,21 +95,21 @@ hmap_chk(
 
 
     uint16_t len_to_hash; char *str_to_hash = NULL; bool free_to_hash;
-    status = key_hash(key, &str_to_hash, &len_to_hash, &free_to_hash); 
+    status = H->key_hash(key, &str_to_hash, &len_to_hash, &free_to_hash); 
     register uint32_t hash = set_hash(str_to_hash, len_to_hash, 
-        ptr_hmap, NULL); 
+        H, NULL); 
     if ( free_to_hash ) { free(str_to_hash); str_to_hash = NULL; }
 
-    uint32_t probe_loc = set_probe_loc(hash, ptr_hmap, NULL);
+    uint32_t probe_loc = set_probe_loc(hash, H, NULL);
     if ( probe_loc == i ) { 
       // this key was placed with no searching 
       continue;
     }
     uint32_t search_idx = probe_loc;
     for ( uint32_t num_searches = 0 ; ; num_searches++ ) { 
-      if ( search_idx == ptr_hmap->size ) { search_idx = 0; }
+      if ( search_idx == H->size ) { search_idx = 0; }
       if ( search_idx == where_found ) { break; }
-      if ( num_searches == ptr_hmap->size ) { go_BYE(-1); }
+      if ( num_searches == H->size ) { go_BYE(-1); }
       if ( bkts[search_idx].key == NULL ) { 
         go_BYE(-1); 
       }

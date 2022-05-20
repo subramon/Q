@@ -2,17 +2,17 @@
 #include "hmap_destroy.h"
 void
 hmap_destroy(
-    hmap_t *ptr_hmap
+    hmap_t *H
     )
 {
-  if ( ptr_hmap == NULL ) { return; }
-  if ( ptr_hmap->bkts != NULL ) { 
-    for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
-      key_free(ptr_hmap->bkts[i].key);
-      val_free(ptr_hmap->bkts[i].val);
-      memset(ptr_hmap->bkts+i, 0, sizeof(bkt_t));
+  if ( H == NULL ) { return; }
+  if ( H->bkts != NULL ) { 
+    for ( uint32_t i = 0; i < H->size; i++ ) { 
+      H->key_free(H->bkts[i].key);
+      H->val_free(H->bkts[i].val);
+      memset(H->bkts+i, 0, sizeof(bkt_t));
     }
   }
-  free_if_non_null(ptr_hmap->bkts);
-  memset(ptr_hmap, '\0', sizeof(hmap_t));
+  free_if_non_null(H->bkts);
+  memset(H, '\0', sizeof(hmap_t));
 }
