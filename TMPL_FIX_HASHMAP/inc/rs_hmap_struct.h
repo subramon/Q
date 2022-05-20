@@ -5,6 +5,17 @@
 #include <stdint.h>
 #include <dlfcn.h>
 
+typedef int(* key_ordr_fn_t)(
+    const void *in1, 
+    const void *in2
+    );
+typedef int (* row_dmp_fn_t)(
+    void *ptr_hmap, 
+    const char * const file_name, 
+    void  **ptr_K,
+    uint32_t *ptr_nK
+    );
+
 typedef int (* del_fn_t)(
     void *ptr_hmap, 
     const void * const in_ptr_key, 
@@ -53,6 +64,8 @@ typedef struct _rs_hmap_t {
   get_fn_t get;
   del_fn_t del;
   chk_fn_t chk;
+  row_dmp_fn_t row_dmp;
+  key_ordr_fn_t key_ordr;
   destroy_fn_t destroy;
 } rs_hmap_t;
 

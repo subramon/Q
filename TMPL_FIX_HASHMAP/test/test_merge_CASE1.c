@@ -48,10 +48,29 @@ main(
   // add H2 to itself, should be no change in nitems 
   status = rs_hmap_merge(&H2, &H2); cBYE(status);
   if ( H2.nitems != nitems ) { go_BYE(-1); }
+  // However, value should double 
+  for ( uint32_t i = 0; i < nitems; i++ ) {
+    rs_hmap_key_t key = (i*2) + 1 ; 
+    rs_hmap_val_t chk_val = 2*i;
+    rs_hmap_val_t val = 0; uint32_t where_found; bool is_found;
+    status = H2.get(&H2, &key, &val, &is_found, &where_found);
+    if ( !is_found ) { go_BYE(-1); }
+    if ( val != chk_val ) { go_BYE(-1); }
+  }
   // add H2 to H1, nitems should double
   status = rs_hmap_merge(&H1, &H2); cBYE(status);
   if ( H1.nitems != 2*nitems ) { go_BYE(-1); }
+  // check that value of H1 items is unchanged 
+  for ( uint32_t i = 0; i < nitems; i++ ) {
+    rs_hmap_key_t key = i*2;
+    rs_hmap_val_t chk_val = i;
+    rs_hmap_val_t val = 0; uint32_t where_found; bool is_found;
+    status = H1.get(&H1, &key, &val, &is_found, &where_found);
+    if ( !is_found ) { go_BYE(-1); }
+    if ( val != chk_val ) { go_BYE(-1); }
+  }
 BYE:
   H1.destroy(&H1);
+  H2.destroy(&H2);
   return status;
 }

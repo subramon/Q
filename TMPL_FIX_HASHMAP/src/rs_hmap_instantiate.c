@@ -69,6 +69,8 @@ rs_hmap_instantiate(
   H->get = (get_fn_t) dlsym(H->config.so_handle, "rs_hmap_get"); 
   H->del = (del_fn_t) dlsym(H->config.so_handle, "rs_hmap_del"); 
   H->chk = (chk_fn_t) dlsym(H->config.so_handle, "rs_hmap_chk"); 
+  H->row_dmp = (row_dmp_fn_t) dlsym(H->config.so_handle, "rs_hmap_row_bindmp"); 
+  H->key_ordr = (key_ordr_fn_t) dlsym(H->config.so_handle, "key_ordr"); 
   H->destroy = (destroy_fn_t) dlsym(H->config.so_handle, "rs_hmap_destroy"); 
 
   rs_hmap_int_config_t *IC = malloc(1 * sizeof(rs_hmap_int_config_t));
