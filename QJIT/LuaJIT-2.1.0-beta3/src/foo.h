@@ -1,8 +1,4 @@
 extern int
 foo(
-   void
+   int x
    );
-extern void *
-bar_fn(
-    void *arg
-    );

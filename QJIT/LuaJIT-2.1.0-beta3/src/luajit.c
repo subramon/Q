@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include "globals.h"
 #include "foo.h"
+#include "bar.h"
 // STOP: RAMESH
 /*
 ** LuaJIT frontend. Runs commands, scripts, read-eval-print (REPL) etc.
@@ -253,10 +254,13 @@ static int loadline(lua_State *L)
 static void dotty(lua_State *L)
 {
   int status;
-  static int ctr;
   const char *oldprogname = progname;
   progname = NULL;
-  for ( int ctr = 0; ; ctr++ ) { 
+  for ( ; ; ) { 
+    // START RAMESH
+    // See if slave is interested 
+    int itmp; __atomic_load(&g_slave_active, &itmp, 0);
+    if ( itmp == 1 ) { printf("Master nap\n"); sleep(1); } 
     for ( int i = 0; ; i++  ) {  // acquire lock 
       int expected = 0; int desired = 1;
       bool rslt = __atomic_compare_exchange(
@@ -265,10 +269,10 @@ static void dotty(lua_State *L)
         // printf("Master has control \n"); 
         break; 
       }
-      printf("Master Sleeping %d:%d \n", ctr, i); 
       sleep(1); 
     }
-    fprintf(stdout, "Master: Please enter a command\n");
+    fprintf(stdout, "Master>> ");
+    // STOP RAMESH
     status = loadline(L); if ( status == -1) { break; }
 
     if (status == LUA_OK) status = docall(L, 0, 0);
@@ -281,6 +285,7 @@ static void dotty(lua_State *L)
 	  lua_pushfstring(L, "error calling " LUA_QL("print") " (%s)",
 			      lua_tostring(L, -1)));
     }
+    // START RAMESH
     { // release lock 
       int expected = 1; int desired = 0;
       bool rslt = __atomic_compare_exchange(
@@ -293,6 +298,7 @@ static void dotty(lua_State *L)
       }
     }
     sleep(2); // to give other thread a chance 
+    // STOP RAMESH
   }
   lua_settop(L, 0);  /* clear stack */
   fputs("\n", stdout);
@@ -607,7 +613,9 @@ int main(int argc, char **argv)
 {
   int status;
   // START: RAMESH 
+  // Initialize global variables
   g_halt = 0;
+  g_slave_active = 0;
   g_foobar = 1; 
   g_L_status = 0;
   pthread_t bar_thrd;
@@ -620,11 +628,11 @@ int main(int argc, char **argv)
   }
   smain.argc = argc;
   smain.argv = argv;
-  // printf("Starting\n"); foobar = 123; foo();
+  printf("Starting\n"); foo(123); // RAMESH
   status = lua_cpcall(L, pmain, NULL);
   report(L, status);
   lua_close(L);
-  // foo(); printf("Wrapping up\n");
+  foo(456); printf("Wrapping up\n"); // RAMESH
   // START: RAMESH
   g_halt = 1;
   pthread_join(bar_thrd, NULL); 

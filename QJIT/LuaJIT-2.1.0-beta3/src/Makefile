@@ -517,7 +517,7 @@ ALL_RM= $(ALL_T) $(ALL_GEN) *.o host/*.o $(WIN_RM)
 
 # Mixed mode defaults.
 TARGET_O= $(LUAJIT_A)
-TARGET_T= $(LUAJIT_T) $(LUAJIT_SO)
+TARGET_T= $(LUAJIT_T) $(LUAJIT_SO) libfoo.so
 TARGET_DEP= $(LIB_VMDEF) $(LUAJIT_SO)
 
 ifeq (Windows,$(TARGET_SYS))
@@ -594,7 +594,7 @@ E= @echo
 # Make targets.
 ##############################################################################
 
-default all:	$(TARGET_T)
+default all:	$(TARGET_T)  
 
 amalg:
 	@grep "^[+|]" ljamalg.c
@@ -697,6 +697,11 @@ include Makefile.dep
 # Target file rules.
 ##############################################################################
 
+RS_SRCS := foo.c
+RS_SRCS += slave.c
+
+RS_OBJS = $(RS_SRCS:.c=.o)
+
 $(LUAJIT_A): $(LJVMCORE_O)
 	$(E) "AR        $@"
 	$(Q)$(TARGET_AR) $@ $(LJVMCORE_O)
@@ -707,10 +712,16 @@ $(LUAJIT_SO): $(LJVMCORE_O)
 	$(Q)$(TARGET_LD) $(TARGET_ASHLDFLAGS) -o $@ $(LJVMCORE_DYNO) $(TARGET_ALIBS)
 	$(Q)$(TARGET_STRIP) $@
 
-$(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP) foo.o 
+$(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP) ${RS_OBJS}
 	$(E) "LINK      $@"
-	$(Q)$(TARGET_LD) $(TARGET_ALDFLAGS) -o $@ foo.o $(LUAJIT_O) $(TARGET_O) $(TARGET_ALIBS) -lpthread
+	$(Q)$(TARGET_LD) $(TARGET_ALDFLAGS) \
+		-o $@ $(LUAJIT_O) \
+		${RS_OBJS} \
+		$(TARGET_O) $(TARGET_ALIBS) \
+		-lpthread
 	$(Q)$(TARGET_STRIP) $@
 	$(E) "OK        Successfully built LuaJIT"
 
+libfoo.so : foo.c 
+	gcc -g  -O0 -fPIC -shared foo.c -o libfoo.so
 ##############################################################################
