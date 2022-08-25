@@ -1,4 +1,4 @@
 extern void *
-bar_fn(
+slave_fn(
     void *arg
     );

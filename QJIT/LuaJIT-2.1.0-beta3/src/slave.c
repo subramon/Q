@@ -14,15 +14,14 @@ extern int g_L_status;
 extern lua_State *L; 
 
 void *
-bar_fn(
+slave_fn(
     void *arg
     )
 {
   int status = 0;
   for ( int i = 0; ; i++ ) {
     int l_halt;
-    g_slave_active = 0;
-    sleep(10);  // give other threads a chance to acquire lock 
+    sleep(10);  // For testing: give other threads a chance to acquire lock 
     g_slave_active = 1;
     // Attempt to acquire lock 
     for ( int j = 0; ; j++ ) {
@@ -65,6 +64,7 @@ bar_fn(
         printf("Slave: %d Catastrophic error\n", __LINE__); exit(1);
       }
     }
+    g_slave_active = 0;
     // see if you need to quit 
     __atomic_load(&g_halt, &l_halt, 0);
     if ( l_halt == 1 ) { break; }

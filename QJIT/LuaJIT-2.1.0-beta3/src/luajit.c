@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include "globals.h"
 #include "foo.h"
-#include "bar.h"
+#include "slave.h"
 // STOP: RAMESH
 /*
 ** LuaJIT frontend. Runs commands, scripts, read-eval-print (REPL) etc.
@@ -269,7 +269,6 @@ static void dotty(lua_State *L)
         // printf("Master has control \n"); 
         break; 
       }
-      sleep(1); 
     }
     fprintf(stdout, "Master>> ");
     // STOP RAMESH
@@ -297,7 +296,6 @@ static void dotty(lua_State *L)
         printf("Master: %d Catastrophic error\n", __LINE__); exit(1);
       }
     }
-    sleep(2); // to give other thread a chance 
     // STOP RAMESH
   }
   lua_settop(L, 0);  /* clear stack */
@@ -618,8 +616,8 @@ int main(int argc, char **argv)
   g_slave_active = 0;
   g_foobar = 1; 
   g_L_status = 0;
-  pthread_t bar_thrd;
-  status = pthread_create(&bar_thrd, NULL, &bar_fn, NULL);
+  pthread_t slave_thrd;
+  status = pthread_create(&slave_thrd, NULL, &slave_fn, NULL);
   // STOP: RAMESH 
   L = lua_open();
   if (L == NULL) {
@@ -635,7 +633,7 @@ int main(int argc, char **argv)
   foo(456); printf("Wrapping up\n"); // RAMESH
   // START: RAMESH
   g_halt = 1;
-  pthread_join(bar_thrd, NULL); 
+  pthread_join(slave_thrd, NULL); 
   // STOP : RAMESH
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
