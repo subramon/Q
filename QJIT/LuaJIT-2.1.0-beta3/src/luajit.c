@@ -1,9 +1,12 @@
 // START: RAMESH
 #include <pthread.h>
 #include <stdbool.h>
+#include "q_macros.h"
+#include "web_struct.h"
 #include "globals.h"
 #include "foo.h"
-#include "slave.h"
+// XX #include "slave.h"
+#include "webserver.h"
 // STOP: RAMESH
 /*
 ** LuaJIT frontend. Runs commands, scripts, read-eval-print (REPL) etc.
@@ -258,17 +261,29 @@ static void dotty(lua_State *L)
   progname = NULL;
   for ( ; ; ) { 
     // START RAMESH
-    // See if slave is interested 
-    int itmp; __atomic_load(&g_slave_active, &itmp, 0);
-    if ( itmp == 1 ) { printf("Master nap\n"); sleep(1); } 
-    for ( int i = 0; ; i++  ) {  // acquire lock 
-      int expected = 0; int desired = 1;
+    int expected, desired; 
+    int l_L_status; __atomic_load(&g_L_status, &l_L_status, 0);
+    int l_web; __atomic_load(&g_webserver_interested, &l_web, 0);
+    if ( ( l_web == 1 ) && ( l_L_status == 1 ) ) { 
+      // relinquish lua state 
+      printf("Relinqushing Lua state \n"); 
+      expected = 1; desired = 0;
       bool rslt = __atomic_compare_exchange(
           &g_L_status, &expected, &desired, false, 0, 0);
-      if ( rslt ) { 
-        // printf("Master has control \n"); 
-        break; 
-      }
+      if ( rslt ) { WHEREAMI; exit(-1); } 
+      // take a short nap for 20 ms
+      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 20 * 1000000 };
+      nanosleep(&tmspec, NULL);
+    }
+    // acquire Lua state
+    for ( ; ; ) { 
+      expected = 0; desired = 1;
+      bool rslt = __atomic_compare_exchange(
+          &g_L_status, &expected, &desired, false, 0, 0);
+      if ( rslt ) { break; }
+      // take a short nap for 10 ms
+      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 10 * 1000000 };
+      nanosleep(&tmspec, NULL);
     }
     fprintf(stdout, "Master>> ");
     // STOP RAMESH
@@ -613,11 +628,20 @@ int main(int argc, char **argv)
   // START: RAMESH 
   // Initialize global variables
   g_halt = 0;
-  g_slave_active = 0;
-  g_foobar = 1; 
+  g_webserver_interested = 0; 
   g_L_status = 0;
-  pthread_t slave_thrd;
-  status = pthread_create(&slave_thrd, NULL, &slave_fn, NULL);
+  g_foobar = 1; 
+  // XX g_slave_active = 0;
+  //-----------------------
+  // For webserver
+  pthread_t l_webserver;
+  web_info_t web_info; memset(&web_info, 0, sizeof(web_info_t));
+  web_info.port = 8004; // TODO P2 Un-hard code 
+  status = pthread_create(&l_webserver, NULL, &webserver, &web_info);
+  cBYE(status);
+
+  // XX pthread_t slave_thrd;
+  // XX status = pthread_create(&slave_thrd, NULL, &slave_fn, NULL);
   // STOP: RAMESH 
   L = lua_open();
   if (L == NULL) {
@@ -633,8 +657,10 @@ int main(int argc, char **argv)
   foo(456); printf("Wrapping up\n"); // RAMESH
   // START: RAMESH
   g_halt = 1;
-  pthread_join(slave_thrd, NULL); 
+  // XX pthread_join(slave_thrd, NULL); 
+  pthread_join(l_webserver, NULL); 
   // STOP : RAMESH
+BYE:
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 

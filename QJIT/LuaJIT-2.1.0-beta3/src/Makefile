@@ -673,10 +673,13 @@ lj_folddef.h: $(BUILDVM_T) lj_opt_fold.c
 # Object file rules.
 ##############################################################################
 
+INCS := -I.
+INCS += -I./inc/
+
 %.o: %.c
-	$(E) "CC        $@"
-	$(Q)$(TARGET_DYNCC) $(TARGET_ACFLAGS) -c -o $(@:.o=_dyn.o) $<
-	$(Q)$(TARGET_CC) $(TARGET_ACFLAGS) -c -o $@ $<
+	$(E) "CC1       $@"
+	$(Q)$(TARGET_DYNCC) $(TARGET_ACFLAGS) ${INCS} -c -o $(@:.o=_dyn.o) $<
+	$(Q)$(TARGET_CC) $(TARGET_ACFLAGS) ${INCS} -c -o $@ $<
 
 %.o: %.S
 	$(E) "ASM       $@"
@@ -684,8 +687,8 @@ lj_folddef.h: $(BUILDVM_T) lj_opt_fold.c
 	$(Q)$(TARGET_CC) $(TARGET_ASFLAGS) -c -o $@ $<
 
 $(LUAJIT_O):
-	$(E) "CC        $@"
-	$(Q)$(TARGET_STCC) $(TARGET_ACFLAGS) -c -o $@ $<
+	$(E) "CC2       $@"
+	$(Q)$(TARGET_STCC) $(TARGET_ACFLAGS) ${INCS} -c -o $@ $<
 
 $(HOST_O): %.o: %.c
 	$(E) "HOSTCC    $@"
@@ -698,9 +701,18 @@ include Makefile.dep
 ##############################################################################
 
 RS_SRCS := foo.c
-RS_SRCS += slave.c
+# RS_SRCS += slave.c
+RS_SRCS += rs_mmap.c
+RS_SRCS += extract_api_args.c
+RS_SRCS += get_req_type.c
+RS_SRCS += handler.c
+RS_SRCS += process_req.c
+RS_SRCS += webserver.c
 
 RS_OBJS = $(RS_SRCS:.c=.o)
+
+RS_LIBS := -lpthread
+RS_LIBS += -levent
 
 $(LUAJIT_A): $(LJVMCORE_O)
 	$(E) "AR        $@"
@@ -718,7 +730,7 @@ $(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP) ${RS_OBJS}
 		-o $@ $(LUAJIT_O) \
 		${RS_OBJS} \
 		$(TARGET_O) $(TARGET_ALIBS) \
-		-lpthread
+		${RS_LIBS}
 	$(Q)$(TARGET_STRIP) $@
 	$(E) "OK        Successfully built LuaJIT"
 
