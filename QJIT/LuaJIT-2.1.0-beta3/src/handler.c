@@ -2,11 +2,13 @@
 #include <evhttp.h>
 #include "q_incs.h"
 #include "web_struct.h"
+#include "rs_mmap.h"
 #include "get_req_type.h"
 #include "extract_api_args.h"
 #include "process_req.h"
 #include "rs_mmap.h"
 #include "handler.h"
+extern int g_halt;
 void
 handler(
     struct evhttp_request *req,
@@ -18,8 +20,8 @@ handler(
   char args[MAX_LEN_ARGS+1];
   char outbuf[MAX_LEN_OUTPUT+1];
   char errbuf[MAX_LEN_ERROR+1];
-  memset(outbuf, '\0', MAX_LEN_OUTPUT+1);
-  memset(errbuf, '\0', MAX_LEN_ERROR+1);
+  memset(outbuf, '\0', MAX_LEN_OUTPUT+1); // TOOD P4 not needed
+  memset(errbuf, '\0', MAX_LEN_ERROR+1); // TOOD P4 not needed
   struct evbuffer *opbuf = NULL;
   if ( arg == NULL ) { go_BYE(-1); } 
   web_info_t *web_info = (web_info_t *)arg;
@@ -29,6 +31,8 @@ handler(
   if ( opbuf == NULL) { go_BYE(-1); }
   const char *uri = evhttp_request_uri(req);
   img_info_t img_info; memset(&img_info, 0, sizeof(img_info_t));
+  // If master calls halt, get out 
+  if ( g_halt == 1 ) { event_base_loopbreak(base); }
   //--------------------------------------
   status = extract_api_args(uri, api, MAX_LEN_API, args, MAX_LEN_ARGS);
   cBYE(status);
@@ -42,7 +46,6 @@ handler(
       outbuf, MAX_LEN_OUTPUT, errbuf, MAX_LEN_ERROR, &img_info);
   cBYE(status);
   if ( strcmp(api, "Halt") == 0 ) {
-    // TODO P1 g_halt = 1;
     // TODO: P4 Need to get loopbreak to wait for these 3 statements
     // evbuffer_add_printf(opbuf, "%s\n", g_rslt);
     // evhttp_send_reply(req, HTTP_OK, "OK", opbuf);

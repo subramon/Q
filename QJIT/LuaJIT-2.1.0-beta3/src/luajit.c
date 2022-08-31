@@ -1,12 +1,22 @@
 // START: RAMESH
 #include <pthread.h>
 #include <stdbool.h>
+#include <inttypes.h>
 #include "q_macros.h"
 #include "web_struct.h"
+#include "rs_hmap_struct.h"
+#include "mem_mgr_struct.h"
 #include "globals.h"
 #include "foo.h"
-// XX #include "slave.h"
 #include "webserver.h"
+#include "mem_mgr.h"
+#include "rs_hmap_instantiate.h"
+#include "qtypes.h"// TODO DELETE JUST FOR TESTING 
+#include "vctr_new_uqid.h" // TODO DELETE JUST FOR TESTING 
+#include "vctr_add.h" // TODO DELETE JUST FOR TESTING 
+#include "vctr_is.h" // TODO DELETE JUST FOR TESTING 
+#include "vctr_del.h" // TODO DELETE JUST FOR TESTING 
+#include "vctr_cnt.h" // TODO DELETE JUST FOR TESTING 
 // STOP: RAMESH
 /*
 ** LuaJIT frontend. Runs commands, scripts, read-eval-print (REPL) etc.
@@ -259,20 +269,22 @@ static void dotty(lua_State *L)
   int status;
   const char *oldprogname = progname;
   progname = NULL;
-  for ( ; ; ) { 
+  for ( int iter = 0; ; iter++ ) { 
     // START RAMESH
     int expected, desired; 
     int l_L_status; __atomic_load(&g_L_status, &l_L_status, 0);
     int l_web; __atomic_load(&g_webserver_interested, &l_web, 0);
-    if ( ( l_web == 1 ) && ( l_L_status == 1 ) ) { 
+    printf("iter = %d, %d, %d \n", iter, l_L_status, l_web);
+    if ( ( l_web == 1 ) && 
+        ( ( l_L_status == 1 ) || ( l_L_status == 0 ) ) ) { 
       // relinquish lua state 
-      printf("Relinqushing Lua state \n"); 
+      printf("Master: Relinqushing Lua state \n"); 
       expected = 1; desired = 0;
       bool rslt = __atomic_compare_exchange(
           &g_L_status, &expected, &desired, false, 0, 0);
       if ( rslt ) { WHEREAMI; exit(-1); } 
-      // take a short nap for 20 ms
-      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 20 * 1000000 };
+      // take a short nap for 100 ms
+      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 100 * 1000000 };
       nanosleep(&tmspec, NULL);
     }
     // acquire Lua state
@@ -280,7 +292,7 @@ static void dotty(lua_State *L)
       expected = 0; desired = 1;
       bool rslt = __atomic_compare_exchange(
           &g_L_status, &expected, &desired, false, 0, 0);
-      if ( rslt ) { break; }
+      if ( rslt ) { printf("Master: Acquired Lua state \n"); break; }
       // take a short nap for 10 ms
       struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 10 * 1000000 };
       nanosleep(&tmspec, NULL);
@@ -627,11 +639,14 @@ int main(int argc, char **argv)
   int status;
   // START: RAMESH 
   // Initialize global variables
+  bool mutex_created = false;
   g_halt = 0;
   g_webserver_interested = 0; 
   g_L_status = 0;
-  g_foobar = 1; 
-  // XX g_slave_active = 0;
+  memset(&g_vctr_hmap, 0, sizeof(rs_hmap_t));
+  memset(&g_chnk_hmap, 0, sizeof(rs_hmap_t));
+  g_vctr_uqid = 0; 
+  g_chnk_uqid = 0; 
   //-----------------------
   // For webserver
   pthread_t l_webserver;
@@ -639,28 +654,72 @@ int main(int argc, char **argv)
   web_info.port = 8004; // TODO P2 Un-hard code 
   status = pthread_create(&l_webserver, NULL, &webserver, &web_info);
   cBYE(status);
+  // For memory manager
+  pthread_cond_init(&g_mem_cond, NULL);
+  pthread_mutex_init(&g_mem_mutex, NULL);
+  mutex_created = true;
 
-  // XX pthread_t slave_thrd;
-  // XX status = pthread_create(&slave_thrd, NULL, &slave_fn, NULL);
+  pthread_t l_mem_mgr;
+  mem_mgr_info_t mem_mgr_info; memset(&mem_mgr_info, 0, sizeof(mem_mgr_info_t));
+  mem_mgr_info.dummy = 123456789;
+  status = pthread_create(&l_mem_mgr, NULL, &mem_mgr, &mem_mgr_info);
+  cBYE(status);
+  pthread_cond_signal(&g_mem_cond);
+
+  // START For hashmaps  for vector, ...
+  rs_hmap_config_t HC; memset(&HC, 0, sizeof(rs_hmap_config_t));
+  HC.min_size = 32;
+  HC.max_size = 0;
+  HC.so_file = strdup("libhmap_VCTR.so"); 
+  status = rs_hmap_instantiate(&g_vctr_hmap, &HC); cBYE(status);
+
+  // STOP  For hashmaps  for vector, ...
   // STOP: RAMESH 
   L = lua_open();
   if (L == NULL) {
     l_message(argv[0], "cannot create state: not enough memory");
     return EXIT_FAILURE;
   }
+  // START TESTING  TODO DELETE 
+  uint32_t x = vctr_new_uqid(); 
+  printf("x = %" PRIu32 "\n", x);
+  x = vctr_new_uqid(); 
+  printf("x = %" PRIu32 "\n", x);
+  uint32_t uqid; status = vctr_add1(F4, &uqid); cBYE(status);
+  printf("uqid = %" PRIu32 "\n", x);
+  if ( uqid != (x+1) ) { go_BYE(-1); }
+  bool b; uint32_t where;
+  status = vctr_is(uqid, &b, &where); cBYE(status);
+  if ( !b ) { go_BYE(-1); }
+  int cnt = vctr_cnt(); 
+  if ( cnt != 1 ) { go_BYE(-1); }
+  status = vctr_del(123445, &b); cBYE(status);
+  if ( b ) { go_BYE(-1); }
+  cnt = vctr_cnt(); 
+  if ( cnt != 1 ) { go_BYE(-1); }
+  status = vctr_del(uqid, &b); cBYE(status);
+  if ( !b ) { go_BYE(-1); }
+  cnt = vctr_cnt(); 
+  if ( cnt != 0 ) { go_BYE(-1); }
+  // STOP TESTING  TODO DELETE 
   smain.argc = argc;
   smain.argv = argv;
-  printf("Starting\n"); foo(123); // RAMESH
+  printf("Starting\n"); 
   status = lua_cpcall(L, pmain, NULL);
   report(L, status);
   lua_close(L);
-  foo(456); printf("Wrapping up\n"); // RAMESH
   // START: RAMESH
-  g_halt = 1;
-  // XX pthread_join(slave_thrd, NULL); 
+  int itmp = 1; __atomic_store(&g_halt, &itmp, 0);
+  pthread_cond_signal(&g_mem_cond);
+  printf("Wrapping up\n"); // RAMESH
   pthread_join(l_webserver, NULL); 
+  pthread_join(l_mem_mgr, NULL); 
   // STOP : RAMESH
 BYE:
+  if ( mutex_created ) { 
+    pthread_cond_destroy(&g_mem_cond);
+    pthread_mutex_destroy(&g_mem_mutex);
+  }
+  g_vctr_hmap.destroy(&g_vctr_hmap);
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
-

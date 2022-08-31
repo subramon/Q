@@ -10,7 +10,7 @@
 typedef enum _req_type_t {
   Undefined,  // start with this guy 
 
-  Execute, 
+  Lua, 
   Halt, 
   Ignore, 
 

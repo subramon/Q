@@ -6,8 +6,9 @@
 #include "rs_hmap_del.h"
 #include "rs_hmap_get.h"
 #include "rs_hmap_put.h"
-#include "rs_hmap_int_types.h" // CUSTOM where key and val are defined 
-#include "rs_hmap_int_struct.h" // CUSTOM where key and val are defined 
+// #include "rs_hmap_int_types.h" // CUSTOM where key and val are defined 
+// above included in following
+#include "rs_hmap_int_struct.h" 
 
 int
 main(

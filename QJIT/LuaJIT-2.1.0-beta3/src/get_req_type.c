@@ -14,8 +14,8 @@ get_req_type(
     return Halt;
   }
   //-----------------------------
-  else if (strcasecmp(api, "Execute") == 0) {
-    return Execute;
+  else if (strcasecmp(api, "Lua") == 0) {
+    return Lua;
   }
   //--------------------------------------------------
   else {

@@ -517,7 +517,7 @@ ALL_RM= $(ALL_T) $(ALL_GEN) *.o host/*.o $(WIN_RM)
 
 # Mixed mode defaults.
 TARGET_O= $(LUAJIT_A)
-TARGET_T= $(LUAJIT_T) $(LUAJIT_SO) libfoo.so
+TARGET_T= $(LUAJIT_T) $(LUAJIT_SO) 
 TARGET_DEP= $(LIB_VMDEF) $(LUAJIT_SO)
 
 ifeq (Windows,$(TARGET_SYS))
@@ -675,6 +675,9 @@ lj_folddef.h: $(BUILDVM_T) lj_opt_fold.c
 
 INCS := -I.
 INCS += -I./inc/
+INCS += -I../../../TMPL_FIX_HASHMAP/inc/
+INCS += -I../../../RUNTIME/VCTRS/inc/
+INCS += -I../../../UTILS/inc/
 
 %.o: %.c
 	$(E) "CC1       $@"
@@ -700,19 +703,20 @@ include Makefile.dep
 # Target file rules.
 ##############################################################################
 
-RS_SRCS := foo.c
-# RS_SRCS += slave.c
-RS_SRCS += rs_mmap.c
+RS_SRCS := rs_mmap.c
 RS_SRCS += extract_api_args.c
 RS_SRCS += get_req_type.c
 RS_SRCS += handler.c
 RS_SRCS += process_req.c
 RS_SRCS += webserver.c
+RS_SRCS += mem_mgr.c
 
 RS_OBJS = $(RS_SRCS:.c=.o)
 
 RS_LIBS := -lpthread
 RS_LIBS += -levent
+RS_LIBS += ../../../TMPL_FIX_HASHMAP/VCTR_HMAP/libhmap_VCTR.so 
+RS_LIBS += ../../../RUNTIME/VCTRS/src/libvctrs.so
 
 $(LUAJIT_A): $(LJVMCORE_O)
 	$(E) "AR        $@"
@@ -734,6 +738,4 @@ $(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP) ${RS_OBJS}
 	$(Q)$(TARGET_STRIP) $@
 	$(E) "OK        Successfully built LuaJIT"
 
-libfoo.so : foo.c 
-	gcc -g  -O0 -fPIC -shared foo.c -o libfoo.so
 ##############################################################################
