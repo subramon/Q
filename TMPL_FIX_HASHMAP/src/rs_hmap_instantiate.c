@@ -73,20 +73,10 @@ rs_hmap_instantiate(
   H->key_ordr = (key_ordr_fn_t) dlsym(H->config.so_handle, "key_ordr"); 
   H->destroy = (destroy_fn_t) dlsym(H->config.so_handle, "rs_hmap_destroy"); 
 
-  rs_hmap_int_config_t *IC = malloc(1 * sizeof(rs_hmap_int_config_t));
-  IC->key_cmp_fn = (key_cmp_fn_t) 
-    dlsym(H->config.so_handle, "key_cmp"); 
-  if ( IC->key_cmp_fn == NULL ) { go_BYE(-1); }
+  H->key_cmp = (key_cmp_fn_t) dlsym(H->config.so_handle, "key_cmp"); 
+  H->val_update = (val_update_fn_t) dlsym(H->config.so_handle, "val_update"); 
+  H->bkt_chk = (bkt_chk_fn_t) dlsym(H->config.so_handle, "bkt_chk"); 
 
-  IC->val_update_fn = (val_update_fn_t) 
-    dlsym(H->config.so_handle, "val_update"); 
-  if ( IC->val_update_fn == NULL ) { go_BYE(-1); }
-
-  IC->bkt_chk_fn = (bkt_chk_fn_t) 
-    dlsym(H->config.so_handle, "bkt_chk"); 
-  if ( IC->bkt_chk_fn == NULL ) { go_BYE(-1); }
-
-  H->int_config = IC;
 BYE:
   return status;
 }

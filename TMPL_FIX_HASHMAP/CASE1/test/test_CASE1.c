@@ -1,5 +1,5 @@
 #include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
+#include "_CASE1_rs_hmap_struct.h"
 #include "rs_hmap_instantiate.h"
 #include "rs_hmap_chk.h"
 #include "rs_hmap_destroy.h"

@@ -2,6 +2,7 @@
 #include "rs_hmap_struct.h"
 #include "rs_hmap_int_struct.h"
 #include "rs_hmap_aux.h"
+#include "rsx_set_hash.h"
 #include "rs_hmap_insert.h"
 
 int
@@ -14,12 +15,10 @@ rs_hmap_insert(
   int status = 0;
   const rs_hmap_key_t * const ptr_key = (const rs_hmap_key_t * const )in_ptr_key;
   const rs_hmap_val_t * const ptr_val = (const rs_hmap_val_t * const )in_ptr_val;
-  register uint32_t hash = set_hash(ptr_key, ptr_hmap);
+  register uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
   register uint32_t probe_loc = set_probe_loc(hash, ptr_hmap);
-  rs_hmap_int_config_t *IC = (rs_hmap_int_config_t *)ptr_hmap->int_config;
-  register key_cmp_fn_t key_cmp_fn = IC->key_cmp_fn;
-  register val_update_fn_t val_update_fn = IC->val_update_fn;
-
+  register val_update_fn_t val_update = ptr_hmap->val_update;
+  register key_cmp_fn_t key_cmp = ptr_hmap->key_cmp;
 
   /*
    * From the paper: "when inserting, if a record probes a location
@@ -48,9 +47,9 @@ rs_hmap_insert(
     rs_hmap_key_t this_key       = bkts[probe_loc].key;
     if ( bkt_full[probe_loc] ) { // If there is a key in the bucket.
       // check if key matches incoming one 
-      if ( key_cmp_fn(&this_key, &key) ) { 
+      if ( key_cmp(&this_key, &key) ) { 
         // update the existing value with the new value in *ptr_val
-        status = val_update_fn(&(bkts[probe_loc].val), &val);  
+        status = val_update(&(bkts[probe_loc].val), &val);  
         cBYE(status);
         break;
       }

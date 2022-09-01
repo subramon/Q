@@ -15,41 +15,50 @@ DFLAGS = -g -DDEBUG
 # DFLAGS = -O4
 # Add -pg for grpof 
 
-INCS += -I./inc/ 
-INCS += -I./CASE1/inc/ 
+INCS := -I./inc/ 
+INCS += -I../inc/ 
 
 TMPL=CASE1
 
 all: libhmap_${TMPL}.so test_${TMPL} test_merge_${TMPL}
 
-SRCS :=	./src/spooky_hash.c  
-SRCS +=	./src/rdtsc.c  
-SRCS +=	./src/rs_hmap_aux.c  
-SRCS +=	./src/rs_hmap_instantiate.c  
-SRCS +=	./src/rs_hmap_pr.c  
-SRCS +=	./src/rs_hmap_chk.c  
-SRCS +=	./src/rs_hmap_del.c  
-SRCS +=	./src/rs_hmap_destroy.c  
-SRCS +=	./src/rs_hmap_get.c  
-SRCS +=	./src/rs_hmap_insert.c  
-SRCS +=	./src/rs_hmap_merge.c  
-SRCS +=	./src/rs_hmap_put.c  
-SRCS +=	./src/rs_hmap_resize.c  
-SRCS +=	./src/rs_hmap_row_bindmp.c  
-SRCS +=	./src/calc_new_size.c  
-SRCS +=	./src/murmurhash.c  
-SRCS +=	./src/fasthash.c  
+SRCS :=	../src/spooky_hash.c  
+SRCS +=	../src/rdtsc.c  
+SRCS +=	../src/rs_hmap_aux.c  
+SRCS +=	../src/rs_hmap_instantiate.c  
+SRCS +=	../src/rs_hmap_pr.c  
+SRCS +=	../src/rs_hmap_chk.c  
+SRCS +=	../src/rs_hmap_del.c  
+SRCS +=	../src/rs_hmap_destroy.c  
+SRCS +=	../src/rs_hmap_get.c  
+SRCS +=	../src/rs_hmap_insert.c  
+SRCS +=	../src/rs_hmap_merge.c  
+SRCS +=	../src/rs_hmap_put.c  
+SRCS +=	../src/rs_hmap_resize.c  
+SRCS +=	../src/rs_hmap_row_bindmp.c  
+SRCS +=	../src/calc_new_size.c  
+SRCS +=	../src/murmurhash.c  
+SRCS +=	../src/fasthash.c  
 
 OBJS = $(SRCS:.c=.o)
 
-CUSTOM_SRCS +=	./${TMPL}/src/pr.c  
-CUSTOM_SRCS +=	./${TMPL}/src/key_cmp.c  
-CUSTOM_SRCS +=	./${TMPL}/src/val_update.c  
-CUSTOM_SRCS +=	./${TMPL}/src/key_ordr.c  
-CUSTOM_SRCS +=	./${TMPL}/src/bkt_chk.c  
-CUSTOM_SRCS +=	./${TMPL}/src/set_hash.c  
+CUSTOM_SRCS +=	./src/rsx_pr.c  
+CUSTOM_SRCS +=	./src/rsx_key_cmp.c  
+CUSTOM_SRCS +=	./src/rsx_val_update.c  
+CUSTOM_SRCS +=	./src/rsx_key_ordr.c  
+CUSTOM_SRCS +=	./src/rsx_bkt_chk.c  
+CUSTOM_SRCS +=	./src/rsx_set_hash.c  
 
 CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
+
+HFILE = ./inc/_${TMPL}_rs_hmap_struct.h
+
+${HFILE} : ../inc/rs_hmap_struct.h 
+	cat ../inc/rs_hmap_struct.h | \
+		sed s"/rs_hmap_t/${TMPL}_rs_hmap_t/"g > \
+		${HFILE}
+
+${CUSTOM_SRCS} : ${HFILE}
 
 .c.o : 
 	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 

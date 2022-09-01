@@ -1,5 +1,5 @@
 extern uint32_t
-set_hash(
+rsx_set_hash(
     const void * const ptr_key,
-    const rs_hmap_t * const ptr_hmap
+    const void * const ptr_hmap
     );

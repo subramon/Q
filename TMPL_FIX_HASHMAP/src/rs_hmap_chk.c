@@ -10,6 +10,7 @@
 #include "spooky_struct.h"
 #include "spooky_hash.h"
 #include "rs_hmap_aux.h"
+#include "rsx_set_hash.h"
 #include "rs_hmap_chk.h"
 #include "rs_hmap_get.h"
 
@@ -99,7 +100,7 @@ rs_hmap_chk(
         &where_found);
     cBYE(status);
     if ( !is_found ) { go_BYE(-1); }
-    uint32_t hash = set_hash(ptr_key, ptr_hmap);
+    uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
     uint32_t probe_loc = set_probe_loc(hash, ptr_hmap);
     if ( probe_loc == i ) { 
       // this key was placed with no searching 
