@@ -17,9 +17,10 @@ vctr_is(
 {
   int status = 0;
   rs_hmap_key_t key = v;
-  rs_hmap_val_t val;
+  rs_hmap_val_t val; memset(&val, 0, sizeof(rs_hmap_val_t));
   status = g_vctr_hmap.get(&g_vctr_hmap, &key, &val, ptr_is_found, 
       ptr_where_found);
+  printf("found at %u \n", *ptr_where_found);
 BYE:
   return status;
 }

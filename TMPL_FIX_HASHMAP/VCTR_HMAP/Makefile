@@ -17,6 +17,7 @@ DFLAGS = -g -DDEBUG
 
 INCS += -I../inc/ 
 INCS += -I./inc/ 
+INCS += -I../../UTILS/inc/
 
 TMPL=VCTR
 
@@ -46,6 +47,7 @@ CUSTOM_SRCS +=	./src/pr.c
 CUSTOM_SRCS +=	./src/key_cmp.c  
 CUSTOM_SRCS +=	./src/val_update.c  
 CUSTOM_SRCS +=	./src/key_ordr.c  
+CUSTOM_SRCS +=	./src/bkt_chk.c  
 
 CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
 

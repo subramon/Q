@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <dlfcn.h>
-#include "rs_hmap_int_types.h" 
+#include "rs_hmap_int_types.h"
 
 typedef struct _rs_hmap_kv_t { 
   rs_hmap_key_t key;
@@ -13,12 +13,14 @@ typedef struct _rs_hmap_kv_t {
 
 typedef bool (*key_cmp_fn_t )(const void * const , const void * const );
 typedef int (*val_update_fn_t )(void *, const void * const);
+typedef int (*bkt_chk_fn_t )(const void * const, int n);
 
 // Configs set internally
 typedef struct _rs_hmap_int_config_t { 
 
   key_cmp_fn_t key_cmp_fn; // function to compare 2 keys
   val_update_fn_t val_update_fn; // function to update value 
+  bkt_chk_fn_t bkt_chk_fn; // function to perform logical consistency checks on contents of bucket
 
 } rs_hmap_int_config_t; 
 

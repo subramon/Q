@@ -82,6 +82,10 @@ rs_hmap_instantiate(
     dlsym(H->config.so_handle, "val_update"); 
   if ( IC->val_update_fn == NULL ) { go_BYE(-1); }
 
+  IC->bkt_chk_fn = (bkt_chk_fn_t) 
+    dlsym(H->config.so_handle, "bkt_chk"); 
+  if ( IC->bkt_chk_fn == NULL ) { go_BYE(-1); }
+
   H->int_config = IC;
 BYE:
   return status;

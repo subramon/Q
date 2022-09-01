@@ -18,21 +18,42 @@ DFLAGS = -g -DDEBUG
 
 INCS := -I../inc/ 
 INCS += -I../../../UTILS/inc/
+INCS += -I../../../
 INCS += -I../../../TMPL_FIX_HASHMAP/inc/
-INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
 
 TMPL=CASE1
 
 
-all: libvctrs.so 
+all: libvctrs.so  ut1
 
 SRCS :=	vctr_is.c  
 SRCS +=	vctr_new_uqid.c  
 SRCS +=	vctr_add.c  
 SRCS +=	vctr_del.c  
 SRCS +=	vctr_cnt.c  
+SRCS +=	vctr_name.c  
+
+mk_vctr_hmap.o : mk_vctr_hmap.c
+	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} \
+		-I../../../UTILS/inc/ \
+		-I../../../TMPL_FIX_HASHMAP/inc/ \
+		-I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/  \
+		-I../inc/
+
+mk_chnk_hmap.o : mk_chnk_hmap.c
+	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} \
+		-I../../../UTILS/inc/ \
+		-I../../../TMPL_FIX_HASHMAP/inc/ \
+		-I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/  \
+		-I../inc/
 
 OBJS = $(SRCS:.c=.o)
+
+OBJS += mk_chnk_hmap.o 
+OBJS += mk_vctr_hmap.o 
+
+TEST_SRCS := ../test/ut1.c
+TEST_OBJS = $(TEST_SRCS:.c=.o)
 
 .c.o : 
 	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
@@ -46,5 +67,12 @@ ${VEC_HMAP_SO} :
 libvctrs.so :  ${OBJS} ${VEC_HMAP_SO}
 	gcc ${OBJS} -shared -lm -o libvctrs.so \
 	${VEC_HMAP_SO}
+
+ut1 : ${TEST_OBJS}
+	gcc ${TEST_OBJS} -o ut1 \
+		-lm \
+		libvctrs.so \
+		${VEC_HMAP_SO}
+
 clean:
-	rm -f *.o *.so
+	rm -f *.o *.so ut1

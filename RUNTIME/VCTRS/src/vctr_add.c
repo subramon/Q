@@ -17,6 +17,7 @@ vctr_add1(
     )
 {
   int status = 0;
+  if ( ( qtype == Q0 ) || ( qtype >= NUM_QTYPES ) ) { go_BYE(-1); }
   *ptr_uqid = vctr_new_uqid();
   printf("uqid = %lu\n", *ptr_uqid);
   rs_hmap_key_t key = *ptr_uqid; 

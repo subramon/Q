@@ -27,7 +27,6 @@ typedef enum {
   HL,  // holiday bit mask 
   NUM_QTYPES // must be last one 
 } qtype_t;
-typedef uint32_t holiday_bmask_t;
 // STOP extract_for_qtypes.tex
 typedef struct _tm_t {
   int8_t tm_year;	/* Year	- 1900. TODO P4 Watch out for 2027!  */
