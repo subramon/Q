@@ -47,6 +47,7 @@ CUSTOM_SRCS +=	./${TMPL}/src/key_cmp.c
 CUSTOM_SRCS +=	./${TMPL}/src/val_update.c  
 CUSTOM_SRCS +=	./${TMPL}/src/key_ordr.c  
 CUSTOM_SRCS +=	./${TMPL}/src/bkt_chk.c  
+CUSTOM_SRCS +=	./${TMPL}/src/set_hash.c  
 
 CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
 

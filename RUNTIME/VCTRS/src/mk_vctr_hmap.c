@@ -26,5 +26,5 @@ mk_vctr_hmap(
   status = IC1->bkt_chk_fn(vctr_hmap->bkts, vctr_hmap->size);
   cBYE(status);
 BYE:
-  return status;
+  if ( status != 0 ) { return NULL; } else { return vctr_hmap; }
 }

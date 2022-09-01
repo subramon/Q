@@ -6,18 +6,20 @@
 
 void 
 pr_key(
-    rs_hmap_key_t *ptr_key,
+    bkt_t *bkts,
+    uint32_t idx,
     FILE *fp
     )
 {
-  fprintf(fp, "%" PRIu64 "", *ptr_key);
+  fprintf(fp, "%" PRIu64 "", bkts[idx].key);
 }
 
 void 
 pr_val(
-    rs_hmap_val_t *ptr_val,
+    bkt_t *bkts,
+    uint32_t idx,
     FILE *fp
     )
 {
-  fprintf(fp, "%u", *ptr_val);
+  fprintf(fp, "%u", bkts[idx].val);
 }

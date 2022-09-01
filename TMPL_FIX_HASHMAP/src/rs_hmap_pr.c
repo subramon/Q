@@ -13,13 +13,13 @@ rs_hmap_pr(
     )
 {
   int status = 0;
-  bkt_t *bkts = (bkt_t *)ptr_hmap->bkts;
+  void *bkts = ptr_hmap->bkts;
   bool *bkt_full = ptr_hmap->bkt_full;
   if ( fp == NULL ) { fp = stdout; }
   for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
     if ( !bkt_full[i] ) { continue; }
-    pr_key(&(bkts[i].key), fp); cBYE(status);
-    pr_val(&(bkts[i].val), fp); cBYE(status);
+    pr_key(bkts, i, fp); cBYE(status);
+    pr_val(bkts, i, fp); cBYE(status);
   }
 BYE:
   return status;

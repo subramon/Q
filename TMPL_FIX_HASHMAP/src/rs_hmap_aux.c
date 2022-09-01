@@ -19,18 +19,6 @@ mk_hmap_key(
   uint64_t r2 = random() ^ RDTSC();
   return (uint32_t)( r1 | ( r2 << 32 )  );
 }
-
-uint32_t
-set_hash(
-    const rs_hmap_key_t * const ptr_key,
-    const rs_hmap_t * const ptr_hmap
-    )
-{
-  uint32_t hash;
-    // hash = murmurhash3(key, len, ptr_hmap->hashkey);
-  hash = fasthash32(ptr_key, sizeof(rs_hmap_key_t), ptr_hmap->hashkey);
-  return hash;
-}
 //----------------------------------------------
 uint32_t
 set_probe_loc(
