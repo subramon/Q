@@ -34,7 +34,7 @@ main(
   HC1.min_size = 32;
   HC1.max_size = 0;
   HC1.so_file = strdup("libhmap_vctr.so"); 
-  status = rs_hmap_instantiate(&g_vctr_hmap, &HC1); cBYE(status);
+  status = vctr_rs_hmap_instantiate(&g_vctr_hmap, &HC1); cBYE(status);
   status = g_vctr_hmap.bkt_chk(g_vctr_hmap.bkts, g_vctr_hmap.size);
   cBYE(status);
   //----------------------------------

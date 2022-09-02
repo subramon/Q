@@ -24,26 +24,30 @@ TMPL=vctr
 
 all: libhmap_${TMPL}.so # TODO test_${TMPL} 
 
-SRCS :=	../src/spooky_hash.c  
-SRCS +=	../src/rdtsc.c  
-SRCS +=	../src/murmurhash.c  
-SRCS +=	../src/fasthash.c  
-SRCS +=	../src/calc_new_size.c  
+SRCS1 :=	../src/spooky_hash.c  
+SRCS1 +=	../src/rdtsc.c  
+SRCS1 +=	../src/murmurhash.c  
+SRCS1 +=	../src/fasthash.c  
+SRCS1 +=	../src/calc_new_size.c  
 
-SRCS +=	./src/rs_hmap_aux.c  
-SRCS +=	./src/rs_hmap_instantiate.c  
-SRCS +=	./src/rs_hmap_pr.c  
-SRCS +=	./src/rs_hmap_chk.c  
-SRCS +=	./src/rs_hmap_del.c  
-SRCS +=	./src/rs_hmap_destroy.c  
-SRCS +=	./src/rs_hmap_get.c  
-SRCS +=	./src/rs_hmap_insert.c  
-SRCS +=	./src/rs_hmap_merge.c  
-SRCS +=	./src/rs_hmap_put.c  
-SRCS +=	./src/rs_hmap_resize.c  
-SRCS +=	./src/rs_hmap_row_bindmp.c  
+SRCS2 :=	./src/rs_hmap_aux.c  
+SRCS2 +=	./src/rs_hmap_instantiate.c  
+SRCS2 +=	./src/rs_hmap_pr.c  
+SRCS2 +=	./src/rs_hmap_chk.c  
+SRCS2 +=	./src/rs_hmap_del.c  
+SRCS2 +=	./src/rs_hmap_destroy.c  
+SRCS2 +=	./src/rs_hmap_get.c  
+SRCS2 +=	./src/rs_hmap_insert.c  
+SRCS2 +=	./src/rs_hmap_merge.c  
+SRCS2 +=	./src/rs_hmap_put.c  
+SRCS2 +=	./src/rs_hmap_resize.c  
+SRCS2 +=	./src/rs_hmap_row_bindmp.c  
 
-OBJS = $(SRCS:.c=.o)
+OBJS1 = $(SRCS1:.c=.o)
+OBJS2 = $(SRCS2:.c=.o)
+
+
+OBJS := ${OBJS1} ${OBJS2}
 
 rs_hmap_aux.o : ./src/rs_hmap_aux.c 
 
@@ -54,12 +58,21 @@ WDIR=${CDIR}/..
 	echo "CDIR = ${CDIR}"
 	cd ..; bash specialize.sh ${WDIR} src c_files.txt ${TMPL} ${CDIR}
 	cd ..; bash specialize.sh ${WDIR} inc h_files.txt ${TMPL} ${CDIR}
+	cat ./src/rs_hmap_instantiate.c | \
+	  	sed s"/^rs_hmap_instantiate/${TMPL}_rs_hmap_instantiate/"g \
+		> _tempf
+	mv _tempf ./src/rs_hmap_instantiate.c
+	cat ./inc/rs_hmap_instantiate.h | \
+	  	sed s"/^rs_hmap_instantiate/${TMPL}_rs_hmap_instantiate/"g \
+		> _tempf
+	mv _tempf ./src/rs_hmap_instantiate.h
 
 CUSTOM_SRCS +=	./src/rsx_pr.c  
 CUSTOM_SRCS +=	./src/rsx_key_cmp.c  
 CUSTOM_SRCS +=	./src/rsx_val_update.c  
 CUSTOM_SRCS +=	./src/rsx_key_ordr.c  
 CUSTOM_SRCS +=	./src/rsx_bkt_chk.c  
+CUSTOM_SRCS +=	./src/rsx_set_hash.c  
 
 CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
 
@@ -74,6 +87,7 @@ test_${TMPL} : libhmap_${TMPL}.so ./test/test_${TMPL}.c
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_${TMPL}.c \
 	libhmap_${TMPL}.so -o test_${TMPL} -ldl
 
+# TODO Need to delete INCS2 as well.
 clean:
-	rm -f *.o ./src/*.o src/_* inc/_*
+	rm -f *.o ./src/*.o ${SRCS2}
 	rm -f libhmap_${TMPL}.so
