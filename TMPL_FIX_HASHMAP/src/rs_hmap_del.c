@@ -25,7 +25,7 @@ rs_hmap_del(
 
   register uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
   register uint32_t probe_loc = set_probe_loc(hash, ptr_hmap);
-  register bkt_t *bkts = ptr_hmap->bkts;
+  register rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   register bool *bkt_full = ptr_hmap->bkt_full;
   register uint32_t my_psl = 0;
   register uint32_t num_probes = 0;
@@ -72,16 +72,16 @@ rs_hmap_del(
    * The probe sequence must be preserved in the deletion case.
    * Use the backwards-shifting method to maintain low variance.
    */
-  bkt_t *this_bkt  = &(bkts[probe_loc]);
+  rs_hmap_bkt_t *this_bkt  = &(bkts[probe_loc]);
   uint32_t prev_probe_loc = probe_loc; 
   for ( ; ; ) {
     // mark this bucket as empty
-    memset(&(bkts[probe_loc]), 0, sizeof(bkt_t));
+    memset(&(bkts[probe_loc]), 0, sizeof(rs_hmap_bkt_t));
     bkt_full[probe_loc] = false; 
 
     probe_loc++;
     if ( probe_loc == ptr_hmap->size ) { probe_loc = 0; }
-    bkt_t *next_bkt = bkts + probe_loc;
+    rs_hmap_bkt_t *next_bkt = bkts + probe_loc;
     /*
      * Stop if we reach an empty bucket or hit a key which
      * is in its base (original) location.

@@ -53,7 +53,7 @@ main(
   // The following works only for this particular Key/Val updates
   uint32_t chk_n1 = 0, chk_n2 = 0;
   for ( uint32_t i = 0; i < H.size; i++ ) { 
-    bkt_t *bkts = H.bkts;
+    rs_hmap_bkt_t *bkts = H.bkts;
     bool *bkt_full = H.bkt_full;
     if ( bkts[i].key != 0 ) { chk_n1++; }
     if ( bkts[i].val != 0 ) { chk_n2++; }

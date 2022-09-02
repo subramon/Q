@@ -15,7 +15,7 @@ rs_hmap_resize(
   if ( ptr_hmap == NULL ) { go_BYE(-1); }
   const size_t oldsize = ptr_hmap->size;
   const size_t nitems  = ptr_hmap->nitems;
-  register bkt_t *bkts = ptr_hmap->bkts;
+  register rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   register bool *bkt_full = ptr_hmap->bkt_full;
 
   // some obvious logical checks
@@ -23,7 +23,7 @@ rs_hmap_resize(
   if ( newsize < (uint32_t)(HIGH_WATER_MARK * (double)nitems) ) { 
     go_BYE(-1); 
   }
-  ptr_hmap->bkts   = calloc(sizeof(bkt_t), newsize);
+  ptr_hmap->bkts   = calloc(sizeof(rs_hmap_bkt_t), newsize);
   ptr_hmap->bkt_full   = calloc(sizeof(bool), newsize);
   ptr_hmap->size   = newsize;
   uint32_t chk_nitems = ptr_hmap->nitems;

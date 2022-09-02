@@ -25,7 +25,7 @@ rs_hmap_get(
   
   register uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
   register uint32_t probe_loc = set_probe_loc(hash, ptr_hmap);
-  register bkt_t *bkts = ptr_hmap->bkts;
+  register rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   register bool *bkt_full = ptr_hmap->bkt_full;
   register uint32_t my_psl = 0;
   register uint32_t num_probes = 0;
@@ -35,7 +35,7 @@ rs_hmap_get(
   // Lookup is a linear probe.
   for ( ; ; ) { 
     if ( num_probes >= ptr_hmap->size ) { go_BYE(-1); }
-    register bkt_t *this_bkt = bkts + probe_loc;
+    register rs_hmap_bkt_t *this_bkt = bkts + probe_loc;
 
     if ( !key_cmp(&(this_bkt->key), ptr_key) ) { // mismatch 
       goto keep_searching;   

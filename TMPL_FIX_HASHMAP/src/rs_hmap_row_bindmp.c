@@ -22,7 +22,7 @@ rs_hmap_row_bindmp(
   if ( ptr_hmap == NULL ) { go_BYE(-1); }
   nK = ptr_hmap->nitems;
   if ( nK == 0 ) { goto BYE; }
-  register bkt_t *bkts = (bkt_t *)ptr_hmap->bkts;
+  register rs_hmap_bkt_t *bkts = (rs_hmap_bkt_t *)ptr_hmap->bkts;
   register bool *bkt_full = ptr_hmap->bkt_full;
 
   if ( file_name == NULL ) { 

@@ -30,7 +30,7 @@ rs_hmap_insert(
    * then swap them and continue.
    */
   // set up the bucket entry 
-  bkt_t entry; 
+  rs_hmap_bkt_t entry; 
   rs_hmap_key_t key = *ptr_key;
   rs_hmap_val_t val = *ptr_val;
   entry.key  = *ptr_key;
@@ -39,7 +39,7 @@ rs_hmap_insert(
   bool key_copied = false; // means we have not copied the key or val
   register uint32_t num_probes = 0;
   //-----------
-  register bkt_t *bkts  = ptr_hmap->bkts;
+  register rs_hmap_bkt_t *bkts  = ptr_hmap->bkts;
   register bool *bkt_full  = ptr_hmap->bkt_full;
   for ( ; ; ) {
     if ( num_probes >= ptr_hmap->size ) { go_BYE(-1); }
@@ -57,7 +57,7 @@ rs_hmap_insert(
       // We found a "rich" bucket.  Capture its location.
       if ( entry.psl > bkts[probe_loc].psl ) {
         // swap 
-        bkt_t tmp = entry;
+        rs_hmap_bkt_t tmp = entry;
         entry = bkts[probe_loc];
         bkts[probe_loc] = tmp;
         //--------------

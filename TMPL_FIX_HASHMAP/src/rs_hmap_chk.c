@@ -48,7 +48,7 @@ rs_hmap_chk(
   // status = hmap_pr(ptr_hmap); cBYE(status);
   // check that number of items is correct
   uint32_t chk_nitems = 0;
-  bkt_t *bkts = ptr_hmap->bkts;
+  rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   bool *bkt_full = ptr_hmap->bkt_full;
   for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
     if ( bkt_full[i] ) {

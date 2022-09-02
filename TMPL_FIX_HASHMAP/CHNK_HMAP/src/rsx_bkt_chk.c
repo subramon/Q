@@ -10,7 +10,7 @@ rsx_bkt_chk(
   int status = 0;
   if ( in_bkts == NULL ) { go_BYE(-1); }
   if ( n == 0 ) { go_BYE(-1); }
-  const bkt_t * const bkts = (const bkt_t * const) in_bkts;
+  const chnk_rs_hmap_bkt_t * const bkts = (const chnk_rs_hmap_bkt_t * const) in_bkts;
   chnk_rs_hmap_val_t zero_val; int valsz = sizeof(chnk_rs_hmap_val_t);
   memset(&zero_val, 0, valsz);
   for ( uint32_t i = 0; i < n; i++ ) { 

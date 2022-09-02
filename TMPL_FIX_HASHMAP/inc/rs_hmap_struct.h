@@ -61,17 +61,17 @@ typedef struct _rs_hmap_kv_t {
   rs_hmap_val_t val;
 } rs_hmap_kv_t;
 
-typedef struct _bkt_t { 
+typedef struct _rs_hmap_bkt_t { 
   rs_hmap_key_t key; 
   uint16_t psl; // probe sequence length 
   rs_hmap_val_t val;    // value that is aggregated, NOT input value
-} bkt_t;
+} rs_hmap_bkt_t;
 
 typedef struct _rs_hmap_t {
   uint32_t size;
   uint32_t nitems;
   uint64_t divinfo;
-  bkt_t  *bkts;  
+  rs_hmap_bkt_t  *bkts;  
   bool *bkt_full; 
   uint64_t hashkey;
   rs_hmap_config_t config; // extrernal config 

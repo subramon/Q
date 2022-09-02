@@ -14,7 +14,7 @@ rs_hmap_pr(
     )
 {
   int status = 0;
-  bkt_t *bkts = ptr_hmap->bkts;
+  rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   bool *bkt_full = ptr_hmap->bkt_full;
   if ( fp == NULL ) { fp = stdout; }
   for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 

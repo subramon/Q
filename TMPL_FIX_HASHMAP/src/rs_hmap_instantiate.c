@@ -48,7 +48,7 @@ rs_hmap_instantiate(
 
   // get smallest prime bigger than min size
   H->size = prime_geq(H->config.min_size);
-  H->bkts = calloc(H->size, sizeof(bkt_t)); 
+  H->bkts = calloc(H->size, sizeof(rs_hmap_bkt_t)); 
   return_if_malloc_failed(H->bkts);
 
   H->bkt_full = calloc(H->size, sizeof(bool)); 

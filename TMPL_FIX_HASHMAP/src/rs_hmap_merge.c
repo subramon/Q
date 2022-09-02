@@ -17,7 +17,7 @@ rs_hmap_merge(
 
   if ( ptr_dst_hmap == NULL ) { go_BYE(-1); }
   if ( ptr_src_hmap == NULL ) { go_BYE(-1); }
-  bkt_t *src_bkts = ptr_src_hmap->bkts;
+  rs_hmap_bkt_t *src_bkts = ptr_src_hmap->bkts;
   bool *src_bkt_full = ptr_src_hmap->bkt_full;
   for ( uint32_t i = 0; i < ptr_src_hmap->size; i++ ) { 
     if ( src_bkt_full[i] == false ) { continue; }

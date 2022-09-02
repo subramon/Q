@@ -10,4 +10,4 @@ rs_hmap_pr.*
 rs_hmap_put.*
 rs_hmap_resize.*
 rs_hmap_row_bindmp.*
-rs_hmap_struct.h
+*rs_hmap_struct.h

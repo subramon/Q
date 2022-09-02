@@ -58,6 +58,11 @@ WDIR=${CDIR}/..
 	echo "CDIR = ${CDIR}"
 	cd ..; bash specialize.sh ${WDIR} src c_files.txt ${TMPL} ${CDIR}
 	cd ..; bash specialize.sh ${WDIR} inc h_files.txt ${TMPL} ${CDIR}
+	mv ./inc/rs_hmap_struct.h ./inc/${TMPL}_rs_hmap_struct.h
+	cat ./inc/${TMPL}_rs_hmap_struct.h | \
+	  	sed s"/__RS_HMAP_STRUCT/__${TMPL}_RS_HMAP_STRUCT/"g \
+		> _tempf
+	mv _tempf ./inc/${TMPL}_rs_hmap_struct.h
 	cat ./src/rs_hmap_instantiate.c | \
 	  	sed s"/^rs_hmap_instantiate/${TMPL}_rs_hmap_instantiate/"g \
 		> _tempf

@@ -24,7 +24,7 @@ vctr_set_name(
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
   if ( val.is_trash    ) { go_BYE(-1); }
-  bkt_t *bkts = (bkt_t *)g_vctr_hmap.bkts;
+  vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap.bkts;
   strcpy(bkts[where].val.name, name);
 
 BYE:
@@ -44,7 +44,7 @@ vctr_get_name(
   cBYE(status);
   if ( !is_found ) { return NULL; } 
   if ( val.is_trash ) { return NULL; } 
-  bkt_t *bkts = (bkt_t *)g_vctr_hmap.bkts;
+  vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap.bkts;
   return bkts[where].val.name;
 BYE:
   return NULL;

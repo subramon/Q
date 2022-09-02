@@ -43,21 +43,29 @@ TEST_OBJS = $(TEST_SRCS:.c=.o)
 .c.o : 
 	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
 
-VEC_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/VCTR_HMAP
-VEC_HMAP_SO  = ${VEC_HMAP_LOC}/libhmap_vctr.so
+#-------------------------------------------
+VCTR_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/VCTR_HMAP
+VCTR_HMAP_SO  = ${VCTR_HMAP_LOC}/libhmap_vctr.so
 
-${VEC_HMAP_SO} : 
-	make -C ${VEC_HMAP_LOC}
+${VCTR_HMAP_SO} : 
+	make -C ${VCTR_HMAP_LOC}
+#-------------------------------------------
+CHNK_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/CHNK_HMAP
+CHNK_HMAP_SO  = ${CHNK_HMAP_LOC}/libhmap_chnk.so
 
-libvctrs.so :  ${OBJS} ${VEC_HMAP_SO}
+${CHNK_HMAP_SO} : 
+	make -C ${CHNK_HMAP_LOC}
+#-------------------------------------------
+libvctrs.so :  ${OBJS} ${VCTR_HMAP_SO}
 	gcc ${OBJS} -shared -lm -o libvctrs.so \
-	${VEC_HMAP_SO}
-
+	${VCTR_HMAP_SO} ${CHNK_HMAP_SO}
+#-------------------------------------------
 ut1 : ${TEST_OBJS}
 	gcc ${TEST_OBJS} -o ut1 \
 		-lm \
 		libvctrs.so \
-		${VEC_HMAP_SO}
+		${VCTR_HMAP_SO} \
+		${CHNK_HMAP_SO}
 
 clean:
 	rm -f *.o *.so ut1
