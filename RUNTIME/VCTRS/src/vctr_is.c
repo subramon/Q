@@ -1,6 +1,6 @@
 #include "q_incs.h"
 #include "qtypes.h"
-#include "../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/rs_hmap_struct.h"
+#include "vctr_rs_hmap_struct.h"
 #include "../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/rs_hmap_get.h"
 #include "vctr_is.h"
 

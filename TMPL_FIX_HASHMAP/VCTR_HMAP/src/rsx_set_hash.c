@@ -5,7 +5,7 @@
 #include "q_macros.h"
 #include "rdtsc.h"
 #include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
+#include "vctr_rs_hmap_struct.h"
 #include "rsx_set_hash.h"
 #include "fasthash.h"
 

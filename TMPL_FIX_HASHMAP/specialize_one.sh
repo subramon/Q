@@ -11,4 +11,5 @@ cat _tempf1 | sed s"/rs_bkt_t/${tmpl}_rs_bkt_t/"g > _tempf2
 cat _tempf2 | sed s"/rs_hmap_key_t/${tmpl}_rs_hmap_key_t/"g > _tempf1
 cat _tempf1 | sed s"/rs_hmap_val_t/${tmpl}_rs_hmap_val_t/"g > _tempf2
 cat _tempf2 | sed s"/rs_hmap_kv_t/${tmpl}_rs_hmap_kv_t/"g > _tempf1
-mv _tempf1 $outfile
+cat _tempf1 | sed s"/rs_hmap_struct/${tmpl}_rs_hmap_struct/"g > _tempf2
+mv _tempf2 $outfile

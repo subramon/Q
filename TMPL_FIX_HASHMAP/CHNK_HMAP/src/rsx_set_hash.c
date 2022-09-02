@@ -1,6 +1,6 @@
 #include "q_macros.h"
 #include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
+#include "chnk_rs_hmap_struct.h"
 #include "rsx_set_hash.h"
 #include "fasthash.h"
 

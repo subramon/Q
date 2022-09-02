@@ -1,3 +1,5 @@
+#include <stdint.h>
+#include "rs_hmap_struct.h"
 extern uint32_t
 mk_hmap_key(
     void

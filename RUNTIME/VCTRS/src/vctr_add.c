@@ -3,7 +3,7 @@
 #include "vctr_new_uqid.h"
 #include "vctr_add.h"
 
-#include "../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/rs_hmap_struct.h"
+#include "vctr_rs_hmap_struct.h"
 #include "../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/rs_hmap_get.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;

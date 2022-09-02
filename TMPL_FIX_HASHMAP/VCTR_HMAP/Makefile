@@ -65,7 +65,11 @@ WDIR=${CDIR}/..
 	cat ./inc/rs_hmap_instantiate.h | \
 	  	sed s"/^rs_hmap_instantiate/${TMPL}_rs_hmap_instantiate/"g \
 		> _tempf
-	mv _tempf ./src/rs_hmap_instantiate.h
+	mv _tempf ./inc/rs_hmap_instantiate.h
+	cat ./src/rs_hmap_instantiate.c | \
+	  	sed s"/rs_hmap_struct/${TMPL}_rs_hmap_struct/"g \
+		> _tempf
+	mv _tempf ./src/rs_hmap_instantiate.c
 
 CUSTOM_SRCS +=	./src/rsx_pr.c  
 CUSTOM_SRCS +=	./src/rsx_key_cmp.c  

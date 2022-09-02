@@ -1,5 +1,5 @@
 #include "q_incs.h"
-#include "rs_hmap_struct.h"
+#include "chnk_rs_hmap_struct.h"
 #include "rsx_bkt_chk.h"
 int
 rsx_bkt_chk(

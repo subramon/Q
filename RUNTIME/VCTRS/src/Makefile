@@ -20,6 +20,8 @@ INCS := -I../inc/
 INCS += -I../../../UTILS/inc/
 INCS += -I../../../
 INCS += -I../../../TMPL_FIX_HASHMAP/inc/
+INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
+INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
 
 TMPL=CASE1
 
