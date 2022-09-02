@@ -4,7 +4,6 @@
  */
  #include "rs_hmap_common.h"
  #include "rs_hmap_struct.h"
- #include "rs_hmap_put.h"
  #include "rs_hmap_merge.h"
 
 int
@@ -23,7 +22,7 @@ rs_hmap_merge(
     if ( src_bkt_full[i] == false ) { continue; }
     rs_hmap_key_t key = src_bkts[i].key;
     rs_hmap_val_t val = src_bkts[i].val;
-    status = rs_hmap_put(ptr_dst_hmap, &key, &val); cBYE(status);
+    status = ptr_dst_hmap->put(ptr_dst_hmap, &key, &val); cBYE(status);
   }
 BYE:
   return status;

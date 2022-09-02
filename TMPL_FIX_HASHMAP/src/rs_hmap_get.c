@@ -3,6 +3,7 @@
 #include "rs_hmap_common.h"
 #include "rs_hmap_struct.h" 
 #include "aux.h"
+#include "set_probe_loc.h"
 #include "rsx_set_hash.h"
 #include "rs_hmap_get.h"
 
@@ -24,7 +25,8 @@ rs_hmap_get(
   if ( key_cmp == NULL ) { go_BYE(-1); }
   
   register uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
-  register uint32_t probe_loc = set_probe_loc(hash, ptr_hmap);
+  register uint32_t probe_loc = 
+    set_probe_loc(hash, ptr_hmap->size,  ptr_hmap->divinfo);
   register rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   register bool *bkt_full = ptr_hmap->bkt_full;
   register uint32_t my_psl = 0;

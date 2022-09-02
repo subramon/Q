@@ -1,6 +1,7 @@
 #include "rs_hmap_common.h"
 #include "rs_hmap_struct.h"
 #include "aux.h"
+#include "set_probe_loc.h"
 #include "rsx_set_hash.h"
 #include "rs_hmap_insert.h"
 
@@ -15,7 +16,8 @@ rs_hmap_insert(
   const rs_hmap_key_t * const ptr_key = (const rs_hmap_key_t * const )in_ptr_key;
   const rs_hmap_val_t * const ptr_val = (const rs_hmap_val_t * const )in_ptr_val;
   register uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
-  register uint32_t probe_loc = set_probe_loc(hash, ptr_hmap);
+  register uint32_t probe_loc = 
+    set_probe_loc(hash, ptr_hmap->size, ptr_hmap->divinfo);
   register val_update_fn_t val_update = ptr_hmap->val_update;
   register key_cmp_fn_t key_cmp = ptr_hmap->key_cmp;
 

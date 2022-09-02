@@ -15,8 +15,8 @@ DFLAGS = -g -DDEBUG
 # DFLAGS = -O4
 # Add -pg for grpof 
 
-INCS := -I./inc/ 
-INCS += -I../inc/ 
+INCS := -I../inc/ 
+INCS += -I../../UTILS/inc/
 
 TMPL=CASE1
 
@@ -28,11 +28,11 @@ SRCS +=	./rdtsc.c
 SRCS +=	./calc_new_size.c  
 SRCS +=	./murmurhash.c  
 SRCS +=	./fasthash.c  
+SRCS +=	./set_probe_loc.c  
 
 OBJS = $(SRCS:.c=.o)
 
-HMAP_SRCS :=	./rs_hmap_set_probe_loc.c  
-HMAP_SRCS +=	./rs_hmap_instantiate.c  
+HMAP_SRCS :=	./rs_hmap_instantiate.c  
 HMAP_SRCS +=	./rs_hmap_pr.c  
 HMAP_SRCS +=	./rs_hmap_chk.c  
 HMAP_SRCS +=	./rs_hmap_del.c  
@@ -71,7 +71,7 @@ libhmap_test.so: ${HMAP_OBJS} ${CUSTOM_OBJS}
 	gcc  ${HMAP_OBJS} ${CUSTOM_OBJS} ${INCS} -shared -lm \
 		-o libhmap_test.so libhmap.so  -ldl 
 
-test1 : libhmap.so libhmap_test.so ${TEST_OBJS}
+test1 : libhmap.so libhmap_test.so ${TEST_OBJS} ../inc/rs_hmap_struct.h
 	gcc ${TEST_OBJS} libhmap_test.so libhmap.so -o test1  -ldl
 
 test_merge : libhmap.so libhmap_test.so ${MERGE_OBJS}
@@ -83,5 +83,5 @@ test_fastrem : ./test/test_fastrem.c
 	-o test_fastrem
 
 clean:
-	rm -f *.o test_hmap *.so ./src/*.o test_kUI8_vUI4
-	rm -f ./${TMPL}/src/*.o
+	rm -f *.o test_hmap *.so ./src/*.o \
+		test1 test_merge test_fastrem
