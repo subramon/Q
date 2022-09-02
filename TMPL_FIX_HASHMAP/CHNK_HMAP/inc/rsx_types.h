@@ -1,16 +1,20 @@
-#ifndef __HMAP_INT_TYPES_H
-#define __HMAP_INT_TYPES_H
+#ifndef __CHNK_TYPES_TYPES_H
+#define __CHNK_TYPES_TYPES_H
+#include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include <inttypes.h>
 #include "qtypes.h"
-typedef uint32_t rs_hmap_key_t; // a chunk is identified by a number
+typedef struct _chnk_rs_hmap_key_t {
+  uint32_t vctr_uqid;
+  uint32_t chnk_idx;
+} chnk_rs_hmap_key_t;
 
 #define MAX_LEN_CHNK_FILE_NAME 63 
 
-typedef struct _chnk_meta_t {
+typedef struct _chnk_rs_hmap_val_t {
   uint16_t num_readers;
   uint16_t num_writers;
-  uint32_t vctr_uqid; // backward reference for debugging 
-  uint32_t chnk_idx;  // backward reference for debugging 
   uint32_t num_elements;
   uint32_t size;
   qtype_t qtype; // backward reference for debugging 
@@ -20,9 +24,8 @@ typedef struct _chnk_meta_t {
   char l2_mem[MAX_LEN_CHNK_FILE_NAME+1];
   char l3_mem[MAX_LEN_CHNK_FILE_NAME+1];
   // Much more to put in here
-} chnk_meta_t;
-typedef chnk_meta_t rs_hmap_val_t;
-#endif //  __HMAP_INT_TYPES_H
+} chnk_rs_hmap_val_t;
+#endif //  __CHNK_TYPES_TYPES_H
 
 /*
  * L1 refers to RAM
