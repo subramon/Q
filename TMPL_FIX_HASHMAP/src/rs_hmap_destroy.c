@@ -1,4 +1,4 @@
-// EXTERNAL EXPOSIRE
+// EXTERNAL EXPOSURE
 #include "rs_hmap_common.h"
 #include "rs_hmap_struct.h"
 #include "rs_hmap_destroy.h"

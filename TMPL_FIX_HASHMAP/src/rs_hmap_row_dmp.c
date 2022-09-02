@@ -4,10 +4,10 @@
  */
  #include "rs_hmap_common.h"
  #include "rs_hmap_struct.h"
- #include "rs_hmap_row_bindmp.h"
+ #include "rs_hmap_row_dmp.h"
 
 int
-rs_hmap_row_bindmp(
+rs_hmap_row_dmp(
     rs_hmap_t *ptr_hmap, 
     const char * const file_name,
     void  **ptr_K,

@@ -20,7 +20,7 @@ main(
   rs_hmap_config_t HC; memset(&HC, 0, sizeof(rs_hmap_config_t));
   HC.min_size = 32;
   HC.max_size = 0;
-  HC.so_file = strdup("libhmap.so"); 
+  HC.so_file = strdup("libhmap_test.so"); 
   status = rs_hmap_instantiate(&H, &HC); cBYE(status);
   //-----------------------------------------------------------
   rs_hmap_val_t sum_val = 0;

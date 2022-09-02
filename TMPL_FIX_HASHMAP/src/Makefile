@@ -22,27 +22,31 @@ TMPL=CASE1
 
 all: libhmap.so test1 test_merge
 
-SRCS :=	./spooky_hash.c  
+SRCS :=	./aux.c  
+SRCS +=	./spooky_hash.c  
 SRCS +=	./rdtsc.c  
-SRCS +=	./rs_hmap_aux.c  
-SRCS +=	./rs_hmap_instantiate.c  
-SRCS +=	./rs_hmap_pr.c  
-SRCS +=	./rs_hmap_chk.c  
-SRCS +=	./rs_hmap_del.c  
-SRCS +=	./rs_hmap_destroy.c  
-SRCS +=	./rs_hmap_get.c  
-SRCS +=	./rs_hmap_insert.c  
-SRCS +=	./rs_hmap_merge.c  
-SRCS +=	./rs_hmap_put.c  
-SRCS +=	./rs_hmap_resize.c  
-SRCS +=	./rs_hmap_row_bindmp.c  
 SRCS +=	./calc_new_size.c  
 SRCS +=	./murmurhash.c  
 SRCS +=	./fasthash.c  
 
 OBJS = $(SRCS:.c=.o)
 
-CUSTOM_SRCS +=	./rsx_pr.c  
+HMAP_SRCS :=	./rs_hmap_set_probe_loc.c  
+HMAP_SRCS +=	./rs_hmap_instantiate.c  
+HMAP_SRCS +=	./rs_hmap_pr.c  
+HMAP_SRCS +=	./rs_hmap_chk.c  
+HMAP_SRCS +=	./rs_hmap_del.c  
+HMAP_SRCS +=	./rs_hmap_destroy.c  
+HMAP_SRCS +=	./rs_hmap_get.c  
+HMAP_SRCS +=	./rs_hmap_insert.c  
+HMAP_SRCS +=	./rs_hmap_merge.c  
+HMAP_SRCS +=	./rs_hmap_put.c  
+HMAP_SRCS +=	./rs_hmap_resize.c  
+HMAP_SRCS +=	./rs_hmap_row_dmp.c  
+
+HMAP_OBJS = $(HMAP_SRCS:.c=.o)
+
+CUSTOM_SRCS :=	./rsx_pr.c  
 CUSTOM_SRCS +=	./rsx_key_cmp.c  
 CUSTOM_SRCS +=	./rsx_val_update.c  
 CUSTOM_SRCS +=	./rsx_key_ordr.c  
@@ -60,15 +64,18 @@ MERGE_OBJS = $(MERGE_SRCS:.c=.o)
 .c.o : 
 	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
 
-libhmap.so: ${OBJS} ${CUSTOM_OBJS}  
-	gcc  ${CFLAGS} ${DFLAGS} ${OBJS} ${CUSTOM_OBJS} \
-	${INCS} -shared -lm -o libhmap.so  -ldl
+libhmap.so: ${OBJS} 
+	gcc  ${OBJS} -shared -lm -o libhmap.so  -ldl
 
-test1 : libhmap.so ${TEST_OBJS}
-	gcc ${TEST_OBJS} libhmap.so -o test1  -ldl
+libhmap_test.so: ${HMAP_OBJS} ${CUSTOM_OBJS}  
+	gcc  ${HMAP_OBJS} ${CUSTOM_OBJS} ${INCS} -shared -lm \
+		-o libhmap_test.so libhmap.so  -ldl 
 
-test_merge : libhmap.so ${MERGE_OBJS}
-	gcc  ${MERGE_OBJS} libhmap.so -o test_merge -ldl
+test1 : libhmap.so libhmap_test.so ${TEST_OBJS}
+	gcc ${TEST_OBJS} libhmap_test.so libhmap.so -o test1  -ldl
+
+test_merge : libhmap.so libhmap_test.so ${MERGE_OBJS}
+	gcc  ${MERGE_OBJS} libhmap_test.so libhmap.so -o test_merge -ldl
 
 test_fastrem : ./test/test_fastrem.c 
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_fastrem.c \

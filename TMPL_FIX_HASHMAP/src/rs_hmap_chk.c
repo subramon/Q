@@ -9,7 +9,7 @@
 #include "rdtsc.h"
 #include "spooky_struct.h"
 #include "spooky_hash.h"
-#include "rs_hmap_aux.h"
+#include "aux.h"
 #include "rsx_set_hash.h"
 #include "rs_hmap_chk.h"
 #include "rs_hmap_get.h"

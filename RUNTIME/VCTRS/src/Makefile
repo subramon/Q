@@ -35,6 +35,9 @@ SRCS +=	vctr_del.c
 SRCS +=	vctr_cnt.c  
 SRCS +=	vctr_name.c  
 
+SRCS +=	chnk_cnt.c  
+SRCS +=	chnk_is.c  
+
 OBJS = $(SRCS:.c=.o)
 
 TEST_SRCS := ../test/ut1.c
@@ -64,6 +67,7 @@ ut1 : ${TEST_OBJS}
 	gcc ${TEST_OBJS} -o ut1 \
 		-lm \
 		libvctrs.so \
+		libhmap.so \
 		${VCTR_HMAP_SO} \
 		${CHNK_HMAP_SO}
 

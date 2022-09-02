@@ -1,6 +1,6 @@
 #include "rs_hmap_common.h"
 #include "rs_hmap_struct.h"
-#include "rs_hmap_aux.h"
+#include "aux.h"
 #include "calc_new_size.h"
 /* Checks whether resize is needed. If so, calculates newsize */
 /* Resize needed when occupancy is too high */

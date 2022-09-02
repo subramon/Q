@@ -38,6 +38,10 @@ typedef int (* get_fn_t)(
 typedef int (* chk_fn_t)(
     void *ptr_hmap
     );
+typedef int (* pr_fn_t)(
+    void *ptr_hmap, 
+    FILE *fp
+    );
 typedef void (* destroy_fn_t)(
     void *ptr_hmap
     );
@@ -77,6 +81,7 @@ typedef struct _rs_hmap_t {
   rs_hmap_config_t config; // extrernal config 
   put_fn_t put;
   get_fn_t get;
+  pr_fn_t pr;
   del_fn_t del;
   chk_fn_t chk;
   row_dmp_fn_t row_dmp;

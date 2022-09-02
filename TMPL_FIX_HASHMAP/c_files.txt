@@ -9,4 +9,4 @@ rs_hmap_insert.c
 rs_hmap_merge.c  
 rs_hmap_put.c  
 rs_hmap_resize.c  
-rs_hmap_row_bindmp.c  
+rs_hmap_row_dmp.c  

@@ -1,8 +1,8 @@
-// EXTERNAL EXPOSUER
+// EXTERNAL EXPOSURE
 // lookup an value given the key.
 #include "rs_hmap_common.h"
 #include "rs_hmap_struct.h" 
-#include "rs_hmap_aux.h"
+#include "aux.h"
 #include "rsx_set_hash.h"
 #include "rs_hmap_get.h"
 

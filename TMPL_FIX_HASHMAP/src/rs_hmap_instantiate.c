@@ -1,5 +1,5 @@
 #include "rs_hmap_common.h"
-#include "rs_hmap_aux.h"
+#include "aux.h"
 #include "rs_hmap_instantiate.h"
 int 
 rs_hmap_instantiate(
@@ -63,16 +63,19 @@ rs_hmap_instantiate(
   H->config.so_handle = dlopen(H->config.so_file, RTLD_NOW); 
   if ( H->config.so_handle == NULL ) { go_BYE(-1); }
 
-  H->put = (put_fn_t) dlsym(H->config.so_handle, "rs_hmap_put"); 
-  H->get = (get_fn_t) dlsym(H->config.so_handle, "rs_hmap_get"); 
-  H->del = (del_fn_t) dlsym(H->config.so_handle, "rs_hmap_del"); 
   H->chk = (chk_fn_t) dlsym(H->config.so_handle, "rs_hmap_chk"); 
-  H->row_dmp = (row_dmp_fn_t) dlsym(H->config.so_handle, "rs_hmap_row_bindmp"); 
-  H->destroy = (destroy_fn_t) dlsym(H->config.so_handle, "rs_hmap_destroy"); 
+  H->destroy = (destroy_fn_t) dlsym(H->config.so_handle,"rs_hmap_destroy"); 
+  H->get = (get_fn_t) dlsym(H->config.so_handle, "rs_hmap_get"); 
+  H->pr  = (pr_fn_t) dlsym(H->config.so_handle, "rs_hmap_pr"); 
+  H->put = (put_fn_t) dlsym(H->config.so_handle, "rs_hmap_put"); 
+  H->del = (del_fn_t) dlsym(H->config.so_handle, "rs_hmap_del"); 
+  H->row_dmp = (row_dmp_fn_t) dlsym(H->config.so_handle,"rs_hmap_row_dmp"); 
+  //--------------------------------------------------------
   H->key_ordr = (key_ordr_fn_t) dlsym(H->config.so_handle, "rsx_key_ordr"); 
   H->key_cmp = (key_cmp_fn_t) dlsym(H->config.so_handle, "rsx_key_cmp"); 
   H->val_update = (val_update_fn_t) dlsym(H->config.so_handle, "rsx_val_update"); 
   H->bkt_chk = (bkt_chk_fn_t) dlsym(H->config.so_handle, "rsx_bkt_chk"); 
+  //--------------------------------------------------------
 
 BYE:
   return status;

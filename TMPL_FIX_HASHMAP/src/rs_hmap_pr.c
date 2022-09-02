@@ -19,8 +19,10 @@ rs_hmap_pr(
   if ( fp == NULL ) { fp = stdout; }
   for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
     if ( !bkt_full[i] ) { continue; }
+    fprintf(fp, ",");
     rsx_pr_key(bkts+i, fp); cBYE(status);
     rsx_pr_val(bkts+i, fp); cBYE(status);
+    fprintf(fp, "\n");
   }
 BYE:
   return status;
