@@ -4,7 +4,6 @@
  */
  #include "rs_hmap_common.h"
  #include "rs_hmap_struct.h"
- #include "rs_hmap_int_struct.h"
  #include "rs_hmap_row_bindmp.h"
 
 int

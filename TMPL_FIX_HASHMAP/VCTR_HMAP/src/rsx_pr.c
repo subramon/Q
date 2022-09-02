@@ -1,24 +1,23 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include "rs_hmap_int_struct.h"
-#include "pr.h"
+#include "rsx_types.h"
+#include "rsx_pr.h"
 
 void 
-pr_key(
-    rs_hmap_key_t *ptr_key,
+rsx_pr_key(
+    void *in_key,
     FILE *fp
     )
 {
+  vctr_rs_hmap_key_t *ptr_key = (vctr_rs_hmap_key_t *)in_key;
   fprintf(fp, "%" PRIu32 "", *ptr_key);
 }
 
 void 
-pr_val(
-    rs_hmap_val_t *ptr_val,
+rsx_pr_val(
+    void *in_val,
     FILE *fp
     )
 {
+  vctr_rs_hmap_val_t *ptr_val = (vctr_rs_hmap_val_t *)in_val;
   fprintf(fp, "nE = %" PRIu64 "\n", ptr_val->num_elements);
   fprintf(fp, "nC = %" PRIu32 "\n", ptr_val->num_chunks);
   fprintf(fp, "is_eov = %s \n", ptr_val->is_eov ? "true" : "false" );

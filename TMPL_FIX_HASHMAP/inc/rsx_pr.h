@@ -1,12 +1,10 @@
 extern void 
 rsx_pr_key(
-    void *bkts,
-    uint32_t idx,
+    void *key,
     FILE *fp
     );
 extern void 
 rsx_pr_val(
-    void *bkts,
-    uint32_t idx,
+    void *val,
     FILE *fp
     );

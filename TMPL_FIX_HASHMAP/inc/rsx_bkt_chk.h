@@ -1,5 +1,5 @@
 extern int
-bkt_chk(
+rsx_bkt_chk(
     const void *const in_bkts,
     uint32_t n
     );

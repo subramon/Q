@@ -1,7 +1,7 @@
-#include "rs_hmap_int_struct.h"
-#include "key_cmp.h"
+#include "rsx_types.h"
+#include "rsx_key_cmp.h"
 bool
-key_cmp(
+rsx_key_cmp(
     const void *const in_ptr_k1,
     const void *const in_ptr_k2
     )

@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <dlfcn.h>
-#include "rs_hmap_int_struct.h"
+#include "rsx_types.h"
 
 typedef int(* key_ordr_fn_t)(
     const void *in1, 
@@ -54,16 +54,18 @@ typedef int (*bkt_chk_fn_t )(
     int n
     );
 
-// Configs set externally
-typedef struct _rs_hmap_config_t { 
-  uint32_t min_size;
-  uint32_t max_size;
-  uint64_t max_growth_step;
-  float low_water_mark;
-  float high_water_mark;
-  char *so_file;
-  void *so_handle; 
-} rs_hmap_config_t; 
+#include "rs_hmap_config.h"
+
+typedef struct _rs_hmap_kv_t { 
+  rs_hmap_key_t key;
+  rs_hmap_val_t val;
+} rs_hmap_kv_t;
+
+typedef struct _bkt_t { 
+  rs_hmap_key_t key; 
+  uint16_t psl; // probe sequence length 
+  rs_hmap_val_t val;    // value that is aggregated, NOT input value
+} bkt_t;
 
 typedef struct _rs_hmap_t {
   uint32_t size;

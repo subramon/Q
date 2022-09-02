@@ -1,7 +1,6 @@
 #include "rs_hmap_common.h"
 #include "rs_hmap_struct.h"
 #include "rs_hmap_aux.h"
-#include "rs_hmap_int_struct.h"
 #include "rs_hmap_instantiate.h"
 int 
 rs_hmap_instantiate(
@@ -70,12 +69,11 @@ rs_hmap_instantiate(
   H->del = (del_fn_t) dlsym(H->config.so_handle, "rs_hmap_del"); 
   H->chk = (chk_fn_t) dlsym(H->config.so_handle, "rs_hmap_chk"); 
   H->row_dmp = (row_dmp_fn_t) dlsym(H->config.so_handle, "rs_hmap_row_bindmp"); 
-  H->key_ordr = (key_ordr_fn_t) dlsym(H->config.so_handle, "key_ordr"); 
   H->destroy = (destroy_fn_t) dlsym(H->config.so_handle, "rs_hmap_destroy"); 
-
-  H->key_cmp = (key_cmp_fn_t) dlsym(H->config.so_handle, "key_cmp"); 
-  H->val_update = (val_update_fn_t) dlsym(H->config.so_handle, "val_update"); 
-  H->bkt_chk = (bkt_chk_fn_t) dlsym(H->config.so_handle, "bkt_chk"); 
+  H->key_ordr = (key_ordr_fn_t) dlsym(H->config.so_handle, "rsx_key_ordr"); 
+  H->key_cmp = (key_cmp_fn_t) dlsym(H->config.so_handle, "rsx_key_cmp"); 
+  H->val_update = (val_update_fn_t) dlsym(H->config.so_handle, "rsx_val_update"); 
+  H->bkt_chk = (bkt_chk_fn_t) dlsym(H->config.so_handle, "rsx_bkt_chk"); 
 
 BYE:
   return status;

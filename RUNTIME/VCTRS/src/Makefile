@@ -33,24 +33,7 @@ SRCS +=	vctr_del.c
 SRCS +=	vctr_cnt.c  
 SRCS +=	vctr_name.c  
 
-mk_vctr_hmap.o : mk_vctr_hmap.c
-	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} \
-		-I../../../UTILS/inc/ \
-		-I../../../TMPL_FIX_HASHMAP/inc/ \
-		-I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/  \
-		-I../inc/
-
-mk_chnk_hmap.o : mk_chnk_hmap.c
-	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} \
-		-I../../../UTILS/inc/ \
-		-I../../../TMPL_FIX_HASHMAP/inc/ \
-		-I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/  \
-		-I../inc/
-
 OBJS = $(SRCS:.c=.o)
-
-OBJS += mk_chnk_hmap.o 
-OBJS += mk_vctr_hmap.o 
 
 TEST_SRCS := ../test/ut1.c
 TEST_OBJS = $(TEST_SRCS:.c=.o)
@@ -59,7 +42,7 @@ TEST_OBJS = $(TEST_SRCS:.c=.o)
 	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
 
 VEC_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/VCTR_HMAP
-VEC_HMAP_SO  = ${VEC_HMAP_LOC}/libhmap_VCTR.so
+VEC_HMAP_SO  = ${VEC_HMAP_LOC}/libhmap_vctr.so
 
 ${VEC_HMAP_SO} : 
 	make -C ${VEC_HMAP_LOC}

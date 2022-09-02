@@ -1,8 +1,9 @@
 #include "q_incs.h"
 #include "q_macros.h"
 #include "qtypes.h"
-#include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
+#include "../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/rs_hmap_struct.h"
+#include "../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/rs_hmap_instantiate.h"
+#include "rs_hmap_config.h"
 #include "vctr_new_uqid.h" 
 #include "vctr_add.h" 
 #include "vctr_is.h" 
@@ -10,14 +11,7 @@
 #include "vctr_cnt.h" 
 #include "vctr_name.h" 
 
-#include "mk_vctr_hmap.h" 
-#include "mk_chnk_hmap.h" 
-
-#include "destroy_vctr_hmap.h" 
-#include "destroy_chnk_hmap.h" 
-
-void * g_vctr_hmap;
-void * g_chnk_hmap;
+vctr_rs_hmap_t g_vctr_hmap;
 uint32_t g_vctr_uqid;
 uint32_t g_chnk_uqid;
 
@@ -32,13 +26,17 @@ main(
   // Initialize global variables
   g_vctr_uqid = 0; 
   g_chnk_uqid = 0; 
-  g_vctr_hmap = NULL;
-  g_chnk_hmap = NULL;
+  memset(&g_vctr_hmap, 0, sizeof(vctr_rs_hmap_t));
   //-----------------------
   if ( argc != 1 ) { go_BYE(-1); }
   //-----------------------
-  g_vctr_hmap = mk_vctr_hmap(); if ( g_vctr_hmap == NULL ) { go_BYE(-1); }
-  g_chnk_hmap = mk_chnk_hmap(); if ( g_chnk_hmap == NULL ) { go_BYE(-1); }
+  rs_hmap_config_t HC1; memset(&HC1, 0, sizeof(rs_hmap_config_t));
+  HC1.min_size = 32;
+  HC1.max_size = 0;
+  HC1.so_file = strdup("libhmap_vctr.so"); 
+  status = rs_hmap_instantiate(&g_vctr_hmap, &HC1); cBYE(status);
+  status = g_vctr_hmap.bkt_chk(g_vctr_hmap.bkts, g_vctr_hmap.size);
+  cBYE(status);
   //----------------------------------
   uint32_t uqid; status = vctr_add1(F4, &uqid); cBYE(status);
   if ( uqid != 1 ) { go_BYE(-1); }
@@ -71,7 +69,6 @@ main(
 
   fprintf(stderr, "Successfully completed %s \n", argv[0]);
 BYE:
-  destroy_vctr_hmap(g_vctr_hmap); 
-  destroy_chnk_hmap(g_chnk_hmap); 
+  g_vctr_hmap.destroy(&g_vctr_hmap);
   return status;
 }

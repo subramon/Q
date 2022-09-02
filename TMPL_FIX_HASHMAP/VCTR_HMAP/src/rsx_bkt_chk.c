@@ -1,8 +1,9 @@
 #include "q_incs.h"
-#include "rs_hmap_int_struct.h"
-#include "bkt_chk.h"
+#include "q_macros.h"
+#include "rs_hmap_struct.h"
+#include "rsx_bkt_chk.h"
 int
-bkt_chk(
+rsx_bkt_chk(
     const void * const in_bkts,
     uint32_t n
     )
@@ -11,7 +12,7 @@ bkt_chk(
   if ( in_bkts == NULL ) { go_BYE(-1); }
   if ( n == 0 ) { go_BYE(-1); }
   const bkt_t * const bkts = (const bkt_t * const) in_bkts;
-  rs_hmap_val_t zero_val; int valsz = sizeof(rs_hmap_val_t);
+  vctr_rs_hmap_val_t zero_val; int valsz = sizeof(vctr_rs_hmap_val_t);
   memset(&zero_val, 0, valsz);
   for ( uint32_t i = 0; i < n; i++ ) { 
     if ( bkts[i].key == 0 ) {  // unused
@@ -20,7 +21,7 @@ bkt_chk(
       }
     }
     else {
-      rs_hmap_val_t val = bkts[i].val;
+      vctr_rs_hmap_val_t val = bkts[i].val;
       if ( ( val.qtype == Q0 ) || 
            ( val.qtype >= NUM_QTYPES ) ) { 
         go_BYE(-1);
