@@ -1,5 +1,4 @@
 rs_hmap_struct.h
-rs_hmap_aux.h  
 rs_hmap_instantiate.h  
 rs_hmap_pr.h  
 rs_hmap_chk.h  
@@ -10,4 +9,4 @@ rs_hmap_insert.h
 rs_hmap_merge.h  
 rs_hmap_put.h  
 rs_hmap_resize.h  
-rs_hmap_row_bindmp.h  
+rs_hmap_row_dmp.h  

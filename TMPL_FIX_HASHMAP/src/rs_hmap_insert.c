@@ -5,8 +5,9 @@
 #include "rsx_set_hash.h"
 #include "rs_hmap_insert.h"
 
+// This is an internal (local) call 
 int
-rs_hmap_insert(
+LCL_rs_hmap_insert(
     rs_hmap_t *ptr_hmap, 
     const void * const *in_ptr_key, 
     const void * const *in_ptr_val

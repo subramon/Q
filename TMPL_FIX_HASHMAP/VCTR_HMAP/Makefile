@@ -24,14 +24,7 @@ TMPL=vctr
 
 all: libhmap_${TMPL}.so # TODO test_${TMPL} 
 
-SRCS1 :=	../src/spooky_hash.c  
-SRCS1 +=	../src/rdtsc.c  
-SRCS1 +=	../src/murmurhash.c  
-SRCS1 +=	../src/fasthash.c  
-SRCS1 +=	../src/calc_new_size.c  
-
-SRCS2 :=	./src/rs_hmap_aux.c  
-SRCS2 +=	./src/rs_hmap_instantiate.c  
+SRCS2 :=	./src/${TMPL}_rs_hmap_instantiate.c  
 SRCS2 +=	./src/rs_hmap_pr.c  
 SRCS2 +=	./src/rs_hmap_chk.c  
 SRCS2 +=	./src/rs_hmap_del.c  
@@ -41,19 +34,18 @@ SRCS2 +=	./src/rs_hmap_insert.c
 SRCS2 +=	./src/rs_hmap_merge.c  
 SRCS2 +=	./src/rs_hmap_put.c  
 SRCS2 +=	./src/rs_hmap_resize.c  
-SRCS2 +=	./src/rs_hmap_row_bindmp.c  
+SRCS2 +=	./src/rs_hmap_row_dmp.c  
 
-OBJS1 = $(SRCS1:.c=.o)
 OBJS2 = $(SRCS2:.c=.o)
 
 
-OBJS := ${OBJS1} ${OBJS2}
+OBJS := ${OBJS2}
 
-rs_hmap_aux.o : ./src/rs_hmap_aux.c 
+${TMPL}_rs_hmap_instantiate.o : ./src/${TMPL}_rs_hmap_instantiate.c 
 
 CDIR=${PWD}
 WDIR=${CDIR}/..
-./src/rs_hmap_aux.c : ../src/rs_hmap_aux.c
+./src/${TMPL}_rs_hmap_instantiate.c : 
 	echo "WDIR = ${WDIR}"
 	echo "CDIR = ${CDIR}"
 	cd ..; bash specialize.sh ${WDIR} src c_files.txt ${TMPL} ${CDIR}
@@ -66,15 +58,12 @@ WDIR=${CDIR}/..
 	cat ./src/rs_hmap_instantiate.c | \
 	  	sed s"/^rs_hmap_instantiate/${TMPL}_rs_hmap_instantiate/"g \
 		> _tempf
-	mv _tempf ./src/rs_hmap_instantiate.c
+	mv _tempf ./src/${TMPL}_rs_hmap_instantiate.c
 	cat ./inc/rs_hmap_instantiate.h | \
 	  	sed s"/^rs_hmap_instantiate/${TMPL}_rs_hmap_instantiate/"g \
 		> _tempf
+	cp _tempf ./inc/${TMPL}_rs_hmap_instantiate.h # TODO FIX ugly
 	mv _tempf ./inc/rs_hmap_instantiate.h
-	cat ./src/rs_hmap_instantiate.c | \
-	  	sed s"/rs_hmap_struct/${TMPL}_rs_hmap_struct/"g \
-		> _tempf
-	mv _tempf ./src/rs_hmap_instantiate.c
 
 CUSTOM_SRCS +=	./src/rsx_pr.c  
 CUSTOM_SRCS +=	./src/rsx_key_cmp.c  

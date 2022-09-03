@@ -110,7 +110,7 @@ rs_hmap_del(
     if ( new_size < ptr_hmap->config.min_size ) { 
       new_size = ptr_hmap->config.min_size;
     }
-    status = rs_hmap_resize(ptr_hmap, new_size); cBYE(status); 
+    status = LCL_rs_hmap_resize(ptr_hmap, new_size); cBYE(status); 
   }
 BYE:
   return status;

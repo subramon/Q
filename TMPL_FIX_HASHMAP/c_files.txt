@@ -6,8 +6,6 @@ rs_hmap_merge.c
 rs_hmap_pr.c  
 rs_hmap_put.c  
 rs_hmap_row_dmp.c  
-
-XX rs_hmap_insert.c  
-XX rs_hmap_resize.c  
-
-YY rs_hmap_instantiate.c  
+rs_hmap_insert.c  
+rs_hmap_resize.c  
+rs_hmap_instantiate.c  

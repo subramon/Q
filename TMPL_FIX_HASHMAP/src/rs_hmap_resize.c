@@ -5,7 +5,7 @@
 #include "rs_hmap_resize.h"
 
 int
-rs_hmap_resize(
+LCL_rs_hmap_resize(
     rs_hmap_t *ptr_hmap, 
     size_t newsize
     )
@@ -37,7 +37,7 @@ rs_hmap_resize(
     // printf("Re-inserting %s \n", (char *)bkts[i].key);
     rs_hmap_key_t key  = bkts[i].key;
     rs_hmap_val_t val  = bkts[i].val;
-    status = rs_hmap_insert(ptr_hmap, 
+    status = LCL_rs_hmap_insert(ptr_hmap, 
         (const void * const)&key, (const void * const)&val);
     cBYE(status);
   }

@@ -47,6 +47,12 @@ TEST_OBJS = $(TEST_SRCS:.c=.o)
 	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
 
 #-------------------------------------------
+TMPL_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/src/
+TMPL_HMAP_SO  = ${TMPL_HMAP_LOC}/libhmap.so
+
+${TMPL_HMAP_SO} : 
+	make -C ${TMPL_HMAP_LOC}
+#-------------------------------------------
 VCTR_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/VCTR_HMAP
 VCTR_HMAP_SO  = ${VCTR_HMAP_LOC}/libhmap_vctr.so
 
@@ -67,9 +73,10 @@ ut1 : ${TEST_OBJS}
 	gcc ${TEST_OBJS} -o ut1 \
 		-lm \
 		libvctrs.so \
-		libhmap.so \
 		${VCTR_HMAP_SO} \
-		${CHNK_HMAP_SO}
+		${CHNK_HMAP_SO} \
+		${TMPL_HMAP_SO} 
+
 
 clean:
 	rm -f *.o *.so ut1

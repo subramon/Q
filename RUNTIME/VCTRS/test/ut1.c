@@ -3,10 +3,10 @@
 #include "qtypes.h"
 
 #include "vctr_rs_hmap_struct.h"
-#include "../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/rs_hmap_instantiate.h"
+#include "vctr_rs_hmap_instantiate.h"
 
 #include "chnk_rs_hmap_struct.h"
-#include "../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/rs_hmap_instantiate.h"
+#include "chnk_rs_hmap_instantiate.h"
 
 #include "rs_hmap_config.h"
 #include "vctr_new_uqid.h" 
@@ -90,6 +90,8 @@ main(
   if ( !b ) { go_BYE(-1); }
   l_vctr_cnt = vctr_cnt(); 
   if ( l_vctr_cnt != 0 ) { go_BYE(-1); }
+  l_chnk_cnt = chnk_cnt(); 
+  if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
   //----------------------------------
 
   fprintf(stderr, "Successfully completed %s \n", argv[0]);
