@@ -1,6 +1,7 @@
 #include "q_incs.h"
 #include "q_macros.h"
 #include "qtypes.h"
+#include "vctr_consts.h"
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
@@ -15,6 +16,7 @@
 #include "vctr_del.h" 
 #include "vctr_cnt.h" 
 #include "vctr_name.h" 
+#include "vctr_put.h" 
 
 #include "chnk_cnt.h" 
 
@@ -61,7 +63,9 @@ main(
   cBYE(status);
   if ( HC2.so_file != NULL ) { go_BYE(-1); } 
   //----------------------------------
-  uint32_t uqid; status = vctr_add1(F4, &uqid); cBYE(status);
+  uint32_t vctr_chnk_size = 32; // for easy testing 
+  uint32_t uqid; status = vctr_add1(F4, vctr_chnk_size, &uqid); 
+  cBYE(status);
   if ( uqid != 1 ) { go_BYE(-1); }
   //----------------------------------
   status = vctr_is(uqid, &b, &where); cBYE(status);
@@ -69,7 +73,7 @@ main(
   l_vctr_cnt = vctr_cnt(); 
   if ( l_vctr_cnt != 1 ) { go_BYE(-1); }
   l_chnk_cnt = chnk_cnt(); 
-  if ( l_chnk_cnt != 1 ) { go_BYE(-1); }
+  if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
   // check empty name  -----------------------------
   name = vctr_get_name(uqid); 
   if ( name == NULL ) { go_BYE(-1); }
@@ -80,6 +84,15 @@ main(
   name = vctr_get_name(uqid); 
   if ( name == NULL ) { go_BYE(-1); }
   if ( strcmp(name, "test name") != 0 ) { go_BYE(-1); }
+  // add a few elements to the vector
+  for ( int i = 0; i < 2*vctr_chnk_size+1; i++ ) { 
+    if ( i == vctr_chnk_size ) { 
+      printf("hello world\n");
+    }
+    float f4 = i+1;
+    status = vctr_put(uqid, (char *)&f4, 1); cBYE(status);
+    printf("Put %d \n", i+1);
+  }
   //-- bogus delete -----------------
   status = vctr_del(123445, &b); cBYE(status);
   if ( b ) { go_BYE(-1); }

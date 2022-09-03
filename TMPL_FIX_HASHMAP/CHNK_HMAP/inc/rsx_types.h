@@ -18,7 +18,7 @@ typedef struct _chnk_rs_hmap_val_t {
   uint32_t num_elements;
   uint32_t size;
   qtype_t qtype; // backward reference for debugging 
-  void *l1_mem;
+  char *l1_mem;
   bool l2_dirty;
   bool l3_dirty;
   char l2_mem[MAX_LEN_CHNK_FILE_NAME+1];

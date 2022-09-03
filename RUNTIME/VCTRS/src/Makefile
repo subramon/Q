@@ -34,6 +34,7 @@ SRCS +=	vctr_add.c
 SRCS +=	vctr_del.c  
 SRCS +=	vctr_cnt.c  
 SRCS +=	vctr_name.c  
+SRCS +=	vctr_put.c  
 
 SRCS +=	chnk_cnt.c  
 SRCS +=	chnk_is.c  
