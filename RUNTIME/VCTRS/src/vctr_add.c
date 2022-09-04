@@ -22,7 +22,6 @@ vctr_add1(
   old_vctr_cnt = vctr_cnt();
   if ( ( qtype == Q0 ) || ( qtype >= NUM_QTYPES ) ) { go_BYE(-1); }
   *ptr_uqid = vctr_new_uqid();
-  printf("uqid = %u\n", *ptr_uqid);
   vctr_rs_hmap_key_t key = *ptr_uqid; 
   uint32_t width = 4; // TODO P1
   uint32_t chnk_size = in_chnk_size;
@@ -31,7 +30,7 @@ vctr_add1(
   }
   vctr_rs_hmap_val_t val = 
     { .qtype = qtype, .chnk_size = chnk_size, 
-      .width = width, .num_chunks = 1  } ;
+      .width = width, .num_chunks = 0  } ;
   status = g_vctr_hmap.put(&g_vctr_hmap, &key, &val); cBYE(status);
 #ifdef DEBUG
   new_vctr_cnt = vctr_cnt();

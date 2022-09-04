@@ -18,12 +18,14 @@ chnk_is(
   chnk_rs_hmap_val_t val; memset(&val, 0, sizeof(chnk_rs_hmap_val_t));
   status = g_chnk_hmap.get(&g_chnk_hmap, &key, &val, ptr_is_found, 
       ptr_where_found);
+  /*
   if ( *ptr_is_found ) { 
     printf("found at %u \n", *ptr_where_found);
   }
   else {
     printf("(%u, %u) not found \n", vctr_uqid, chnk_idx);
   }
+  */
 BYE:
   return status;
 }

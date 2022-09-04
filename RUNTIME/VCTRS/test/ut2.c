@@ -12,13 +12,12 @@
 #include "rs_hmap_config.h"
 #include "vctr_new_uqid.h" 
 #include "vctr_add.h" 
-#include "vctr_is.h" 
 #include "vctr_del.h" 
 #include "vctr_cnt.h" 
-#include "vctr_name.h" 
-#include "vctr_put.h" 
+#include "vctr_put_chunk.h" 
 #include "vctr_num_elements.h"
 #include "vctr_num_chunks.h"
+#include "vctr_is_eov.h"
 
 #include "chnk_cnt.h" 
 
@@ -35,7 +34,7 @@ main(
     )
 {
   int status;
-  bool b; uint32_t where; int l_vctr_cnt, l_chnk_cnt; char *name = NULL;
+  bool b; int l_vctr_cnt, l_chnk_cnt; 
   // Initialize global variables
   g_vctr_uqid = 0; 
   memset(&g_vctr_hmap, 0, sizeof(vctr_rs_hmap_t));
@@ -68,42 +67,49 @@ main(
   uint32_t vctr_chnk_size = 32; // for easy testing 
   uint32_t uqid; status = vctr_add1(F4, vctr_chnk_size, &uqid); 
   cBYE(status);
-  if ( uqid != 1 ) { go_BYE(-1); }
-  //----------------------------------
-  status = vctr_is(uqid, &b, &where); cBYE(status);
-  if ( !b ) { go_BYE(-1); }
-  l_vctr_cnt = vctr_cnt(); 
-  if ( l_vctr_cnt != 1 ) { go_BYE(-1); }
-  l_chnk_cnt = chnk_cnt(); 
-  if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
-  // check empty name  -----------------------------
-  name = vctr_get_name(uqid); 
-  if ( name == NULL ) { go_BYE(-1); }
-  if ( *name != '\0' ) { go_BYE(-1); }
-  // set name  -----------------------------
-  status = vctr_set_name("test name", uqid);  cBYE(status);
-  // check good name  -----------------------------
-  name = vctr_get_name(uqid); 
-  if ( name == NULL ) { go_BYE(-1); }
-  if ( strcmp(name, "test name") != 0 ) { go_BYE(-1); }
-  // add a few elements to the vector
-  for ( uint32_t i = 0; i < 2*vctr_chnk_size+1; i++ ) { 
-    float f4 = i+1;
-    status = vctr_put(uqid, (char *)&f4, 1); cBYE(status);
-    uint32_t num_elements, num_chunks;
-    status = vctr_num_elements(uqid, &num_elements); cBYE(status);
-    if ( num_elements != (i+1) ) { go_BYE(-1); }
-    status = vctr_num_chunks(uqid, &num_chunks); cBYE(status);
-    if ( num_chunks != ((i / vctr_chnk_size)+1) ) { 
-      go_BYE(-1); 
+  uint32_t num_chunks = 4;
+  float *X = NULL;
+  for ( uint32_t i = 0; i < num_chunks; i++ ) {
+    X = malloc(vctr_chnk_size * sizeof(float));
+    for ( uint32_t j = 0; j < vctr_chnk_size; j++ ) { 
+      X[j] = i*100 + j;
     }
+    status = vctr_put_chunk(uqid, (char **)&X, true, vctr_chnk_size);
+    cBYE(status);
+    if ( X != NULL ) { go_BYE(-1); }
+    uint32_t num_elements, l_num_chunks;
+    status = vctr_num_elements(uqid, &num_elements); cBYE(status);
+    status = vctr_num_chunks(uqid, &l_num_chunks); cBYE(status);
+    if ( l_num_chunks != (i+1) ) { go_BYE(-1); }
+    if ( num_elements != (i+1)*vctr_chnk_size ) { go_BYE(-1); }
   }
-  //-- bogus delete -----------------
-  status = vctr_del(123445, &b); cBYE(status);
+  // vector should NOT be eov 
+  status = vctr_is_eov(uqid, &b); cBYE(status);
   if ( b ) { go_BYE(-1); }
-  l_vctr_cnt = vctr_cnt(); 
-  if ( l_vctr_cnt != 1 ) { go_BYE(-1); }
-  //-- good delete -----------------
+  // now for last chunk (smaller than a full chunk)
+  X = malloc(vctr_chnk_size * sizeof(float));
+  for ( uint32_t j = 0; j < vctr_chnk_size; j++ ) { 
+    X[j] = (num_chunks)*100 + j;
+  }
+  status = vctr_put_chunk(uqid, (char **)&X, true, vctr_chnk_size-1);
+  cBYE(status);
+  if ( X != NULL ) { go_BYE(-1); }
+  uint32_t num_elements, l_num_chunks;
+  status = vctr_num_elements(uqid, &num_elements); cBYE(status);
+  status = vctr_num_chunks(uqid, &l_num_chunks); cBYE(status);
+  if ( l_num_chunks != (num_chunks+1) ) { go_BYE(-1); }
+  if ( num_elements != (((num_chunks+1)*vctr_chnk_size)-1) ) { go_BYE(-1); }
+  // vector should be eov 
+  status = vctr_is_eov(uqid, &b); cBYE(status);
+  if ( !b ) { go_BYE(-1); }
+  //-- cannot put stuff after vector is eov 
+  fprintf(stdout, ">>> Deliberate error\n");
+  X = malloc(vctr_chnk_size * sizeof(float));
+  status = vctr_put_chunk(uqid, (char **)&X, true, 1);
+  if ( status == 0 ) { go_BYE(-1); }
+  if ( X == NULL ) { go_BYE(-1); }
+  fprintf(stdout, "<<< Deliberate error\n");
+  //-- delete -----------------
   status = vctr_del(uqid, &b); cBYE(status);
   if ( !b ) { go_BYE(-1); }
   l_vctr_cnt = vctr_cnt(); 
@@ -111,7 +117,6 @@ main(
   l_chnk_cnt = chnk_cnt(); 
   if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
   //----------------------------------
-
   fprintf(stderr, "Successfully completed %s \n", argv[0]);
 BYE:
   g_vctr_hmap.destroy(&g_vctr_hmap);

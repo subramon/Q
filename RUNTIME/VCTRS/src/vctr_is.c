@@ -1,7 +1,6 @@
 #include "q_incs.h"
 #include "qtypes.h"
 #include "vctr_rs_hmap_struct.h"
-#include "../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/rs_hmap_get.h"
 #include "vctr_is.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
@@ -18,7 +17,6 @@ vctr_is(
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
   status = g_vctr_hmap.get(&g_vctr_hmap, &key, &val, ptr_is_found, 
       ptr_where_found);
-  printf("found at %u \n", *ptr_where_found);
 BYE:
   return status;
 }

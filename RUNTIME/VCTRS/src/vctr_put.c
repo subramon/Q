@@ -48,6 +48,7 @@ vctr_put(
     //-------------------------------
     status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
     cBYE(status);
+    g_vctr_hmap.bkts[vctr_where].val.num_chunks++;
   }
   else {
     chnk_idx = vctr_val.num_chunks - 1; 
