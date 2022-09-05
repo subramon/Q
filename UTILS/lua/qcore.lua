@@ -21,6 +21,8 @@ local libs            = {}
 -- Keeps track of struct files that have been cdef'd
 local cdefd = {}
 
+-- we need q_cdef instead of just cdef because we do not want
+-- to error out by repeating a cdef that was done earlier
 local function q_cdef( infile, incs)
   if ( cdefd[infile] ) then
     -- print("struct file: Skipping cdef of " .. infile)

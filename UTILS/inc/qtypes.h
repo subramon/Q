@@ -24,7 +24,6 @@ typedef enum {
   SC,  // constant length strings
   SV,  // variable length strings
   TM1, // time struct  tm_t
-  HL,  // holiday bit mask 
   NUM_QTYPES // must be last one 
 } qtype_t;
 // STOP extract_for_qtypes.tex
@@ -49,4 +48,29 @@ typedef struct _tm_t {
 # endif
   */
 } tm_t;
+extern qtype_t
+get_tm_qtype(
+    const char * const fld
+    );
+extern int
+t_assign(
+    struct tm *dst, 
+    tm_t *src
+    );
+extern int
+get_width_qtype(
+    const char * const str_qtype
+    );
+extern int
+get_width_c_qtype(
+      qtype_t qtype
+    );
+extern qtype_t
+get_c_qtype(
+    const char *const str_qtype
+    );
+extern const char *
+get_str_qtype(
+    qtype_t qtype
+    );
 #endif // __QTYPES_H

@@ -5,7 +5,7 @@ extern int cmem_dupe( // INTERNAL NOT VISIBLE TO LUA
     CMEM_REC_TYPE *ptr_cmem,
     void *data,
     int64_t size,
-    const char *field_type,
+    qtype_t qtype,
     const char *cell_name
     );
 extern int cmem_clone( // INTERNAL NOT VISIBLE TO LUA 
@@ -16,7 +16,7 @@ extern int cmem_clone( // INTERNAL NOT VISIBLE TO LUA
 extern int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA 
     CMEM_REC_TYPE *ptr_cmem,
     int64_t size,
-    const char *field_type,
+    qtype_t qtype,
     const char *cell_name
     );
 extern void cmem_undef( // USED FOR DEBUGGING

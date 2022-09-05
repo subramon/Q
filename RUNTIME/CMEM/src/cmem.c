@@ -11,6 +11,14 @@
 #include "cmem_struct.h"
 #include "aux_lua_to_c.h"
 #include "cmem.h"
+#include "qtypes.h"
+
+#include "I1_to_txt.h" 
+#include "I2_to_txt.h" 
+#include "I4_to_txt.h" 
+#include "I8_to_txt.h" 
+#include "F4_to_txt.h" 
+#include "F8_to_txt.h" 
 
 #define CMEM_ALIGNMENT 64 
 #define MIN_VAL 1
@@ -19,11 +27,12 @@
 
 int luaopen_libcmem (lua_State *L);
 
-int cmem_dupe( // INTERNAL NOT VISIBLE TO LUA 
+int 
+cmem_dupe( // INTERNAL NOT VISIBLE TO LUA 
     CMEM_REC_TYPE *ptr_cmem,
     void *data,
     int64_t size,
-    const char * const fldtype,
+    qtype_t qtype,
     const char * const cell_name
     )
 {
@@ -32,24 +41,21 @@ int cmem_dupe( // INTERNAL NOT VISIBLE TO LUA
   if ( size < 1 ) { go_BYE(-1); }
   ptr_cmem->data = data;
   ptr_cmem->size = size;
-  if ( ( fldtype != NULL ) && ( *fldtype != '\0' ) ) { 
-    strncpy(ptr_cmem->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1); 
-  }
-  if ( ( cell_name != NULL ) && ( *cell_name != '\0' ) ) { 
-    int len = strlen(cell_name) + 1; 
-    ptr_cmem->cell_name = malloc(len);
-    return_if_malloc_failed(ptr_cmem->cell_name);
-    strcpy(ptr_cmem->cell_name, cell_name); 
+  ptr_cmem->qtype = qtype;
+  memset(ptr_cmem->cell_name, 0, Q_MAX_LEN_CELL_NAME+1); 
+  if ( cell_name != NULL ) { 
+    strncpy(ptr_cmem->cell_name, cell_name, Q_MAX_LEN_CELL_NAME);
   }
   ptr_cmem->is_foreign = true;
 BYE:
   return status;
 }
 
-int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA 
+int 
+cmem_malloc( // INTERNAL NOT VISIBLE TO LUA 
     CMEM_REC_TYPE *ptr_cmem,
     int64_t size,
-    const char *const fldtype,
+    qtype_t qtype,
     const char *const cell_name
     )
 {
@@ -66,24 +72,23 @@ int cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
   }
   ptr_cmem->data = data;
   ptr_cmem->size = size;
-  if ( fldtype != NULL ) { 
-    strncpy(ptr_cmem->fldtype, fldtype, Q_MAX_LEN_QTYPE_NAME-1);
-  }
+  ptr_cmem->qtype = qtype;
+  memset(ptr_cmem->cell_name, 0, Q_MAX_LEN_CELL_NAME+1); 
   if ( cell_name != NULL ) { 
-    int len = strlen(cell_name) + 1;
-    ptr_cmem->cell_name = malloc(len); 
-    return_if_malloc_failed(ptr_cmem->cell_name);
-    strcpy(ptr_cmem->cell_name, cell_name); 
+    strncpy(ptr_cmem->cell_name, cell_name, Q_MAX_LEN_CELL_NAME);
   }
   ptr_cmem->is_foreign = false;
 BYE:
   return status;
 }
-static int l_cmem_dupe( lua_State *L)  // ONLY FOR TESTING
+static int 
+l_cmem_dupe( 
+    lua_State *L
+    )  // ONLY FOR TESTING
 {
   int status = 0;
   CMEM_REC_TYPE *ptr_cmem = NULL;
-  const char *fldtype = NULL;
+  const char *str_qtype = NULL;
   const char *cell_name = NULL;
   void *data = NULL;
 
@@ -91,26 +96,25 @@ static int l_cmem_dupe( lua_State *L)  // ONLY FOR TESTING
   return_if_malloc_failed(ptr_cmem);
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
 
-  if ( lua_islightuserdata(L, 1) ) {
-    data = lua_touserdata(L, 1);
-  }
-  else {
-    go_BYE(-1);
-  }
+  if ( !lua_islightuserdata(L, 1) ) { go_BYE(-1); }
+  data = lua_touserdata(L, 1);
+
   int64_t size =  luaL_checknumber(L, 2);
   if ( size <= 0 ) { go_BYE(-1); }
 
   if ( lua_gettop(L) > 3 ) { 
     if ( lua_isstring(L, 3) ) {
-      fldtype = luaL_checkstring(L, 3);
+      str_qtype = luaL_checkstring(L, 3);
     }
   }
+  qtype_t qtype = get_c_qtype(str_qtype); 
+  if ( qtype == Q0 ) { go_BYE(-1); }
   if ( lua_gettop(L) > 4 ) { 
     if ( lua_isstring(L, 4) ) {
       cell_name = luaL_checkstring(L, 4);
     }
   }
-  status = cmem_dupe(ptr_cmem, data, size, fldtype, cell_name);
+  status = cmem_dupe(ptr_cmem, data, size, qtype, cell_name);
   cBYE(status);
 
   /* Add the metatable to the stack. */
@@ -123,13 +127,16 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
-static int l_cmem_new( lua_State *L) 
+static int 
+l_cmem_new( 
+    lua_State *L
+    ) 
 {
   int status = 0;
   CMEM_REC_TYPE *ptr_cmem = NULL;
   bool is_key;
 
-  const char * fldtype = NULL;   // info to be set from input 
+  const char * str_qtype = NULL;   // info to be set from input 
   const char * cell_name = NULL; // info to be set from input 
   int64_t size;           // info to be set from input 
   
@@ -142,9 +149,14 @@ static int l_cmem_new( lua_State *L)
   else {
     if ( !lua_istable(L, 1) ) { go_BYE(-1); }
     status = get_int_from_tbl(L, 1, "size", &is_key, &size); cBYE(status);
-    if ( !is_key ) { fprintf(stderr, "CMEM size not specified\n"); go_BYE(-1); }
-    status = get_str_from_tbl(L, 1, "qtype", &is_key, &fldtype); cBYE(status);
-    status = get_str_from_tbl(L, 1, "name", &is_key, &cell_name); cBYE(status);
+    if ( !is_key ) { 
+      fprintf(stderr, "CMEM size not specified\n"); 
+      go_BYE(-1); 
+    }
+    status = get_str_from_tbl(L, 1, "qtype", &is_key, &str_qtype); 
+    cBYE(status);
+    status = get_str_from_tbl(L, 1, "name", &is_key, &cell_name); 
+    cBYE(status);
   }
   // Note we allow size == 0 for dummy CMEM so that we do not 
   if ( size < 0 ) { go_BYE(-1); }
@@ -155,7 +167,9 @@ static int l_cmem_new( lua_State *L)
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = cmem_malloc(ptr_cmem, size, fldtype, cell_name);
+  qtype_t qtype = get_c_qtype(str_qtype); 
+  // This is okay: if ( qtype == Q0 ) { go_BYE(-1); }
+  status = cmem_malloc(ptr_cmem, size, qtype, cell_name);
   cBYE(status);
   return 1;
 BYE:
@@ -164,17 +178,19 @@ BYE:
   return 2;
 }
 
-static int l_cmem_set_name( lua_State *L) {
+static int 
+l_cmem_set_name( 
+    lua_State *L
+    ) {
   int status = 0;
   int num_args = lua_gettop(L);
   if ( num_args != 2 ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   const char * const cell_name = luaL_checkstring(L, 2);
-  free_if_non_null(ptr_cmem->cell_name);
-  int len = strlen(cell_name) + 1;
-  ptr_cmem->cell_name = malloc(len);
-  if ( ptr_cmem->cell_name == NULL ) { go_BYE(-1); }
-  strcpy( ptr_cmem->cell_name, cell_name); 
+  memset(ptr_cmem->cell_name, 0, Q_MAX_LEN_CELL_NAME+1); 
+  if ( cell_name != NULL ) { 
+    strncpy(ptr_cmem->cell_name, cell_name, Q_MAX_LEN_CELL_NAME);
+  }
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -184,7 +200,11 @@ BYE:
   return 3;
 }
 
-static int l_cmem_name( lua_State *L) {
+static int 
+l_cmem_name( 
+    lua_State *L
+    ) 
+{
   int status = 0;
   int num_args = lua_gettop(L);
   if ( num_args != 1 ) { go_BYE(-1); }
@@ -206,7 +226,8 @@ BYE:
 
 // set_default used only for debugging. 
 // TODO P4 Consider using it elsewhere as well
-static int set_default(
+static int 
+set_default(
     CMEM_REC_TYPE *ptr_cmem,
     lua_Number val
     )
@@ -215,37 +236,37 @@ static int set_default(
   if ( ptr_cmem == NULL ) { WHEREAMI; return -1; }
   if ( ptr_cmem->size <= 0 ) { WHEREAMI; return -1; }
   if ( ptr_cmem->data == NULL ) { WHEREAMI; return -1; }
-  if ( strcmp(ptr_cmem->fldtype, "I1") == 0 ) {
+  if ( ptr_cmem->qtype == I1 ) { 
     int8_t *x = (int8_t *)(ptr_cmem->data);
     width = sizeof(int8_t);
     int n = ptr_cmem->size / width;
     for ( int i = 0; i  < n; i++ ) { x[i] = (int8_t)val; }
   }
-  else if ( strcmp(ptr_cmem->fldtype, "I2") == 0 ) {
+  else if ( ptr_cmem->qtype == I2 ) { 
     int16_t *x = (int16_t *)(ptr_cmem->data);
     width = sizeof(int16_t);
     int n = ptr_cmem->size / width;
     for ( int i = 0; i  < n; i++ ) { x[i] = (int16_t)val; }
   }
-  else if ( strcmp(ptr_cmem->fldtype, "I4") == 0 ) {
+  else if ( ptr_cmem->qtype == I4 ) { 
     int32_t *x = (int32_t *)(ptr_cmem->data);
     width = sizeof(int32_t);
     int n = ptr_cmem->size / width;
     for ( int i = 0; i  < n; i++ ) { x[i] = (int32_t)val; }
   }
-  else if ( strcmp(ptr_cmem->fldtype, "I8") == 0 ) {
+  else if ( ptr_cmem->qtype == I8 ) { 
     int64_t *x = (int64_t *)(ptr_cmem->data);
     width = sizeof(int64_t);
     int n = ptr_cmem->size / width;
     for ( int i = 0; i  < n; i++ ) { x[i] = (int64_t)val; }
   }
-  else if ( strcmp(ptr_cmem->fldtype, "F4") == 0 ) {
+  else if ( ptr_cmem->qtype == F4 ) { 
     float *x = (float *)(ptr_cmem->data);
     width = sizeof(float);
     int n = ptr_cmem->size / width;
     for ( int i = 0; i  < n; i++ ) { x[i] = (float)val; }
   }
-  else if ( strcmp(ptr_cmem->fldtype, "F8") == 0 ) {
+  else if ( ptr_cmem->qtype == F8 ) { 
     double *x = (double *)(ptr_cmem->data);
     width = sizeof(double);
     int n = ptr_cmem->size / width;
@@ -259,7 +280,10 @@ static int set_default(
   return 0;
 }
 
-static int l_cmem_nop( lua_State *L) // just for debugging 
+static int 
+l_cmem_nop( 
+    lua_State *L
+    ) // just for debugging 
 {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   if ( ptr_cmem == NULL ) {  // to stop gcc from complaining
@@ -270,7 +294,10 @@ static int l_cmem_nop( lua_State *L) // just for debugging
   return 1;
 }
 
-static int l_cmem_set_default( lua_State *L)
+static int 
+l_cmem_set_default( 
+    lua_State *L
+    )
 {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   lua_Number val = 0;
@@ -289,7 +316,8 @@ BYE:
   return 2;
 }
 
-static int cmem_set_min_max(
+static int 
+cmem_set_min_max(
     CMEM_REC_TYPE *ptr_cmem,
     int mode 
     )
@@ -298,42 +326,42 @@ static int cmem_set_min_max(
   if ( ptr_cmem == NULL ) { WHEREAMI; return -1; }
   if ( ptr_cmem->size <= 0 ) { WHEREAMI; return -1; }
   if ( ptr_cmem->data == NULL ) { WHEREAMI; return -1; }
-  if ( strcmp(ptr_cmem->fldtype, "I1") == 0 ) { 
+  if ( ptr_cmem->qtype == I1 ) { 
     int8_t val; int8_t *x = (int8_t *)(ptr_cmem->data);
     width = sizeof(int8_t);
     int n = ptr_cmem->size / width;
     if ( mode == MIN_VAL ) { val = SCHAR_MIN; } else { val = SCHAR_MAX; }
     for ( int i = 0; i  < n; i++ ) { x[i] = val; }
   }
-  else if ( strcmp(ptr_cmem->fldtype, "I2") == 0 ) { 
+  else if ( ptr_cmem->qtype == I2 ) { 
     int16_t val; int16_t *x = (int16_t *)(ptr_cmem->data);
     width = sizeof(int16_t);
     int n = ptr_cmem->size / width;
     if ( mode == MIN_VAL ) { val = SHRT_MIN; } else { val = SHRT_MAX; }
     for ( int i = 0; i  < n; i++ ) { x[i] = val; }
   }
-  else if ( strcmp(ptr_cmem->fldtype, "I4") == 0 ) { 
+  else if ( ptr_cmem->qtype == I4 ) { 
     int32_t val; int32_t *x = (int32_t *)(ptr_cmem->data);
     width = sizeof(int32_t);
     int n = ptr_cmem->size / width;
     if ( mode == MIN_VAL ) { val = INT_MIN; } else { val = INT_MAX; }
     for ( int i = 0; i  < n; i++ ) { x[i] = val; }
   }
-  else if ( strcmp(ptr_cmem->fldtype, "I8") == 0 ) { 
+  else if ( ptr_cmem->qtype == I8 ) { 
     int64_t val; int64_t *x = (int64_t *)(ptr_cmem->data);
     width = sizeof(int64_t);
     int n = ptr_cmem->size / width;
     if ( mode == MIN_VAL ) { val = LONG_MIN; } else { val = LONG_MAX; }
     for ( int i = 0; i  < n; i++ ) { x[i] = val; }
   }
-  else if ( strcmp(ptr_cmem->fldtype, "F4") == 0 ) { 
+  else if ( ptr_cmem->qtype == F4 ) { 
     float val; float *x = (float *)(ptr_cmem->data);
     width = sizeof(float);
     int n = ptr_cmem->size / width;
     if ( mode == MIN_VAL ) { val = FLT_MIN; } else { val = FLT_MAX; }
     for ( int i = 0; i  < n; i++ ) { x[i] = val; }
   }
-  else if ( strcmp(ptr_cmem->fldtype, "F8") == 0 ) { 
+  else if ( ptr_cmem->qtype == F8 ) { 
     double val; double *x = (double *)(ptr_cmem->data);
     width = sizeof(double);
     int n = ptr_cmem->size / width;
@@ -348,7 +376,10 @@ static int cmem_set_min_max(
   return 0;
 }
 
-static int l_cmem_set_max( lua_State *L)
+static int 
+l_cmem_set_max( 
+    lua_State *L
+    )
 {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   int status = cmem_set_min_max(ptr_cmem, MAX_VAL);
@@ -361,7 +392,10 @@ static int l_cmem_set_max( lua_State *L)
   return 1;
 }
 
-static int l_cmem_set_min( lua_State *L)
+static int 
+l_cmem_set_min( 
+    lua_State *L
+    )
 {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   int status = cmem_set_min_max(ptr_cmem, MIN_VAL);
@@ -375,7 +409,8 @@ static int l_cmem_set_min( lua_State *L)
 }
 
 
-static int cmem_zero( 
+static int 
+cmem_zero( 
     CMEM_REC_TYPE *ptr_cmem
     )
 {
@@ -386,7 +421,10 @@ static int cmem_zero(
   return 0;
 }
 
-static int l_cmem_zero( lua_State *L) {
+static int 
+l_cmem_zero( 
+    lua_State *L
+    ) {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   int status = cmem_zero(ptr_cmem);
   if ( status < 0 ) { 
@@ -398,13 +436,21 @@ static int l_cmem_zero( lua_State *L) {
   return 1;
 }
 
-static int l_cmem_get_width( lua_State *L) {
+static int 
+l_cmem_get_width( 
+    lua_State *L
+    ) 
+{
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   lua_pushnumber(L, ptr_cmem->width);
   return 1;
 }
 
-static int l_cmem_set_width( lua_State *L) {
+static int 
+l_cmem_set_width( 
+    lua_State *L
+    ) 
+{
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   int64_t width =  luaL_checknumber(L, 2);
   if ( ptr_cmem->width > 0 ) { WHEREAMI; goto BYE; }
@@ -421,32 +467,38 @@ BYE:
   return 2;
 }
 
-static int l_cmem_qtype( lua_State *L) {
+static int 
+l_cmem_qtype( 
+    lua_State *L
+    ) 
+{
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
-  lua_pushstring(L, ptr_cmem->fldtype);
+  lua_pushstring(L, get_str_qtype(ptr_cmem->qtype));
   return 1;
 }
-
-static int l_cmem_fldtype( lua_State *L) {
-  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
-  lua_pushstring(L, ptr_cmem->fldtype);
-  return 1;
-}
-
-static int l_cmem_data( lua_State *L) {
+static int l_cmem_data( 
+    lua_State *L
+    ) 
+{
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   lua_pushlightuserdata(L, ptr_cmem->data);
   return 1;
 }
 
-
-static int l_cmem_size( lua_State *L) {
+static int l_cmem_size( 
+    lua_State *L
+    ) 
+{
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   lua_pushnumber(L, ptr_cmem->size);
   return 1;
 }
 
-static int l_cmem_is_data( lua_State *L) {
+static int 
+l_cmem_is_data( 
+    lua_State *L
+    ) 
+{
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   bool ret_val;
   if ( ( ptr_cmem->data == NULL ) || ( ptr_cmem->size == 0 ) ) { 
@@ -459,7 +511,11 @@ static int l_cmem_is_data( lua_State *L) {
   return 1;
 }
 
-static int l_cmem_is_foreign( lua_State *L) {
+static int 
+l_cmem_is_foreign( 
+    lua_State *L
+    ) 
+{
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   lua_pushboolean(L, ptr_cmem->is_foreign);
   return 1;
@@ -485,9 +541,9 @@ static int l_cmem_me( lua_State *L) {
   lua_pushstring(L, "is_stealable ");
   lua_pushboolean(L, ptr_cmem->is_stealable );
   lua_settable(L, -3);
-  // fldtype
-  lua_pushstring(L, "fldtype");
-  lua_pushstring(L, ptr_cmem->fldtype );
+  // qtype
+  lua_pushstring(L, "qtype");
+  lua_pushstring(L, get_str_qtype(ptr_cmem->qtype));
   lua_settable(L, -3);
   // cell_name
   lua_pushstring(L, "cell_name");
@@ -501,7 +557,10 @@ static int l_cmem_me( lua_State *L) {
   return 1; 
 }
 
-static int l_cmem_stealable( lua_State *L) 
+static int 
+l_cmem_stealable( 
+    lua_State *L
+    ) 
 {
   int status = 0;
   int num_args = lua_gettop(L);
@@ -526,7 +585,7 @@ static int l_cmem_free( lua_State *L)
   int num_args = lua_gettop(L);
   if ( num_args != 1 ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
-  free_if_non_null(ptr_cmem->cell_name); 
+  memset(ptr_cmem->cell_name, 0, Q_MAX_LEN_CELL_NAME+1); 
   if ( ptr_cmem->data == NULL ) { 
     // explicit free will cause control to come here
     if ( ptr_cmem->size != 0 ) {
@@ -544,8 +603,6 @@ static int l_cmem_free( lua_State *L)
         printf("TODO P0 not good\n"); WHEREAMI; goto BYE;
       }
       free_if_non_null(ptr_cmem->data);
-      free_if_non_null(ptr_cmem->cell_name);
-      memset(ptr_cmem->fldtype, '\0', Q_MAX_LEN_QTYPE_NAME+1);
       ptr_cmem->size = 0;
     }
   }
@@ -616,14 +673,22 @@ BYE:
   return 3;
 }
 // Following only for debugging and hence has limited usage 
-static int l_cmem_set( lua_State *L) {
+static int l_cmem_set( 
+    lua_State *L
+    ) 
+{
+  int status = 0;
+  int num_args = lua_gettop(L);
+  if ( !( ( num_args == 2  ) || ( num_args == 3  ) ) ) { 
+    go_BYE(-1);
+  }
 
   CMEM_REC_TYPE *ptr_cmem  = luaL_checkudata( L, 1, "CMEM");
   lua_Number val = 0;
   const char *str_val = NULL;
   // NOTE: Do NOT change order of if. Lua will claim it as string 
   // even if it is a number
-  if ( strcmp(ptr_cmem->fldtype, "SC") == 0 ) { 
+  if ( ptr_cmem->qtype == SC ) { 
     if ( lua_isstring(L, 2) ) {
       str_val = luaL_checkstring(L, 2);
     }
@@ -636,37 +701,41 @@ static int l_cmem_set( lua_State *L) {
     else { WHEREAMI; goto BYE; }
   }
   void *X = ptr_cmem->data;
-  const char *fldtype = ptr_cmem->fldtype;
-  if ( lua_gettop(L) >= 3 ) { 
-    if ( lua_isstring(L, 3) ) {
-      fldtype = luaL_checkstring(L, 3);
-      if ( strcmp(fldtype,  ptr_cmem->fldtype) != 0 ) {
-        WHEREAMI; goto BYE;
-      }
+  const char *str_qtype;
+  qtype_t qtype = ptr_cmem->qtype;
+  if ( num_args == 3 ) { 
+  if ( lua_isstring(L, 3) ) {
+    str_qtype = luaL_checkstring(L, 3);
+    qtype = get_c_qtype(str_qtype);
+    // Convert str_qtype to qtype 
+    if ( qtype !=  ptr_cmem->qtype) {
+      WHEREAMI; goto BYE;
     }
   }
-  if ( ( fldtype == NULL ) || ( *fldtype == '\0' ) ) { 
-    WHEREAMI; goto BYE;
+  else {
+    go_BYE(-1);
   }
-  if ( strcmp(fldtype, "I1") == 0 ) { 
+  }
+  if ( qtype == Q0 ) { go_BYE(-1); }
+  if ( qtype == I1 ) { 
     int8_t *ptr = (int8_t *)X; ptr[0] = val;
   }
-  else if ( strcmp(fldtype, "I2") == 0 ) { 
+  else if ( qtype == I2 ) { 
     int16_t *ptr = (int16_t *)X; ptr[0] = val;
   }
-  else if ( strcmp(fldtype, "I4") == 0 ) { 
+  else if (  qtype == I4 ) { 
     int32_t *ptr = (int32_t *)X; ptr[0] = val;
   }
-  else if ( strcmp(fldtype, "I8") == 0 ) { 
+  else if ( qtype == I8 ) { 
     int64_t *ptr = (int64_t *)X; ptr[0] = val;
   }
-  else if ( strcmp(fldtype, "F4") == 0 ) { 
+  else if ( qtype == F4 ) { 
     float *ptr = (float *)X; ptr[0] = val;
   }
-  else if ( strcmp(fldtype, "F8") == 0 ) { 
+  else if ( qtype == F8 ) { 
     double *ptr = (double *)X; ptr[0] = val;
   }
-  else if ( strcmp(fldtype, "SC") == 0 ) { 
+  else if ( qtype == SC ) { 
     if ( str_val == NULL ) { WHEREAMI; goto BYE; }
     memset(ptr_cmem->data, '\0', ptr_cmem->size);
     if ( strlen(str_val) >= (uint64_t)ptr_cmem->size ) { 
@@ -684,13 +753,59 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
+// Following only for debugging 
+static int l_cmem_to_str( lua_State *L) {
+  int status = 0;
+  char buf[BUFLEN+1]; 
+  CMEM_REC_TYPE *ptr_cmem = luaL_checkudata( L, 1, "CMEM");
+  const char *str_qtype = luaL_checkstring(L, 2);
+  memset(buf, '\0', BUFLEN);
+  void  *X          = ptr_cmem->data;
+  if ( strcmp(str_qtype, "B1") == 0 ) { 
+    go_BYE(-1); // TODO 
+    // status = B1_to_txt(X, buf, BUFLEN); cBYE(status);
+  }
+  else if ( strcmp(str_qtype, "I1") == 0 ) { 
+    status = I1_to_txt(X, "", buf, BUFLEN); cBYE(status);
+  }
+  else if ( strcmp(str_qtype, "I2") == 0 ) { 
+    status = I2_to_txt(X, "", buf, BUFLEN); cBYE(status);
+  }
+  else if ( strcmp(str_qtype, "I4") == 0 ) { 
+    status = I4_to_txt(X, "", buf, BUFLEN); cBYE(status);
+  }
+  else if ( strcmp(str_qtype, "I8") == 0 ) { 
+    status = I8_to_txt(X, "", buf, BUFLEN); cBYE(status);
+  }
+  else if ( strcmp(str_qtype, "F4") == 0 ) { 
+    status = F4_to_txt(X, "", buf, BUFLEN); cBYE(status);
+  }
+  else if ( strcmp(str_qtype, "F8") == 0 ) { 
+    status = F8_to_txt(X, "", buf, BUFLEN); cBYE(status);
+  }
+  else if ( strcmp(str_qtype, "F8") == 0 ) { 
+    status = F8_to_txt(X, "", buf, BUFLEN); cBYE(status);
+  }
+  else if ( strcmp(str_qtype, "SC") == 0 ) { 
+    int len = mcr_min(ptr_cmem->size, BUFLEN);
+    strncpy(buf, X, len);
+  }
+  else {
+    go_BYE(-1);
+  }
+  lua_pushstring(L, buf);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
 //----------------------------------------
 static const struct luaL_Reg cmem_methods[] = {
     { "__gc",       l_cmem_free               },
     { "data",       l_cmem_data },
     { "delete",     l_cmem_free               },
     { "dupe",       l_cmem_dupe }, // only for testing
-    { "fldtype",    l_cmem_fldtype },
     { "is_foreign", l_cmem_is_foreign },
     { "is_data",    l_cmem_is_data },
     { "me",         l_cmem_me },
@@ -707,6 +822,7 @@ static const struct luaL_Reg cmem_methods[] = {
     { "seq",        l_cmem_seq               },
     { "size",       l_cmem_size },
     { "stealable",  l_cmem_stealable },
+    { "to_str",     l_cmem_to_str },
     { "width",      l_cmem_get_width },
     { "zero",       l_cmem_zero },
     { NULL,  NULL         }
@@ -716,7 +832,6 @@ static const struct luaL_Reg cmem_functions[] = {
     { "data",       l_cmem_data },
     { "delete",     l_cmem_free               },
     { "dupe",       l_cmem_dupe }, // only for testing
-    { "fldtype",    l_cmem_fldtype },
     { "is_foreign", l_cmem_is_foreign },
     { "is_data",    l_cmem_is_data },
     { "me",         l_cmem_me },
@@ -733,6 +848,7 @@ static const struct luaL_Reg cmem_functions[] = {
     { "seq",        l_cmem_seq               },
     { "size",       l_cmem_size },
     { "stealable",  l_cmem_stealable },
+    { "to_str",     l_cmem_to_str },
     { "width",      l_cmem_get_width },
     { "zero",       l_cmem_zero },
     { NULL,  NULL         }
@@ -753,6 +869,7 @@ int luaopen_libcmem (lua_State *L) {
    * metatable.__index = metatable
    */
   lua_setfield(L, -2, "__index");
+  lua_pushcfunction(L, l_cmem_to_str); lua_setfield(L, -2, "__tostring");
 
   /* Register the object.func functions into the table that is at the 
    * top of the stack. */

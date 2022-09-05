@@ -21,6 +21,7 @@
 #include "get_bit_u64.h"
 #include "isdir.h"
 #include "isfile.h"
+#include "qtypes.h"
 #include "rdtsc.h"
 #include "rs_mmap.h"
 
@@ -138,6 +139,15 @@ static int l_cutils_isfile(
   const char *const file_name = luaL_checkstring(L, 1);
   bool exists = isfile(file_name);
   lua_pushboolean(L, exists);
+  return 1;
+}
+static int l_cutils_get_width( 
+    lua_State *L
+    )
+{
+  const char *const str_qtype = luaL_checkstring(L, 1);
+  int width = get_width_qtype(str_qtype);
+  lua_pushnumber(L, width);
   return 1;
 }
 //----------------------------------------
@@ -484,6 +494,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "getfiles",    l_cutils_getfiles },
     { "getsize",     l_cutils_getsize },
     { "gettime",     l_cutils_gettime },
+    { "get_width",   l_cutils_get_width },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },
