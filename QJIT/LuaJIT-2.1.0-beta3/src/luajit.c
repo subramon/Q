@@ -4,19 +4,26 @@
 #include <inttypes.h>
 #include "q_macros.h"
 #include "web_struct.h"
-#include "rs_hmap_struct.h"
 #include "mem_mgr_struct.h"
-#include "globals.h"
 #include "foo.h"
 #include "webserver.h"
 #include "mem_mgr.h"
-#include "rs_hmap_instantiate.h"
+
+#include "vctr_rs_hmap_struct.h"
+#include "vctr_rs_hmap_instantiate.h"
+
+#include "chnk_rs_hmap_struct.h"
+#include "chnk_rs_hmap_instantiate.h"
+
+#include "globals.h"
+/*
 #include "qtypes.h"// TODO DELETE JUST FOR TESTING 
 #include "vctr_new_uqid.h" // TODO DELETE JUST FOR TESTING 
 #include "vctr_add.h" // TODO DELETE JUST FOR TESTING 
 #include "vctr_is.h" // TODO DELETE JUST FOR TESTING 
 #include "vctr_del.h" // TODO DELETE JUST FOR TESTING 
 #include "vctr_cnt.h" // TODO DELETE JUST FOR TESTING 
+*/
 // STOP: RAMESH
 /*
 ** LuaJIT frontend. Runs commands, scripts, read-eval-print (REPL) etc.
@@ -643,9 +650,11 @@ int main(int argc, char **argv)
   g_halt = 0;
   g_webserver_interested = 0; 
   g_L_status = 0;
-  memset(&g_vctr_hmap, 0, sizeof(rs_hmap_t));
-  memset(&g_chnk_hmap, 0, sizeof(rs_hmap_t));
+
+  memset(&g_vctr_hmap, 0, sizeof(vctr_rs_hmap_t));
   g_vctr_uqid = 0; 
+
+  memset(&g_chnk_hmap, 0, sizeof(chnk_rs_hmap_t));
   g_chnk_uqid = 0; 
   //-----------------------
   // For webserver
@@ -667,11 +676,18 @@ int main(int argc, char **argv)
   pthread_cond_signal(&g_mem_cond);
 
   // START For hashmaps  for vector, ...
-  rs_hmap_config_t HC; memset(&HC, 0, sizeof(rs_hmap_config_t));
-  HC.min_size = 32;
-  HC.max_size = 0;
-  HC.so_file = strdup("libhmap_VCTR.so"); 
-  status = rs_hmap_instantiate(&g_vctr_hmap, &HC); cBYE(status);
+  rs_hmap_config_t HC1; memset(&HC1, 0, sizeof(rs_hmap_config_t));
+  HC1.min_size = 32;
+  HC1.max_size = 0;
+  HC1.so_file = strdup("libhmap_vctr.so"); 
+  status = vctr_rs_hmap_instantiate(&g_vctr_hmap, &HC1); cBYE(status);
+
+  rs_hmap_config_t HC2; memset(&HC2, 0, sizeof(rs_hmap_config_t));
+  HC2.min_size = 32;
+  HC2.max_size = 0;
+  HC2.so_file = strdup("libhmap_chnk.so"); 
+  status = vctr_rs_hmap_instantiate(&g_vctr_hmap, &HC2); cBYE(status);
+
 
   // STOP  For hashmaps  for vector, ...
   // STOP: RAMESH 
@@ -680,6 +696,7 @@ int main(int argc, char **argv)
     l_message(argv[0], "cannot create state: not enough memory");
     return EXIT_FAILURE;
   }
+#ifdef XXX
   // START TESTING  TODO DELETE 
   uint32_t x = vctr_new_uqid(); 
   printf("x = %" PRIu32 "\n", x);
@@ -702,6 +719,7 @@ int main(int argc, char **argv)
   cnt = vctr_cnt(); 
   if ( cnt != 0 ) { go_BYE(-1); }
   // STOP TESTING  TODO DELETE 
+#endif
   smain.argc = argc;
   smain.argv = argv;
   printf("Starting\n"); 
@@ -721,5 +739,6 @@ BYE:
     pthread_mutex_destroy(&g_mem_mutex);
   }
   g_vctr_hmap.destroy(&g_vctr_hmap);
+  g_chnk_hmap.destroy(&g_chnk_hmap);
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

@@ -676,6 +676,8 @@ lj_folddef.h: $(BUILDVM_T) lj_opt_fold.c
 INCS := -I.
 INCS += -I./inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/inc/
+INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
+INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
 INCS += -I../../../RUNTIME/VCTRS/inc/
 INCS += -I../../../UTILS/inc/
 
@@ -715,7 +717,9 @@ RS_OBJS = $(RS_SRCS:.c=.o)
 
 RS_LIBS := -lpthread
 RS_LIBS += -levent
-RS_LIBS += ../../../TMPL_FIX_HASHMAP/VCTR_HMAP/libhmap_VCTR.so 
+RS_LIBS += ../../../TMPL_FIX_HASHMAP/VCTR_HMAP/libhmap_vctr.so 
+RS_LIBS += ../../../TMPL_FIX_HASHMAP/CHNK_HMAP/libhmap_chnk.so 
+RS_LIBS += ../../../TMPL_FIX_HASHMAP/src/libhmap.so 
 RS_LIBS += ../../../RUNTIME/VCTRS/src/libvctrs.so
 
 $(LUAJIT_A): $(LJVMCORE_O)

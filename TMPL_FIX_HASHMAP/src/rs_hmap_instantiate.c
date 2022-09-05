@@ -62,7 +62,10 @@ rs_hmap_instantiate(
   H->config.so_file = HC->so_file;
   HC->so_file = NULL;  // control handed over 
   H->config.so_handle = dlopen(H->config.so_file, RTLD_NOW); 
-  if ( H->config.so_handle == NULL ) { go_BYE(-1); }
+  if ( H->config.so_handle == NULL ) { 
+    fprintf(stderr, "Unable to open %s \n", H->config.so_file); 
+    go_BYE(-1); 
+  }
 
   // external exposure for following
   H->chk = (chk_fn_t) dlsym(H->config.so_handle, "rs_hmap_chk"); 

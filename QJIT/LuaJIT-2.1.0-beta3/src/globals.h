@@ -7,9 +7,10 @@ int g_L_status; // values as described below
 // 1 => Master owns Lua State 
 // 2 => WebServer owns Lua State 
 // hash map for vectors, chunks, vectors x chunks
-rs_hmap_t g_vctr_hmap;
-rs_hmap_t g_chnk_hmap;
+vctr_rs_hmap_t g_vctr_hmap;
 uint32_t g_vctr_uqid;
+
+chnk_rs_hmap_t g_chnk_hmap;
 uint32_t g_chnk_uqid;
 // For master and memory manager
 pthread_cond_t  g_mem_cond;
