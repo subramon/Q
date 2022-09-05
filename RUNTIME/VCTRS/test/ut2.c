@@ -77,7 +77,7 @@ main(
     status = vctr_put_chunk(uqid, (char **)&X, true, vctr_chnk_size);
     cBYE(status);
     if ( X != NULL ) { go_BYE(-1); }
-    uint32_t num_elements, l_num_chunks;
+    uint64_t num_elements; uint32_t l_num_chunks;
     status = vctr_num_elements(uqid, &num_elements); cBYE(status);
     status = vctr_num_chunks(uqid, &l_num_chunks); cBYE(status);
     if ( l_num_chunks != (i+1) ) { go_BYE(-1); }
@@ -94,7 +94,7 @@ main(
   status = vctr_put_chunk(uqid, (char **)&X, true, vctr_chnk_size-1);
   cBYE(status);
   if ( X != NULL ) { go_BYE(-1); }
-  uint32_t num_elements, l_num_chunks;
+  uint64_t num_elements; uint32_t l_num_chunks;
   status = vctr_num_elements(uqid, &num_elements); cBYE(status);
   status = vctr_num_chunks(uqid, &l_num_chunks); cBYE(status);
   if ( l_num_chunks != (num_chunks+1) ) { go_BYE(-1); }

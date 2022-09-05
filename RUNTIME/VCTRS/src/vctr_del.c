@@ -9,18 +9,20 @@ extern chnk_rs_hmap_t g_chnk_hmap;
 
 int
 vctr_del(
-    uint32_t uqid
+    uint32_t uqid,
+    bool *ptr_is_found
     )
 {
   int status = 0;
-  bool is_found;
   printf("Freeing %u \n", uqid);
   vctr_rs_hmap_key_t key = uqid; 
   vctr_rs_hmap_val_t val;
-  status = g_vctr_hmap.del(&g_vctr_hmap, &key, &val, &is_found); 
+  status = g_vctr_hmap.del(&g_vctr_hmap, &key, &val, ptr_is_found); 
   cBYE(status);
-  if ( !is_found ) { go_BYE(-1); }
+  if ( !*ptr_is_found ) { goto BYE; }
+  //-------------------------------------------
   if ( val.num_elements > 0 ) { 
+    bool is_found;
     if ( val.num_chunks == 0 ) { go_BYE(-1); }
     for ( uint32_t i = 0; i < val.num_chunks; i++ ) { 
       if ( g_chnk_hmap.nitems == 0 ) { go_BYE(-1); }

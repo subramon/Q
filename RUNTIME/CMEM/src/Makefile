@@ -1,3 +1,18 @@
+
+CC=gcc
+
+CFLAGS := -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align 
+CFLAGS += -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings 
+CFLAGS += -Wunused-variable -Wunused-parameter -Wno-pedantic 
+CFLAGS += -Wno-unused-label 
+# CFLAGS := -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined 
+CFLAGS += -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith 
+CFLAGS += -Wmissing-declarations -Wredundant-decls -Wnested-externs 
+CFLAGS += -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings 
+CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn 
+CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
+CFLAGS += -Wduplicated-branches -Wrestrict
+
 # Why are we depending on print and load csv?
 INCS=-I. \
      	-I../inc/ \
@@ -7,7 +22,6 @@ INCS=-I. \
 
 
 all: libcmem.so 
-	cp libcmem.so ${Q_ROOT}/lib/
 
 clean:
 	rm -f *.so *.o _*
@@ -36,7 +50,7 @@ GEN_SRC_FILES = \
 libcmem.so:   cmem.c  \
 	${GEN_SRC_FILES} ${SRC_FILES}  ${INC_FILES} \
 		aux_lua_to_c.c 
-	gcc ${QC_FLAGS} ${INCS} \
+	gcc ${CFLAGS} ${INCS} \
 		${GEN_SRC_FILES} \
 		${SRC_FILES} \
 		cmem.c \

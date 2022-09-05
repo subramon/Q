@@ -1,4 +1,4 @@
-extern bool
-vctr_is(
+extern int
+vctr_chk(
     uint32_t uqid
     );

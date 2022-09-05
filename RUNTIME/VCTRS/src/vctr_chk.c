@@ -6,16 +6,13 @@
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 
-bool
-vctr_is(
+// TODO 
+int
+vctr_chk(
     uint32_t uqid
     )
 {
   int status = 0;
-  bool is_found; uint32_t where;
-  
-  status = vctr_is(uqid, &is_found, &where);
-  if ( !is_found ) { return false; }
 BYE:
-  if ( status < 0 ) { return false; } else { return true; }
+  return status;
 }

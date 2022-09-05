@@ -8,14 +8,6 @@
 
 #include "q_incs.h"
 
-#include "B1_to_txt.h"
-#include "I1_to_txt.h"
-#include "I2_to_txt.h"
-#include "I4_to_txt.h"
-#include "I8_to_txt.h"
-#include "F4_to_txt.h"
-#include "F8_to_txt.h"
-
 #include "cmem_struct.h"
 #include "aux_lua_to_c.h"
 #include "cmem.h"
@@ -692,107 +684,6 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
-// Following only for debugging 
-static int l_cmem_to_str( lua_State *L) {
-  int status = 0;
-  char buf[BUFLEN+1]; 
-  CMEM_REC_TYPE *ptr_cmem = luaL_checkudata( L, 1, "CMEM");
-  const char *qtype = luaL_checkstring(L, 2);
-  memset(buf, '\0', BUFLEN);
-  void  *X          = ptr_cmem->data;
-  if ( strcmp(qtype, "B1") == 0 ) { 
-    status = B1_to_txt(X, buf, BUFLEN); cBYE(status);
-  }
-  else if ( strcmp(qtype, "I1") == 0 ) { 
-    status = I1_to_txt(X, "", buf, BUFLEN); cBYE(status);
-  }
-  else if ( strcmp(qtype, "I2") == 0 ) { 
-    status = I2_to_txt(X, "", buf, BUFLEN); cBYE(status);
-  }
-  else if ( strcmp(qtype, "I4") == 0 ) { 
-    status = I4_to_txt(X, "", buf, BUFLEN); cBYE(status);
-  }
-  else if ( strcmp(qtype, "I8") == 0 ) { 
-    status = I8_to_txt(X, "", buf, BUFLEN); cBYE(status);
-  }
-  else if ( strcmp(qtype, "F4") == 0 ) { 
-    status = F4_to_txt(X, "", buf, BUFLEN); cBYE(status);
-  }
-  else if ( strcmp(qtype, "F8") == 0 ) { 
-    status = F8_to_txt(X, "", buf, BUFLEN); cBYE(status);
-  }
-  else if ( strcmp(qtype, "F8") == 0 ) { 
-    status = F8_to_txt(X, "", buf, BUFLEN); cBYE(status);
-  }
-  else if ( strcmp(qtype, "SC") == 0 ) { 
-    int len = mcr_min(ptr_cmem->size, BUFLEN);
-    strncpy(buf, X, len);
-  }
-  else {
-    go_BYE(-1);
-  }
-  lua_pushstring(L, buf);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-// Following only for debugging 
-static int l_cmem_prbuf( lua_State *L) {
-  CMEM_REC_TYPE *ptr_cmem = luaL_checkudata( L, 1, "CMEM");
-  void  *X          = ptr_cmem->data;
-  const char *qtype = ptr_cmem->fldtype;
-  int num_bytes     = ptr_cmem->size;
-  int num_to_pr = 1; // default 
-  if ( lua_isnumber(L, 2) ) { 
-    num_to_pr  = luaL_checknumber(L, 2);
-    if ( num_to_pr <= 0 ) { WHEREAMI goto BYE; }
-  }
-  if ( ptr_cmem->data == NULL ) { WHEREAMI; goto BYE; }
-  if ( ptr_cmem->size <= 0 ) { WHEREAMI; goto BYE; }
-  if ( strcmp(qtype, "I1") == 0 ) { 
-    int8_t *Y = (int8_t *)X; int fldsz = sizeof(int8_t);
-    if ( num_bytes < (num_to_pr * fldsz) ) { WHEREAMI; goto BYE; }
-    for ( int i = 0; i < num_to_pr; i++ ) { printf("%" PRI1 ":", Y[i]); }
-  }
-  else if ( strcmp(qtype, "I2") == 0 ) { 
-    int16_t *Y = (int16_t *)X; int fldsz = sizeof(int16_t);
-    if ( num_bytes < (num_to_pr * fldsz) ) { WHEREAMI; goto BYE; }
-    for ( int i = 0; i < num_to_pr; i++ ) { printf("%" PRI2 ":", Y[i]); }
-  }
-  else if ( strcmp(qtype, "I4") == 0 ) { 
-    int32_t *Y = (int32_t *)X; int fldsz = sizeof(int32_t);
-    if ( num_bytes < (num_to_pr * fldsz) ) { WHEREAMI; goto BYE; }
-    for ( int i = 0; i < num_to_pr; i++ ) { printf("%" PRI4 ":", Y[i]); }
-  }
-  else if ( strcmp(qtype, "I8") == 0 ) { 
-    int64_t *Y = (int64_t *)X; int fldsz = sizeof(int64_t);
-    if ( num_bytes < (num_to_pr * fldsz) ) { WHEREAMI; goto BYE; }
-    for ( int i = 0; i < num_to_pr; i++ ) { printf("%" PRI8 ":", Y[i]); }
-  }
-  else if ( strcmp(qtype, "F4") == 0 ) { 
-    float *Y = (float *)X; int fldsz = sizeof(float);
-    if ( num_bytes < (num_to_pr * fldsz) ) { WHEREAMI; goto BYE; }
-    for ( int i = 0; i < num_to_pr; i++ ) { printf("%" PRF4 ":", Y[i]); }
-  }
-  else if ( strcmp(qtype, "F8") == 0 ) { 
-    double *Y = (double *)X; int fldsz = sizeof(double);
-    if ( num_bytes < (num_to_pr * fldsz) ) { WHEREAMI; goto BYE; }
-    for ( int i = 0; i < num_to_pr; i++ ) { printf("%" PRF8 ":", Y[i]); }
-  }
-  else if ( strcmp(qtype, "SC") == 0 ) { 
-    const char *Y = (const char  *)X; 
-    printf("%s", Y);
-  }
-  else {
-    WHEREAMI; goto BYE; 
-  }
-  fprintf(stdout, "\n");
-  lua_pushboolean(L, true); return 1;
-BYE:
-  lua_pushboolean(L, false); return 1;
-}
 //----------------------------------------
 static const struct luaL_Reg cmem_methods[] = {
     { "__gc",       l_cmem_free               },
@@ -806,7 +697,6 @@ static const struct luaL_Reg cmem_methods[] = {
     { "name",       l_cmem_name },
     { "new",        l_cmem_new },
     { "nop",        l_cmem_nop },
-    { "prbuf",      l_cmem_prbuf },
     { "qtype",      l_cmem_qtype },
     { "set",        l_cmem_set               },
     { "set_default", l_cmem_set_default },
@@ -817,7 +707,6 @@ static const struct luaL_Reg cmem_methods[] = {
     { "seq",        l_cmem_seq               },
     { "size",       l_cmem_size },
     { "stealable",  l_cmem_stealable },
-    { "to_str",     l_cmem_to_str },
     { "width",      l_cmem_get_width },
     { "zero",       l_cmem_zero },
     { NULL,  NULL         }
@@ -834,7 +723,6 @@ static const struct luaL_Reg cmem_functions[] = {
     { "name",       l_cmem_name },
     { "new",        l_cmem_new },
     { "nop",        l_cmem_nop },
-    { "prbuf",      l_cmem_prbuf },
     { "qtype",      l_cmem_qtype },
     { "set",        l_cmem_set               },
     { "set_default", l_cmem_set_default },
@@ -845,7 +733,6 @@ static const struct luaL_Reg cmem_functions[] = {
     { "seq",        l_cmem_seq               },
     { "size",       l_cmem_size },
     { "stealable",  l_cmem_stealable },
-    { "to_str",     l_cmem_to_str },
     { "width",      l_cmem_get_width },
     { "zero",       l_cmem_zero },
     { NULL,  NULL         }
@@ -866,7 +753,6 @@ int luaopen_libcmem (lua_State *L) {
    * metatable.__index = metatable
    */
   lua_setfield(L, -2, "__index");
-  lua_pushcfunction(L, l_cmem_to_str); lua_setfield(L, -2, "__tostring");
 
   /* Register the object.func functions into the table that is at the 
    * top of the stack. */
@@ -876,7 +762,9 @@ int luaopen_libcmem (lua_State *L) {
   luaL_register(L, NULL, cmem_methods);
 
   /* Register CMEM in types table */
-  int status = luaL_dostring(L, "return require 'Q/UTILS/lua/register_type'");
+  // TODO P1 fix hard coding below 
+  int status = luaL_dostring(L, 
+      "return require 'Q/UTILS/lua/register_type'");
   if (status != 0 ) {
     printf("Running require failed:  %s\n", lua_tostring(L, -1));
     exit(1);

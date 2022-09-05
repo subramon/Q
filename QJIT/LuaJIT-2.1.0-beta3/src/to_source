@@ -1,4 +1,4 @@
 export PATH=$PWD:$PATH # use this Luajit first 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../../../TMPL_FIX_HASHMAP/VCTR_HMAP/:../../../TMPL_FIX_HASHMAP/CHNK_HMAP/:../../../TMPL_FIX_HASHMAP/src/:../../../RUNTIME/VCTRS/src/
-export LUA_PATH="$HOME/Q/RUNTIME/VCTRS/lua/?.lua;;"
-export LUA_CPATH="$HOME/Q/RUNTIME/VCTRS/src/?.so;;"
+export LUA_PATH="$HOME/?.lua;$HOME/?/init.lua;$HOME/Q/RUNTIME/VCTRS/lua/?.lua;;"
+export LUA_CPATH="$HOME/Q/RUNTIME/VCTRS/src/?.so;$HOME/Q/RUNTIME/CMEM/src/?.so;;"

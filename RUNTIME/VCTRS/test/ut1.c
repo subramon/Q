@@ -81,7 +81,7 @@ main(
   if ( name == NULL ) { go_BYE(-1); }
   if ( *name != '\0' ) { go_BYE(-1); }
   // set name  -----------------------------
-  status = vctr_set_name("test name", uqid);  cBYE(status);
+  status = vctr_set_name(uqid, "test name");  cBYE(status);
   // check good name  -----------------------------
   name = vctr_get_name(uqid); 
   if ( name == NULL ) { go_BYE(-1); }
@@ -90,7 +90,7 @@ main(
   for ( uint32_t i = 0; i < 2*vctr_chnk_size+1; i++ ) { 
     float f4 = i+1;
     status = vctr_put(uqid, (char *)&f4, 1); cBYE(status);
-    uint32_t num_elements, num_chunks;
+    uint64_t num_elements; uint32_t num_chunks;
     status = vctr_num_elements(uqid, &num_elements); cBYE(status);
     if ( num_elements != (i+1) ) { go_BYE(-1); }
     status = vctr_num_chunks(uqid, &num_chunks); cBYE(status);

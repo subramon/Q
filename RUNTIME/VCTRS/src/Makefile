@@ -18,7 +18,7 @@ DFLAGS = -g -DDEBUG
 
 INCS := -I../inc/ 
 INCS += -I../../../UTILS/inc/
-INCS += -I../../../
+INCS += -I../../CMEM/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
@@ -26,19 +26,20 @@ INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
 TMPL=CASE1
 
 
-all: libvctrs.so  ut1 ut2
+all: core_libvctr.so  ut1 ut2 libvctr.so 
 
-SRCS :=	vctr_is.c  
-SRCS +=	vctr_new_uqid.c  
-SRCS +=	vctr_add.c  
-SRCS +=	vctr_del.c  
+SRCS :=	vctr_add.c  
 SRCS +=	vctr_cnt.c  
+SRCS +=	vctr_chk.c
+SRCS +=	vctr_del.c  
+SRCS +=	vctr_is.c  
+SRCS +=	vctr_is_eov.c  
 SRCS +=	vctr_name.c  
+SRCS +=	vctr_num_chunks.c  
+SRCS +=	vctr_num_elements.c  
+SRCS +=	vctr_new_uqid.c  
 SRCS +=	vctr_put.c  
 SRCS +=	vctr_put_chunk.c  
-SRCS +=	vctr_num_elements.c  
-SRCS +=	vctr_num_chunks.c  
-SRCS +=	vctr_is_eov.c  
 
 SRCS +=	chnk_cnt.c  
 SRCS +=	chnk_is.c  
@@ -73,17 +74,27 @@ CHNK_HMAP_SO  = ${CHNK_HMAP_LOC}/libhmap_chnk.so
 ${CHNK_HMAP_SO} : 
 	make -C ${CHNK_HMAP_LOC}
 #-------------------------------------------
-libvctrs.so :  ${OBJS} ${VCTR_HMAP_SO}
-	gcc ${OBJS} -shared -lm -o libvctrs.so \
+core_libvctr.so :  ${OBJS} ${VCTR_HMAP_SO}
+	gcc ${OBJS} -shared -lm -o core_libvctr.so \
 	${VCTR_HMAP_SO} ${CHNK_HMAP_SO}
+#-------------------------------------------
+libvctr.so: core_libvctr.so \
+	cVector.o \
+ 	../../CMEM/src/cmem.o \
+	../../CMEM/src/aux_lua_to_c.o
+	gcc cVector.o \
+	../../CMEM/src/cmem.o \
+	../../CMEM/src/aux_lua_to_c.o \
+	core_libvctr.so \
+	-shared -lm -o libvctr.so 
 #-------------------------------------------
 ut1 : ${TEST1_OBJS}
 	gcc ${TEST1_OBJS} -o ut1 -lm \
-		libvctrs.so ${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${TMPL_HMAP_SO} 
+		core_libvctr.so ${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${TMPL_HMAP_SO} 
 #-------------------------------------------
 ut2 : ${TEST2_OBJS}
 	gcc ${TEST2_OBJS} -o ut2 -lm \
-		libvctrs.so ${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${TMPL_HMAP_SO} 
+		core_libvctr.so ${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${TMPL_HMAP_SO} 
 
 
 clean:

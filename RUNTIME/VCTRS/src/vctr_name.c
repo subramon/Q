@@ -9,8 +9,8 @@ extern vctr_rs_hmap_t g_vctr_hmap;
 
 int
 vctr_set_name(
-    const char * const name,
-    uint32_t uqid
+    uint32_t uqid,
+    const char * const name
     )
 {
   int status = 0;

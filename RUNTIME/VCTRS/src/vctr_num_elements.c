@@ -9,7 +9,7 @@ extern vctr_rs_hmap_t g_vctr_hmap;
 int
 vctr_num_elements(
     uint32_t vctr_uqid,
-    uint32_t *ptr_num_elements
+    uint64_t *ptr_num_elements
     )
 {
   int status = 0;

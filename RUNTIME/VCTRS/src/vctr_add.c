@@ -35,9 +35,11 @@ vctr_add1(
 #ifdef DEBUG
   new_vctr_cnt = vctr_cnt();
   if ( new_vctr_cnt != old_vctr_cnt + 1 ) { go_BYE(-1); }
-  bool is_found; uint32_t where_found;
+  // initializations below for debugging. Not needed
+  bool is_found = true; uint32_t where_found = 123456789;
   status = vctr_is(*ptr_uqid, &is_found, &where_found); 
   cBYE(status);
+  printf("Looking for %u \n", *ptr_uqid);
   if ( !is_found ) { go_BYE(-1); }
 #endif
 BYE:

@@ -686,7 +686,7 @@ int main(int argc, char **argv)
   HC2.min_size = 32;
   HC2.max_size = 0;
   HC2.so_file = strdup("libhmap_chnk.so"); 
-  status = vctr_rs_hmap_instantiate(&g_vctr_hmap, &HC2); cBYE(status);
+  status = chnk_rs_hmap_instantiate(&g_chnk_hmap, &HC2); cBYE(status);
 
 
   // STOP  For hashmaps  for vector, ...
