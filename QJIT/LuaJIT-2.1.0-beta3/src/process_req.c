@@ -10,6 +10,10 @@ extern int g_webserver_interested;
 extern int g_L_status;
 extern int g_halt;
 extern lua_State *L; 
+// for out of band 
+uint64_t g_mem_allowed; 
+uint64_t g_mem_used;
+
 int
 process_req(
     req_type_t req_type,
@@ -45,6 +49,7 @@ process_req(
       break;
       //--------------------------------------------------------
     case Lua :  
+      if ( W->is_out_of_band == false ) { go_BYE(-1); }
       {
         // indicate interest 
         itmp = 1; __atomic_store(&g_webserver_interested, &itmp, 0);
@@ -118,6 +123,13 @@ process_req(
         printf("Slave: Relinquished Lua state\n");
         break;
       }
+      //--------------------------------------------------------
+    case Memory :  
+      sprintf(outbuf, 
+          "{ \"Allowed\" : %" PRIu64 ", "
+          "     \"Used\" : %" PRIu64 "}",
+          g_mem_allowed, g_mem_used);
+      break;
       //--------------------------------------------------------
     case Halt :  
       sprintf(outbuf, "{ \"%s\" : \"OK\" }", api);

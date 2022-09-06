@@ -9,6 +9,7 @@
 #include "q_incs.h"
 
 #include "cmem_struct.h"
+#include "aux_cmem.h"
 #include "aux_lua_to_c.h"
 #include "cmem.h"
 #include "qtypes.h"
@@ -585,28 +586,7 @@ static int l_cmem_free( lua_State *L)
   int num_args = lua_gettop(L);
   if ( num_args != 1 ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
-  memset(ptr_cmem->cell_name, 0, Q_MAX_LEN_CELL_NAME+1); 
-  if ( ptr_cmem->data == NULL ) { 
-    // explicit free will cause control to come here
-    if ( ptr_cmem->size != 0 ) {
-      WHEREAMI; goto BYE;
-    }
-  }
-  else {
-    if ( ptr_cmem->is_foreign ) { 
-      /* Foreign indicates somebody else responsible for free */
-    }
-    else {
-      // garbage collection of Lua
-      if ( ptr_cmem->size == 0 ) {
-        /* nothing to do */
-        printf("TODO P0 not good\n"); WHEREAMI; goto BYE;
-      }
-      free_if_non_null(ptr_cmem->data);
-      ptr_cmem->size = 0;
-    }
-  }
-  // printf("Freeing %x \n", ptr_cmem);
+  status = cmem_free(ptr_cmem);  cBYE(status);
   lua_pushboolean(L, true); 
   return 1; 
 BYE:

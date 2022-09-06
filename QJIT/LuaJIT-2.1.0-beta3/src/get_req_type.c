@@ -14,6 +14,10 @@ get_req_type(
     return Halt;
   }
   //-----------------------------
+  else if (strcasecmp(api, "Memory") == 0) {
+    return Memory;
+  }
+  //-----------------------------
   else if (strcasecmp(api, "Lua") == 0) {
     return Lua;
   }

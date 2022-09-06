@@ -11,6 +11,7 @@ typedef struct _img_info_t {
 
 typedef struct _web_info_t { 
   struct event_base *base;
+  bool is_out_of_band;
   int port;
 } web_info_t;
 

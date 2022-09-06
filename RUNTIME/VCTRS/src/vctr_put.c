@@ -9,6 +9,7 @@
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
+extern uint64_t g_mem_used;
 
 int
 vctr_put(
@@ -41,8 +42,11 @@ vctr_put(
     //-------------------------------
     chnk_rs_hmap_key_t chnk_key = 
     { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
-    char *l1_mem = malloc(width * vctr_val.chnk_size);
-    return_if_malloc_failed(l1_mem); 
+    char *l1_mem = NULL;
+    uint64_t sz = width * vctr_val.chnk_size;
+    status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, sz);
+    cBYE(status);
+    __atomic_add_fetch(&g_mem_used, sz, 0);
     chnk_rs_hmap_val_t chnk_val = { .qtype = qtype, .l1_mem = l1_mem };
     l1_mem = NULL;
     //-------------------------------
@@ -66,8 +70,10 @@ vctr_put(
     { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
     memset(&chnk_val, 0, sizeof(chnk_rs_hmap_val_t));
     chnk_val.qtype = qtype;
-    chnk_val.l1_mem = malloc(width * vctr_val.chnk_size);
-    return_if_malloc_failed(chnk_val.l1_mem); 
+    uint64_t sz = width * vctr_val.chnk_size;
+    status = posix_memalign((void **)&chnk_val.l1_mem, Q_VCTR_ALIGNMENT,sz);
+    cBYE(status);
+    __atomic_add_fetch(&g_mem_used, sz, 0);
     status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
     cBYE(status);
     g_vctr_hmap.bkts[vctr_where].val.num_chunks++;

@@ -15,3 +15,6 @@ uint32_t g_chnk_uqid;
 // For master and memory manager
 pthread_cond_t  g_mem_cond;
 pthread_mutex_t g_mem_mutex;
+// Memory stuff
+uint64_t g_mem_allowed; // maximum memory that C can allocate
+uint64_t g_mem_used;    // amount of memory malloc'd

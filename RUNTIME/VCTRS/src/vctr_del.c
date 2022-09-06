@@ -7,6 +7,8 @@
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
 
+extern uint64_t g_mem_used;
+
 int
 vctr_del(
     uint32_t uqid,
@@ -31,7 +33,13 @@ vctr_del(
       status = g_chnk_hmap.del(&g_chnk_hmap, &chnk_key, &chnk_val, 
           &is_found); 
       cBYE(status);
-      free_if_non_null(chnk_val.l1_mem);
+      if ( chnk_val.l1_mem != NULL ) { 
+        free_if_non_null(chnk_val.l1_mem);
+        uint64_t sz = val.chnk_size * val.width;
+        if ( sz == 0 ) { go_BYE(-1); } 
+        if ( sz > g_mem_used ) { go_BYE(-1); } 
+        __atomic_sub_fetch(&g_mem_used, sz, 0);
+      }
       if ( chnk_val.l2_mem[0] != '\0' ) { unlink(chnk_val.l2_mem); }
       if ( chnk_val.l3_mem[0] != '\0' ) { unlink(chnk_val.l3_mem); }
       if ( !is_found ) { go_BYE(-1); }

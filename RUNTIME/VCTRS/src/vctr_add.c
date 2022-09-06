@@ -33,7 +33,7 @@ vctr_add1(
 
   uint32_t chnk_size = in_chnk_size;
   if  ( chnk_size == 0 ) { 
-    chnk_size = VCTR_CHNK_SIZE;
+    chnk_size = Q_VCTR_CHNK_SIZE;
   }
   vctr_rs_hmap_val_t val = 
     { .qtype = qtype, .chnk_size = chnk_size, 

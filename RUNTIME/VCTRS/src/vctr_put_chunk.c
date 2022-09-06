@@ -1,6 +1,7 @@
 #include "q_incs.h"
 #include "qtypes.h"
 #include "vctr_consts.h"
+#include "cmem_struct.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_cnt.h"
@@ -8,6 +9,7 @@
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
+extern uint64_t g_mem_used;
 
 // is_stealable is for the most common way in which we will put 
 // data into vectors. In this case, we put a chunk at a time
@@ -22,17 +24,15 @@ extern chnk_rs_hmap_t g_chnk_hmap;
 int
 vctr_put_chunk(
     uint32_t vctr_uqid,
-    char **ptr_X, // [vctr.chnk_size]
-    bool is_stealable,
+    CMEM_REC_TYPE *ptr_cmem,
     uint32_t n // number of elements 1 <= n <= vctr.chnk_size
     )
 {
   int status = 0;
   bool is_found; uint32_t vctr_where;
-  char *X = *ptr_X;
 
   if ( vctr_uqid == 0 ) { go_BYE(-1); }
-  if ( X == NULL ) { go_BYE(-1); }
+  if ( ptr_cmem->data == NULL ) { go_BYE(-1); }
   if ( n == 0 ) { go_BYE(-1); }
 
   vctr_rs_hmap_key_t vctr_key = vctr_uqid;
@@ -64,20 +64,24 @@ vctr_put_chunk(
     chnk_idx = vctr_val.num_chunks;
   }
   //-------------------------------
-  char *l1_mem;
-  if ( is_stealable ) { 
-    l1_mem = X;
-    *ptr_X = NULL;
+  char *l1_mem = NULL;
+  if ( ( ptr_cmem->is_stealable ) && ( !ptr_cmem->is_foreign ) ) { 
+    l1_mem = ptr_cmem->data;
+    ptr_cmem->data = NULL;
+    ptr_cmem->size = 0;
+    ptr_cmem->is_foreign   = true;
   }
   else {
-    l1_mem = malloc(vctr_val.chnk_size * vctr_val.width);
-    return_if_malloc_failed(l1_mem);
-    memcpy(l1_mem, X, n * vctr_val.width);
+    uint64_t sz = vctr_val.chnk_size * vctr_val.width;
+    status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, sz); 
+    cBYE(status);
+    __atomic_add_fetch(&g_mem_used, sz, 0);
+    memcpy(l1_mem, ptr_cmem->data, n * vctr_val.width);
   }
   chnk_rs_hmap_key_t chnk_key = 
   { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
   chnk_rs_hmap_val_t chnk_val = { 
-    .qtype = qtype, .l1_mem = X, .num_elements = n };
+    .qtype = qtype, .l1_mem = l1_mem, .num_elements = n };
   //-------------------------------
   status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
   cBYE(status);

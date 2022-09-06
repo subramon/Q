@@ -141,6 +141,22 @@ static int l_cutils_isfile(
   lua_pushboolean(L, exists);
   return 1;
 }
+//----------------------------------------
+static int l_cutils_str_qtype_to_ctype( 
+    lua_State *L
+    )
+{
+  const char *const str_qtype = luaL_checkstring(L, 1);
+  const char * const x = str_qtype_to_ctype(str_qtype);
+  if ( x == NULL ) { 
+    lua_pushnil(L);
+  }
+  else { 
+    lua_pushstring(L, x);
+  }
+  return 1;
+}
+//----------------------------------------
 static int l_cutils_get_width( 
     lua_State *L
     )
@@ -480,6 +496,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
+    { "str_qtype_to_ctype", l_cutils_str_qtype_to_ctype },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };
@@ -501,6 +518,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
+    { "str_qtype_to_ctype", l_cutils_str_qtype_to_ctype },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };

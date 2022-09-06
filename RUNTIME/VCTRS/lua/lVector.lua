@@ -1,6 +1,7 @@
 local ffi     = require 'ffi'
 local cVector = require 'libvctr'
 local register_type = require 'Q/UTILS/lua/register_type'
+local qcfg = require'Q/UTILS/lua/qcfg'
 --====================================
 local uqid -- This defines the vector - super important 
 local lVector = {}
@@ -45,6 +46,10 @@ function lVector:get_name()
   return name
 end
 
+function lVector:eov()
+  local status = cVector.eov(self._base_vec)
+  return status
+end
 function lVector:is_eov()
   local is_eov = cVector.is_eov(self._base_vec)
   assert(type(is_eov) == "boolean")

@@ -651,6 +651,8 @@ int main(int argc, char **argv)
   g_webserver_interested = 0; 
   g_L_status = 0;
 
+  g_mem_allowed = 4 * 1024 * 1048576 ; // in Bytes
+  g_mem_used    = 0;
   memset(&g_vctr_hmap, 0, sizeof(vctr_rs_hmap_t));
   g_vctr_uqid = 0; 
 
@@ -659,9 +661,21 @@ int main(int argc, char **argv)
   //-----------------------
   // For webserver
   pthread_t l_webserver;
-  web_info_t web_info; memset(&web_info, 0, sizeof(web_info_t));
+  web_info_t web_info; 
+
+  memset(&web_info, 0, sizeof(web_info_t));
   web_info.port = 8004; // TODO P2 Un-hard code 
+  web_info.is_out_of_band = false;
   status = pthread_create(&l_webserver, NULL, &webserver, &web_info);
+  cBYE(status);
+  // For out of band 
+  pthread_t l_out_of_band;
+  web_info_t out_of_band_info; 
+  memset(&out_of_band_info, 0, sizeof(web_info_t));
+  out_of_band_info.port = 8008; // TODO P2 Un-hard code 
+  out_of_band_info.is_out_of_band = true;
+  status = pthread_create(&l_out_of_band, NULL, &webserver, 
+      &out_of_band_info);
   cBYE(status);
   // For memory manager
   pthread_cond_init(&g_mem_cond, NULL);
@@ -731,6 +745,7 @@ int main(int argc, char **argv)
   pthread_cond_signal(&g_mem_cond);
   printf("Wrapping up\n"); // RAMESH
   pthread_join(l_webserver, NULL); 
+  pthread_join(l_out_of_band, NULL); 
   pthread_join(l_mem_mgr, NULL); 
   // STOP : RAMESH
 BYE:

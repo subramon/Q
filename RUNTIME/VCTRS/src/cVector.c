@@ -17,6 +17,7 @@
 #include "vctr_num_elements.h"
 #include "vctr_width.h"
 #include "vctr_is_eov.h"
+#include "vctr_eov.h"
 #include "vctr_put.h"
 #include "vctr_put_chunk.h"
 
@@ -137,6 +138,19 @@ static int l_vctr_is_eov( lua_State *L) {
   bool b_is_eov; 
   status = vctr_is_eov(ptr_v->uqid, &b_is_eov);
   lua_pushboolean(L, b_is_eov);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
+static int l_vctr_eov( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_eov(ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -282,6 +296,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "free", l_vctr_free },
     { "delete", l_vctr_delete },
     //--------------------------------
+    { "eov",    l_vctr_eov },
     { "is_eov", l_vctr_is_eov },
     { "nop", l_vctr_nop },
     //--------------------------------
@@ -305,8 +320,9 @@ static const struct luaL_Reg vector_functions[] = {
     { "free", l_vctr_free },
     { "delete", l_vctr_delete },
     //--------------------------------
+    { "eov",    l_vctr_eov },
     { "is_eov", l_vctr_is_eov },
-    { "nop", l_vctr_nop },
+    { "nop",    l_vctr_nop },
     //--------------------------------
     { "set_name", l_vctr_set_name },
     { "get_name", l_vctr_get_name },

@@ -120,3 +120,27 @@ get_str_qtype(
   if ( qtype == Q0 ) { return "Q0"; }
   return "XX";
 }
+
+const char *
+str_qtype_to_ctype(
+    const char * const str_qtype
+    )
+{
+  if ( strcmp(str_qtype, "Q0") == 0 ) { return NULL; } 
+
+  if ( strcmp(str_qtype, "I1") == 0 ) { return "int8_t"; } 
+  if ( strcmp(str_qtype, "I2") == 0 ) { return "int16_t"; } 
+  if ( strcmp(str_qtype, "I4") == 0 ) { return "int32_t"; } 
+  if ( strcmp(str_qtype, "I8") == 0 ) { return "int64_t"; } 
+
+  if ( strcmp(str_qtype, "UI1") == 0 ) { return "uint8_t"; } 
+  if ( strcmp(str_qtype, "UI2") == 0 ) { return "uint16_t"; } 
+  if ( strcmp(str_qtype, "UI4") == 0 ) { return "uint32_t"; } 
+  if ( strcmp(str_qtype, "UI8") == 0 ) { return "uint64_t"; } 
+
+  if ( strcmp(str_qtype, "F4") == 0 ) { return "float"; } 
+  if ( strcmp(str_qtype, "F8") == 0 ) { return "double"; } 
+
+  if ( strcmp(str_qtype, "TM1") == 0 ) { return "tm_t"; } 
+  return NULL; 
+}

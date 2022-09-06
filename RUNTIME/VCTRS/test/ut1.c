@@ -28,6 +28,8 @@ uint32_t g_vctr_uqid;
 chnk_rs_hmap_t g_chnk_hmap;
 uint32_t g_chnk_uqid;
 
+uint64_t g_mem_used;
+
 int 
 main(
     int argc,

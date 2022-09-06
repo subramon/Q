@@ -4,13 +4,16 @@ CFLAGS := -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align
 CFLAGS += -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings 
 CFLAGS += -Wunused-variable -Wunused-parameter -Wno-pedantic 
 CFLAGS += -Wno-unused-label 
-# CFLAGS := -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined 
 CFLAGS += -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith 
 CFLAGS += -Wmissing-declarations -Wredundant-decls -Wnested-externs 
 CFLAGS += -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings 
 CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn 
 CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
 CFLAGS += -Wduplicated-branches -Wrestrict
+
+# CFLAGS += -fsanitize=address -fno-omit-frame-pointer 
+# CFLAGS += -fsanitize=undefined 
+# CFLAGS +=  -static-libasan # for address sanitizer
 
 DFLAGS = -g -DDEBUG 
 # DFLAGS = -O4
@@ -32,6 +35,7 @@ SRCS :=	vctr_add.c
 SRCS +=	vctr_cnt.c  
 SRCS +=	vctr_chk.c
 SRCS +=	vctr_del.c  
+SRCS +=	vctr_eov.c  
 SRCS +=	vctr_is.c  
 SRCS +=	vctr_is_eov.c  
 SRCS +=	vctr_name.c  
@@ -51,6 +55,7 @@ TEST1_SRCS := ../test/ut1.c
 TEST1_OBJS = $(TEST1_SRCS:.c=.o)
 
 TEST2_SRCS := ../test/ut2.c
+TEST2_SRCS += ../../CMEM/src/aux_cmem.c 
 TEST2_OBJS = $(TEST2_SRCS:.c=.o)
 
 .c.o : 
@@ -79,12 +84,14 @@ core_libvctr.so :  ${OBJS} \
 	${TMPL_HMAP_SO} \
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} 
-	gcc ${OBJS} -shared -lm -o core_libvctr.so \
+	gcc ${OBJS}  \
+	-shared -o core_libvctr.so \
 	${VCTR_HMAP_SO} ${CHNK_HMAP_SO} 
 	cp core_libvctr.so ${Q_ROOT}/lib/
 #-------------------------------------------
 EXT_SRCS := cVector.c
 EXT_SRCS += ../../CMEM/src/aux_lua_to_c.c
+EXT_SRCS += ../../CMEM/src/aux_cmem.c
 EXT_SRCS += ../../../UTILS/src/qtypes.c
 
 EXT_OBJS = $(EXT_SRCS:.c=.o)
@@ -92,14 +99,14 @@ EXT_OBJS = $(EXT_SRCS:.c=.o)
 libvctr.so: ${EXT_OBJS} core_libvctr.so cVector.o 
 	gcc ${EXT_OBJS} \
 	core_libvctr.so \
-	-shared -lm -o libvctr.so 
+	-shared -o libvctr.so 
 	cp libvctr.so ${Q_ROOT}/lib/
 
 ${Q_ROOT}/lib/libutils.so :
 	make -C ../../../UTILS/src/
 #-------------------------------------------
 ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so 
-	gcc ${TEST1_OBJS} -o ut1 -lm \
+	gcc ${TEST1_OBJS} -o ut1 \
 	core_libvctr.so \
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
@@ -107,7 +114,7 @@ ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so
 	${Q_ROOT}/lib/libutils.so
 #-------------------------------------------
 ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
-	gcc ${TEST2_OBJS} -o ut2 -lm \
+	gcc ${TEST2_OBJS} -o ut2 \
 	core_libvctr.so \
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \

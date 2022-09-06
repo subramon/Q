@@ -1,7 +1,6 @@
 #ifndef __QTYPES_H
 #define __QTYPES_H
-// TODO: Keep in sync with lua/subtypes.lua
-// START extract_for_qtypes.tex
+//START_FOR_CDEF
 typedef uint16_t bfloat16; 
 typedef enum { 
   Q0, // mixed  must be first one 
@@ -48,6 +47,7 @@ typedef struct _tm_t {
 # endif
   */
 } tm_t;
+//STOP_FOR_CDEF
 extern qtype_t
 get_tm_qtype(
     const char * const fld
@@ -72,5 +72,9 @@ get_c_qtype(
 extern const char *
 get_str_qtype(
     qtype_t qtype
+    );
+extern const char *
+str_qtype_to_ctype(
+    const char * const str_qtype
     );
 #endif // __QTYPES_H

@@ -27,11 +27,19 @@ tests.t2 = function()
   local buf = cmem.new( {size = size, qtype = qtype, name = "inbuf"})
   -- put some stuff
   local iptr = assert(get_ptr(buf, qtype))
-  for i = 1, chunk_size do 
+  for i = 1, 2*chunk_size do 
     iptr[0] = i + 1 
     x:put1(buf, 1)
     assert(x:num_elements() == i)
   end
+  local status = x:eov()
+  assert(status == true)
+  assert(x:is_eov() == true)
+  print(">>> START Deliberate error")
+  local status = x:eov()
+  assert(not status)
+  print("<<< STOP  Deliberate error")
+
   print("Test t2 succeeded")
 end
 -- return tests

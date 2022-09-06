@@ -44,9 +44,10 @@ qcfg.q_link_flags    = os.getenv("Q_LINK_FLAGS")
 qcfg.ld_library_path = os.getenv("LD_LIBRARY_PATH")
 --=================================
 qcfg.debug = true -- set to TRUE only if you want debugging
-qcfg.is_memo = true -- Vector code uses this default value
-qcfg.has_nulls = false -- Vector code uses this default value
+-- TODO THINK qcfg.is_memo = true -- Vector code uses this default value
+-- TODO THINK qcfg.has_nulls = false -- Vector code uses this default value
 
+-- Following function used to modify qcfg at run time 
 local function modify(key, val)
   qcfg[key] = val
 end
