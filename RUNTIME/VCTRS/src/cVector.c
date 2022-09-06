@@ -20,8 +20,8 @@
 #include "vctr_put_chunk.h"
 
   /*
-  ** Implementation of luaL_testudata which will return NULL in case if udata is not of type tname
-  ** TODO: Check for the appropriate location for this function
+  ** Implementation of luaL_testudata which will return NULL in case 
+  if udata is not of type tname
   */
 LUALIB_API void *luaL_testudata (
     lua_State *L, 
@@ -68,7 +68,7 @@ static int l_vctr_get_name( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   char * name = vctr_get_name(ptr_v->uqid); 
   if ( name == NULL ) { go_BYE(-1); } 
-  lua_pushstring(L, name); // TODO make sure no strdup needed
+  lua_pushstring(L, name); // 99% sure that no strdup needed
   return 1;
 BYE:
   lua_pushnil(L);
@@ -159,11 +159,11 @@ BYE:
 }
 //----------------------------------------
 static int l_vctr_free( lua_State *L) {
-  WHEREAMI; // TODO delete 
   int status = 0;
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool is_found;
+  printf("Freeing Vector %u \n", ptr_v->uqid);
   status = vctr_del(ptr_v->uqid, &is_found); 
   lua_pushboolean(L, is_found);
   return 1;
@@ -200,8 +200,7 @@ static int l_vctr_add1( lua_State *L)
   VCTR_REC_TYPE *ptr_v = NULL;
   bool is_key; int64_t itmp; 
   const char * str_qtype;
-  qtype_t qtype;
-  uint32_t width; 
+  uint32_t width = 0; 
   uint32_t chunk_size;
   // width needed only for SC; all other qtypes have known fixed widths
   //--- get args passed from Lua 
@@ -214,20 +213,31 @@ static int l_vctr_add1( lua_State *L)
   cBYE(status);
   if ( !is_key ) { go_BYE(-1); }
   if ( *str_qtype == '\0' ) { go_BYE(-1); }
-  //----------------
+  qtype_t qtype  = get_c_qtype(str_qtype);
+  if ( qtype == Q0 ) { go_BYE(-1); }
+  //-------------------------------------------
   status = get_int_from_tbl(L, 1, "width", &is_key, &itmp); cBYE(status);
-  if ( !is_key )  { go_BYE(-1); }
-  if ( itmp < 1 ) { go_BYE(-1); }
-  if ( strcmp(str_qtype, "SC") == 0 ) { 
-    if ( itmp < 2 ) { go_BYE(-1); }
+  if ( is_key )  { 
+    if ( itmp < 1 ) { go_BYE(-1); }
+  }
+  else { // must specify width for SC 
+    if ( strcmp(str_qtype, "SC") == 0 ) { go_BYE(-1); }
   }
   width = (uint32_t)itmp;
-  //------------------
+  if ( strcmp(str_qtype, "SC") == 0 ) { // need to keep 1 char for nullc
+    if ( width < 2 ) { go_BYE(-1); }
+  }
+  //-------------------------------------------
   status = get_int_from_tbl(L, 1, "chunk_size", &is_key, &itmp); 
   cBYE(status);
-  if ( !is_key )  { go_BYE(-1); }
-  if ( itmp < 0 ) { go_BYE(-1); }
-  chunk_size = (uint32_t)itmp;
+  if ( is_key )  { // default chunk size == 0 => use Q_VCTR_CHNK_SIZE
+    if ( itmp <- 0 ) { go_BYE(-1); }
+    chunk_size = (uint32_t)itmp;
+  }
+  else {
+    chunk_size = 0; 
+  }
+  //-------------------------------------------
 
   ptr_v = (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
   return_if_malloc_failed(ptr_v);
@@ -235,10 +245,9 @@ static int l_vctr_add1( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  qtype = F4; // TODO HARD COODED
-  status = vctr_add1(qtype, chunk_size, &(ptr_v->uqid)); cBYE(status);
+  status = vctr_add1(qtype, width, chunk_size, &(ptr_v->uqid)); 
+  cBYE(status);
 
-  lua_pushboolean(L, true);
   return 1; 
 BYE:
   lua_pushnil(L);

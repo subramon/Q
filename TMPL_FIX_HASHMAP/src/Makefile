@@ -67,6 +67,11 @@ MERGE_OBJS = $(MERGE_SRCS:.c=.o)
 libhmap.so: ${OBJS} 
 	gcc  ${OBJS} -shared -lm -o libhmap.so  -ldl
 
+EXTSO = ${Q_ROOT}/lib/libhmap.so
+
+${EXTSO} : libhmap.so
+	cp libhmap.so ${EXTSO}
+
 libhmap_test.so: ${HMAP_OBJS} ${CUSTOM_OBJS}  
 	gcc  ${HMAP_OBJS} ${CUSTOM_OBJS} ${INCS} -shared -lm \
 		-o libhmap_test.so libhmap.so  -ldl 
@@ -84,4 +89,4 @@ test_fastrem : ./test/test_fastrem.c
 
 clean:
 	rm -f *.o test_hmap *.so ./src/*.o \
-		test1 test_merge test_fastrem
+		test1 test_merge test_fastrem ${EXTSO}

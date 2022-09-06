@@ -22,7 +22,7 @@ INCS += -I/usr/include/lua5.1/
 all: libcmem.so 
 
 clean:
-	rm -f *.so *.o _*
+	rm -f *.so *.o _* ${OBJS}
 	rm -f ${Q_ROOT}/lib/libcmem.so
 		
 SRCS := cmem.c

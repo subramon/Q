@@ -13,6 +13,7 @@ extern vctr_rs_hmap_t g_vctr_hmap;
 int
 vctr_add1(
     qtype_t qtype,
+    uint32_t width,
     uint32_t in_chnk_size,
     uint32_t *ptr_uqid
     )
@@ -23,7 +24,11 @@ vctr_add1(
   if ( ( qtype == Q0 ) || ( qtype >= NUM_QTYPES ) ) { go_BYE(-1); }
   *ptr_uqid = vctr_new_uqid();
   vctr_rs_hmap_key_t key = *ptr_uqid; 
-  uint32_t width = 4; // TODO P1
+  if ( width == 0 ) { 
+    width = get_width_c_qtype(qtype);
+  }
+  if ( width <= 0 ) { go_BYE(-1); }
+
   uint32_t chnk_size = in_chnk_size;
   if  ( chnk_size == 0 ) { 
     chnk_size = VCTR_CHNK_SIZE;

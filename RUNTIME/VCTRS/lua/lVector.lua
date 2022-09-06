@@ -1,27 +1,26 @@
 local ffi     = require 'ffi'
 local cVector = require 'libvctr'
+local register_type = require 'Q/UTILS/lua/register_type'
 --====================================
 local uqid -- This defines the vector - super important 
 local lVector = {}
 lVector.__index = lVector
 
-local setmetatable = require '__gc'
+-- Following hack of __gc is needed because of inability to set
+-- __gc on anything other than userdata in 5.1.* 
+-- This is why we need cVector.c and cannot directly ffi to the 
+-- C files in ../src/
+-- Given that we are paying the price of using the C API, I think
+-- we can dispense with this __gc business
+-- local setmetatable = require 'Q/UTILS/lua/rs_gc'
 local mt = {
    __call = function (cls, ...)
       return cls.new(...)
    end,
-   __gc = function() 
-     print("Calling gc ")
-     local is_found  = ffi.new("bool[?]", 1)
-     is_found = ffi.cast("bool *", is_found)
-    local status = cVector.vctr_del(self.uqid, is_found)
-    if ( status ~= 0 ) then print("Error in gc") end 
-    -- print("DONE Calling gc ")
-  end
-}
+ }
 setmetatable(lVector, mt)
 
--- register_type(lVector, "lVector")
+register_type(lVector, "lVector")
 
 function lVector:check()
   assert(cVector.vctr_chk(self._base_vec))
@@ -31,45 +30,33 @@ function lVector:check()
   return true
 end
 
-function lVector:num_chunks()
-  local num_chunks = fff.new("uint32_t[?]", 1)
-  num_chunks = ffi.cast("uint32_t *", num_chunks) 
-  local status = cVector.num_chunks(self.uqid, num_chunks)
-  assert(status == 0)
-  return num_chunks
-end
-
 function lVector:num_elements()
-  local num_elements = fff.new("uint32_t[?]", 1)
-  num_elements = ffi.cast("uint32_t *", num_elements) 
-  local status = cVector.num_elements(self.uqid, num_elements)
-  assert(status == 0)
+  local num_elements = ffi.new("uint32_t[?]", 1)
+  local num_elements = cVector.num_elements(self._base_vec)
   return num_elements
 end
 
 function lVector:get_name()
-  local name = fff.new("char *[?]", 1)
-  name = ffi.cast("char **", 1) 
-  local name = cVector.get_name(self.uqid)
+  local name = cVector.get_name(self._base_vec)
   return name
 end
 
 function lVector:is_eov()
-  local is_eov = fff.new("bool[?]", 1)
-  is_eov = ffi.cast("bool *", is_eov) 
-  local status = cVector.is_eov(self.uqid, is_eov)
-  assert(status == 0)
-  return num_elements
+  local is_eov = cVector.is_eov(self._base_vec)
+  assert(type(is_eov) == "boolean")
+  return is_eov
 end
 function lVector.new(args)
   local vector = setmetatable({}, lVector)
   vector.meta = {} -- for meta data stored in vector
   assert(type(args) == "table")
-  local l_uqid = ffi.new("uint32_t[?]", 1)
-  l_uqid = ffi.cast("uint32_t *", l_uqid);
-  assert(cVector.add1(args))
-  vector.uqid = l_uqid; -- IMPORTANT 
+  vector._base_vec = assert(cVector.add1(args))
   vector.siblings = {} -- no conjoined vectors
   return vector
 end
+function lVector.put1(c)
+  assert(type(c) == "CMEM")
+
+end
+
 return lVector

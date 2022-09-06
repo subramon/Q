@@ -52,6 +52,7 @@ local function cprint(
   -- START: Assemble F and W
   for i, v in ipairs(V) do 
     local qtype = v:fldtype()
+    -- TODO We no longer have cenum
     qtype = qconsts.qtypes[qtype].cenum -- convert string to integer for C
     local width = v:width()
     -- Note: we create temporary local variables because the

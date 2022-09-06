@@ -5,96 +5,6 @@ local cutils  = require 'libcutils' ;
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local tests = {}
 
-ffi.cdef([[
-char *strncpy(char *dest, const char *src, size_t n);
-]]
-)
-ffi.cdef([[
-typedef uint16_t bfloat16; 
-typedef enum { 
-  Q0, 
-  BL, 
-  I1,
-  I2,
-  I4,
-  I8,
-  F2,
-  F4,
-  F8,
-  UI1,
-  UI2,
-  UI4,
-  UI8,
-  SC,  
-  SV,  
-  TM1, 
-  NUM_QTYPES 
-} qtype_t;
-typedef struct _tm_t {
-  int8_t tm_year;	
-  int8_t tm_mon;	
-  int8_t tm_mday;	
-  int8_t tm_hour;	
-  int8_t tm_min;	
-  int8_t tm_sec;	
-  int16_t tm_yday;	
-} tm_t;
-extern qtype_t
-get_tm_qtype(
-    const char * const fld
-    );
-extern int
-t_assign(
-    struct tm *dst, 
-    tm_t *src
-    );
-extern int
-get_width_qtype(
-    char * const str_qtype
-    );
-extern int
-get_width_c_qtype(
-      qtype_t qtype
-    );
-extern qtype_t
-get_c_qtype(
-    const char *const str_qtype
-    );
-extern const char *
-get_str_qtype(
-    qtype_t qtype
-    );
-typedef struct _cmem_rec_type {
-  void *data;
-  int64_t size;
-  int width;
-  qtype_t qtype;
-  char cell_name[16];
-  bool is_foreign; 
-  bool is_stealable; 
-} CMEM_REC_TYPE;
-]])
---[[ TODO Improve above hard coding using below 
-local qconsts = require 'Q/UTILS/lua/qconsts'
-local qc      = require  'Q/UTILS/lua/qcore' -- to cdef CMEM_REC_TYPE 
-local for_cdef = require 'Q/UTILS/lua/for_cdef'
-local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
-local incs = { "UTILS/inc/" }
-local x = for_cdef(infile, incs)
-ffi.cdef(x)
---]]
-
-tests.t0 = function()
-  -- basic test 
-  local buf = cmem.new(16)
-  assert(type(buf) == "CMEM")
-  buf:zero()
-  local y = buf:to_str("I4")
-  assert(y == "0")
-  buf:prbuf(4)
-  print("test 0 passed")
-end
-
 tests.t1 = function()
   -- basic test 
   local buf = cmem.new({ size = 128, qtype = "I4"})
@@ -110,10 +20,9 @@ tests.t2 = function()
   local num_trials = 10 -- 1024*1048576
   local sz = 65537
   local qtype = "I4"
-  local width
+  local width = cutils.get_width(qtype)
   for j = 1, num_trials do 
     local buf = cmem.new( {size = sz, qtype = qtype, name = "inbuf"})
-    width = cutils.get_width(qtype)
     buf:set_width(width)
     assert(buf:width() == width)
     buf:set(j, qtype)

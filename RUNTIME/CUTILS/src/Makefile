@@ -25,7 +25,7 @@ OBJS = $(SRCS:.c=.o)
 	$(CC) -c -o $@ $< ${QC_FLAGS} ${DFLAGS} $(INCS) 
 
 clean:
-	rm -f *.so *.o _*
+	rm -f *.so *.o _* ${OBJS}
 		
 libcutils.so:   ${OBJS} 
 	gcc ${OBJS} -shared -o libcutils.so

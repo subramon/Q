@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/ballsh
 INCS=-I../inc/ -I../inc/
 INCDIR=../inc/
 
 
-all : gen_src_files src_files gen_inc_files
+all : libutils.so gen_src_files src_files gen_inc_files
 
 
 gen_inc_files : \
@@ -216,6 +216,7 @@ SRC_FILES =  \
 	isfile.c \
 	isdir.c \
 	q_omp_get_num_procs.c  \
+	qtypes.c \
 	rand_file_name.c \
 	rdtsc.c \
 	rs_mmap.c \
@@ -246,11 +247,13 @@ libutils.so : src_files gen_src_files gen_inc_files
 	gcc -shared ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} \
 		${GEN_SRC_FILES} \
 		${SRC_FILES} -o libutils.so
+	cp libutils.so ${Q_ROOT}/lib/
 
 clean :
 	rm -f _*
 	rm -f *.so
 	rm -f *.o
+	rm -f  ${Q_ROOT}/lib/libutils.so 
 
 
 # do not use following unless you absolutely need to

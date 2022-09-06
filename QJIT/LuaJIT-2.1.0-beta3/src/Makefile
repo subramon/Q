@@ -717,9 +717,9 @@ RS_OBJS = $(RS_SRCS:.c=.o)
 
 RS_LIBS := -lpthread
 RS_LIBS += -levent
-RS_LIBS += ../../../TMPL_FIX_HASHMAP/VCTR_HMAP/libhmap_vctr.so 
-RS_LIBS += ../../../TMPL_FIX_HASHMAP/CHNK_HMAP/libhmap_chnk.so 
-RS_LIBS += ../../../TMPL_FIX_HASHMAP/src/libhmap.so 
+RS_LIBS += ${Q_ROOT}/lib/libhmap_vctr.so 
+RS_LIBS += ${Q_ROOT}/lib/libhmap_chnk.so 
+RS_LIBS += ${Q_ROOT}/lib/libhmap.so 
 
 $(LUAJIT_A): $(LJVMCORE_O)
 	$(E) "AR        $@"

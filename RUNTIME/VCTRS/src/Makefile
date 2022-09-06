@@ -57,45 +57,68 @@ TEST2_OBJS = $(TEST2_SRCS:.c=.o)
 
 #-------------------------------------------
 TMPL_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/src/
-TMPL_HMAP_SO  = ${TMPL_HMAP_LOC}/libhmap.so
+TMPL_HMAP_SO  = ${Q_ROOT}/lib/libhmap.so
 
 ${TMPL_HMAP_SO} : 
-	make -C ${TMPL_HMAP_LOC}
+	make -C ${TMPL_HMAP_LOC} ${TMPL_HMAP_SO}
 #-------------------------------------------
 VCTR_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/VCTR_HMAP
-VCTR_HMAP_SO  = ${VCTR_HMAP_LOC}/libhmap_vctr.so
+VCTR_HMAP_SO  = ${Q_ROOT}/lib/libhmap_vctr.so
 
 ${VCTR_HMAP_SO} : 
-	make -C ${VCTR_HMAP_LOC}
+	make -C ${VCTR_HMAP_LOC} ${VCTR_HMAP_SO}
 #-------------------------------------------
 CHNK_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/CHNK_HMAP
-CHNK_HMAP_SO  = ${CHNK_HMAP_LOC}/libhmap_chnk.so
+CHNK_HMAP_SO  = ${Q_ROOT}/lib/libhmap_chnk.so
 
 ${CHNK_HMAP_SO} : 
-	make -C ${CHNK_HMAP_LOC}
+	make -C ${CHNK_HMAP_LOC} ${CHNK_HMAP_SO}
 #-------------------------------------------
-core_libvctr.so :  ${OBJS} ${VCTR_HMAP_SO}
+core_libvctr.so :  ${OBJS} \
+	${TMPL_HMAP_SO} \
+	${VCTR_HMAP_SO} \
+	${CHNK_HMAP_SO} 
 	gcc ${OBJS} -shared -lm -o core_libvctr.so \
-	${VCTR_HMAP_SO} ${CHNK_HMAP_SO}
+	${VCTR_HMAP_SO} ${CHNK_HMAP_SO} 
+	cp core_libvctr.so ${Q_ROOT}/lib/
 #-------------------------------------------
-libvctr.so: core_libvctr.so \
-	cVector.o \
- 	../../CMEM/src/cmem.o \
-	../../CMEM/src/aux_lua_to_c.o
-	gcc cVector.o \
-	../../CMEM/src/cmem.o \
-	../../CMEM/src/aux_lua_to_c.o \
+EXT_SRCS := cVector.c
+EXT_SRCS += ../../CMEM/src/aux_lua_to_c.c
+EXT_SRCS += ../../../UTILS/src/qtypes.c
+
+EXT_OBJS = $(EXT_SRCS:.c=.o)
+
+libvctr.so: ${EXT_OBJS} core_libvctr.so cVector.o 
+	gcc ${EXT_OBJS} \
 	core_libvctr.so \
 	-shared -lm -o libvctr.so 
+	cp libvctr.so ${Q_ROOT}/lib/
+
+${Q_ROOT}/lib/libutils.so :
+	make -C ../../../UTILS/src/
 #-------------------------------------------
-ut1 : ${TEST1_OBJS}
+ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST1_OBJS} -o ut1 -lm \
-		core_libvctr.so ${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${TMPL_HMAP_SO} 
+	core_libvctr.so \
+	${VCTR_HMAP_SO} \
+	${CHNK_HMAP_SO} \
+	${TMPL_HMAP_SO} \
+	${Q_ROOT}/lib/libutils.so
 #-------------------------------------------
-ut2 : ${TEST2_OBJS}
+ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST2_OBJS} -o ut2 -lm \
-		core_libvctr.so ${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${TMPL_HMAP_SO} 
+	core_libvctr.so \
+	${VCTR_HMAP_SO} \
+	${CHNK_HMAP_SO} \
+	${TMPL_HMAP_SO} \
+	${Q_ROOT}/lib/libutils.so
+#-------------------------------------------
 
 
 clean:
 	rm -f *.o *.so ut1 ut2
+	rm -f  ${Q_ROOT}/lib/core_libvctr.so 
+	rm -f  ${Q_ROOT}/lib/libvctr.so 
+	rm -f ${TMPL_HMAP_SO}
+	rm -f ${VCTR_HMAP_SO}
+	rm -f ${CHNK_HMAP_SO}

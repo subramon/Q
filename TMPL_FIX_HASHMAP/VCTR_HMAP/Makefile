@@ -77,6 +77,13 @@ CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
 .c.o : 
 	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
 
+MYSO = libhmap_${TMPL}.so
+
+EXTSO = ${Q_ROOT}/lib/${MYSO} 
+
+${EXTSO} : ${MYSO}
+	cp ${MYSO} ${EXTSO}
+
 libhmap_${TMPL}.so: ${OBJS} ${CUSTOM_OBJS}   ./inc/*.h 
 	gcc  ${CFLAGS} ${DFLAGS} ${OBJS} ${CUSTOM_OBJS} \
 	${INCS} -shared -lm -o libhmap_${TMPL}.so  -ldl
@@ -87,5 +94,4 @@ test_${TMPL} : libhmap_${TMPL}.so ./test/test_${TMPL}.c
 
 # TODO Need to delete INCS2 as well.
 clean:
-	rm -f *.o ./src/*.o ${SRCS2}
-	rm -f libhmap_${TMPL}.so
+	rm -f *.o ./src/*.o ${SRCS2} *.so ${EXTSO}

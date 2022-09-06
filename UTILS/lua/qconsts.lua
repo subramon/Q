@@ -30,7 +30,6 @@ local qconsts = {}
   qconsts.width = width
   --===========================
 
-  -- CAUTION: cenum Needs to be in sync with OPERATORS/PRINT/src/cprint.c
   local qtypes = {}
   qtypes.I1 = {
     min = -128,
@@ -40,7 +39,6 @@ local qconsts = {}
     ctype = "int8_t",
     ispctype = "int8",
     max_length="6",
-    cenum = 1, -- used to pass qtype to C
   }
   qtypes.I2 = {
     min = -32768,
@@ -50,7 +48,6 @@ local qconsts = {}
     ctype = "int16_t",
     ispctype = "int16",
     max_length="8",
-    cenum = 2, -- used to pass qtype to C
   }
   qtypes.I4 = {
     min = -2147483648,
@@ -60,7 +57,6 @@ local qconsts = {}
     ctype = "int32_t",
     ispctype = "int32",
     max_length="13",
-    cenum = 3, -- used to pass qtype to C
   }
   qtypes.I8 = {
     min = -9223372036854775808,
@@ -70,7 +66,6 @@ local qconsts = {}
     ctype = "int64_t",
     ispctype = "int64",
     max_length="22" ,
-    cenum = 4, -- used to pass qtype to C
   }
   qtypes.F4 = {
     min = -3.4 * math.pow(10,38),
@@ -80,7 +75,6 @@ local qconsts = {}
     ctype = "float",
     ispctype = "float",
     max_length="33",
-    cenum = 5, -- used to pass qtype to C
   }
   qtypes.F8 = {
     min = -1.7 * math.pow(10,308),
@@ -90,12 +84,10 @@ local qconsts = {}
     ctype = "double",
     ispctype = "double",
     max_length="65" ,
-    cenum = 6, -- used to pass qtype to C
   }
   qtypes.SC = {
     -- I don't think we need this TODO P4 width = 8,
     ctype = "char",
-    cenum = 7, -- used to pass qtype to C
   }
   qtypes.TM = {
     -- no min
@@ -103,7 +95,6 @@ local qconsts = {}
     max_txt_width = 64,
     width = ffi.sizeof("TM"),
     ctype = "struct tm",
-    cenum = 8, -- used to pass qtype to C
   }
   qtypes.B1 = {
     min = 0,
@@ -111,7 +102,6 @@ local qconsts = {}
     max_txt_width = 8, -- TODO P4 allow true/false as input values
     width = 1, -- This has to be handled as a special case
     ctype = "uint64_t",
-    cenum = 9, -- used to pass qtype to C
   }
 
   qconsts.qtypes = qtypes

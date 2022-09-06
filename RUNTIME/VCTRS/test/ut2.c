@@ -65,7 +65,7 @@ main(
   if ( HC2.so_file != NULL ) { go_BYE(-1); } 
   //----------------------------------
   uint32_t vctr_chnk_size = 32; // for easy testing 
-  uint32_t uqid; status = vctr_add1(F4, vctr_chnk_size, &uqid); 
+  uint32_t uqid; status = vctr_add1(F4, 0, vctr_chnk_size, &uqid); 
   cBYE(status);
   uint32_t num_chunks = 4;
   float *X = NULL;
