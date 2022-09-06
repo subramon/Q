@@ -40,6 +40,7 @@ SRCS +=	vctr_num_elements.c
 SRCS +=	vctr_new_uqid.c  
 SRCS +=	vctr_put.c  
 SRCS +=	vctr_put_chunk.c  
+SRCS +=	vctr_width.c  
 
 SRCS +=	chnk_cnt.c  
 SRCS +=	chnk_is.c  

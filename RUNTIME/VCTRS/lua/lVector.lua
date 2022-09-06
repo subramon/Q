@@ -30,8 +30,12 @@ function lVector:check()
   return true
 end
 
+function lVector:width()
+  local width = cVector.width(self._base_vec)
+  return width
+end
+
 function lVector:num_elements()
-  local num_elements = ffi.new("uint32_t[?]", 1)
   local num_elements = cVector.num_elements(self._base_vec)
   return num_elements
 end
@@ -54,9 +58,9 @@ function lVector.new(args)
   vector.siblings = {} -- no conjoined vectors
   return vector
 end
-function lVector.put1(c)
+function lVector:put1(c, n)
   assert(type(c) == "CMEM")
-
+  assert(cVector.put1(self._base_vec, c, n))
 end
 
 return lVector

@@ -25,9 +25,11 @@ vctr_add1(
   *ptr_uqid = vctr_new_uqid();
   vctr_rs_hmap_key_t key = *ptr_uqid; 
   if ( width == 0 ) { 
-    width = get_width_c_qtype(qtype);
+    int w = get_width_c_qtype(qtype);
+    if ( w <= 0 ) { go_BYE(-1); }
+    width = w;
   }
-  if ( width <= 0 ) { go_BYE(-1); }
+  if ( width == 0 ) { go_BYE(-1); }
 
   uint32_t chnk_size = in_chnk_size;
   if  ( chnk_size == 0 ) { 
@@ -44,7 +46,6 @@ vctr_add1(
   bool is_found = true; uint32_t where_found = 123456789;
   status = vctr_is(*ptr_uqid, &is_found, &where_found); 
   cBYE(status);
-  printf("Looking for %u \n", *ptr_uqid);
   if ( !is_found ) { go_BYE(-1); }
 #endif
 BYE:

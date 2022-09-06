@@ -6,8 +6,12 @@ INCS=-I. \
 	-I/usr/include/lua5.1 \
 
 
-all: libcutils.so 
-	cp libcutils.so ${Q_ROOT}/lib/
+EXTSO = ${Q_ROOT}/lib/libcutils.so
+
+all: libcutils.so ${EXTSO}
+
+${EXTSO} : libcutils.so
+	cp libcutils.so ${EXTSO}
 
 SRCS := cutils.c 
 SRCS += ../../../UTILS/src/qtypes.c 
@@ -25,7 +29,7 @@ OBJS = $(SRCS:.c=.o)
 	$(CC) -c -o $@ $< ${QC_FLAGS} ${DFLAGS} $(INCS) 
 
 clean:
-	rm -f *.so *.o _* ${OBJS}
+	rm -f *.so *.o _* ${OBJS} ${EXTSO}
 		
 libcutils.so:   ${OBJS} 
 	gcc ${OBJS} -shared -o libcutils.so

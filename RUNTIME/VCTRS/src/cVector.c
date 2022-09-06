@@ -15,6 +15,7 @@
 #include "vctr_del.h"
 #include "vctr_name.h"
 #include "vctr_num_elements.h"
+#include "vctr_width.h"
 #include "vctr_is_eov.h"
 #include "vctr_put.h"
 #include "vctr_put_chunk.h"
@@ -88,6 +89,20 @@ BYE:
   return 2;
 }
 //----------------------------------------
+static int l_vctr_width( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint32_t width;
+  status = vctr_width(ptr_v->uqid, &width); cBYE(status);
+  lua_pushnumber(L, width);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_vctr_num_elements( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
@@ -132,10 +147,12 @@ BYE:
 static int l_vctr_put( lua_State *L) {
   int status = 0;
   // get args from Lua 
-  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); 
+  if ( num_args != 3 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
   char *data = ptr_cmem->data;
+  if ( data == NULL ) { go_BYE(-1); }
   int64_t n = luaL_checknumber(L, 3);
 
   status = vctr_put(ptr_v->uqid, data, n); cBYE(status);
@@ -222,6 +239,8 @@ static int l_vctr_add1( lua_State *L)
   }
   else { // must specify width for SC 
     if ( strcmp(str_qtype, "SC") == 0 ) { go_BYE(-1); }
+    itmp = get_width_c_qtype(qtype);
+    if ( itmp < 0 ) { go_BYE(-1); }
   }
   width = (uint32_t)itmp;
   if ( strcmp(str_qtype, "SC") == 0 ) { // need to keep 1 char for nullc
@@ -270,10 +289,11 @@ static const struct luaL_Reg vector_methods[] = {
     { "get_name", l_vctr_get_name },
     //--------------------------------
     { "num_elements", l_vctr_num_elements },
+    { "width", l_vctr_width },
     // creation, new, ...
     { "add1", l_vctr_add1 },
     //--------------------------------
-    { "put", l_vctr_put },
+    { "put1", l_vctr_put },
     { "put_chunk", l_vctr_put_chunk },
     //--------------------------------
     { NULL,          NULL               },
@@ -292,10 +312,11 @@ static const struct luaL_Reg vector_functions[] = {
     { "get_name", l_vctr_get_name },
     //--------------------------------
     { "num_elements", l_vctr_num_elements },
+    { "width", l_vctr_width },
     // creation, new, ...
     { "add1", l_vctr_add1 },
     //--------------------------------
-    { "put", l_vctr_put },
+    { "put1", l_vctr_put },
     { "put_chunk", l_vctr_put_chunk },
     //--------------------------------
 
