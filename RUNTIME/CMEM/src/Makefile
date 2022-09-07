@@ -39,7 +39,8 @@ SRCS +=	../../../UTILS/src/F8_to_txt.c
 OBJS = $(SRCS:.c=.o)
 
 .c.o : 
-	$(CC) -c -o $@ $< ${QC_FLAGS} ${DFLAGS} $(INCS) 
+	$(CC) -c -o $@ $< ${QC_FLAGS} ${DFLAGS} $(INCS) -DGLOBALS
+# GLOBALS needed for g_mem_used
 
 libcmem.so:   ${OBJS} 
 	$(CC) ${OBJS} -shared -o libcmem.so

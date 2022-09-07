@@ -35,6 +35,7 @@ vctr_put(
   if ( vctr_val.is_eov    ) { go_BYE(-1); } // vector can be appended to 
   qtype_t qtype = vctr_val.qtype;
   uint32_t width = vctr_val.width;
+  uint32_t chnk_size = width * vctr_val.max_num_in_chnk;
   uint32_t chnk_idx;
   // handle special case for empty vector 
   if ( vctr_val.num_elements == 0 ) { 
@@ -43,19 +44,18 @@ vctr_put(
     chnk_rs_hmap_key_t chnk_key = 
     { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
     char *l1_mem = NULL;
-    uint64_t sz = width * vctr_val.chnk_size;
-    status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, sz);
+    status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, chnk_size);
     cBYE(status);
-    __atomic_add_fetch(&g_mem_used, sz, 0);
+    __atomic_add_fetch(&g_mem_used, chnk_size, 0);
     chnk_rs_hmap_val_t chnk_val = { .qtype = qtype, .l1_mem = l1_mem };
     l1_mem = NULL;
     //-------------------------------
     status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
     cBYE(status);
-    g_vctr_hmap.bkts[vctr_where].val.num_chunks++;
+    g_vctr_hmap.bkts[vctr_where].val.num_chnks++;
   }
   else {
-    chnk_idx = vctr_val.num_chunks - 1; 
+    chnk_idx = vctr_val.num_chnks - 1; 
   }
   // find chunk in chunk hmap 
   status = chnk_is(vctr_uqid, chnk_idx, &is_found, &chnk_where); 
@@ -63,20 +63,20 @@ vctr_put(
   // if insufficient space in this chunk, create one more 
   chnk_rs_hmap_val_t chnk_val = g_chnk_hmap.bkts[chnk_where].val;
   if ( chnk_val.l1_mem == NULL ) { go_BYE(-1); }
-  if ( chnk_val.num_elements == vctr_val.chnk_size ) { 
-    chnk_idx = vctr_val.num_chunks;
+  if ( chnk_val.num_elements == vctr_val.max_num_in_chnk ) { 
+    chnk_idx = vctr_val.num_chnks;
     //--------------------------
     chnk_rs_hmap_key_t chnk_key = 
     { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
     memset(&chnk_val, 0, sizeof(chnk_rs_hmap_val_t));
     chnk_val.qtype = qtype;
-    uint64_t sz = width * vctr_val.chnk_size;
-    status = posix_memalign((void **)&chnk_val.l1_mem, Q_VCTR_ALIGNMENT,sz);
+    status = posix_memalign((void **)&chnk_val.l1_mem, Q_VCTR_ALIGNMENT,
+        chnk_size);
     cBYE(status);
-    __atomic_add_fetch(&g_mem_used, sz, 0);
+    __atomic_add_fetch(&g_mem_used, chnk_size, 0);
     status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
     cBYE(status);
-    g_vctr_hmap.bkts[vctr_where].val.num_chunks++;
+    g_vctr_hmap.bkts[vctr_where].val.num_chnks++;
     //--------------------------
     status = chnk_is(vctr_uqid, chnk_idx, &is_found, &chnk_where); 
     cBYE(status);
@@ -86,7 +86,8 @@ vctr_put(
   // However, you may have more to write than chunk can hold 
   // find out how much you can copy
   uint32_t n_to_copy = n;
-  uint32_t space_in_chunk = vctr_val.chnk_size - chnk_val.num_elements;
+  uint32_t space_in_chunk = 
+    vctr_val.max_num_in_chnk - chnk_val.num_elements;
   if ( n > space_in_chunk ) { 
     n_to_copy = space_in_chunk;
   }
@@ -97,7 +98,7 @@ vctr_put(
   // if you still have stuff to copy, then tail recursive call
   // to deal with leftover
   if ( n > space_in_chunk ) {
-    status = vctr_put(vctr_uqid, X + (n_to_copy) * width, n - n_to_copy);
+    status = vctr_put(vctr_uqid, X + (n_to_copy * width), n - n_to_copy);
     cBYE(status);
   }
 BYE:

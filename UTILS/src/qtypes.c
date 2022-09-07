@@ -129,7 +129,7 @@ get_str_qtype(
 }
 
 const char *
-str_qtype_to_ctype(
+str_qtype_to_str_ctype(
     const char * const str_qtype
     )
 {

@@ -2,12 +2,12 @@
 #include "qtypes.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
+#include "vctr_is.h"
+#include "chnk_del.h"
 #include "vctr_del.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
-
-extern uint64_t g_mem_used;
 
 int
 vctr_del(
@@ -16,35 +16,33 @@ vctr_del(
     )
 {
   int status = 0;
+  uint32_t where_found;
+
   printf("Freeing %u \n", uqid);
-  vctr_rs_hmap_key_t key = uqid; 
-  vctr_rs_hmap_val_t val;
-  status = g_vctr_hmap.del(&g_vctr_hmap, &key, &val, ptr_is_found); 
-  cBYE(status);
+
+  status = vctr_is(uqid, ptr_is_found, &where_found); cBYE(status);
   if ( !*ptr_is_found ) { goto BYE; }
+  vctr_rs_hmap_val_t val = g_vctr_hmap.bkts[where_found].val;
   //-------------------------------------------
+  // Delete chunks in vector before deleting vector 
   if ( val.num_elements > 0 ) { 
     bool is_found;
-    if ( val.num_chunks == 0 ) { go_BYE(-1); }
-    for ( uint32_t i = 0; i < val.num_chunks; i++ ) { 
-      if ( g_chnk_hmap.nitems == 0 ) { go_BYE(-1); }
-      chnk_rs_hmap_key_t chnk_key = { .vctr_uqid = uqid, .chnk_idx = i };
-      chnk_rs_hmap_val_t chnk_val;
-      status = g_chnk_hmap.del(&g_chnk_hmap, &chnk_key, &chnk_val, 
-          &is_found); 
+    if ( val.num_chnks == 0 ) { go_BYE(-1); }
+    for ( uint32_t chnk_idx = 0; chnk_idx < val.num_chnks; chnk_idx++ ) { 
+      uint32_t old_nitems = g_chnk_hmap.nitems;
+      if ( old_nitems == 0 ) { go_BYE(-1); }
+      status = chnk_del(uqid, chnk_idx, &is_found); 
       cBYE(status);
-      if ( chnk_val.l1_mem != NULL ) { 
-        free_if_non_null(chnk_val.l1_mem);
-        uint64_t sz = val.chnk_size * val.width;
-        if ( sz == 0 ) { go_BYE(-1); } 
-        if ( sz > g_mem_used ) { go_BYE(-1); } 
-        __atomic_sub_fetch(&g_mem_used, sz, 0);
-      }
-      if ( chnk_val.l2_mem[0] != '\0' ) { unlink(chnk_val.l2_mem); }
-      if ( chnk_val.l3_mem[0] != '\0' ) { unlink(chnk_val.l3_mem); }
       if ( !is_found ) { go_BYE(-1); }
+      uint32_t new_nitems = g_chnk_hmap.nitems;
+      if ( new_nitems != (old_nitems-1) ) { go_BYE(-1); }
     }
   }
+  bool is_found;
+  vctr_rs_hmap_key_t key = uqid; 
+  status = g_vctr_hmap.del(&g_vctr_hmap, &key, &val, &is_found); 
+  cBYE(status);
+  if ( !is_found ) { go_BYE(-1); }
 BYE:
   return status;
 }

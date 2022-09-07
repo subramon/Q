@@ -9,7 +9,7 @@ extern vctr_rs_hmap_t g_vctr_hmap;
 int
 vctr_num_chunks(
     uint32_t vctr_uqid,
-    uint32_t *ptr_num_chunks
+    uint32_t *ptr_num_chnks
     )
 {
   int status = 0;
@@ -19,7 +19,7 @@ vctr_num_chunks(
   status = g_vctr_hmap.get(&g_vctr_hmap, &key, &val, &is_found, 
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
-  *ptr_num_chunks = val.num_chunks;
+  *ptr_num_chnks = val.num_chnks;
 BYE:
   return status;
 }

@@ -74,7 +74,7 @@ get_str_qtype(
     qtype_t qtype
     );
 extern const char *
-str_qtype_to_ctype(
+str_qtype_to_str_ctype(
     const char * const str_qtype
     );
 #endif // __QTYPES_H

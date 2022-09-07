@@ -45,7 +45,9 @@ qcfg.ld_library_path = os.getenv("LD_LIBRARY_PATH")
 --=================================
 qcfg.num_in_chunk = 32 -- this is default value
 qcfg.debug = true -- set to TRUE only if you want debugging
--- TODO THINK qcfg.is_memo = true -- Vector code uses this default value
+qcfg.memo_len = -1 --  Vector code uses this default value
+-- -1 means infinite memo, 0 means no memoization 
+-- 1 means 1 previous chunk kept, 2 means 2 previous chunks and so on
 -- TODO THINK qcfg.has_nulls = false -- Vector code uses this default value
 
 -- Following function used to modify qcfg at run time 

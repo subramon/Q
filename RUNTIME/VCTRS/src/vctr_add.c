@@ -14,7 +14,7 @@ int
 vctr_add1(
     qtype_t qtype,
     uint32_t width,
-    uint32_t in_chnk_size,
+    uint32_t in_max_num_in_chnk,
     uint32_t *ptr_uqid
     )
 {
@@ -31,13 +31,13 @@ vctr_add1(
   }
   if ( width == 0 ) { go_BYE(-1); }
 
-  uint32_t chnk_size = in_chnk_size;
-  if  ( chnk_size == 0 ) { 
-    chnk_size = Q_VCTR_CHNK_SIZE;
+  uint32_t max_num_in_chnk = in_max_num_in_chnk;
+  if  ( max_num_in_chnk == 0 ) { 
+    max_num_in_chnk = Q_VCTR_MAX_NUM_IN_CHNK;
   }
   vctr_rs_hmap_val_t val = 
-    { .qtype = qtype, .chnk_size = chnk_size, 
-      .width = width, .num_chunks = 0  } ;
+    { .qtype = qtype, .max_num_in_chnk = max_num_in_chnk, 
+      .width = width, .num_chnks = 0  } ;
   status = g_vctr_hmap.put(&g_vctr_hmap, &key, &val); cBYE(status);
 #ifdef DEBUG
   new_vctr_cnt = vctr_cnt();

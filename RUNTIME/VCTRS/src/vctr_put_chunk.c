@@ -25,7 +25,7 @@ int
 vctr_put_chunk(
     uint32_t vctr_uqid,
     CMEM_REC_TYPE *ptr_cmem,
-    uint32_t n // number of elements 1 <= n <= vctr.chnk_size
+    uint32_t n // number of elements 1 <= n <= vctr.max_num_in_chnk
     )
 {
   int status = 0;
@@ -43,17 +43,19 @@ vctr_put_chunk(
   if ( !is_found ) { go_BYE(-1); } // vector exists 
   if ( vctr_val.is_trash  ) { go_BYE(-1); }
   if ( vctr_val.is_eov    ) { go_BYE(-1); } // vector can be appended to 
+  // cannot put more than can fit in chunk
+  if ( n > vctr_val.max_num_in_chnk ) { go_BYE(-1); } 
+
   qtype_t qtype = vctr_val.qtype;
+  uint32_t chnk_size = vctr_val.width * vctr_val.max_num_in_chnk;
   uint32_t chnk_idx;
   // number of elements in vector must be multiple of chunk size 
-  if ( ( ( vctr_val.num_elements / vctr_val.chnk_size ) * 
-      vctr_val.chnk_size ) != vctr_val.num_elements ) {
+  if ( ( ( vctr_val.num_elements / vctr_val.max_num_in_chnk ) * 
+      vctr_val.max_num_in_chnk ) != vctr_val.num_elements ) {
     go_BYE(-1);
   }
-  // n cannot be bigger than chunk size 
-  if ( n > vctr_val.chnk_size ) { go_BYE(-1); } 
   // vector is implicitly at an end if insufficient elements sent
-  if ( n < vctr_val.chnk_size ) { 
+  if ( n < vctr_val.max_num_in_chnk ) { 
     g_vctr_hmap.bkts[vctr_where].val.is_eov = true; 
   }
   // handle special case for empty vector 
@@ -61,21 +63,22 @@ vctr_put_chunk(
     chnk_idx = 0;
   }
   else {
-    chnk_idx = vctr_val.num_chunks;
+    chnk_idx = vctr_val.num_chnks;
   }
   //-------------------------------
   char *l1_mem = NULL;
-  if ( ( ptr_cmem->is_stealable ) && ( !ptr_cmem->is_foreign ) ) { 
+  if ( ptr_cmem->is_stealable ) { 
+    if ( ptr_cmem->is_foreign ) { go_BYE(-1); }
     l1_mem = ptr_cmem->data;
     ptr_cmem->data = NULL;
     ptr_cmem->size = 0;
     ptr_cmem->is_foreign   = true;
+    ptr_cmem->is_stealable = false;
   }
   else {
-    uint64_t sz = vctr_val.chnk_size * vctr_val.width;
-    status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, sz); 
+    status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, chnk_size); 
     cBYE(status);
-    __atomic_add_fetch(&g_mem_used, sz, 0);
+    __atomic_add_fetch(&g_mem_used, chnk_size, 0);
     memcpy(l1_mem, ptr_cmem->data, n * vctr_val.width);
   }
   chnk_rs_hmap_key_t chnk_key = 
@@ -87,7 +90,7 @@ vctr_put_chunk(
   cBYE(status);
   // update meta data in vector
   g_vctr_hmap.bkts[vctr_where].val.num_elements += n;
-  g_vctr_hmap.bkts[vctr_where].val.num_chunks++; 
+  g_vctr_hmap.bkts[vctr_where].val.num_chnks++; 
 BYE:
   return status;
 }

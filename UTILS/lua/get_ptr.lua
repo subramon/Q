@@ -23,7 +23,7 @@ local function get_ptr(
   -- Made qtype optional
   if qtype then
     assert(type(qtype) == "string")
-    local ctype = cutils.str_qtype_to_ctype(qtype)
+    local ctype = cutils.str_qtype_to_str_ctype(qtype)
     if ( ctype == ffi.NULL ) then 
       local cast_as = qtype
       assert(ends_with(trim(qtype), "*"))

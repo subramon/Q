@@ -114,6 +114,7 @@ main(
   if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
   //----------------------------------
 
+  if ( g_mem_used != 0 ) { go_BYE(-1); }
   fprintf(stderr, "Successfully completed %s \n", argv[0]);
 BYE:
   g_vctr_hmap.destroy(&g_vctr_hmap);

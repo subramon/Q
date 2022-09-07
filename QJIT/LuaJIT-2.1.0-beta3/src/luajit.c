@@ -646,12 +646,13 @@ int main(int argc, char **argv)
   int status;
   // START: RAMESH 
   // Initialize global variables
+#undef USE_WEB_SERVER
   bool mutex_created = false;
   g_halt = 0;
   g_webserver_interested = 0; 
   g_L_status = 0;
 
-  g_mem_allowed = 4 * 1024 * 1048576 ; // in Bytes
+  g_mem_allowed = 4 * 1024 * (uint64_t)1048576 ; // in Bytes
   g_mem_used    = 0;
   memset(&g_vctr_hmap, 0, sizeof(vctr_rs_hmap_t));
   g_vctr_uqid = 0; 
@@ -660,6 +661,7 @@ int main(int argc, char **argv)
   g_chnk_uqid = 0; 
   //-----------------------
   // For webserver
+#ifdef WEB_SERVER
   pthread_t l_webserver;
   web_info_t web_info; 
 
@@ -677,6 +679,7 @@ int main(int argc, char **argv)
   status = pthread_create(&l_out_of_band, NULL, &webserver, 
       &out_of_band_info);
   cBYE(status);
+#endif
   // For memory manager
   pthread_cond_init(&g_mem_cond, NULL);
   pthread_mutex_init(&g_mem_mutex, NULL);
@@ -744,8 +747,10 @@ int main(int argc, char **argv)
   int itmp = 1; __atomic_store(&g_halt, &itmp, 0);
   pthread_cond_signal(&g_mem_cond);
   printf("Wrapping up\n"); // RAMESH
+#ifdef WEB_SERVER
   pthread_join(l_webserver, NULL); 
   pthread_join(l_out_of_band, NULL); 
+#endif
   pthread_join(l_mem_mgr, NULL); 
   // STOP : RAMESH
 BYE:

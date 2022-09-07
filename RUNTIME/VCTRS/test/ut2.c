@@ -17,10 +17,13 @@
 #include "vctr_del.h" 
 #include "vctr_cnt.h" 
 #include "vctr_put_chunk.h" 
+#include "vctr_get_chunk.h" 
 #include "vctr_num_elements.h"
 #include "vctr_num_chunks.h"
+#include "vctr_width.h"
 #include "vctr_is_eov.h"
 
+#include "aux_cmem.h" 
 #include "chnk_cnt.h" 
 
 vctr_rs_hmap_t g_vctr_hmap;
@@ -69,22 +72,24 @@ main(
   cBYE(status);
   if ( HC2.so_file != NULL ) { go_BYE(-1); } 
   //----------------------------------
-  uint32_t vctr_chnk_size = 32; // for easy testing 
-  uint32_t uqid; status = vctr_add1(F4, 0, vctr_chnk_size, &uqid); 
+  uint32_t max_num_in_chunk = 32; // for easy testing 
+  qtype_t qtype = F4;
+  uint32_t uqid; status = vctr_add1(qtype, 0, max_num_in_chunk, &uqid); 
   cBYE(status);
   uint32_t num_chunks = 4;
-  float *X = NULL;
   CMEM_REC_TYPE cmem; 
-  uint64_t sz = vctr_chnk_size * sizeof(float);
+  uint32_t width;
+  status = vctr_width(uqid, &width); cBYE(status);
+  if ( width != sizeof(float) ) { go_BYE(-1); }
+  uint32_t vctr_chnk_size = max_num_in_chunk * width;
   for ( uint32_t i = 0; i < num_chunks; i++ ) {
     // Initialize CMEM
     memset(&cmem, 0, sizeof(CMEM_REC_TYPE));
-    X = malloc(sz);
-    __atomic_add_fetch(&g_mem_used, sz, 0);
-    for ( uint32_t j = 0; j < vctr_chnk_size; j++ ) { 
-      X[j] = i*100 + j;
+    status = cmem_malloc(&cmem, vctr_chnk_size, qtype, NULL); 
+    cBYE(status);
+    for ( uint32_t j = 0; j < max_num_in_chunk; j++ ) { 
+      ((float *)cmem.data)[j] = i*100 + j;
     }
-    cmem.data = X; cmem.size = sz; X = NULL;
     if ( ( i % 2 ) == 0 ) {
       cmem.is_stealable = true;
     }
@@ -92,55 +97,62 @@ main(
       cmem.is_stealable = false;
     }
     //-------------------------
-    status = vctr_put_chunk(uqid, &cmem, vctr_chnk_size);
+    status = vctr_put_chunk(uqid, &cmem, max_num_in_chunk);
     cBYE(status);
-    if ( X != NULL ) { go_BYE(-1); }
+    status = cmem_free(&cmem); cBYE(status); // no more need for cmem
+
+    // some basic tests on vector 
     uint64_t num_elements; uint32_t l_num_chunks;
     status = vctr_num_elements(uqid, &num_elements); cBYE(status);
     status = vctr_num_chunks(uqid, &l_num_chunks); cBYE(status);
     if ( l_num_chunks != (i+1) ) { go_BYE(-1); }
-    if ( num_elements != (i+1)*vctr_chnk_size ) { go_BYE(-1); }
-    if ( !cmem.is_foreign ) { // memory was NOT stolen by vector
-      __atomic_sub_fetch(&g_mem_used, sz, 0);
-    }
+    if ( num_elements != (i+1)*max_num_in_chunk ) { go_BYE(-1); }
 
-    status = cmem_free(&cmem); cBYE(status);
+    // some tests on the chunk just created
+    CMEM_REC_TYPE chk_cmem; uint32_t chk_n;
+    status = vctr_get_chunk(uqid, i, &chk_cmem, &chk_n);
+    if ( chk_cmem.qtype != qtype ) { go_BYE(-1); }
+    if ( chk_cmem.size  != vctr_chnk_size ) { go_BYE(-1); }
+    for ( uint32_t j = 0; j < max_num_in_chunk; j++ ) { 
+      if ( ((float *)chk_cmem.data)[j] != (i*100 + j) ) { go_BYE(-1); } 
+    }
+    cmem_free(&chk_cmem);
   }
   // vector should NOT be eov 
   status = vctr_is_eov(uqid, &b); cBYE(status);
   if ( b ) { go_BYE(-1); }
   // now for last chunk (smaller than a full chunk)
-  sz = vctr_chnk_size * sizeof(float);
-  X = malloc(sz);
-  __atomic_add_fetch(&g_mem_used, sz, 0);
-  for ( uint32_t j = 0; j < vctr_chnk_size; j++ ) { 
-    X[j] = (num_chunks)*100 + j;
+  memset(&cmem, 0, sizeof(CMEM_REC_TYPE));
+  status = cmem_malloc(&cmem, vctr_chnk_size, qtype, NULL); cBYE(status);
+  for ( uint32_t j = 0; j < max_num_in_chunk; j++ ) { 
+    ((float *)cmem.data)[j] = (num_chunks)*100 + j;
   }
-  cmem.data = X; cmem.size = sz; X = NULL;
   cmem.is_stealable = true;
-  //----------------
-  status = vctr_put_chunk(uqid, &cmem, vctr_chnk_size-1);
+  //--------------------------------------------------
+  status = vctr_put_chunk(uqid, &cmem, max_num_in_chunk-1);
   cBYE(status);
-  if ( !cmem.is_foreign ) { // memory was NOT stolen by vector
-    __atomic_sub_fetch(&g_mem_used, sz, 0);
-  }
+  // if cmem was stealable, should not be any longer 
+  if ( !cmem.is_foreign ) { go_BYE(-1); }
+  if ( cmem.is_stealable ) { go_BYE(-1); }
   status = cmem_free(&cmem); cBYE(status);
+  //--------------------------------------------------
+  // basic checks on Vector
   uint64_t num_elements; uint32_t l_num_chunks;
   status = vctr_num_elements(uqid, &num_elements); cBYE(status);
   status = vctr_num_chunks(uqid, &l_num_chunks); cBYE(status);
   if ( l_num_chunks != (num_chunks+1) ) { go_BYE(-1); }
-  if ( num_elements != (((num_chunks+1)*vctr_chnk_size)-1) ) { go_BYE(-1); }
+  if ( num_elements != (((num_chunks+1)*max_num_in_chunk)-1) ) { go_BYE(-1); }
   // vector should be eov 
   status = vctr_is_eov(uqid, &b); cBYE(status);
   if ( !b ) { go_BYE(-1); }
   //-- cannot put stuff after vector is eov 
-  sz = vctr_chnk_size * sizeof(float);
-  X = malloc(sz);
-  cmem.data = X; cmem.size = sz; X = NULL;
+  memset(&cmem, 0, sizeof(CMEM_REC_TYPE));
   fprintf(stdout, ">>> Deliberate error\n");
   status = vctr_put_chunk(uqid, &cmem, 1);
   fprintf(stdout, "<<< Deliberate error\n");
   if ( status == 0 ) { go_BYE(-1); }
+  if ( cmem.is_foreign ) { go_BYE(-1); }
+  if ( cmem.is_stealable ) { go_BYE(-1); }
   status = cmem_free(&cmem); cBYE(status);
   //-- delete -----------------
   status = vctr_del(uqid, &b); cBYE(status);

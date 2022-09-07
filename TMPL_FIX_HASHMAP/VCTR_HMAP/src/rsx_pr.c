@@ -19,7 +19,8 @@ rsx_pr_val(
 {
   vctr_rs_hmap_val_t *ptr_val = (vctr_rs_hmap_val_t *)in_val;
   fprintf(fp, "nE = %" PRIu64 "\n", ptr_val->num_elements);
-  fprintf(fp, "nC = %" PRIu32 "\n", ptr_val->num_chunks);
+  fprintf(fp, "nC = %" PRIu32 "\n", ptr_val->num_chnks);
+  fprintf(fp, "nS = %" PRIu32 "\n", ptr_val->max_num_in_chnk);
   fprintf(fp, "is_eov = %s \n", ptr_val->is_eov ? "true" : "false" );
   fprintf(fp, "is_trash = %s \n", ptr_val->is_trash ? "true" : "false" );
 }

@@ -11,7 +11,6 @@
 #include "cmem_struct.h"
 #include "aux_cmem.h"
 #include "aux_lua_to_c.h"
-#include "cmem.h"
 #include "qtypes.h"
 
 #include "I1_to_txt.h" 
@@ -477,8 +476,11 @@ l_cmem_stealable(
   int num_args = lua_gettop(L);
   if ( ( num_args < 1 ) || ( num_args > 2 ) )  { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
-  bool stealable = false;
+  // you must own it to make it stealable 
+  if ( ptr_cmem->is_foreign ) { go_BYE(-1); }
+  bool stealable = true; // default behavior
   if ( num_args == 2 ) { 
+    if ( !lua_isboolean(L, 1) ) { go_BYE(-1); }
     stealable = lua_toboolean(L, 2);
   }
   ptr_cmem->is_stealable = stealable;

@@ -1,3 +1,5 @@
+#ifndef __AUX_CMEM_H
+#define __AUX_CMEM_H
 extern int 
 cmem_free( 
     CMEM_REC_TYPE *ptr_cmem
@@ -17,3 +19,4 @@ cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
     qtype_t qtype,
     const char *const cell_name
     );
+#endif // __AUX_CMEM_H

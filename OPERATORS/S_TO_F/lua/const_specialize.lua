@@ -1,5 +1,6 @@
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
+local cutils    = require 'libcutils'
 local Scalar    = require 'libsclr'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
@@ -28,14 +29,14 @@ local function const_specialize(
   subs.fn = "const_" .. qtype
   subs.len = len
   subs.out_qtype = qtype
-  subs.out_ctype = cutils.get_c_qtype(qtype)
+  subs.out_ctype = cutils.str_qtype_to_str_ctype(qtype)
   subs.buf_size = num_in_chunk * cutils.get_width_qtype(qtype)
   subs.cast_buf_as = subs.out_ctype .. " * "
 
   -- set up args for C code
   local val  = largs.val
   assert(type(val) ~= nil)
-  local sclr_val = Scalar(val, qtype)
+  local sclr_val = Scalar.new(val, qtype)
 
   -- allocate cargs 
   subs.cargs_ctype = "CONST_" .. qtype .. "_REC_TYPE";
@@ -47,7 +48,8 @@ local function const_specialize(
   -- initialize cargs from scalar sclr_val
   local cargs = assert(get_ptr(subs.cargs, subs.cast_cargs_as))
   local sclr_val = ffi.cast("SCLR_REC_TYPE *", sclr_val)
-  cargs[0]["val"] = sclr_val[0].val.[string.lower(qtype)]
+  -- cargs[0]["val"] = sclr_val[0].val.[string.lower(qtype)]
+  cargs[0]["val"] = sclr_val[0].val.i4 -- TODO P0 
 
   subs.tmpl   = "OPERATORS/S_TO_F/lua/const.tmpl"
   subs.incdir = "OPERATORS/S_TO_F/gen_inc/"

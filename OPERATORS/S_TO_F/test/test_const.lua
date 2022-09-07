@@ -1,7 +1,8 @@
 -- FUNCTIONAL 
 local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
-local Scalar  = require 'libsclr'
+local qcfg       = require 'Q/UTILS/lua/qcfg'
+local Scalar     = require 'libsclr'
 local chunk_size = 1024 -- just for testing 
 
 local tests = {}
@@ -15,8 +16,16 @@ tests.t1 = function()
     qtype = qtype, 
     len = len 
   }
-  local c1 = Q.const(args):memo(true)
+  print("Calling const")
+  local c1 = Q.const(args)
+
+  assert(c1:memo_len() == qcfg.memo_len)
+
+  local memo_len = 2
+  c1:memo(memo_len)
+  assert(c1:memo_len() == memo_len)
   c1:eval()
+  --[[
   for i = 1, len do
     assert(c1:get1(i-1):to_num() == val)
   end
@@ -25,6 +34,7 @@ tests.t1 = function()
   -- TODO: What is the error we are trying to create?
   local status = pcall(c1.get1, len) -- deliberate error
   assert(not status)
+  --]]
   print("Test t1 succeeded")
 end
 tests.t2 = function() 
@@ -64,10 +74,9 @@ tests.t3 = function() -- this is a stress test
   assert(c1:eval())
   print("Test t3 succeeded")
 end
---[[
 tests.t1()
-tests.t3()
-tests.t2()
-os.exit()
---]]
+-- tests.t3()
+-- tests.t2()
+--[[
 return tests
+--]]

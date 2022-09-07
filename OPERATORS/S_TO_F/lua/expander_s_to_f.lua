@@ -1,5 +1,5 @@
 local qc      = require 'Q/UTILS/lua/qcore'
-local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
@@ -22,20 +22,19 @@ return function (a, largs)
   qc.q_add(subs)
 
   local l_chunk_num = 0
-  local buf = assert(cmem.new(0)) -- note we don't really allocate data
+  local buf 
   
   local generator = function(chunk_num)
     -- Adding assert on l_chunk_num to have sync between 
     -- expected chunk_num and generator's l_chunk_num state
+    assert(chunk_num == l_chunk_num)
     --=== START: buffer allocation
-    if ( not buf:is_data() ) then 
-      buf = assert(
-        cmem.new({size = subs.buf_size, qtype = subs.out_qtype}))
+    if ( not buf ) then 
+      buf = cmem.new({size = subs.buf_size, qtype = subs.out_qtype})
       buf:stealable(true)
     end
     --=== STOP : buffer allocation
     --=============================
-    assert(chunk_num == l_chunk_num)
     local lb = num_in_chunk * l_chunk_num
     if ( lb >= subs.len) then 
       cargs:delete()

@@ -142,12 +142,12 @@ static int l_cutils_isfile(
   return 1;
 }
 //----------------------------------------
-static int l_cutils_str_qtype_to_ctype( 
+static int l_cutils_str_qtype_to_str_ctype( 
     lua_State *L
     )
 {
   const char *const str_qtype = luaL_checkstring(L, 1);
-  const char * const x = str_qtype_to_ctype(str_qtype);
+  const char * const x = str_qtype_to_str_ctype(str_qtype);
   if ( x == NULL ) { 
     lua_pushnil(L);
   }
@@ -157,7 +157,7 @@ static int l_cutils_str_qtype_to_ctype(
   return 1;
 }
 //----------------------------------------
-static int l_cutils_get_width( 
+static int l_cutils_get_width_qtype( 
     lua_State *L
     )
 {
@@ -489,6 +489,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "getfiles",    l_cutils_getfiles },
     { "getsize",     l_cutils_getsize },
     { "gettime",     l_cutils_gettime },
+    { "get_width_qtype",   l_cutils_get_width_qtype },
     { "delete",      l_cutils_delete },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
@@ -496,7 +497,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
-    { "str_qtype_to_ctype", l_cutils_str_qtype_to_ctype },
+    { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };
@@ -511,14 +512,14 @@ static const struct luaL_Reg cutils_functions[] = {
     { "getfiles",    l_cutils_getfiles },
     { "getsize",     l_cutils_getsize },
     { "gettime",     l_cutils_gettime },
-    { "get_width",   l_cutils_get_width },
+    { "get_width_qtype",   l_cutils_get_width_qtype },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
-    { "str_qtype_to_ctype", l_cutils_str_qtype_to_ctype },
+    { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };

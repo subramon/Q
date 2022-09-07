@@ -13,6 +13,7 @@ vctr_chk(
     )
 {
   int status = 0;
+  if ( uqid == 0 ) { go_BYE(-1); }
 BYE:
   return status;
 }

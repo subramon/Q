@@ -27,9 +27,9 @@ rsx_bkt_chk(
         go_BYE(-1);
       }
       if ( val.num_elements == 0 ) { 
-        if ( val.num_chunks != 0 ) { go_BYE(-1); }
+        if ( val.num_chnks != 0 ) { go_BYE(-1); }
       }
-      if ( val.num_chunks == 0 ) { 
+      if ( val.num_chnks == 0 ) { 
         if ( val.num_elements != 0 ) { go_BYE(-1); }
       }
     }

@@ -44,9 +44,11 @@ SRCS +=	vctr_num_elements.c
 SRCS +=	vctr_new_uqid.c  
 SRCS +=	vctr_put.c  
 SRCS +=	vctr_put_chunk.c  
+SRCS +=	vctr_get_chunk.c  
 SRCS +=	vctr_width.c  
 
 SRCS +=	chnk_cnt.c  
+SRCS +=	chnk_del.c  
 SRCS +=	chnk_is.c  
 
 OBJS = $(SRCS:.c=.o)
@@ -119,7 +121,8 @@ ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
 	${TMPL_HMAP_SO} \
-	${Q_ROOT}/lib/libutils.so
+	${Q_ROOT}/lib/libutils.so \
+	-lm 
 #-------------------------------------------
 
 

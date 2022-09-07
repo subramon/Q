@@ -2,6 +2,9 @@
 #include "cmem_consts.h"
 #include "cmem_struct.h"
 #include "aux_cmem.h"
+#ifdef GLOBALS
+extern uint64_t g_mem_used;
+#endif
 int 
 cmem_free( 
     CMEM_REC_TYPE *ptr_cmem
@@ -26,6 +29,10 @@ cmem_free(
         go_BYE(-1);
       }
       free_if_non_null(ptr_cmem->data);
+#ifdef GLOBALS
+      if (  ptr_cmem->size > g_mem_used ) { go_BYE(-1); }
+      __atomic_sub_fetch(&g_mem_used, ptr_cmem->size, 0);
+#endif
       ptr_cmem->size = 0;
     }
   }
@@ -72,8 +79,10 @@ cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
     size = (size_t)ceil((double)size / CMEM_ALIGNMENT) * CMEM_ALIGNMENT;
     status = posix_memalign(&data, CMEM_ALIGNMENT, size);
     cBYE(status);
-    // TODO P4: make sure that posix_memalign is not causing any problems
     return_if_malloc_failed(data);
+#ifdef GLOBALS
+    __atomic_add_fetch(&g_mem_used, size, 0);
+#endif
   }
   ptr_cmem->data = data;
   ptr_cmem->size = size;
