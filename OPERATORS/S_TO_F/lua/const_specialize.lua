@@ -1,53 +1,53 @@
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
 local Scalar    = require 'libsclr'
-local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
-local qconsts   = require 'Q/UTILS/lua/qconsts'
 local qc        = require 'Q/UTILS/lua/qcore'
-local qmem      = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local qcfg    =  require 'Q/UTILS/lua/qcfg'
+local num_in_chunk =  qcfg.num_in_chunk
 
 -- cdef the necessary struct within pcall to prevent error on second call
 local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
 qc.q_cdef("OPERATORS/S_TO_F/inc/const_struct.h", incs)
 qc.q_cdef("RUNTIME/SCLR/inc/sclr_struct.h", incs)
 
-return function (
+local function const_specialize(
   largs
   )
 
   assert(type(largs) == "table")
+
   local qtype = assert(largs.qtype)
-  local len   = assert(largs.len)
   assert(is_in(qtype, { "B1", "I1", "I2", "I4", "I8", "F4", "F8"}))
+
+  local len   = assert(largs.len)
   assert(len > 0, "vector length must be positive")
   --=======================
   local subs = {};
   subs.fn = "const_" .. qtype
   subs.len = len
   subs.out_qtype = qtype
-  subs.out_ctype = qconsts.qtypes[qtype].ctype
-  subs.out_buf_size = chunk_size * qconsts.qtypes[qtype].width
-  subs.cst_out_as = subs.out_ctype .. " * "
+  subs.out_ctype = cutils.get_c_qtype(qtype)
+  subs.buf_size = num_in_chunk * cutils.get_width_qtype(qtype)
+  subs.cast_buf_as = subs.out_ctype .. " * "
 
   -- set up args for C code
   local val  = largs.val
   assert(type(val) ~= nil)
-  local sval = assert(to_scalar(val, qtype))
+  local sclr_val = Scalar(val, qtype)
 
   -- allocate cargs 
   subs.cargs_ctype = "CONST_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(subs.cargs_ctype)
   subs.cargs = cmem.new(sz)
   subs.cargs:zero()
-  subs.cst_cargs_as = subs.cargs_ctype .. " *"
+  subs.cast_cargs_as = subs.cargs_ctype .. " *"
 
-  -- initialize cargs from scalar sval
-  local cargs = assert(get_ptr(subs.cargs, subs.cst_cargs_as))
-  local s = ffi.cast("SCLR_REC_TYPE *", sval)
-  cargs[0]["val"] = s[0].cdata["val" .. qtype]
+  -- initialize cargs from scalar sclr_val
+  local cargs = assert(get_ptr(subs.cargs, subs.cast_cargs_as))
+  local sclr_val = ffi.cast("SCLR_REC_TYPE *", sclr_val)
+  cargs[0]["val"] = sclr_val[0].val.[string.lower(qtype)]
 
   subs.tmpl   = "OPERATORS/S_TO_F/lua/const.tmpl"
   subs.incdir = "OPERATORS/S_TO_F/gen_inc/"
@@ -62,4 +62,4 @@ return function (
   end
   return subs
 end
-
+return const_specialize

@@ -1,7 +1,7 @@
 #ifndef __CMEM_STRUCT_H
 #define __CMEM_STRUCT_H
 //START_FOR_CDEF
-#include "cmem_constants.h"
+#include "cmem_consts.h"
 #include "qtypes.h"
 typedef struct _cmem_rec_type {
   void *data;

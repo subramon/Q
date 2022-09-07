@@ -1,6 +1,5 @@
 #ifndef __SCALAR_H
 #define __SCALAR_H
-#include "cmem_constants.h"
 #include "qtypes.h"
 //START_FOR_CDEF
 typedef struct _sclr_rec_type { 

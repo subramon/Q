@@ -25,6 +25,7 @@ SRC += aux_scalar.c
 OBJ = $(SRC:.c=.o)
 
 EXT_SRC := ../../../UTILS/src/is_valid_chars_for_num.c 
+EXT_SRC += ../../../UTILS/src/qtypes.c 
 
 EXT_SRC += ../../../UTILS/src/txt_to_B1.c 
 EXT_SRC += ../../../UTILS/src/txt_to_I1.c 
@@ -45,6 +46,7 @@ EXT_SRC += ../../../UTILS/src/F8_to_txt.c
 EXT_SRC += ../../../UTILS/src/SC_to_txt.c 
 
 EXT_SRC += ../../CMEM/src/aux_lua_to_c.c 
+EXT_SRC += ../../CMEM/src/aux_cmem.c 
 
 EXT_OBJ = $(EXT_SRC:.c=.o)
 
@@ -59,8 +61,8 @@ ${CMEM_SO} :
 	make -C ../../CMEM/src/
 
 
-libsclr.so:  ${GEN_SRC} ${EXT_OBJ} ${OBJ} ${CMEM_SO}
-	gcc  ${EXT_OBJ} ${OBJ} ${CMEM_SO} -shared -o libsclr.so
+libsclr.so:  ${GEN_SRC} ${EXT_OBJ} ${OBJ} 
+	gcc  ${EXT_OBJ} ${OBJ} -shared -o libsclr.so
 
 #------------------------------------------------------
 _eval_arith.c: gen_arith.lua

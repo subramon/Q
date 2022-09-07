@@ -19,4 +19,5 @@ tests.t1 = function ()
   print("Successfully completed test t1")
 end
 --================
-return tests
+-- return tests
+tests.t1()

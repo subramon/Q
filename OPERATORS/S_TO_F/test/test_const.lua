@@ -1,25 +1,30 @@
 -- FUNCTIONAL 
 local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
-local qconsts = require 'Q/UTILS/lua/qconsts'
 local Scalar  = require 'libsclr'
-local qmem    = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local chunk_size = 1024 -- just for testing 
 
 local tests = {}
 tests.t1 = function() 
   local val = (2048*1048576)-1
   local len = chunk_size * 2 + 3
   local qtype = "I4"
-  local c1 = Q.const( {val = val, qtype = qtype, len = len }):memo(true)
+  local args = {
+    val = val, 
+    chunk_size  = chunk_size, 
+    qtype = qtype, 
+    len = len 
+  }
+  local c1 = Q.const(args):memo(true)
   c1:eval()
   for i = 1, len do
     assert(c1:get1(i-1):to_num() == val)
   end
   assert(c1:num_elements() == len)
+  assert(c1:qtype() == qtype)
+  -- TODO: What is the error we are trying to create?
   local status = pcall(c1.get1, len) -- deliberate error
   assert(not status)
-  assert(c1:qtype() == qtype)
   print("Test t1 succeeded")
 end
 tests.t2 = function() 
