@@ -438,37 +438,6 @@ l_cmem_zero(
 }
 
 static int 
-l_cmem_get_width( 
-    lua_State *L
-    ) 
-{
-  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
-  lua_pushnumber(L, ptr_cmem->width);
-  return 1;
-}
-
-static int 
-l_cmem_set_width( 
-    lua_State *L
-    ) 
-{
-  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
-  int64_t width =  luaL_checknumber(L, 2);
-  if ( ptr_cmem->width > 0 ) { WHEREAMI; goto BYE; }
-  if ( width <= 0 ) { WHEREAMI; goto BYE; }
-  if ( ( ( ptr_cmem->size / width )  * width ) != ptr_cmem->size ) {
-    WHEREAMI; goto BYE;
-  }
-  ptr_cmem->width = width;
-  lua_pushboolean(L, true);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-
-static int 
 l_cmem_qtype( 
     lua_State *L
     ) 
@@ -529,10 +498,6 @@ static int l_cmem_me( lua_State *L) {
   // size
   lua_pushstring(L, "size");
   lua_pushnumber(L, ptr_cmem->size);
-  lua_settable(L, -3);
-  // width
-  lua_pushstring(L, "width");
-  lua_pushnumber(L, ptr_cmem->width);
   lua_settable(L, -3);
   // is_foreign 
   lua_pushstring(L, "is_foreign ");
@@ -604,45 +569,61 @@ static int l_cmem_seq( lua_State *L) {
   lua_Number start  = luaL_checknumber(L, 2);
   lua_Number incr   = luaL_checknumber(L, 3);
   lua_Number num    = luaL_checknumber(L, 4);
-  const char *qtype = luaL_checkstring(L, 5);
+  const char *str_qtype = luaL_checkstring(L, 5);
   void *X = ptr_cmem->data;
-  // width must be set
-  int width = ptr_cmem->width;
+  qtype_t qtype = get_c_qtype(str_qtype);
+  int width = get_width_qtype(str_qtype);
+  if ( width < 0 ) { go_BYE(-1); }
   if ( ( width < 1 ) || ( width > 8 ) ) { go_BYE(-1); }
-  if ( num > ( ptr_cmem->size / width ) ) { go_BYE(-1); }
+  // check if enough space in CMEM
+  if ( (num * width) > ptr_cmem->size ) { go_BYE(-1); }
   memset(buf, '\0', BUFLEN);
-  if ( strcmp(qtype, "I1") == 0 ) { 
+  switch ( qtype ) { 
+    case I1 : 
+      {
     if ( width != sizeof(int8_t) ) { go_BYE(-1); }
     int8_t *ptr = (int8_t *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
-  }
-  else if ( strcmp(qtype, "I2") == 0 ) { 
+      }
+    break;
+    case I2 : 
+    {
     if ( width != sizeof(int16_t) ) { go_BYE(-1); }
     int16_t *ptr = (int16_t *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
-  }
-  else if ( strcmp(qtype, "I4") == 0 ) { 
+    }
+    break;
+    case I4 : 
+    {
     if ( width != sizeof(int32_t) ) { go_BYE(-1); }
     int32_t *ptr = (int32_t *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
-  }
-  else if ( strcmp(qtype, "I8") == 0 ) { 
+    }
+    break;
+    case I8 : 
+    {
     if ( width != sizeof(int64_t) ) { go_BYE(-1); }
     int64_t *ptr = (int64_t *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
-  }
-  else if ( strcmp(qtype, "F4") == 0 ) { 
+    }
+    break;
+    case F4 : 
+    {
     if ( width != sizeof(float) ) { go_BYE(-1); }
     float *ptr = (float *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
-  }
-  else if ( strcmp(qtype, "F8") == 0 ) { 
+    }
+    break;
+    case F8 : 
+    {
     if ( width != sizeof(double) ) { go_BYE(-1); }
     double *ptr = (double *)X; ptr[0] = start;
     for ( int i = 1; i < num; i++ ) { ptr[i] = ptr[i-1] + incr; }
-  }
-  else {
-    go_BYE(-1); 
+    }
+    break;
+    default : 
+    go_BYE(-1);
+    break;
   }
   lua_pushboolean(L, true);
   return 1;
@@ -731,7 +712,8 @@ static int l_cmem_set(
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 // Following only for debugging 
 static int l_cmem_to_str( lua_State *L) {
@@ -798,12 +780,10 @@ static const struct luaL_Reg cmem_methods[] = {
     { "set_max",    l_cmem_set_max },
     { "set_min",    l_cmem_set_min },
     { "set_name",   l_cmem_set_name },
-    { "set_width",  l_cmem_set_width },
     { "seq",        l_cmem_seq               },
     { "size",       l_cmem_size },
     { "stealable",  l_cmem_stealable },
     { "to_str",     l_cmem_to_str },
-    { "width",      l_cmem_get_width },
     { "zero",       l_cmem_zero },
     { NULL,  NULL         }
 };
@@ -824,12 +804,10 @@ static const struct luaL_Reg cmem_functions[] = {
     { "set_max",    l_cmem_set_max },
     { "set_min",    l_cmem_set_min },
     { "set_name",   l_cmem_set_name },
-    { "set_width",  l_cmem_set_width },
     { "seq",        l_cmem_seq               },
     { "size",       l_cmem_size },
     { "stealable",  l_cmem_stealable },
     { "to_str",     l_cmem_to_str },
-    { "width",      l_cmem_get_width },
     { "zero",       l_cmem_zero },
     { NULL,  NULL         }
 };

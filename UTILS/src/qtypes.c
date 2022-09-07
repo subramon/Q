@@ -80,6 +80,8 @@ get_c_qtype(
     )
 {
   if ( str_qtype == NULL ) { return Q0; }
+  if ( strcmp("B1", str_qtype) == 0 ) { return B1; }
+
   if ( strcmp("I1", str_qtype) == 0 ) { return I1; }
   if ( strcmp("I2", str_qtype) == 0 ) { return I2; }
   if ( strcmp("I4", str_qtype) == 0 ) { return I4; }
@@ -106,18 +108,23 @@ get_str_qtype(
     )
 {
   if ( qtype == Q0 ) { return "Q0"; }
+
+  if ( qtype == B1 ) { return "B1"; }
+
   if ( qtype == I1 ) { return "I1"; }
   if ( qtype == I2 ) { return "I2"; }
   if ( qtype == I4 ) { return "I4"; }
   if ( qtype == I8 ) { return "I8"; }
+
   if ( qtype == UI1 ) { return "UI1"; }
   if ( qtype == UI2 ) { return "UI2"; }
   if ( qtype == UI4 ) { return "UI4"; }
   if ( qtype == UI8 ) { return "UI8"; }
+
   if ( qtype == F4 ) { return "F4"; }
   if ( qtype == F8 ) { return "F8"; }
+
   if ( qtype == TM1 ) { return "TM1"; }
-  if ( qtype == Q0 ) { return "Q0"; }
   return "XX";
 }
 

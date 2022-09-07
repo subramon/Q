@@ -18,6 +18,7 @@
 #include "cmem_struct.h"
 #include "cmem.h"
 #include "sclr_struct.h"
+#include "aux_scalar.h"
 
 extern int luaopen_libsclr (lua_State *L);
 
@@ -28,7 +29,7 @@ static int l_sclr_to_data( lua_State *L)
   if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
   ptr_sclr = (SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
   if ( ptr_sclr == NULL ) { go_BYE(-1); }
-  void *ptr = (void *)(&(ptr_sclr->cdata));
+  void *ptr = (void *)(&(ptr_sclr->val));
   lua_pushlightuserdata(L, ptr);
   return 1;
 BYE:
@@ -52,13 +53,12 @@ static int l_sclr_to_cmem( lua_State *L)
   if ( ptr_cmem == NULL ) { WHEREAMI; goto BYE; }
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
 
-  size_t size = sizeof(CDATA_TYPE);
-  status = cmem_malloc(ptr_cmem, size, ptr_sclr->field_type, "");
+  size_t size = sizeof(SCLR_REC_TYPE);
+  status = cmem_malloc(ptr_cmem, size, ptr_sclr->qtype, "");
   cBYE(status);
-  memcpy(ptr_cmem->data, &(ptr_sclr->cdata), size);
+  memcpy(ptr_cmem->data, &(ptr_sclr->val), size);
   ptr_cmem->size = size;
-  ptr_cmem->width = ptr_sclr->field_width;
-  strncpy(ptr_cmem->fldtype, ptr_sclr->field_type, Q_MAX_LEN_QTYPE_NAME-1);
+  ptr_cmem->qtype = ptr_sclr->qtype;
   ptr_cmem->is_foreign = false;
 
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
@@ -81,38 +81,40 @@ static int l_sclr_reincarnate(lua_State *L) {
   memset(op_str_buf, '\0', OP_BUF_LEN+1);
   memset(buf,        '\0', BUF_LEN+1);
   SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
-  const char *field_type = ptr_sclr->field_type;
+  qtype_t qtype = ptr_sclr->qtype;
 
   strncpy(op_str_buf, "Scalar.new(", OP_BUF_LEN);
-  if ( strcmp(field_type, "B1" ) == 0 ) {
-    snprintf(buf, BUF_LEN, "%s", ptr_sclr->cdata.valB1 ? "true" : "false");
-  }
-  else if ( strcmp(field_type, "I1" ) == 0 ) {
-    snprintf(buf, BUF_LEN, "%" PRI1, ptr_sclr->cdata.valI1);
-  }
-  else if ( strcmp(field_type, "I2" ) == 0 ) {
-    snprintf(buf, BUF_LEN, "%" PRI2, ptr_sclr->cdata.valI2);
-  }
-  else if ( strcmp(field_type, "I4" ) == 0 ) {
-    snprintf(buf, BUF_LEN, "%" PRI4, ptr_sclr->cdata.valI4);
-  }
-  else if ( strcmp(field_type, "I8" ) == 0 ) {
-    snprintf(buf, BUF_LEN, "%" PRI8, ptr_sclr->cdata.valI8);
-  }
-  else if ( strcmp(field_type, "F4" ) == 0 ) {
-    snprintf(buf, BUF_LEN, "%" PRF4, ptr_sclr->cdata.valF4);
-  }
-  else if ( strcmp(field_type, "F8" ) == 0 ) {
-    snprintf(buf, BUF_LEN, "%" PRF8, ptr_sclr->cdata.valF8);
-  }
-  else {
-    WHEREAMI; goto BYE;
+  switch ( qtype ) { 
+    case B1 : 
+    snprintf(buf, BUF_LEN, "%s", ptr_sclr->val.b1 ? "true" : "false");
+    break;
+    case I1 : 
+    snprintf(buf, BUF_LEN, "%" PRI1, ptr_sclr->val.i1);
+    break;
+    case I2 : 
+    snprintf(buf, BUF_LEN, "%" PRI2, ptr_sclr->val.i2);
+    break;
+    case I4 : 
+    snprintf(buf, BUF_LEN, "%" PRI4, ptr_sclr->val.i4);
+    break;
+    case I8 : 
+    snprintf(buf, BUF_LEN, "%" PRI8, ptr_sclr->val.i8);
+    break;
+    case F4 : 
+    snprintf(buf, BUF_LEN, "%" PRF4, ptr_sclr->val.f4);
+    break;
+    case F8 : 
+    snprintf(buf, BUF_LEN, "%" PRF8, ptr_sclr->val.f8);
+    break;
+    default : 
+    go_BYE(-1);
+    break;
   }
   strncat(op_str_buf, buf, OP_BUF_LEN);
 
   strncat(op_str_buf, ", '", OP_BUF_LEN);
 
-  strncat(op_str_buf, field_type, OP_BUF_LEN);
+  strncat(op_str_buf, get_str_qtype(qtype), OP_BUF_LEN);
 
   strncat(op_str_buf, "')", OP_BUF_LEN);
 
@@ -126,55 +128,32 @@ BYE:
 }
 
 static int l_sclr_to_num( lua_State *L) {
+  int status = 0;
   if ( lua_gettop(L) < 1 ) { WHEREAMI; goto BYE; }
   SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
-  const char *field_type = ptr_sclr->field_type;
-  if ( strcmp(field_type, "B1" ) == 0 ) { 
-    lua_pushnumber(L, ptr_sclr->cdata.valB1);
-  }
-  else if ( strcmp(field_type, "I1" ) == 0 ) { 
-    lua_pushnumber(L, ptr_sclr->cdata.valI1);
-  }
-  else if ( strcmp(field_type, "I2" ) == 0 ) { 
-    lua_pushnumber(L, ptr_sclr->cdata.valI2);
-  }
-  else if ( strcmp(field_type, "I4" ) == 0 ) { 
-    lua_pushnumber(L, ptr_sclr->cdata.valI4);
-  }
-  else if ( strcmp(field_type, "I8" ) == 0 ) { 
-    lua_pushnumber(L, ptr_sclr->cdata.valI8);
-  }
-  else if ( strcmp(field_type, "F4" ) == 0 ) { 
-    lua_pushnumber(L, ptr_sclr->cdata.valF4);
-  }
-  else if ( strcmp(field_type, "F8" ) == 0 ) { 
-    lua_pushnumber(L, ptr_sclr->cdata.valF8);
-  }
-  else {
-    WHEREAMI; goto BYE;
+  qtype_t qtype = ptr_sclr->qtype;
+  switch ( qtype ) { 
+    case B1 : lua_pushnumber(L, ptr_sclr->val.b1); break;
+    case I1 : lua_pushnumber(L, ptr_sclr->val.i1); break;
+    case I2 : lua_pushnumber(L, ptr_sclr->val.i2); break;
+    case I4 : lua_pushnumber(L, ptr_sclr->val.i4); break;
+    case I8 : lua_pushnumber(L, ptr_sclr->val.i8); break;
+    case F4 : lua_pushnumber(L, ptr_sclr->val.f4); break;
+    case F8 : lua_pushnumber(L, ptr_sclr->val.f8); break;
+    default : go_BYE(-1); break;
   }
   return 1;
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 
 static int l_qtype(lua_State *L) {
   if ( lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
   SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
-  lua_pushstring(L, ptr_sclr->field_type);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  return 2;
-}
-
-static int l_fldtype(lua_State *L) {
-  if ( lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
-  SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
-  lua_pushstring(L, ptr_sclr->field_type);
+  lua_pushstring(L, get_str_qtype(ptr_sclr->qtype));
   return 1;
 BYE:
   lua_pushnil(L);
@@ -192,38 +171,20 @@ static int l_sclr_to_str( lua_State *L) {
   SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
   // TODO Allow user to provide format
   memset(buf, '\0', BUFLEN+1);
-  const char *field_type = ptr_sclr->field_type;
-
-  if ( strcmp(field_type, "B1" ) == 0 ) { 
-    if (  ptr_sclr->cdata.valB1 ) { 
-      strncpy(buf, "true", BUFLEN);
-    }
-    else {
-      strncpy(buf, "false", BUFLEN);
-    }
+  qtype_t qtype = ptr_sclr->qtype;
+  switch ( qtype ) { 
+    case B1 : 
+      nw = snprintf(buf, BUFLEN, "%s", ptr_sclr->val.b1 ? "true" : "false");
+      break;
+    case I1 : nw = snprintf(buf, BUFLEN, "%d", ptr_sclr->val.i1); break;
+    case I2 : nw = snprintf(buf, BUFLEN, "%d", ptr_sclr->val.i2); break;
+    case I4 : nw = snprintf(buf, BUFLEN, "%d", ptr_sclr->val.i4); break;
+    case I8 : nw = snprintf(buf, BUFLEN, "%" PRId64, ptr_sclr->val.i8); break;
+    case F4 : nw = snprintf(buf, BUFLEN, "%f", ptr_sclr->val.f4); break;
+    case F8 : nw = snprintf(buf, BUFLEN, "%lf", ptr_sclr->val.f8); break;
+    default : go_BYE(-1); break;
   }
-  else if ( strcmp(field_type, "I1" ) == 0 ) { 
-    nw = snprintf(buf, BUFLEN, "%d", ptr_sclr->cdata.valI1);
-  }
-  else if ( strcmp(field_type, "I2" ) == 0 ) { 
-    nw = snprintf(buf, BUFLEN, "%d", ptr_sclr->cdata.valI2);
-  }
-  else if ( strcmp(field_type, "I4" ) == 0 ) { 
-    nw = snprintf(buf, BUFLEN, "%d", ptr_sclr->cdata.valI4);
-  }
-  else if ( strcmp(field_type, "I8" ) == 0 ) { 
-    nw = snprintf(buf, BUFLEN, "%" PRId64, ptr_sclr->cdata.valI8);
-  }
-  else if ( strcmp(field_type, "F4" ) == 0 ) { 
-    nw = snprintf(buf, BUFLEN, "%f", ptr_sclr->cdata.valF4);
-  }
-  else if ( strcmp(field_type, "F8" ) == 0 ) { 
-    nw = snprintf(buf, BUFLEN, "%lf", ptr_sclr->cdata.valF8);
-  }
-  else {
-    go_BYE(-1);
-  }
-  if ( ( nw < 0 ) || ( nw >= BUFLEN ) )  { go_BYE(-1); }
+  if ( ( nw <= 0 ) || ( nw >= BUFLEN ) )  { go_BYE(-1); }
   lua_pushstring(L, buf);
   return 1;
 BYE:
@@ -244,26 +205,15 @@ static int l_sclr_abs( lua_State *L) {
 
   if ( lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
   SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
-  if ( strcmp(ptr_sclr->field_type, "I1") == 0 ) {
-    ptr_sclr->cdata.valI1 = abs(ptr_sclr->cdata.valI1);
-  }
-  else if ( strcmp(ptr_sclr->field_type, "I2") == 0 ) { 
-    ptr_sclr->cdata.valI2 = abs(ptr_sclr->cdata.valI2);
-  }
-  else if ( strcmp(ptr_sclr->field_type, "I4") == 0 ) { 
-    ptr_sclr->cdata.valI4 = abs(ptr_sclr->cdata.valI4);
-  }
-  else if ( strcmp(ptr_sclr->field_type, "I8") == 0 ) { 
-    ptr_sclr->cdata.valI8 = llabs(ptr_sclr->cdata.valI8);
-  }
-  else if ( strcmp(ptr_sclr->field_type, "F4") == 0 ) { 
-    ptr_sclr->cdata.valF4 = fabsf(ptr_sclr->cdata.valF4);
-  }
-  else if ( strcmp(ptr_sclr->field_type, "F8") == 0 ) { 
-    ptr_sclr->cdata.valF8 = fabs(ptr_sclr->cdata.valF8);
-  }
-  else {
-    go_BYE(-1);
+  qtype_t qtype = ptr_sclr->qtype;
+  switch ( qtype ) { 
+    case I1 : ptr_sclr->val.i1 = abs(ptr_sclr->val.i1); break;
+    case I2 : ptr_sclr->val.i2 = abs(ptr_sclr->val.i2); break;
+    case I4 : ptr_sclr->val.i4 = abs(ptr_sclr->val.i4); break;
+    case I8 : ptr_sclr->val.i8 = llabs(ptr_sclr->val.i8); break;
+    case F4 : ptr_sclr->val.f4 = fabsf(ptr_sclr->val.f4); break;
+    case F8 : ptr_sclr->val.f8 = fabs(ptr_sclr->val.f8); break;
+    default : go_BYE(-1); break;
   }
   // Push the scalar back 
   return 1;
@@ -278,174 +228,180 @@ static int l_sclr_conv( lua_State *L) {
 
   if ( lua_gettop(L) != 2 ) { WHEREAMI; goto BYE; }
   SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
-  const char *qtype   = luaL_checkstring(L, 2);
-  if ( strcmp(ptr_sclr->field_type, "I1") == 0 ) {
-    if ( strcmp(qtype, "I1") == 0 ) { 
+  const char *to_qtype   = luaL_checkstring(L, 2);
+  switch (  ptr_sclr->qtype ) {
+    case I1 : 
+    if ( strcmp(to_qtype, "I1") == 0 ) { 
       // Nothing to do 
     }
-    else if ( strcmp(qtype, "I2") == 0 ) { 
-      ptr_sclr->cdata.valI2 = ptr_sclr->cdata.valI1;
+    else if ( strcmp(to_qtype, "I2") == 0 ) { 
+      ptr_sclr->val.i2 = ptr_sclr->val.i1;
     }
-    else if ( strcmp(qtype, "I4") == 0 ) { 
-      ptr_sclr->cdata.valI4 = ptr_sclr->cdata.valI1;
+    else if ( strcmp(to_qtype, "I4") == 0 ) { 
+      ptr_sclr->val.i4 = ptr_sclr->val.i1;
     }
-    else if ( strcmp(qtype, "I8") == 0 ) { 
-      ptr_sclr->cdata.valI8 = ptr_sclr->cdata.valI1;
+    else if ( strcmp(to_qtype, "I8") == 0 ) { 
+      ptr_sclr->val.i8 = ptr_sclr->val.i1;
     }
-    else if ( strcmp(qtype, "F4") == 0 ) { 
-      ptr_sclr->cdata.valF4 = ptr_sclr->cdata.valI1;
+    else if ( strcmp(to_qtype, "F4") == 0 ) { 
+      ptr_sclr->val.f4 = ptr_sclr->val.i1;
     }
-    else if ( strcmp(qtype, "F8") == 0 ) { 
-      ptr_sclr->cdata.valF8 = ptr_sclr->cdata.valI1;
+    else if ( strcmp(to_qtype, "F8") == 0 ) { 
+      ptr_sclr->val.f8 = ptr_sclr->val.i1;
     }
     else {
       go_BYE(-1);
     }
-  }
-  else if ( strcmp(ptr_sclr->field_type, "I2") == 0 ) { 
-    if ( strcmp(qtype, "I1") == 0 ) { 
-      mcr_chk_range_set(ptr_sclr->cdata.valI2, ptr_sclr->cdata.valI2, SCHAR_MIN, SCHAR_MAX);
+    break;
+    case I2 : 
+    if ( strcmp(to_qtype, "I1") == 0 ) { 
+      mcr_chk_range_set(ptr_sclr->val.i2, ptr_sclr->val.i2, SCHAR_MIN, SCHAR_MAX);
     }
-    else if ( strcmp(qtype, "I2") == 0 ) { 
+    else if ( strcmp(to_qtype, "I2") == 0 ) { 
       // Nothing to do 
     }
-    else if ( strcmp(qtype, "I4") == 0 ) { 
-      ptr_sclr->cdata.valI4 = ptr_sclr->cdata.valI2;
+    else if ( strcmp(to_qtype, "I4") == 0 ) { 
+      ptr_sclr->val.i4 = ptr_sclr->val.i2;
     }
-    else if ( strcmp(qtype, "I8") == 0 ) { 
-      ptr_sclr->cdata.valI8 = ptr_sclr->cdata.valI2;
+    else if ( strcmp(to_qtype, "I8") == 0 ) { 
+      ptr_sclr->val.i8 = ptr_sclr->val.i2;
     }
-    else if ( strcmp(qtype, "F4") == 0 ) { 
-      ptr_sclr->cdata.valF4 = ptr_sclr->cdata.valI2;
+    else if ( strcmp(to_qtype, "F4") == 0 ) { 
+      ptr_sclr->val.f4 = ptr_sclr->val.i2;
     }
-    else if ( strcmp(qtype, "F8") == 0 ) { 
-      ptr_sclr->cdata.valF8 = ptr_sclr->cdata.valI2;
+    else if ( strcmp(to_qtype, "F8") == 0 ) { 
+      ptr_sclr->val.f8 = ptr_sclr->val.i2;
     }
     else {
       go_BYE(-1);
     }
-  }
-  else if ( strcmp(ptr_sclr->field_type, "I4") == 0 ) { 
-    if ( strcmp(qtype, "I1") == 0 ) { 
-      mcr_chk_range_set(ptr_sclr->cdata.valI4, ptr_sclr->cdata.valI1, SCHAR_MIN, SCHAR_MAX);
+    break;
+    case I4 : 
+    if ( strcmp(to_qtype, "I1") == 0 ) { 
+      mcr_chk_range_set(ptr_sclr->val.i4, ptr_sclr->val.i1, SCHAR_MIN, SCHAR_MAX);
     }
-    else if ( strcmp(qtype, "I2") == 0 ) { 
-      mcr_chk_range_set(ptr_sclr->cdata.valI4, ptr_sclr->cdata.valI2, SHRT_MIN, SHRT_MAX);
+    else if ( strcmp(to_qtype, "I2") == 0 ) { 
+      mcr_chk_range_set(ptr_sclr->val.i4, ptr_sclr->val.i2, SHRT_MIN, SHRT_MAX);
     }
-    else if ( strcmp(qtype, "I4") == 0 ) { 
+    else if ( strcmp(to_qtype, "I4") == 0 ) { 
       // nothing to do 
     }
-    else if ( strcmp(qtype, "I8") == 0 ) { 
-      ptr_sclr->cdata.valI8 = ptr_sclr->cdata.valI4;
+    else if ( strcmp(to_qtype, "I8") == 0 ) { 
+      ptr_sclr->val.i8 = ptr_sclr->val.i4;
     }
-    else if ( strcmp(qtype, "F4") == 0 ) { 
-      if ( ptr_sclr->cdata.valI4 > 16777217 ) { go_BYE(-1); }
-      if ( ptr_sclr->cdata.valI4 < -16777217 ) { go_BYE(-1); }
-      ptr_sclr->cdata.valF4 = ptr_sclr->cdata.valI4;
+    else if ( strcmp(to_qtype, "F4") == 0 ) { 
+      if ( ptr_sclr->val.i4 > 16777217 ) { go_BYE(-1); }
+      if ( ptr_sclr->val.i4 < -16777217 ) { go_BYE(-1); }
+      ptr_sclr->val.f4 = ptr_sclr->val.i4;
     }
-    else if ( strcmp(qtype, "F8") == 0 ) { 
-      ptr_sclr->cdata.valF8 = ptr_sclr->cdata.valI4;
+    else if ( strcmp(to_qtype, "F8") == 0 ) { 
+      ptr_sclr->val.f8 = ptr_sclr->val.i4;
     }
     else {
       go_BYE(-1);
     }
-  }
-  else if ( strcmp(ptr_sclr->field_type, "I8") == 0 ) { 
-    if ( strcmp(qtype, "I1") == 0 ) { 
-      mcr_chk_range_set(ptr_sclr->cdata.valI8, ptr_sclr->cdata.valI1, SCHAR_MIN, SCHAR_MAX);
+    break;
+    case I8 : 
+    if ( strcmp(to_qtype, "I1") == 0 ) { 
+      mcr_chk_range_set(ptr_sclr->val.i8, ptr_sclr->val.i1, SCHAR_MIN, SCHAR_MAX);
     }
-    else if ( strcmp(qtype, "I2") == 0 ) { 
-      mcr_chk_range_set(ptr_sclr->cdata.valI8, ptr_sclr->cdata.valI1, SHRT_MIN, SHRT_MAX);
+    else if ( strcmp(to_qtype, "I2") == 0 ) { 
+      mcr_chk_range_set(ptr_sclr->val.i8, ptr_sclr->val.i1, SHRT_MIN, SHRT_MAX);
     }
-    else if ( strcmp(qtype, "I4") == 0 ) { 
-      mcr_chk_range_set(ptr_sclr->cdata.valI8, ptr_sclr->cdata.valI1, INT_MIN, INT_MAX);
+    else if ( strcmp(to_qtype, "I4") == 0 ) { 
+      mcr_chk_range_set(ptr_sclr->val.i8, ptr_sclr->val.i1, INT_MIN, INT_MAX);
     }
-    else if ( strcmp(qtype, "I8") == 0 ) { 
+    else if ( strcmp(to_qtype, "I8") == 0 ) { 
       // nothing to do 
     }
-    else if ( strcmp(qtype, "F4") == 0 ) { 
-      if ( ptr_sclr->cdata.valI8 > 16777217 ) { go_BYE(-1); }
-      if ( ptr_sclr->cdata.valI8 < -16777217 ) { go_BYE(-1); }
-      ptr_sclr->cdata.valF4 = ptr_sclr->cdata.valI8;
+    else if ( strcmp(to_qtype, "F4") == 0 ) { 
+      if ( ptr_sclr->val.i8 > 16777217 ) { go_BYE(-1); }
+      if ( ptr_sclr->val.i8 < -16777217 ) { go_BYE(-1); }
+      ptr_sclr->val.f4 = ptr_sclr->val.i8;
     }
-    else if ( strcmp(qtype, "F8") == 0 ) { 
-      if ( ptr_sclr->cdata.valI8 > 9007199254740993LL ) { go_BYE(-1); }
-      if ( ptr_sclr->cdata.valI8 < -9007199254740993LL ) { go_BYE(-1); }
-      ptr_sclr->cdata.valF8 = ptr_sclr->cdata.valI8;
+    else if ( strcmp(to_qtype, "F8") == 0 ) { 
+      if ( ptr_sclr->val.i8 > 9007199254740993LL ) { go_BYE(-1); }
+      if ( ptr_sclr->val.i8 < -9007199254740993LL ) { go_BYE(-1); }
+      ptr_sclr->val.f8 = ptr_sclr->val.i8;
     }
     else {
       go_BYE(-1);
     }
-  }
-  else if ( strcmp(ptr_sclr->field_type, "F4") == 0 ) { 
-    float val = ptr_sclr->cdata.valF4;
-    if ( strcmp(qtype, "I1") == 0 ) { 
+    break;
+    case F4 : 
+    {
+    float val = ptr_sclr->val.f4;
+    if ( strcmp(to_qtype, "I1") == 0 ) { 
       mcr_chk_int(val);
       if ( ( val < SCHAR_MIN ) || ( val > SCHAR_MAX ) ) { go_BYE(-1); }
-      ptr_sclr->cdata.valI1 = val;
+      ptr_sclr->val.i1 = val;
     }
-    else if ( strcmp(qtype, "I2") == 0 ) { 
+    else if ( strcmp(to_qtype, "I2") == 0 ) { 
       mcr_chk_int(val);
       if ( ( val < SHRT_MIN ) || ( val > SHRT_MAX ) ) { go_BYE(-1); }
-      ptr_sclr->cdata.valI2 = val;
+      ptr_sclr->val.i2 = val;
     }
-    else if ( strcmp(qtype, "I4") == 0 ) { 
+    else if ( strcmp(to_qtype, "I4") == 0 ) { 
       mcr_chk_int(val);
-      ptr_sclr->cdata.valI4 = val;
+      ptr_sclr->val.i4 = val;
     }
-    else if ( strcmp(qtype, "I8") == 0 ) { 
+    else if ( strcmp(to_qtype, "I8") == 0 ) { 
       mcr_chk_int(val);
-      ptr_sclr->cdata.valI8 = val;
+      ptr_sclr->val.i8 = val;
     }
-    else if ( strcmp(qtype, "F4") == 0 ) { 
+    else if ( strcmp(to_qtype, "F4") == 0 ) { 
       // Nothing to do 
     }
-    else if ( strcmp(qtype, "F8") == 0 ) { 
-      ptr_sclr->cdata.valF8 = ptr_sclr->cdata.valF4;
+    else if ( strcmp(to_qtype, "F8") == 0 ) { 
+      ptr_sclr->val.f8 = ptr_sclr->val.f4;
     }
     else {
       go_BYE(-1);
     }
-  }
-  else if ( strcmp(ptr_sclr->field_type, "F8") == 0 ) { 
-    double val = ptr_sclr->cdata.valF8;
-    if ( strcmp(qtype, "I1") == 0 ) { 
+    }
+    break;
+    case F8 : 
+    {
+    double val = ptr_sclr->val.f8;
+    if ( strcmp(to_qtype, "I1") == 0 ) { 
       mcr_chk_int(val);
       if ( ( val < SCHAR_MIN ) || ( val > SCHAR_MAX ) ) { go_BYE(-1); }
-      ptr_sclr->cdata.valI1 = val;
+      ptr_sclr->val.i1 = val;
     }
-    else if ( strcmp(qtype, "I2") == 0 ) { 
+    else if ( strcmp(to_qtype, "I2") == 0 ) { 
       mcr_chk_int(val);
       if ( ( val < SHRT_MIN ) || ( val > SHRT_MAX ) ) { go_BYE(-1); }
-      ptr_sclr->cdata.valI2 = val;
+      ptr_sclr->val.i2 = val;
     }
-    else if ( strcmp(qtype, "I4") == 0 ) { 
+    else if ( strcmp(to_qtype, "I4") == 0 ) { 
       mcr_chk_int(val);
       if ( ( val < INT_MIN ) || ( val > INT_MAX ) ) { go_BYE(-1); }
-      ptr_sclr->cdata.valI4 = val;
+      ptr_sclr->val.i4 = val;
     }
-    else if ( strcmp(qtype, "I8") == 0 ) { 
+    else if ( strcmp(to_qtype, "I8") == 0 ) { 
       mcr_chk_int(val);
-      ptr_sclr->cdata.valI8 = val;
+      ptr_sclr->val.i8 = val;
     }
-    else if ( strcmp(qtype, "F4") == 0 ) { 
-      if ( ptr_sclr->cdata.valF8 >    FLT_MAX ) { go_BYE(-1); }
-      if ( ptr_sclr->cdata.valF8 < -1*FLT_MAX ) { go_BYE(-1); }
-      ptr_sclr->cdata.valF4 = (double)ptr_sclr->cdata.valF8;
+    else if ( strcmp(to_qtype, "F4") == 0 ) { 
+      if ( ptr_sclr->val.f8 >    FLT_MAX ) { go_BYE(-1); }
+      if ( ptr_sclr->val.f8 < -1*FLT_MAX ) { go_BYE(-1); }
+      ptr_sclr->val.f4 = (double)ptr_sclr->val.f8;
       // TODO P3 Consider case where double value is close
       // to 0 but coercion to float makes it 0
     }
-    else if ( strcmp(qtype, "F8") == 0 ) { 
+    else if ( strcmp(to_qtype, "F8") == 0 ) { 
       // Nothing to do 
     }
     else {
       go_BYE(-1);
     }
-  }
-  else {
+    }
+    break;
+    default : 
     go_BYE(-1);
+    break;
   }
-  strcpy(ptr_sclr->field_type, qtype);
+  ptr_sclr->qtype = get_c_qtype(to_qtype);
 
   // Push the scalar back 
   lua_pop(L, 1);
@@ -457,161 +413,133 @@ BYE:
   return 3;
 }
 
+typedef enum {
+  DATA_AS_UNDEF,
+  DATA_AS_CMEM,
+  DATA_AS_NUM,
+  DATA_AS_STR,
+  DATA_AS_BOOL,
+} data_as_t;
+
 static int l_sclr_new( lua_State *L) {
   int status = 0;
-  bool    tempB1;
-  int8_t  tempI1;
-  int16_t tempI2;
-  int32_t tempI4;
-  int64_t tempI8;
-  float   tempF4;
-  double  tempF8;
   const char *str_val = NULL;
-  char *dst = NULL;
-  char *src = NULL;
-  lua_Number  in_val;
+  // lua_Number  num_val;
+  bool bool_val;
   CMEM_REC_TYPE *ptr_cmem = NULL;
+  data_as_t data_as = DATA_AS_UNDEF;
 
   // TESTING GC problems lua_gc(L, LUA_GCCOLLECT, 0);  
 
-  bool found = false;
   if ( ( lua_gettop(L) != 1) && ( lua_gettop(L) != 2 ) ) { go_BYE(-1); }
   if ( lua_isstring(L, 1) ) { 
     str_val = luaL_checkstring(L, 1);
-    found = true;
+    data_as = DATA_AS_STR;
   }
   else if (  lua_isuserdata(L, 1) ) { 
     ptr_cmem = luaL_checkudata(L, 1, "CMEM");
-    found = true;
+    data_as = DATA_AS_CMEM;
   }
   else if ( lua_isnumber(L, 1) ) {
     // No matter how I invoke it, Lua sends value as string
+    // num_val = luaL_checknumber(L, 1);
+    data_as = DATA_AS_NUM;
     go_BYE(-1); 
-    in_val = luaL_checknumber(L, 1);
   }
   else if ( lua_isboolean(L, 1) ) {
     // However, if I invoke as true, then it comes here
-    in_val = lua_toboolean(L, 1);
-    found = true;
+    bool_val = lua_toboolean(L, 1);
+    data_as = DATA_AS_BOOL;
   }
   else {
     go_BYE(-1);
   }
-  const char *qtype;
+  const char *str_qtype;
+  qtype_t qtype;
   if ( lua_gettop(L) == 2 ) {
-    qtype   = luaL_checkstring(L, 2);
+    str_qtype   = luaL_checkstring(L, 2);
+    qtype = get_c_qtype(str_qtype);
+    if ( qtype == Q0 ) { go_BYE(-1); }
   }
   else {
-    qtype = "I8"; // default 
+    qtype = I8; // default 
   }
   SCLR_REC_TYPE *ptr_sclr = NULL;
   ptr_sclr = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
   return_if_malloc_failed(ptr_sclr);
   memset(ptr_sclr, '\0', sizeof(SCLR_REC_TYPE));
-  dst = (char *)&(ptr_sclr->cdata);
+  ptr_sclr->qtype = qtype;
 
-  if ( ptr_cmem != NULL ) {
-    src = (char*)ptr_cmem->data;
-    if ( ( ptr_cmem->fldtype != NULL ) && 
-        ( *(ptr_cmem->fldtype) != '\0' ) ) {
-      if ( strcmp(qtype, ptr_cmem->fldtype) != 0 ) { go_BYE(-1); }
-    }
-  }
-  if ( !found ) { go_BYE(-1); }
-  if ( ( str_val != NULL ) && ( ptr_cmem != NULL ) ) { go_BYE(-1); }
-
-  if ( qtype == NULL ) { /* TODO P4 Infer qtype go_BYE(-1); */ }
-
-  if ( strcmp(qtype, "B1" ) == 0 ) {
-    if ( src != NULL ) { 
-      memcpy(dst, src, 1);
-    }
-    else {
-      if ( str_val == NULL ) { 
-        tempB1 = in_val;
+  switch ( data_as ) {
+    case DATA_AS_CMEM : 
+      switch ( qtype )  {
+        case B1 : 
+          ptr_sclr->val.b1 = ((bool *)ptr_cmem->data)[0];
+          break;
+        case I1 : 
+          ptr_sclr->val.i1 = ((int8_t *)ptr_cmem->data)[0];
+          break;
+        case I2 : 
+          ptr_sclr->val.i2 = ((int16_t *)ptr_cmem->data)[0];
+          break;
+        case I4 : 
+          ptr_sclr->val.i4 = ((int32_t *)ptr_cmem->data)[0];
+          break;
+        case I8 : 
+          ptr_sclr->val.i8 = ((int64_t *)ptr_cmem->data)[0];
+          break;
+        case F4 : 
+          ptr_sclr->val.f4 = ((float *)ptr_cmem->data)[0];
+          break;
+        case F8 : 
+          ptr_sclr->val.f8 = ((double *)ptr_cmem->data)[0];
+          break;
+        default : 
+          go_BYE(-1);
+          break;
       }
-      else {
-        status = txt_to_B1(str_val, &tempB1); cBYE(status);
+      break;
+    case DATA_AS_BOOL : 
+      switch ( qtype ) { 
+        case B1 : ptr_sclr->val.b1 = bool_val; break;
+        default : go_BYE(-1); break; 
       }
-      ptr_sclr->cdata.valB1 = tempB1;
-    }
-    strcpy(ptr_sclr->field_type, "B1"); 
-    ptr_sclr->field_width = sizeof(bool);
-  }
-  else if ( strcmp(qtype, "I1" ) == 0 ) { 
-    if ( src != NULL ) { 
-      memcpy(dst, src, 1);
-    }
-    else {
-      status = txt_to_I1(str_val, &tempI1); cBYE(status);
-      memcpy(dst, &tempI1, 1); 
-    }
-    strcpy(ptr_sclr->field_type, "I1"); 
-    ptr_sclr->field_width = 1;
-  }
-  else if ( strcmp(qtype, "I2" ) == 0 ) { 
-    if ( src != NULL ) { 
-      memcpy(dst, src, 2);
-      if ( ptr_cmem->size < 2 ) { go_BYE(-1); }
-    }
-    else {
-      status = txt_to_I2(str_val, &tempI2); cBYE(status);
-      memcpy(dst, &tempI2, 2); 
-    }
-    strcpy(ptr_sclr->field_type, "I2"); 
-    ptr_sclr->field_width = 2;
-  }
-  else if ( strcmp(qtype, "I4" ) == 0 ) { 
-    if ( src != NULL ) { 
-      if ( ptr_cmem->size < 4 ) { go_BYE(-1); }
-      memcpy(dst, src, 4);
-    }
-    else {
-      status = txt_to_I4(str_val, &tempI4); cBYE(status);
-      memcpy(dst, &tempI4, 4); 
-    }
-    strcpy(ptr_sclr->field_type, "I4"); 
-    ptr_sclr->field_width = 4;
-  }
-  else if ( strcmp(qtype, "I8" ) == 0 ) { 
-    if ( src != NULL ) { 
-      if ( ptr_cmem->size < 8 ) { go_BYE(-1); }
-      memcpy(dst, src, 8);
-    }
-    else {
-      status = txt_to_I8(str_val, &tempI8); cBYE(status);
-      memcpy(dst, &tempI8, 8); 
-    }
-    strcpy(ptr_sclr->field_type, "I8"); 
-    ptr_sclr->field_width = 8;
-  }
-  else if ( strcmp(qtype, "F4" ) == 0 ) { 
-    if ( src != NULL ) { 
-      if ( ptr_cmem->size < 4 ) { go_BYE(-1); }
-      memcpy(dst, src, 4);
-    }
-    else {
-      status = txt_to_F4(str_val, &tempF4); cBYE(status);
-      memcpy(dst, &tempF4, 4); 
-    }
-    strcpy(ptr_sclr->field_type, "F4"); 
-    ptr_sclr->field_width = 4;
-  }
-  else if ( strcmp(qtype, "F8" ) == 0 ) { 
-    if ( src != NULL ) { 
-      if ( ptr_cmem->size < 8 ) { go_BYE(-1); }
-      memcpy(dst, src, 8);
-    }
-    else {
-      status = txt_to_F8(str_val, &tempF8); cBYE(status);
-      memcpy(dst, &tempF8, 8); 
-    }
-    strcpy(ptr_sclr->field_type, "F8"); 
-    ptr_sclr->field_width = 8;
-  }
-  else {
-    fprintf(stderr, "Unknown qtype [%s] \n", qtype);
-    go_BYE(-1);
+      break;
+    case DATA_AS_NUM : 
+      go_BYE(-1); // TODO P2
+      break;
+    case DATA_AS_STR : 
+      switch ( qtype )  {
+        case B1 : 
+          status = txt_to_B1(str_val, &(ptr_sclr->val.b1)); 
+          break;
+        case I1 : 
+          status = txt_to_I1(str_val, &(ptr_sclr->val.i1)); 
+          break;
+        case I2 : 
+          status = txt_to_I2(str_val, &(ptr_sclr->val.i2)); 
+          break;
+        case I4 : 
+          status = txt_to_I4(str_val, &(ptr_sclr->val.i4)); 
+          break;
+        case I8 : 
+          status = txt_to_I8(str_val, &(ptr_sclr->val.i8)); 
+          break;
+        case F4 : 
+          status = txt_to_F4(str_val, &(ptr_sclr->val.f4)); 
+          break;
+        case F8 : 
+          status = txt_to_F8(str_val, &(ptr_sclr->val.f8)); 
+          break;
+        default : 
+          go_BYE(-1);
+          break;
+      }
+      cBYE(status);
+      break;
+    default :
+      go_BYE(-1);
+      break;
   }
   luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
@@ -622,137 +550,6 @@ BYE:
   return 2;
 }
 
-static int set_output_field_type(
-    const char *const fldtype1,
-    const char *const fldtype2,
-    SCLR_REC_TYPE *ptr_sclr
-    )
-{
-  int status = 0;
-  if ( strcmp(fldtype1, "I1") == 0 ) {
-    if ( strcmp(fldtype2, "I1") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I1");
-    }
-    else if ( strcmp(fldtype2, "I2") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I2");
-    }
-    else if ( strcmp(fldtype2, "I4") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I4");
-    }
-    else if ( strcmp(fldtype2, "I8") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I8");
-    }
-    else if ( strcmp(fldtype2, "F4") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F4");
-    }
-    else if ( strcmp(fldtype2, "F8") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F8");
-    }
-    else {
-      go_BYE(-1);
-    }
-  }
-  else if ( strcmp(fldtype1, "I2") == 0 ) {
-    if ( strcmp(fldtype2, "I1") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I2");
-    }
-    else if ( strcmp(fldtype2, "I2") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I2");
-    }
-    else if ( strcmp(fldtype2, "I4") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I4");
-    }
-    else if ( strcmp(fldtype2, "I8") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I8");
-    }
-    else if ( strcmp(fldtype2, "F4") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F4");
-    }
-    else if ( strcmp(fldtype2, "F8") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F8");
-    }
-    else {
-      go_BYE(-1);
-    }
-  }
-  else if ( strcmp(fldtype1, "I4") == 0 ) {
-    if ( strcmp(fldtype2, "I1") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I4");
-    }
-    else if ( strcmp(fldtype2, "I2") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I4");
-    }
-    else if ( strcmp(fldtype2, "I4") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I4");
-    }
-    else if ( strcmp(fldtype2, "I8") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I8");
-    }
-    else if ( strcmp(fldtype2, "F4") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F4");
-    }
-    else if ( strcmp(fldtype2, "F8") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F8");
-    }
-    else {
-      go_BYE(-1);
-    }
-  }
-  else if ( strcmp(fldtype1, "I8") == 0 ) {
-    if ( strcmp(fldtype2, "I1") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I8");
-    }
-    else if ( strcmp(fldtype2, "I2") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I8");
-    }
-    else if ( strcmp(fldtype2, "I4") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I8");
-    }
-    else if ( strcmp(fldtype2, "I8") == 0 ) {
-      strcpy(ptr_sclr->field_type, "I8");
-    }
-    else if ( strcmp(fldtype2, "F4") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F4");
-    }
-    else if ( strcmp(fldtype2, "F8") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F8");
-    }
-    else {
-      go_BYE(-1);
-    }
-  }
-  else if ( strcmp(fldtype1, "F4") == 0 ) {
-    if ( strcmp(fldtype2, "I1") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F4");
-    }
-    else if ( strcmp(fldtype2, "I2") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F4");
-    }
-    else if ( strcmp(fldtype2, "I4") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F4");
-    }
-    else if ( strcmp(fldtype2, "I8") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F4");
-    }
-    else if ( strcmp(fldtype2, "F4") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F4");
-    }
-    else if ( strcmp(fldtype2, "F8") == 0 ) {
-      strcpy(ptr_sclr->field_type, "F8");
-    }
-    else {
-      go_BYE(-1);
-    }
-  }
-  else if ( strcmp(fldtype1, "F8") == 0 ) {
-    strcpy(ptr_sclr->field_type, "F8");
-  }
-  else {
-    go_BYE(-1);
-  }
-BYE:
-  return status;
-}
 //----------------------------------------
 
 #include "_eval_cmp.c"
@@ -767,7 +564,6 @@ static const struct luaL_Reg sclr_methods[] = {
     { "to_num", l_sclr_to_num },
     { "to_cmem", l_sclr_to_cmem },
     { "to_data", l_sclr_to_data },
-    { "fldtype", l_fldtype },
     { "qtype", l_qtype },
     { "reincarnate", l_sclr_reincarnate },
     { NULL,          NULL               },
@@ -779,7 +575,6 @@ static const struct luaL_Reg sclr_functions[] = {
     { "conv", l_sclr_conv },
     { "div", l_sclr_div },
     { "eq", l_sclr_eq },
-    { "fldtype", l_fldtype },
     { "geq", l_sclr_geq },
     { "gt", l_sclr_gt },
     { "leq", l_sclr_leq },

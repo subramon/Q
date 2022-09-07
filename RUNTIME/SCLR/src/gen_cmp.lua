@@ -2,22 +2,13 @@ function gen_code(T1, T3)
   hdr = [[
 #include "q_incs.h"
 #include "sclr_struct.h"
-extern int 
+static int 
 eval_cmp(
-    const char *const fldtype1,
-    const char *const fldtype2,
+    qtype_t qtype1,
+    qtype_t qtype2,
     const char *const op,
-    CDATA_TYPE cdata1,
-    CDATA_TYPE cdata2,
-    int *ptr_ret_val
-    );
-int 
-eval_cmp(
-    const char *const fldtype1,
-    const char *const fldtype2,
-    const char *const op,
-    CDATA_TYPE cdata1,
-    CDATA_TYPE cdata2,
+    SCLR_REC_TYPE sclr1,
+    SCLR_REC_TYPE sclr2,
     int *ptr_ret_val
     )
 {
@@ -25,13 +16,13 @@ eval_cmp(
   int ret_val;
   ]]
   io.write(hdr)
-  s1 = 'if ( strcmp(fldtype1, "__QTYPE__") == 0 ) {\n'
-  s11 = 'else if ( strcmp(fldtype1, "__QTYPE__") == 0 ) {\n'
-  s2 = '    if ( strcmp(fldtype2, "__QTYPE__") == 0 ) {\n'
-  s21 = '\n    else if ( strcmp(fldtype2, "__QTYPE__") == 0 ) {\n'
+  s1 = 'if ( qtype1 == __QTYPE__ ) {\n'
+  s11 = 'else if ( qtype1 == __QTYPE__ ) {\n'
+  s2 = '    if ( qtype2 == __QTYPE__ ) {\n'
+  s21 = '\n    else if ( qtype2 == __QTYPE__ ) {\n'
   s3 = [[
       if ( strcmp(op, "__CMP__") == 0 ) {
-        ret_val = cdata1.val__QTYPE1__  __CMP__ cdata2.val__QTYPE2__ ;
+        ret_val = sclr1.val.__QTYPE1__  __CMP__ sclr2.val.__QTYPE2__ ;
       }
 ]]
   for k1, v1 in pairs(T1) do
@@ -53,8 +44,8 @@ eval_cmp(
       for k3, v3 in pairs(T3) do
         local str = ""
         if ( k3 > 1 ) then io.write("      else") end
-        str = string.gsub(s3, "__QTYPE1__", v1)
-        str = string.gsub(str, "__QTYPE2__", v2)
+        str = string.gsub(s3, "__QTYPE1__", string.lower(v1))
+        str = string.gsub(str, "__QTYPE2__", string.lower(v2))
         str = string.gsub(str, "__CMP__", v3)
         io.write(str)
       end
@@ -84,15 +75,16 @@ static int l_sclr___KEY__(lua_State *L)
   SCLR_REC_TYPE *ptr_sclr1 = (SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
   if ( lua_isnumber(L, 2) ) { 
     SCLR_REC_TYPE val2; 
-    strcpy(val2.field_type, "F8");
-    val2.cdata.valF8 = luaL_checknumber(L, 2);
-    status = eval_cmp( ptr_sclr1->field_type, "F8",
-      "__VAL__", ptr_sclr1->cdata, val2.cdata, &ret_val);
+    memset(&val2, 0, sizeof(SCLR_REC_TYPE));
+    val2.qtype = F8;
+    val2.val.f8 = luaL_checknumber(L, 2);
+    status = eval_cmp( ptr_sclr1->qtype, F8, 
+      "__VAL__", *ptr_sclr1, val2, &ret_val);
   }
   else {
     SCLR_REC_TYPE *ptr_sclr2 = (SCLR_REC_TYPE *)luaL_checkudata(L, 2, "Scalar");
-    status = eval_cmp( ptr_sclr1->field_type, ptr_sclr2->field_type, 
-      "__VAL__", ptr_sclr1->cdata, ptr_sclr2->cdata, &ret_val);
+    status = eval_cmp( ptr_sclr1->qtype, ptr_sclr2->qtype, 
+      "__VAL__", *ptr_sclr1, *ptr_sclr2, &ret_val);
   }
   cBYE(status);
   lua_pushboolean(L, ret_val);

@@ -4,7 +4,7 @@
 typedef uint16_t bfloat16; 
 typedef enum { 
   Q0, // mixed  must be first one 
-  BL, // boolean (currently stored as I1)
+  B1, // boolean (currently stored as I1)
 
   I1,
   I2,

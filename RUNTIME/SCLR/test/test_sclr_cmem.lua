@@ -53,8 +53,8 @@ ffi.cdef([[
     end
     local s2 = ffi.cast("SCLR_REC_TYPE *", s)
     local kc  = qtype
-    local ks = "val" .. qtype
-    c2[0][kc] = s2[0].cdata[ks]
+    local ks =  string.lower(qtype)
+    c2[0][kc] = s2[0].val[ks]
     cnt = cnt + 1 
   end
   for _, qtype in pairs(qtypes) do
@@ -70,9 +70,6 @@ ffi.cdef([[
   print("test 2 passed")
 end
 --================
-return tests
---[[
+-- return tests
 tests.t1()
 tests.t2()
-os.exit()
---]]

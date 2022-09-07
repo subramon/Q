@@ -1,8 +1,9 @@
+require "Q/OPERATORS/S_TO_F/lua/s_to_f"
+--[[
 require 'Q/QTILS/lua/fold'
 require "Q/OPERATORS/F_TO_S/lua/f_to_s"
 require "Q/OPERATORS/MK_COL/lua/mk_col"
 require "Q/OPERATORS/PRINT/lua/print_csv"
-require "Q/OPERATORS/S_TO_F/lua/s_to_f"
 require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
 require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
 require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
@@ -28,7 +29,6 @@ require "Q/UTILS/lua/unpack"
 require "Q/UTILS/lua/set_memo"
 -- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
 -- TODO require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
---[[
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/get_idx_by_val"
@@ -87,23 +87,5 @@ require "Q/UTILS/lua/view_meta"
 _G['g_time'] = {}
 _G['g_ctr']  = {}
 
---=== Stuff to do at first load time 
-local qmem = require 'Q/UTILS/lua/qmem'
-qmem.init()
-local reset      = os.getenv("Q_RESET")
-local reset_fn   = require 'Q/UTILS/lua/reset'
-local restore_fn = require 'Q/UTILS/lua/restore'
-if ( reset == "true" ) then 
-  reset_fn()
-else
-  status, msg = pcall(restore_fn)
-  if ( not status ) then 
-    print("WARNING!!! Restore failed. Wiping things out...")
-    print(msg)
-    reset_fn()
-  else
-    print("Restored data")
-  end
-end
 --======================
 return require 'Q/q_export'
