@@ -16,6 +16,7 @@ typedef struct _vctr_meta_t {
   uint32_t max_num_in_chnk;
   uint32_t width;
   // Note that chunk size = max_num_in_chnk * width 
+  int memo_len;
   qtype_t qtype;
   bool is_eov;   // true => no appends allowed
   bool is_writable;   // false => no changes allowed

@@ -679,7 +679,6 @@ int main(int argc, char **argv)
   status = pthread_create(&l_out_of_band, NULL, &webserver, 
       &out_of_band_info);
   cBYE(status);
-#endif
   // For memory manager
   pthread_cond_init(&g_mem_cond, NULL);
   pthread_mutex_init(&g_mem_mutex, NULL);
@@ -691,6 +690,7 @@ int main(int argc, char **argv)
   status = pthread_create(&l_mem_mgr, NULL, &mem_mgr, &mem_mgr_info);
   cBYE(status);
   pthread_cond_signal(&g_mem_cond);
+#endif
 
   // START For hashmaps  for vector, ...
   rs_hmap_config_t HC1; memset(&HC1, 0, sizeof(rs_hmap_config_t));
@@ -750,8 +750,8 @@ int main(int argc, char **argv)
 #ifdef WEB_SERVER
   pthread_join(l_webserver, NULL); 
   pthread_join(l_out_of_band, NULL); 
-#endif
   pthread_join(l_mem_mgr, NULL); 
+#endif
   // STOP : RAMESH
 BYE:
   if ( mutex_created ) { 

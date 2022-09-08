@@ -23,9 +23,9 @@ setmetatable(lVector, mt)
 register_type(lVector, "lVector")
 
 function lVector:check()
-  assert(cVector.vctr_chk(self._base_vec))
+  assert(cVector.chk(self._base_vec))
   if ( self._nn_vec ) then 
-    assert(cVector.vctr_chk(self._nn_vec))
+    assert(cVector.chk(self._nn_vec))
   end 
   return true
 end
@@ -61,14 +61,16 @@ function lVector.new(args)
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector
   assert(type(args) == "table")
-  vector._base_vec = assert(cVector.add1(args))
   vector._siblings = {} -- no conjoined vectors
   vector._chunk_num = 0 -- next chunk to ask for 
+  if ( args.gen ) then vector._generator = args.gen end 
   --=================================================
   if ( args.max_num_in_chunk ) then 
     vector._max_num_in_chunk = args.max_num_in_chunk
   else
     vector._max_num_in_chunk = qcfg.max_num_in_chunk
+    -- NOTE: Following needed for cVector.add*
+    args.max_num_in_chunk = vector._max_num_in_chunk 
   end
   assert(type(vector._max_num_in_chunk) == "number")
   assert(vector._max_num_in_chunk > 0)
@@ -77,10 +79,13 @@ function lVector.new(args)
     vector._memo_len = args.memo_len
   else
     vector._memo_len = qcfg.memo_len
+    -- NOTE: Following needed for cVector.add*
+    args.memo_len = vector._memo_len 
   end
   assert(type(vector._memo_len) == "number")
   --=================================================
-  if ( args.gen ) then vector._generator = args.gen end 
+  vector._base_vec = assert(cVector.add1(args))
+  --=================================================
   return vector
 end
 function lVector:memo(memo_len)
@@ -90,7 +95,9 @@ function lVector:memo(memo_len)
   assert(type(memo_len == "number"))
   -- cannot memo once vector has elements in it 
   if ( self:num_elements() > 0 ) then return nil end 
+  assert(cVector.set_memo(self._base_vec, memo_len))
   self._memo_len = memo_len
+  return self
 end
 function lVector:put1(c, n)
   assert(type(c) == "CMEM")
@@ -103,7 +110,6 @@ function lVector:put_chunk(c, n)
 end
 
 function lVector:get_chunk(chnk_idx)
-  print("Get chunk")
   assert(type(chnk_idx) == "number")
   assert(chnk_idx >= 0)
   assert(chnk_idx <= self._chunk_num)

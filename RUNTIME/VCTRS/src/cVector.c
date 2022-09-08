@@ -10,18 +10,20 @@
 // #include "aux_lua_to_c.h" // get_str_from_tbl()
 #include "vctr_struct.h"
 
+#include "chnk_del.h"
+
 #include "vctr_add.h"
 #include "vctr_chk.h"
 #include "vctr_del.h"
-#include "chnk_del.h"
+#include "vctr_eov.h"
+#include "vctr_is_eov.h"
+#include "vctr_get_chunk.h"
 #include "vctr_name.h"
 #include "vctr_num_elements.h"
-#include "vctr_width.h"
-#include "vctr_is_eov.h"
-#include "vctr_eov.h"
 #include "vctr_put.h"
 #include "vctr_put_chunk.h"
-#include "vctr_get_chunk.h"
+#include "vctr_set_memo.h"
+#include "vctr_width.h"
 
   /*
   ** Implementation of luaL_testudata which will return NULL in case 
@@ -82,20 +84,37 @@ BYE:
 }
 //----------------------------------------------
 static int l_vctr_nop( lua_State *L) {
+  int status = 0;
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  if ( ptr_v == NULL ) { goto BYE; }
+  if ( ptr_v == NULL ) { go_BYE(-1); }
   fprintf(stdout, "nop\n");
   lua_pushboolean(L, true);
   return 1;
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_set_memo( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  int memo_len = luaL_checknumber(L, 2); 
+  status = vctr_set_memo(ptr_v->uqid, memo_len); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
 }
 //----------------------------------------
 static int l_vctr_width( lua_State *L) {
   int status = 0;
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t width;
   status = vctr_width(ptr_v->uqid, &width); cBYE(status);
@@ -104,12 +123,13 @@ static int l_vctr_width( lua_State *L) {
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 //----------------------------------------
 static int l_vctr_num_elements( lua_State *L) {
   int status = 0;
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint64_t num_elements;
   status = vctr_num_elements(ptr_v->uqid, &num_elements); cBYE(status);
@@ -118,12 +138,13 @@ static int l_vctr_num_elements( lua_State *L) {
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 //----------------------------------------
 static int l_vctr_chk( lua_State *L) {
   int status = 0;
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   status = vctr_chk(ptr_v->uqid);  cBYE(status);
   lua_pushboolean(L, true);
@@ -131,12 +152,13 @@ static int l_vctr_chk( lua_State *L) {
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 //----------------------------------------
 static int l_vctr_is_eov( lua_State *L) {
   int status = 0;
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool b_is_eov; 
   status = vctr_is_eov(ptr_v->uqid, &b_is_eov);
@@ -151,7 +173,7 @@ BYE:
 //----------------------------------------
 static int l_vctr_eov( lua_State *L) {
   int status = 0;
-  if (  lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   status = vctr_eov(ptr_v->uqid); cBYE(status);
   lua_pushboolean(L, true);
@@ -159,7 +181,8 @@ static int l_vctr_eov( lua_State *L) {
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 //----------------------------------------
 static int l_vctr_put( lua_State *L) {
@@ -275,7 +298,7 @@ static int l_vctr_free( lua_State *L) {
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool is_found;
-  printf("Freeing Vector %u \n", ptr_v->uqid);
+  printf("cVector: Freeing Vector %u \n", ptr_v->uqid);
   status = vctr_del(ptr_v->uqid, &is_found); 
   lua_pushboolean(L, is_found);
   return 1;
@@ -298,7 +321,8 @@ static int l_chnk_delete( lua_State *L) {
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 //----------------------------------------
 //-----------------------
@@ -319,7 +343,8 @@ static int l_vctr_delete( lua_State *L) {
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 //----------------------------------------
 static int l_vctr_add1( lua_State *L) 
@@ -330,6 +355,7 @@ static int l_vctr_add1( lua_State *L)
   const char * str_qtype;
   uint32_t width = 0; 
   uint32_t max_num_in_chnk;
+  int memo_len;
   // width needed only for SC; all other qtypes have known fixed widths
   //--- get args passed from Lua 
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
@@ -359,13 +385,14 @@ static int l_vctr_add1( lua_State *L)
   //-------------------------------------------
   status = get_int_from_tbl(L, 1, "max_num_in_chunk", &is_key, &itmp); 
   cBYE(status);
-  if ( is_key )  { // default chunk size == 0 => use Q_VCTR_CHNK_SIZE
-    if ( itmp <- 0 ) { go_BYE(-1); }
-    max_num_in_chnk = (uint32_t)itmp;
-  }
-  else {
-    max_num_in_chnk = 0; 
-  }
+  if ( !is_key )  { go_BYE(-1); }
+  if ( itmp <= 0 ) { go_BYE(-1); }
+  max_num_in_chnk = (uint32_t)itmp;
+  //-------------------------------------------
+  status = get_int_from_tbl(L, 1, "memo_len", &is_key, &itmp); 
+  cBYE(status);
+  if ( !is_key )  { go_BYE(-1); }
+  memo_len = itmp;
   //-------------------------------------------
 
   ptr_v = (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
@@ -374,14 +401,16 @@ static int l_vctr_add1( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vctr_add1(qtype, width, max_num_in_chnk, &(ptr_v->uqid)); 
+  status = vctr_add1(qtype, width, max_num_in_chnk, memo_len,
+      &(ptr_v->uqid)); 
   cBYE(status);
 
   return 1; 
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
-  return 2;
+  lua_pushnumber(L, status);
+  return 3;
 }
 
 //-----------------------
@@ -397,9 +426,10 @@ static const struct luaL_Reg vector_methods[] = {
     { "is_eov", l_vctr_is_eov },
     { "nop", l_vctr_nop },
     //--------------------------------
+    { "set_memo", l_vctr_set_memo },
     { "set_name", l_vctr_set_name },
-    { "get_name", l_vctr_get_name },
     //--------------------------------
+    { "name", l_vctr_get_name },
     { "num_elements", l_vctr_num_elements },
     { "num_readers", l_vctr_num_readers },
     { "width", l_vctr_width },
@@ -425,9 +455,10 @@ static const struct luaL_Reg vector_functions[] = {
     { "is_eov", l_vctr_is_eov },
     { "nop",    l_vctr_nop },
     //--------------------------------
+    { "set_memo", l_vctr_set_memo},
     { "set_name", l_vctr_set_name },
-    { "get_name", l_vctr_get_name },
     //--------------------------------
+    { "name", l_vctr_get_name },
     { "num_elements", l_vctr_num_elements },
     { "num_readers", l_vctr_num_readers },
     { "width", l_vctr_width },

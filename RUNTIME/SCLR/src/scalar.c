@@ -16,7 +16,7 @@
 #include "txt_to_F8.h"
 
 #include "cmem_struct.h"
-#include "cmem.h"
+#include "aux_cmem.h"
 #include "sclr_struct.h"
 #include "aux_scalar.h"
 

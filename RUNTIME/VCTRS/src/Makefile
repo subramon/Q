@@ -36,6 +36,7 @@ SRCS +=	vctr_cnt.c
 SRCS +=	vctr_chk.c
 SRCS +=	vctr_del.c  
 SRCS +=	vctr_eov.c  
+SRCS +=	vctr_get_chunk.c  
 SRCS +=	vctr_is.c  
 SRCS +=	vctr_is_eov.c  
 SRCS +=	vctr_name.c  
@@ -44,7 +45,7 @@ SRCS +=	vctr_num_elements.c
 SRCS +=	vctr_new_uqid.c  
 SRCS +=	vctr_put.c  
 SRCS +=	vctr_put_chunk.c  
-SRCS +=	vctr_get_chunk.c  
+SRCS +=	vctr_set_memo.c  
 SRCS +=	vctr_width.c  
 
 SRCS +=	chnk_cnt.c  
@@ -127,7 +128,7 @@ ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so
 
 
 clean:
-	rm -f *.o *.so ut1 ut2
+	rm -f *.o *.so ut1 ut2 ../test/*.o
 	rm -f  ${Q_ROOT}/lib/core_libvctr.so 
 	rm -f  ${Q_ROOT}/lib/libvctr.so 
 	rm -f ${TMPL_HMAP_SO}

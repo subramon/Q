@@ -15,6 +15,7 @@ vctr_add1(
     qtype_t qtype,
     uint32_t width,
     uint32_t in_max_num_in_chnk,
+    int memo_len,
     uint32_t *ptr_uqid
     )
 {
@@ -37,7 +38,7 @@ vctr_add1(
   }
   vctr_rs_hmap_val_t val = 
     { .qtype = qtype, .max_num_in_chnk = max_num_in_chnk, 
-      .width = width, .num_chnks = 0  } ;
+      .memo_len = memo_len, .width = width, .num_chnks = 0  } ;
   status = g_vctr_hmap.put(&g_vctr_hmap, &key, &val); cBYE(status);
 #ifdef DEBUG
   new_vctr_cnt = vctr_cnt();

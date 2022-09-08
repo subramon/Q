@@ -74,7 +74,7 @@ main(
   //----------------------------------
   uint32_t max_num_in_chunk = 32; // for easy testing 
   qtype_t qtype = F4;
-  uint32_t uqid; status = vctr_add1(qtype, 0, max_num_in_chunk, &uqid); 
+  uint32_t uqid; status = vctr_add1(qtype, 0, max_num_in_chunk, -1,&uqid); 
   cBYE(status);
   uint32_t num_chunks = 4;
   CMEM_REC_TYPE cmem; 
@@ -110,7 +110,7 @@ main(
 
     // some tests on the chunk just created
     CMEM_REC_TYPE chk_cmem; uint32_t chk_n;
-    status = vctr_get_chunk(uqid, i, &chk_cmem, &chk_n);
+    status = vctr_get_chunk(uqid, i, &chk_cmem, &chk_n, NULL);
     if ( chk_cmem.qtype != qtype ) { go_BYE(-1); }
     if ( chk_cmem.size  != vctr_chnk_size ) { go_BYE(-1); }
     for ( uint32_t j = 0; j < max_num_in_chunk; j++ ) { 

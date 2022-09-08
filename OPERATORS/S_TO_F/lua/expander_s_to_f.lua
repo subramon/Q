@@ -1,3 +1,4 @@
+-- local ffi = require 'ffi'
 local qc      = require 'Q/UTILS/lua/qcore'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local cmem    = require 'libcmem'
@@ -22,18 +23,14 @@ return function (a, largs)
   qc.q_add(subs)
 
   local l_chunk_num = 0
-  local buf 
-  
   local generator = function(chunk_num)
     -- Adding assert on l_chunk_num to have sync between 
     -- expected chunk_num and generator's l_chunk_num state
     assert(chunk_num == l_chunk_num)
-    --=== START: buffer allocation
-    if ( not buf ) then 
-      buf = assert(cmem.new({size = subs.buf_size, qtype = subs.out_qtype}))
-      assert(buf:stealable(true))
-    end
-    --=== STOP : buffer allocation
+    -- allocate new buffer for each chunk because Vector will steal it
+    local buf = assert(
+      cmem.new({size = subs.buf_size, qtype = subs.out_qtype}))
+    assert(buf:stealable(true))
     --=============================
     local lb = max_num_in_chunk * l_chunk_num
     if ( lb >= subs.len) then 
@@ -52,6 +49,7 @@ return function (a, largs)
     end
     --=============================
     local cbuf   = get_ptr(buf, subs.cast_buf_as)
+    -- assert(cbuf ~= ffi.NULL)
     local start_time = cutils.rdtsc()
     qc[fn](cbuf, num_elements, cast_cargs, lb)
     record_time(start_time, fn)
