@@ -202,6 +202,47 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_unget_chunk( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 2 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint32_t chnk_idx = luaL_checknumber(L, 2); 
+
+  status = vctr_get_chunk(ptr_v->uqid, chnk_idx, NULL, NULL, NULL);
+  cBYE(status);
+
+  lua_pushboolean(L, 1);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_num_readers( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 2 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint32_t chnk_idx = luaL_checknumber(L, 2); 
+  uint32_t num_readers;;
+
+  status = vctr_get_chunk(ptr_v->uqid, chnk_idx, NULL, NULL, &num_readers);
+  cBYE(status);
+
+  lua_pushnumber(L, num_readers);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_vctr_get_chunk( lua_State *L) {
   int status = 0;
   // get args from Lua 
@@ -217,7 +258,7 @@ static int l_vctr_get_chunk( lua_State *L) {
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vctr_get_chunk(ptr_v->uqid, chnk_idx, ptr_c, &num_elements);
+  status = vctr_get_chunk(ptr_v->uqid, chnk_idx, ptr_c, &num_elements,NULL);
   cBYE(status);
 
   lua_pushnumber(L, num_elements);
@@ -360,6 +401,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "get_name", l_vctr_get_name },
     //--------------------------------
     { "num_elements", l_vctr_num_elements },
+    { "num_readers", l_vctr_num_readers },
     { "width", l_vctr_width },
     // creation, new, ...
     { "add1", l_vctr_add1 },
@@ -367,6 +409,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "put1", l_vctr_put },
     { "put_chunk", l_vctr_put_chunk },
     { "get_chunk", l_vctr_get_chunk },
+    { "unget_chunk", l_vctr_unget_chunk },
     //--------------------------------
     { NULL,          NULL               },
 };
@@ -386,6 +429,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "get_name", l_vctr_get_name },
     //--------------------------------
     { "num_elements", l_vctr_num_elements },
+    { "num_readers", l_vctr_num_readers },
     { "width", l_vctr_width },
     // creation, new, ...
     { "add1", l_vctr_add1 },
@@ -393,6 +437,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "put1", l_vctr_put },
     { "put_chunk", l_vctr_put_chunk },
     { "get_chunk", l_vctr_get_chunk },
+    { "unget_chunk", l_vctr_unget_chunk },
     //--------------------------------
 
     { NULL,  NULL         }

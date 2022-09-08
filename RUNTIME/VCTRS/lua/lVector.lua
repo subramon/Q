@@ -64,7 +64,22 @@ function lVector.new(args)
   vector._base_vec = assert(cVector.add1(args))
   vector._siblings = {} -- no conjoined vectors
   vector._chunk_num = 0 -- next chunk to ask for 
-  vector._memo_len = qcfg.memo_len
+  --=================================================
+  if ( args.max_num_in_chunk ) then 
+    vector._max_num_in_chunk = args.max_num_in_chunk
+  else
+    vector._max_num_in_chunk = qcfg.max_num_in_chunk
+  end
+  assert(type(vector._max_num_in_chunk) == "number")
+  assert(vector._max_num_in_chunk > 0)
+  --=================================================
+  if ( args.memo_len ) then 
+    vector._memo_len = args.memo_len
+  else
+    vector._memo_len = qcfg.memo_len
+  end
+  assert(type(vector._memo_len) == "number")
+  --=================================================
   if ( args.gen ) then vector._generator = args.gen end 
   return vector
 end
@@ -88,35 +103,58 @@ function lVector:put_chunk(c, n)
 end
 
 function lVector:get_chunk(chnk_idx)
+  print("Get chunk")
   assert(type(chnk_idx) == "number")
   assert(chnk_idx >= 0)
-  local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
-  assert(type(x) == "CMEM")
-  return x, n
+  assert(chnk_idx <= self._chunk_num)
+  if ( chnk_idx == self._chunk_num ) then 
+    -- invoke the generator 
+    print("Generating chunk num " .. self._chunk_num)
+    local num_elements, buf, nn_buf = self._generator(self._chunk_num)
+    assert(type(num_elements) == "number")
+    if ( num_elements == 0 ) then  -- nothing more to generate
+      self:eov()  -- vector is at an end 
+      return 0
+    else
+      self:put_chunk(buf, num_elements)
+      -- TODO P1 IMPORTANT What about nn_buf??? 
+      return num_elements, buf
+    end 
+  else 
+    print("Archival chunk num " .. self._chunk_num)
+    local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
+    if ( x ~= nil ) then assert(type(x) == "CMEM") end 
+    return x, n
+  end
 end
 -- evaluates the vector using a provided generator function
 -- when done, is_eov() will be true for this vector
 -- if is_eov() at time of call, nothing is done 
 function lVector:eval()
-  print("EVAL ")
   if ( self:is_eov() ) then return self end 
-  local base_len, base_addr, nn_addr 
   repeat
-    base_len, base_addr, nn_addr = self:get_chunk(self.chunk_num)
+    local num_elements, buf, nn_buf = self:get_chunk(self._chunk_num)
+    assert(type(num_elements) == "number")
     -- this unget needed because get_chunk increments num readers 
     -- and the eval doesn't actually get the chunk for itself
-    cVector.unget_chunk(self._base_vec, self.chunk_num)
+    cVector.unget_chunk(self._base_vec, self._chunk_num)
     if ( self._nn_vec ) then 
-      cVector.unget_chunk(self._nn_vec, self.chunk_num) 
+      cVector.unget_chunk(self._nn_vec, self._chunk_num) 
     end
-    self.chunk_num = self.chunk_num + 1 
+    self._chunk_num = self._chunk_num + 1 
     -- release old chunks
+    -- NOTE that memo_len == 0 is meanignless 
+    -- because we always keep the last chunk generated
     if ( self._memo_len >= 0 ) then
-      local chunk_to_release = (self.chunk_num - self._memo_len) - 1 
-      local is_found = cVector.chnk_delete(self._base_vec, chunk_to_release)
-      assert(is_found == true)
+      local chunk_to_release = (self._chunk_num - self._memo_len) - 1 
+      if ( chunk_to_release >= 0 ) then 
+        print("Deleting chunk " .. chunk_to_release)
+        local is_found = 
+          cVector.chunk_delete(self._base_vec, chunk_to_release)
+        assert(is_found == true)
+      end
     end
-  until ( base_len ~= num_in_chunk ) 
+  until ( num_elements ~= self._max_num_in_chunk ) 
   assert(self:is_eov())
   --[[ TODO THINK P1 
   -- cannot have Vector with 0 elements

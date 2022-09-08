@@ -43,7 +43,7 @@ end
 qcfg.q_link_flags    = os.getenv("Q_LINK_FLAGS")
 qcfg.ld_library_path = os.getenv("LD_LIBRARY_PATH")
 --=================================
-qcfg.num_in_chunk = 32 -- this is default value
+qcfg.max_num_in_chunk = 32 -- this is default value
 qcfg.debug = true -- set to TRUE only if you want debugging
 qcfg.memo_len = -1 --  Vector code uses this default value
 -- -1 means infinite memo, 0 means no memoization 

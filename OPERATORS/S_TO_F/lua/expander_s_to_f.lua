@@ -5,7 +5,7 @@ local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 local qcfg    =  require 'Q/UTILS/lua/qcfg'
-local num_in_chunk =  qcfg.num_in_chunk
+local max_num_in_chunk =  qcfg.max_num_in_chunk
 
 return function (a, largs)
   -- Get name of specializer function. By convention
@@ -30,19 +30,21 @@ return function (a, largs)
     assert(chunk_num == l_chunk_num)
     --=== START: buffer allocation
     if ( not buf ) then 
-      buf = cmem.new({size = subs.buf_size, qtype = subs.out_qtype})
-      buf:stealable(true)
+      buf = assert(cmem.new({size = subs.buf_size, qtype = subs.out_qtype}))
+      assert(buf:stealable(true))
     end
     --=== STOP : buffer allocation
     --=============================
-    local lb = num_in_chunk * l_chunk_num
+    local lb = max_num_in_chunk * l_chunk_num
     if ( lb >= subs.len) then 
       cargs:delete()
       return 0, nil 
     end 
     local num_elements = subs.len - lb
     -- generate no more than a chunk at a time 
-    if ( num_elements > num_in_chunk ) then num_elements = num_in_chunk end
+    if ( num_elements > max_num_in_chunk ) then 
+      num_elements = max_num_in_chunk 
+    end
     -- quit if nothing more to produce 
     if ( num_elements <= 0 ) then 
       cargs:delete()

@@ -480,7 +480,7 @@ l_cmem_stealable(
   if ( ptr_cmem->is_foreign ) { go_BYE(-1); }
   bool stealable = true; // default behavior
   if ( num_args == 2 ) { 
-    if ( !lua_isboolean(L, 1) ) { go_BYE(-1); }
+    if ( !lua_isboolean(L, 2) ) { go_BYE(-1); }
     stealable = lua_toboolean(L, 2);
   }
   ptr_cmem->is_stealable = stealable;

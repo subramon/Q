@@ -6,7 +6,7 @@ local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local qc        = require 'Q/UTILS/lua/qcore'
 local qcfg    =  require 'Q/UTILS/lua/qcfg'
-local num_in_chunk =  qcfg.num_in_chunk
+local max_num_in_chunk =  qcfg.max_num_in_chunk
 
 -- cdef the necessary struct within pcall to prevent error on second call
 local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
@@ -30,7 +30,7 @@ local function const_specialize(
   subs.len = len
   subs.out_qtype = qtype
   subs.out_ctype = cutils.str_qtype_to_str_ctype(qtype)
-  subs.buf_size = num_in_chunk * cutils.get_width_qtype(qtype)
+  subs.buf_size = max_num_in_chunk * cutils.get_width_qtype(qtype)
   subs.cast_buf_as = subs.out_ctype .. " * "
 
   -- set up args for C code

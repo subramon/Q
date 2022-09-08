@@ -14,7 +14,8 @@ vctr_get_chunk(
     uint32_t vctr_uqid,
     uint32_t chnk_idx,
     CMEM_REC_TYPE *ptr_cmem,
-    uint32_t *ptr_n // number in chunk
+    uint32_t *ptr_n, // number in chunk
+    uint32_t *ptr_num_readers
     )
 {
   int status = 0;
@@ -22,8 +23,6 @@ vctr_get_chunk(
   uint32_t vctr_where_found, chnk_where_found;
   uint32_t chnk_size, width, max_num_in_chnk;
 
-  memset(ptr_cmem, 0, sizeof(CMEM_REC_TYPE));
-  *ptr_n = 0;
 
   status = vctr_is(vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
@@ -36,14 +35,51 @@ vctr_get_chunk(
   status = chnk_is(vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);
   cBYE(status);
   if ( chnk_is_found == false ) { go_BYE(-1); }
+  if ( ptr_num_readers != NULL ) { 
+    *ptr_num_readers = g_chnk_hmap.bkts[chnk_where_found].val.num_readers;
+    goto BYE; // NOTE early exit
+  }
   //-----------------------------------------------------
   // TODO Handle case when data has been flushed to l2/l4 mem
-  ptr_cmem->data  = g_chnk_hmap.bkts[chnk_where_found].val.l1_mem; 
-  ptr_cmem->qtype = g_vctr_hmap.bkts[vctr_where_found].val.qtype; 
-  ptr_cmem->size  = chnk_size;
-  ptr_cmem->is_foreign  = true;
-  ptr_cmem->is_stealable  = false;
-  *ptr_n = g_chnk_hmap.bkts[chnk_where_found].val.num_elements; 
+  if ( ptr_cmem != NULL ) { 
+    memset(ptr_cmem, 0, sizeof(CMEM_REC_TYPE));
+    ptr_cmem->data  = g_chnk_hmap.bkts[chnk_where_found].val.l1_mem; 
+    ptr_cmem->qtype = g_vctr_hmap.bkts[vctr_where_found].val.qtype; 
+    ptr_cmem->size  = chnk_size;
+    ptr_cmem->is_foreign  = true;
+    ptr_cmem->is_stealable  = false;
+    g_chnk_hmap.bkts[chnk_where_found].val.num_readers++;
+  }
+  if ( ptr_n != NULL ) { 
+    *ptr_n = g_chnk_hmap.bkts[chnk_where_found].val.num_elements; 
+  }
+BYE:
+  return status;
+}
+
+int
+vctr_unget_chunk(
+    uint32_t vctr_uqid,
+    uint32_t chnk_idx
+    )
+{
+  int status = 0;
+  status = vctr_get_chunk(vctr_uqid, chnk_idx, NULL, NULL, NULL);
+  cBYE(status);
+BYE:
+  return status;
+}
+
+int
+vctr_num_readers(
+    uint32_t vctr_uqid,
+    uint32_t chnk_idx,
+    uint32_t *ptr_num_readers
+    )
+{
+  int status = 0;
+  status = vctr_get_chunk(vctr_uqid, chnk_idx, NULL, NULL, ptr_num_readers);
+  cBYE(status);
 BYE:
   return status;
 }
