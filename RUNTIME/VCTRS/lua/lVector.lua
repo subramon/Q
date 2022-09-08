@@ -57,13 +57,20 @@ end
 function lVector:memo_len()
   return self._memo_len
 end
+function lVector:qtype()
+  return self._qtype
+end
 function lVector.new(args)
+  for k, v in pairs(args) do print(k, v) end 
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector
   assert(type(args) == "table")
   vector._siblings = {} -- no conjoined vectors
   vector._chunk_num = 0 -- next chunk to ask for 
   if ( args.gen ) then vector._generator = args.gen end 
+  --=================================================
+  assert(type(args.qtype) == "string")
+  vector._qtype = args.qtype
   --=================================================
   if ( args.max_num_in_chunk ) then 
     vector._max_num_in_chunk = args.max_num_in_chunk
@@ -107,6 +114,13 @@ end
 function lVector:put_chunk(c, n)
   assert(type(c) == "CMEM")
   assert(cVector.put_chunk(self._base_vec, c, n))
+end
+
+function lVector:get1(elem_idx)
+  assert(type(elem_idx) == "number")
+  if (elem_idx < 0) then return nil end
+  local sclr = cVector.get1(self._base_vec, elem_idx)
+  return sclr
 end
 
 function lVector:get_chunk(chnk_idx)

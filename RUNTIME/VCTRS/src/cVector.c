@@ -18,6 +18,7 @@
 #include "vctr_eov.h"
 #include "vctr_is_eov.h"
 #include "vctr_get_chunk.h"
+#include "vctr_get1.h"
 #include "vctr_name.h"
 #include "vctr_num_elements.h"
 #include "vctr_put.h"
@@ -266,6 +267,29 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_get1( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 2 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint64_t elem_idx = luaL_checknumber(L, 2); 
+  //-- allocate SCLR to go back 
+  SCLR_REC_TYPE *ptr_s = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
+  return_if_malloc_failed(ptr_s);
+  memset(ptr_s, '\0', sizeof(SCLR_REC_TYPE));
+  luaL_getmetatable(L, "Scalar"); /* Add the metatable to the stack. */
+  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+
+  status = vctr_get1(ptr_v->uqid, elem_idx, ptr_s); cBYE(status);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_vctr_get_chunk( lua_State *L) {
   int status = 0;
   // get args from Lua 
@@ -298,9 +322,10 @@ static int l_vctr_free( lua_State *L) {
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool is_found;
-  printf("cVector: Freeing Vector %u \n", ptr_v->uqid);
+  printf("cVector: Start Freeing Vector %u \n", ptr_v->uqid);
   status = vctr_del(ptr_v->uqid, &is_found); 
   lua_pushboolean(L, is_found);
+  printf("cVector: Stop  Freeing Vector %u \n", ptr_v->uqid);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -438,6 +463,7 @@ static const struct luaL_Reg vector_methods[] = {
     //--------------------------------
     { "put1", l_vctr_put },
     { "put_chunk", l_vctr_put_chunk },
+    { "get1", l_vctr_get1 },
     { "get_chunk", l_vctr_get_chunk },
     { "unget_chunk", l_vctr_unget_chunk },
     //--------------------------------
@@ -467,6 +493,7 @@ static const struct luaL_Reg vector_functions[] = {
     //--------------------------------
     { "put1", l_vctr_put },
     { "put_chunk", l_vctr_put_chunk },
+    { "get1", l_vctr_get1 },
     { "get_chunk", l_vctr_get_chunk },
     { "unget_chunk", l_vctr_unget_chunk },
     //--------------------------------
