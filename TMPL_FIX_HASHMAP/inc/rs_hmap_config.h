@@ -9,7 +9,6 @@
 typedef struct _rs_hmap_config_t { 
   uint32_t min_size;
   uint32_t max_size;
-  uint64_t max_growth_step;
   float low_water_mark;
   float high_water_mark;
   char *so_file;

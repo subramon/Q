@@ -22,8 +22,16 @@ LCL_rs_hmap_resize(
   if ( newsize < (uint32_t)(HIGH_WATER_MARK * (double)nitems) ) { 
     go_BYE(-1); 
   }
-  ptr_hmap->bkts   = calloc(sizeof(rs_hmap_bkt_t), newsize);
-  ptr_hmap->bkt_full   = calloc(sizeof(bool), newsize);
+  status = posix_memalign((void **)&(ptr_hmap->bkts), 16, 
+      sizeof(rs_hmap_bkt_t) * newsize);
+  cBYE(status);
+  memset(ptr_hmap->bkts, 0, sizeof(rs_hmap_bkt_t) * newsize);
+
+  status = posix_memalign((void **)&(ptr_hmap->bkt_full), 16,
+      sizeof(bool) * newsize);
+  cBYE(status);
+  memset((ptr_hmap->bkt_full), 0, sizeof(bool) * newsize);
+
   ptr_hmap->size   = newsize;
   uint32_t chk_nitems = ptr_hmap->nitems;
   ptr_hmap->nitems = 0;

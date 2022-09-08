@@ -1,3 +1,4 @@
+CC = gcc
 
 CFLAGS := -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align 
 CFLAGS += -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings 
@@ -29,20 +30,24 @@ SRCS +=	./calc_new_size.c
 SRCS +=	./murmurhash.c  
 SRCS +=	./fasthash.c  
 SRCS +=	./set_probe_loc.c  
+SRCS +=	../../UTILS/src/rs_mmap.c  
 
 OBJS = $(SRCS:.c=.o)
 
 HMAP_SRCS :=	./rs_hmap_instantiate.c  
-HMAP_SRCS +=	./rs_hmap_pr.c  
 HMAP_SRCS +=	./rs_hmap_chk.c  
 HMAP_SRCS +=	./rs_hmap_del.c  
 HMAP_SRCS +=	./rs_hmap_destroy.c  
+HMAP_SRCS +=	./rs_hmap_freeze.c  
 HMAP_SRCS +=	./rs_hmap_get.c  
-HMAP_SRCS +=	./rs_hmap_insert.c  
+HMAP_SRCS +=	./rs_hmap_insert.c  # local 
+HMAP_SRCS +=	./rs_hmap_set_fn_ptrs.c  # local 
 HMAP_SRCS +=	./rs_hmap_merge.c  
+HMAP_SRCS +=	./rs_hmap_pr.c  
 HMAP_SRCS +=	./rs_hmap_put.c  
 HMAP_SRCS +=	./rs_hmap_resize.c  
 HMAP_SRCS +=	./rs_hmap_row_dmp.c  
+HMAP_SRCS +=	./rs_hmap_thaw.c  
 
 HMAP_OBJS = $(HMAP_SRCS:.c=.o)
 
@@ -88,5 +93,5 @@ test_fastrem : ./test/test_fastrem.c
 	-o test_fastrem
 
 clean:
-	rm -f *.o test_hmap *.so ./src/*.o \
+	rm -f *.o test_hmap *.so ./src/*.o ../test/*.o \
 		test1 test_merge test_fastrem ${EXTSO}

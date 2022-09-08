@@ -27,6 +27,11 @@ typedef int (* get_fn_t)(
     bool *ptr_is_found,
     uint32_t *ptr_where_found
     );
+typedef int (* freeze_fn_t)(
+    void *ptr_hmap, 
+    const char * const meta_file_name,
+    const char * const data_file_name
+    );
 typedef int (* merge_fn_t)(
     void *ptr_dst_hmap, 
     const void * const ptr_src_hmap
@@ -99,6 +104,7 @@ typedef struct _rs_hmap_t {
   del_fn_t del;
   destroy_fn_t destroy;
   get_fn_t get;
+  freeze_fn_t freeze;
   merge_fn_t merge;
   pr_fn_t pr;
   put_fn_t put;

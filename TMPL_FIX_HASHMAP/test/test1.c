@@ -5,7 +5,9 @@
 #include "rs_hmap_destroy.h"
 #include "rs_hmap_del.h"
 #include "rs_hmap_get.h"
+#include "rs_hmap_freeze.h"
 #include "rs_hmap_put.h"
+#include "rs_hmap_thaw.h"
 
 int
 main(
@@ -16,6 +18,7 @@ main(
   // num_frees = num_mallocs = 0; 
   int num_iterations = 8; 
   rs_hmap_t H; memset(&H, 0, sizeof(rs_hmap_t));
+  rs_hmap_t H2; memset(&H2, 0, sizeof(rs_hmap_t));
   //---------------------------
   rs_hmap_config_t HC; memset(&HC, 0, sizeof(rs_hmap_config_t));
   HC.min_size = 32;
@@ -70,6 +73,10 @@ main(
   if ( chk_n1 != H.nitems ) { go_BYE(-1); }
   if ( chk_n2 != H.nitems ) { go_BYE(-1); }
 
+  status = rs_hmap_freeze(&H, "_meta.csv", "_bkts.bin", "_full.bin"); 
+  cBYE(status);
+  status = rs_hmap_thaw(&H2, "_meta.csv", "_data.bin", "_full.bin"); 
+  cBYE(status);
   // Now delete the items one by one 
   // All items have the same value: let us determine what it is 
   // sum_val is the value for all keys 
@@ -119,5 +126,6 @@ main(
   fprintf(stderr, "Unit test succeeded\n");
 BYE:
   H.destroy(&H);
+  H2.destroy(&H2);
   return status;
 }
