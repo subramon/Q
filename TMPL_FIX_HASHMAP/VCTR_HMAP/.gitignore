@@ -11,3 +11,6 @@ rs_hmap_put.*
 rs_hmap_resize.*
 rs_hmap_row_dmp.*
 *rs_hmap_struct.h
+rs_hmap_freeze*
+rs_hmap_unfreeze*
+rs_hmap_set_fn_ptrs*

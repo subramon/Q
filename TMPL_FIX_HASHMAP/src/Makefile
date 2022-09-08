@@ -47,7 +47,7 @@ HMAP_SRCS +=	./rs_hmap_pr.c
 HMAP_SRCS +=	./rs_hmap_put.c  
 HMAP_SRCS +=	./rs_hmap_resize.c  
 HMAP_SRCS +=	./rs_hmap_row_dmp.c  
-HMAP_SRCS +=	./rs_hmap_thaw.c  
+HMAP_SRCS +=	./rs_hmap_unfreeze.c  
 
 HMAP_OBJS = $(HMAP_SRCS:.c=.o)
 

@@ -35,6 +35,9 @@ SRCS2 +=	./src/rs_hmap_merge.c
 SRCS2 +=	./src/rs_hmap_put.c  
 SRCS2 +=	./src/rs_hmap_resize.c  
 SRCS2 +=	./src/rs_hmap_row_dmp.c  
+SRCS2 +=	./src/rs_hmap_set_fn_ptrs.c  
+SRCS2 +=	./src/rs_hmap_freeze.c  
+SRCS2 +=	./src/rs_hmap_unfreeze.c  
 
 OBJS2 = $(SRCS2:.c=.o)
 

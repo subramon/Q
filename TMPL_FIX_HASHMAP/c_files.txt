@@ -2,6 +2,7 @@ rs_hmap_chk.c
 rs_hmap_del.c  
 rs_hmap_destroy.c  
 rs_hmap_get.c  
+rs_hmap_freeze.c  
 rs_hmap_merge.c  
 rs_hmap_pr.c  
 rs_hmap_put.c  
@@ -9,3 +10,5 @@ rs_hmap_row_dmp.c
 rs_hmap_insert.c  
 rs_hmap_resize.c  
 rs_hmap_instantiate.c  
+rs_hmap_set_fn_ptrs.c  
+rs_hmap_unfreeze.c  

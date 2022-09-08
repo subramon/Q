@@ -2,9 +2,9 @@
 #include "rs_hmap_struct.h"
 #include "rs_hmap_set_fn_ptrs.h"
 #include "rs_mmap.h"
-#include "rs_hmap_thaw.h"
+#include "rs_hmap_unfreeze.h"
 int 
-rs_hmap_thaw(
+rs_hmap_unfreeze(
     rs_hmap_t *H,
     const char * const meta_file,
     const char * const bkts_file,

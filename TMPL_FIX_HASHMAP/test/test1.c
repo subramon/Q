@@ -7,7 +7,7 @@
 #include "rs_hmap_get.h"
 #include "rs_hmap_freeze.h"
 #include "rs_hmap_put.h"
-#include "rs_hmap_thaw.h"
+#include "rs_hmap_unfreeze.h"
 
 int
 main(
@@ -75,7 +75,7 @@ main(
 
   status = rs_hmap_freeze(&H, "_meta.csv", "_bkts.bin", "_full.bin"); 
   cBYE(status);
-  status = rs_hmap_thaw(&H2, "_meta.csv", "_data.bin", "_full.bin"); 
+  status = rs_hmap_unfreeze(&H2, "_meta.csv", "_data.bin", "_full.bin"); 
   cBYE(status);
   // Now delete the items one by one 
   // All items have the same value: let us determine what it is 
