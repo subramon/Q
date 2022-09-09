@@ -470,6 +470,22 @@ BYE:
   lua_pushnumber(L, status);
   return 3;
 }
+static int l_vctr_null( lua_State *L) 
+{ // create a null vector, needed for function signature compatibility
+  int status = 0;
+  VCTR_REC_TYPE *ptr_v = NULL;
+  ptr_v = (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
+  return_if_malloc_failed(ptr_v);
+  memset(ptr_v, '\0', sizeof(VCTR_REC_TYPE));
+  luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
+  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
 
 //-----------------------
 static const struct luaL_Reg vector_methods[] = {
@@ -494,6 +510,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "pr", l_vctr_print },
     // creation, new, ...
     { "add1", l_vctr_add1 },
+    { "null", l_vctr_null },
     //--------------------------------
     { "put1", l_vctr_put },
     { "put_chunk", l_vctr_put_chunk },
@@ -525,6 +542,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "pr", l_vctr_print },
     // creation, new, ...
     { "add1", l_vctr_add1 },
+    { "null", l_vctr_null },
     //--------------------------------
     { "put1", l_vctr_put },
     { "put_chunk", l_vctr_put_chunk },

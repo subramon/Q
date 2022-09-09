@@ -197,6 +197,10 @@ function lVector:eval()
 end
 
 function lVector:pr(opfile, lb, ub)
+  local nn = self._nn_vec
+  if ( nn == nil ) then
+    nn = lVector.null()
+  end
   if ( opfile ) then
     assert(type(opfile) == "string")
   else
@@ -218,8 +222,13 @@ function lVector:pr(opfile, lb, ub)
     ub = self:num_elements()
   end
   --=================================
-  assert(cVector.pr(self._base_vec, self._nn_vec, opfile, lb, ub))
+  -- assert(cVector.pr(self._base_vec, self._nn_vec, opfile, lb, ub))
+  assert(cVector.pr(self._base_vec, nn, opfile, lb, ub))
   return true
+end
+
+function lVector.null()
+  return cVector.null()
 end
 
 return lVector

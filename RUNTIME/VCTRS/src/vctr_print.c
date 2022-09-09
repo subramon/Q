@@ -65,15 +65,16 @@ vctr_print(
     uint32_t l_num_to_pr = mcr_min(num_in_chnk - chnk_idx, num_to_pr); 
     for ( uint64_t i = 0; i < l_num_to_pr; i++ ) { 
       switch ( qtype ) {
-        case I1 : fprintf(fp, "%d", ((int8_t *)data)[i]); break; 
-        case I2 : fprintf(fp, "%d", ((int16_t *)data)[i]); break; 
-        case I4 : fprintf(fp, "%d", ((int32_t *)data)[i]); break; 
-        case I8 : fprintf(fp, "%" PRIi64 "", ((int64_t *)data)[i]); break; 
-        case F4 : fprintf(fp, "%f", ((float *)data)[i]); break; 
-        case F8 : fprintf(fp, "%lf", ((double *)data)[i]); break; 
+        case I1 : fprintf(fp, "%d\n", ((int8_t *)data)[i]); break; 
+        case I2 : fprintf(fp, "%d\n", ((int16_t *)data)[i]); break; 
+        case I4 : fprintf(fp, "%d\n", ((int32_t *)data)[i]); break; 
+        case I8 : fprintf(fp, "%" PRIi64 "\n", ((int64_t *)data)[i]); break; 
+        case F4 : fprintf(fp, "%f\n", ((float *)data)[i]); break; 
+        case F8 : fprintf(fp, "%lf\n", ((double *)data)[i]); break; 
         default : go_BYE(-1); break;
       }
     }
+    break; // TODO P0
   }
 BYE:
   if ( ( opfile == NULL ) || ( *opfile == '\0' ) ) { 
