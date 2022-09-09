@@ -21,8 +21,8 @@ typedef struct _chnk_rs_hmap_val_t {
   char *l1_mem;
   bool l2_dirty;
   bool l3_dirty;
-  char l2_mem[MAX_LEN_CHNK_FILE_NAME+1];
-  char l3_mem[MAX_LEN_CHNK_FILE_NAME+1];
+  uint64_t l2_mem_id; // This identifies the file where it is stored
+  // Details on converting l2_mem_id to filename elsewhere
   // Much more to put in here
 } chnk_rs_hmap_val_t;
 #endif //  __CHNK_TYPES_TYPES_H

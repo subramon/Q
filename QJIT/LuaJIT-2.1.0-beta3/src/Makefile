@@ -680,6 +680,7 @@ INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
 INCS += -I../../../RUNTIME/VCTRS/inc/
 INCS += -I../../../UTILS/inc/
+INCS += -I../../GUTILS/inc/
 
 %.o: %.c
 	$(E) "CC1       $@"
@@ -717,6 +718,7 @@ RS_OBJS = $(RS_SRCS:.c=.o)
 
 RS_LIBS := -lpthread
 RS_LIBS += -levent
+RS_LIBS += ${Q_ROOT}/lib/libgutils.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap_vctr.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap_chnk.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap.so 

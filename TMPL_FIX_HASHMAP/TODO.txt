@@ -1,0 +1,4 @@
+The specialize_one.sh script is hopeless naive but it works for now
+
+For example, I had to change the name of rs_hmap_thaw to rs_hmap_unfreeze
+because the pattern match for rs_hmap_t kicked in 

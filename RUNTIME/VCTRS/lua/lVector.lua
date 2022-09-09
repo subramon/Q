@@ -162,7 +162,6 @@ function lVector:eval()
     if ( self._nn_vec ) then 
       cVector.unget_chunk(self._nn_vec, self._chunk_num) 
     end
-    self._chunk_num = self._chunk_num + 1 
     -- release old chunks
     -- NOTE that memo_len == 0 is meanignless 
     -- because we always keep the last chunk generated
