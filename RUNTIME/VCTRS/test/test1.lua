@@ -52,7 +52,7 @@ tests.t3 = function()
   for i = 1, num_chunks do 
     local iptr = assert(get_ptr(buf, qtype))
     for  j = 1, max_num_in_chnk do 
-      iptr[0] = (i+1)*100 + (j+1)
+      iptr[j-1] = (i+1)*100 + (j+1)
     end
     print("i = ", i)
     x:put_chunk(buf, max_num_in_chnk)
@@ -64,6 +64,11 @@ tests.t3 = function()
     assert(type(c) == "CMEM")
     assert(type(n) == "number")
     assert(n == max_num_in_chnk)
+    -- check values are what you put in 
+    local iptr = assert(get_ptr(c, qtype))
+    for  j = 1, max_num_in_chnk do 
+      assert(iptr[j-1] == (i+1)*100 + (j+1))
+    end
   end
   assert(x:is_eov() == false)
   x:put_chunk(buf, max_num_in_chnk-1)
