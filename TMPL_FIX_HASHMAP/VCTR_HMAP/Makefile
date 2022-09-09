@@ -21,8 +21,10 @@ INCS += -I../inc/
 INCS += -I../../UTILS/inc/
 
 TMPL=vctr
+MYSO = libhmap_${TMPL}.so
+EXTSO = ${Q_ROOT}/lib/${MYSO} 
 
-all: libhmap_${TMPL}.so # TODO test_${TMPL} 
+all: libhmap_${TMPL}.so ${EXTSO}
 
 SRCS2 :=	./src/${TMPL}_rs_hmap_instantiate.c  
 SRCS2 +=	./src/rs_hmap_pr.c  
@@ -80,9 +82,7 @@ CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
 .c.o : 
 	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
 
-MYSO = libhmap_${TMPL}.so
 
-EXTSO = ${Q_ROOT}/lib/${MYSO} 
 
 ${EXTSO} : ${MYSO}
 	cp ${MYSO} ${EXTSO}

@@ -21,6 +21,7 @@
 #include "vctr_get1.h"
 #include "vctr_name.h"
 #include "vctr_num_elements.h"
+#include "vctr_print.h"
 #include "vctr_put.h"
 #include "vctr_put_chunk.h"
 #include "vctr_set_memo.h"
@@ -76,6 +77,38 @@ static int l_vctr_get_name( lua_State *L) {
   char * name = vctr_get_name(ptr_v->uqid); 
   if ( name == NULL ) { go_BYE(-1); } 
   lua_pushstring(L, name); // 99% sure that no strdup needed
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------------
+static int l_vctr_print( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 5 ) { go_BYE(-1); }
+  uint32_t uqid = 0, nn_uqid = 0;
+  const char * opfile = NULL;
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uqid = ptr_v->uqid;
+  VCTR_REC_TYPE *ptr_nn_v = NULL;
+
+  if ( luaL_checkudata(L, 2, "Vector") != NULL ) { 
+    ptr_nn_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
+    nn_uqid = ptr_nn_v->uqid;
+  }
+  if ( lua_isstring(L, 3) ) { 
+    opfile = luaL_checkstring(L, 3);
+  }
+  if ( !lua_isnumber(L, 4) ) { go_BYE(-1); }
+  uint64_t lb = luaL_checknumber(L, 4);
+
+  if ( !lua_isnumber(L, 5) ) { go_BYE(-1); }
+  uint64_t ub = luaL_checknumber(L, 5);
+
+  status = vctr_print(uqid, nn_uqid, opfile, lb, ub); cBYE(status);
+  lua_pushboolean(L, true); 
   return 1;
 BYE:
   lua_pushnil(L);
@@ -458,6 +491,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "num_elements", l_vctr_num_elements },
     { "num_readers", l_vctr_num_readers },
     { "width", l_vctr_width },
+    { "pr", l_vctr_print },
     // creation, new, ...
     { "add1", l_vctr_add1 },
     //--------------------------------
@@ -488,6 +522,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "num_elements", l_vctr_num_elements },
     { "num_readers", l_vctr_num_readers },
     { "width", l_vctr_width },
+    { "pr", l_vctr_print },
     // creation, new, ...
     { "add1", l_vctr_add1 },
     //--------------------------------

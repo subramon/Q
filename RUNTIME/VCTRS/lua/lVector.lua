@@ -114,6 +114,7 @@ end
 function lVector:put_chunk(c, n)
   assert(type(c) == "CMEM")
   assert(cVector.put_chunk(self._base_vec, c, n))
+  self._chunk_num = self._chunk_num + 1 
 end
 
 function lVector:get1(elem_idx)
@@ -193,6 +194,32 @@ function lVector:eval()
   --]]
   if ( qcfg.debug ) then self:check() end
   return self
+end
+
+function lVector:pr(opfile, lb, ub)
+  if ( opfile ) then
+    assert(type(opfile) == "string")
+  else
+    opfile = ffi.NULL
+  end
+  --=================================
+  if ( lb ) then
+    assert(type(lb) == "number")
+    assert(lb >= 0)
+  else
+    lb = 0
+  end
+  --=================================
+  if ( ub ) then -- upper bound exclusive
+    assert(type(ub) == "number")
+    assert(ub > lb) 
+    assert(ub <= self:num_elements())
+  else
+    ub = self:num_elements()
+  end
+  --=================================
+  assert(cVector.pr(self._base_vec, self._nn_vec, opfile, lb, ub))
+  return true
 end
 
 return lVector

@@ -713,30 +713,7 @@ int main(int argc, char **argv)
     l_message(argv[0], "cannot create state: not enough memory");
     return EXIT_FAILURE;
   }
-#ifdef XXX
-  // START TESTING  TODO DELETE 
-  uint32_t x = vctr_new_uqid(); 
-  printf("x = %" PRIu32 "\n", x);
-  x = vctr_new_uqid(); 
-  printf("x = %" PRIu32 "\n", x);
-  uint32_t uqid; status = vctr_add1(F4, &uqid); cBYE(status);
-  printf("uqid = %" PRIu32 "\n", x);
-  if ( uqid != (x+1) ) { go_BYE(-1); }
-  bool b; uint32_t where;
-  status = vctr_is(uqid, &b, &where); cBYE(status);
-  if ( !b ) { go_BYE(-1); }
-  int cnt = vctr_cnt(); 
-  if ( cnt != 1 ) { go_BYE(-1); }
-  status = vctr_del(123445, &b); cBYE(status);
-  if ( b ) { go_BYE(-1); }
-  cnt = vctr_cnt(); 
-  if ( cnt != 1 ) { go_BYE(-1); }
-  status = vctr_del(uqid, &b); cBYE(status);
-  if ( !b ) { go_BYE(-1); }
-  cnt = vctr_cnt(); 
-  if ( cnt != 0 ) { go_BYE(-1); }
-  // STOP TESTING  TODO DELETE 
-#endif
+
   smain.argc = argc;
   smain.argv = argv;
   printf("Starting\n"); 

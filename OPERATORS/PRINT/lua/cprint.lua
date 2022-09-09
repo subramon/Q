@@ -2,10 +2,9 @@ local cutils   = require 'libcutils'
 local cmem     = require 'libcmem'
 local ffi      = require 'ffi'
 local qc       = require 'Q/UTILS/lua/qcore'
-local qconsts  = require 'Q/UTILS/lua/qconsts'
+local qcfg     = require 'Q/UTILS/lua/qcfg'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
-local qmem    = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local max_num_in_chunk = qcfg.max_num_in_chunk
 
 local function cprint( 
   opfile, -- file for destination fo print

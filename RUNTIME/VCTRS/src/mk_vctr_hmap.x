@@ -14,7 +14,6 @@ mk_vctr_hmap(
 {
   int status;
   rs_hmap_t *vctr_hmap = NULL;
-  memset(vctr_hmap, 0, sizeof(rs_hmap_t));
 
   rs_hmap_config_t HC1; memset(&HC1, 0, sizeof(rs_hmap_config_t));
   HC1.min_size = 32;

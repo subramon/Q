@@ -21,7 +21,9 @@ INCS += -I../../UTILS/inc/
 
 TMPL=CASE1
 
-all: libhmap.so test1 test_merge
+EXTSO = ${Q_ROOT}/lib/libhmap.so
+
+all: libhmap.so test1 test_merge ${EXTSO}
 
 SRCS :=	./aux.c  
 SRCS +=	./spooky_hash.c  
@@ -72,7 +74,6 @@ MERGE_OBJS = $(MERGE_SRCS:.c=.o)
 libhmap.so: ${OBJS} 
 	gcc  ${OBJS} -shared -lm -o libhmap.so  -ldl
 
-EXTSO = ${Q_ROOT}/lib/libhmap.so
 
 ${EXTSO} : libhmap.so
 	cp libhmap.so ${EXTSO}

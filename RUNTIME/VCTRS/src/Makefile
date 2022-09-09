@@ -45,6 +45,7 @@ SRCS +=	vctr_name.c
 SRCS +=	vctr_num_chunks.c  
 SRCS +=	vctr_num_elements.c  
 SRCS +=	vctr_new_uqid.c  
+SRCS +=	vctr_print.c  
 SRCS +=	vctr_put.c  
 SRCS +=	vctr_put_chunk.c  
 SRCS +=	vctr_set_memo.c  

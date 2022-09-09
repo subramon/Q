@@ -45,7 +45,7 @@ rs_hmap_unfreeze(
   nr = fscanf(mfp, "high_water_mark,%f\n", &(H->config.high_water_mark));
   if ( nr != 1 ) { go_BYE(-1);  }
 
-  nr = fscanf(mfp, "so_file,%s\n", buf); 
+  nr = fscanf(mfp, "so_file,%127s\n", buf); 
   if ( nr != 1 ) { go_BYE(-1);  }
   H->config.so_file = strdup(buf);
 

@@ -1,9 +1,9 @@
 require "Q/OPERATORS/S_TO_F/lua/s_to_f"
+require "Q/OPERATORS/PRINT/lua/print_csv"
 --[[
 require 'Q/QTILS/lua/fold'
 require "Q/OPERATORS/F_TO_S/lua/f_to_s"
 require "Q/OPERATORS/MK_COL/lua/mk_col"
-require "Q/OPERATORS/PRINT/lua/print_csv"
 require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
 require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
 require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"

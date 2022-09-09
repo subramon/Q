@@ -76,8 +76,10 @@ tests.t3 = function()
   assert(type(n) == "number")
   assert(n == max_num_in_chnk-1)
   -- cannot put once eov 
+  print(">>> START Deliberate error")
   local status = pcall(lVector.put_chunk, x, buf, max_num_in_chnk-1)
   assert(status == false)
+  print(">>> STOP  Deliberate error")
 
   print("Test t3 succeeded")
 end
