@@ -5,6 +5,7 @@
 #include "chnk_is.h"
 #include "vctr_is.h"
 #include "vctr_get1.h"
+#include "get_chnk_data.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
@@ -40,7 +41,8 @@ vctr_get1(
   if ( chnk_is_found == false ) { go_BYE(-1); }
   //-----------------------------------------------------
   // TODO Handle case when data has been flushed to l2/l4 mem
-  char *data  = g_chnk_hmap.bkts[chnk_where_found].val.l1_mem; 
+  char *data  = get_chnk_data(chnk_where_found); 
+  if ( data == NULL ) { go_BYE(-1);
   uint32_t num_in_chnk = g_chnk_hmap.bkts[chnk_where_found].val.num_elements;
   if ( (chnk_off+1) > num_in_chnk ) { go_BYE(-1); } // TODO Check boundary
 

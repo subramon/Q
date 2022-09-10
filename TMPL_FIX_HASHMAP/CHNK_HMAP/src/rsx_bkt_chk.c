@@ -23,8 +23,7 @@ rsx_bkt_chk(
       chnk_rs_hmap_val_t val = bkts[i].val;
       if ( val.num_elements < val.size ) { go_BYE(-1); }
       if ( val.num_elements == 0       ) { go_BYE(-1); }
-      if ( val.l2_dirty ) { if ( val.l2_mem[0] == '\0' ) { go_BYE(-1); }}
-      if ( val.l3_dirty ) { if ( val.l3_mem[0] == '\0' ) { go_BYE(-1); }}
+      if ( val.l2_dirty ) { if ( val.l2_mem_id != 0 ) { go_BYE(-1); }}
     }
   }
 BYE:

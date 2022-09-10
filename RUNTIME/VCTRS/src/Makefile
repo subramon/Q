@@ -26,6 +26,7 @@ INCS += -I../../SCLR/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
+INCS += -I../../../QJIT/GUTILS/inc
 
 TMPL=CASE1
 
@@ -53,6 +54,7 @@ SRCS +=	vctr_width.c
 
 SRCS +=	chnk_cnt.c  
 SRCS +=	chnk_del.c  
+SRCS +=	chnk_free_resources.c  
 SRCS +=	chnk_is.c  
 
 OBJS = $(SRCS:.c=.o)
@@ -74,6 +76,12 @@ TMPL_HMAP_SO  = ${Q_ROOT}/lib/libhmap.so
 ${TMPL_HMAP_SO} : 
 	make -C ${TMPL_HMAP_LOC} ${TMPL_HMAP_SO}
 #-------------------------------------------
+GUTILS_LOC = ../../../QJIT/GUTILS/
+GUTILS_SO  = ${Q_ROOT}/lib/libgutils.so
+
+${GUTILS_SO} : 
+	make -C ${GUTILS_LOC} ${GUTILS_SO}
+#-------------------------------------------
 VCTR_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/VCTR_HMAP
 VCTR_HMAP_SO  = ${Q_ROOT}/lib/libhmap_vctr.so
 
@@ -89,7 +97,8 @@ ${CHNK_HMAP_SO} :
 core_libvctr.so :  ${OBJS} \
 	${TMPL_HMAP_SO} \
 	${VCTR_HMAP_SO} \
-	${CHNK_HMAP_SO} 
+	${CHNK_HMAP_SO} \
+	${GUTILS_SO} 
 	gcc ${OBJS}  \
 	-shared -o core_libvctr.so \
 	${VCTR_HMAP_SO} ${CHNK_HMAP_SO} 
@@ -117,6 +126,7 @@ ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
 	${TMPL_HMAP_SO} \
+	${GUTILS_SO} \
 	${Q_ROOT}/lib/libutils.so
 #-------------------------------------------
 ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
@@ -125,6 +135,7 @@ ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
 	${TMPL_HMAP_SO} \
+	${GUTILS_SO} \
 	${Q_ROOT}/lib/libutils.so \
 	-lm 
 #-------------------------------------------
@@ -137,3 +148,4 @@ clean:
 	rm -f ${TMPL_HMAP_SO}
 	rm -f ${VCTR_HMAP_SO}
 	rm -f ${CHNK_HMAP_SO}
+	rm -f ${GUTILS_HMAP_SO} 

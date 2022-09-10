@@ -29,6 +29,9 @@ chnk_rs_hmap_t g_chnk_hmap;
 uint32_t g_chnk_uqid;
 
 uint64_t g_mem_used;
+uint64_t g_mem_allowed;
+uint64_t g_dsk_used;
+uint64_t g_dsk_allowed;
 
 int 
 main(
@@ -44,6 +47,11 @@ main(
 
   g_chnk_uqid = 0; 
   memset(&g_chnk_hmap, 0, sizeof(chnk_rs_hmap_t));
+
+  g_mem_used = 0;
+  g_mem_allowed = (uint64_t)1048576 * (uint64_t)(1024 * 4);
+  g_dsk_used = 0;
+  g_dsk_allowed = (uint64_t)1048576 * (uint64_t)(1024 * 32);
   //-----------------------
   if ( argc != 1 ) { go_BYE(-1); }
   //-------------------------------------------------------

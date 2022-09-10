@@ -6,10 +6,10 @@
 #include "chnk_cnt.h"
 #include "chnk_is.h"
 #include "vctr_put.h"
+#include "mod_mem_used.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
-extern uint64_t g_mem_used;
 
 int
 vctr_put(
@@ -46,7 +46,7 @@ vctr_put(
     char *l1_mem = NULL;
     status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, chnk_size);
     cBYE(status);
-    __atomic_add_fetch(&g_mem_used, chnk_size, 0);
+    status = incr_mem_used(chnk_size);  cBYE(status);
     chnk_rs_hmap_val_t chnk_val = { .qtype = qtype, .l1_mem = l1_mem };
     l1_mem = NULL;
     //-------------------------------
@@ -73,7 +73,7 @@ vctr_put(
     status = posix_memalign((void **)&chnk_val.l1_mem, Q_VCTR_ALIGNMENT,
         chnk_size);
     cBYE(status);
-    __atomic_add_fetch(&g_mem_used, chnk_size, 0);
+    status = incr_mem_used( chnk_size);
     status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
     cBYE(status);
     g_vctr_hmap.bkts[vctr_where].val.num_chnks++;

@@ -17,6 +17,7 @@ CC=gcc
 INCS := -I../inc/ 
 INCS += -I../../../UTILS/gen_inc/ 
 INCS += -I../../../UTILS/inc/
+INCS += -I../../../QJIT/GUTILS/inc/
 INCS += -I/usr/include/lua5.1/ 
 
 all: libcmem.so 

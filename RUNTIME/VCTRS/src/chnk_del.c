@@ -4,11 +4,11 @@
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_is.h"
 #include "vctr_is.h"
+#include "chnk_free_resources.h"
 #include "chnk_del.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
-extern uint64_t g_mem_used;
 
 int
 chnk_del(
@@ -41,14 +41,7 @@ chnk_del(
   status = g_chnk_hmap.del(&g_chnk_hmap, &chnk_key,&chnk_val,ptr_is_found); 
   cBYE(status);
   if ( !*ptr_is_found ) { goto BYE; } // silent exit 
-  if ( chnk_val.l1_mem != NULL ) { 
-    free_if_non_null(chnk_val.l1_mem);
-    if ( chnk_size == 0 ) { go_BYE(-1); } 
-    if ( chnk_size > g_mem_used ) { go_BYE(-1); } 
-    __atomic_sub_fetch(&g_mem_used, chnk_size, 0);
-  }
-  if ( chnk_val.l2_mem[0] != '\0' ) { unlink(chnk_val.l2_mem); }
-  if ( chnk_val.l3_mem[0] != '\0' ) { unlink(chnk_val.l3_mem); }
+  status = chnk_free_resources(chnk_size, &chnk_val); cBYE(status);
 BYE:
   return status;
 }

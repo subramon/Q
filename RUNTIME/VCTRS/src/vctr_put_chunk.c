@@ -6,10 +6,10 @@
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_cnt.h"
 #include "vctr_put_chunk.h"
+#include "mod_mem_used.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
-extern uint64_t g_mem_used;
 
 // is_stealable is for the most common way in which we will put 
 // data into vectors. In this case, we put a chunk at a time
@@ -78,7 +78,7 @@ vctr_put_chunk(
   else {
     status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, chnk_size); 
     cBYE(status);
-    __atomic_add_fetch(&g_mem_used, chnk_size, 0);
+    status = incr_mem_used(chnk_size); cBYE(status);
     memcpy(l1_mem, ptr_cmem->data, n * vctr_val.width);
   }
   chnk_rs_hmap_key_t chnk_key = 
