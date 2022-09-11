@@ -2,8 +2,11 @@
 INCS=-I../inc/ -I../inc/
 INCDIR=../inc/
 
+MYSO = libutils.so
 
-all : libutils.so gen_src_files src_files gen_inc_files
+EXTSO=${Q_ROOT}/lib/${MYSO}
+
+all : ${MYSO} gen_src_files src_files gen_inc_files ${EXTSO}
 
 
 gen_inc_files : \
@@ -77,7 +80,7 @@ gen_src_files : \
 #----------------------------------
 
 # the purpose of test is to run a quick test on *all* the code here
-test : libutils.so 
+test : ${MYSO}
 	
 ../inc/txt_to_B1.h : 
 	luajit ../src/cli_extract_func_decl.lua txt_to_B1.c ${INCDIR}
@@ -243,17 +246,19 @@ GEN_SRC_FILES = \
 #----------------------------------
 
 
-libutils.so : src_files gen_src_files gen_inc_files
+${EXTSO} : ${MYSO}
+	cp ${MYSO} ${EXTSO}
+
+${MYSO} : src_files gen_src_files gen_inc_files
 	gcc -shared ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} \
 		${GEN_SRC_FILES} \
-		${SRC_FILES} -o libutils.so
-	cp libutils.so ${Q_ROOT}/lib/
+		${SRC_FILES} -o ${MYSO}
 
 clean :
 	rm -f _*
 	rm -f *.so
 	rm -f *.o
-	rm -f  ${Q_ROOT}/lib/libutils.so 
+	rm -f  ${EXTSO} ${MYSO}
 
 
 # do not use following unless you absolutely need to

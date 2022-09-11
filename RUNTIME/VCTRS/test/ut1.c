@@ -108,6 +108,9 @@ main(
       go_BYE(-1); 
     }
   }
+  status = g_vctr_hmap.freeze(&g_vctr_hmap,
+      "/tmp/", "_meta.csv", "_bkts.bin","_full.bin");
+  cBYE(status);
   //-- bogus delete -----------------
   status = vctr_del(123445, &b); cBYE(status);
   if ( b ) { go_BYE(-1); }

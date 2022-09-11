@@ -40,13 +40,16 @@ vctr_get1(
   cBYE(status);
   if ( chnk_is_found == false ) { go_BYE(-1); }
   //-----------------------------------------------------
-  // TODO Handle case when data has been flushed to l2/l4 mem
-  char *data  = get_chnk_data(chnk_where_found); 
-  if ( data == NULL ) { go_BYE(-1);
+  chnk_rs_hmap_key_t key = { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx};
+  char *data  = get_chnk_data(&key, 
+      &(g_chnk_hmap.bkts[chnk_where_found].val), false); 
+  if ( data == NULL ) { go_BYE(-1); }
   uint32_t num_in_chnk = g_chnk_hmap.bkts[chnk_where_found].val.num_elements;
   if ( (chnk_off+1) > num_in_chnk ) { go_BYE(-1); } // TODO Check boundary
 
   memcpy(&(ptr_sclr->val), data, width); 
+  // Following is needed because get_chnk_data increments num_readers
+  g_chnk_hmap.bkts[chnk_where_found].val.num_readers--; 
 BYE:
   return status;
 }

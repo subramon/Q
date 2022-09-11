@@ -15,6 +15,7 @@ main(
     )
 {
   int status = 0;
+  const char * const meta_dir_root = "/tmp/";
   // num_frees = num_mallocs = 0; 
   int num_iterations = 8; 
   rs_hmap_t H; memset(&H, 0, sizeof(rs_hmap_t));
@@ -73,7 +74,7 @@ main(
   if ( chk_n1 != H.nitems ) { go_BYE(-1); }
   if ( chk_n2 != H.nitems ) { go_BYE(-1); }
 
-  status = rs_hmap_freeze(&H, "_meta.csv", "_bkts.bin", "_full.bin"); 
+  status = H.freeze(&H, meta_dir_root, "_meta.csv", "_bkts.bin", "_full.bin"); 
   cBYE(status);
   status = rs_hmap_unfreeze(&H2, "_meta.csv", "_data.bin", "_full.bin"); 
   cBYE(status);

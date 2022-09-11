@@ -26,7 +26,10 @@ EXTSO = ${Q_ROOT}/lib/${MYSO}
 
 all: libhmap_${TMPL}.so ${EXTSO}
 
+# Following are different because they are for first call
 SRCS2 :=	./src/${TMPL}_rs_hmap_instantiate.c  
+SRCS2 +=	./src/rs_hmap_unfreeze.c  
+#----------------------------------------
 SRCS2 +=	./src/rs_hmap_pr.c  
 SRCS2 +=	./src/rs_hmap_chk.c  
 SRCS2 +=	./src/rs_hmap_del.c  
@@ -39,7 +42,6 @@ SRCS2 +=	./src/rs_hmap_resize.c
 SRCS2 +=	./src/rs_hmap_row_dmp.c  
 SRCS2 +=	./src/rs_hmap_set_fn_ptrs.c  
 SRCS2 +=	./src/rs_hmap_freeze.c  
-SRCS2 +=	./src/rs_hmap_unfreeze.c  
 
 OBJS2 = $(SRCS2:.c=.o)
 
@@ -47,6 +49,7 @@ OBJS2 = $(SRCS2:.c=.o)
 OBJS := ${OBJS2}
 
 ${TMPL}_rs_hmap_instantiate.o : ./src/${TMPL}_rs_hmap_instantiate.c 
+${TMPL}_rs_hmap_unfreeze.o : ./src/${TMPL}_rs_hmap_unfreeze.c 
 
 CDIR=${PWD}
 WDIR=${CDIR}/..
@@ -59,7 +62,8 @@ WDIR=${CDIR}/..
 	cat ./inc/${TMPL}_rs_hmap_struct.h | \
 	  	sed s"/__RS_HMAP_STRUCT/__${TMPL}_RS_HMAP_STRUCT/"g \
 		> _tempf
-	mv _tempf ./inc/${TMPL}_rs_hmap_struct.h
+	cp _tempf ./inc/${TMPL}_rs_hmap_struct.h
+#-------------------------------
 	cat ./src/rs_hmap_instantiate.c | \
 	  	sed s"/^rs_hmap_instantiate/${TMPL}_rs_hmap_instantiate/"g \
 		> _tempf
@@ -69,6 +73,17 @@ WDIR=${CDIR}/..
 		> _tempf
 	cp _tempf ./inc/${TMPL}_rs_hmap_instantiate.h # TODO FIX ugly
 	mv _tempf ./inc/rs_hmap_instantiate.h
+#-------------------------------
+	cat ./src/rs_hmap_unfreeze.c | \
+	  	sed s"/^rs_hmap_unfreeze/${TMPL}_rs_hmap_unfreeze/"g \
+		> _tempf
+	mv _tempf ./src/${TMPL}_rs_hmap_unfreeze.c
+	cat ./inc/rs_hmap_unfreeze.h | \
+	  	sed s"/^rs_hmap_unfreeze/${TMPL}_rs_hmap_unfreeze/"g \
+		> _tempf
+	cp _tempf ./inc/${TMPL}_rs_hmap_unfreeze.h # TODO FIX ugly
+	mv _tempf ./inc/rs_hmap_unfreeze.h
+#-------------------------------
 
 CUSTOM_SRCS +=	./src/rsx_pr.c  
 CUSTOM_SRCS +=	./src/rsx_key_cmp.c  
@@ -81,6 +96,7 @@ CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
 
 .c.o : 
 	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
+
 
 
 ${EXTSO} : ${MYSO}

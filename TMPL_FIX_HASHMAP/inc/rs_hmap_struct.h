@@ -29,8 +29,10 @@ typedef int (* get_fn_t)(
     );
 typedef int (* freeze_fn_t)(
     void *ptr_hmap, 
+    const char * const dir,
     const char * const meta_file_name,
-    const char * const data_file_name
+    const char * const bkts_file_name,
+    const char * const full_file_name
     );
 typedef int (* merge_fn_t)(
     void *ptr_dst_hmap, 

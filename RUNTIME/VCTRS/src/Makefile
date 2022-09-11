@@ -76,6 +76,12 @@ TMPL_HMAP_SO  = ${Q_ROOT}/lib/libhmap.so
 ${TMPL_HMAP_SO} : 
 	make -C ${TMPL_HMAP_LOC} ${TMPL_HMAP_SO}
 #-------------------------------------------
+UTILS_LOC = ../../../UTILS/src/
+UTILS_SO  = ${Q_ROOT}/lib/libutils.so
+
+${UTILS_SO} : 
+	make -C ${UTILS_LOC} ${UTILS_SO}
+#-------------------------------------------
 GUTILS_LOC = ../../../QJIT/GUTILS/
 GUTILS_SO  = ${Q_ROOT}/lib/libgutils.so
 
@@ -98,10 +104,11 @@ core_libvctr.so :  ${OBJS} \
 	${TMPL_HMAP_SO} \
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
-	${GUTILS_SO} 
+	${GUTILS_SO}  \
+	${UTILS_SO} 
 	gcc ${OBJS}  \
 	-shared -o core_libvctr.so \
-	${VCTR_HMAP_SO} ${CHNK_HMAP_SO} 
+	${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${GUTILS_SO} ${UTILS_SO}
 	cp core_libvctr.so ${Q_ROOT}/lib/
 #-------------------------------------------
 EXT_SRCS := cVector.c
@@ -117,8 +124,6 @@ libvctr.so: ${EXT_OBJS} core_libvctr.so cVector.o
 	-shared -o libvctr.so 
 	cp libvctr.so ${Q_ROOT}/lib/
 
-${Q_ROOT}/lib/libutils.so :
-	make -C ../../../UTILS/src/
 #-------------------------------------------
 ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST1_OBJS} -o ut1 \
@@ -148,4 +153,5 @@ clean:
 	rm -f ${TMPL_HMAP_SO}
 	rm -f ${VCTR_HMAP_SO}
 	rm -f ${CHNK_HMAP_SO}
-	rm -f ${GUTILS_HMAP_SO} 
+	rm -f ${GUTILS_SO} 
+	rm -f ${UTILS_SO} 

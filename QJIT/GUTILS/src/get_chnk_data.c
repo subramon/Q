@@ -2,62 +2,44 @@
 #include "q_macros.h"
 
 #include "chnk_rs_hmap_struct.h"
-
-#define MAIN_PGM
-#include "qjit_globals.h"
-#include "get_chnk_ptr.h"
+#include "rs_mmap.h"
+#include "l2_file_name.h"
+#include "get_chnk_data.h"
 
 char *
-get_chnk_ptr(
-    uint32_t x 
+get_chnk_data(
+    chnk_rs_hmap_key_t *ptr_key,
+    chnk_rs_hmap_val_t *ptr_chnk,
+    bool is_write
     )
 {
   int status = 0;
   char *l2_file = NULL;
+  char *X = NULL; size_t nX = 0;
 
-  char *data  = get_chnk_data(chnk_where_found); 
-  if ( data != NULL ) { return data; }
-  // try and get it from l2 mem 
-  l2_file = l2_file_name(XX); 
-  if ( l2)
-BYE:
-  free_if_non_null(l2_file);
-  return status;
-}
-  }
-}
-char *
-l2_file_name(
-    uint64_t uqid
-    )
-{
-  int status = 0;
-  if ( uqid == 0 ) { return NULL; }
-  int len = strlen(g_data_dir_root);
-  len += 16 + 4; // 4 is "kosuru", 16 is for sizeof(uint64_t)/4
-
-  char *file_name = malloc(len);
-  return_if_malloc_failed(file_name);
-  memset(file_name, 0, len);
-  uint64_t dir = uqid >> 16; // top 16 bits identifies directory
-  uint64_t mask = (uint64_t)0xFF<< 48; // top 16 bits set to 1, bottom 48 to 0
-  mask = ~mask;  // top 16 bits set to 0, bottom 48 to 1
-  uint64_t file = ( uqid & mask) >> 16; // bot 48 bits identifies file
-
-  if ( dir == 0 ) { 
-    sprintf(file_name, "%s/", g_data_dir_root);
-    len = strlen(file_name);
-    for ( int i = 0; i < 12; i++ ) {  // 48/4 == 12
-      uint64_t nibble = file & 0xF;
-      char c = hex(nibble);
-      file_name[len++] = c;
-      file = file >> 4;
-    }
+  if ( is_write ) { 
+    if ( ptr_chnk->num_readers > 0 ) { go_BYE(-1); }
+    if ( ptr_chnk->num_writers > 0 ) { go_BYE(-1); }
+    ptr_chnk->num_writers = 1;
   }
   else {
-    // TODO 
-    go_BYE(-1);
+    if ( ptr_chnk->num_writers > 0 ) { go_BYE(-1); }
+    ptr_chnk->num_readers++;
   }
+
+  if ( ptr_chnk->l1_mem == NULL ) {
+    // try and get it from l2 mem 
+    l2_file = l2_file_name(ptr_key->vctr_uqid); 
+    if ( l2_file == NULL ) { go_BYE(-1); }
+    status = rs_mmap(l2_file, &X, &nX, is_write); cBYE(status);
+    if ( nX != ptr_chnk->size ) { go_BYE(-1); }
+    ptr_chnk->l1_mem = malloc(ptr_chnk->size);
+    memcpy(ptr_chnk->l1_mem, X, nX); 
+  }
+  char *data  = ptr_chnk->l1_mem; 
+  if ( data == NULL ) { go_BYE(-1); }
 BYE:
-  if ( status < 0 ) { return  NULL; } else { return file_name; }
+  free_if_non_null(l2_file);
+  if ( X != NULL ) { munmap(X, nX);  }
+  if ( status == 0 ) { return data; } else { return NULL; }
 }

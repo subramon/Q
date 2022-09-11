@@ -6,6 +6,7 @@ INCS += -I../../../UTILS/gen_inc/
 INCS += -I../../../UTILS/inc 
 INCS += -I../../CMEM/inc 
 INCS += -I/usr/include/lua5.1 
+INCS += -I../../../QJIT/GUTILS/inc 
 
 EXTSO = ${Q_ROOT}/lib/libsclr.so
 

@@ -5,6 +5,7 @@
 #include "chnk_is.h"
 #include "vctr_is.h"
 #include "vctr_get_chunk.h"
+#include "get_chnk_data.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
@@ -22,7 +23,7 @@ vctr_get_chunk(
   bool vctr_is_found, chnk_is_found;
   uint32_t vctr_where_found, chnk_where_found;
   uint32_t chnk_size, width, max_num_in_chnk;
-
+  bool is_write = false; // TODO P3 Handle case when this is true 
 
   status = vctr_is(vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
@@ -42,8 +43,12 @@ vctr_get_chunk(
   //-----------------------------------------------------
   // TODO Handle case when data has been flushed to l2/l4 mem
   if ( ptr_cmem != NULL ) { 
+    chnk_rs_hmap_key_t key = {.vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx};
+    char *data = get_chnk_data(&key,
+        &(g_chnk_hmap.bkts[chnk_where_found].val), is_write); 
+
     memset(ptr_cmem, 0, sizeof(CMEM_REC_TYPE));
-    ptr_cmem->data  = g_chnk_hmap.bkts[chnk_where_found].val.l1_mem; 
+    ptr_cmem->data  = data;
     ptr_cmem->qtype = g_vctr_hmap.bkts[vctr_where_found].val.qtype; 
     ptr_cmem->size  = chnk_size;
     ptr_cmem->is_foreign  = true;
