@@ -16,6 +16,7 @@
 #include "vctr_chk.h"
 #include "vctr_del.h"
 #include "vctr_eov.h"
+#include "vctr_is.h"
 #include "vctr_is_eov.h"
 #include "vctr_get_chunk.h"
 #include "vctr_get1.h"
@@ -279,6 +280,60 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_uqid( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+
+  lua_pushnumber(L, ptr_v->uqid);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_max_num_in_chnk( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint32_t max_num_in_chnk;;
+
+  status = vctr_get_max_num_in_chnk(ptr_v->uqid, &max_num_in_chnk);
+  cBYE(status);
+
+  lua_pushnumber(L, max_num_in_chnk);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_memo_len( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint32_t memo_len;
+  status = vctr_get_memo_len(ptr_v->uqid, &memo_len);
+  cBYE(status);
+  lua_pushnumber(L, memo_len);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_vctr_num_readers( lua_State *L) {
   int status = 0;
   // get args from Lua 
@@ -408,6 +463,43 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_rehydrate( lua_State *L) 
+{
+  int status = 0;
+  VCTR_REC_TYPE *ptr_v = NULL;
+  bool is_key; int64_t itmp; 
+  uint32_t uqid = 0; 
+  // width needed only for SC; all other qtypes have known fixed widths
+  //--- get args passed from Lua 
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
+  if ( !lua_istable(L, 1) ) { go_BYE(-1); }
+  luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
+  // CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
+  //------------------- get qtype and width
+  //-------------------------------------------
+  status = get_int_from_tbl(L, 1, "uqid", &is_key, &itmp); cBYE(status);
+  if ( !is_key )  { go_BYE(-1); } 
+  uqid = (uint32_t)itmp;
+  //-------------------------------------------
+
+  ptr_v = (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
+  return_if_malloc_failed(ptr_v);
+  memset(ptr_v, '\0', sizeof(VCTR_REC_TYPE));
+  luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
+  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+
+  bool  is_found; uint32_t where_found;
+  status = vctr_is(uqid, &is_found, &where_found); cBYE(status);
+  if ( !is_found ) { go_BYE(-1); } 
+  ptr_v->uqid = uqid; 
+
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
 static int l_vctr_add1( lua_State *L) 
 {
   int status = 0;
@@ -509,10 +601,14 @@ static const struct luaL_Reg vector_methods[] = {
     { "name", l_vctr_get_name },
     { "num_elements", l_vctr_num_elements },
     { "num_readers", l_vctr_num_readers },
+    { "max_num_in_chnk", l_vctr_max_num_in_chnk },
+    { "memo_len", l_vctr_memo_len },
+    { "uqid", l_vctr_uqid },
     { "width", l_vctr_width },
     { "pr", l_vctr_print },
     // creation, new, ...
     { "add1", l_vctr_add1 },
+    { "rehydrate", l_vctr_rehydrate },
     { "null", l_vctr_null },
     //--------------------------------
     { "put1", l_vctr_put },
@@ -541,10 +637,14 @@ static const struct luaL_Reg vector_functions[] = {
     { "name", l_vctr_get_name },
     { "num_elements", l_vctr_num_elements },
     { "num_readers", l_vctr_num_readers },
+    { "max_num_in_chnk", l_vctr_max_num_in_chnk },
+    { "uqid", l_vctr_uqid },
+    { "memo_len", l_vctr_memo_len },
     { "width", l_vctr_width },
     { "pr", l_vctr_print },
     // creation, new, ...
     { "add1", l_vctr_add1 },
+    { "rehydrate", l_vctr_rehydrate },
     { "null", l_vctr_null },
     //--------------------------------
     { "put1", l_vctr_put },

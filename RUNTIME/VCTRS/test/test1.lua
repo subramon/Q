@@ -2,6 +2,7 @@ local cmem   = require 'libcmem'
 local cutils = require 'libcutils'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local qcfg = require 'Q/UTILS/lua/qcfg'
 
 local tests = {}
 tests.t1 = function()
@@ -95,8 +96,48 @@ tests.t3 = function()
 
   print("Test t3 succeeded")
 end
+tests.t4 = function()
+  -- this is a dangerous test - not recommended practive
+  -- in the way it rehydrates a Vector
+  -- But good as a test
+  local qtype = "I4"
+  local max_num_in_chnk = 16
+  local width = cutils.get_width_qtype(qtype)
+
+  -- NOTE: x is a global below 
+  local x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chnk })
+  -- create a buffer for data to put into vector 
+  local size = max_num_in_chnk * width
+  local buf = cmem.new( {size = size, qtype = qtype, name = "inbuf"})
+  -- put some stuff
+  local num_chunks = 4
+  local counter = 10
+  for i = 1, num_chunks do 
+    local iptr = assert(get_ptr(buf, qtype))
+    for  j = 1, max_num_in_chnk do 
+      iptr[j-1] = counter
+      counter = counter + 10
+    end
+    x:put_chunk(buf, max_num_in_chnk)
+  end
+  assert(x:is_eov() == false)
+  x:put_chunk(buf, max_num_in_chnk-1)
+  assert(x:is_eov() == true)
+  --============================
+  assert(x:memo_len() == qcfg.memo_len)
+  assert(x:max_num_in_chnk() == max_num_in_chnk)
+  x:pr("/tmp/_x")
+  --============================
+  local args = { uqid = 1 }
+  local y = lVector(args)
+  assert(type(y) == "lVector")
+  y:pr("/tmp/_y")
+
+  print("Test t4 succeeded")
+end
 -- return tests
-tests.t1()
-tests.t2()
-tests.t3()
+-- tests.t1()
+-- tests.t2()
+-- tests.t3()
+tests.t4()
 

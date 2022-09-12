@@ -35,6 +35,16 @@ function lVector:width()
   return width
 end
 
+function lVector:memo_len()
+  local memo_len = cVector.memo_len(self._base_vec)
+  return memo_len
+end
+
+function lVector:max_num_in_chnk()
+  local max_num_in_chnk = cVector.max_num_in_chnk(self._base_vec)
+  return max_num_in_chnk
+end
+
 function lVector:num_elements()
   local num_elements = cVector.num_elements(self._base_vec)
   return num_elements
@@ -65,6 +75,18 @@ function lVector.new(args)
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector
   assert(type(args) == "table")
+  if ( args.uqid )  then 
+    assert(type(args.uqid) == "number")
+    assert(args.uqid > 0)
+    vector._base_vec = assert(cVector.rehydrate(args))
+    -- get following from cVector
+    -- max_num_in_chnk
+    -- memo_len
+    vector._max_num_in_chnk = cVector.max_num_in_chnk(vector._base_vec)
+    vector._memo_len        = cVector.memo_len(vector._base_vec)
+    return vector 
+  end
+
   vector._siblings = {} -- no conjoined vectors
   vector._chunk_num = 0 -- next chunk to ask for 
   if ( args.gen ) then vector._generator = args.gen end 
