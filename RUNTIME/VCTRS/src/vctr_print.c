@@ -4,6 +4,7 @@
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_is.h"
 #include "vctr_is.h"
+#include "chnk_get_data.h"
 #include "vctr_print.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
@@ -33,7 +34,7 @@ vctr_print(
   }
   bool vctr_is_found, chnk_is_found;
   qtype_t qtype;
-  uint64_t num_elements, num_to_pr, pr_idx; 
+  uint64_t num_elements, num_to_pr, pr_idx;
   uint32_t vctr_where_found, chnk_where_found;
   uint32_t width, max_num_in_chnk;
 
@@ -46,10 +47,11 @@ vctr_print(
   max_num_in_chnk = g_vctr_hmap.bkts[vctr_where_found].val.max_num_in_chnk;
   num_elements = g_vctr_hmap.bkts[vctr_where_found].val.num_elements;;
   if ( ub > num_elements ) { go_BYE(-1); }
+
   num_to_pr = ub - lb;
   pr_idx = lb;
+  for ( ; num_to_pr > 0; ) {
 
-  for ( ; ; ) { 
     uint32_t chnk_idx = pr_idx / max_num_in_chnk;
     uint32_t chnk_off = pr_idx % max_num_in_chnk;
     //-------------------------------
@@ -57,10 +59,12 @@ vctr_print(
     cBYE(status);
     if ( !chnk_is_found ) { go_BYE(-1); }
     uint32_t num_in_chnk = 
-       g_chnk_hmap.bkts[chnk_where_found].val.num_elements;;
+      g_chnk_hmap.bkts[chnk_where_found].val.num_elements;;
     //-----------------------------------------------------
     // TODO Handle case when data has been flushed to l2/l4 mem
-    char *data  = g_chnk_hmap.bkts[chnk_where_found].val.l1_mem; 
+    chnk_rs_hmap_key_t key = { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx};
+    char *data  = chnk_get_data(&key, 
+        &(g_chnk_hmap.bkts[chnk_where_found].val), false); 
     data += (chnk_off * width);
     uint32_t l_num_to_pr = mcr_min(num_in_chnk - chnk_idx, num_to_pr); 
     for ( uint64_t i = 0; i < l_num_to_pr; i++ ) { 
@@ -74,7 +78,9 @@ vctr_print(
         default : go_BYE(-1); break;
       }
     }
-    break; // TODO P0
+    lb += l_num_to_pr; 
+    num_to_pr = ub - lb;
+    pr_idx = lb;
   }
 BYE:
   if ( ( opfile == NULL ) || ( *opfile == '\0' ) ) { 

@@ -26,13 +26,13 @@ vctr_del(
   //-------------------------------------------
   // Delete chunks in vector before deleting vector 
   if ( val.num_elements > 0 ) { 
-    bool is_found;
     if ( val.num_chnks == 0 ) { go_BYE(-1); }
     for ( uint32_t chnk_idx = 0; chnk_idx < val.num_chnks; chnk_idx++ ) { 
       uint32_t old_nitems = g_chnk_hmap.nitems;
       if ( old_nitems == 0 ) { go_BYE(-1); }
-      status = chnk_del(uqid, chnk_idx); 
-      cBYE(status);
+      bool is_found = true;
+      status = chnk_del(uqid, chnk_idx); cBYE(status);
+      if ( status == -3 ) { status = 0; is_found = false; } 
       if ( val.memo_len < 0 ) {  
         // memo length infinite means all chunks must have been saved
         if ( !is_found ) { 

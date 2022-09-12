@@ -16,13 +16,14 @@ typedef struct _chnk_rs_hmap_val_t {
   uint16_t num_readers;
   uint16_t num_writers;
   uint32_t num_elements;
-  uint32_t size;
+  //-----
   qtype_t qtype; // backward reference for debugging 
-  char *l1_mem;
   bool     l2_exists; ;
-  uint16_t l2_dir_num; // 0 means undefined
+  uint32_t size;
+  //-----
   // Details on converting l2_mem_id to filename elsewhere
   // Much more to put in here
+  char *l1_mem;
 } chnk_rs_hmap_val_t;
 #endif //  __CHNK_TYPES_TYPES_H
 

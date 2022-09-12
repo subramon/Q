@@ -14,3 +14,4 @@ rs_hmap_row_dmp.*
 rs_hmap_freeze*
 rs_hmap_unfreeze*
 rs_hmap_set_fn_ptrs*
+*rs_hmap_unfree*

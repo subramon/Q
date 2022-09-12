@@ -99,6 +99,9 @@ main(
   // add a few elements to the vector
   for ( uint32_t i = 0; i < 2*vctr_chnk_size+1; i++ ) { 
     float f4 = i+1;
+    if ( i == 32 ) { 
+      printf("hello world\n");
+    }
     status = vctr_put(uqid, (char *)&f4, 1); cBYE(status);
     uint64_t num_elements; uint32_t num_chunks;
     status = vctr_num_elements(uqid, &num_elements); cBYE(status);

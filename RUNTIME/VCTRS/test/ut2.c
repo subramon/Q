@@ -2,12 +2,19 @@
 #include "q_macros.h"
 #include "qtypes.h"
 #include "vctr_consts.h"
+#include "qjit_consts.h"
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
 
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_rs_hmap_instantiate.h"
+
+#include "rmtree.h"
+#include "isdir.h"
+#include "get_file_size.h"
+#include "l2_file_name.h"
+#include "isfile.h"
 
 #include "cmem_struct.h"
 #include "aux_cmem.h"
@@ -22,6 +29,9 @@
 #include "vctr_num_chunks.h"
 #include "vctr_width.h"
 #include "vctr_is_eov.h"
+#include "vctr_l1_to_l2.h"
+#include "vctr_drop_l1_l2.h"
+#include "vctr_print.h"
 
 #include "aux_cmem.h" 
 #include "chnk_cnt.h" 
@@ -36,6 +46,8 @@ uint64_t g_mem_used;
 uint64_t g_mem_allowed;
 uint64_t g_dsk_used;
 uint64_t g_dsk_allowed;
+
+char g_data_dir_root[Q_MAX_LEN_DIR_NAME];
 
 int 
 main(
@@ -161,6 +173,47 @@ main(
   if ( cmem.is_foreign ) { go_BYE(-1); }
   if ( cmem.is_stealable ) { go_BYE(-1); }
   status = cmem_free(&cmem); cBYE(status);
+  // flush to disk 
+  strcpy(g_data_dir_root, "/tmp/_ut2_data"); 
+  status = rmtree(g_data_dir_root); 
+  status = mkdir(g_data_dir_root, 0744);
+  if ( g_dsk_used != 0 ) { go_BYE(-1); } 
+  status = vctr_l1_to_l2(uqid, 0); cBYE(status);
+  if ( g_dsk_used == 0 ) { go_BYE(-1); } 
+  uint64_t bak_mem_used = g_mem_used;
+  uint64_t bak_dsk_used = g_dsk_used;
+  // Check that there are 5 files for each chunk 
+  // Also that there are sizes are correct 
+  for ( uint32_t chnk_idx = 0; chnk_idx < l_num_chunks; chnk_idx++ ) { 
+    char *l2_file = l2_file_name(uqid, chnk_idx); 
+    if ( !isfile(l2_file) ) { go_BYE(-1); } 
+    uint64_t sz = get_file_size(l2_file);
+    if ( sz != max_num_in_chunk * sizeof(float) ) { go_BYE(-1); }
+    free_if_non_null(l2_file);
+  }
+  // now delete l2 backup 
+  status = vctr_drop_l1_l2(uqid, 0, '2'); cBYE(status);
+  // Now check that there are no files 
+  if ( g_dsk_used != 0 ) { go_BYE(-1); } 
+  for ( uint32_t chnk_idx = 0; chnk_idx < l_num_chunks; chnk_idx++ ) { 
+    char *l2_file = l2_file_name(uqid, chnk_idx); 
+    if ( isfile(l2_file) ) { go_BYE(-1); } 
+    free_if_non_null(l2_file);
+  }
+  // make the backups again
+  status = vctr_l1_to_l2(uqid, 0); cBYE(status);
+  if ( g_dsk_used != bak_dsk_used ) { go_BYE(-1); } 
+  // now delete the l1 portion
+  status = vctr_drop_l1_l2(uqid, 0, '1'); cBYE(status);
+  // Now check that no RAM is in use 
+  if ( g_mem_used != 0 ) { go_BYE(-1); } 
+  // Now print the vector (this should cause stuff to be retsored to l1 
+  status = vctr_print(uqid, 0, "/tmp/_xxxx", 0, num_elements);
+  cBYE(status);
+  // l1 memory should be back as was before 
+  if ( g_mem_used != bak_mem_used ) { go_BYE(-1); } 
+
+  status = rmtree(g_data_dir_root); 
   //-- delete -----------------
   status = vctr_del(uqid, &b); cBYE(status);
   if ( !b ) { go_BYE(-1); }

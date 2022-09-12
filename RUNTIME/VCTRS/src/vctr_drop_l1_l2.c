@@ -5,16 +5,17 @@
 #include "chnk_is.h"
 #include "vctr_is.h"
 #include "vctr_print.h"
-#include "vctr_l1_to_l2.h"
-#include "chnk_l1_to_l2.h"
+#include "vctr_drop_l1_l2.h"
+#include "chnk_drop_l1_l2.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
 
 int
-vctr_l1_to_l2(
+vctr_drop_l1_l2(
     uint32_t vctr_uqid,
-    uint32_t nn_vctr_uqid
+    uint32_t nn_vctr_uqid,
+    char level
     )
 {
   int status = 0;
@@ -39,7 +40,8 @@ vctr_l1_to_l2(
     chnk_rs_hmap_val_t *ptr_chnk_val = 
       &(g_chnk_hmap.bkts[chnk_where_found].val); 
 
-    status = chnk_l1_to_l2(ptr_chnk_key, ptr_chnk_val); cBYE(status);
+    status = chnk_drop_l1_l2(ptr_chnk_key, ptr_chnk_val, level); 
+    cBYE(status);
   }
 BYE:
   return status;

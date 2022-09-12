@@ -1,7 +1,8 @@
 // START: RAMESH
 #include "q_incs.h"
 #include "q_macros.h"
-extern char *g_data_dir_root;
+#include "qjit_consts.h"
+extern char g_data_dir_root[Q_MAX_LEN_DIR_NAME];
 #include "l2_file_name.h"
 
 static char
@@ -32,42 +33,42 @@ hex(
 char *
 l2_file_name(
     uint32_t vctr_uqid,
-    uint32_t chnk_idx,
-    uint16_t l2_dir_num
+    uint32_t chnk_idx
     )
 {
   int status = 0;
   if ( vctr_uqid == 0 ) { return NULL; }
-  if ( l2_dir_num == 0 ) { return NULL; }
+  if ( g_data_dir_root == NULL ) { go_BYE(-1); }
   int len = strlen(g_data_dir_root);
-  len += 4 + 8 + 8 + 8; 
-  // 4 is for l2_dir_num,  8 is for vctr_uqid, 8 is for chnk_idx
-  // 8 = (3 is for underscore + 1 for forward slash + 1 for nullc. + ...)
+  // top 8 bits of vctr_uqid and top 8 bits of chnk_idx used for directory 
+  uint32_t part1 = vctr_uqid >> 24;
+  uint32_t part2 = chnk_idx >> 24; 
+  uint32_t dir_num = (part1 << 8 ) | part2;
+  // bottom 20 bits of vctr_uqid and 32 bits of chnk_idx used for file
+  int len1 = 8/4 + 8/4 + 8 ; // for directory  (+8 for kosuru)
+  int len2 = 24/4 + 24/4 + 8 ; // for file name  (+8 for kosuru)
+  len += (len1 + len2);
 
   char *file_name = malloc(len);
   return_if_malloc_failed(file_name);
   memset(file_name, 0, len);
 
-  sprintf(file_name, "%s/", g_data_dir_root);
+  sprintf(file_name, "%s/_", g_data_dir_root);
   len = strlen(file_name);
-  if ( l2_dir_num != 0 ) { 
-    //------------------------------------------------
-    for ( uint32_t i = 0; i < 8*sizeof(l2_dir_num)/4; i++ ) {
-      uint64_t nibble = vctr_uqid & 0xF;
-      char c = hex(nibble);
-      file_name[len++] = c;
-      l2_dir_num = l2_dir_num >> 4;
-    }
-  }
+  if ( dir_num != 0 ) { go_BYE(-1); } // TODO TO BE IMPLEMENTED 
+  uint32_t mask = 0x000000FF; mask = ~mask; // to mask out top 8 bits
+  vctr_uqid = vctr_uqid & mask;
+  chnk_idx  = chnk_idx  & mask;
   //------------------------------------------------
-  for ( uint32_t i = 0; i < 8*sizeof(vctr_uqid)/4; i++ ) {
+  for ( uint32_t i = 0; i < 6; i++ ) {
     uint64_t nibble = vctr_uqid & 0xF;
     char c = hex(nibble);
     file_name[len++] = c;
     vctr_uqid = vctr_uqid >> 4;
   }
+  file_name[len++] = '_';
   //------------------------------------------------
-  for ( uint32_t i = 0; i < 8*sizeof(chnk_idx)/4; i++ ) {
+  for ( uint32_t i = 0; i < 6; i++ ) {
     uint64_t nibble = chnk_idx & 0xF;
     char c = hex(nibble);
     file_name[len++] = c;

@@ -1,4 +1,6 @@
 #!/bin/ballsh
+
+CC = gcc 
 INCS=-I../inc/ -I../inc/
 INCDIR=../inc/
 
@@ -56,6 +58,7 @@ src_files :  \
 	q_omp_get_num_procs.c  \
 	rand_file_name.c \
 	rdtsc.c \
+	rmtree.c \
 	rs_mmap.c \
 	SC_to_txt.c \
 	set_bit_u64.c  \
@@ -222,6 +225,7 @@ SRC_FILES =  \
 	qtypes.c \
 	rand_file_name.c \
 	rdtsc.c \
+	rmtree.c \
 	rs_mmap.c \
 	SC_to_txt.c \
 	set_bit_u64.c  \

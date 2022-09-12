@@ -20,6 +20,7 @@ vctr_put(
 {
   int status = 0;
   bool is_found; uint32_t vctr_where, chnk_where;
+  chnk_rs_hmap_val_t chnk_val;
 
   if ( vctr_uqid == 0 ) { go_BYE(-1); }
   if ( X == NULL ) { go_BYE(-1); }
@@ -46,13 +47,19 @@ vctr_put(
     char *l1_mem = NULL;
     status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, chnk_size);
     cBYE(status);
+    memset(&chnk_val, 0, sizeof(chnk_rs_hmap_val_t));
+    chnk_val.l1_mem = l1_mem; l1_mem = NULL;
+    chnk_val.qtype = qtype;
+    chnk_val.size  = chnk_size;
     status = incr_mem_used(chnk_size);  cBYE(status);
-    chnk_rs_hmap_val_t chnk_val = { .qtype = qtype, .l1_mem = l1_mem };
-    l1_mem = NULL;
     //-------------------------------
     status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
     cBYE(status);
     g_vctr_hmap.bkts[vctr_where].val.num_chnks++;
+    // for debugging 
+    status = chnk_is(vctr_uqid, chnk_idx, &is_found, &chnk_where); 
+    cBYE(status);
+    if ( !is_found ) { go_BYE(-1); } 
   }
   else {
     chnk_idx = vctr_val.num_chnks - 1; 
@@ -60,20 +67,25 @@ vctr_put(
   // find chunk in chunk hmap 
   status = chnk_is(vctr_uqid, chnk_idx, &is_found, &chnk_where); 
   cBYE(status);
+  if ( !is_found ) { go_BYE(-1); } 
   // if insufficient space in this chunk, create one more 
-  chnk_rs_hmap_val_t chnk_val = g_chnk_hmap.bkts[chnk_where].val;
+  chnk_val = g_chnk_hmap.bkts[chnk_where].val;
   if ( chnk_val.l1_mem == NULL ) { go_BYE(-1); }
   if ( chnk_val.num_elements == vctr_val.max_num_in_chnk ) { 
     chnk_idx = vctr_val.num_chnks;
     //--------------------------
     chnk_rs_hmap_key_t chnk_key = 
     { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
-    memset(&chnk_val, 0, sizeof(chnk_rs_hmap_val_t));
-    chnk_val.qtype = qtype;
-    status = posix_memalign((void **)&chnk_val.l1_mem, Q_VCTR_ALIGNMENT,
+    char *l1_mem = NULL;
+    status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT,
         chnk_size);
     cBYE(status);
+    memset(&chnk_val, 0, sizeof(chnk_rs_hmap_val_t));
+    chnk_val.l1_mem = l1_mem; l1_mem = NULL;
+    chnk_val.qtype = qtype;
+    chnk_val.size  = chnk_size;
     status = incr_mem_used( chnk_size);
+    //-------------------------------
     status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
     cBYE(status);
     g_vctr_hmap.bkts[vctr_where].val.num_chnks++;
@@ -91,12 +103,12 @@ vctr_put(
   if ( n > space_in_chunk ) { 
     n_to_copy = space_in_chunk;
   }
-  memcpy(chnk_val.l1_mem + (n_to_copy * width), X, (n*width));
+  uint32_t num_in_chnk = chnk_val.num_elements;
+  memcpy(chnk_val.l1_mem + (num_in_chnk * width), X, (n_to_copy*width));
   // update chunk and vector meta data base on above copy
   g_vctr_hmap.bkts[vctr_where].val.num_elements += n_to_copy;
   g_chnk_hmap.bkts[chnk_where].val.num_elements += n_to_copy;
-  // if you still have stuff to copy, then tail recursive call
-  // to deal with leftover
+  // if you still have stuff to copy, then tail recursive call // to deal with leftover
   if ( n > space_in_chunk ) {
     status = vctr_put(vctr_uqid, X + (n_to_copy * width), n - n_to_copy);
     cBYE(status);

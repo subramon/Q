@@ -84,7 +84,7 @@ vctr_put_chunk(
   chnk_rs_hmap_key_t chnk_key = 
   { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
   chnk_rs_hmap_val_t chnk_val = { 
-    .qtype = qtype, .l1_mem = l1_mem, .num_elements = n };
+    .qtype = qtype, .l1_mem = l1_mem, .num_elements = n, .size = chnk_size };
   //-------------------------------
   status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
   cBYE(status);

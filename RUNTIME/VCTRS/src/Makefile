@@ -27,6 +27,7 @@ INCS += -I../../../TMPL_FIX_HASHMAP/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
 INCS += -I../../../QJIT/GUTILS/inc
+INCS += -I../../../QJIT/LuaJIT-2.1.0-beta3/src/inc
 
 TMPL=CASE1
 
@@ -37,11 +38,13 @@ SRCS :=	vctr_add.c
 SRCS +=	vctr_cnt.c  
 SRCS +=	vctr_chk.c
 SRCS +=	vctr_del.c  
+SRCS +=	vctr_drop_l1_l2.c  
 SRCS +=	vctr_eov.c  
 SRCS +=	vctr_get1.c  
 SRCS +=	vctr_get_chunk.c  
 SRCS +=	vctr_is.c  
 SRCS +=	vctr_is_eov.c  
+SRCS +=	vctr_l1_to_l2.c  
 SRCS +=	vctr_name.c  
 SRCS +=	vctr_num_chunks.c  
 SRCS +=	vctr_num_elements.c  
@@ -55,7 +58,10 @@ SRCS +=	vctr_width.c
 SRCS +=	chnk_cnt.c  
 SRCS +=	chnk_del.c  
 SRCS +=	chnk_free_resources.c  
+SRCS +=	chnk_get_data.c  
 SRCS +=	chnk_is.c  
+SRCS +=	chnk_l1_to_l2.c  
+SRCS +=	chnk_drop_l1_l2.c  
 
 OBJS = $(SRCS:.c=.o)
 

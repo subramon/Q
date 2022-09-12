@@ -36,9 +36,10 @@ chnk_del(
       &(g_chnk_hmap.bkts[where_found].val)); 
   cBYE(status);
   //-- delete entry in hash table 
-  status = g_chnk_hmap.del(&g_chnk_hmap, &key, &val, &chnk_is_found); 
+  bool is_found;
+  status = g_chnk_hmap.del(&g_chnk_hmap, &key, &val, &is_found); 
   cBYE(status);
-  if ( chnk_is_found == false ) { go_BYE(-1); }
+  if ( is_found == false ) { go_BYE(-1); }
 BYE:
   return status;
 }

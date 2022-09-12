@@ -1,6 +1,5 @@
 extern char *
 l2_file_name(
     uint32_t vctr_uqid,
-    uint32_t chnk_idx,
-    uint16_t l2_dir_num
+    uint32_t chnk_idx
     );

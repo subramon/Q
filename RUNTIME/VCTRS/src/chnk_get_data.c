@@ -4,10 +4,12 @@
 #include "chnk_rs_hmap_struct.h"
 #include "rs_mmap.h"
 #include "l2_file_name.h"
-#include "get_chnk_data.h"
+#include "vctr_consts.h"
+#include "mod_mem_used.h"
+#include "chnk_get_data.h"
 
 char *
-get_chnk_data(
+chnk_get_data(
     chnk_rs_hmap_key_t *ptr_key,
     chnk_rs_hmap_val_t *ptr_chnk,
     bool is_write
@@ -29,13 +31,15 @@ get_chnk_data(
 
   if ( ptr_chnk->l1_mem == NULL ) {
     // try and get it from l2 mem 
-    l2_file = l2_file_name(
-        ptr_key->vctr_uqid, ptr_key->chnk_idx, ptr_chnk->l2_dir_num); 
+    l2_file = l2_file_name(ptr_key->vctr_uqid, ptr_key->chnk_idx);
     if ( l2_file == NULL ) { go_BYE(-1); }
     status = rs_mmap(l2_file, &X, &nX, is_write); cBYE(status);
     if ( nX != ptr_chnk->size ) { go_BYE(-1); }
-    ptr_chnk->l1_mem = malloc(ptr_chnk->size);
+    status = posix_memalign((void **)&(ptr_chnk->l1_mem), 
+      Q_VCTR_ALIGNMENT, ptr_chnk->size);
+    cBYE(status);
     memcpy(ptr_chnk->l1_mem, X, nX); 
+    incr_mem_used(ptr_chnk->size);
   }
   char *data  = ptr_chnk->l1_mem; 
   if ( data == NULL ) { go_BYE(-1); }

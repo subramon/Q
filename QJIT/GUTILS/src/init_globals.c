@@ -24,6 +24,9 @@ init_globals(
   g_webserver_interested = 0; 
   g_L_status = 0;
 
+  memset(g_data_dir_root, 0, Q_MAX_LEN_DIR_NAME+1);
+  memset(g_meta_dir_root, 0, Q_MAX_LEN_DIR_NAME+1);
+
   strcpy(g_data_dir_root, "/home/subramon/local/Q/data/"); 
   strcpy(g_meta_dir_root, "/home/subramon/local/Q/meta/"); 
   g_mem_allowed = 4 * 1024 * (uint64_t)1048576 ; // in Bytes
