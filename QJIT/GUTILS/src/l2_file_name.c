@@ -31,35 +31,47 @@ hex(
 }
 char *
 l2_file_name(
-    uint64_t uqid
+    uint32_t vctr_uqid,
+    uint32_t chnk_idx,
+    uint16_t l2_dir_num
     )
 {
   int status = 0;
-  if ( uqid == 0 ) { return NULL; }
+  if ( vctr_uqid == 0 ) { return NULL; }
+  if ( l2_dir_num == 0 ) { return NULL; }
   int len = strlen(g_data_dir_root);
-  len += 16 + 4; // 4 is "kosuru", 16 is for sizeof(uint64_t)/4
+  len += 4 + 8 + 8 + 8; 
+  // 4 is for l2_dir_num,  8 is for vctr_uqid, 8 is for chnk_idx
+  // 8 = (3 is for underscore + 1 for forward slash + 1 for nullc. + ...)
 
   char *file_name = malloc(len);
   return_if_malloc_failed(file_name);
   memset(file_name, 0, len);
-  uint64_t dir = uqid >> 16; // top 16 bits identifies directory
-  uint64_t mask = (uint64_t)0xFF<< 48; // top 16 bits set to 1, bottom 48 to 0
-  mask = ~mask;  // top 16 bits set to 0, bottom 48 to 1
-  uint64_t file = ( uqid & mask) >> 16; // bot 48 bits identifies file
 
-  if ( dir == 0 ) { 
-    sprintf(file_name, "%s/", g_data_dir_root);
-    len = strlen(file_name);
-    for ( int i = 0; i < 12; i++ ) {  // 48/4 == 12
-      uint64_t nibble = file & 0xF;
+  sprintf(file_name, "%s/", g_data_dir_root);
+  len = strlen(file_name);
+  if ( l2_dir_num != 0 ) { 
+    //------------------------------------------------
+    for ( uint32_t i = 0; i < 8*sizeof(l2_dir_num)/4; i++ ) {
+      uint64_t nibble = vctr_uqid & 0xF;
       char c = hex(nibble);
       file_name[len++] = c;
-      file = file >> 4;
+      l2_dir_num = l2_dir_num >> 4;
     }
   }
-  else {
-    // TODO 
-    go_BYE(-1);
+  //------------------------------------------------
+  for ( uint32_t i = 0; i < 8*sizeof(vctr_uqid)/4; i++ ) {
+    uint64_t nibble = vctr_uqid & 0xF;
+    char c = hex(nibble);
+    file_name[len++] = c;
+    vctr_uqid = vctr_uqid >> 4;
+  }
+  //------------------------------------------------
+  for ( uint32_t i = 0; i < 8*sizeof(chnk_idx)/4; i++ ) {
+    uint64_t nibble = chnk_idx & 0xF;
+    char c = hex(nibble);
+    file_name[len++] = c;
+    chnk_idx = chnk_idx >> 4;
   }
 BYE:
   if ( status < 0 ) { return  NULL; } else { return file_name; }

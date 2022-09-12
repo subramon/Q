@@ -371,8 +371,11 @@ static int l_chnk_delete( lua_State *L) {
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t chnk_idx = luaL_checknumber(L, 2);
-  bool is_found;
-  status = chnk_del(ptr_v->uqid, chnk_idx, &is_found); 
+  bool is_found = true;
+  status = chnk_del(ptr_v->uqid, chnk_idx);
+  if ( ( status == -2 ) || ( status == -3 ) ) {
+    is_found = false; status = 0; 
+  }
   cBYE(status);
   lua_pushboolean(L, is_found);
   return 1;

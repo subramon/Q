@@ -19,8 +19,8 @@ typedef struct _chnk_rs_hmap_val_t {
   uint32_t size;
   qtype_t qtype; // backward reference for debugging 
   char *l1_mem;
-  bool l2_dirty;
-  uint64_t l2_mem_id; // This identifies the file where it is stored
+  bool     l2_exists; ;
+  uint16_t l2_dir_num; // 0 means undefined
   // Details on converting l2_mem_id to filename elsewhere
   // Much more to put in here
 } chnk_rs_hmap_val_t;

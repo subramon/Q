@@ -29,7 +29,8 @@ get_chnk_data(
 
   if ( ptr_chnk->l1_mem == NULL ) {
     // try and get it from l2 mem 
-    l2_file = l2_file_name(ptr_key->vctr_uqid); 
+    l2_file = l2_file_name(
+        ptr_key->vctr_uqid, ptr_key->chnk_idx, ptr_chnk->l2_dir_num); 
     if ( l2_file == NULL ) { go_BYE(-1); }
     status = rs_mmap(l2_file, &X, &nX, is_write); cBYE(status);
     if ( nX != ptr_chnk->size ) { go_BYE(-1); }

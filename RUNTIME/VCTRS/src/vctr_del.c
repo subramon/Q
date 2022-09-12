@@ -31,7 +31,7 @@ vctr_del(
     for ( uint32_t chnk_idx = 0; chnk_idx < val.num_chnks; chnk_idx++ ) { 
       uint32_t old_nitems = g_chnk_hmap.nitems;
       if ( old_nitems == 0 ) { go_BYE(-1); }
-      status = chnk_del(uqid, chnk_idx, &is_found); 
+      status = chnk_del(uqid, chnk_idx); 
       cBYE(status);
       if ( val.memo_len < 0 ) {  
         // memo length infinite means all chunks must have been saved

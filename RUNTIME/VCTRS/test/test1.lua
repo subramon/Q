@@ -41,7 +41,8 @@ end
 tests.t3 = function()
   local qtype = "I4"
   local max_num_in_chnk = 16
-  local x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chnk })
+  -- NOTE: x is a global below 
+  x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chnk })
   local width = cutils.get_width_qtype(qtype)
   assert(x:width() == width)
   -- create a buffer for data to put into vector 
@@ -87,6 +88,10 @@ tests.t3 = function()
   print(">>> STOP  Deliberate error")
   -- test printing
   x:pr(nil, 0, 10)
+  -- test globals
+  for k, v in pairs(_G) do 
+    if ( type(v) == "lVector") then print (k) end
+  end
 
   print("Test t3 succeeded")
 end
