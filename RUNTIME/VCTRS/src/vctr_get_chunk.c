@@ -35,7 +35,9 @@ vctr_get_chunk(
   //-------------------------------
   status = chnk_is(vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);
   cBYE(status);
-  if ( chnk_is_found == false ) { go_BYE(-1); }
+  if ( chnk_is_found == false ) { 
+    go_BYE(-1); 
+  }
   if ( ptr_num_readers != NULL ) { 
     *ptr_num_readers = g_chnk_hmap.bkts[chnk_where_found].val.num_readers;
     goto BYE; // NOTE early exit

@@ -4,7 +4,7 @@ require 'Q/UTILS/lua/strict'
 local qcfg       = require 'Q/UTILS/lua/qcfg'
 local Scalar     = require 'libsclr'
 
-local blksz = 1024
+local blksz = qcfg.max_num_in_chunk 
 local tests = {}
 tests.t1 = function() 
   local val = (2048*1048576)-1
@@ -29,65 +29,72 @@ tests.t1 = function()
   local chk_val = Scalar.new(val, qtype)
   for i = 1, len do
     local ival = c1:get1(i-1)
-    if ( ival ) then 
-      assert(type(ival) == "Scalar")
-      assert(ival == chk_val)
-    end
+    if ( ( i >= 1 ) and ( i <= blksz ) ) then
+      assert(type(ival) == "nil")
+      --  because of memo, we should have lost chunk 0
+     else
+       assert(type(ival) == "Scalar")
+       assert(ival == chk_val)
+     end
   end
+  print(">>> START Deliberate error")
   local ival = c1:get1(len)
   assert(ival == nil)
   local ival = c1:get1(-1)
   assert(ival == nil)
+  print("<<< STOP  Deliberate error")
   
   assert(c1:num_elements() == len)
   assert(c1:qtype() == qtype)
-  -- TODO: What is the error we are trying to create?
+  -- Asking for index too high or too low should cause a problem
   local status = pcall(c1.get1, len) -- deliberate error
+  assert(not status)
+  local status = pcall(c1.get1, -1) -- deliberate error
   assert(not status)
 
   print("Test t1 succeeded")
   -- os.exit() -- WHY IS THIS NEEDED? 
 end
 tests.t2 = function() 
-  local len = blksz * 3 + 1941;
+  print("B1 not implemented ")
+  --[[
+  local len = blksz * 3 + 19;
   local vals = { true, false }
   local qtype = "B1"
   for _, val in pairs(vals) do 
     local c1 = Q.const( {val = val, qtype = qtype, len = len })
     c1:eval()
+    local sclr = Scalar.new(val, "B1")
+    print("testing const_B1 with value " .. tostring(val))
     for i = 1, len do
-      assert(c1:get1(i-1) == Scalar.new(val, "B1"))
+      assert(c1:get1(i-1) == sclr)
     end
     assert(c1:num_elements() == len)
-    local status = pcall(c1.get1, len) -- deliberate error
     assert(c1:qtype() == qtype)
+    print(">>> START Deliberate error")
+    local status = pcall(c1.get1, len) -- deliberate error
+    assert(not status)
+    print("<<< STOP  Deliberate error")
   end
   print("Test t2 succeeded")
+  --]]
 end
 tests.t3 = function() -- this is a stress test 
   local val = 1
-  local num_chunks = 1000 -- set this very large for a stress test
+  local num_chunks = 10 -- set this very large for a stress test
   local len = num_chunks * blksz 
   local qtype = "I4"
-  local c1 = Q.const( {val = val, qtype = qtype, len = len }):memo(false)
-  for i = 1, num_chunks do 
-    local chunk_len = c1:get_chunk(i-1)
-    -- TODO assert(chunk_len == blksz)
-    if ( ( i % 1000000 ) == 0 ) then print("i = ", i) end 
-    c1:unget_chunk(i-1)
-    local n1, n2 = c1:num_elements()
-    assert(not n2)
-    -- TODO assert(n1 ==  i * max_num_in_chunk)
-    collectgarbage()
-  end
-  c1:get_chunk(num_chunks)
+  local c1 = Q.const( {val = val, qtype = qtype, len = len })
+  c1:memo(2)
+  c1:eval()
+  print(" ====== eval done ====== ")
   assert(c1:is_eov())
-  assert(c1:eval())
   print("Test t3 succeeded")
+  os.exit() -- WHY IS THIS NEEDED?
 end
-tests.t1()
--- tests.t3()
+-- tests.t1()
 -- tests.t2()
+tests.t3()
 --[[
 return tests
 --]]

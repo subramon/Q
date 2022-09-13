@@ -56,7 +56,7 @@ l2_file_name(
   sprintf(file_name, "%s/_", g_data_dir_root);
   len = strlen(file_name);
   if ( dir_num != 0 ) { go_BYE(-1); } // TODO TO BE IMPLEMENTED 
-  uint32_t mask = 0x000000FF; mask = ~mask; // to mask out top 8 bits
+  uint32_t mask = 0xFF000000; mask = ~mask; // to mask out top 8 bits
   vctr_uqid = vctr_uqid & mask;
   chnk_idx  = chnk_idx  & mask;
   //------------------------------------------------

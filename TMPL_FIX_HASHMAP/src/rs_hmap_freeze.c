@@ -13,16 +13,15 @@ mk_file_name(
     )
 {
   int status = 0;
-  char *fname = NULL; int len = 0;
+  char *fname = NULL; 
+
   if ( ( f == NULL ) || ( *f == '\0' ) ) { go_BYE(-1); }
-  if ( ( d == NULL ) || ( *d == '\0' ) ) {
-    len = strlen(f) + 4;
-  }
-  else {
-    len = strlen(d) + strlen(f) + 4;
+  int len = strlen(f) + 8; // +8 for kosuru
+  if ( ( d != NULL ) && ( *d != '\0' ) ) {
+    len += strlen(d);
   }
   fname = malloc(len); memset(fname, 0, len);
-  if ( ( d == NULL ) || ( *d == '\0' ) ) {
+  if ( ( d != NULL ) && ( *d != '\0' ) ) {
     sprintf(fname, "%s/%s", d, f);
   }
   else {

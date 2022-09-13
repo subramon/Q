@@ -50,22 +50,40 @@ function lVector:num_elements()
   return num_elements
 end
 
-function lVector:get_name()
-  local name = cVector.get_name(self._base_vec)
+function lVector:name()
+  local name = cVector.name(self._base_vec)
   return name
 end
 
+function lVector:set_name(name)
+  assert(type(name) == "string")
+  local status = cVector.set_name(self._base_vec, name)
+  return self
+end
+function lVector:l1_to_l2()
+  local status = cVector.l1_to_l2(self._base_vec)
+  return self
+end
+function lVector:persist()
+  local status = cVector.persist(self._base_vec)
+  return self
+end
 function lVector:eov()
   local status = cVector.eov(self._base_vec)
   self._generator = nil -- IMPORTANT, we no longer have a generator 
-  return status
+  return self
 end
 function lVector:is_eov()
   local is_eov = cVector.is_eov(self._base_vec)
   assert(type(is_eov) == "boolean")
   return is_eov
 end
-function lVector:is_gen()
+function lVector:is_persist()
+  local is_persist = cVector.is_persist(self._base_vec)
+  assert(type(is_persist) == "boolean")
+  return is_persist
+end
+function lVector:has_gen()
   if ( self._generator ) then return true  else return false end 
 end
 function lVector:uqid()
@@ -160,11 +178,12 @@ function lVector:get_chunk(chnk_idx)
   assert(chnk_idx <= self._chunk_num)
   if ( chnk_idx == self._chunk_num ) then 
     -- invoke the generator 
-    print("Generating chunk num " .. self._chunk_num)
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
     if ( num_elements == 0 ) then  -- nothing more to generate
       self:eov()  -- vector is at an end 
+      -- Following increment seems unnecessary but is important to 
+      -- keep consistency with put_chunk
       return 0
     else
       self:put_chunk(buf, num_elements)
@@ -188,23 +207,33 @@ function lVector:eval()
     assert(type(num_elements) == "number")
     -- this unget needed because get_chunk increments num readers 
     -- and the eval doesn't actually get the chunk for itself
-    cVector.unget_chunk(self._base_vec, self._chunk_num)
-    if ( self._nn_vec ) then 
-      cVector.unget_chunk(self._nn_vec, self._chunk_num) 
-    end
+    -- The -1 below is important. This is because get_chunk would have 
+    -- called put_chunk which would have incremented chunk_num
+    if ( num_elements == 0 ) then 
+      cVector.unget_chunk(self._base_vec, self._chunk_num-1)
+      if ( self._nn_vec ) then 
+        cVector.unget_chunk(self._nn_vec, self._chunk_num-1) 
+      end
+    end 
+    --===========================
+    print("completed unget")
     -- release old chunks
     -- NOTE that memo_len == 0 is meanignless 
     -- because we always keep the last chunk generated
-    if ( self._memo_len >= 0 ) then
-      local chunk_to_release = (self._chunk_num - self._memo_len) - 1 
+    if ( ( self._memo_len >= 0 ) and ( num_elements > 0 ) ) then
+      local chunk_to_release = (self._chunk_num-1) - self._memo_len
       if ( chunk_to_release >= 0 ) then 
         print("Deleting chunk " .. chunk_to_release)
         local is_found = 
           cVector.chunk_delete(self._base_vec, chunk_to_release)
-        assert(is_found == true)
+        -- assert(is_found == true)
+        if ( is_found == false ) then 
+          print("Chunk was not found " .. chunk_to_release)
+        end
       end
     end
   until ( num_elements ~= self._max_num_in_chunk ) 
+  print("lVector: eov")
   assert(self:is_eov())
   --[[ TODO THINK P1 
   -- cannot have Vector with 0 elements
@@ -222,6 +251,7 @@ function lVector:eval()
   end
   --]]
   if ( qcfg.debug ) then self:check() end
+  print("lVector; eval() done")
   return self
 end
 

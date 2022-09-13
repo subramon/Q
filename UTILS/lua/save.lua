@@ -34,12 +34,16 @@ local function internal_save(
     end
   elseif ( type(value) == "lVector" ) then
     local vec = value
-    if ( ( vec:num_elements() == 0 ) or ( vec:is_gen() ) ) then
+    -- TODO P4 At some point, we might want to relax following
+    if ( ( vec:num_elements() == 0 ) or ( vec:has_gen() ) 
+        or ( vec:is_eov() == false ) ) then
       -- skip ths vector
-      print("Not saving lVector because eov=false or is_gen=true ", name)
+      print("Not saving lVector" .. name )
     else
+      -- flush vector to disk and mark for persistence
+      vec:l1_to_l2()
+      vec:persist()
       fp:write(name, " = lVector ( ", vec:uqid(), " )\n" )
-      print(y)
     end
   elseif ( type(value) == "Scalar" ) then
     local sclr = value
@@ -69,7 +73,8 @@ local function save()
     cutils.delete(meta_file)
     cutils.delete(aux_file)
   end
-  print("Writing to ", meta_file, aux_file)
+  print("Writing to ", meta_file)
+  print("Writing to ", aux_file)
   --================================================
   local fp = assert(io.open(aux_file, "w+"))
   local str = string.format("status = %s", "TODO")
@@ -92,7 +97,6 @@ local function save()
     internal_save(k, v, Tsaved, fp); -- print("Saving ", k, v)
   end
   fp:close()
-  print("Saved to " .. meta_file)
   return meta_file
 end
 return require('Q/q_export').export('save', save)

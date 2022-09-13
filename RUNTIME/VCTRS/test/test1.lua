@@ -108,7 +108,9 @@ tests.t4 = function()
   local width = cutils.get_width_qtype(qtype)
 
   -- NOTE: x is a global below 
-  x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chnk })
+  x = lVector({ name = "xvec", qtype = qtype, max_num_in_chunk = max_num_in_chnk })
+  assert(x:name() == "xvec")
+  print("Created vector " .. x:name() .. " with uqid = " .. x:uqid())
   -- create a buffer for data to put into vector 
   local size = max_num_in_chnk * width
   local buf = cmem.new( {size = size, qtype = qtype, name = "inbuf"})
@@ -154,19 +156,28 @@ tests.t4 = function()
   local args = { uqid = uqid }
   y = lVector(args)
   assert(type(y) == "lVector")
+  print("Created vector " .. y:name() .. " with uqid = " .. y:uqid())
   y:pr("/tmp/_y")
-  print("SAVE STARTED")
+  y:set_name("yvec")
+  -- Check that x and y are in globals
+  local xfound = false; local yfound = false
+  for k, v in pairs(_G) do 
+    if ( k == "x") then xfound = true; assert(type(x) == "lVector")  end 
+    if ( k == "y") then yfound = true; assert(type(x) == "lVector") end 
+  end
+
   Q.save()
-  print("SAVE DONE")
   print("==================xxx =============")
-  local Y = pldata.read("/tmp/_y")
-  assert(#Y == x:num_elements())
+  local ydata = pldata.read("/tmp/_y")
+  print("================== www ============")
+  assert(#ydata == x:num_elements())
   -- Note that we test data for all except last chunk 
   counter = 10
   for i = 1, num_chunks do 
-    assert(Y[i][1] == counter)
+    assert(ydata[i][1] == counter)
     counter = counter + 10 
   end
+  print("================== yyy ============")
   print("Test t4 succeeded")
 end
 -- return tests

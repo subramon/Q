@@ -18,10 +18,13 @@
 #include "vctr_eov.h"
 #include "vctr_is.h"
 #include "vctr_is_eov.h"
+#include "vctr_l1_to_l2.h"
+#include "vctr_is_persist.h"
 #include "vctr_get_chunk.h"
 #include "vctr_get1.h"
 #include "vctr_name.h"
 #include "vctr_num_elements.h"
+#include "vctr_persist.h"
 #include "vctr_print.h"
 #include "vctr_put.h"
 #include "vctr_put_chunk.h"
@@ -191,6 +194,21 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_is_persist( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  bool b_is_persist; 
+  status = vctr_is_persist(ptr_v->uqid, &b_is_persist);
+  lua_pushboolean(L, b_is_persist);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_vctr_is_eov( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
@@ -206,11 +224,46 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_persist( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_persist(ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_vctr_eov( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   status = vctr_eov(ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_l1_to_l2( lua_State *L) {
+  int status = 0;
+  int num_args = lua_gettop(L); 
+  if ( ( num_args < 0 ) || ( num_args > 2 ) )  { go_BYE(-1); } 
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_nn_v = NULL; uint64_t nn_uqid = 0; // for nn vector 
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  if ( num_args == 2 ) { 
+    ptr_nn_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
+  }
+  if ( ptr_nn_v != NULL ) { nn_uqid = ptr_nn_v->uqid; } 
+  status = vctr_l1_to_l2(ptr_v->uqid, nn_uqid); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -267,10 +320,7 @@ static int l_vctr_unget_chunk( lua_State *L) {
   if ( num_args != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t chnk_idx = luaL_checknumber(L, 2); 
-
-  status = vctr_get_chunk(ptr_v->uqid, chnk_idx, NULL, NULL, NULL);
-  cBYE(status);
-
+  status = vctr_unget_chunk(ptr_v->uqid, chnk_idx); cBYE(status);
   lua_pushboolean(L, 1);
   return 1;
 BYE:
@@ -361,7 +411,7 @@ static int l_vctr_get1( lua_State *L) {
   int num_args = lua_gettop(L); 
   if ( num_args != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  uint64_t elem_idx = luaL_checknumber(L, 2); 
+  int64_t elem_idx = luaL_checknumber(L, 2); 
   //-- allocate SCLR to go back 
   SCLR_REC_TYPE *ptr_s = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
   return_if_malloc_failed(ptr_s);
@@ -410,8 +460,15 @@ static int l_vctr_free( lua_State *L) {
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool is_found;
-  printf("cVector: Start Freeing Vector %u \n", ptr_v->uqid);
-  status = vctr_del(ptr_v->uqid, &is_found); 
+  printf("cVector: Start Freeing Vector %u ", ptr_v->uqid);
+  char *name = vctr_get_name(ptr_v->uqid); 
+  if ( name == NULL ) { 
+    printf("\n"); 
+  }
+  else {
+    printf("%s\n", name); 
+  }
+  status = vctr_del(ptr_v->uqid, &is_found); // Deliberate no cBYE(status); 
   lua_pushboolean(L, is_found);
   printf("cVector: Stop  Freeing Vector %u \n", ptr_v->uqid);
   return 1;
@@ -426,8 +483,9 @@ static int l_chnk_delete( lua_State *L) {
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t chnk_idx = luaL_checknumber(L, 2);
-  bool is_found = true;
-  status = chnk_del(ptr_v->uqid, chnk_idx);
+  bool is_found = true, b_is_persist;
+  status = vctr_is_persist(ptr_v->uqid, &b_is_persist); cBYE(status);
+  status = chnk_del(ptr_v->uqid, chnk_idx, b_is_persist);
   if ( ( status == -2 ) || ( status == -3 ) ) {
     is_found = false; status = 0; 
   }
@@ -441,27 +499,6 @@ BYE:
   return 3;
 }
 //----------------------------------------
-//-----------------------
-// TODO: Do we care about this difference? If so, implement it 
-// Difference between delete and free is that in delete we destroy
-// an underlying file if it exists
-// free just 
-// (1) frees   stuff that has been malloc'd and 
-// (2) munmaps stuff that has been mmapped
-static int l_vctr_delete( lua_State *L) {
-  int status = 0;
-  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
-  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  bool is_found;
-  status = vctr_del(ptr_v->uqid, &is_found); cBYE(status);
-  lua_pushboolean(L, is_found);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  lua_pushnumber(L, status);
-  return 3;
-}
 //----------------------------------------
 static int l_vctr_rehydrate( lua_State *L) 
 {
@@ -505,7 +542,7 @@ static int l_vctr_add1( lua_State *L)
   int status = 0;
   VCTR_REC_TYPE *ptr_v = NULL;
   bool is_key; int64_t itmp; 
-  const char * str_qtype;
+  const char * str_qtype = NULL, *str_name = NULL;
   uint32_t width = 0; 
   uint32_t max_num_in_chnk;
   int memo_len;
@@ -515,14 +552,17 @@ static int l_vctr_add1( lua_State *L)
   if ( !lua_istable(L, 1) ) { go_BYE(-1); }
   luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
   // CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
-  //------------------- get qtype and width
+  //------------------- get name
+  status = get_str_from_tbl(L, 1, "name", &is_key, &str_name);  
+  cBYE(status);
+  //------------------- get qtype 
   status = get_str_from_tbl(L, 1, "qtype", &is_key, &str_qtype);  
   cBYE(status);
   if ( !is_key ) { go_BYE(-1); }
   if ( *str_qtype == '\0' ) { go_BYE(-1); }
   qtype_t qtype  = get_c_qtype(str_qtype);
   if ( qtype == Q0 ) { go_BYE(-1); }
-  //-------------------------------------------
+  //-------------------- get width 
   status = get_int_from_tbl(L, 1, "width", &is_key, &itmp); cBYE(status);
   if ( is_key )  { 
     if ( itmp < 1 ) { go_BYE(-1); }
@@ -557,6 +597,9 @@ static int l_vctr_add1( lua_State *L)
   status = vctr_add1(qtype, width, max_num_in_chnk, memo_len,
       &(ptr_v->uqid)); 
   cBYE(status);
+  if ( ( str_name != NULL ) && ( * str_name != '\0' ) ) {
+    status = vctr_set_name(ptr_v->uqid, str_name); cBYE(status);
+  }
 
   return 1; 
 BYE:
@@ -588,7 +631,6 @@ static const struct luaL_Reg vector_methods[] = {
     { "chk", l_vctr_chk },
 
     { "free", l_vctr_free },
-    { "delete", l_vctr_delete },
     { "chunk_delete", l_chnk_delete },
     //--------------------------------
     { "eov",    l_vctr_eov },
@@ -624,11 +666,12 @@ static const struct luaL_Reg vector_functions[] = {
     { "chk", l_vctr_chk },
 
     { "free", l_vctr_free },
-    { "delete", l_vctr_delete },
     { "chunk_delete", l_chnk_delete },
     //--------------------------------
     { "eov",    l_vctr_eov },
     { "is_eov", l_vctr_is_eov },
+    { "persist", l_vctr_persist },
+    { "is_persist", l_vctr_is_persist },
     { "nop",    l_vctr_nop },
     //--------------------------------
     { "set_memo", l_vctr_set_memo},
@@ -646,6 +689,8 @@ static const struct luaL_Reg vector_functions[] = {
     { "add1", l_vctr_add1 },
     { "rehydrate", l_vctr_rehydrate },
     { "null", l_vctr_null },
+    //--------------------------------
+    { "l1_to_l2", l_vctr_l1_to_l2 },
     //--------------------------------
     { "put1", l_vctr_put },
     { "put_chunk", l_vctr_put_chunk },

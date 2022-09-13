@@ -23,6 +23,7 @@ vctr_del(
   status = vctr_is(uqid, ptr_is_found, &where_found); cBYE(status);
   if ( !*ptr_is_found ) { goto BYE; }
   vctr_rs_hmap_val_t val = g_vctr_hmap.bkts[where_found].val;
+  bool is_persist = val.is_persist;
   //-------------------------------------------
   // Delete chunks in vector before deleting vector 
   if ( val.num_elements > 0 ) { 
@@ -31,8 +32,9 @@ vctr_del(
       uint32_t old_nitems = g_chnk_hmap.nitems;
       if ( old_nitems == 0 ) { go_BYE(-1); }
       bool is_found = true;
-      status = chnk_del(uqid, chnk_idx); cBYE(status);
+      status = chnk_del(uqid, chnk_idx, is_persist); 
       if ( status == -3 ) { status = 0; is_found = false; } 
+      cBYE(status);
       if ( val.memo_len < 0 ) {  
         // memo length infinite means all chunks must have been saved
         if ( !is_found ) { 
@@ -46,7 +48,8 @@ vctr_del(
         }
         else {
           if ( is_found ) { 
-            go_BYE(-1); 
+            printf("Found chunk %u. Should not have existed\n", chnk_idx);
+            // go_BYE(-1); 
           }
         }
       }

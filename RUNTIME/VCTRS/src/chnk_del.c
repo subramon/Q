@@ -13,13 +13,15 @@ extern chnk_rs_hmap_t g_chnk_hmap;
 int
 chnk_del(
     uint32_t vctr_uqid,
-    uint32_t chnk_idx
+    uint32_t chnk_idx,
+    bool is_persist
     )
 {
   int status = 0;
   bool vctr_is_found, chnk_is_found;
   uint32_t where_found;
 
+  printf("C code: deleting %u \n", chnk_idx);
   status = vctr_is(vctr_uqid, &vctr_is_found, &where_found);
   cBYE(status);
   if ( !vctr_is_found ) { return -2; } // NOTE
@@ -31,9 +33,8 @@ chnk_del(
   if ( chnk_is_found == false ) { return -3; } // NOTE 
   if ( g_chnk_hmap.nitems == 0 ) { go_BYE(-1); }
   //----------------------------------------------------
-  status = chnk_free_resources(
-      &(g_chnk_hmap.bkts[where_found].key), 
-      &(g_chnk_hmap.bkts[where_found].val)); 
+  status = chnk_free_resources( &(g_chnk_hmap.bkts[where_found].key), 
+      &(g_chnk_hmap.bkts[where_found].val), is_persist);
   cBYE(status);
   //-- delete entry in hash table 
   bool is_found;

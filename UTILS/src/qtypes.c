@@ -56,6 +56,8 @@ get_width_c_qtype(
     )
 {
   switch ( qtype ) { 
+    case B1 : return sizeof(bool); break;
+
     case I1 : return sizeof(int8_t); break;
     case I2 : return sizeof(int16_t); break;
     case I4 : return sizeof(int32_t); break;
@@ -134,6 +136,8 @@ str_qtype_to_str_ctype(
     )
 {
   if ( strcmp(str_qtype, "Q0") == 0 ) { return NULL; } 
+
+  if ( strcmp(str_qtype, "B1") == 0 ) { return "bool"; } 
 
   if ( strcmp(str_qtype, "I1") == 0 ) { return "int8_t"; } 
   if ( strcmp(str_qtype, "I2") == 0 ) { return "int16_t"; } 

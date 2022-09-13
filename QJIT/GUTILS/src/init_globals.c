@@ -24,6 +24,7 @@ init_globals(
   g_webserver_interested = 0; 
   g_L_status = 0;
 
+  g_save_session = true;
   memset(g_data_dir_root, 0, Q_MAX_LEN_DIR_NAME+1);
   memset(g_meta_dir_root, 0, Q_MAX_LEN_DIR_NAME+1);
 

@@ -672,7 +672,7 @@ int main(int argc, char **argv)
 #endif
   // STOP : RAMESH
   if ( g_save_session ) { 
-    status = g_vctr_hmap.freeze(&g_vctr_hmap, g_data_dir_root, 
+    status = g_vctr_hmap.freeze(&g_vctr_hmap, g_meta_dir_root, 
         "_vctr_meta.csv", "_vctr_bkts.bin", "_vctr_full.bin"); 
     cBYE(status);
     status = g_chnk_hmap.freeze(&g_chnk_hmap, g_meta_dir_root, 

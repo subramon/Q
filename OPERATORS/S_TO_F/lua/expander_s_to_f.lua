@@ -56,5 +56,11 @@ return function (a, largs)
     l_chunk_num = l_chunk_num + 1 
     return num_elements, buf
   end
-  return lVector{gen = generator, qtype = subs.out_qtype}
+  -- OLD return lVector{gen = generator, qtype = subs.out_qtype}
+  -- We discontinued above in favor of below so as to allow user to
+  -- pass other information like memo_len, max_num_in_chnk, ... to 
+  -- Vector.new(...)
+  largs.gen = generator
+  largs.qtype = subs.out_qtype
+  return lVector(largs)
 end
