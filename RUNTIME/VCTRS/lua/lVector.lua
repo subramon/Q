@@ -64,6 +64,11 @@ function lVector:is_eov()
   assert(type(is_eov) == "boolean")
   return is_eov
 end
+function lVector:uqid()
+  local uqid = cVector.uqid(self._base_vec)
+  assert(type(uqid) == "number")
+  return uqid
+end
 function lVector:memo_len()
   return self._memo_len
 end
@@ -71,7 +76,6 @@ function lVector:qtype()
   return self._qtype
 end
 function lVector.new(args)
-  for k, v in pairs(args) do print(k, v) end 
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector
   assert(type(args) == "table")

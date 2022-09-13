@@ -1,3 +1,5 @@
+local pldata = require 'pl.data'
+
 local cmem   = require 'libcmem'
 local cutils = require 'libcutils'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
@@ -56,10 +58,8 @@ tests.t3 = function()
     for  j = 1, max_num_in_chnk do 
       iptr[j-1] = (i+1)*100 + (j+1)
     end
-    print("i = ", i)
     x:put_chunk(buf, max_num_in_chnk)
     assert(x:is_eov() == false)
-    print(x:num_elements(), i*max_num_in_chnk)
     assert(x:num_elements() == i*max_num_in_chnk)
     -- get what you put 
     local c, n = x:get_chunk(i-1)
@@ -88,11 +88,13 @@ tests.t3 = function()
   assert(status == false)
   print(">>> STOP  Deliberate error")
   -- test printing
-  x:pr(nil, 0, 10)
+  local y = x:pr(nil, 0, 10)
   -- test globals
+  --[[
   for k, v in pairs(_G) do 
     if ( type(v) == "lVector") then print (k) end
   end
+  --]]
 
   print("Test t3 succeeded")
 end
@@ -112,13 +114,30 @@ tests.t4 = function()
   -- put some stuff
   local num_chunks = 4
   local counter = 10
+  local iptr = assert(get_ptr(buf, qtype))
   for i = 1, num_chunks do 
-    local iptr = assert(get_ptr(buf, qtype))
     for  j = 1, max_num_in_chnk do 
       iptr[j-1] = counter
       counter = counter + 10
     end
+
+    local x1 = buf:to_str("I4")
+    local y1 = loadstring(x1)
+    local z1 = y1()
     x:put_chunk(buf, max_num_in_chnk)
+    local buf2, n = x:get_chunk(i-1)
+    assert(type(buf2) == "CMEM")
+    assert(type(n) == "number")
+    assert(n == max_num_in_chnk)
+    -- don't forget that to_str on CMEM prints only a limited number
+    -- of values, for upper bound look up cmem.c 
+
+    local x2 = buf2:to_str("I4")
+    local y2 = loadstring(x2)
+    local z2 = y2()
+    for k, v in pairs(z1) do 
+      assert(z1[k] == z2[k])
+    end
   end
   assert(x:is_eov() == false)
   x:put_chunk(buf, max_num_in_chnk-1)
@@ -128,16 +147,26 @@ tests.t4 = function()
   assert(x:max_num_in_chnk() == max_num_in_chnk)
   x:pr("/tmp/_x")
   --============================
-  local args = { uqid = 1 }
+  local uqid = x:uqid()
+  assert(type(uqid) == "number")
+  assert(uqid > 0)
+  local args = { uqid = uqid }
   local y = lVector(args)
   assert(type(y) == "lVector")
   y:pr("/tmp/_y")
-
+  local Y = pldata.read("/tmp/_y")
+  assert(#Y == x:num_elements())
+  -- Note that we test data for all except last chunk 
+  counter = 10
+  for i = 1, num_chunks do 
+    assert(Y[i][1] == counter)
+    counter = counter + 10 
+  end
   print("Test t4 succeeded")
 end
 -- return tests
--- tests.t1()
--- tests.t2()
--- tests.t3()
+tests.t1()
+tests.t2()
+tests.t3()
 tests.t4()
 

@@ -212,6 +212,7 @@ GEN_INC_FILES = \
 
 #--------
 SRC_FILES =  \
+	cat_to_buf.c \
 	copy_file.c \
 	B1_to_txt.c \
 	file_exists.c \

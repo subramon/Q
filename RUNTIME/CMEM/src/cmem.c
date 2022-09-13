@@ -19,6 +19,7 @@
 #include "I8_to_txt.h" 
 #include "F4_to_txt.h" 
 #include "F8_to_txt.h" 
+#include "cat_to_buf.h" 
 
 #define MIN_VAL 1
 #define MAX_VAL 2
@@ -662,12 +663,15 @@ BYE:
   lua_pushnumber(L, status);
   return 3;
 }
+#define MAX_TO_PR 64 
 // Following only for debugging 
 static int l_cmem_to_str( lua_State *L) {
   int status = 0;
+  char *ebuf = NULL; int ebuflen = 0, ebufsz = 0; // expandable buffer
   char buf[BUFLEN+1]; 
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata( L, 1, "CMEM");
   const char *str_qtype = luaL_checkstring(L, 2);
+  int64_t size = ptr_cmem->size;
   memset(buf, '\0', BUFLEN);
   void  *X          = ptr_cmem->data;
   if ( strcmp(str_qtype, "B1") == 0 ) { 
@@ -681,7 +685,22 @@ static int l_cmem_to_str( lua_State *L) {
     status = I2_to_txt(X, "", buf, BUFLEN); cBYE(status);
   }
   else if ( strcmp(str_qtype, "I4") == 0 ) { 
-    status = I4_to_txt(X, "", buf, BUFLEN); cBYE(status);
+    int n = mcr_min(MAX_TO_PR, size/sizeof(int32_t));
+    int32_t *I4ptr = (int32_t *)X;
+    status = cat_to_buf(&ebuf, &ebufsz, &ebuflen, " return { ",
+        strlen(" return { "));
+    for ( int i = 0; i < n; i++ ) { 
+      status = I4_to_txt(I4ptr+i, "", buf, BUFLEN); cBYE(status);
+      status = cat_to_buf(&ebuf, &ebufsz, &ebuflen, buf, strlen(buf)); 
+      cBYE(status);
+      status = cat_to_buf(&ebuf, &ebufsz, &ebuflen, ",", 1);
+      cBYE(status);
+    }
+    status = cat_to_buf(&ebuf, &ebufsz, &ebuflen, "}", 1);
+    cBYE(status);
+    lua_pushstring(L, ebuf);
+    free_if_non_null(ebuf);
+    return 1;
   }
   else if ( strcmp(str_qtype, "I8") == 0 ) { 
     status = I8_to_txt(X, "", buf, BUFLEN); cBYE(status);
@@ -703,10 +722,12 @@ static int l_cmem_to_str( lua_State *L) {
     go_BYE(-1);
   }
   lua_pushstring(L, buf);
+  free_if_non_null(ebuf);
   return 1;
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
+  free_if_non_null(ebuf);
   return 2;
 }
 //----------------------------------------

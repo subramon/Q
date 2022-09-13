@@ -36,6 +36,7 @@ SRCS +=	../../../UTILS/src/I4_to_txt.c
 SRCS +=	../../../UTILS/src/I8_to_txt.c 
 SRCS +=	../../../UTILS/src/F4_to_txt.c 
 SRCS +=	../../../UTILS/src/F8_to_txt.c 
+SRCS +=	../../../UTILS/src/cat_to_buf.c 
 
 OBJS = $(SRCS:.c=.o)
 

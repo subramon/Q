@@ -61,12 +61,12 @@ vctr_print(
     uint32_t num_in_chnk = 
       g_chnk_hmap.bkts[chnk_where_found].val.num_elements;;
     //-----------------------------------------------------
-    // TODO Handle case when data has been flushed to l2/l4 mem
-    chnk_rs_hmap_key_t key = { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx};
-    char *data  = chnk_get_data(&key, 
-        &(g_chnk_hmap.bkts[chnk_where_found].val), false); 
+    chnk_rs_hmap_key_t key = g_chnk_hmap.bkts[chnk_where_found].key;
+    chnk_rs_hmap_val_t val = g_chnk_hmap.bkts[chnk_where_found].val;
+    char *data  = chnk_get_data(&key, &val, false); 
     data += (chnk_off * width);
-    uint32_t l_num_to_pr = mcr_min(num_in_chnk - chnk_idx, num_to_pr); 
+    num_in_chnk -= chnk_off;  
+    uint32_t l_num_to_pr = mcr_min(num_in_chnk, num_to_pr); 
     for ( uint64_t i = 0; i < l_num_to_pr; i++ ) { 
       switch ( qtype ) {
         case I1 : fprintf(fp, "%d\n", ((int8_t *)data)[i]); break; 
