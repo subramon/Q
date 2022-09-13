@@ -718,7 +718,7 @@ RS_OBJS = $(RS_SRCS:.c=.o)
 
 RS_LIBS := -lpthread
 RS_LIBS += -levent
-RS_LIBS += ${Q_ROOT}/lib/libgutils.so 
+RS_LIBS += ${Q_ROOT}/lib/libcgutils.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap_vctr.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap_chnk.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap.so 

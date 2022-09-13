@@ -57,12 +57,16 @@ end
 
 function lVector:eov()
   local status = cVector.eov(self._base_vec)
+  self._generator = nil -- IMPORTANT, we no longer have a generator 
   return status
 end
 function lVector:is_eov()
   local is_eov = cVector.is_eov(self._base_vec)
   assert(type(is_eov) == "boolean")
   return is_eov
+end
+function lVector:is_gen()
+  if ( self._generator ) then return true  else return false end 
 end
 function lVector:uqid()
   local uqid = cVector.uqid(self._base_vec)

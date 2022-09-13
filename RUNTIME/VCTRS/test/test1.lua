@@ -1,3 +1,4 @@
+local Q = require 'Q'
 local pldata = require 'pl.data'
 
 local cmem   = require 'libcmem'
@@ -107,7 +108,7 @@ tests.t4 = function()
   local width = cutils.get_width_qtype(qtype)
 
   -- NOTE: x is a global below 
-  local x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chnk })
+  x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chnk })
   -- create a buffer for data to put into vector 
   local size = max_num_in_chnk * width
   local buf = cmem.new( {size = size, qtype = qtype, name = "inbuf"})
@@ -151,9 +152,13 @@ tests.t4 = function()
   assert(type(uqid) == "number")
   assert(uqid > 0)
   local args = { uqid = uqid }
-  local y = lVector(args)
+  y = lVector(args)
   assert(type(y) == "lVector")
   y:pr("/tmp/_y")
+  print("SAVE STARTED")
+  Q.save()
+  print("SAVE DONE")
+  print("==================xxx =============")
   local Y = pldata.read("/tmp/_y")
   assert(#Y == x:num_elements())
   -- Note that we test data for all except last chunk 
@@ -165,8 +170,8 @@ tests.t4 = function()
   print("Test t4 succeeded")
 end
 -- return tests
-tests.t1()
-tests.t2()
-tests.t3()
+-- tests.t1()
+-- tests.t2()
+-- tests.t3()
 tests.t4()
 

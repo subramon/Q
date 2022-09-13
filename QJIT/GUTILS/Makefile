@@ -7,9 +7,13 @@ INCS += -I../../TMPL_FIX_HASHMAP/inc/
 INCS += -I../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
 INCS += -I../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
 
-MYSO = libgutils.so
-EXTSO = ${Q_ROOT}/lib/${MYSO}
-all : ${MYSO} ${EXTSO} 
+MYSO  = libcgutils.so
+EXTMYSO = ${Q_ROOT}/lib/${MYSO}
+
+ALTSO = liblgutils.so 
+EXTALTSO = ${Q_ROOT}/lib/${ALTSO}
+
+all : ${MYSO} ${EXTMYSO} ${ALTSO} ${EXTALTSO}
 
 
 SRCS := ./src/l2_file_name.c 
@@ -18,6 +22,10 @@ SRCS += ./src/mod_mem_used.c
 OBJS = $(SRCS:.c=.o)
 #----------------------------------
 
+ALTSRCS := ./src/lgutils.c 
+
+ALTOBJS = $(ALTSRCS:.c=.o)
+
 
 .c.o : 
 	$(CC) -c -o $@ $< ${QC_FLAGS} ${DFLAGS} $(INCS) 
@@ -25,10 +33,17 @@ OBJS = $(SRCS:.c=.o)
 ${MYSO} : ${OBJS}
 	gcc -shared ${OBJS} -o ${MYSO}
 
-${EXTSO} : ${MYSO}
-	cp ${MYSO} ${EXTSO}
+${EXTMYSO} : ${MYSO}
+	cp ${MYSO} ${EXTMYSO}
+
+${ALTSO} : ${ALTOBJS}
+	gcc -shared ${ALTOBJS} -o ${ALTSO}
+
+${EXTALTSO} : ${ALTSO}
+	cp ${ALTSO} ${EXTALTSO}
 
 clean :
 	rm -f ${OBJS}
-	rm -f ${MYSO} ${EXTSO}
+	rm -f ${MYSO} ${EXTMYSO}
+	rm -f ${ALTSO} ${EXTALTSO}
 

@@ -1,5 +1,6 @@
-local cutils  = require 'libcutils'
-local cVector = require 'libvctr'
+local cutils   = require 'libcutils'
+local lgutils  = require 'liblgutils'
+local cVector  = require 'libvctr'
 local basic_serialize = require 'Q/UTILS/lua/basic_serialize'
 local should_save = require 'Q/UTILS/lua/should_save'
 
@@ -33,22 +34,12 @@ local function internal_save(
     end
   elseif ( type(value) == "lVector" ) then
     local vec = value
-    vec:eov() -- Debatable whether we should do this or not
-    local reincarnate_str = vec:shutdown()
-    if ( reincarnate_str ) then
-      assert(type(reincarnate_str) == "string")
-      local y = loadstring(reincarnate_str)()
-      assert(type(y) == "table")
-      y = string.gsub(reincarnate_str, "return ", "" )
-      fp:write(name, " = lVector ( ", y, " ) " )
-      fp:write("\n")
-      print(y)
-      --===========================
-      --TODO internal_save(name .. "._meta", vec._meta, Tsaved, fp)
-      fp:write(name .. ":persist(true)")
-      fp:write("\n")
+    if ( ( vec:num_elements() == 0 ) or ( vec:is_gen() ) ) then
+      -- skip ths vector
+      print("Not saving lVector because eov=false or is_gen=true ", name)
     else
-      print("Not saving lVector because eov=false or is_memo=false ", name)
+      fp:write(name, " = lVector ( ", vec:uqid(), " )\n" )
+      print(y)
     end
   elseif ( type(value) == "Scalar" ) then
     local sclr = value
@@ -66,10 +57,11 @@ local function internal_save(
 end
 
 local function save()
-  local data_dir = cVector.get_globals("data_dir")
-  assert(cutils.isdir(data_dir))
-  local meta_file = data_dir .. "/q_meta.lua" -- note .lua suffix
-  local aux_file  = data_dir .. "/q_aux.lua"
+  local meta_dir = lgutils.meta_dir()
+  assert(type(meta_dir) == "string")
+  assert(cutils.isdir(meta_dir))
+  local meta_file = meta_dir .. "/q_meta.lua" -- note .lua suffix
+  local aux_file  = meta_dir .. "/q_aux.lua"
 
   if  cutils.isfile(meta_file) or  cutils.isfile(aux_file) then
     print("Warning! Over-writing meta data file ", meta_file)
@@ -80,18 +72,16 @@ local function save()
   print("Writing to ", meta_file, aux_file)
   --================================================
   local fp = assert(io.open(aux_file, "w+"))
-  local str = string.format(
-    "local T = {}; T.max_file_num = %s; return T",
-    cVector.get_globals("max_file_num"))
+  local str = string.format("status = %s", "TODO")
   fp:write(str)
   fp:close()
   --================================================
   fp = assert(io.open(meta_file, "w+"))
-  fp:write("local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'\n")
+  fp:write("local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'\n")
   fp:write("local cVector = require 'libvctr'\n")
   fp:write("local Scalar  = require 'libsclr'\n")
-  fp:write("local cmem    = require 'libcmem'\n")
-  fp:write("local cmem    = require 'libcutils'\n")
+  -- NEEDED ?? fp:write("local cmem    = require 'libcmem'\n")
+  -- NEEDED ?? fp:write("local cutils  = require 'libcutils'\n")
 
   -- saved is a table that keeps track of things we have already saved
   -- so that we don't save them a second time around

@@ -89,7 +89,7 @@ ${UTILS_SO} :
 	make -C ${UTILS_LOC} ${UTILS_SO}
 #-------------------------------------------
 GUTILS_LOC = ../../../QJIT/GUTILS/
-GUTILS_SO  = ${Q_ROOT}/lib/libgutils.so
+GUTILS_SO  = ${Q_ROOT}/lib/libcgutils.so
 
 ${GUTILS_SO} : 
 	make -C ${GUTILS_LOC} ${GUTILS_SO}
