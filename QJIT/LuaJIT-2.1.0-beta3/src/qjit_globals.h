@@ -33,3 +33,4 @@ my_extern char g_data_dir_root[Q_MAX_LEN_DIR_NAME+1];
 my_extern char g_meta_dir_root[Q_MAX_LEN_DIR_NAME+1];
 // save/restore
 bool g_save_session;
+bool g_restore_session;

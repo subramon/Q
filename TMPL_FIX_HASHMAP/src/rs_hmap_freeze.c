@@ -4,32 +4,8 @@
  */
  #include "rs_hmap_common.h"
  #include "rs_hmap_struct.h"
+ #include "mk_dir_file_name.h"
  #include "rs_hmap_freeze.h"
-
-static char *
-mk_file_name(
-    const char * const d,
-    const char * const f
-    )
-{
-  int status = 0;
-  char *fname = NULL; 
-
-  if ( ( f == NULL ) || ( *f == '\0' ) ) { go_BYE(-1); }
-  int len = strlen(f) + 8; // +8 for kosuru
-  if ( ( d != NULL ) && ( *d != '\0' ) ) {
-    len += strlen(d);
-  }
-  fname = malloc(len); memset(fname, 0, len);
-  if ( ( d != NULL ) && ( *d != '\0' ) ) {
-    sprintf(fname, "%s/%s", d, f);
-  }
-  else {
-    strcpy(fname, f);
-  }
-BYE:
-  if ( status != 0 ) { return NULL; } else { return fname; }
-}
 
 int
 rs_hmap_freeze(
@@ -48,7 +24,7 @@ rs_hmap_freeze(
 
   //------------------------------------------------
   if ( meta_file_name == NULL ) { go_BYE(-1); } 
-  fname = mk_file_name(dir, meta_file_name);
+  fname = mk_dir_file_name(dir, meta_file_name);
   if ( fname == NULL ) { go_BYE(-1); } 
 
   fp = fopen(fname, "w");
@@ -70,7 +46,7 @@ rs_hmap_freeze(
 
   //------------------------------------------------
   if ( bkts_file_name == NULL ) { go_BYE(-1); }
-  fname = mk_file_name(dir, bkts_file_name);
+  fname = mk_dir_file_name(dir, bkts_file_name);
   if ( fname == NULL ) { go_BYE(-1); } 
 
   fp = fopen(fname, "wb");
@@ -81,7 +57,7 @@ rs_hmap_freeze(
   free_if_non_null(fname);
   //------------------------------------------------
   if ( full_file_name == NULL ) { go_BYE(-1); }
-  fname = mk_file_name(dir, full_file_name);
+  fname = mk_dir_file_name(dir, full_file_name);
   if ( fname == NULL ) { go_BYE(-1); } 
   fp = fopen(fname, "wb");
   return_if_fopen_failed(fp, fname, "wb");

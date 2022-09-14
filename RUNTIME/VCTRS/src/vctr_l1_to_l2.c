@@ -34,12 +34,7 @@ vctr_l1_to_l2(
     status = chnk_is(vctr_uqid, chnk_idx, &chnk_is_found,&chnk_where_found);
     cBYE(status);
     if ( !chnk_is_found ) { go_BYE(-1); }
-    chnk_rs_hmap_key_t *ptr_chnk_key = 
-      &(g_chnk_hmap.bkts[chnk_where_found].key); 
-    chnk_rs_hmap_val_t *ptr_chnk_val = 
-      &(g_chnk_hmap.bkts[chnk_where_found].val); 
-
-    status = chnk_l1_to_l2(ptr_chnk_key, ptr_chnk_val); cBYE(status);
+    status = chnk_l1_to_l2(chnk_where_found); cBYE(status);
   }
 BYE:
   return status;

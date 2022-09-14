@@ -15,6 +15,7 @@
 #include "vctr_add.h"
 #include "vctr_chk.h"
 #include "vctr_del.h"
+#include "vctr_drop_l1_l2.h"
 #include "vctr_eov.h"
 #include "vctr_is.h"
 #include "vctr_is_eov.h"
@@ -478,6 +479,22 @@ BYE:
   lua_pushnumber(L, status);
   return 3;
 }
+//---------------------------------------------
+static int l_vctr_drop_l1_l2( lua_State *L) {
+  int status = 0;
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  int level = luaL_checknumber(L, 2);
+  status = vctr_drop_l1_l2(ptr_v->uqid, level); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//---------------------------------------------
 static int l_chnk_delete( lua_State *L) {
   int status = 0;
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
@@ -498,7 +515,6 @@ BYE:
   lua_pushnumber(L, status);
   return 3;
 }
-//----------------------------------------
 //----------------------------------------
 static int l_vctr_rehydrate( lua_State *L) 
 {
@@ -687,6 +703,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "pr", l_vctr_print },
     // creation, new, ...
     { "add1", l_vctr_add1 },
+    { "drop_l1_l2", l_vctr_drop_l1_l2 },
     { "rehydrate", l_vctr_rehydrate },
     { "null", l_vctr_null },
     //--------------------------------

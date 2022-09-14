@@ -59,11 +59,9 @@ vctr_print(
     cBYE(status);
     if ( !chnk_is_found ) { go_BYE(-1); }
     uint32_t num_in_chnk = 
-      g_chnk_hmap.bkts[chnk_where_found].val.num_elements;;
+      g_chnk_hmap.bkts[chnk_where_found].val.num_elements;
     //-----------------------------------------------------
-    chnk_rs_hmap_key_t key = g_chnk_hmap.bkts[chnk_where_found].key;
-    chnk_rs_hmap_val_t val = g_chnk_hmap.bkts[chnk_where_found].val;
-    char *data  = chnk_get_data(&key, &val, false); 
+    char *data  = chnk_get_data(chnk_where_found, false);
     data += (chnk_off * width);
     num_in_chnk -= chnk_off;  
     uint32_t l_num_to_pr = mcr_min(num_in_chnk, num_to_pr); 
@@ -78,6 +76,9 @@ vctr_print(
         default : go_BYE(-1); break;
       }
     }
+    // indicate that you no longer need it 
+    g_chnk_hmap.bkts[chnk_where_found].val.num_readers--;
+    //-------------
     lb += l_num_to_pr; 
     num_to_pr = ub - lb;
     pr_idx = lb;

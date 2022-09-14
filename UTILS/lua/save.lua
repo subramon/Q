@@ -41,9 +41,10 @@ local function internal_save(
       print("Not saving lVector" .. name )
     else
       -- flush vector to disk and mark for persistence
-      vec:l1_to_l2()
-      vec:persist()
-      fp:write(name, " = lVector ( ", vec:uqid(), " )\n" )
+      vec:l1_to_l2() -- copy from level 1 to level 2 
+      vec:persist()  -- indicate not to free level 2 upon delete
+      vec:drop(1)    -- free memory held in level 1
+      fp:write(name, " = lVector ( { uqid = ", vec:uqid(), " } )\n" )
     end
   elseif ( type(value) == "Scalar" ) then
     local sclr = value
@@ -97,6 +98,7 @@ local function save()
     internal_save(k, v, Tsaved, fp); -- print("Saving ", k, v)
   end
   fp:close()
+  lgutils.save_session() -- saves data structures from C side 
   return meta_file
 end
 return require('Q/q_export').export('save', save)

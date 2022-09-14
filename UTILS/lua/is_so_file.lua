@@ -1,6 +1,6 @@
 local cutils     = require 'libcutils'
 local qcfg       = require 'Q/UTILS/lua/qcfg'
-local lib_prefix = qcfg.q_root .. "/lib/lib"
+local lib_prefix = qcfg.q_root .. "/csos/lib"
 --================================================
 local function is_so_file(fn)
   local is_so = false

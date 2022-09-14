@@ -60,6 +60,14 @@ function lVector:set_name(name)
   local status = cVector.set_name(self._base_vec, name)
   return self
 end
+function lVector:drop(level)
+  assert(type(level) == "number")
+  assert(cVector.drop_l1_l2(self._base_vec, level))
+  if ( self._nn_vec ) then 
+    assert(cVector.drop_l1_l2(self._nn_vec, level))
+  end
+  return self
+end
 function lVector:l1_to_l2()
   local status = cVector.l1_to_l2(self._base_vec)
   return self
@@ -77,6 +85,11 @@ function lVector:is_eov()
   local is_eov = cVector.is_eov(self._base_vec)
   assert(type(is_eov) == "boolean")
   return is_eov
+end
+function lVector:nop()
+  local status = cVector.nop(self._base_vec)
+  assert(type(status) == "boolean")
+  return status
 end
 function lVector:is_persist()
   local is_persist = cVector.is_persist(self._base_vec)

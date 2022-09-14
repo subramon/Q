@@ -56,7 +56,8 @@ get_width_c_qtype(
     )
 {
   switch ( qtype ) { 
-    case B1 : return sizeof(bool); break;
+    case B1 : return 0; break; // this is a special case, ugly
+    case BL : return sizeof(bool); break;
 
     case I1 : return sizeof(int8_t); break;
     case I2 : return sizeof(int16_t); break;
@@ -82,7 +83,9 @@ get_c_qtype(
     )
 {
   if ( str_qtype == NULL ) { return Q0; }
+
   if ( strcmp("B1", str_qtype) == 0 ) { return B1; }
+  if ( strcmp("BL", str_qtype) == 0 ) { return BL; }
 
   if ( strcmp("I1", str_qtype) == 0 ) { return I1; }
   if ( strcmp("I2", str_qtype) == 0 ) { return I2; }
@@ -112,6 +115,7 @@ get_str_qtype(
   if ( qtype == Q0 ) { return "Q0"; }
 
   if ( qtype == B1 ) { return "B1"; }
+  if ( qtype == BL ) { return "BL"; }
 
   if ( qtype == I1 ) { return "I1"; }
   if ( qtype == I2 ) { return "I2"; }
@@ -137,7 +141,8 @@ str_qtype_to_str_ctype(
 {
   if ( strcmp(str_qtype, "Q0") == 0 ) { return NULL; } 
 
-  if ( strcmp(str_qtype, "B1") == 0 ) { return "bool"; } 
+  if ( strcmp(str_qtype, "B1") == 0 ) { return "uint64_t"; } 
+  if ( strcmp(str_qtype, "BL") == 0 ) { return "bool"; } 
 
   if ( strcmp(str_qtype, "I1") == 0 ) { return "int8_t"; } 
   if ( strcmp(str_qtype, "I2") == 0 ) { return "int16_t"; } 

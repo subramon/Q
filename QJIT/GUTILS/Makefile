@@ -13,12 +13,22 @@ EXTMYSO = ${Q_ROOT}/lib/${MYSO}
 ALTSO = liblgutils.so 
 EXTALTSO = ${Q_ROOT}/lib/${ALTSO}
 
+UTILS_LOC = ../../UTILS/src/
+UTILS_SO = ${Q_ROOT}/lib/libutils.so
+
 all : ${MYSO} ${EXTMYSO} ${ALTSO} ${EXTALTSO}
+
+${UTILS_SO} : 
+	make -C ${UTILS_LOC} 
+
+
 
 
 SRCS := ./src/l2_file_name.c 
 SRCS += ./src/init_globals.c 
 SRCS += ./src/mod_mem_used.c 
+
+SRCS += ./../../UTILS/src/rmtree.c 
 OBJS = $(SRCS:.c=.o)
 #----------------------------------
 
@@ -36,8 +46,8 @@ ${MYSO} : ${OBJS}
 ${EXTMYSO} : ${MYSO}
 	cp ${MYSO} ${EXTMYSO}
 
-${ALTSO} : ${ALTOBJS}
-	gcc -shared ${ALTOBJS} -o ${ALTSO}
+${ALTSO} : ${ALTOBJS} ${UTILS_SO}
+	gcc -shared ${ALTOBJS}  ${UTILS_SO} -o ${ALTSO}
 
 ${EXTALTSO} : ${ALTSO}
 	cp ${ALTSO} ${EXTALTSO}

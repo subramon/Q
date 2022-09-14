@@ -670,15 +670,6 @@ int main(int argc, char **argv)
   pthread_join(l_out_of_band, NULL); 
   pthread_join(l_mem_mgr, NULL); 
 #endif
-  // STOP : RAMESH
-  if ( g_save_session ) { 
-    status = g_vctr_hmap.freeze(&g_vctr_hmap, g_meta_dir_root, 
-        "_vctr_meta.csv", "_vctr_bkts.bin", "_vctr_full.bin"); 
-    cBYE(status);
-    status = g_chnk_hmap.freeze(&g_chnk_hmap, g_meta_dir_root, 
-        "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin"); 
-    cBYE(status);
-  }
 BYE:
   if ( g_mutex_created ) { 
     pthread_cond_destroy(&g_mem_cond);
@@ -686,5 +677,6 @@ BYE:
   }
   g_vctr_hmap.destroy(&g_vctr_hmap);
   g_chnk_hmap.destroy(&g_chnk_hmap);
+  // STOP : RAMESH
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

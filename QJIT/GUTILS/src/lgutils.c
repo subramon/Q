@@ -28,6 +28,43 @@
 
 int luaopen_liblgutils (lua_State *L);
 
+static int l_lgutils_save_session( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( g_save_session ) { 
+    status = g_vctr_hmap.freeze(&g_vctr_hmap, g_meta_dir_root, 
+        "_vctr_meta.csv", "_vctr_bkts.bin", "_vctr_full.bin"); 
+    cBYE(status);
+    status = g_chnk_hmap.freeze(&g_chnk_hmap, g_meta_dir_root, 
+        "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin"); 
+    cBYE(status);
+  }
+  lua_pushboolean(L, true); 
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
+
+//----------------------------------------
+static int l_lgutils_is_restore_session( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 0 ) { go_BYE(-1); }
+  lua_pushboolean(L, g_restore_session); 
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
 //----------------------------------------
 static int l_lgutils_meta_dir( 
     lua_State *L
@@ -61,14 +98,18 @@ BYE:
 //----------------------------------------
 //----------------------------------------
 static const struct luaL_Reg lgutils_methods[] = {
-    { "data_dir",    l_lgutils_data_dir },
-    { "meta_dir",    l_lgutils_meta_dir },
+    { "is_restore_session", l_lgutils_is_restore_session },
+    { "data_dir",           l_lgutils_data_dir },
+    { "meta_dir",           l_lgutils_meta_dir },
+    { "save_session",       l_lgutils_save_session },
     { NULL,  NULL         }
 };
  
 static const struct luaL_Reg lgutils_functions[] = {
-    { "data_dir",    l_lgutils_data_dir },
-    { "meta_dir",    l_lgutils_meta_dir },
+    { "is_restore_session", l_lgutils_is_restore_session },
+    { "data_dir",           l_lgutils_data_dir },
+    { "meta_dir",           l_lgutils_meta_dir },
+    { "save_session",       l_lgutils_save_session },
     { NULL,  NULL         }
 };
  

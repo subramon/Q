@@ -92,7 +92,7 @@ tests.t3 = function() -- this is a stress test
   print("Test t3 succeeded")
   os.exit() -- WHY IS THIS NEEDED?
 end
--- tests.t1()
+tests.t1()
 -- tests.t2()
 tests.t3()
 --[[

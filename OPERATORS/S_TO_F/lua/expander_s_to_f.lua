@@ -20,7 +20,7 @@ return function (a, largs)
   local cargs      = assert(subs.cargs)
   local cast_cargs = assert(get_ptr(cargs, subs.cast_cargs_as))
 
-  qc.q_add(subs)
+  assert(qc.q_add(subs))
 
   local l_chunk_num = 0
   local generator = function(chunk_num)

@@ -28,7 +28,7 @@ all: libhmap_${TMPL}.so ${EXTSO}
 
 # Following are different because they are for first call
 SRCS2 :=	./src/${TMPL}_rs_hmap_instantiate.c  
-SRCS2 +=	./src/rs_hmap_unfreeze.c  
+SRCS2 +=	./src/${TMPL}_rs_hmap_unfreeze.c  
 #----------------------------------------
 SRCS2 +=	./src/rs_hmap_pr.c  
 SRCS2 +=	./src/rs_hmap_chk.c  

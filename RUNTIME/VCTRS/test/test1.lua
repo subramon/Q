@@ -166,6 +166,7 @@ tests.t4 = function()
     if ( k == "y") then yfound = true; assert(type(x) == "lVector") end 
   end
 
+  x:nop()
   Q.save()
   print("==================xxx =============")
   local ydata = pldata.read("/tmp/_y")

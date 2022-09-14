@@ -722,6 +722,7 @@ RS_LIBS += ${Q_ROOT}/lib/libcgutils.so
 RS_LIBS += ${Q_ROOT}/lib/libhmap_vctr.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap_chnk.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap.so 
+RS_LIBS += ${Q_ROOT}/lib/libcgutils.so 
 
 $(LUAJIT_A): $(LJVMCORE_O)
 	$(E) "AR        $@"

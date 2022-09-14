@@ -1,3 +1,4 @@
+local lgutils = require 'liblgutils'
 require "Q/OPERATORS/S_TO_F/lua/s_to_f"
 require "Q/OPERATORS/PRINT/lua/print_csv"
 require "Q/UTILS/lua/save"
@@ -87,5 +88,11 @@ require "Q/UTILS/lua/view_meta"
 _G['g_time'] = {}
 _G['g_ctr']  = {}
 
+if ( lgutils.is_restore_session() ) then
+  print("restoring session")
+  require "q_meta"
+else
+  print("NOT restoring session")
+end
 --======================
 return require 'Q/q_export'

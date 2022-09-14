@@ -26,12 +26,13 @@ EXTSO = ${Q_ROOT}/lib/libhmap.so
 all: libhmap.so test1 test_merge ${EXTSO}
 
 SRCS :=	./aux.c  
-SRCS +=	./spooky_hash.c  
-SRCS +=	./rdtsc.c  
 SRCS +=	./calc_new_size.c  
-SRCS +=	./murmurhash.c  
 SRCS +=	./fasthash.c  
+SRCS +=	./mk_dir_file_name.c  
+SRCS +=	./murmurhash.c  
+SRCS +=	./rdtsc.c  
 SRCS +=	./set_probe_loc.c  
+SRCS +=	./spooky_hash.c  
 SRCS +=	../../UTILS/src/rs_mmap.c  
 
 OBJS = $(SRCS:.c=.o)

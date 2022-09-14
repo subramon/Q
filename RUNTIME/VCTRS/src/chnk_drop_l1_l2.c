@@ -12,14 +12,15 @@ int
 chnk_drop_l1_l2(
     chnk_rs_hmap_key_t *ptr_chnk_key,
     chnk_rs_hmap_val_t *ptr_chnk_val,
-    char level
+    int level
     )
 {
   int status = 0;
   char *l2_file = NULL; 
 
+  if ( !( ( level == 1 ) || ( level == 2 ) ) ) { go_BYE(-1); }
   switch ( level ) { 
-    case '1' : 
+    case 1 : 
       if ( ptr_chnk_val->l1_mem == NULL ) { goto BYE; } // nothing to do 
       // Verify that backup exists in l2 before dropping l1 
       l2_file = l2_file_name(ptr_chnk_key->vctr_uqid, 
@@ -31,7 +32,7 @@ chnk_drop_l1_l2(
       decr_mem_used(ptr_chnk_val->size);
       break;
       //-----------------
-    case '2' : 
+    case 2 : 
       // cannot delete l2 if l1 does not exist 
       if ( ptr_chnk_val->l1_mem == NULL ) { goto BYE; } // nothing to do 
       //--------------------
@@ -40,6 +41,7 @@ chnk_drop_l1_l2(
       if ( l2_file == NULL )  { go_BYE(-1); }
       if ( !isfile(l2_file) ) { goto BYE; } // nothing to do 
       unlink(l2_file); 
+      ptr_chnk_val->l2_exists = false; 
       decr_dsk_used(ptr_chnk_val->size);
       break;
       //-----------------

@@ -192,7 +192,7 @@ main(
     free_if_non_null(l2_file);
   }
   // now delete l2 backup 
-  status = vctr_drop_l1_l2(uqid, 0, '2'); cBYE(status);
+  status = vctr_drop_l1_l2(uqid, 2); cBYE(status);
   // Now check that there are no files 
   if ( g_dsk_used != 0 ) { go_BYE(-1); } 
   for ( uint32_t chnk_idx = 0; chnk_idx < l_num_chunks; chnk_idx++ ) { 
@@ -204,7 +204,7 @@ main(
   status = vctr_l1_to_l2(uqid, 0); cBYE(status);
   if ( g_dsk_used != bak_dsk_used ) { go_BYE(-1); } 
   // now delete the l1 portion
-  status = vctr_drop_l1_l2(uqid, 0, '1'); cBYE(status);
+  status = vctr_drop_l1_l2(uqid, 1); cBYE(status);
   // Now check that no RAM is in use 
   if ( g_mem_used != 0 ) { go_BYE(-1); } 
   // Now print the vector (this should cause stuff to be retsored to l1 
@@ -213,7 +213,6 @@ main(
   // l1 memory should be back as was before 
   if ( g_mem_used != bak_mem_used ) { go_BYE(-1); } 
 
-  status = rmtree(g_data_dir_root); 
   //-- delete -----------------
   status = vctr_del(uqid, &b); cBYE(status);
   if ( !b ) { go_BYE(-1); }
@@ -222,10 +221,13 @@ main(
   l_chnk_cnt = chnk_cnt(); 
   if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
   //----------------------------------
-  fprintf(stderr, "Successfully completed %s \n", argv[0]);
+  if ( g_mem_used != 0 ) { go_BYE(-1); }
+  if ( g_dsk_used != 0 ) { go_BYE(-1); }
+  fprintf(stderr, "Successfully completed %s \n", argv[0]); 
+  // cleanup
+  status = rmtree(g_data_dir_root); 
 BYE:
   g_vctr_hmap.destroy(&g_vctr_hmap);
   g_chnk_hmap.destroy(&g_chnk_hmap);
-  if ( g_mem_used != 0 ) { go_BYE(-1); }
   return status;
 }

@@ -45,9 +45,7 @@ vctr_get_chunk(
   //-----------------------------------------------------
   // TODO Handle case when data has been flushed to l2/l4 mem
   if ( ptr_cmem != NULL ) { 
-    chnk_rs_hmap_key_t key = {.vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx};
-    char *data = chnk_get_data(&key,
-        &(g_chnk_hmap.bkts[chnk_where_found].val), is_write); 
+    char *data = chnk_get_data(chnk_where_found, is_write); 
 
     memset(ptr_cmem, 0, sizeof(CMEM_REC_TYPE));
     ptr_cmem->data  = data;

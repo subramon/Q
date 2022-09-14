@@ -68,7 +68,8 @@ echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 CURR_PATH=`pwd`
 cd $Q_SRC_ROOT
 cd ../
-export LUA_PATH="`pwd`/?.lua;`pwd`/?/init.lua;;"
+#- first arg to LUA_PATH is for q_meta used to restore sessions
+export LUA_PATH="${Q_ROOT}/meta/?.lua;`pwd`/?.lua;`pwd`/?/init.lua;;"
 export LUA_CPATH="${Q_ROOT}/lib/?.so;;"
 cd $CURR_PATH
 echo "LUA_PATH: $LUA_PATH"

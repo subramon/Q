@@ -1,11 +1,14 @@
 #include "q_incs.h"
 #include "q_macros.h"
+#include "rmtree.h"
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
+#include "vctr_rs_hmap_unfreeze.h"
 
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_rs_hmap_instantiate.h"
+#include "chnk_rs_hmap_unfreeze.h"
 
 #define MAIN_PGM
 #include "qjit_globals.h"
@@ -24,7 +27,8 @@ init_globals(
   g_webserver_interested = 0; 
   g_L_status = 0;
 
-  g_save_session = true;
+  g_save_session    = true;
+  g_restore_session = false;
   memset(g_data_dir_root, 0, Q_MAX_LEN_DIR_NAME+1);
   memset(g_meta_dir_root, 0, Q_MAX_LEN_DIR_NAME+1);
 
@@ -76,16 +80,34 @@ init_globals(
 
   // START For hashmaps  for vector, ...
   rs_hmap_config_t HC1; memset(&HC1, 0, sizeof(rs_hmap_config_t));
-  HC1.min_size = 32;
-  HC1.max_size = 0;
-  HC1.so_file = strdup("libhmap_vctr.so"); 
-  status = vctr_rs_hmap_instantiate(&g_vctr_hmap, &HC1); cBYE(status);
-
   rs_hmap_config_t HC2; memset(&HC2, 0, sizeof(rs_hmap_config_t));
-  HC2.min_size = 32;
-  HC2.max_size = 0;
-  HC2.so_file = strdup("libhmap_chnk.so"); 
-  status = chnk_rs_hmap_instantiate(&g_chnk_hmap, &HC2); cBYE(status);
+
+  if ( g_restore_session ) { 
+    printf(">>>>>>>>>>>> RESTORING SESSION ============\n");
+    status = vctr_rs_hmap_unfreeze(&g_vctr_hmap, g_meta_dir_root,
+        "_vctr_meta.csv", "_vctr_bkts.bin", "_vctr_full.bin");
+    cBYE(status);
+    status = chnk_rs_hmap_unfreeze(&g_chnk_hmap, g_meta_dir_root,
+        "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin");
+    cBYE(status);
+    printf("<<<<<<<<<<<< RESTORING SESSION ============\n");
+  }
+  else { 
+    HC1.min_size = 32;
+    HC1.max_size = 0;
+    HC1.so_file = strdup("libhmap_vctr.so"); 
+    status = vctr_rs_hmap_instantiate(&g_vctr_hmap, &HC1); cBYE(status);
+
+    HC2.min_size = 32;
+    HC2.max_size = 0;
+    HC2.so_file = strdup("libhmap_chnk.so"); 
+    status = chnk_rs_hmap_instantiate(&g_chnk_hmap, &HC2); cBYE(status);
+
+    rmtree(g_data_dir_root);
+    rmtree(g_meta_dir_root);
+    status = mkdir(g_data_dir_root, 0744); cBYE(status);
+    status = mkdir(g_meta_dir_root, 0744); cBYE(status);
+  }
 
 
   // STOP  For hashmaps  for vector, ...

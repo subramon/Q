@@ -14,14 +14,13 @@ extern chnk_rs_hmap_t g_chnk_hmap;
 int
 vctr_drop_l1_l2(
     uint32_t vctr_uqid,
-    uint32_t nn_vctr_uqid,
-    char level
+    int level
     )
 {
   int status = 0;
 
+  if ( !( ( level == 1 ) || ( level == 2 ) ) ) { go_BYE(-1); }
   if ( vctr_uqid == 0 ) { go_BYE(-1); }
-  if ( nn_vctr_uqid != 0 ) { go_BYE(-1); } // TODO TO BE IMPLEMENTED
 
   bool vctr_is_found, chnk_is_found;
   uint32_t vctr_where_found, chnk_where_found;
