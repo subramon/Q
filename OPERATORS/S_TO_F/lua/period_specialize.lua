@@ -1,14 +1,13 @@
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
-local cVector   = require 'libvctr'
+local cutils    = require 'libcutils'
 local Scalar    = require 'libsclr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
-local qconsts   = require 'Q/UTILS/lua/qconsts'
 local qc        = require 'Q/UTILS/lua/qcore'
-local qmem      = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local qcfg      = require 'Q/UTILS/lua/qcfg'
+local max_num_in_chunk = qcfg.max_num_in_chunk
 
 -- cdef the necessary struct within pcall to prevent error on second call
 local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
@@ -24,18 +23,17 @@ return function (
   local start = assert(largs.start)
   local by    = assert(largs.by)
   local period= assert(largs.period)
-  local ctype = assert(qconsts.qtypes[qtype].ctype)
   assert(is_in(qtype, { "I1", "I2", "I4", "I8", "F4", "F8"}))
   assert(len > 0, "vector length must be positive")
   assert(period > 0, "period must be positive")
 
   local subs = {};
   --========================
-  subs.fn	    = "period_" .. qtype
-  subs.len	    = len
-  subs.out_qtype    = qtype
-  subs.out_ctype    = qconsts.qtypes[qtype].ctype
-  subs.out_buf_size = chunk_size * qconsts.qtypes[qtype].width
+  subs.fn	 = "period_" .. qtype
+  subs.len	 = len
+  subs.out_qtype = qtype
+  subs.out_ctype = cutils.str_qtype_to_str_ctype(qtype)
+  subs.buf_size = max_num_in_chunk * cutils.get_width_qtype(qtype)
   --========================
   -- set up args for C code
   local sstart = assert(to_scalar(start, qtype))
@@ -48,20 +46,19 @@ return function (
   subs.cargs_ctype = "PERIOD_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(subs.cargs_ctype)
   subs.cargs = cmem.new(sz)
-  subs.cst_cargs_as = subs.cargs_ctype .. " *"
+  subs.cast_cargs_as = subs.cargs_ctype .. " *"
 
   -- set cargs from scalar values 
-  local cargs = assert(get_ptr(subs.cargs, subs.cst_cargs_as))
-  cargs[0]["start"]  =  sstart[0].cdata["val" .. qtype]
-  cargs[0]["by"]     =     sby[0].cdata["val" .. qtype]
-  cargs[0]["period"] = speriod[0].cdata["valI4"]
+  local cargs = assert(get_ptr(subs.cargs, subs.cast_cargs_as))
+  cargs[0]["start"]  =  sstart[0].val[string.lower(qtype)]
+  cargs[0]["by"]     =     sby[0].val[string.lower(qtype)]
+  cargs[0]["period"] = speriod[0].val[string.lower(qtype)]
 
-
-  subs.tmpl         = "OPERATORS/S_TO_F/lua/period.tmpl"
+  subs.tmpl  = "OPERATORS/S_TO_F/lua/period.tmpl"
   subs.incdir = "OPERATORS/S_TO_F/gen_inc/"
   subs.srcdir = "OPERATORS/S_TO_F/gen_src/"
-  subs.incs = { "UTILS/inc", "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
+  subs.incs   = { "UTILS/inc", "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
   subs.structs = { "OPERATORS/S_TO_F/inc/const_struct.h" }
-  subs.cst_out_as = subs.out_ctype .. " * "
+  subs.cast_buf_as = subs.out_ctype .. " * "
   return subs
 end

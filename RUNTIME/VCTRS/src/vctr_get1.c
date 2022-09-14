@@ -44,6 +44,8 @@ vctr_get1(
   if ( data == NULL ) { go_BYE(-1); }
   uint32_t num_in_chnk = g_chnk_hmap.bkts[chnk_where_found].val.num_elements;
   if ( (chnk_off+1) > num_in_chnk ) { go_BYE(-1); } // TODO Check boundary
+  // offset the pointer to the base of the chunk
+  data += (width * chnk_off);
 
   memcpy(&(ptr_sclr->val), data, width); 
   // Following is needed because chnk_get_data increments num_readers

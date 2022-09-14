@@ -69,7 +69,12 @@ vctr_chk(
     bool chnk_is_found; uint32_t chnk_where_found;
     status = chnk_is(vctr_uqid, chnk_idx,&chnk_is_found,&chnk_where_found);
     cBYE(status);
-    if ( !chnk_is_found ) { go_BYE(-1); }
+    // TODO P3 Tighten following test 
+    if ( vctr_val.memo_len < 0 ) { 
+      if ( !chnk_is_found ) { go_BYE(-1); }
+    }
+    if ( !chnk_is_found ) { continue; }
+    //------------
     chnk_rs_hmap_val_t chnk_val;
     memset(&chnk_val, 0, sizeof(chnk_rs_hmap_val_t));
     chnk_rs_hmap_key_t chnk_key;

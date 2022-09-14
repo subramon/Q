@@ -1,6 +1,6 @@
 -- FUNCTIONAL 
-local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
+local Q = require 'Q'
 local qcfg       = require 'Q/UTILS/lua/qcfg'
 local Scalar     = require 'libsclr'
 

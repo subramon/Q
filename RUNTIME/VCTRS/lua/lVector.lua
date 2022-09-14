@@ -242,7 +242,6 @@ function lVector:eval()
       end
     end 
     --===========================
-    print("completed unget")
     -- release old chunks
     -- NOTE that memo_len == 0 is meanignless 
     -- because we always keep the last chunk generated

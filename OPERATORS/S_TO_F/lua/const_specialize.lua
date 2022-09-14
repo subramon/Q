@@ -48,8 +48,8 @@ local function const_specialize(
   -- initialize cargs from scalar sclr_val
   local cargs = assert(get_ptr(subs.cargs, subs.cast_cargs_as))
   local sclr_val = ffi.cast("SCLR_REC_TYPE *", sclr_val)
-  -- cargs[0]["val"] = sclr_val[0].val.[string.lower(qtype)]
-  cargs[0]["val"] = sclr_val[0].val.i4 -- TODO P0 
+  cargs[0]["val"] = sclr_val[0].val[string.lower(qtype)]
+  -- cargs[0]["val"] = sclr_val[0].val.i4 -- TODO P0 
 
   subs.tmpl   = "OPERATORS/S_TO_F/lua/const.tmpl"
   subs.incdir = "OPERATORS/S_TO_F/gen_inc/"
