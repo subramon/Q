@@ -1,19 +1,108 @@
 #include "q_incs.h"
-#include "qtypes.h"
+#include "q_macros.h"
+#include "rmtree.h"
+
 #include "vctr_rs_hmap_struct.h"
+#include "chnk_rs_hmap_struct.h"
+#include "isfile.h"
+#include "l2_file_name.h"
+#include "chnk_is.h"
 #include "vctr_is.h"
 #include "vctr_chk.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
+extern chnk_rs_hmap_t g_chnk_hmap;
 
-// TODO 
+
 int
-vctr_chk(
-    uint32_t uqid
+vctrs_chk(
+    bool is_at_rest
     )
 {
   int status = 0;
-  if ( uqid == 0 ) { go_BYE(-1); }
+  // Above check needed because (unfortunately) I have used
+  // uint32_t everywhere instead of vctr_rs_hmap_key_t 
+  if ( sizeof(uint32_t) != sizeof(vctr_rs_hmap_key_t)) { go_BYE(-1); }
+  for ( uint32_t i = 0; i < g_vctr_hmap.size; i++ ) { 
+    vctr_rs_hmap_val_t vctr_val;
+    memset(&vctr_val, 0, sizeof(vctr_rs_hmap_val_t));
+    vctr_rs_hmap_key_t vctr_key;
+    memset(&vctr_key, 0, sizeof(vctr_rs_hmap_key_t));
+    if ( g_vctr_hmap.bkt_full[i] == false ) { 
+      // key and value must be empty 
+      if ( memcmp(&g_vctr_hmap.bkts[i].val, &vctr_val, 
+            sizeof(vctr_rs_hmap_val_t)) != 0 ) {
+        go_BYE(-1); 
+      }
+      if ( memcmp(&g_vctr_hmap.bkts[i].key, &vctr_key, 
+            sizeof(vctr_rs_hmap_key_t)) != 0 ) {
+        go_BYE(-1); 
+      }
+      continue; 
+    }
+    status = vctr_chk(vctr_key, is_at_rest); cBYE(status); 
+  }
+BYE:
+  return status;
+}
+int
+vctr_chk(
+    uint32_t vctr_uqid,
+    bool is_at_rest
+    )
+{
+  int status = 0;
+
+  bool vctr_is_found; uint32_t vctr_where_found;
+  status = vctr_is(vctr_uqid, &vctr_is_found, &vctr_where_found);
+  cBYE(status);
+  if ( !vctr_is_found ) { go_BYE(-1); }
+
+  vctr_rs_hmap_val_t vctr_val = g_vctr_hmap.bkts[vctr_where_found].val;
+  uint32_t qtype           = vctr_val.qtype;
+  uint64_t num_elements    = vctr_val.num_elements;
+  uint32_t num_chnks       = vctr_val.num_chnks;
+  uint32_t max_num_in_chnk = vctr_val.max_num_in_chnk;
+  uint64_t chk_num_elements    = 0;
+  if ( vctr_uqid == 0 ) { goto BYE; }
+  for ( uint32_t chnk_idx = 0; chnk_idx < num_chnks; chnk_idx++ ) {
+    bool chnk_is_found; uint32_t chnk_where_found;
+    status = chnk_is(vctr_uqid, chnk_idx,&chnk_is_found,&chnk_where_found);
+    cBYE(status);
+    if ( !chnk_is_found ) { go_BYE(-1); }
+    chnk_rs_hmap_val_t chnk_val;
+    memset(&chnk_val, 0, sizeof(chnk_rs_hmap_val_t));
+    chnk_rs_hmap_key_t chnk_key;
+    memset(&chnk_key, 0, sizeof(chnk_rs_hmap_key_t));
+    chnk_val = g_chnk_hmap.bkts[chnk_where_found].val;
+    chnk_key = g_chnk_hmap.bkts[chnk_where_found].key;
+    if ( is_at_rest ) { 
+      if ( chnk_val.num_readers != 0 ) { go_BYE(-1); } 
+      if ( chnk_val.num_writers != 0 ) { go_BYE(-1); } 
+    }
+    if ( chnk_val.num_readers > 0 ) { 
+      if ( chnk_val.num_writers != 0 ) { go_BYE(-1); } 
+    }
+    if ( chnk_val.num_writers > 0 ) { 
+      if ( chnk_val.num_readers != 0 ) { go_BYE(-1); } 
+    }
+    if ( ( chnk_val.num_elements == 0 ) || 
+        ( chnk_val.num_elements > max_num_in_chnk ) ) { 
+      go_BYE(-1);
+    }
+    chk_num_elements += chnk_val.num_elements;
+    if ( chnk_val.qtype != qtype ) { go_BYE(-1); }
+    // if data not in L2, must be in L1 
+    if ( chnk_val.l2_exists == false ) { 
+      if ( chnk_val.l1_mem == NULL ) { go_BYE(-1); }
+    }
+    else { // check that file exists 
+      char *l2_file = l2_file_name(vctr_uqid, chnk_idx);
+      if ( !isfile(l2_file) ) { go_BYE(-1); }
+      free_if_non_null(l2_file);
+    }
+  }
+  if ( chk_num_elements != num_elements ) { go_BYE(-1); }
 BYE:
   return status;
 }

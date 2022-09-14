@@ -22,12 +22,25 @@ setmetatable(lVector, mt)
 
 register_type(lVector, "lVector")
 
-function lVector:check()
-  assert(cVector.chk(self._base_vec))
-  if ( self._nn_vec ) then 
-    assert(cVector.chk(self._nn_vec))
+function lVector:check(is_at_rest, is_for_all)
+  if ( type(is_at_rest) == "nil" ) then
+    is_at_rest = false
+  end
+  assert(type(is_at_rest) == "boolean")
+
+  if ( type(is_for_all) == "nil" ) then
+    is_for_all = false
+  end
+  assert(type(is_for_all) == "boolean")
+
+  local status = cVector.chk(self._base_vec, is_at_rest, is_for_all)
+  local nn_status = true
+  if ( not is_for_all ) then 
+    if ( self._nn_vec ) then 
+      nn_status = cVector.chk(self._nn_vec, is_at_rest, is_for_all)
+    end
   end 
-  return true
+  return (status and nn_status)
 end
 
 function lVector:width()

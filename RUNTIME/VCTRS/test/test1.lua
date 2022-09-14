@@ -166,6 +166,8 @@ tests.t4 = function()
     if ( k == "y") then yfound = true; assert(type(x) == "lVector") end 
   end
 
+  assert(x:check()) -- checking on this vector
+  assert(x:check(true, true)) -- checking on all vectors
   x:nop()
   Q.save()
   print("==================xxx =============")
