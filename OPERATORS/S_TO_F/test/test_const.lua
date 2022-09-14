@@ -52,6 +52,7 @@ tests.t1 = function()
   local status = pcall(c1.get1, -1) -- deliberate error
   assert(not status)
 
+  assert(c1:check(true, true)) -- checking on all vectors
   print("Test t1 succeeded")
   -- os.exit() -- WHY IS THIS NEEDED? 
 end
@@ -89,6 +90,7 @@ tests.t3 = function() -- this is a stress test
   c1:eval()
   print(" ====== eval done ====== ")
   assert(c1:is_eov())
+  assert(c1:check(true, true)) -- checking on all vectors
   print("Test t3 succeeded")
   os.exit() -- WHY IS THIS NEEDED?
 end

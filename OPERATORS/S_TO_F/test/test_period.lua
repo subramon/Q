@@ -28,6 +28,7 @@ tests.t1 = function()
     cnt = cnt + 1 
     if ( cnt == period ) then val = start; cnt = 0 end 
   end
+  assert(c1:check(true, true)) -- checking on all vectors
   print("successfully executed t1")
 end
 tests.t1()

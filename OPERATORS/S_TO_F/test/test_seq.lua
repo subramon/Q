@@ -23,6 +23,7 @@ tests.t1 = function()
   local status = pcall(c1.get1, len) -- deliberate error
   assert(not status)
   assert(c1:qtype() == qtype)
+  assert(c1:check(true, true)) -- checking on all vectors
   print("Test t1 succeeded")
 end
 tests.t1()
