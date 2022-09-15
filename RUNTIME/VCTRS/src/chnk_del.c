@@ -21,7 +21,6 @@ chnk_del(
   bool vctr_is_found, chnk_is_found;
   uint32_t where_found;
 
-  printf("C code: deleting %u \n", chnk_idx);
   status = vctr_is(vctr_uqid, &vctr_is_found, &where_found);
   cBYE(status);
   if ( !vctr_is_found ) { return -2; } // NOTE

@@ -21,6 +21,7 @@ local function for_cdef(
   incs,
   subs
   )
+  -- Determine the input file 
   -- print("infile = ", infile)
   local src_root = qcfg.q_src_root
   assert(type(infile) == "string")
@@ -30,6 +31,8 @@ local function for_cdef(
     infile = src_root .. "/" .. infile
   end
   assert(cutils.isfile(infile), "File not found: " .. infile)
+  --============================================
+  -- Determine the incs i.e., -I....
   local cmd
   if ( incs ) then
     assert(type(incs) == "table")

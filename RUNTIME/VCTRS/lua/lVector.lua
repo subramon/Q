@@ -248,7 +248,7 @@ function lVector:eval()
     if ( ( self._memo_len >= 0 ) and ( num_elements > 0 ) ) then
       local chunk_to_release = (self._chunk_num-1) - self._memo_len
       if ( chunk_to_release >= 0 ) then 
-        print("Deleting chunk " .. chunk_to_release)
+        -- print("Deleting chunk " .. chunk_to_release)
         local is_found = 
           cVector.chunk_delete(self._base_vec, chunk_to_release)
         -- assert(is_found == true)
@@ -258,7 +258,6 @@ function lVector:eval()
       end
     end
   until ( num_elements ~= self._max_num_in_chunk ) 
-  print("lVector: eov")
   assert(self:is_eov())
   --[[ TODO THINK P1 
   -- cannot have Vector with 0 elements
@@ -276,7 +275,6 @@ function lVector:eval()
   end
   --]]
   if ( qcfg.debug ) then self:check() end
-  print("lVector; eval() done")
   return self
 end
 

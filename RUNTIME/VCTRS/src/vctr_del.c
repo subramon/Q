@@ -18,8 +18,6 @@ vctr_del(
   int status = 0;
   uint32_t where_found;
 
-  printf("Freeing Vector %u \n", uqid);
-
   status = vctr_is(uqid, ptr_is_found, &where_found); cBYE(status);
   if ( !*ptr_is_found ) { goto BYE; }
   vctr_rs_hmap_val_t val = g_vctr_hmap.bkts[where_found].val;

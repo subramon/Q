@@ -24,17 +24,17 @@ local function compile_and_link(
   assert(cutils.isfile(dotc), dotc)
   local is_so, sofile = is_so_file(fn)
   if ( is_so ) then
-    -- print("File exists: No need to create " .. sofile)
+    print("File exists: No need to create " .. sofile)
     return sofile
   end
   --===============================
   local str_incs = {}
   if ( incs ) then
-  for _, v in ipairs(incs) do
-    local incdir = qcfg.q_src_root .. v
-    assert(cutils.isdir(incdir), incdir)
-    str_incs[#str_incs+1] = "-I" .. incdir
-  end
+    for _, v in ipairs(incs) do
+      local incdir = qcfg.q_src_root .. v
+      assert(cutils.isdir(incdir), incdir)
+      str_incs[#str_incs+1] = "-I" .. incdir
+    end
     str_incs = table.concat(str_incs, " ")
   else
     str_incs = ""
@@ -59,7 +59,7 @@ local function compile_and_link(
   --===============================
   local q_cmd = string.format("gcc -shared %s %s %s %s -o %s %s",
        qc_flags, str_incs, dotc, str_srcs, sofile, str_libs)
-  -- print(q_cmd)
+  print("q_cmd = ", q_cmd)
   assert(exec(q_cmd), q_cmd)
   assert(cutils.isfile(sofile))
   return true

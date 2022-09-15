@@ -27,7 +27,8 @@ tests.t1 = function()
   assert(type(c2) == "lVector")
 
   local chk_val = Scalar.new(val, qtype)
-  for i = 1, len do
+  local lb = blksz+1 -- to ignore block 0 
+  for i = lb, len do
     local ival = c1:get1(i-1)
     if ( ( i >= 1 ) and ( i <= blksz ) ) then
       assert(type(ival) == "nil")
@@ -53,6 +54,9 @@ tests.t1 = function()
   assert(not status)
 
   assert(c1:check(true, true)) -- checking on all vectors
+  -- make a few more vectors just for fun
+  local c3 = Q.const(args):eval()
+  local c4 = Q.const(args):eval()
   print("Test t1 succeeded")
   -- os.exit() -- WHY IS THIS NEEDED? 
 end
@@ -88,7 +92,6 @@ tests.t3 = function() -- this is a stress test
   local c1 = Q.const( {val = val, qtype = qtype, len = len })
   c1:memo(2)
   c1:eval()
-  print(" ====== eval done ====== ")
   assert(c1:is_eov())
   assert(c1:check(true, true)) -- checking on all vectors
   print("Test t3 succeeded")

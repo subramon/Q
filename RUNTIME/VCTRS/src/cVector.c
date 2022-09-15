@@ -468,7 +468,6 @@ static int l_vctr_free( lua_State *L) {
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool is_found;
-  printf("cVector: Start Freeing Vector %u ", ptr_v->uqid);
   char *name = vctr_get_name(ptr_v->uqid); 
   if ( name == NULL ) { 
     printf("\n"); 
@@ -478,7 +477,6 @@ static int l_vctr_free( lua_State *L) {
   }
   status = vctr_del(ptr_v->uqid, &is_found); // Deliberate no cBYE(status); 
   lua_pushboolean(L, is_found);
-  printf("cVector: Stop  Freeing Vector %u \n", ptr_v->uqid);
   return 1;
 BYE:
   lua_pushnil(L);

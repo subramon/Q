@@ -107,7 +107,10 @@ vctr_chk(
       free_if_non_null(l2_file);
     }
   }
-  if ( chk_num_elements != num_elements ) { go_BYE(-1); }
+  // if no memo, then num in chunk should match num in vector 
+  if ( vctr_val.memo_len < 0 ) { 
+    if ( chk_num_elements != num_elements ) { go_BYE(-1); }
+  }
 BYE:
   return status;
 }

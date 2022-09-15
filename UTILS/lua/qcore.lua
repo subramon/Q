@@ -19,13 +19,15 @@ local libs            = {}
 -- Keeps track of struct files that have been cdef'd
 local cdefd = {}
 
+-- IMPORTANT: Document the assumption that no two files that can
+-- be sent to cdef can have the same struct in them
 -- we need q_cdef instead of just cdef because we do not want
 -- to error out by repeating a cdef that was done earlier
 local function q_cdef( infile, incs)
   if ( cdefd[infile] ) then
-    -- print("struct file: Skipping cdef of " .. infile)
+    print("Skipping cdef of " .. infile)
   else
-    -- print("cdef'ing " .. infile)
+    print("cdef'ing " .. infile)
     local y = for_cdef(infile, incs)
     ffi.cdef(y)
     cdefd[infile] = true
