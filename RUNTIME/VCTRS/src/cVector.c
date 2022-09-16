@@ -126,7 +126,6 @@ static int l_vctr_nop( lua_State *L) {
   int status = 0;
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   if ( ptr_v == NULL ) { go_BYE(-1); }
-  fprintf(stdout, "nop\n");
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -468,6 +467,7 @@ static int l_vctr_free( lua_State *L) {
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool is_found;
+  /*
   char *name = vctr_get_name(ptr_v->uqid); 
   if ( name == NULL ) { 
     printf("\n"); 
@@ -475,6 +475,7 @@ static int l_vctr_free( lua_State *L) {
   else {
     printf("%s\n", name); 
   }
+  */
   status = vctr_del(ptr_v->uqid, &is_found); // Deliberate no cBYE(status); 
   lua_pushboolean(L, is_found);
   return 1;

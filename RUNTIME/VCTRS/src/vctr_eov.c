@@ -19,7 +19,7 @@ vctr_eov(
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
   if ( val.is_trash ) { go_BYE(-1); }
-  if ( val.is_eov ) { go_BYE(-1); }
+  // TODO P3 Consider why to comment this: if ( val.is_eov ) { go_BYE(-1); }
   g_vctr_hmap.bkts[where_found].val.is_eov = true; 
 BYE:
   return status;

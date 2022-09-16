@@ -77,6 +77,19 @@ get_width_c_qtype(
   }
 }
 
+bool
+is_qtype(
+    const char *const str_qtype
+    )
+{
+  if ( get_c_qtype(str_qtype) == Q0 ) {
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+
 qtype_t
 get_c_qtype(
     const char *const str_qtype

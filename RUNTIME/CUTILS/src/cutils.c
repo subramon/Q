@@ -95,6 +95,16 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_cutils_is_qtype( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  const char *const str_qtype = luaL_checkstring(L, 1);
+  lua_pushboolean(L, is_qtype(str_qtype));
+  return 1;
+}
+//----------------------------------------
 static int l_cutils_isdir( 
     lua_State *L
     )
@@ -164,6 +174,16 @@ static int l_cutils_get_width_qtype(
   const char *const str_qtype = luaL_checkstring(L, 1);
   int width = get_width_qtype(str_qtype);
   lua_pushnumber(L, width);
+  return 1;
+}
+//----------------------------------------
+static int l_cutils_get_c_qtype( 
+    lua_State *L
+    )
+{
+  const char *const str_qtype = luaL_checkstring(L, 1);
+  qtype_t qtype  = get_c_qtype(str_qtype);
+  lua_pushnumber(L, qtype);
   return 1;
 }
 //----------------------------------------
@@ -490,9 +510,11 @@ static const struct luaL_Reg cutils_methods[] = {
     { "getsize",     l_cutils_getsize },
     { "gettime",     l_cutils_gettime },
     { "get_width_qtype",   l_cutils_get_width_qtype },
+    { "get_c_qtype", l_cutils_get_c_qtype },
     { "delete",      l_cutils_delete },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
+    { "is_qtype",     l_cutils_is_qtype },
     { "makepath",    l_cutils_makepath },
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
@@ -513,6 +535,8 @@ static const struct luaL_Reg cutils_functions[] = {
     { "getsize",     l_cutils_getsize },
     { "gettime",     l_cutils_gettime },
     { "get_width_qtype",   l_cutils_get_width_qtype },
+    { "get_c_qtype", l_cutils_get_c_qtype },
+    { "is_qtype",     l_cutils_is_qtype },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },

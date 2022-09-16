@@ -47,7 +47,19 @@ vctr_get1(
   // offset the pointer to the base of the chunk
   data += (width * chnk_off);
 
-  memcpy(&(ptr_sclr->val), data, width); 
+  if ( qtype == SC ) { 
+    go_BYE(-1); // TO BE IMPLEMENTED 
+    // check for null termination 
+    /*
+    if ( data[width-1] != '\0' ) { go_BYE(-1); } 
+    ptr_sclr->variable_val = malloc(width * sizeof(char));
+    return_if_malloc_failed(ptr_sclr->variable_val);
+    memcpy(ptr_sclr->variable_val, data, width); 
+   */ 
+  }
+  else { 
+    memcpy(&(ptr_sclr->val), data, width); 
+  }
   // Following is needed because chnk_get_data increments num_readers
   g_chnk_hmap.bkts[chnk_where_found].val.num_readers--; 
 BYE:

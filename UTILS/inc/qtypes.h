@@ -79,4 +79,8 @@ extern const char *
 str_qtype_to_str_ctype(
     const char * const str_qtype
     );
+extern bool
+is_qtype(
+    const char *const str_qtype
+    );
 #endif // __QTYPES_H

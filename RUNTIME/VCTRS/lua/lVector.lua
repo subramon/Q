@@ -1,3 +1,7 @@
+-- All attributes of vector start with _ to distinguish it from methods
+-- So, we have lVector.width but we have self._base_vec or self._chunk_num
+-- All meta data, by convention, is in _meta.* e.g.,
+-- self._meta.meaning or self._meta.max
 local ffi     = require 'ffi'
 local cVector = require 'libvctr'
 local register_type = require 'Q/UTILS/lua/register_type'
@@ -185,9 +189,13 @@ function lVector:put1(c, n)
   assert(cVector.put1(self._base_vec, c, n))
 end
 
-function lVector:put_chunk(c, n)
+function lVector:put_chunk(c, n, nn_c)
   assert(type(c) == "CMEM")
   assert(cVector.put_chunk(self._base_vec, c, n))
+  if ( self._nn_vec ) then 
+    assert(type(nn_c) == "CMEM")
+    assert(cVector.put_chunk(self._nn_vec, nn_c, n))
+  end
   self._chunk_num = self._chunk_num + 1 
 end
 
@@ -195,7 +203,15 @@ function lVector:get1(elem_idx)
   assert(type(elem_idx) == "number")
   if (elem_idx < 0) then return nil end
   local sclr = cVector.get1(self._base_vec, elem_idx)
+  if ( type(sclr) ~= "nil" ) then assert(type(sclr) == "Scalar") end
   return sclr
+end
+
+function lVector:unget_chunk(chnk_idx)
+  cVector.unget_chunk(self._base_vec, chnk_idx)
+  if ( self._nn_vec ) then 
+    cVector.unget_chunk(self._nn_vec, chnk_idx)
+  end
 end
 
 function lVector:get_chunk(chnk_idx)
@@ -204,23 +220,33 @@ function lVector:get_chunk(chnk_idx)
   assert(chnk_idx <= self._chunk_num)
   if ( chnk_idx == self._chunk_num ) then 
     -- invoke the generator 
+    if ( type(self._generator) == "nil" ) then return 0, nil end 
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
-    if ( num_elements == 0 ) then  -- nothing more to generate
+    --==============================
+    if ( num_elements > 0 ) then  
+      self:put_chunk(buf, num_elements)
+    end
+    --==============================
+    if ( num_elements < self._max_num_in_chunk ) then 
+      -- nothing more to generate
       self:eov()  -- vector is at an end 
       -- Following increment seems unnecessary but is important to 
       -- keep consistency with put_chunk
+    end
+    --==============================
+    if ( num_elements == 0 ) then
       return 0
-    else
-      self:put_chunk(buf, num_elements)
+    else 
       -- TODO P1 IMPORTANT What about nn_buf??? 
       return num_elements, buf
     end 
   else 
-    print("Archival chunk num " .. self._chunk_num)
     local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
-    if ( x ~= nil ) then assert(type(x) == "CMEM") end 
-    return x, n
+    if ( x == nil ) then return 0, nil end 
+    assert(type(n) == "number")
+    assert(type(x) == "CMEM")
+    return n, x 
   end
 end
 -- evaluates the vector using a provided generator function

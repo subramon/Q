@@ -43,6 +43,9 @@ end
 qcfg.q_link_flags    = os.getenv("Q_LINK_FLAGS")
 qcfg.ld_library_path = os.getenv("LD_LIBRARY_PATH")
 --=================================
+-- Note that no cell in an input CSV file can have length greater
+-- than max_width_SC
+qcfg.max_width_SC = 32 -- => max length of constant length string = 32-1
 qcfg.max_num_in_chunk = 32 -- this is default value
 qcfg.debug = true -- set to TRUE only if you want debugging
 qcfg.memo_len = -1 --  Vector code uses this default value

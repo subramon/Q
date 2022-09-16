@@ -63,7 +63,7 @@ tests.t3 = function()
     assert(x:is_eov() == false)
     assert(x:num_elements() == i*max_num_in_chnk)
     -- get what you put 
-    local c, n = x:get_chunk(i-1)
+    local n, c = x:get_chunk(i-1)
     assert(type(c) == "CMEM")
     assert(type(n) == "number")
     assert(n == max_num_in_chnk)
@@ -79,7 +79,7 @@ tests.t3 = function()
   assert(x:num_elements() == 
     (num_chunks*max_num_in_chnk) + (max_num_in_chnk-1))
   -- get what you put 
-  local c, n = x:get_chunk(num_chunks)
+  local n, c = x:get_chunk(num_chunks)
   assert(type(c) == "CMEM")
   assert(type(n) == "number")
   assert(n == max_num_in_chnk-1)
@@ -128,7 +128,7 @@ tests.t4 = function()
     local y1 = loadstring(x1)
     local z1 = y1()
     x:put_chunk(buf, max_num_in_chnk)
-    local buf2, n = x:get_chunk(i-1)
+    local n, buf2 = x:get_chunk(i-1)
     assert(type(buf2) == "CMEM")
     assert(type(n) == "number")
     assert(n == max_num_in_chnk)
@@ -170,9 +170,7 @@ tests.t4 = function()
   assert(x:check(true, true)) -- checking on all vectors
   x:nop()
   Q.save()
-  print("==================xxx =============")
   local ydata = pldata.read("/tmp/_y")
-  print("================== www ============")
   assert(#ydata == x:num_elements())
   -- Note that we test data for all except last chunk 
   counter = 10
@@ -180,12 +178,11 @@ tests.t4 = function()
     assert(ydata[i][1] == counter)
     counter = counter + 10 
   end
-  print("================== yyy ============")
   print("Test t4 succeeded")
 end
 -- return tests
--- tests.t1()
+tests.t1()
 -- tests.t2()
--- tests.t3()
+tests.t3()
 tests.t4()
 

@@ -1,20 +1,22 @@
-require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local ffi     = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local Scalar  = require 'libsclr'
-local qconsts = require 'Q/UTILS/lua/qconsts'
+local qcfg    = require 'Q/UTILS/lua/qcfg'
 local plpath = require 'pl.path'
 local plutils= require 'pl.utils'
-local test_print  = true -- turn false if you want only load_csv tested
+require 'Q/UTILS/lua/strict'
+-- TODO P1 Set below to true 
+local test_print  = false -- turn false if you want only load_csv tested
 --=======================================================
 local tests = {}
 tests.t1 = function()
   local M = {}
   local O = { is_hdr = true }
-  M[1] = { name = "i4", qtype = "I4", is_memo = false}
-  M[2] = { name = "f4", qtype = "F4", is_memo = true}
-  local datafile = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in1.csv"
+  -- TODO P1 Test with different memo_len values 
+  M[1] = { name = "i4", qtype = "I4", memo_len = -1 }
+  M[2] = { name = "f4", qtype = "F4", memo_len = -1  }
+  local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in1.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   local num_cols = 0
@@ -23,9 +25,9 @@ tests.t1 = function()
     num_cols = num_cols + 1
     assert(type(v) == "lVector")
     if ( k == "i4" ) then 
-      assert(v:fldtype() == "I4") 
+      assert(v:qtype() == "I4") 
     elseif ( k == "f4" ) then 
-      assert(v:fldtype() == "F4") 
+      assert(v:qtype() == "F4") 
     else
       error("")
     end 
@@ -33,22 +35,24 @@ tests.t1 = function()
   assert(num_cols == #M, num_cols)
   local chunk_idx = 0
   repeat 
+    -- if ( chunk_idx == 9 ) then break end -- TODO P1 
     local n 
     for k, v in pairs(T) do 
       n = v:get_chunk(chunk_idx)
       if  ( n ~= 0 ) then 
         v:unget_chunk(chunk_idx)
       end
+      -- print("got chunk " .. chunk_idx .. " for " .. k)
     end
     chunk_idx = chunk_idx + 1
-  until n == 0 
+  until (n == 0)
   -- This test is specific to the in1.csv we have crafted
   for i = 1, T.i4:num_elements() do
-    assert(T.i4:get1(i-1) == Scalar.new(i, "I4"))
+    assert(T.i4:get1(i-1):to_num() == i)
   end
   for i = 1, T.f4:num_elements() do
     assert(math.ceil( T.f4:get1(i-1):to_num()) == i+1)
-    assert(math.floor(T.f4:get1(i-1):to_num()) == i  )
+    assert(math.floor(T.f4:get1(i-1):to_num()) == i)
   end
   --===================
   if ( test_print ) then
@@ -58,7 +62,7 @@ tests.t1 = function()
       U[1] = T.i4
       U[2] = T.f4
       Q.print_csv(U, { impl = impl, opfile = opfile } )
-      local expected = qconsts.Q_SRC_ROOT .. 
+      local expected = qcfg.q_src_root .. 
         "/OPERATORS/LOAD_CSV/test/chk_in1.csv"
       assert(plutils.readfile(expected) == plutils.readfile(opfile))
       print("Tested print with impl = ", impl)
@@ -73,7 +77,7 @@ tests.t2 = function()
   local O = { is_hdr = true }
   M[1] = { name = "i1", qtype = "I4", has_nulls = false }
   M[2] = { name = "s1", qtype = "SC", has_nulls = false, width = 6}
-  local datafile = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in2.csv"
+  local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in2.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   assert(type(T) == "table")
@@ -83,8 +87,8 @@ tests.t2 = function()
   local chunk_idx = 0
   for k, v in pairs(T) do 
     assert(type(v) == "lVector")
-    if ( k == "i1" ) then assert(v:fldtype() == "I4") end 
-    if ( k == "s1" ) then assert(v:fldtype() == "SC") end 
+    if ( k == "i1" ) then assert(v:qtype() == "I4") end 
+    if ( k == "s1" ) then assert(v:qtype() == "SC") end 
   end
   repeat 
     local n 
@@ -97,16 +101,17 @@ tests.t2 = function()
     print("Completed " .. chunk_idx )
     chunk_idx = chunk_idx + 1
   until n == 0 
+  T.s1:get1(0)
   -- This test is specific to the in2.csv we have crafted
   assert(T.i1:get1(0) == Scalar.new(10, "I4"))
   assert(T.i1:get1(1) == Scalar.new(20, "I4"))
   assert(T.i1:get1(2) == Scalar.new(30, "I4"))
   for i = 1, T.s1:num_elements() do
-    assert(type(T.s1:get1(i-1)) == "CMEM")
+    assert(type(T.s1:get1(i-1)) == "Scalar")
   end
-  assert(ffi.string(get_ptr(T.s1:get1(0))) == "ABC")
-  assert(ffi.string(get_ptr(T.s1:get1(1))) == "DEFX")
-  assert(ffi.string(get_ptr(T.s1:get1(2))) == "GHIYZ")
+  assert(T.s1:get1(0):to_str() == "ABC")
+  assert(T.s1:get1(1):to_str() == "DEFX")
+  assert(T.s1:get1(2):to_str() == "GHIYZ")
   --===================
   if ( test_print ) then
     local opfile = "/tmp/_x"
@@ -115,7 +120,7 @@ tests.t2 = function()
       U[1] = T.i1
       U[2] = T.s1
       Q.print_csv(U, { impl = impl, opfile = opfile } )
-      local expected = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/chk_in2.csv"
+      local expected = qcfg.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/chk_in2.csv"
       assert(plutils.readfile(expected) == plutils.readfile(opfile))
     end
   end
@@ -130,7 +135,7 @@ tests.t3 = function()
   M[#M+1] = { is_memo = false, name = "customer_id", qtype = "I8", }
   M[#M+1] = { is_memo = false, name = "category_id", qtype = "I4", }
   M[#M+1] = { is_memo = true, name = "price", qtype = "F4", has_nulls = false}
-  local datafile = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in3.csv"
+  local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in3.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   for _, v in pairs(T) do assert(v:is_memo()) end 
@@ -164,7 +169,7 @@ tests.t4 = function()
   M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
   M[#M+1] = { name = "store_id", qtype = "I4", has_nulls = false}
   local format = "%Y-%m-%d %H:%M:%S"
-  local datafile = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in4.csv"
+  local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in4.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   local x = Q.SC_to_TM(T.datetime, format)
@@ -175,7 +180,7 @@ tests.t4 = function()
     for _, impl in ipairs({"C", "L"}) do 
       local opfile = "/tmp/_x" .. impl
       Q.print_csv(T.datetime, { opfile = opfile, impl = impl } )
-      local expected = qconsts.Q_SRC_ROOT .. 
+      local expected = qcfg.q_src_root .. 
       "/OPERATORS/LOAD_CSV/test/chk_in4.csv"
       assert(plutils.readfile(expected) == plutils.readfile(opfile))
     end
@@ -192,7 +197,7 @@ tests.t5 = function()
   M[#M+1] = { is_load = false, name = "category_id", qtype = "I4", has_nulls = false}
   M[#M+1] = { is_load = false, name = "price", qtype = "F4", has_nulls = false}
   local format = "%Y-%m-%d %H:%M:%S"
-  local datafile = qconsts.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/in3.csv"
+  local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in3.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   assert(T.datetime) 
@@ -231,7 +236,7 @@ tests.t5 = function()
     for _, impl in ipairs({"C", "L"}) do 
       local opfile = "/tmp/_x" .. impl
       Q.print_csv(out, {opfile = opfile, impl = impl})
-      local expected = qconsts.Q_SRC_ROOT .. 
+      local expected = qcfg.q_src_root .. 
       "/OPERATORS/LOAD_CSV/test/chk_in5.csv"
       assert(plutils.readfile(expected) == plutils.readfile(opfile))
     end
@@ -239,12 +244,12 @@ tests.t5 = function()
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
---[[
 tests.t1()
-tests.t2()
+--[[
 tests.t3()
+tests.t2()
 tests.t4()
 tests.t5()
 os.exit()
---]]
 return tests
+--]]

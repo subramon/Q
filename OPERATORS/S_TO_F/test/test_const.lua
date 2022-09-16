@@ -53,10 +53,10 @@ tests.t1 = function()
   local status = pcall(c1.get1, -1) -- deliberate error
   assert(not status)
 
-  assert(c1:check(true, true)) -- checking on all vectors
   -- make a few more vectors just for fun
   local c3 = Q.const(args):eval()
   local c4 = Q.const(args):eval()
+  assert(c1:check(true, true)) -- checking on all vectors
   print("Test t1 succeeded")
   -- os.exit() -- WHY IS THIS NEEDED? 
 end

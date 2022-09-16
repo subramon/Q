@@ -1,6 +1,7 @@
 -- This version supports chunking in load_csv
-local qconsts = require 'Q/UTILS/lua/qconsts'
+local cutils = require 'libcutils'
 local qc      = require 'Q/UTILS/lua/qcore'
+local qcfg    = require 'Q/UTILS/lua/qcfg'
   
 local function validate_meta(
   M -- meta data table 
@@ -20,7 +21,7 @@ local function validate_meta(
     assert(type(name) == "string")
     local qtype = assert(fld_M.qtype)
     assert(type(qtype) == "string")
-    assert(qconsts.qtypes[qtype])
+    assert(cutils.is_qtype(qtype))
     --===========================================
     if fld_M.is_persist ~= nil then 
       assert(type(fld_M.is_persist) == "boolean")
@@ -69,11 +70,11 @@ local function validate_meta(
       width = assert(fld_M.width)
       assert(type(width) ==  "number")
       assert(width >= 2)
-      assert(width <= qconsts.max_width["SC"])
+      assert(width <= qcfg.max_width_SC)
     elseif fld_M.qtype == "B1" then 
       width = 1
     else
-      width = assert(qconsts.qtypes[qtype].width)
+      width = assert(cutils.get_width_qtype(qtype))
     end
     fld_M.width = width
     --===========================================

@@ -9,6 +9,10 @@ cmem_free(
     )
 {
   int status = 0;
+  if ( *ptr_cmem->cell_name != '\0' ) { 
+    // printf("CMEM Freeing %s \n", ptr_cmem->cell_name);
+  }
+
   memset(ptr_cmem->cell_name, 0, Q_MAX_LEN_CELL_NAME+1); 
   if ( ptr_cmem->data == NULL ) { 
     // explicit free will cause control to come here

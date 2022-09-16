@@ -18,7 +18,7 @@ all: libsclr.so ${EXTSO}
 GEN_SRC := _eval_arith.c	 
 GEN_SRC += _outer_eval_arith.c 
 GEN_SRC += _eval_cmp.c	 
-GEN_SRC += _outer_eval_cmp.c 
+GEN_SRC += outer_eval_cmp.c 
 
 SRC := scalar.c
 SRC += aux_scalar.c
