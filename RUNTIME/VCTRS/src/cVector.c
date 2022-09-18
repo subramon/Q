@@ -92,9 +92,10 @@ BYE:
 //----------------------------------------------
 static int l_vctr_print( lua_State *L) {
   int status = 0;
-  if (  lua_gettop(L) != 5 ) { go_BYE(-1); }
+  if (  lua_gettop(L) != 6 ) { go_BYE(-1); }
   uint32_t uqid = 0, nn_uqid = 0;
   const char * opfile = NULL;
+  const char * format = NULL;
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uqid = ptr_v->uqid;
   VCTR_REC_TYPE *ptr_nn_v = NULL;
@@ -112,7 +113,10 @@ static int l_vctr_print( lua_State *L) {
   if ( !lua_isnumber(L, 5) ) { go_BYE(-1); }
   uint64_t ub = luaL_checknumber(L, 5);
 
-  status = vctr_print(uqid, nn_uqid, opfile, lb, ub); cBYE(status);
+  if ( !lua_isstring(L, 6) ) { go_BYE(-1); }
+  format = luaL_checkstring(L, 6);
+
+  status = vctr_print(uqid, nn_uqid, opfile, format, lb, ub); cBYE(status);
   lua_pushboolean(L, true); 
   return 1;
 BYE:

@@ -319,12 +319,12 @@ function lVector:eval()
   return self
 end
 
-function lVector:pr(opfile, lb, ub)
+function lVector:pr(opfile, lb, ub, format)
   local nn = self._nn_vec
   if ( nn == nil ) then
     nn = lVector.null()
   end
-  if ( opfile ) then
+  if ( ( opfile )  and ( #opfile > 0 ) ) then
     assert(type(opfile) == "string")
   else
     opfile = ffi.NULL
@@ -339,14 +339,20 @@ function lVector:pr(opfile, lb, ub)
   --=================================
   if ( ub ) then -- upper bound exclusive
     assert(type(ub) == "number")
-    assert(ub > lb) 
+    if ( ub ~= 0 ) then assert(ub > lb)  end
     assert(ub <= self:num_elements())
   else
     ub = self:num_elements()
   end
   --=================================
+  if ( ( format ) and (#format > 0 ) ) then
+    assert(type(format) == "string")
+  else
+    format = ffi.NULL
+  end
+  --=================================
   -- assert(cVector.pr(self._base_vec, self._nn_vec, opfile, lb, ub))
-  assert(cVector.pr(self._base_vec, nn, opfile, lb, ub))
+  assert(cVector.pr(self._base_vec, nn, opfile, lb, ub, format))
   return true
 end
 

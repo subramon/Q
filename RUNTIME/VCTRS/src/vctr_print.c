@@ -15,6 +15,7 @@ vctr_print(
     uint32_t vctr_uqid,
     uint32_t nn_vctr_uqid,
     const char * const opfile,
+    const char * const format,
     uint64_t lb,
     uint64_t ub
     )
@@ -23,7 +24,6 @@ vctr_print(
   FILE *fp = NULL;
 
   if ( vctr_uqid == 0 ) { go_BYE(-1); }
-  if ( ub <= lb ) { go_BYE(-1); } 
   if ( nn_vctr_uqid != 0 ) { go_BYE(-1); } // TODO TO BE IMPLEMENTED
   if ( ( opfile == NULL ) || ( *opfile == '\0' ) ) { 
     fp = stdout;
@@ -46,6 +46,9 @@ vctr_print(
   width  = g_vctr_hmap.bkts[vctr_where_found].val.width;
   max_num_in_chnk = g_vctr_hmap.bkts[vctr_where_found].val.max_num_in_chnk;
   num_elements = g_vctr_hmap.bkts[vctr_where_found].val.num_elements;;
+
+  if ( ub == 0 ) { ub = num_elements; }
+  if ( ub <= lb ) { go_BYE(-1); } 
   if ( ub > num_elements ) { go_BYE(-1); }
 
   num_to_pr = ub - lb;
@@ -73,6 +76,22 @@ vctr_print(
         case I8 : fprintf(fp, "%" PRIi64 "\n", ((int64_t *)data)[i]); break; 
         case F4 : fprintf(fp, "%f\n", ((float *)data)[i]); break; 
         case F8 : fprintf(fp, "%lf\n", ((double *)data)[i]); break; 
+        case SC : { 
+                    char *cptr = (char *)data;
+                    cptr += (i*width);
+                    fprintf(fp, "%s\n", cptr);
+                  }
+                  break;
+        case TM : {
+                    char buf[64]; 
+                    int len = sizeof(buf); 
+                    memset(buf, 0, len);
+                    struct tm * tptr = ((struct tm *)data) + i;
+                    size_t nw = strftime(buf, len-1, format, tptr);
+                    if ( nw == 0 ) { go_BYE(-1); }
+                    fprintf(fp, "%s\n", buf);
+                  }
+                  break;
         default : go_BYE(-1); break;
       }
     }

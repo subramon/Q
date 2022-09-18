@@ -5,6 +5,7 @@ local Scalar  = require 'libsclr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local plpath = require 'pl.path'
 local plutils= require 'pl.utils'
+local plfile = require 'pl.file'
 require 'Q/UTILS/lua/strict'
 -- TODO P1 Set below to true 
 local test_print  = false -- turn false if you want only load_csv tested
@@ -172,10 +173,50 @@ tests.t4 = function()
   local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in4.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
+  T.datetime:eval()
+  T.datetime:pr("_1", 0, 0, format); 
+  T.store_id:pr("_2", 0, 0, format); 
   local x = Q.SC_to_TM(T.datetime, format)
+  x:eval()
+  assert(type(x) == "lVector")
+  assert(x:num_elements() == T.datetime:num_elements())
+  x:pr("_3", 0, 0, format); 
   local y = Q.TM_to_SC(x, format)
   y:eval()
-  -- TODO P3 verify that x and T.datetime are the same
+  x:pr("_4", 0, 0, format); 
+  local out1 = plfile.read("_1")
+  local out3 = plfile.read("_3")
+  local out4 = plfile.read("_4")
+  assert(out1 == out3)
+  assert(out1 == out4)
+  --===================
+  if ( test_print ) then
+    for _, impl in ipairs({"C", "L"}) do 
+      local opfile = "/tmp/_x" .. impl
+      Q.print_csv(T.datetime, { opfile = opfile, impl = impl } )
+      local expected = qcfg.q_src_root .. 
+      "/OPERATORS/LOAD_CSV/test/chk_in4.csv"
+      assert(plutils.readfile(expected) == plutils.readfile(opfile))
+    end
+  end
+  --===================
+  print("Test t4 succeeded")
+end
+--==============================================================
+tests.t4a = function()
+  local M = {}
+  local O = { is_hdr = true }
+  M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
+  M[#M+1] = { name = "store_id", qtype = "I4", has_nulls = false}
+  local format = "%Y-%m-%d %H:%M:%S"
+  local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in4.csv"
+  assert(plpath.isfile(datafile))
+  local T = Q.load_csv(datafile, M, O)
+  local x = Q.SC_to_TM(T.datetime, format)
+  assert(type(x) == "lVector")
+  local y = Q.TM_to_SC(x, format)
+  y:eval()
+  y:pr("_4", 0, 0, format); 
   --===================
   if ( test_print ) then
     for _, impl in ipairs({"C", "L"}) do 
@@ -248,8 +289,9 @@ end
 -- WORKS tests.t1()
 -- WORKS tests.t2()
 -- WORKS tests.t3()
--- NOT WORKING tests.t4()
-tests.t5()
+-- WORKS tests.t4()
+tests.t4a()
+-- NOT WORKING tests.t5()
 --[[
 os.exit()
 return tests

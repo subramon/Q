@@ -23,6 +23,14 @@ local function TM_to_SC(
   assert(#format > 0)
   assert(#format < 64) -- some sanity check 
 
+  local subs = {}
+  subs.fn = "TM_to_SC"
+  subs.dotc = "OPERATORS/LOAD_CSV/src/TM_to_SC.c"
+  subs.doth = "OPERATORS/LOAD_CSV/inc/TM_to_SC.h"
+  subs.incs = { "OPERATORS/LOAD_CSV/inc/", "UTILS/inc/" }
+  -- subs.srcs = {}
+  qc.q_add(subs)
+
   local in_ctype = cutils.str_qtype_to_str_ctype(in_qtype)
   local cst_in_as = in_ctype .. " *"
   local out_width = 32 -- TODO P3 Undo hard code
@@ -35,7 +43,7 @@ local function TM_to_SC(
     local cst_out_buf = get_ptr(out_buf, "char  * ")
     local len, base_data = inv:get_chunk(chunk_idx)
     if ( len > 0 ) then 
-      local in_ptr = get_ptr(base_data, cst_in_a)
+      local in_ptr = get_ptr(base_data, cst_in_as)
       assert(in_ptr ~= ffi.NULL)
       local start_time = cutils.rdtsc()
       local status = qc["TM_to_SC"](in_ptr, len, format,

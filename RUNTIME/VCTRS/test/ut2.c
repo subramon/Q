@@ -208,7 +208,7 @@ main(
   // Now check that no RAM is in use 
   if ( g_mem_used != 0 ) { go_BYE(-1); } 
   // Now print the vector (this should cause stuff to be retsored to l1 
-  status = vctr_print(uqid, 0, "/tmp/_xxxx", 0, num_elements);
+  status = vctr_print(uqid, 0, "/tmp/_xxxx", 0, num_elements, "");
   cBYE(status);
   // l1 memory should be back as was before 
   if ( g_mem_used != bak_mem_used ) { go_BYE(-1); } 
