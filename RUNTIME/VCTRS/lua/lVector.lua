@@ -98,6 +98,9 @@ function lVector:eov()
   self._generator = nil -- IMPORTANT, we no longer have a generator 
   return self
 end
+function lVector:has_nulls()
+  if ( self._nn_vec ) then return true else return false end 
+end
 function lVector:is_eov()
   local is_eov = cVector.is_eov(self._base_vec)
   assert(type(is_eov) == "boolean")
@@ -217,8 +220,19 @@ end
 function lVector:get_chunk(chnk_idx)
   assert(type(chnk_idx) == "number")
   assert(chnk_idx >= 0)
-  assert(chnk_idx <= self._chunk_num)
-  if ( chnk_idx == self._chunk_num ) then 
+  local to_generate 
+  if ( self:is_eov() ) then
+    to_generate = false
+  else
+    if ( chnk_idx < self._chunk_num ) then 
+      to_generate = false
+    elseif ( chnk_idx == self._chunk_num ) then 
+      to_generate = true
+    else
+      error("")
+    end
+  end
+  if ( to_generate ) then 
     -- invoke the generator 
     if ( type(self._generator) == "nil" ) then return 0, nil end 
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
@@ -242,6 +256,7 @@ function lVector:get_chunk(chnk_idx)
       return num_elements, buf
     end 
   else 
+    print("Archival get_chunk " .. chnk_idx)
     local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
     if ( x == nil ) then return 0, nil end 
     assert(type(n) == "number")

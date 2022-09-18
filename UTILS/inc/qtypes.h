@@ -24,6 +24,7 @@ typedef enum {
 
   SC,  // constant length strings
   SV,  // variable length strings
+  TM,  // time struct  tm_t
   TM1, // time struct  tm_t
   NUM_QTYPES // must be last one 
 } qtype_t;

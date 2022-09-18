@@ -129,7 +129,7 @@ end
 --=======================================================
 tests.t3 = function()
   local M = {}
-  local O = { is_hdr = true, fld_sep = "comma", is_memo = true  }
+  local O = { is_hdr = true, fld_sep = "comma", memo_len = -1  }
   M[#M+1] = { is_memo = false, name = "datetime", qtype = "SC", width=20}
   M[#M+1] = { is_memo = false, name = "store_id", qtype = "I4", }
   M[#M+1] = { is_memo = false, name = "customer_id", qtype = "I8", }
@@ -138,7 +138,7 @@ tests.t3 = function()
   local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in3.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
-  for _, v in pairs(T) do assert(v:is_memo()) end 
+  for _, v in pairs(T) do assert(v:memo_len() == -1 ) end 
   local chunk_idx = 0
   repeat 
     local n 
@@ -173,7 +173,8 @@ tests.t4 = function()
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   local x = Q.SC_to_TM(T.datetime, format)
-  local y = Q.TM_to_SC(x:eval(), format)
+  local y = Q.TM_to_SC(x, format)
+  y:eval()
   -- TODO P3 verify that x and T.datetime are the same
   --===================
   if ( test_print ) then
@@ -190,7 +191,7 @@ tests.t4 = function()
 end
 tests.t5 = function()
   local M = {}
-  local O = { is_hdr = true, memo = true  }
+  local O = { is_hdr = true, memo_len = -1  }
   M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
   M[#M+1] = { is_load = false, name = "store_id", qtype = "I4", has_nulls = false}
   M[#M+1] = { is_load = false, name = "customer_id", qtype = "I8", has_nulls = false}
@@ -216,9 +217,9 @@ tests.t5 = function()
   }
   local out = {}
   for i, tm_fld in ipairs(tm_flds) do 
-    out[i] = Q.TM_to_I2(x, tm_fld):memo(true)
+    out[i] = Q.TM_to_I2(x, tm_fld)
     assert(type(out[i]) ==  "lVector")
-    assert(out[i]:is_memo())
+    out[i]:eval()
   end
   local chunk_idx = 0
   local n
@@ -244,12 +245,12 @@ tests.t5 = function()
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
-tests.t1()
---[[
-tests.t3()
-tests.t2()
-tests.t4()
+-- WORKS tests.t1()
+-- WORKS tests.t2()
+-- WORKS tests.t3()
+-- NOT WORKING tests.t4()
 tests.t5()
+--[[
 os.exit()
 return tests
 --]]

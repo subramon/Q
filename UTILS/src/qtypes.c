@@ -72,7 +72,9 @@ get_width_c_qtype(
     case F2 : return sizeof(bfloat16); break;
     case F4 : return sizeof(float); break;
     case F8 : return sizeof(double); break;
+
     case TM1 : return sizeof(tm_t); break;
+    case TM  : return sizeof(struct tm); break;
     default : return 0; break;
   }
 }
@@ -118,6 +120,8 @@ get_c_qtype(
 
   if ( strcmp("TM1", str_qtype) == 0 ) { return TM1; }  
   if ( strncmp("TM1:", str_qtype, 3) == 0 ) { return TM1; }  
+
+  if ( strcmp("TM", str_qtype) == 0 ) { return TM; }  
   return Q0;
 }
 const char *
@@ -144,7 +148,8 @@ get_str_qtype(
   if ( qtype == F8 ) { return "F8"; }
 
   if ( qtype == TM1 ) { return "TM1"; }
-  return "XX";
+  if ( qtype == TM ) { return "TM"; }
+  return NULL; 
 }
 
 const char *
@@ -171,5 +176,6 @@ str_qtype_to_str_ctype(
   if ( strcmp(str_qtype, "F8") == 0 ) { return "double"; } 
 
   if ( strcmp(str_qtype, "TM1") == 0 ) { return "tm_t"; } 
+  if ( strcmp(str_qtype, "TM") == 0 ) { return "struct tm"; } 
   return NULL; 
 }

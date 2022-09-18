@@ -18,10 +18,10 @@ all: libsclr.so ${EXTSO}
 GEN_SRC := _eval_arith.c	 
 GEN_SRC += _outer_eval_arith.c 
 GEN_SRC += _eval_cmp.c	 
-GEN_SRC += outer_eval_cmp.c 
 
 SRC := scalar.c
 SRC += aux_scalar.c
+# SRC += outer_eval_cmp.c  # included in scalar.c
 
 OBJ = $(SRC:.c=.o)
 
@@ -62,7 +62,7 @@ ${CMEM_SO} :
 	make -C ../../CMEM/src/
 
 
-libsclr.so:  ${GEN_SRC} ${EXT_OBJ} ${OBJ} 
+libsclr.so:  ${GEN_SRC} ${EXT_OBJ} ${OBJ} outer_eval_cmp.c 
 	gcc  ${EXT_OBJ} ${OBJ} -shared -o libsclr.so
 
 #------------------------------------------------------

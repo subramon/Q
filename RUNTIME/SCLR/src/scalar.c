@@ -182,6 +182,11 @@ static int l_sclr_to_str( lua_State *L) {
     case I8 : nw = snprintf(buf, BUFLEN, "%" PRId64, ptr_sclr->val.i8); break;
     case F4 : nw = snprintf(buf, BUFLEN, "%f", ptr_sclr->val.f4); break;
     case F8 : nw = snprintf(buf, BUFLEN, "%lf", ptr_sclr->val.f8); break;
+    case SC : {
+                if ( ptr_sclr->val.str == NULL ) { go_BYE(-1); }
+                lua_pushstring(L, ptr_sclr->val.str);
+                return 1;
+              } 
     default : go_BYE(-1); break;
   }
   if ( ( nw <= 0 ) || ( nw >= BUFLEN ) )  { go_BYE(-1); }
@@ -531,6 +536,14 @@ static int l_sclr_new( lua_State *L) {
         case F8 : 
           status = txt_to_F8(str_val, &(ptr_sclr->val.f8)); 
           break;
+        case SC : 
+          {
+            int len = strlen(str_val)+1;
+            ptr_sclr->val.str = malloc(len);
+            memset(ptr_sclr->val.str, 0, len);
+            memcpy(ptr_sclr->val.str, str_val, len);
+          }
+          break;
         default : 
           go_BYE(-1);
           break;
@@ -552,8 +565,7 @@ BYE:
 
 //----------------------------------------
 
-#include "_eval_cmp.c"
-#include "_outer_eval_cmp.c"
+#include "outer_eval_cmp.c"
 #include "_eval_arith.c"
 #include "_outer_eval_arith.c"
 //-----------------------

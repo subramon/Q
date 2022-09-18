@@ -48,14 +48,10 @@ vctr_get1(
   data += (width * chnk_off);
 
   if ( qtype == SC ) { 
-    go_BYE(-1); // TO BE IMPLEMENTED 
-    // check for null termination 
-    /*
     if ( data[width-1] != '\0' ) { go_BYE(-1); } 
-    ptr_sclr->variable_val = malloc(width * sizeof(char));
-    return_if_malloc_failed(ptr_sclr->variable_val);
-    memcpy(ptr_sclr->variable_val, data, width); 
-   */ 
+    ptr_sclr->val.str = malloc(width * sizeof(char));
+    return_if_malloc_failed(ptr_sclr->val.str);
+    memcpy(ptr_sclr->val.str, data, width); 
   }
   else { 
     memcpy(&(ptr_sclr->val), data, width); 
