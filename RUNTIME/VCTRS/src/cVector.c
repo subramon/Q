@@ -27,7 +27,8 @@
 #include "vctr_num_elements.h"
 #include "vctr_persist.h"
 #include "vctr_print.h"
-#include "vctr_put.h"
+#include "vctr_putn.h"
+#include "vctr_put1.h"
 #include "vctr_put_chunk.h"
 #include "vctr_set_memo.h"
 #include "vctr_width.h"
@@ -96,14 +97,12 @@ static int l_vctr_print( lua_State *L) {
   uint32_t uqid = 0, nn_uqid = 0;
   const char * opfile = NULL;
   const char * format = NULL;
-  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE*)luaL_checkudata(L, 1, "Vector");
   uqid = ptr_v->uqid;
-  VCTR_REC_TYPE *ptr_nn_v = NULL;
 
-  if ( luaL_checkudata(L, 2, "Vector") != NULL ) { 
-    ptr_nn_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
-    nn_uqid = ptr_nn_v->uqid;
-  }
+  VCTR_REC_TYPE *ptr_nn_v = (VCTR_REC_TYPE*)luaL_checkudata(L, 2, "Vector");
+  nn_uqid = ptr_nn_v->uqid;
+
   if ( lua_isstring(L, 3) ) { 
     opfile = luaL_checkstring(L, 3);
   }
@@ -284,18 +283,36 @@ BYE:
   return 3;
 }
 //----------------------------------------
-static int l_vctr_put( lua_State *L) {
+static int l_vctr_put1( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 2 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  SCLR_REC_TYPE *ptr_sclr = (SCLR_REC_TYPE *)luaL_checkudata(L, 2, "Scalar");
+
+  status = vctr_put1(ptr_v->uqid, ptr_sclr); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_putn( lua_State *L) {
   int status = 0;
   // get args from Lua 
   int num_args = lua_gettop(L); 
   if ( num_args != 3 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
+  int32_t n = n = luaL_checknumber(L, 3);
   char *data = ptr_cmem->data;
   if ( data == NULL ) { go_BYE(-1); }
-  int64_t n = luaL_checknumber(L, 3);
 
-  status = vctr_put(ptr_v->uqid, data, n); cBYE(status);
+  status = vctr_putn(ptr_v->uqid, data, n); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -679,7 +696,8 @@ static const struct luaL_Reg vector_methods[] = {
     { "rehydrate", l_vctr_rehydrate },
     { "null", l_vctr_null },
     //--------------------------------
-    { "put1", l_vctr_put },
+    { "put1", l_vctr_put1 },
+    { "putn", l_vctr_putn },
     { "put_chunk", l_vctr_put_chunk },
     { "get1", l_vctr_get1 },
     { "get_chunk", l_vctr_get_chunk },
@@ -719,7 +737,8 @@ static const struct luaL_Reg vector_functions[] = {
     //--------------------------------
     { "l1_to_l2", l_vctr_l1_to_l2 },
     //--------------------------------
-    { "put1", l_vctr_put },
+    { "put1", l_vctr_put1 },
+    { "putn", l_vctr_putn },
     { "put_chunk", l_vctr_put_chunk },
     { "get1", l_vctr_get1 },
     { "get_chunk", l_vctr_get_chunk },

@@ -51,6 +51,11 @@ vctr_print(
   if ( ub <= lb ) { go_BYE(-1); } 
   if ( ub > num_elements ) { go_BYE(-1); }
 
+  if ( qtype == TM ) { 
+    if ( ( format == NULL ) || ( *format == '\0' ) ) {
+      go_BYE(-1);
+    }
+  }
   num_to_pr = ub - lb;
   pr_idx = lb;
   for ( ; num_to_pr > 0; ) {

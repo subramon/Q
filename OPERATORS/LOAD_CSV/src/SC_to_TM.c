@@ -1,4 +1,6 @@
 //START_INCLUDES
+#define _XOPEN_SOURCE       /* See feature_test_macros(7) */
+#include <time.h>
 #include "q_incs.h"
 //STOP_INCLUDES
 #include "SC_to_TM.h"

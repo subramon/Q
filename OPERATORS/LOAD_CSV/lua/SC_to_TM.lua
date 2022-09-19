@@ -40,6 +40,7 @@ local function SC_to_TM(
     local cst_buf = get_ptr(buf, out_ctype .. "  *")
     local len, base_data = invec:get_chunk(l_chunk_num)
     if ( len > 0 ) then 
+      assert(type(base_data) == "CMEM")
       local base_ptr = get_ptr(base_data, "char *")
       assert(base_ptr ~= ffi.NULL)
       local start_time = cutils.rdtsc()

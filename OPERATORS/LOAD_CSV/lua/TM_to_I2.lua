@@ -15,7 +15,6 @@ local function TM_to_I2(
   )
   assert(type(invec) == "lVector")
   assert(invec:has_nulls() == false)
-  local in_width = invec:width()
   local in_qtype = assert(invec:qtype())
   assert(in_qtype == "TM")
   local spfn = require 'Q/OPERATORS/LOAD_CSV/lua/TM_to_I2_specialize'
@@ -26,20 +25,19 @@ local function TM_to_I2(
     "UTILS/inc/" }
   qc.q_add(subs)
 
-
-  local max_num_in_chunk = max_num_in_chunk
   local in_ctype = cutils.str_qtype_to_str_ctype(in_qtype)
   local cst_in_as = in_ctype .. " *"
 
   local out_qtype = "I2" -- hard coded 
   local out_ctype = cutils.str_qtype_to_str_ctype(out_qtype)
   local cst_out_as = out_ctype .. " *"
-  local out_width = cutils.get_width_qtype(out_ctype)
+  local out_width = cutils.get_width_qtype(out_qtype)
 
   local l_chunk_num = 0
   local function gen(chunk_num)
     assert(chunk_num == l_chunk_num)
     local buf = cmem.new(max_num_in_chunk * out_width)
+    assert(buf:is_data())
     buf:stealable(true)
     local cst_buf = get_ptr(buf, cst_out_as)
     local len, base_data = invec:get_chunk(l_chunk_num)

@@ -6,19 +6,17 @@ require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
+require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
+require "Q/OPERATORS/MK_COL/lua/mk_col"
 --[[
 require 'Q/QTILS/lua/fold'
 require "Q/OPERATORS/F_TO_S/lua/f_to_s"
-require "Q/OPERATORS/MK_COL/lua/mk_col"
 require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
 require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
 require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
 
 require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
 require 'Q/OPERATORS/WHERE/lua/where'
-require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
--- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
--- TODO require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
 
 require 'Q/QTILS/lua/nop'
 require 'Q/QTILS/lua/avg'

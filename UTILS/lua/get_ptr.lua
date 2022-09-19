@@ -20,11 +20,12 @@ local function get_ptr(
   local ret_ptr
   assert(type(x) == "CMEM")
   local y = x:data()
+  if ( y == ffi.NULL ) then print("Empty CMEM") return nil end
   -- Made qtype optional
   if qtype then
     assert(type(qtype) == "string")
     local ctype = cutils.str_qtype_to_str_ctype(qtype)
-    if ( ctype == ffi.NULL ) then 
+    if ( ctype == nil ) then
       local cast_as = qtype
       assert(ends_with(trim(qtype), "*"))
       ret_ptr = ffi.cast(cast_as, y)

@@ -4,6 +4,7 @@
 -- self._meta.meaning or self._meta.max
 local ffi     = require 'ffi'
 local cVector = require 'libvctr'
+local Scalar  = require 'libsclr'
 local register_type = require 'Q/UTILS/lua/register_type'
 local qcfg = require'Q/UTILS/lua/qcfg'
 --====================================
@@ -187,9 +188,55 @@ function lVector:memo(memo_len)
   self._memo_len = memo_len
   return self
 end
-function lVector:put1(c, n)
-  assert(type(c) == "CMEM")
-  assert(cVector.put1(self._base_vec, c, n))
+
+function lVector:set_nulls(nn_vec)
+  assert(not self._nn_vec) -- must not have an nn_vec currently
+  assert(self:is_eov()) -- must be ended for input
+  --===============
+  assert(type(nn_vec) == "lVector")
+  assert(nn_vec:has_nulls() == false) -- nn cannot have nulls
+  assert(nn_vec:is_eov()) -- nn vec must also be ended for input
+  assert(nn_vec:num_elements() == self:num_elements()) -- sizes must match
+  local nn_qtype = nn_vec:qtype() 
+  assert( ( nn_qtype == "BL") or ( nn_qtype == "B1") ) 
+
+  self._nn_vec = nn_vec
+  return self 
+end
+
+function lVector:put1(sclr, nn_sclr)
+  --========================
+  assert(type(sclr) == "Scalar")
+  --========================
+  if ( type(nn_sclr) ~= "nil" ) then
+    assert(type(nn_sclr) == "Scalar")
+    assert( ( nn_sclr:qtype() == "BL") or (nn_sclr:qtype() == "B1") )
+    assert(self._nn_vec)
+  end
+  --========================
+  assert(cVector.put1(self._base_vec, sclr))
+  if ( self.nn_vec ) then 
+    assert(cVector.put1(self._nn_vec, nn_sclr))
+  end
+end
+
+function lVector:putn(col, n, nn_col)
+  --========================
+  assert(type(col) == "CMEM")
+  --========================
+  if ( type(n) == "nil" ) then n = 1 end
+  assert(type(n) == "number"); assert(n > 0)
+  --========================
+  if ( type(nn_col) ~= "nil" ) then
+    assert(type(nn_col) == "CMEM")
+    assert( nn_col:qtype() == "BL") -- B1 not allowed
+    assert(self._nn_vec)
+  end
+  --========================
+  assert(cVector.putn(self._base_vec, col, n))
+  if ( self.nn_vec ) then 
+    assert(cVector.putn(self._nn_vec, nn_col, n))
+  end
 end
 
 function lVector:put_chunk(c, n, nn_c)
@@ -239,7 +286,8 @@ function lVector:get_chunk(chnk_idx)
     assert(type(num_elements) == "number")
     --==============================
     if ( num_elements > 0 ) then  
-      self:put_chunk(buf, num_elements)
+      assert(type(buf) == "CMEM")
+      self:put_chunk(buf, num_elements, nn_buf)
     end
     --==============================
     if ( num_elements < self._max_num_in_chunk ) then 
@@ -252,11 +300,10 @@ function lVector:get_chunk(chnk_idx)
     if ( num_elements == 0 ) then
       return 0
     else 
-      -- TODO P1 IMPORTANT What about nn_buf??? 
-      return num_elements, buf
+      return num_elements, buf, nn_buf
     end 
   else 
-    print("Archival get_chunk " .. chnk_idx)
+    -- print("Archival get_chunk " .. chnk_idx)
     local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
     if ( x == nil ) then return 0, nil end 
     assert(type(n) == "number")
@@ -348,7 +395,7 @@ function lVector:pr(opfile, lb, ub, format)
   if ( ( format ) and (#format > 0 ) ) then
     assert(type(format) == "string")
   else
-    format = ffi.NULL
+    format = ""
   end
   --=================================
   -- assert(cVector.pr(self._base_vec, self._nn_vec, opfile, lb, ub))

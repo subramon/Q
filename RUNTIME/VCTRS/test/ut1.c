@@ -16,7 +16,7 @@
 #include "vctr_del.h" 
 #include "vctr_cnt.h" 
 #include "vctr_name.h" 
-#include "vctr_put.h" 
+#include "vctr_putn.h" 
 #include "vctr_num_elements.h"
 #include "vctr_num_chunks.h"
 
@@ -102,7 +102,7 @@ main(
     if ( i == 32 ) { 
       printf("hello world\n");
     }
-    status = vctr_put(uqid, (char *)&f4, 1); cBYE(status);
+    status = vctr_putn(uqid, (char *)&f4, 1); cBYE(status);
     uint64_t num_elements; uint32_t num_chunks;
     status = vctr_num_elements(uqid, &num_elements); cBYE(status);
     if ( num_elements != (i+1) ) { go_BYE(-1); }

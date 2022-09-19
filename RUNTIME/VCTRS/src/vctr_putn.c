@@ -5,14 +5,14 @@
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_cnt.h"
 #include "chnk_is.h"
-#include "vctr_put.h"
+#include "vctr_putn.h"
 #include "mod_mem_used.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
 
 int
-vctr_put(
+vctr_putn(
     uint32_t vctr_uqid,
     char *X,
     uint32_t n // number of elements
@@ -110,7 +110,7 @@ vctr_put(
   g_chnk_hmap.bkts[chnk_where].val.num_elements += n_to_copy;
   // if you still have stuff to copy, then tail recursive call // to deal with leftover
   if ( n > space_in_chunk ) {
-    status = vctr_put(vctr_uqid, X + (n_to_copy * width), n - n_to_copy);
+    status = vctr_putn(vctr_uqid, X + (n_to_copy * width), n - n_to_copy);
     cBYE(status);
   }
 BYE:

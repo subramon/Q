@@ -212,11 +212,14 @@ tests.t4a = function()
   local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in4.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
+  T.datetime:set_name("datetime")
   local x = Q.SC_to_TM(T.datetime, format)
+  x:set_name("xvec")
   assert(type(x) == "lVector")
   local y = Q.TM_to_SC(x, format)
+  y:set_name("yvec")
   y:eval()
-  y:pr("_4", 0, 0, format); 
+  y:pr("_4a", 0, 0, format); 
   --===================
   if ( test_print ) then
     for _, impl in ipairs({"C", "L"}) do 
@@ -260,7 +263,6 @@ tests.t5 = function()
   for i, tm_fld in ipairs(tm_flds) do 
     out[i] = Q.TM_to_I2(x, tm_fld)
     assert(type(out[i]) ==  "lVector")
-    out[i]:eval()
   end
   local chunk_idx = 0
   local n
@@ -273,6 +275,16 @@ tests.t5 = function()
     end
     chunk_idx = chunk_idx + 1 
   until n == 0 
+  -- print values 
+  for i, tm_fld in ipairs(tm_flds) do 
+    out[i]:pr("_" .. tm_fld, 0, 0, format); 
+  end
+  -- check with correct values
+  for i, tm_fld in ipairs(tm_flds) do 
+    local x = plfile.read(tm_fld)
+    local y = plfile.read("_" .. tm_fld)
+    assert(x == y)
+  end
 
   if ( test_print ) then 
     for _, impl in ipairs({"C", "L"}) do 
@@ -286,13 +298,12 @@ tests.t5 = function()
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
--- WORKS tests.t1()
--- WORKS tests.t2()
--- WORKS tests.t3()
--- WORKS tests.t4()
-tests.t4a()
--- NOT WORKING tests.t5()
---[[
+-- tests.t1()
+-- tests.t2()
+-- tests.t3()
+-- tests.t4()
+-- tests.t4a()
+tests.t5()
 os.exit()
 return tests
 --]]

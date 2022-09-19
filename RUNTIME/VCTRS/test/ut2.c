@@ -175,7 +175,9 @@ main(
   status = cmem_free(&cmem); cBYE(status);
   // flush to disk 
   strcpy(g_data_dir_root, "/tmp/_ut2_data"); 
+  printf(">>> START Acceptable error\n");
   status = rmtree(g_data_dir_root); 
+  printf(">>> STOP  Acceptable error\n");
   status = mkdir(g_data_dir_root, 0744);
   if ( g_dsk_used != 0 ) { go_BYE(-1); } 
   status = vctr_l1_to_l2(uqid, 0); cBYE(status);
@@ -208,7 +210,7 @@ main(
   // Now check that no RAM is in use 
   if ( g_mem_used != 0 ) { go_BYE(-1); } 
   // Now print the vector (this should cause stuff to be retsored to l1 
-  status = vctr_print(uqid, 0, "/tmp/_xxxx", 0, num_elements, "");
+  status = vctr_print(uqid, 0, "/tmp/_xxxx", "", 0, num_elements);
   cBYE(status);
   // l1 memory should be back as was before 
   if ( g_mem_used != bak_mem_used ) { go_BYE(-1); } 

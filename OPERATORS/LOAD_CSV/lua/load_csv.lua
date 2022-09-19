@@ -79,6 +79,7 @@ local function load_csv(
             end
           end
         end
+        assert(type(databuf[v.name]) == "CMEM")
         return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
       end
       lgens[my_name] = lgen

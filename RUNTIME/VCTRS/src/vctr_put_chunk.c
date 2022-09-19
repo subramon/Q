@@ -70,7 +70,7 @@ vctr_put_chunk(
   if ( ptr_cmem->is_stealable ) { 
     if ( ptr_cmem->is_foreign ) { go_BYE(-1); }
     l1_mem = ptr_cmem->data;
-    ptr_cmem->data = NULL;
+    // DO NOT DO THIS!! Might be needed by others; ptr_cmem->data = NULL;
     ptr_cmem->size = 0;
     ptr_cmem->is_foreign   = true;
     ptr_cmem->is_stealable = false;

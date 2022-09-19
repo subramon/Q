@@ -5,6 +5,7 @@
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
 #include "isfile.h"
+#include "get_file_size.h"
 #include "l2_file_name.h"
 #include "chnk_is.h"
 #include "vctr_is.h"
@@ -60,10 +61,12 @@ vctr_chk(
 
   vctr_rs_hmap_val_t vctr_val = g_vctr_hmap.bkts[vctr_where_found].val;
   uint32_t qtype           = vctr_val.qtype;
+  uint32_t width           = vctr_val.width;
   uint64_t num_elements    = vctr_val.num_elements;
   uint32_t num_chnks       = vctr_val.num_chnks;
   uint32_t max_num_in_chnk = vctr_val.max_num_in_chnk;
   uint64_t chk_num_elements    = 0;
+  int good_filesz  = width * max_num_in_chnk;
   if ( vctr_uqid == 0 ) { goto BYE; }
   for ( uint32_t chnk_idx = 0; chnk_idx < num_chnks; chnk_idx++ ) {
     bool chnk_is_found; uint32_t chnk_where_found;
@@ -95,6 +98,10 @@ vctr_chk(
         ( chnk_val.num_elements > max_num_in_chnk ) ) { 
       go_BYE(-1);
     }
+    // all but last chunk must be full 
+    if ( chnk_idx < num_chnks-1 ) { // for all but last chunk
+      if ( chnk_val.num_elements != max_num_in_chnk ) { go_BYE(-1); }
+    }
     chk_num_elements += chnk_val.num_elements;
     if ( chnk_val.qtype != qtype ) { go_BYE(-1); }
     // if data not in L2, must be in L1 
@@ -104,6 +111,8 @@ vctr_chk(
     else { // check that file exists 
       char *l2_file = l2_file_name(vctr_uqid, chnk_idx);
       if ( !isfile(l2_file) ) { go_BYE(-1); }
+      int64_t filesz = get_file_size(l2_file);
+      if ( filesz != good_filesz ) { go_BYE(-1); }
       free_if_non_null(l2_file);
     }
   }
