@@ -71,8 +71,12 @@ local mk_col = function (
 
   col = lVector(args)
   for k, v in ipairs(input) do
-    local val = input[k]
-    sclr = Scalar.new(val, qtype)
+    local sclr
+    if ( type(v) == "Scalar" ) then 
+      sclr = v
+    else
+      sclr = assert(Scalar.new(v, qtype))
+    end
     --===================
     if ( nn_input ) then 
       local nn_val = nn_input[k]

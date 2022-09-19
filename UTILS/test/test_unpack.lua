@@ -1,8 +1,7 @@
 local strict  = require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
-local qconsts = require 'Q/UTILS/lua/qconsts'
-local qmem    = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local qcfg    = require 'Q/UTILS/lua/qcfg'
+local max_num_in_chunk = qcfg.max_num_in_chunk
 
 local tests = {}
 
@@ -20,9 +19,9 @@ tests.t1 = function()
 end
 
 -- Q.unpack to evaluate vector internally 
--- test-case for num_elements > chunk_size
+-- test-case for num_elements > max_num_in_chunk
 tests.t2 = function()
-  local num_elements = chunk_size + 4
+  local num_elements = max_num_in_chunk + 4
   local vec = Q.seq({ start = 1, by = 1, len = num_elements , qtype = "I4"})
   local tbl = Q.unpack(vec)
   assert( type(tbl) == "table" )
@@ -34,4 +33,6 @@ tests.t2 = function()
   print("successfully executed t2")
 end
 
-return tests
+-- return tests
+tests.t1()
+tests.t2()

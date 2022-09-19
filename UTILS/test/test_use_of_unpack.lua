@@ -29,4 +29,5 @@ tests.t1 = function()
   print("successfully executed t1")
 end
 
-return tests
+-- return tests
+tests.t1()

@@ -8,6 +8,11 @@ require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
 require "Q/OPERATORS/MK_COL/lua/mk_col"
+
+require "Q/UTILS/lua/pack"
+require "Q/UTILS/lua/unpack"
+require "Q/UTILS/lua/set_memo"
+
 --[[
 require 'Q/QTILS/lua/fold'
 require "Q/OPERATORS/F_TO_S/lua/f_to_s"
@@ -24,10 +29,6 @@ require 'Q/QTILS/lua/head'
 
 require "Q/UTILS/lua/restore"
 require "Q/UTILS/lua/register_qop" 
-
-require "Q/UTILS/lua/pack"
-require "Q/UTILS/lua/unpack"
-require "Q/UTILS/lua/set_memo"
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/get_idx_by_val"

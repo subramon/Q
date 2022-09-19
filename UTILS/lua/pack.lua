@@ -14,8 +14,8 @@ local T = {}
 local function pack(tbl, qtype)
   assert(tbl and type(tbl) == "table", "input must be a table")
   assert(#tbl > 0, "Input table has no entries")
-  -- as mk_col operator takes much time for input table with 1 million values
-  assert(#tbl <= 1024, "max limit is upto 1024 num_elements for creating vector")
+  -- CAUTION: This is a slow operator. Useful for quick testing
+  -- Do not use when performance is critical 
   -- for base_qtype, what if input qtype is 'B1'
   assert(type(qtype) == "string" and base_qtype(qtype))
   local col = assert(mk_col(tbl, qtype)) -- internally calling mk_col
