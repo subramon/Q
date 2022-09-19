@@ -1,11 +1,10 @@
 local cutils    = require 'libcutils'
 local Reducer   = require 'Q/RUNTIME/RDCR/lua/Reducer'
-local qconsts   = require 'Q/UTILS/lua/qconsts'
 local qc        = require 'Q/UTILS/lua/qcore'
-local qmem      = require 'Q/UTILS/lua/qmem'
+local qcfg      = require 'Q/UTILS/lua/qcfg'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
-local csz       = qmem.chunk_size
+local max_num_in_chunk       = qcfg.max_num_in_chunk
 
 return function (a, x, optargs)
   -- Return early if you have cached the result of a previous call
@@ -38,7 +37,7 @@ return function (a, x, optargs)
   --==================
   local lgen = function(chunk_num)
     assert(chunk_num == l_chunk_num)
-    local offset = l_chunk_num * csz
+    local offset = l_chunk_num * max_num_in_chunk
     local x_len, x_chunk, nn_x_chunk = x:get_chunk(l_chunk_num)
     if ( ( not x_len ) or ( x_len == 0 ) ) then return nil end 
     local inx = get_ptr(x_chunk, subs.cst_in_as)

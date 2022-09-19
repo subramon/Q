@@ -19,7 +19,7 @@ typedef struct _chnk_rs_hmap_val_t {
   //-----
   qtype_t qtype; // backward reference for debugging 
   bool     l2_exists; ;
-  uint32_t size;
+  uint32_t size; // we do not expect a chunk to exceed 4G, a vector might
   //-----
   // Details on converting l2_mem_id to filename elsewhere
   // Much more to put in here

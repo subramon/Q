@@ -14,7 +14,6 @@ require "Q/UTILS/lua/unpack"
 require "Q/UTILS/lua/set_memo"
 
 --[[
-require 'Q/QTILS/lua/fold'
 require "Q/OPERATORS/F_TO_S/lua/f_to_s"
 require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
 require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
@@ -23,11 +22,12 @@ require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
 require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
 require 'Q/OPERATORS/WHERE/lua/where'
 
+--== These are from QTILS 
+require 'Q/QTILS/lua/fold'
 require 'Q/QTILS/lua/nop'
 require 'Q/QTILS/lua/avg'
 require 'Q/QTILS/lua/head'
 
-require "Q/UTILS/lua/restore"
 require "Q/UTILS/lua/register_qop" 
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
