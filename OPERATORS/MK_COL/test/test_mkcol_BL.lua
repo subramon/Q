@@ -6,21 +6,21 @@ local mk_col = require 'Q/OPERATORS/MK_COL/lua/mk_col'
 local tests = {}
 tests.t1 = function() 
   local input = {1,0,0,0,1,1,0,1,0}
-  local col  =  mk_col(input, "B1")
+  local col  =  mk_col(input, "BL")
   assert(type(col) == "lVector", " Output of mk_col is not lVector")
   assert(col:num_elements() == #input)
-  for i = 1, col:length() do
-    local s = Scalar.new(input[i], "B1")
+  for i = 1, col:num_elements() do
+    local s = Scalar.new(input[i], "BL")
     assert(col:get1(i-1) == s)
   end
   print("Test t1 succeeded")
 end
 tests.t2 = function() 
   local input = {true, false, true, false}
-  local col  =  mk_col(input, "B1")
+  local col  =  mk_col(input, "BL")
   assert(col)
   assert(type(col) == "lVector", " Output of mk_col is not lVector")
-  for i=1,col:length() do
+  for i=1,col:num_elements() do
     local x = col:get1(i-1)
     assert(x)
     assert(type(x) == "Scalar")
@@ -28,5 +28,8 @@ tests.t2 = function()
   end
   print("Test t2 succeeded")
 end
--- tests.t1()
+tests.t1()
+tests.t2()
+--[[
 return tests
+--]]

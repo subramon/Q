@@ -76,7 +76,13 @@ vctr_put1(
   }
   // now you have access to a chunk where you can write.
   uint32_t num_in_chnk = chnk_val.num_elements;
-  memcpy(chnk_val.l1_mem + (num_in_chnk * width), &(ptr_sclr->val), width);
+  memset(chnk_val.l1_mem + (num_in_chnk * width), 0, width);
+  if ( qtype == SC ) { 
+    strcpy(chnk_val.l1_mem + (num_in_chnk*width), ptr_sclr->val.str); 
+  }
+  else {
+    memcpy(chnk_val.l1_mem + (num_in_chnk*width), &(ptr_sclr->val), width);
+  }
   
   // update chunk and vector meta data base on above copy
   g_vctr_hmap.bkts[vctr_where].val.num_elements++;
