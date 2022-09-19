@@ -5,6 +5,7 @@
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_cnt.h"
 #include "chnk_is.h"
+#include "chnk_first.h"
 #include "vctr_putn.h"
 #include "mod_mem_used.h"
 
@@ -38,32 +39,12 @@ vctr_putn(
   uint32_t width = vctr_val.width;
   uint32_t chnk_size = width * vctr_val.max_num_in_chnk;
   uint32_t chnk_idx;
-  // handle special case for empty vector 
-  if ( vctr_val.num_elements == 0 ) { 
-    chnk_idx = 0;
-    //-------------------------------
-    chnk_rs_hmap_key_t chnk_key = 
-    { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
-    char *l1_mem = NULL;
-    status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, chnk_size);
-    cBYE(status);
-    memset(&chnk_val, 0, sizeof(chnk_rs_hmap_val_t));
-    chnk_val.l1_mem = l1_mem; l1_mem = NULL;
-    chnk_val.qtype = qtype;
-    chnk_val.size  = chnk_size;
-    status = incr_mem_used(chnk_size);  cBYE(status);
-    //-------------------------------
-    status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
-    cBYE(status);
-    g_vctr_hmap.bkts[vctr_where].val.num_chnks++;
-    // for debugging 
-    status = chnk_is(vctr_uqid, chnk_idx, &is_found, &chnk_where); 
-    cBYE(status);
-    if ( !is_found ) { go_BYE(-1); } 
-  }
-  else {
-    chnk_idx = vctr_val.num_chnks - 1; 
-  }
+  // handle special case for empty vector with no chunks in it 
+  status = chnk_first(vctr_where); cBYE(status); 
+  // reset vctr_val because chnk_first makes changes
+  vctr_val = g_vctr_hmap.bkts[vctr_where].val;
+
+  chnk_idx = vctr_val.num_chnks - 1; 
   // find chunk in chunk hmap 
   status = chnk_is(vctr_uqid, chnk_idx, &is_found, &chnk_where); 
   cBYE(status);

@@ -144,6 +144,13 @@ function lVector.new(args)
     -- memo_len
     vector._max_num_in_chnk = cVector.max_num_in_chnk(vector._base_vec)
     vector._memo_len        = cVector.memo_len(vector._base_vec)
+    -- If vector has nulls, do following 
+    if ( args.nn_uqid ) then 
+      local nn_uqid = args.nn_uqid
+      assert(type(nn_uqid) == "number")
+      assert(nn_uqid > 0)
+      vector._nn_vec = assert(cVector.rehydrate({ uqid = nn_uqid}))
+    end 
     return vector 
   end
 
@@ -174,6 +181,22 @@ function lVector.new(args)
   assert(type(vector._memo_len) == "number")
   --=================================================
   vector._base_vec = assert(cVector.add1(args))
+  if ( args.has_nulls ) then 
+    -- assemble args for nn Vector 
+    local nn_args = {}
+    nn_args.qtype = "BL" -- TODO P1 Move this to B1 
+    if ( args.name ) then 
+      nn_args.name = "nn_" .. args.name 
+    end
+    if ( args.max_num_in_chunk ) then 
+      nn_args.max_num_in_chunk  = args.max_num_in_chunk 
+    end
+    if ( args.memo_len ) then 
+      nn_args.memo_len  = args.memo_len 
+    end
+    ----------------------------------- 
+    vector._nn_vec = assert(cVector.add1(args))
+  end 
   --=================================================
   return vector
 end
@@ -187,6 +210,10 @@ function lVector:memo(memo_len)
   assert(cVector.set_memo(self._base_vec, memo_len))
   self._memo_len = memo_len
   return self
+end
+
+function lVector:unset_nulls()
+  self._nn_vec = nil
 end
 
 function lVector:set_nulls(nn_vec)
@@ -208,10 +235,14 @@ function lVector:put1(sclr, nn_sclr)
   --========================
   assert(type(sclr) == "Scalar")
   --========================
+  -- nn_sclr can be provided only if vector has nulls
+  if ( type(nn_sclr) ~= "nil" ) then assert(self._nn_vec) end
+  -- if vector has nulls, nn_sclr must be provided
+  if ( self._nn_vec ) then assert(type(nn_sclr) == "Scalar") end
+  -- if nn_sclr is provided it must be a B1 or BL Scalar
   if ( type(nn_sclr) ~= "nil" ) then
     assert(type(nn_sclr) == "Scalar")
     assert( ( nn_sclr:qtype() == "BL") or (nn_sclr:qtype() == "B1") )
-    assert(self._nn_vec)
   end
   --========================
   assert(cVector.put1(self._base_vec, sclr))
@@ -227,11 +258,12 @@ function lVector:putn(col, n, nn_col)
   if ( type(n) == "nil" ) then n = 1 end
   assert(type(n) == "number"); assert(n > 0)
   --========================
-  if ( type(nn_col) ~= "nil" ) then
-    assert(type(nn_col) == "CMEM")
-    assert( nn_col:qtype() == "BL") -- B1 not allowed
-    assert(self._nn_vec)
-  end
+  -- nn_col can be provided only of vector has nulls
+  if ( type(nn_col) ~= "nil" ) then assert(self._nn_vec) end
+  -- if vector has nulls, nn_col must be provided 
+  if ( self._nn_vec ) then assert(nn_col) end 
+  -- if nn_col, then it must be CMEM 
+  if ( nn_col ) then assert(type(nn_col) == "CMEM") end
   --========================
   assert(cVector.putn(self._base_vec, col, n))
   if ( self.nn_vec ) then 

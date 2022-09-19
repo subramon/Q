@@ -60,6 +60,7 @@ SRCS +=	vctr_width.c
 
 SRCS +=	chnk_cnt.c  
 SRCS +=	chnk_del.c  
+SRCS +=	chnk_first.c  
 SRCS +=	chnk_free_resources.c  
 SRCS +=	chnk_get_data.c  
 SRCS +=	chnk_is.c  

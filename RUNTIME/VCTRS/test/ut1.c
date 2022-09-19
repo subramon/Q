@@ -1,6 +1,7 @@
 #include "q_incs.h"
 #include "q_macros.h"
 #include "qtypes.h"
+#include "sclr_struct.h"
 #include "vctr_consts.h"
 
 #include "vctr_rs_hmap_struct.h"
@@ -10,12 +11,13 @@
 #include "chnk_rs_hmap_instantiate.h"
 
 #include "rs_hmap_config.h"
-#include "vctr_new_uqid.h" 
 #include "vctr_add.h" 
 #include "vctr_is.h" 
 #include "vctr_del.h" 
 #include "vctr_cnt.h" 
 #include "vctr_name.h" 
+#include "vctr_put1.h" 
+#include "vctr_get1.h" 
 #include "vctr_putn.h" 
 #include "vctr_num_elements.h"
 #include "vctr_num_chunks.h"
@@ -99,9 +101,6 @@ main(
   // add a few elements to the vector
   for ( uint32_t i = 0; i < 2*vctr_chnk_size+1; i++ ) { 
     float f4 = i+1;
-    if ( i == 32 ) { 
-      printf("hello world\n");
-    }
     status = vctr_putn(uqid, (char *)&f4, 1); cBYE(status);
     uint64_t num_elements; uint32_t num_chunks;
     status = vctr_num_elements(uqid, &num_elements); cBYE(status);
@@ -120,6 +119,33 @@ main(
   l_vctr_cnt = vctr_cnt(); 
   if ( l_vctr_cnt != 1 ) { go_BYE(-1); }
   //-- good delete -----------------
+  status = vctr_del(uqid, &b); cBYE(status);
+  if ( !b ) { go_BYE(-1); }
+  l_vctr_cnt = vctr_cnt(); 
+  if ( l_vctr_cnt != 0 ) { go_BYE(-1); }
+  l_chnk_cnt = chnk_cnt(); 
+  if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
+  //----------------------------------
+
+  // Test putting of Scalars
+  vctr_chnk_size = 32; // for easy testing 
+  status = vctr_add1(I4, 0, vctr_chnk_size, -1, &uqid); 
+  cBYE(status);
+  if ( uqid != 2 ) { go_BYE(-1); }
+  SCLR_REC_TYPE sclr; memset(&sclr, 0, sizeof(SCLR_REC_TYPE));
+  sclr.qtype = I4;
+  sclr.val.i4 = 1; 
+  for ( uint32_t i = 0; i < vctr_chnk_size*2+ 3; i++ ) { 
+    status = vctr_put1(uqid, &sclr); 
+    // check that what you put is what you get 
+    SCLR_REC_TYPE chk_sclr; memset(&chk_sclr, 0, sizeof(SCLR_REC_TYPE));
+    status = vctr_get1(uqid, i, &chk_sclr); 
+    if ( memcmp(&sclr, &chk_sclr, sizeof(SCLR_REC_TYPE)) != 0 ) {
+      go_BYE(-1);
+    }
+    sclr.val.i4++;
+  }
+  //----------------------------------
   status = vctr_del(uqid, &b); cBYE(status);
   if ( !b ) { go_BYE(-1); }
   l_vctr_cnt = vctr_cnt(); 
