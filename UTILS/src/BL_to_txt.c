@@ -5,10 +5,10 @@
 #include <string.h>
 #include "q_macros.h"
 //STOP_INCLUDES
-#include "B1_to_txt.h"
+#include "BL_to_txt.h"
 //START_FUNC_DECL
 int
-B1_to_txt(
+BL_to_txt(
     bool val,
     char * X,
     size_t nX

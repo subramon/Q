@@ -1,7 +1,7 @@
-#ifndef __txt_to_B1_H
-#define __txt_to_B1_H
+#ifndef __txt_to_BL_H
+#define __txt_to_BL_H
 extern int
-txt_to_B1(
+txt_to_BL(
       const char * const X,
       bool *ptr_val
       );

@@ -19,16 +19,25 @@ tests.t1 = function()
 end   
 tests.t2 = function()
   -- make vector with null values
-  local col = Q.mk_col({1,2,3,4}, "I4", {true, false, true, false})
-  assert(type(col) == "lVector", " Output of mk_col is not lVector")
+  local col = Q.mk_col({1,2,3,4}, "I4", 
+    { name = "my test name"}, {true, false, true, false})
+  assert(type(col) == "lVector")
+  assert(col:has_nulls() == true)
+  assert(col:name() == "my test name")
+  local uqid = col:uqid()
+  local nn_col = col:get_nulls()
+  assert(type(nn_col) == "lVector")
+  local nn_uqid = nn_col:uqid()
+  assert(nn_col:qtype() == "BL")
+  assert(nn_col:num_elements() == col:num_elements())
   for i = 1, col:num_elements() do  
     local x, nn_x = col:get1(i-1)
     assert(type(x) == "Scalar")
     assert(type(nn_x) == "Scalar")
     if ( ( i == 1 ) or ( i == 3 ) ) then 
-      assert(nn_x == Scalar.new(true, "B1"))
+      assert(nn_x == Scalar.new(true, "BL"))
     elseif ( ( i == 2 ) or ( i == 4 ) ) then 
-      assert(nn_x == Scalar.new(false, "B1"))
+      assert(nn_x == Scalar.new(false, "BL"))
     else
       error("")
     end

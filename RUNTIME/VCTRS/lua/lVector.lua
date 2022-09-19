@@ -96,8 +96,21 @@ function lVector:persist()
 end
 function lVector:eov()
   local status = cVector.eov(self._base_vec)
+  if ( self._nn_vec ) then status = cVector.eov(self._nn_vec) end 
+  -- TODO P1 Should we get rid of chunk_num now ?
   self._generator = nil -- IMPORTANT, we no longer have a generator 
   return self
+end
+function lVector:get_nulls()
+  if ( not self._nn_vec ) then return nil end 
+    local nn_vector = setmetatable({}, lVector)
+    nn_vector._base_vec = self._nn_vec
+    nn_vector._qtype = cVector.qtype(self._nn_vec)
+    nn_vector._name  = cVector.name(self._nn_vec)
+    return nn_vector
+end
+function lVector:break_nulls()
+  self._nn_vec = nil
 end
 function lVector:has_nulls()
   if ( self._nn_vec ) then return true else return false end 
@@ -144,6 +157,7 @@ function lVector.new(args)
     -- memo_len
     vector._max_num_in_chnk = cVector.max_num_in_chnk(vector._base_vec)
     vector._memo_len        = cVector.memo_len(vector._base_vec)
+    vector._qtype           = cVector.qtype(vector._base_vec)
     -- If vector has nulls, do following 
     if ( args.nn_uqid ) then 
       local nn_uqid = args.nn_uqid
@@ -195,7 +209,7 @@ function lVector.new(args)
       nn_args.memo_len  = args.memo_len 
     end
     ----------------------------------- 
-    vector._nn_vec = assert(cVector.add1(args))
+    vector._nn_vec = assert(cVector.add1(nn_args))
   end 
   --=================================================
   return vector
@@ -225,7 +239,7 @@ function lVector:set_nulls(nn_vec)
   assert(nn_vec:is_eov()) -- nn vec must also be ended for input
   assert(nn_vec:num_elements() == self:num_elements()) -- sizes must match
   local nn_qtype = nn_vec:qtype() 
-  assert( ( nn_qtype == "BL") or ( nn_qtype == "B1") ) 
+  assert(nn_qtype == "BL") -- TODO consider adding B1 
 
   self._nn_vec = nn_vec
   return self 
@@ -239,14 +253,14 @@ function lVector:put1(sclr, nn_sclr)
   if ( type(nn_sclr) ~= "nil" ) then assert(self._nn_vec) end
   -- if vector has nulls, nn_sclr must be provided
   if ( self._nn_vec ) then assert(type(nn_sclr) == "Scalar") end
-  -- if nn_sclr is provided it must be a B1 or BL Scalar
+  -- if nn_sclr is provided it must be BL Scalar
   if ( type(nn_sclr) ~= "nil" ) then
     assert(type(nn_sclr) == "Scalar")
-    assert( ( nn_sclr:qtype() == "BL") or (nn_sclr:qtype() == "B1") )
+    assert(nn_sclr:qtype() == "BL") 
   end
   --========================
   assert(cVector.put1(self._base_vec, sclr))
-  if ( self.nn_vec ) then 
+  if ( self._nn_vec ) then 
     assert(cVector.put1(self._nn_vec, nn_sclr))
   end
 end
@@ -282,11 +296,19 @@ function lVector:put_chunk(c, n, nn_c)
 end
 
 function lVector:get1(elem_idx)
+  local nn_sclr
   assert(type(elem_idx) == "number")
   if (elem_idx < 0) then return nil end
   local sclr = cVector.get1(self._base_vec, elem_idx)
   if ( type(sclr) ~= "nil" ) then assert(type(sclr) == "Scalar") end
-  return sclr
+  if ( self._nn_vec ) then 
+    nn_sclr = cVector.get1(self._nn_vec, elem_idx)
+    assert(type(nn_sclr) == type(sclr))
+    if ( nn_sclr ) then
+      assert(nn_sclr:qtype() == "BL")
+    end
+  end
+  return sclr, nn_sclr
 end
 
 function lVector:unget_chunk(chnk_idx)

@@ -11,13 +11,16 @@ local good_qtypes = rev_lkp({ "I1",  "I2",  "I4", "I8",  "F4", "F8", "B1", "SC"}
 local mk_col = function (
   input, 
   qtype, 
+  optargs,
   nn_input
   )
-  local doc_string = [[ Signature: Q.mk_col(input, qtype, opt_nn_input)
+  local doc_string = [[ 
+  Signature: Q.mk_col(input, qtype, optargs, opt_nn_input)
 -- creates a column of input table values of input qtype
 1) input: array of values
 2) qtype: desired qtype of column
-3) nn_input: array of nn values
+3) optargs: table containing optional arguments
+4) nn_input: array of nn values
 -- returns: column of input values of qtype"
 ]]
   if input and input == "help" then
@@ -56,8 +59,18 @@ local mk_col = function (
   end
   --=====================
   local col, nn_col, sclr, nn_sclr
-  col = lVector({ qtype = qtype, width = width, has_nulls = has_nulls})
-  nn_col = lVector({ qtype = "BL", has_nulls = false})
+  local args = { qtype = qtype, width = width, has_nulls = has_nulls}
+  if ( optargs ) then 
+    assert(type(optargs) == "table")
+    for k, v in pairs(optargs) do 
+      assert(k ~= "qtype")
+      assert(k ~= "width")
+      assert(k ~= "has_nulls")
+      args[k] = v
+    end
+  end
+
+  col = lVector(args)
   for k, v in ipairs(input) do
     local val = input[k]
     sclr = Scalar.new(val, qtype)
@@ -65,17 +78,12 @@ local mk_col = function (
     if ( nn_input ) then 
       local nn_val = nn_input[k]
       assert(type(nn_val) == "boolean")
-      nn_sclr = Scalar.new(nn_val, "BL")
-      nn_col:put1(nn_sclr)
+      nn_sclr = assert(Scalar.new(nn_val, "BL"))
     end
     --===================
-    col:put1(sclr)
+    col:put1(sclr, nn_sclr)
   end
   col:eov()
-  if ( nn_input ) then 
-    nn_col:eov()
-    col:set_nulls(nn_col)
-  end
   return col
 end
 return require('Q/q_export').export('mk_col', mk_col)

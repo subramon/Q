@@ -16,7 +16,6 @@ static int l_sclr_eq(lua_State *L)
   qtype_t qtype = s1->qtype;
   if ( s2->qtype != qtype ) { goto BYE; }
   switch ( qtype ) { 
-    case B1 : if ( s1->val.b1  == s2->val.b1 ) { bval = true; } break; 
     case BL : if ( s1->val.b1  == s2->val.b1 ) { bval = true; } break;
     case I1 : if ( s1->val.i1  == s2->val.i1 ) { bval = true; }  break; 
     case I2 : if ( s1->val.i2  == s2->val.i2 ) { bval = true; }  break; 
@@ -39,7 +38,8 @@ static int l_sclr_eq(lua_State *L)
   return 1;
 BYE:
   lua_pushboolean(L, bval);
-  return 1;
+  lua_pushnumber(L, status);
+  return 2;
 }
 static int l_sclr_neq(lua_State *L)
 {
@@ -52,7 +52,6 @@ static int l_sclr_neq(lua_State *L)
   qtype_t qtype = s1->qtype;
   if ( s2->qtype != qtype ) { goto BYE; }
   switch ( qtype ) { 
-    case B1 : if ( s1->val.b1  != s2->val.b1 ) { bval = true; } break; 
     case BL : if ( s1->val.b1  != s2->val.b1 ) { bval = true; } break;
     case I1 : if ( s1->val.i1  != s2->val.i1 ) { bval = true; }  break; 
     case I2 : if ( s1->val.i2  != s2->val.i2 ) { bval = true; }  break; 
@@ -75,7 +74,8 @@ static int l_sclr_neq(lua_State *L)
   return 1;
 BYE:
   lua_pushboolean(L, bval);
-  return 1;
+  lua_pushnumber(L, status);
+  return 2;
 }
 static int l_sclr_leq(lua_State *L)
 {
@@ -100,7 +100,8 @@ static int l_sclr_leq(lua_State *L)
   return 1;
 BYE:
   lua_pushboolean(L, bval);
-  return 1;
+  lua_pushnumber(L, status);
+  return 2;
 }
 static int l_sclr_geq(lua_State *L)
 {
@@ -125,8 +126,8 @@ static int l_sclr_geq(lua_State *L)
   return 1;
 BYE:
   lua_pushboolean(L, bval);
-  return 1;
-  return 3;
+  lua_pushnumber(L, status);
+  return 2;
 }
 static int l_sclr_lt(lua_State *L)
 {
@@ -151,7 +152,8 @@ static int l_sclr_lt(lua_State *L)
   return 1;
 BYE:
   lua_pushboolean(L, bval);
-  return 1;
+  lua_pushnumber(L, status);
+  return 2;
 }
 static int l_sclr_gt(lua_State *L)
 {
@@ -176,5 +178,6 @@ static int l_sclr_gt(lua_State *L)
   return 1;
 BYE:
   lua_pushboolean(L, bval);
-  return 1;
+  lua_pushnumber(L, status);
+  return 2;
 }

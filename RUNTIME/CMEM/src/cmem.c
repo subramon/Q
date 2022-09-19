@@ -674,9 +674,8 @@ static int l_cmem_to_str( lua_State *L) {
   int64_t size = ptr_cmem->size;
   memset(buf, '\0', BUFLEN);
   void  *X          = ptr_cmem->data;
-  if ( strcmp(str_qtype, "B1") == 0 ) { 
-    go_BYE(-1); // TODO 
-    // status = B1_to_txt(X, buf, BUFLEN); cBYE(status);
+  if ( strcmp(str_qtype, "BL") == 0 ) { 
+    status = BL_to_txt(X, buf, BUFLEN); cBYE(status);
   }
   else if ( strcmp(str_qtype, "I1") == 0 ) { 
     status = I1_to_txt(X, "", buf, BUFLEN); cBYE(status);

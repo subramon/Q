@@ -30,6 +30,7 @@ SRCS := cmem.c
 SRCS += aux_cmem.c
 SRCS += aux_lua_to_c.c
 SRCS += ../../../UTILS/src/qtypes.c
+SRCS +=	../../../UTILS/src/BL_to_txt.c 
 SRCS +=	../../../UTILS/src/I1_to_txt.c 
 SRCS +=	../../../UTILS/src/I2_to_txt.c 
 SRCS +=	../../../UTILS/src/I4_to_txt.c 

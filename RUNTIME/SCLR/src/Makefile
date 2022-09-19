@@ -28,7 +28,7 @@ OBJ = $(SRC:.c=.o)
 EXT_SRC := ../../../UTILS/src/is_valid_chars_for_num.c 
 EXT_SRC += ../../../UTILS/src/qtypes.c 
 
-EXT_SRC += ../../../UTILS/src/txt_to_B1.c 
+EXT_SRC += ../../../UTILS/src/txt_to_BL.c 
 EXT_SRC += ../../../UTILS/src/txt_to_I1.c 
 EXT_SRC += ../../../UTILS/src/txt_to_I2.c 
 EXT_SRC += ../../../UTILS/src/txt_to_I4.c 
@@ -37,7 +37,7 @@ EXT_SRC += ../../../UTILS/src/txt_to_F4.c
 EXT_SRC += ../../../UTILS/src/txt_to_F8.c 
 EXT_SRC += ../../../UTILS/src/txt_to_SC.c 
 	
-EXT_SRC += ../../../UTILS/src/B1_to_txt.c 
+EXT_SRC += ../../../UTILS/src/BL_to_txt.c 
 EXT_SRC += ../../../UTILS/src/I1_to_txt.c 
 EXT_SRC += ../../../UTILS/src/I2_to_txt.c 
 EXT_SRC += ../../../UTILS/src/I4_to_txt.c 

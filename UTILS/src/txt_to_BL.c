@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "q_macros.h"
-#include "txt_to_B1.h"
+#include "txt_to_BL.h"
 //START_FUNC_DECL
 int
-txt_to_B1(
+txt_to_BL(
       const char * const X,
       bool *ptr_val
       )

@@ -11,7 +11,7 @@ EXTSO=${Q_ROOT}/lib/${MYSO}
 all : ${MYSO} ${EXTSO}
 
 gen_inc_files : \
-	../inc/txt_to_B1.h \
+	../inc/txt_to_BL.h \
 	../inc/txt_to_SC.h \
 	../inc/txt_to_I1.h \
 	../inc/txt_to_I2.h \
@@ -19,7 +19,7 @@ gen_inc_files : \
 	../inc/txt_to_I8.h \
 	../inc/txt_to_F4.h \
 	../inc/txt_to_F8.h \
-	../inc/B1_to_txt.h \
+	../inc/BL_to_txt.h \
 	../inc/SC_to_txt.h \
 	../inc/I1_to_txt.h \
 	../inc/I2_to_txt.h \
@@ -45,11 +45,11 @@ gen_inc_files : \
 
 #----------------------------------
 
-../inc/txt_to_B1.h : 
-	luajit ../src/cli_extract_func_decl.lua txt_to_B1.c ${INCDIR}
+../inc/txt_to_BL.h : 
+	luajit ../src/cli_extract_func_decl.lua txt_to_BL.c ${INCDIR}
 ../inc/txt_to_SC.h :
 	luajit ../src/cli_extract_func_decl.lua txt_to_SC.c ${INCDIR}
-txt_to_B1.c : ../inc/txt_to_B1.h
+txt_to_BL.c : ../inc/txt_to_BL.h
 txt_to_SC.c : ../inc/txt_to_SC.h
 #----------------------------------
 ../inc/txt_to_I1.h :
@@ -78,11 +78,11 @@ txt_to_SC.c : ../inc/txt_to_SC.h
 ../src/txt_to_F8.c :
 	luajit gen_code_F.lua 
 #----------------------------------
-../inc/B1_to_txt.h : 
-	lua ../src/cli_extract_func_decl.lua B1_to_txt.c ${INCDIR}
+../inc/BL_to_txt.h : 
+	lua ../src/cli_extract_func_decl.lua BL_to_txt.c ${INCDIR}
 ../inc/SC_to_txt.h : 
 	lua ../src/cli_extract_func_decl.lua SC_to_txt.c ${INCDIR}
-B1_to_txt.c : ../inc/B1_to_txt.h
+BL_to_txt.c : ../inc/BL_to_txt.h
 SC_to_txt.c : ../inc/SC_to_txt.h
 #----------------------------------
 ../inc/I1_to_txt.h :
@@ -154,7 +154,7 @@ SC_to_txt.c : ../inc/SC_to_txt.h
 	luajit ../src/cli_extract_func_decl.lua trim.c ${INCDIR}
 
 GEN_INC_FILES = \
-	../inc/B1_to_txt.h   \
+	../inc/BL_to_txt.h   \
 	../inc/file_exists.h  \
 	../inc/get_bit_u64.h \
 	../inc/get_file_size.h  \
@@ -176,7 +176,7 @@ GEN_INC_FILES = \
 
 SRCS := cat_to_buf.c 
 SRCS += copy_file.c 
-SRCS += B1_to_txt.c 
+SRCS += BL_to_txt.c 
 SRCS += file_exists.c 
 SRCS += get_bit_u64.c  
 SRCS += get_file_size.c 
@@ -194,7 +194,7 @@ SRCS += SC_to_txt.c
 SRCS += set_bit_u64.c  
 SRCS += spooky_hash.c 
 SRCS += trim.c 
-SRCS += txt_to_B1.c 
+SRCS += txt_to_BL.c 
 SRCS += txt_to_SC.c 
 
 OBJS = $(SRCS:.c=.o)
