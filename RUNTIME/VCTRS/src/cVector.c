@@ -17,6 +17,7 @@
 #include "vctr_del.h"
 #include "vctr_drop_l1_l2.h"
 #include "vctr_eov.h"
+#include "vctr_incr_ref_count.h"
 #include "vctr_is.h"
 #include "vctr_is_eov.h"
 #include "vctr_l1_to_l2.h"
@@ -409,6 +410,24 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_ref_count( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint32_t ref_count;
+  status = vctr_get_ref_count(ptr_v->uqid, &ref_count);
+  cBYE(status);
+  lua_pushnumber(L, ref_count);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_vctr_memo_len( lua_State *L) {
   int status = 0;
   // get args from Lua 
@@ -586,6 +605,7 @@ static int l_vctr_rehydrate( lua_State *L)
   bool  is_found; uint32_t where_found;
   status = vctr_is(uqid, &is_found, &where_found); cBYE(status);
   if ( !is_found ) { go_BYE(-1); } 
+  status = vctr_incr_ref_count(where_found); cBYE(status);
   ptr_v->uqid = uqid; 
 
   return 1; 
@@ -704,6 +724,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "num_readers", l_vctr_num_readers },
     { "max_num_in_chnk", l_vctr_max_num_in_chnk },
     { "memo_len", l_vctr_memo_len },
+    { "ref_count", l_vctr_ref_count },
     { "uqid", l_vctr_uqid },
     { "width", l_vctr_width },
     { "pr", l_vctr_print },
@@ -744,6 +765,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "max_num_in_chnk", l_vctr_max_num_in_chnk },
     { "uqid", l_vctr_uqid },
     { "memo_len", l_vctr_memo_len },
+    { "ref_count", l_vctr_ref_count },
     { "width", l_vctr_width },
     { "pr", l_vctr_print },
     // creation, new, ...

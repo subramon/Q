@@ -22,3 +22,8 @@ vctr_get_qtype(
     uint32_t uqid,
     qtype_t *ptr_qtype
     );
+extern int
+vctr_get_ref_count(
+    uint32_t uqid,
+    int *ptr_ref_count
+    );

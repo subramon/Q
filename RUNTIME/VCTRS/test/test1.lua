@@ -9,7 +9,7 @@ local qcfg = require 'Q/UTILS/lua/qcfg'
 
 local tests = {}
 tests.t1 = function()
-  local x, y = lVector({ qtype = "F4", width = 4, chunk_size = 0 })
+  local x, y = lVector({ qtype = "F4", width = 4, max_num_in_chunk = 0 })
   assert(type(x) == "lVector")
   assert(type(y) == "nil") -- only one thing returned
   x = nil

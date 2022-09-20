@@ -22,6 +22,15 @@ vctr_del(
   if ( !*ptr_is_found ) { goto BYE; }
   vctr_rs_hmap_val_t val = g_vctr_hmap.bkts[where_found].val;
   bool is_persist = val.is_persist;
+  if ( val.ref_count == 0 ) { go_BYE(-1); }
+  g_vctr_hmap.bkts[where_found].val.ref_count--;
+  if ( g_vctr_hmap.bkts[where_found].val.ref_count > 0 ) {
+    printf("Not deleting Vector %u, name %s\n",
+        uqid, val.name);
+    goto BYE;
+  }
+  val = g_vctr_hmap.bkts[where_found].val;
+
   //-------------------------------------------
   // Delete chunks in vector before deleting vector 
   if ( val.num_elements > 0 ) { 

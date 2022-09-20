@@ -15,6 +15,7 @@ typedef struct _vctr_meta_t {
   uint32_t num_chnks;
   uint32_t max_num_in_chnk;
   uint32_t width;
+  uint32_t ref_count; // reference count 
   // Note that chunk size = max_num_in_chnk * width 
   int memo_len;
   qtype_t qtype;

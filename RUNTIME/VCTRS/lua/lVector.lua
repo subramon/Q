@@ -53,6 +53,11 @@ function lVector:width()
   return width
 end
 
+function lVector:ref_count()
+  local ref_count = cVector.ref_count(self._base_vec)
+  return ref_count
+end
+
 function lVector:memo_len()
   local memo_len = cVector.memo_len(self._base_vec)
   return memo_len

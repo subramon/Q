@@ -38,7 +38,8 @@ vctr_add1(
   }
   vctr_rs_hmap_val_t val = 
     { .qtype = qtype, .max_num_in_chnk = max_num_in_chnk, 
-      .memo_len = memo_len, .width = width, .num_chnks = 0  } ;
+      .memo_len = memo_len, .width = width, .num_chnks = 0,
+      .ref_count = 1 } ;
   status = g_vctr_hmap.put(&g_vctr_hmap, &key, &val); cBYE(status);
 #ifdef DEBUG
   new_vctr_cnt = vctr_cnt();

@@ -30,7 +30,7 @@ vctrs_chk(
     memset(&vctr_val, 0, sizeof(vctr_rs_hmap_val_t));
     vctr_rs_hmap_key_t vctr_key;
     memset(&vctr_key, 0, sizeof(vctr_rs_hmap_key_t));
-    if ( g_vctr_hmap.bkt_full[i] == false ) { 
+    if ( g_vctr_hmap.bkt_full[i] == false ) {
       // key and value must be empty 
       if ( memcmp(&g_vctr_hmap.bkts[i].val, &vctr_val, 
             sizeof(vctr_rs_hmap_val_t)) != 0 ) {
@@ -62,13 +62,15 @@ vctr_chk(
 
   vctr_rs_hmap_val_t vctr_val = g_vctr_hmap.bkts[vctr_where_found].val;
   uint32_t qtype           = vctr_val.qtype;
-  if ( !is_qtype(qtype) ) { go_BYE(-1); }
+  if ( qtype >= NUM_QTYPES ) { go_BYE(-1); } 
+  if ( qtype <= Q0 ) { go_BYE(-1); } 
   uint32_t width           = vctr_val.width;
-  if ( get_width_c_qtype(qtype) != width ) { go_BYE(-1); }
+  if ( get_width_c_qtype(qtype) != (int)width ) { go_BYE(-1); }
   uint64_t num_elements    = vctr_val.num_elements;
   uint32_t num_chnks       = vctr_val.num_chnks;
   uint32_t max_num_in_chnk = vctr_val.max_num_in_chnk;
   uint64_t chk_num_elements    = 0;
+  if ( vctr_val.ref_count == 0 ) {  go_BYE(-1); }
   // name must be null terminated 
   if ( vctr_val.name[MAX_LEN_VCTR_NAME] != '\0' ) { go_BYE(-1); }
   int good_filesz  = width * max_num_in_chnk;

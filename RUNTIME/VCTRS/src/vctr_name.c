@@ -108,3 +108,23 @@ BYE:
   return status;
 }
 
+int
+vctr_get_ref_count(
+    uint32_t uqid,
+    int *ptr_ref_count
+    )
+{
+  int status = 0;
+  bool is_found; uint32_t where;
+  vctr_rs_hmap_key_t key = uqid;
+  vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
+  status = g_vctr_hmap.get(&g_vctr_hmap, &key, &val, &is_found, &where);
+  cBYE(status);
+  if ( !is_found ) { go_BYE(-1); }
+  if ( val.is_trash ) { go_BYE(-1); }
+  vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap.bkts;
+  *ptr_ref_count = bkts[where].val.ref_count;
+BYE:
+  return status;
+}
+
