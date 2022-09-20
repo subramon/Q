@@ -742,6 +742,7 @@ $(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP) ${RS_OBJS}
 		$(TARGET_O) $(TARGET_ALIBS) \
 		${RS_LIBS}
 	$(Q)$(TARGET_STRIP) $@
+	cp luajit ~/local/Q/bin/qjit # TODO Improve this 
 	$(E) "OK        Successfully built LuaJIT"
 
 ##############################################################################

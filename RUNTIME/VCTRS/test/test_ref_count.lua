@@ -10,12 +10,12 @@ tests.t1 = function()
   local y = lVector({uqid = x_uqid})
   assert(type(y) == "lVector")
   local y_uqid = y:uqid()
-  print(y_uqid, x_uqid)
   assert(y_uqid == x_uqid)
   assert(y:ref_count() == 2)
   x = nil
   collectgarbage()
   assert(y:ref_count() == 1)
+  print("Test t1 succeeded")
 end
 -- return tests
 tests.t1()

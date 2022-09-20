@@ -145,6 +145,9 @@ static int l_vctr_nop( lua_State *L) {
   int status = 0;
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   if ( ptr_v == NULL ) { go_BYE(-1); }
+  uint32_t uqid = ptr_v->uqid; 
+  bool  is_found; uint32_t where_found;
+  status = vctr_is(uqid, &is_found, &where_found); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -531,7 +534,11 @@ static int l_vctr_free( lua_State *L) {
     printf("%s\n", name); 
   }
   */
-  status = vctr_del(ptr_v->uqid, &is_found); // Deliberate no cBYE(status); 
+  if (  ptr_v->uqid == 0 ) { 
+    printf("STRANGE! Vector uqid == 0 \n"); goto BYE;
+  }
+  status = vctr_del(ptr_v->uqid, &is_found); cBYE(status); 
+  // TODO P2 Investigate why Lua is deleting a Vector with uqid == 0
   lua_pushboolean(L, is_found);
   return 1;
 BYE:

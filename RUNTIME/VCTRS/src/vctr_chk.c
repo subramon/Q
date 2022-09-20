@@ -42,7 +42,7 @@ vctrs_chk(
       }
       continue; 
     }
-    status = vctr_chk(vctr_key, is_at_rest); cBYE(status); 
+    status = vctr_chk(g_vctr_hmap.bkts[i].key, is_at_rest); cBYE(status); 
   }
 BYE:
   return status;
@@ -65,7 +65,12 @@ vctr_chk(
   if ( qtype >= NUM_QTYPES ) { go_BYE(-1); } 
   if ( qtype <= Q0 ) { go_BYE(-1); } 
   uint32_t width           = vctr_val.width;
-  if ( get_width_c_qtype(qtype) != (int)width ) { go_BYE(-1); }
+  if ( qtype != SC ) {
+    if ( get_width_c_qtype(qtype) != (int)width ) { go_BYE(-1); }
+  }
+  else {
+    if  ( width < 2 ) { go_BYE(-1); }
+  }
   uint64_t num_elements    = vctr_val.num_elements;
   uint32_t num_chnks       = vctr_val.num_chnks;
   uint32_t max_num_in_chnk = vctr_val.max_num_in_chnk;

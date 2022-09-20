@@ -25,8 +25,6 @@ vctr_del(
   if ( val.ref_count == 0 ) { go_BYE(-1); }
   g_vctr_hmap.bkts[where_found].val.ref_count--;
   if ( g_vctr_hmap.bkts[where_found].val.ref_count > 0 ) {
-    printf("Not deleting Vector %u, name %s\n",
-        uqid, val.name);
     goto BYE;
   }
   val = g_vctr_hmap.bkts[where_found].val;

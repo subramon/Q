@@ -9,7 +9,7 @@ local qcfg = require 'Q/UTILS/lua/qcfg'
 
 local tests = {}
 tests.t1 = function()
-  local x, y = lVector({ qtype = "F4", width = 4, max_num_in_chunk = 0 })
+  local x, y = lVector({ qtype = "F4", width = 4})
   assert(type(x) == "lVector")
   assert(type(y) == "nil") -- only one thing returned
   x = nil
@@ -48,6 +48,7 @@ tests.t3 = function()
   x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chnk })
   local width = cutils.get_width_qtype(qtype)
   assert(x:width() == width)
+  x:set_name("xvec")
   -- create a buffer for data to put into vector 
   local size = max_num_in_chnk * width
   local buf = cmem.new( {size = size, qtype = qtype, name = "inbuf"})
@@ -75,6 +76,7 @@ tests.t3 = function()
   assert(x:is_eov() == false)
   x:put_chunk(buf, max_num_in_chnk-1)
   assert(x:is_eov() == true)
+  x:nop()
   assert(x:num_elements() == 
     (num_chunks*max_num_in_chnk) + (max_num_in_chnk-1))
   -- get what you put 
@@ -88,13 +90,10 @@ tests.t3 = function()
   assert(status == false)
   print(">>> STOP  Deliberate error")
   -- test printing
-  local y = x:pr(nil, 0, 10)
-  -- test globals
-  --[[
-  for k, v in pairs(_G) do 
-    if ( type(v) == "lVector") then print (k) end
-  end
-  --]]
+  assert(x:pr("_x", 0, 10))
+  x:nop()
+  x = nil
+  collectgarbage()
 
   print("Test t3 succeeded")
 end
@@ -108,6 +107,7 @@ tests.t4 = function()
 
   -- NOTE: x is a global below 
   x = lVector({ name = "xvec", qtype = qtype, max_num_in_chunk = max_num_in_chnk })
+  assert(x:check(true, true)) -- checking on all vectors
   assert(x:name() == "xvec")
   print("Created vector " .. x:name() .. " with uqid = " .. x:uqid())
   -- create a buffer for data to put into vector 
@@ -153,6 +153,7 @@ tests.t4 = function()
   assert(type(uqid) == "number")
   assert(uqid > 0)
   local args = { uqid = uqid }
+  assert(x:check(false, true)) -- checking on all vectors
   y = lVector(args)
   assert(type(y) == "lVector")
   print("Created vector " .. y:name() .. " with uqid = " .. y:uqid())
@@ -166,7 +167,7 @@ tests.t4 = function()
   end
 
   assert(x:check()) -- checking on this vector
-  assert(x:check(true, true)) -- checking on all vectors
+  assert(x:check(false, true)) -- checking on all vectors
   x:nop()
   Q.save()
   local ydata = pldata.read("/tmp/_y")

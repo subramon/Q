@@ -76,3 +76,4 @@ echo "LUA_PATH: $LUA_PATH"
 echo "LUA_CPATH: $LUA_CPATH"
 cd $PREV_DIR
 cd $CUR_DIR 
+export PATH=$PATH:$Q_ROOT/bin/
