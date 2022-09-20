@@ -5,6 +5,10 @@ typedef struct _CONST_B1_rec_type {
    bool val;
 } CONST_B1_REC_TYPE;
 
+typedef struct _CONST_BL_rec_type {
+   bool val;
+} CONST_BL_REC_TYPE;
+
 typedef struct _CONST_F4_rec_type {
    float val;
 } CONST_F4_REC_TYPE;

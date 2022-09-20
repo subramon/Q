@@ -5,6 +5,7 @@
 typedef struct _sclr_rec_type { 
   union { 
     bool b1;
+    bool bl;
 
     int8_t  i1;
     int16_t i2;

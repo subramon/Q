@@ -1,5 +1,6 @@
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
+local cutils    = require 'libcutils'
 local Scalar    = require 'libsclr'
 local lVector   = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
@@ -22,7 +23,7 @@ return function (x, optargs)
   local subs = {}
   subs.operator   = "sum"
   subs.fn         = subs.operator .. "_" .. qtype -- e.g., sum_F4
-  subs.ctype      = cutils.get_str_qtype_to_str_ctype(qtype) -- e.g., float
+  subs.ctype      = cutils.str_qtype_to_str_ctype(qtype) -- e.g., float
   subs.cast_in_as = subs.ctype .. " *" -- e.g., "float *"
   --=====================================
   -- set up args for C code

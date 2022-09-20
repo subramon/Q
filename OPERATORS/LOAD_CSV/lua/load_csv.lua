@@ -11,7 +11,6 @@ local malloc_aux    = require "Q/OPERATORS/LOAD_CSV/lua/malloc_aux"
 local bridge_C      = require "Q/OPERATORS/LOAD_CSV/lua/bridge_C"
 local qcfg          = require 'Q/UTILS/lua/qcfg'
 local setup_ptrs    = require 'Q/OPERATORS/LOAD_CSV/lua/setup_ptrs'
-local free_buffers    = require 'Q/OPERATORS/LOAD_CSV/lua/free_buffers'
 
 local max_num_in_chunk = qcfg.max_num_in_chunk
  --======================================

@@ -1,6 +1,8 @@
 -- FUNCTIONAL 
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
+local qcfg = require 'Q/UTILS/lua/qcfg'
+local max_num_in_chunk = qcfg.max_num_in_chunk
 local tests = {}
 --=========================================
 tests.t1 = function()
@@ -29,16 +31,47 @@ end
 --=========================================
 tests.t3 = function()
   local n = 1048576+17
-  local y = Q.const({val = true, qtype = "B1", len = n })
-  local z = Q.sum(y):eval():to_num()
-  assert(z == n)
+  
+  local qtypes = { "BL", "B1" }
+  for k, qtype in pairs(qtypes) do 
+    local y = Q.const({val = true, qtype = qtype, len = n })
+    local outval, outcnt = Q.sum(y):eval()
+    print(outval, outcnt)
+    assert(type(outval) == "Scalar")
+    assert(outval:to_num() == n)
+
+    assert(type(outcnt) == "Scalar")
+    assert(outcnt:to_num() == n)
+    
+    print("Test t3 " .. qtype .. " succeeded")
+  end
   print("Test t3 succeeded")
+end
+--=========================================
+tests.t4 = function()
+  local n = max_num_in_chunk * 2 + 3
+  
+  local qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" } 
+  for k, qtype in pairs(qtypes) do 
+    local y = Q.const({val = 2, qtype = qtype, len = n })
+    local outval, outcnt = Q.sum(y):eval()
+    assert(type(outval) == "Scalar")
+    assert(outval:to_num() == 2*n)
+
+    assert(type(outcnt) == "Scalar")
+    assert(outcnt:to_num() == n)
+    
+    print("Test t4, qtype =  " .. qtype .. " succeeded")
+  end
+  print("Test t4 succeeded")
 end
 --=========================================
 --[[
 return tests
 os.exit()
 --]]
--- TODO tests.t1()
-tests.t2()
--- TODO tests.t3()
+-- TODO tests.t1() -- Need Q.rand() to work 
+-- DONE tests.t2()
+-- tests.t3() -- TODO Need const.B1 to work, const BL works 
+tests.t4()
+os.exit()

@@ -20,7 +20,7 @@ local function const_specialize(
   assert(type(largs) == "table")
 
   local qtype = assert(largs.qtype)
-  assert(is_in(qtype, { "B1", "I1", "I2", "I4", "I8", "F4", "F8"}))
+  assert(is_in(qtype, { "B1", "BL", "I1", "I2", "I4", "I8", "F4", "F8"}))
 
   local len   = assert(largs.len)
   assert(len > 0, "vector length must be positive")

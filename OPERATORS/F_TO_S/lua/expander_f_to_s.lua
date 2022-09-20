@@ -24,6 +24,8 @@ return function (a, x, optargs)
   local subs = assert(spfn(x, optargs))
   -- subs must return (1) args (2) getter ..... TODO P3 finish doc
   local func_name = assert(subs.fn)
+  local accumulator = assert(subs.accumulator)
+  assert(type(accumulator) == "CMEM")
 
   qc.q_add(subs)
 
@@ -48,7 +50,7 @@ return function (a, x, optargs)
     x:unget_chunk(l_chunk_num)
     l_chunk_num = l_chunk_num + 1
     if ( x_len < max_num_in_chunk ) then is_eor = true  end
-    return cargs, is_eor 
+    return accumulator, is_eor 
   end
-  return Reducer ( { gen = lgen, func = getter, value = cargs} )
+  return Reducer ( { gen = lgen, func = getter, value = accumulator} )
 end
