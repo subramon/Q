@@ -456,6 +456,25 @@ function lVector:pr(opfile, lb, ub, format)
   assert(cVector.pr(self._base_vec, nn, opfile, lb, ub, format))
   return true
 end
+function lVector:get_meta(key)
+  assert(type(key) == "string")
+  if ( self._meta[key] ) then 
+    return self._meta[key] 
+  else
+    return nil
+  end
+end
+function lVector:unset_meta(key)
+  assert(type(key) == "string")
+  if ( self._meta[key] ) then 
+    self._meta[key] = nil
+  end
+end
+function lVector:set_meta(key, value)
+  assert(type(key) == "string")
+  assert(value)
+  self._meta[key] = value
+end
 
 function lVector.null()
   return cVector.null()

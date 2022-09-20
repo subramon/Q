@@ -1,8 +1,8 @@
 -- Coding convention. Local variables start with underscore
-local ffi      = require 'ffi'
-local cutils   = require 'libcutils'
-local record_time = require 'Q/UTILS/lua/record_time'
-local register_type = require 'Q/UTILS/lua/register_type'
+local ffi           = require 'ffi'
+local cutils        = require 'libcutils'
+local record_time   = require 'Q/UTILS/lua/record_time'
+local register_type  = require 'Q/UTILS/lua/register_type'
 local Reducer = {}
 Reducer.__index = Reducer
 
@@ -15,7 +15,6 @@ setmetatable(Reducer, {
 register_type(Reducer, "Reducer")
 
 function Reducer.new(arg)
-  local start_time = cutils.rdtsc()
   assert(type(arg) == "table")
   local reducer = setmetatable({}, Reducer)
   -- gen is optional
@@ -43,15 +42,13 @@ function Reducer.new(arg)
     reducer._is_eor = false -- we still need to figure out final answer
   end
   reducer._index = 0
-  record_time(start_time, "Reducer.new")
   return reducer
 end
 
 function Reducer:next()
-  if ( self._is_eor ) then
-    return false
-  end
   local start_time = cutils.rdtsc()
+  -- return false if end-of-reducer or no generator
+  if ( self._is_eor ) then return false end
   if self._gen == nil then return false end
   -- assert(self._gen ~= nil,  'Reducer: The reducer is materialized')
   local val, is_eor = self._gen(self._index)
