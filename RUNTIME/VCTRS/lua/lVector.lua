@@ -108,11 +108,7 @@ function lVector:eov()
 end
 function lVector:get_nulls()
   if ( not self._nn_vec ) then return nil end 
-    local nn_vector = setmetatable({}, lVector)
-    nn_vector._base_vec = self._nn_vec
-    nn_vector._qtype = cVector.qtype(self._nn_vec)
-    nn_vector._name  = cVector.name(self._nn_vec)
-    return nn_vector
+  return self._nn_vec
 end
 function lVector:break_nulls()
   self._nn_vec = nil
@@ -170,6 +166,7 @@ function lVector.new(args)
       assert(nn_uqid > 0)
       vector._nn_vec = assert(cVector.rehydrate({ uqid = nn_uqid}))
     end 
+    vector:persist(false) -- IMPORTANT
     return vector 
   end
 

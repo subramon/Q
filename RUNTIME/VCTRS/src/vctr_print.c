@@ -75,6 +75,8 @@ vctr_print(
     uint32_t l_num_to_pr = mcr_min(num_in_chnk, num_to_pr); 
     for ( uint64_t i = 0; i < l_num_to_pr; i++ ) { 
       switch ( qtype ) {
+        case BL : fprintf(fp, "%s\n", 
+                      ((bool *)data)[i] ? "true" : "false"); break;
         case I1 : fprintf(fp, "%d\n", ((int8_t *)data)[i]); break; 
         case I2 : fprintf(fp, "%d\n", ((int16_t *)data)[i]); break; 
         case I4 : fprintf(fp, "%d\n", ((int32_t *)data)[i]); break; 

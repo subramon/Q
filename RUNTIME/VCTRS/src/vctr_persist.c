@@ -8,7 +8,8 @@ extern vctr_rs_hmap_t g_vctr_hmap;
 
 int
 vctr_persist(
-    uint32_t vctr_uqid
+    uint32_t vctr_uqid,
+    bool bval
     )
 {
   int status = 0;
@@ -20,7 +21,7 @@ vctr_persist(
   if ( !is_found ) { go_BYE(-1); }
   if ( val.is_trash ) { go_BYE(-1); }
   // This is okay: if ( val.is_persist ) { go_BYE(-1); }
-  g_vctr_hmap.bkts[where_found].val.is_persist = true; 
+  g_vctr_hmap.bkts[where_found].val.is_persist = bval;
 BYE:
   return status;
 }

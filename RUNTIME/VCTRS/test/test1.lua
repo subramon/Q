@@ -3,6 +3,7 @@ local pldata = require 'pl.data'
 
 local cmem   = require 'libcmem'
 local cutils = require 'libcutils'
+local cVector = require 'libvctr'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local qcfg = require 'Q/UTILS/lua/qcfg'
@@ -107,7 +108,7 @@ tests.t4 = function()
 
   -- NOTE: x is a global below 
   x = lVector({ name = "xvec", qtype = qtype, max_num_in_chunk = max_num_in_chnk })
-  assert(x:check(true, true)) -- checking on all vectors
+  assert(cVector.check_all())
   assert(x:name() == "xvec")
   print("Created vector " .. x:name() .. " with uqid = " .. x:uqid())
   -- create a buffer for data to put into vector 
@@ -153,7 +154,7 @@ tests.t4 = function()
   assert(type(uqid) == "number")
   assert(uqid > 0)
   local args = { uqid = uqid }
-  assert(x:check(false, true)) -- checking on all vectors
+  assert(cVector.check_all())
   y = lVector(args)
   assert(type(y) == "lVector")
   print("Created vector " .. y:name() .. " with uqid = " .. y:uqid())
@@ -167,7 +168,7 @@ tests.t4 = function()
   end
 
   assert(x:check()) -- checking on this vector
-  assert(x:check(false, true)) -- checking on all vectors
+  assert(cVector.check_all())
   x:nop()
   Q.save()
   local ydata = pldata.read("/tmp/_y")

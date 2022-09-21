@@ -14,6 +14,7 @@
 
 #include "vctr_add.h"
 #include "vctr_chk.h"
+#include "vctr_cnt.h"
 #include "vctr_del.h"
 #include "vctr_drop_l1_l2.h"
 #include "vctr_eov.h"
@@ -172,6 +173,29 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_check_all( lua_State *L) {
+  int status = status = vctrs_chk(false); 
+  if ( status == 0 ) { 
+    lua_pushboolean(L, true);
+  }
+  else { 
+    lua_pushboolean(L, false);
+  }
+  return 1;
+}
+//----------------------------------------
+static int l_vctr_count( lua_State *L) {
+  int status = 0;
+  uint32_t count = vctr_cnt();
+  lua_pushnumber(L, count);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_vctr_width( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
@@ -255,9 +279,13 @@ BYE:
 //----------------------------------------
 static int l_vctr_persist( lua_State *L) {
   int status = 0;
-  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  bool bval = true;
+  if (  lua_gettop(L) < 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vctr_persist(ptr_v->uqid); cBYE(status);
+  if (  lua_gettop(L) == 2 ) { 
+    bval = lua_toboolean(L, 2); 
+  }
+  status = vctr_persist(ptr_v->uqid, bval); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -714,6 +742,7 @@ BYE:
 static const struct luaL_Reg vector_methods[] = {
     { "__gc",    l_vctr_free   },
     { "chk", l_vctr_chk },
+    { "check_all", l_vctr_check_all },
 
     { "free", l_vctr_free },
     { "chunk_delete", l_chnk_delete },
@@ -752,6 +781,7 @@ static const struct luaL_Reg vector_methods[] = {
  
 static const struct luaL_Reg vector_functions[] = {
     { "chk", l_vctr_chk },
+    { "check_all", l_vctr_check_all },
 
     { "free", l_vctr_free },
     { "chunk_delete", l_chnk_delete },
@@ -765,6 +795,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "set_memo", l_vctr_set_memo},
     { "set_name", l_vctr_set_name },
     //--------------------------------
+    { "count", l_vctr_count },
     { "name", l_vctr_get_name },
     { "qtype", l_vctr_get_qtype },
     { "num_elements", l_vctr_num_elements },
