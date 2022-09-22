@@ -1,7 +1,13 @@
-Remove cVector.chunk_size
+where do we keep max_num_in_chunk? Lua or C. Be consistent
+What of init_globals() needs to be saved in Q.save() 
+  and restored after that
+Make sure that cVector:check() is done more often and uses 
+  is_at_rest = true whenever possible
+#=======================
+
+
 Use qcfg.ISPC 
 Move q_core   to qcore
-Move q_consts to q_consts
 
 
 F1S1OPF2
