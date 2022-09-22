@@ -1,4 +1,4 @@
-local qconsts       = require 'Q/UTILS/lua/q_consts'
+local cutils        = require 'libcutils'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
 return function (
@@ -15,12 +15,12 @@ return function (
   assert(b:qtype() == "B1")
   assert(not b:has_nulls())
 
-  subs.fn = "where_" .. a_qtype
-  subs.srcdir = "OPERATORS/WHERE/gen_src/"
-  subs.incdir = "OPERATORS/WHERE/gen_inc/"
-  subs.incs = { "OPERATORS/WHERE/gen_inc/", "UTILS/inc/" }
-  subs.srcs = { "UTILS/src/get_bit_u64.c" }
-  subs.a_ctype = qconsts.qtypes[a_qtype].ctype
-  subs.tmpl = "OPERATORS/WHERE/lua/where.tmpl"
+  subs.fn      = "where_" .. a_qtype
+  subs.srcdir  = "OPERATORS/WHERE/gen_src/"
+  subs.incdir  = "OPERATORS/WHERE/gen_inc/"
+  subs.incs    = { "OPERATORS/WHERE/gen_inc/", "UTILS/inc/" }
+  subs.srcs    = { "UTILS/src/get_bit_u64.c" }
+  subs.a_ctype = cutils.str_qtype_to_str_ctype(a_qtype)
+  subs.tmpl    = "OPERATORS/WHERE/lua/where.tmpl"
   return subs
 end
