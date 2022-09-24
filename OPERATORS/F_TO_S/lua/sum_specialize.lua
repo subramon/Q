@@ -28,15 +28,11 @@ return function (x, optargs)
   --=====================================
   -- set up args for C code
   --==========
-  -- When we query the Reduce for a value, we return 3 values
+  -- When we query the Reduce for a value, we return 2 values
   -- These are (1) the sum (2) the number of values seen
-  -- (3) the number of values that were good
   -- (2) need not be the same as number of elements because one can ask
-  -- for partial values
-  -- (2) need not be the same as (3) when there are null values
-  -- We call these 3 values  (a) outval (b) num_seen (c) num_good
-  -- num_seen and num_good are of type I8
-  -- outval has type F8  or I8
+  -- for partial values -- num_seen is  of type I8
+  -- sum has type F8  or I8
   if ( i_qtypes[qtype] ) then 
     subs.accumulator_ctype = "SUM_I_ARGS"
     subs.outval_qtype ="I8"
@@ -73,11 +69,7 @@ return function (x, optargs)
     local tmps = ffi.cast("SCLR_REC_TYPE *", num_seen)
     tmps[0].val.i8 = x[0].num
     -------------------
-    local num_good = Scalar.new(0, "I8")
-    local tmps = ffi.cast("SCLR_REC_TYPE *", num_good)
-    tmps[0].val.i8 = x[0].num_good
-    -------------------
-    return outval, num_seen, num_good
+    return outval, num_seen
   end
   subs.getter = getter
   subs.tmpl   = "OPERATORS/F_TO_S/lua/sum.tmpl"

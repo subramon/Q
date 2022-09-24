@@ -26,16 +26,18 @@ vctr_add1(
   *ptr_uqid = vctr_new_uqid();
   vctr_rs_hmap_key_t key = *ptr_uqid; 
   if ( width == 0 ) { 
-    int w = get_width_c_qtype(qtype);
-    if ( w <= 0 ) { go_BYE(-1); }
-    width = w;
+    width = get_width_c_qtype(qtype);
   }
-  if ( width == 0 ) { go_BYE(-1); }
 
   uint32_t max_num_in_chnk = in_max_num_in_chnk;
   if  ( max_num_in_chnk == 0 ) { 
     max_num_in_chnk = Q_VCTR_MAX_NUM_IN_CHNK;
   }
+  if ( qtype == B1 ) {
+    width = max_num_in_chnk / 8;
+  }
+  if ( width == 0 ) { go_BYE(-1); }
+  //-------------------------------------------
   vctr_rs_hmap_val_t val = 
     { .qtype = qtype, .max_num_in_chnk = max_num_in_chnk, 
       .memo_len = memo_len, .width = width, .num_chnks = 0,

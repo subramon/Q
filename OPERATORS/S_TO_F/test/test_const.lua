@@ -61,15 +61,16 @@ tests.t1 = function()
   -- os.exit() -- WHY IS THIS NEEDED? 
 end
 tests.t2 = function() 
-  print("B1 not implemented ")
-  --[[
   local len = blksz * 3 + 19;
   local vals = { true, false }
   local qtype = "B1"
   for _, val in pairs(vals) do 
     local c1 = Q.const( {val = val, qtype = qtype, len = len })
     c1:eval()
-    local sclr = Scalar.new(val, "B1")
+    print("XXXXXXXXXXXXXXXXXXXXXXXXX")
+    c1:pr()
+    print("XXX===============XXXXXXX")
+    local sclr = Scalar.new(val, "BL")
     print("testing const_B1 with value " .. tostring(val))
     for i = 1, len do
       assert(c1:get1(i-1) == sclr)
@@ -82,7 +83,7 @@ tests.t2 = function()
     print("<<< STOP  Deliberate error")
   end
   print("Test t2 succeeded")
-  --]]
+
 end
 tests.t3 = function() -- this is a stress test 
   local val = 1
@@ -97,9 +98,9 @@ tests.t3 = function() -- this is a stress test
   print("Test t3 succeeded")
   os.exit() -- WHY IS THIS NEEDED?
 end
-tests.t1()
--- tests.t2()
-tests.t3()
+-- WORKS tests.t1()
+tests.t2()
+-- WORKS tests.t3()
 --[[
 return tests
 --]]

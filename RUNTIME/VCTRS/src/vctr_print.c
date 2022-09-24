@@ -70,11 +70,17 @@ vctr_print(
       g_chnk_hmap.bkts[chnk_where_found].val.num_elements;
     //-----------------------------------------------------
     char *data  = chnk_get_data(chnk_where_found, false);
+    char *orig_data = data;
     data += (chnk_off * width);
     num_in_chnk -= chnk_off;  
     uint32_t l_num_to_pr = mcr_min(num_in_chnk, num_to_pr); 
     for ( uint64_t i = 0; i < l_num_to_pr; i++ ) { 
       switch ( qtype ) {
+        case B1 : 
+          {
+            int ival = get_bit_u64(orig_data, chnk_off+i); cBYE(status);
+            fprintf(fp, "%s\n", ival ? "true" : "false"); break;
+          }
         case BL : fprintf(fp, "%s\n", 
                       ((bool *)data)[i] ? "true" : "false"); break;
         case I1 : fprintf(fp, "%d\n", ((int8_t *)data)[i]); break; 

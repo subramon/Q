@@ -25,12 +25,19 @@ local function const_specialize(
   local len   = assert(largs.len)
   assert(len > 0, "vector length must be positive")
   --=======================
+  local orig_qtype = qtype
   local subs = {};
   subs.fn = "const_" .. qtype
   subs.len = len
   subs.out_qtype = qtype
   subs.out_ctype = cutils.str_qtype_to_str_ctype(qtype)
   subs.buf_size = max_num_in_chunk * cutils.get_width_qtype(qtype)
+  if ( orig_qtype == "B1" ) then 
+    subs.buf_size = max_num_in_chunk / 8 
+    qtype = "BL"
+  end
+  assert(subs.buf_size > 0)
+    
   subs.cast_buf_as = subs.out_ctype .. " * "
 
   -- set up args for C code
@@ -57,7 +64,7 @@ local function const_specialize(
   subs.incs   = { "UTILS/inc", "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
   subs.structs = { "OPERATORS/S_TO_F/inc/const_struct.h" }
   --=== handle B1 as special case
-  if ( qtype == "B1" ) then
+  if ( orig_qtype == "B1" ) then
     subs.tmpl = nil -- this is not generated code 
     subs.dotc   = "OPERATORS/S_TO_F/src/const_B1.c"
     subs.doth   = "OPERATORS/S_TO_F/inc/const_B1.h"

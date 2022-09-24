@@ -665,11 +665,10 @@ int main(int argc, char **argv)
   int itmp = 1; __atomic_store(&g_halt, &itmp, 0);
   pthread_cond_signal(&g_mem_cond);
   printf("Wrapping up\n"); // RAMESH
-#ifdef WEB_SERVER
-  pthread_join(l_webserver, NULL); 
-  pthread_join(l_out_of_band, NULL); 
-  pthread_join(l_mem_mgr, NULL); 
-#endif
+  // Wait for other threads to join
+  if ( g_is_webserver   ) { pthread_join(g_webserver,   NULL); }
+  if ( g_is_out_of_band ) { pthread_join(g_out_of_band, NULL); }
+  if ( g_is_mem_mgr     ) { pthread_join(g_mem_mgr,    NULL); }
 BYE:
   if ( g_mutex_created ) { 
     pthread_cond_destroy(&g_mem_cond);

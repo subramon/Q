@@ -53,6 +53,8 @@ vctr_get1(
     return_if_malloc_failed(ptr_sclr->val.str);
     memcpy(ptr_sclr->val.str, data, width); 
   }
+  else if ( qtype == B1 ) { 
+  }
   else { 
     memcpy(&(ptr_sclr->val), data, width); 
   }

@@ -1,8 +1,10 @@
 where do we keep max_num_in_chunk? Lua or C. Be consistent
 What of init_globals() needs to be saved in Q.save() 
   and restored after that
+  g_dsk_used should be checked/restored
 Make sure that cVector:check() is done more often and uses 
   is_at_rest = true whenever possible
+Make sure that if you restore but do not save, files get deleted
 #=======================
 
 
@@ -21,23 +23,3 @@ Check whether we have implemented essence of F1F2OPF3/expander_f1f2opf3.txt
 Verify that extra bits are zeroed out for vveq and vseq and so on
 --=================
 Delete get_hdr.lua -- used in MDB
-
-======================================
-For following: all vec_start_read, need to do a vec_end_read
-AINB/lua/get_idx_by_val.lua:  local f2_len, f2_ptr = y:get_all()
-AINB/lua/expander_ainb.lua:  local blen, bptr, nn_bptr = b:get_all()
-APPROX/FREQUENT/test/test_approx_frequent.lua:  local _, y_c, _ = y:get_all()
-APPROX/FREQUENT/test/test_approx_frequent.lua:  local _, f_c, _ = f:get_all()
-APPROX/QUANTILE/lua/approx_quantile.lua:  local x_len, xptr, nn_xptr = x:get_all()
-APPROX/QUANTILE/test/test_aq.lua:  local sz, q, nn_q = quantiles:get_all()
-APPROX/QUANTILE/test/test_aq.lua:  local sz, q, nn_q = quantiles:get_all()
-AX_EQUALS_B/lua/do_solver.lua:  local n, bptr, nn_bptr = b:get_all()
-AX_EQUALS_B/lua/do_solver.lua:    local Ai_len, Ai_chunk, nn_Ai_chunk = A[i]:get_all()
-AX_EQUALS_B/test/test_solver.lua:  local _, b_new_chunk, _ = b_new:get_all()
-GET/lua/get_val_by_idx.lua:    local f2_len, f2_ptr = y:get_all()
-GET/lua/DEPRECATED/get_idx_by_val.lua:  local f2_len, f2_ptr = y:get_all()
-LOAD_CSV/test/testcases/handle_category.lua:      status, len, base_data, nn_data = pcall(ret[col_name].get_all, ret[col_name])
-MM/lua/mv_mul.lua:      y_len, yptr, nn_yptr = y:get_all()
-PCA/lua/eigen.lua:    local x_len, xptr, nn_xptr = X[xidx]:get_all()
-PCA/lua/corr_mat.lua:    local x_len, xptr, nn_xptr = X[xidx]:get_all()
-======================================

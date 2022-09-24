@@ -685,7 +685,6 @@ static int l_vctr_add1( lua_State *L)
     itmp = get_width_c_qtype(qtype);
   }
   width = (uint32_t)itmp;
-  if ( width <= 0 ) { go_BYE(-1); }
   // need to keep 1 char for nullc when qtype == SC 
   if ( qtype == SC ) { if ( width < 2 ) { go_BYE(-1); } }
   //-------------------------------------------
