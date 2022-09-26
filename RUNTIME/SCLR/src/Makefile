@@ -61,9 +61,12 @@ CMEM_SO = ../../CMEM/src/libcmem.so
 ${CMEM_SO} :
 	make -C ../../CMEM/src/
 
+CGUTILS_SO = ../../../QJIT/GUTILS/libcgutils.so
+	
+${CGUTILS_SO} :
 
 libsclr.so:  ${GEN_SRC} ${EXT_OBJ} ${OBJ} outer_eval_cmp.c 
-	gcc  ${EXT_OBJ} ${OBJ} -shared -o libsclr.so
+	gcc  ${EXT_OBJ} ${OBJ} -shared -o libsclr.so ${CGUTILS_SO}
 
 #------------------------------------------------------
 _eval_arith.c: gen_arith.lua
@@ -74,4 +77,3 @@ _eval_cmp.c: gen_cmp.lua
 	luajit gen_cmp.lua
 _outer_eval_cmp.c: gen_cmp.lua
 	luajit gen_cmp.lua
-

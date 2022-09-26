@@ -30,8 +30,10 @@ const_B1(
   if ( ( nXprime * 64 ) != nX ) {
     // Now set nX-Xprime least significant bits to 1 
     lval = 0; 
-    for ( unsigned int k = 0; k < nX - nXprime; k++  ) { 
-      lval = ( lval << 1 ) | 1 ;
+    if ( lval ) { 
+      for ( unsigned int k = 0; k < nX - nXprime; k++  ) { 
+        lval = ( lval << 1 ) | 1 ;
+      }
     }
     X[nXprime] = 0; // set to 0
     X[nXprime] = lval;

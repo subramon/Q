@@ -45,17 +45,21 @@ vctr_get1(
   uint32_t num_in_chnk = g_chnk_hmap.bkts[chnk_where_found].val.num_elements;
   if ( (chnk_off+1) > num_in_chnk ) { go_BYE(-1); } // TODO Check boundary
   // offset the pointer to the base of the chunk
-  data += (width * chnk_off);
 
   if ( qtype == SC ) { 
+    data += (width * chnk_off);
     if ( data[width-1] != '\0' ) { go_BYE(-1); } 
     ptr_sclr->val.str = malloc(width * sizeof(char));
     return_if_malloc_failed(ptr_sclr->val.str);
     memcpy(ptr_sclr->val.str, data, width); 
   }
   else if ( qtype == B1 ) { 
+    // Note that we do NOT offset data over here
+    ptr_sclr->qtype = BL;
+    ptr_sclr->val.bl = get_bit_u64((uint64_t *)data, chnk_off); 
   }
   else { 
+    data += (width * chnk_off);
     memcpy(&(ptr_sclr->val), data, width); 
   }
   // Following is needed because chnk_get_data increments num_readers

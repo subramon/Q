@@ -86,7 +86,7 @@ static int l_sclr_reincarnate(lua_State *L) {
   strncpy(op_str_buf, "Scalar.new(", OP_BUF_LEN);
   switch ( qtype ) { 
     case BL : 
-    snprintf(buf, BUF_LEN, "%s", ptr_sclr->val.b1 ? "true" : "false");
+    snprintf(buf, BUF_LEN, "%s", ptr_sclr->val.bl ? "true" : "false");
     break;
     case I1 : 
     snprintf(buf, BUF_LEN, "%" PRI1, ptr_sclr->val.i1);
@@ -133,7 +133,7 @@ static int l_sclr_to_num( lua_State *L) {
   SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
   qtype_t qtype = ptr_sclr->qtype;
   switch ( qtype ) { 
-    case BL : lua_pushnumber(L, ptr_sclr->val.b1); break;
+    case BL : lua_pushnumber(L, ptr_sclr->val.bl); break;
     case I1 : lua_pushnumber(L, ptr_sclr->val.i1); break;
     case I2 : lua_pushnumber(L, ptr_sclr->val.i2); break;
     case I4 : lua_pushnumber(L, ptr_sclr->val.i4); break;
@@ -174,7 +174,7 @@ static int l_sclr_to_str( lua_State *L) {
   qtype_t qtype = ptr_sclr->qtype;
   switch ( qtype ) { 
     case BL : 
-      nw = snprintf(buf, BUFLEN, "%s", ptr_sclr->val.b1 ? "true" : "false");
+      nw = snprintf(buf, BUFLEN, "%s", ptr_sclr->val.bl ? "true" : "false");
       break;
     case I1 : nw = snprintf(buf, BUFLEN, "%d", ptr_sclr->val.i1); break;
     case I2 : nw = snprintf(buf, BUFLEN, "%d", ptr_sclr->val.i2); break;
@@ -479,7 +479,7 @@ static int l_sclr_new( lua_State *L) {
     case DATA_AS_CMEM : 
       switch ( qtype )  {
         case BL : 
-          ptr_sclr->val.b1 = ((bool *)ptr_cmem->data)[0];
+          ptr_sclr->val.bl = ((bool *)ptr_cmem->data)[0];
           break;
         case I1 : 
           ptr_sclr->val.i1 = ((int8_t *)ptr_cmem->data)[0];
@@ -506,7 +506,7 @@ static int l_sclr_new( lua_State *L) {
       break;
     case DATA_AS_BOOL : 
       switch ( qtype ) { 
-        case BL : ptr_sclr->val.b1 = bool_val; break;
+        case BL : ptr_sclr->val.bl = bool_val; break;
         default : go_BYE(-1); break; 
       }
       break;
@@ -516,7 +516,7 @@ static int l_sclr_new( lua_State *L) {
     case DATA_AS_STR : 
       switch ( qtype )  {
         case BL :  
-          status = txt_to_BL(str_val, &(ptr_sclr->val.b1)); 
+          status = txt_to_BL(str_val, &(ptr_sclr->val.bl)); 
           break;
         case I1 : 
           status = txt_to_I1(str_val, &(ptr_sclr->val.i1)); 

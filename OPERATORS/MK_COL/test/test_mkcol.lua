@@ -25,10 +25,14 @@ tests.t2 = function()
   assert(col:has_nulls() == true)
   assert(col:name() == "my test name")
   local uqid = col:uqid()
-  local nn_col = col:get_nulls()
+  assert(col:qtype() == "I4")
+  --===================================
+  local nn_col = assert(col:get_nulls())
   assert(type(nn_col) == "lVector")
+  assert(nn_col:has_nulls() == false)
   local nn_uqid = nn_col:uqid()
   assert(nn_col:qtype() == "BL")
+  --=====================================
   assert(nn_col:num_elements() == col:num_elements())
   for i = 1, col:num_elements() do  
     local x, nn_x = col:get1(i-1)

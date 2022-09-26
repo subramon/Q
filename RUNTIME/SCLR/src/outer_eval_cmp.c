@@ -16,7 +16,7 @@ static int l_sclr_eq(lua_State *L)
   qtype_t qtype = s1->qtype;
   if ( s2->qtype != qtype ) { goto BYE; }
   switch ( qtype ) { 
-    case BL : if ( s1->val.b1  == s2->val.b1 ) { bval = true; } break;
+    case BL : if ( s1->val.bl  == s2->val.bl ) { bval = true; } break;
     case I1 : if ( s1->val.i1  == s2->val.i1 ) { bval = true; }  break; 
     case I2 : if ( s1->val.i2  == s2->val.i2 ) { bval = true; }  break; 
     case I4 : if ( s1->val.i4  == s2->val.i4 ) { bval = true; }  break; 
@@ -52,7 +52,7 @@ static int l_sclr_neq(lua_State *L)
   qtype_t qtype = s1->qtype;
   if ( s2->qtype != qtype ) { goto BYE; }
   switch ( qtype ) { 
-    case BL : if ( s1->val.b1  != s2->val.b1 ) { bval = true; } break;
+    case BL : if ( s1->val.bl  != s2->val.bl ) { bval = true; } break;
     case I1 : if ( s1->val.i1  != s2->val.i1 ) { bval = true; }  break; 
     case I2 : if ( s1->val.i2  != s2->val.i2 ) { bval = true; }  break; 
     case I4 : if ( s1->val.i4  != s2->val.i4 ) { bval = true; }  break; 

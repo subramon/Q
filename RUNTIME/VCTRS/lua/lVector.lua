@@ -101,7 +101,13 @@ function lVector:persist()
 end
 function lVector:eov()
   local status = cVector.eov(self._base_vec)
-  if ( self._nn_vec ) then status = cVector.eov(self._nn_vec) end 
+  local nn_vector = self._nn_vec
+  if ( nn_vector ) then
+    assert(type(nn_vector) == "lVector")
+    if ( nn_vector ) then 
+      status = cVector.eov(nn_vector._base_vec) 
+    end 
+  end
   -- TODO P1 Should we get rid of chunk_num now ?
   self._generator = nil -- IMPORTANT, we no longer have a generator 
   return self
@@ -211,7 +217,10 @@ function lVector.new(args)
       nn_args.memo_len  = args.memo_len 
     end
     ----------------------------------- 
-    vector._nn_vec = assert(cVector.add1(nn_args))
+    local nn_vector = setmetatable({}, lVector)
+    nn_vector._base_vec = assert(cVector.add1(nn_args))
+    nn_vector._qtype = "BL" -- TODO P2 Consider switch to B1 
+    vector._nn_vec = nn_vector 
   end 
   --=================================================
   return vector
@@ -261,9 +270,17 @@ function lVector:put1(sclr, nn_sclr)
     assert(nn_sclr:qtype() == "BL") 
   end
   --========================
+  -- TODO P3 Take out debugging checks belo
+  local n1 = self:num_elements() 
   assert(cVector.put1(self._base_vec, sclr))
-  if ( self._nn_vec ) then 
-    assert(cVector.put1(self._nn_vec, nn_sclr))
+  local n2 = self:num_elements() 
+  assert(n1+1 == n2)
+  local nn_vector = self._nn_vec
+  if ( nn_vector ) then 
+    local nn_n1 = nn_vector:num_elements() 
+    assert(cVector.put1(nn_vector._base_vec, nn_sclr))
+    local nn_n2 = nn_vector:num_elements() 
+    assert(nn_n1+1 == nn_n2)
   end
 end
 
@@ -303,12 +320,12 @@ function lVector:get1(elem_idx)
   if (elem_idx < 0) then return nil end
   local sclr = cVector.get1(self._base_vec, elem_idx)
   if ( type(sclr) ~= "nil" ) then assert(type(sclr) == "Scalar") end
-  if ( self._nn_vec ) then 
-    nn_sclr = cVector.get1(self._nn_vec, elem_idx)
-    assert(type(nn_sclr) == type(sclr))
-    if ( nn_sclr ) then
-      assert(nn_sclr:qtype() == "BL")
-    end
+  local nn_vector = self._nn_vec
+  if ( nn_vector ) then
+    assert(type(nn_vector) == "lVector")
+    nn_sclr = cVector.get1(nn_vector._base_vec, elem_idx)
+    assert(type(nn_sclr) == "Scalar") 
+    assert(nn_sclr:qtype() == "BL") -- TODO P2 Consider switching to B1
   end
   return sclr, nn_sclr
 end

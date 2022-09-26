@@ -65,8 +65,14 @@ vctr_chk(
   if ( qtype >= NUM_QTYPES ) { go_BYE(-1); } 
   if ( qtype <= Q0 ) { go_BYE(-1); } 
   uint32_t width           = vctr_val.width;
+  // Unfortunately, we have some special casing to do here
   if ( qtype != SC ) {
-    if ( get_width_c_qtype(qtype) != (int)width ) { go_BYE(-1); }
+    if ( qtype == B1 ) { 
+      if  ( width != 0 ) { go_BYE(-1); }
+    }
+    else {
+      if ( get_width_c_qtype(qtype) != (int)width ) { go_BYE(-1); }
+    }
   }
   else {
     if  ( width < 2 ) { go_BYE(-1); }

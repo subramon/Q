@@ -45,6 +45,9 @@ OBJS = $(SRCS:.c=.o)
 	$(CC) -c -o $@ $< ${QC_FLAGS} ${DFLAGS} $(INCS) -DGLOBALS
 # GLOBALS needed for g_mem_used
 
+CGUTILS_SO = ../../../QJIT/GUTILS/libcgutils.so
+	
+${CGUTILS_SO} :
 libcmem.so:   ${OBJS} 
-	$(CC) ${OBJS} -shared -o libcmem.so
+	$(CC) ${OBJS} -shared -o libcmem.so ${CGUTILS_SO}
 	cp libcmem.so ${Q_ROOT}/lib/libcmem.so

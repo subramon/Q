@@ -51,6 +51,36 @@ BYE:
 }
 
 //----------------------------------------
+static int l_lgutils_dsk_used( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 0 ) { go_BYE(-1); }
+  lua_pushnumber(L, g_dsk_used); 
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
+//----------------------------------------
+static int l_lgutils_mem_used( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 0 ) { go_BYE(-1); }
+  lua_pushnumber(L, g_mem_used); 
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
+//----------------------------------------
 static int l_lgutils_is_restore_session( 
     lua_State *L
     )
@@ -99,6 +129,8 @@ BYE:
 //----------------------------------------
 static const struct luaL_Reg lgutils_methods[] = {
     { "is_restore_session", l_lgutils_is_restore_session },
+    { "mem_used", l_lgutils_mem_used },
+    { "dsk_used", l_lgutils_dsk_used },
     { "data_dir",           l_lgutils_data_dir },
     { "meta_dir",           l_lgutils_meta_dir },
     { "save_session",       l_lgutils_save_session },
@@ -107,6 +139,8 @@ static const struct luaL_Reg lgutils_methods[] = {
  
 static const struct luaL_Reg lgutils_functions[] = {
     { "is_restore_session", l_lgutils_is_restore_session },
+    { "mem_used", l_lgutils_mem_used },
+    { "dsk_used", l_lgutils_dsk_used },
     { "data_dir",           l_lgutils_data_dir },
     { "meta_dir",           l_lgutils_meta_dir },
     { "save_session",       l_lgutils_save_session },

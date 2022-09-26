@@ -3,6 +3,7 @@ require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local qcfg       = require 'Q/UTILS/lua/qcfg'
 local Scalar     = require 'libsclr'
+local lgutils    = require 'liblgutils'
 
 local blksz = qcfg.max_num_in_chunk 
 local tests = {}
@@ -61,19 +62,22 @@ tests.t1 = function()
   -- os.exit() -- WHY IS THIS NEEDED? 
 end
 tests.t2 = function() 
-  local len = blksz * 3 + 19;
-  local vals = { true, false }
+  local len = blksz + 19;
+  -- local vals = { true, false }
+  local vals = { false }
   local qtype = "B1"
   for _, val in pairs(vals) do 
     local c1 = Q.const( {val = val, qtype = qtype, len = len })
     c1:eval()
-    print("XXXXXXXXXXXXXXXXXXXXXXXXX")
-    c1:pr()
-    print("XXX===============XXXXXXX")
-    local sclr = Scalar.new(val, "BL")
-    print("testing const_B1 with value " .. tostring(val))
-    for i = 1, len do
-      assert(c1:get1(i-1) == sclr)
+    collectgarbage()
+    c1:set_name("vec_" .. tostring(val))
+    -- c1:pr()
+    local chk_sclr = Scalar.new(val, "BL")
+    for i = 65, len do
+      local sclr = c1:get1(i-1)
+      assert(type(sclr) == "Scalar")
+      assert(sclr:qtype() == "BL")
+      assert(sclr == chk_sclr)
     end
     assert(c1:num_elements() == len)
     assert(c1:qtype() == qtype)
@@ -81,6 +85,8 @@ tests.t2 = function()
     local status = pcall(c1.get1, len) -- deliberate error
     assert(not status)
     print("<<< STOP  Deliberate error")
+    c1 = nil
+    collectgarbage()
   end
   print("Test t2 succeeded")
 

@@ -33,10 +33,10 @@ vctr_add1(
   if  ( max_num_in_chnk == 0 ) { 
     max_num_in_chnk = Q_VCTR_MAX_NUM_IN_CHNK;
   }
-  if ( qtype == B1 ) {
-    width = max_num_in_chnk / 8;
+  // Unfortunate special case for B1 
+  if ( qtype != B1 ) {
+    if ( width == 0 ) { go_BYE(-1); }
   }
-  if ( width == 0 ) { go_BYE(-1); }
   //-------------------------------------------
   vctr_rs_hmap_val_t val = 
     { .qtype = qtype, .max_num_in_chnk = max_num_in_chnk, 
