@@ -34,6 +34,15 @@ uint64_t g_mem_used;
 uint64_t g_mem_allowed;
 uint64_t g_dsk_used;
 uint64_t g_dsk_allowed;
+// For libcgutils not to complain
+bool g_mutex_created;
+pthread_cond_t  g_mem_cond;
+pthread_mutex_t g_mem_mutex;
+int g_L_status;
+int g_halt;
+int g_webserver_interested;
+char *g_data_dir_root;
+char *g_meta_dir_root;
 
 int 
 main(

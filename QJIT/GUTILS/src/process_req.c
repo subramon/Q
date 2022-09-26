@@ -9,10 +9,10 @@
 extern int g_webserver_interested;
 extern int g_L_status;
 extern int g_halt;
-extern lua_State *L; 
+extern lua_State *L;  // IMPORTANT: This comes from luajit.c 
 // for out of band 
-uint64_t g_mem_allowed; 
-uint64_t g_mem_used;
+extern uint64_t g_mem_allowed; 
+extern uint64_t g_mem_used;
 
 int
 process_req(

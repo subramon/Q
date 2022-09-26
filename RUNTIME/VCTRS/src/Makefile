@@ -119,7 +119,7 @@ core_libvctr.so :  ${OBJS} \
 	${UTILS_SO} 
 	gcc ${OBJS}  \
 	-shared -o core_libvctr.so \
-	${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${GUTILS_SO} ${UTILS_SO}
+	${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${GUTILS_SO} ${UTILS_SO} 
 	cp core_libvctr.so ${Q_ROOT}/lib/
 #-------------------------------------------
 EXT_SRCS := cVector.c
@@ -137,13 +137,14 @@ libvctr.so: ${EXT_OBJS} core_libvctr.so cVector.o
 
 #-------------------------------------------
 ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so 
-	gcc ${TEST1_OBJS} -o ut1 \
+	gcc ${TEST1_OBJS} \
 	core_libvctr.so \
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
 	${TMPL_HMAP_SO} \
+	${UTILS_SO} \
 	${GUTILS_SO} \
-	${Q_ROOT}/lib/libutils.so
+	-o ut1  
 #-------------------------------------------
 ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST2_OBJS} -o ut2 \
@@ -151,9 +152,9 @@ ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
 	${TMPL_HMAP_SO} \
+	${UTILS_SO} \
 	${GUTILS_SO} \
-	${Q_ROOT}/lib/libutils.so \
-	-lm 
+	-lm
 #-------------------------------------------
 
 
