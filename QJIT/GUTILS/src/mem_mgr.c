@@ -9,7 +9,7 @@ extern int g_halt;
 extern pthread_cond_t  g_mem_cond;
 extern pthread_mutex_t g_mem_mutex;
 // STOP  globals
-void *
+_Noreturn void *
 mem_mgr(
     void *arg
     )

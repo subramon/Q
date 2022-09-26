@@ -69,7 +69,7 @@ CURR_PATH=`pwd`
 cd $Q_SRC_ROOT
 cd ../
 #- first arg to LUA_PATH is for q_meta used to restore sessions
-export LUA_PATH="${Q_ROOT}/meta/?.lua;`pwd`/?.lua;`pwd`/?/init.lua;;"
+export LUA_PATH="${Q_ROOT}/meta/?.lua;${Q_ROOT}/config/?.lua;`pwd`/?.lua;`pwd`/?/init.lua;;"
 export LUA_CPATH="${Q_ROOT}/lib/?.so;;"
 cd $CURR_PATH
 echo "LUA_PATH: $LUA_PATH"

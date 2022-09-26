@@ -3,17 +3,6 @@
 #include <stdbool.h>
 #include <inttypes.h>
 #include "q_macros.h"
-#include "web_struct.h"
-#include "mem_mgr_struct.h"
-#include "foo.h"
-#include "webserver.h"
-#include "mem_mgr.h"
-
-#include "vctr_rs_hmap_struct.h"
-#include "vctr_rs_hmap_instantiate.h"
-
-#include "chnk_rs_hmap_struct.h"
-#include "chnk_rs_hmap_instantiate.h"
 
 #define MAIN_PGM
 #include "qjit_globals.h"
@@ -657,14 +646,14 @@ int main(int argc, char **argv)
 
   smain.argc = argc;
   smain.argv = argv;
-  printf("Starting\n"); 
+  printf("QJIT Starting\n"); 
   status = lua_cpcall(L, pmain, NULL);
   report(L, status);
   lua_close(L);
   // START: RAMESH
   int itmp = 1; __atomic_store(&g_halt, &itmp, 0);
   pthread_cond_signal(&g_mem_cond);
-  printf("Wrapping up\n"); // RAMESH
+  printf("QJIT Wrapping up\n"); // RAMESH
   // Wait for other threads to join
   if ( g_is_webserver   ) { pthread_join(g_webserver,   NULL); }
   if ( g_is_out_of_band ) { pthread_join(g_out_of_band, NULL); }

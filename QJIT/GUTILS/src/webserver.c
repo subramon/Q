@@ -6,7 +6,7 @@
 #include "webserver.h"
 
 // globals 
-void *
+_Noreturn void *
 webserver(
     void *arg
     )

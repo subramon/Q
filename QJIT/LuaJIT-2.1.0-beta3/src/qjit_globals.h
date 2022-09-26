@@ -1,9 +1,14 @@
+#include <pthread.h>
 #include "qjit_consts.h"
+#include "web_struct.h"
+#include "mem_mgr_struct.h"
 #ifdef MAIN_PGM
 #define my_extern 
 #else
 #define my_extern extern
 #endif
+#include "vctr_rs_hmap_struct.h"
+#include "chnk_rs_hmap_struct.h"
 // Place globals in this file 
 my_extern int g_halt;
 my_extern int g_webserver_interested; 
@@ -46,3 +51,6 @@ web_info_t g_out_of_band_info;
 bool           g_is_mem_mgr;
 pthread_t      g_mem_mgr;
 mem_mgr_info_t g_mem_mgr_info; 
+// configs for hash tables 
+rs_hmap_config_t g_vctr_hmap_config; 
+rs_hmap_config_t g_chnk_hmap_config; 

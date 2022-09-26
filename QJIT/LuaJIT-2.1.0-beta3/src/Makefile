@@ -706,16 +706,6 @@ include Makefile.dep
 # Target file rules.
 ##############################################################################
 
-RS_SRCS := rs_mmap.c
-RS_SRCS += extract_api_args.c
-RS_SRCS += get_req_type.c
-RS_SRCS += handler.c
-RS_SRCS += process_req.c
-RS_SRCS += webserver.c
-RS_SRCS += mem_mgr.c
-
-RS_OBJS = $(RS_SRCS:.c=.o)
-
 RS_LIBS := -lpthread
 RS_LIBS += -levent
 RS_LIBS += ${Q_ROOT}/lib/libcgutils.so 
@@ -734,11 +724,10 @@ $(LUAJIT_SO): $(LJVMCORE_O)
 	$(Q)$(TARGET_LD) $(TARGET_ASHLDFLAGS) -o $@ $(LJVMCORE_DYNO) $(TARGET_ALIBS)
 	$(Q)$(TARGET_STRIP) $@
 
-$(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP) ${RS_OBJS}
+$(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP) 
 	$(E) "LINK      $@"
 	$(Q)$(TARGET_LD) $(TARGET_ALDFLAGS) \
 		-o $@ $(LUAJIT_O) \
-		${RS_OBJS} \
 		$(TARGET_O) $(TARGET_ALIBS) \
 		${RS_LIBS}
 	$(Q)$(TARGET_STRIP) $@
