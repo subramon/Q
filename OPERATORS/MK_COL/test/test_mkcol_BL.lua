@@ -2,6 +2,7 @@
 require 'Q/UTILS/lua/strict'
 local Scalar = require 'libsclr'
 local mk_col = require 'Q/OPERATORS/MK_COL/lua/mk_col'
+local cVector = require 'libvctr'
 
 local tests = {}
 tests.t1 = function() 
@@ -13,6 +14,7 @@ tests.t1 = function()
     local s = Scalar.new(input[i], "BL")
     assert(col:get1(i-1) == s)
   end
+  cVector.check_all(true, true)
   print("Test t1 succeeded")
 end
 tests.t2 = function() 
@@ -26,6 +28,7 @@ tests.t2 = function()
     assert(type(x) == "Scalar")
     assert(x:to_str() == tostring(input[i]))
   end
+  cVector.check_all(true, true)
   print("Test t2 succeeded")
 end
 tests.t1()

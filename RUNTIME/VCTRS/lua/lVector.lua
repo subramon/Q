@@ -440,10 +440,15 @@ function lVector:eval()
 end
 
 function lVector:pr(opfile, lb, ub, format)
-  local nn = self._nn_vec
-  if ( nn == nil ) then
-    nn = lVector.null()
+  -- Note that nn_vec can be number or Vector
+  local nn_vector = self._nn_vec
+  local nn_vec = 0 -- => no null vector
+  if ( nn_vector ~= nil ) then
+    assert(type(nn_vector) == "lVector")
+    nn_vec = nn_vector._base_vec
+    assert(type(nn_vec) == "Vector")
   end
+  --=================================
   if ( ( opfile )  and ( #opfile > 0 ) ) then
     assert(type(opfile) == "string")
   else
@@ -472,7 +477,7 @@ function lVector:pr(opfile, lb, ub, format)
   end
   --=================================
   -- assert(cVector.pr(self._base_vec, self._nn_vec, opfile, lb, ub))
-  assert(cVector.pr(self._base_vec, nn, opfile, lb, ub, format))
+  assert(cVector.pr(self._base_vec, nn_vec, opfile, lb, ub, format))
   return true
 end
 function lVector:get_meta(key)

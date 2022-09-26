@@ -117,8 +117,13 @@ static int l_vctr_print( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE*)luaL_checkudata(L, 1, "Vector");
   uqid = ptr_v->uqid;
 
-  VCTR_REC_TYPE *ptr_nn_v = (VCTR_REC_TYPE*)luaL_checkudata(L, 2, "Vector");
-  nn_uqid = ptr_nn_v->uqid;
+  if ( lua_isnumber(L, 2) ) { 
+    nn_uqid = 0; // indicating null 
+  }
+  else {
+    VCTR_REC_TYPE *ptr_nn_v = (VCTR_REC_TYPE*)luaL_checkudata(L, 2, "Vector");
+    nn_uqid = ptr_nn_v->uqid;
+  }
 
   if ( lua_isstring(L, 3) ) { 
     opfile = luaL_checkstring(L, 3);
@@ -563,7 +568,8 @@ static int l_vctr_free( lua_State *L) {
   }
   */
   if (  ptr_v->uqid == 0 ) { 
-    printf("STRANGE! Vector uqid == 0 \n"); goto BYE;
+    // This is because of vctr_null() Not dangerous 
+    goto BYE;
   }
   status = vctr_del(ptr_v->uqid, &is_found); cBYE(status); 
   // TODO P2 Investigate why Lua is deleting a Vector with uqid == 0

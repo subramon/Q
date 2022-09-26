@@ -2,6 +2,7 @@
 require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local Scalar  = require 'libsclr'
+local cVector = require 'libvctr'
 local tests = {}
 tests.t1 = function()
   -- input table of values 1,2,3 of type I4, given to mk_col
@@ -15,6 +16,7 @@ tests.t1 = function()
     assert(x == Scalar.new(i, "I4")) -- dependent on input values
   end
   assert(col:has_nulls() == false)
+  cVector.check_all(true, true)
   print("Test t1 succeeded")
 end   
 tests.t2 = function()
@@ -47,6 +49,7 @@ tests.t2 = function()
     end
   end
   assert(col:has_nulls())
+  cVector.check_all(true, true)
   print("Test t2 succeeded")
 end   
 -- return tests

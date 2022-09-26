@@ -2,8 +2,6 @@ where do we keep max_num_in_chunk? Lua or C. Be consistent
 What of init_globals() needs to be saved in Q.save() 
   and restored after that
   g_dsk_used should be checked/restored
-Make sure that cVector:check() is done more often and uses 
-  is_at_rest = true whenever possible
 Make sure that if you restore but do not save, files get deleted
 #=======================
 

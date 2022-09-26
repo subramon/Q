@@ -3,6 +3,7 @@ require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local qcfg       = require 'Q/UTILS/lua/qcfg'
 local Scalar     = require 'libsclr'
+local cVector    = require 'libvctr'
 local lgutils    = require 'liblgutils'
 
 local blksz = qcfg.max_num_in_chunk 
@@ -57,7 +58,7 @@ tests.t1 = function()
   -- make a few more vectors just for fun
   local c3 = Q.const(args):eval()
   local c4 = Q.const(args):eval()
-  assert(c1:check(false, true)) -- checking on all vectors
+  assert(cVector.check_all(true, true)) -- checking on all vectors
   print("Test t1 succeeded")
   -- os.exit() -- WHY IS THIS NEEDED? 
 end
@@ -88,6 +89,7 @@ tests.t2 = function()
     c1 = nil
     collectgarbage()
   end
+  assert(cVector.check_all(true, true)) -- checking on all vectors
   print("Test t2 succeeded")
 
 end
@@ -100,13 +102,13 @@ tests.t3 = function() -- this is a stress test
   c1:memo(2)
   c1:eval()
   assert(c1:is_eov())
-  assert(c1:check(false, true)) -- checking on all vectors
   print("Test t3 succeeded")
+  assert(cVector.check_all(true, true)) -- checking on all vectors
   os.exit() -- WHY IS THIS NEEDED?
 end
--- WORKS tests.t1()
+tests.t1()
 tests.t2()
--- WORKS tests.t3()
+tests.t3()
 --[[
 return tests
 --]]
