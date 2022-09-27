@@ -8,9 +8,9 @@ vctr_get_name(
     uint32_t uqid
     );
 extern int
-vctr_get_max_num_in_chnk(
+vctr_get_max_num_in_chunk(
     uint32_t uqid,
-    uint32_t *ptr_max_num_in_chnk
+    uint32_t *ptr_max_num_in_chunk
     );
 extern int
 vctr_get_memo_len(

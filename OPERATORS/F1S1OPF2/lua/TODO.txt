@@ -1,3 +1,6 @@
+test is_prev with both B1 and BL
+
+
 Fix the Makefile
 
 

@@ -1,8 +1,8 @@
 local gen_code = require("Q/UTILS/lua/gen_code")
-local qtypes = { 'I1', 'I2', 'I4', 'I8','F4', 'F8' }
+local qtypes = { 'I1', 'I2', 'I4', 'I8', 'F4', 'F8' }
 local comparisons = { 'lt', 'gt', 'leq', 'geq', 'eq', 'neq' }
 
-local optargs = { default = 1 }
+local optargs = { default = false, out_qtype = "BL", }
 local num_produced = 0
 local sp_fn = assert(require("is_prev_specialize"))
 for i, qtype in ipairs(qtypes) do 

@@ -16,6 +16,7 @@ require "Q/UTILS/lua/pack"
 require "Q/UTILS/lua/unpack"
 require "Q/UTILS/lua/set_memo"
 
+require "Q/OPERATORS/F1S1OPF2/lua/is_prev"
 --[[
 require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
 require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
@@ -46,7 +47,6 @@ require "Q/OPERATORS/CLONE/lua/clone"
 require "Q/OPERATORS/DROP_NULLS/lua/drop_nulls"
 
 require "Q/OPERATORS/F1OPF2F3/lua/f1opf2f3"
-require "Q/OPERATORS/F1S1OPF2/lua/is_prev"
 
 require "Q/OPERATORS/GET/lua/get_val_by_idx"
 require "Q/OPERATORS/GET/lua/set_sclr_val_by_idx"

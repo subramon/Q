@@ -426,18 +426,18 @@ BYE:
   return 3;
 }
 //----------------------------------------
-static int l_vctr_max_num_in_chnk( lua_State *L) {
+static int l_vctr_max_num_in_chunk( lua_State *L) {
   int status = 0;
   // get args from Lua 
   int num_args = lua_gettop(L); 
   if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  uint32_t max_num_in_chnk;;
+  uint32_t max_num_in_chunk;;
 
-  status = vctr_get_max_num_in_chnk(ptr_v->uqid, &max_num_in_chnk);
+  status = vctr_get_max_num_in_chunk(ptr_v->uqid, &max_num_in_chunk);
   cBYE(status);
 
-  lua_pushnumber(L, max_num_in_chnk);
+  lua_pushnumber(L, max_num_in_chunk);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -763,7 +763,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "qtype", l_vctr_get_qtype },
     { "num_elements", l_vctr_num_elements },
     { "num_readers", l_vctr_num_readers },
-    { "max_num_in_chnk", l_vctr_max_num_in_chnk },
+    { "max_num_in_chunk", l_vctr_max_num_in_chunk },
     { "memo_len", l_vctr_memo_len },
     { "ref_count", l_vctr_ref_count },
     { "uqid", l_vctr_uqid },
@@ -805,7 +805,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "qtype", l_vctr_get_qtype },
     { "num_elements", l_vctr_num_elements },
     { "num_readers", l_vctr_num_readers },
-    { "max_num_in_chnk", l_vctr_max_num_in_chnk },
+    { "max_num_in_chunk", l_vctr_max_num_in_chunk },
     { "uqid", l_vctr_uqid },
     { "memo_len", l_vctr_memo_len },
     { "ref_count", l_vctr_ref_count },

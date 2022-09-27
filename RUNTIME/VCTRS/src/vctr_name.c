@@ -49,9 +49,9 @@ BYE:
   return NULL;
 }
 int
-vctr_get_max_num_in_chnk(
+vctr_get_max_num_in_chunk(
     uint32_t uqid,
-    uint32_t *ptr_max_num_in_chnk
+    uint32_t *ptr_max_num_in_chunk
     )
 {
   int status = 0;
@@ -63,7 +63,7 @@ vctr_get_max_num_in_chnk(
   if ( !is_found ) { go_BYE(-1); } 
   if ( val.is_trash ) { go_BYE(-1); } 
   vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap.bkts;
-  *ptr_max_num_in_chnk = bkts[where].val.max_num_in_chnk;
+  *ptr_max_num_in_chunk = bkts[where].val.max_num_in_chnk;
 BYE:
   return status;
 }

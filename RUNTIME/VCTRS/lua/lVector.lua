@@ -63,9 +63,9 @@ function lVector:memo_len()
   return memo_len
 end
 
-function lVector:max_num_in_chnk()
-  local max_num_in_chnk = cVector.max_num_in_chnk(self._base_vec)
-  return max_num_in_chnk
+function lVector:max_num_in_chunk()
+  local max_num_in_chunk = cVector.max_num_in_chunk(self._base_vec)
+  return max_num_in_chunk
 end
 
 function lVector:num_elements()
@@ -160,9 +160,9 @@ function lVector.new(args)
     assert(args.uqid > 0)
     vector._base_vec = assert(cVector.rehydrate(args))
     -- get following from cVector
-    -- max_num_in_chnk
+    -- max_num_in_chunk
     -- memo_len
-    vector._max_num_in_chnk = cVector.max_num_in_chnk(vector._base_vec)
+    vector._max_num_in_chunk = cVector.max_num_in_chunk(vector._base_vec)
     vector._memo_len        = cVector.memo_len(vector._base_vec)
     vector._qtype           = cVector.qtype(vector._base_vec)
     -- If vector has nulls, do following 
