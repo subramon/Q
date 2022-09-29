@@ -362,7 +362,7 @@ function lVector:get_chunk(chnk_idx)
       assert(type(buf) == "CMEM")
       self:put_chunk(buf, num_elements, nn_buf)
     end
-    --==============================
+    --==============================, NUmber of elements
     if ( num_elements < self._max_num_in_chunk ) then 
       -- nothing more to generate
       self:eov()  -- vector is at an end 
@@ -396,7 +396,10 @@ function lVector:eval()
     -- and the eval doesn't actually get the chunk for itself
     -- The -1 below is important. This is because get_chunk would have 
     -- called put_chunk which would have incremented chunk_num
-    if ( num_elements == 0 ) then 
+    -- TODO THINK. I added ( self._chunk_num > 0 ) 
+    -- to handle the zero element array case. Consider this caefully
+    if ( ( num_elements == 0 ) and ( self._chunk_num > 0 ) )  then
+      print("Ungetting " .. self._chunk_num .. " for " .. self:uqid())
       cVector.unget_chunk(self._base_vec, self._chunk_num-1)
       if ( self._nn_vec ) then 
         cVector.unget_chunk(self._nn_vec, self._chunk_num-1) 
@@ -493,11 +496,13 @@ function lVector:unset_meta(key)
   if ( self._meta[key] ) then 
     self._meta[key] = nil
   end
+  return self
 end
 function lVector:set_meta(key, value)
   assert(type(key) == "string")
   assert(value)
   self._meta[key] = value
+  return self
 end
 
 function lVector.null()

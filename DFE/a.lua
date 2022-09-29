@@ -1,39 +1,35 @@
 -- Create big table 
 T1 = Q.load_csv(...)
-for k, v in pairs(T1) do
-  v:eval()
-  break
-end
+for k, v in pairs(T1) do v:eval() break end
 -- create I8 composite key, ck,  from mdse_item_i and T.dist_loc_i
 local T1.ck = Q.concat(T.mdse_item_i, T.dist_loc_i)
 
-local T1.x = Q.is_prev(ck, "eq", { default_val = true})
+local T1.x = Q.is_prev(ck, "neq", { default_val = true})
 local n = ck:num_elements()
-local T1.idx = Q.idx(n)
+local T1.id = Q.seq({len = n, start = 0, by = 1, qtype = I8})
 local T2 = {}
-T2.lb = Q.where(T1.idx, T1.x)
-T2.ub = Q.shift(T1.lb, "up", { val = n})
+T2.lb = Q.where(T1.id, T1.x)
 T2.ck = Q.where(T1.ck, T1.x)
+-- conjoin T2.lb and T2.ck since they both depend on T1.x
+T2.ub = Q.shift(T1.lb, "up", { by = 1, newval = n })
+T2.ub:eval() -- materialize T2 with columns: {ck, lb, ub }
 
---== New data, call this T2
-local ck2 = Q.concat(T2.mdse_item_i, T2.dist_loc_i)
-local x2 = Q.a_in_b(ck1, ck2)
-local lb2 = Q.where(lb, x2)
-local ub2 = Q.where(ub, x2)
+--== New data, call this T4
+T4 = Q.load_csv(...)
+for k, v in pairs(T4) do v:eval() break end
+-- create composite key in T4
+local T4.ck = Q.concat(T4.mdse_item_i, T4.dist_loc_i)
+local T4.lb = Q.srt_join(T2.lb, T2.ck, T4.ck)
+local T4.ub = Q.srt_join(T2.lb, T2.ck, T4.ck)
 
---== select relevant rows in T1 
-local x = Q.expand_selection(lb2, ub2, n)
 --== copy relevant rows from T1 to T3 
 local T3 = {}
 for k, v in pairs(T1) do 
-  T3[k] = Q.where(T1.v.x) 
+  T3[k] = Q.where_ranges(T1.v, T4.lb, T4.ub)
 end
 -- conjoin T3
 -- materialize T3
-for k, v in pairs(T3) do
-  v:eval()
-  break
-end
+for k, v in pairs(T3) do v:eval() break end
 -- dump it out
 Q.print_csv(T3, { opfile = "xxx" } )
 

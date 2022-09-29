@@ -1,0 +1,71 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include "q_macros.h"
+#include "get_bit_u64.h"
+//START_FOR_CDEF
+extern int
+${fn}(
+      const ${a_ctype} * const A,
+      const bool * const B,
+      uint64_t *ptr_abidx,
+      uint64_t nA,
+      ${a_ctype} * restrict C,
+      uint64_t nC,
+      uint64_t *ptr_num_in_C
+      );
+//STOP_FOR_CDEF
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+
+int
+${fn}(
+      const ${a_ctype} * const A,
+      const bool * const B,
+      uint64_t *ptr_abidx,
+      uint64_t nA,
+      ${a_ctype} * restrict C,
+      uint64_t nC,
+      uint64_t *ptr_num_in_C
+      )
+{
+  int status = 0;
+  
+  // START: Basic checks on input parameters
+  if ( A == NULL ) { go_BYE(-1); }
+  if ( B == NULL ) { go_BYE(-1); }
+  if ( C == NULL ) { go_BYE(-1); }
+  if ( nA == 0 ) { go_BYE(-1); }
+  if ( nC == 0 ) { go_BYE(-1); }
+  if ( ptr_num_in_C == NULL ) { go_BYE(-1); }
+  if ( ptr_abidx == NULL ) { go_BYE(-1); }
+  uint64_t num_in_C = *ptr_num_in_C;
+  uint64_t abidx = *ptr_abidx;
+  if ( num_in_C > nC ) { 
+    go_BYE(-1); 
+  }
+  if ( abidx >= nA ) { go_BYE(-1); }
+  //-------------------------------
+  
+  for ( ; abidx < nA; abidx++ ) { 
+    if ( B[abidx] ) { 
+      if ( num_in_C == nC ) { break; }
+      C[num_in_C++] = A[abidx];
+    }
+  }
+  *ptr_num_in_C = num_in_C;
+  *ptr_abidx     = abidx;
+  if ( num_in_C > nC ) { go_BYE(-1); }
+  if ( abidx > nA ) { go_BYE(-1); }
+  //-------------------------------
+BYE:
+  return status;
+}
+   ]]
+}
