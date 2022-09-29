@@ -10,6 +10,13 @@ local qcfg     = require 'Q/UTILS/lua/qcfg'
 local cutils   = require 'libcutils'
 --==================
 
+-- IMPORTANT: Place things here that you are likely to need via ffi
+-- e.g., ffi.C.malloc, etc 
+ffi.cdef([[
+       void *memcpy(void *dest, const void *src, size_t n);
+       ]]);
+-- TODO P2 Why isn't malloc, free, ... here?
+
 -- to make sure we do not dynamically compile the same function twice
 local known_functions = {}
 -- what we will return

@@ -1,0 +1,7 @@
+Verify that B1 works 
+
+Verify that test_where_gen works
+
+Finish test_where.lua
+
+Slght ugliness in case where b's meta tells us that return nil

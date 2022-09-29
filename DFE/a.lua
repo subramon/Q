@@ -1,3 +1,15 @@
+-- DONE Q.load_csv
+-- TODO Test load_csv with null values
+-- TODO Test load_csv with TM data type 
+-- TODO Q.concat
+-- DONE Q.is_prev
+-- DONE Q.seq 
+-- DONE Q.where 
+-- TODO test conjoin
+-- TODO Q.shift
+-- TODO Q.srt_join
+-- TODO Q.where_ranges
+-- TODO Q.print_csv
 -- Create big table 
 T1 = Q.load_csv(...)
 for k, v in pairs(T1) do v:eval() break end
