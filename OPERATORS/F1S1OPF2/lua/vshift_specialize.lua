@@ -2,11 +2,8 @@ local ffi     = require 'ffi'
 local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
 local Scalar  = require 'libsclr'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local qcfg    = require 'Q/UTILS/lua/qcfg'
 local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
-local max_num_in_chunk = qcfg.max_num_in_chunk
-local q_src_root       = qcfg.q_src_root
 
 return function (
   f1,
@@ -14,7 +11,6 @@ return function (
   newval,
   optargs
   )
-  local tmpl = q_src_root .. "/OPERATORS/F1S1OPF2/lua/is_prev.tmpl"
   local subs = {}
   --===========================================
   assert(type(f1) == "lVector")
@@ -30,10 +26,13 @@ return function (
   --=================================
   -- when you shift, you introduce holes that are filled with newval
   if ( not newval ) then 
-    newval = Scalar.new(0, f1:qtype())
+    newval = Scalar.new(0, in_qtype)
+  end
+  if ( type(newval) == "number" ) then 
+    newval = Scalar.new(newval, in_qtype)
   end
   assert(type(newval) == "Scalar")
-  assert(newval:qtype() == f1:qtype()) -- TODO P4 relax limitation
+  assert(newval:qtype() == in_qtype) -- TODO P4 relax limitation
   --===========================================
   subs.in_qtype = in_qtype
   subs.in_ctype = cutils.str_qtype_to_str_ctype(in_qtype)
@@ -46,5 +45,5 @@ return function (
 
   subs.width = cutils.get_width_qtype(subs.out_qtype)
   subs.bufsz = subs.max_num_in_chunk * subs.width
-  return subs, tmpl
+  return subs
 end

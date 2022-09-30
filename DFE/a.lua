@@ -6,9 +6,9 @@
 -- DONE Q.seq 
 -- DONE Q.where 
 -- TODO test conjoin
--- TODO Q.shift
+-- DONE Q.vshift
 -- TODO Q.srt_join
--- TODO Q.where_ranges
+-- TODO Q.select_ranges
 -- TODO Q.print_csv
 -- Create big table 
 T1 = Q.load_csv(...)
@@ -23,7 +23,7 @@ local T2 = {}
 T2.lb = Q.where(T1.id, T1.x)
 T2.ck = Q.where(T1.ck, T1.x)
 -- conjoin T2.lb and T2.ck since they both depend on T1.x
-T2.ub = Q.shift(T1.lb, "up", { by = 1, newval = n })
+T2.ub = Q.vshift(T1.lb, 1, Scalar.new(n, T1.lb:qtype())
 T2.ub:eval() -- materialize T2 with columns: {ck, lb, ub }
 
 --== New data, call this T4
