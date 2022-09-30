@@ -1,5 +1,6 @@
-test is_prev with both B1 and BL
+test vshift with both up and down and with shift_by > 1
 
+test is_prev with both B1 and BL
 
 Fix the Makefile
 

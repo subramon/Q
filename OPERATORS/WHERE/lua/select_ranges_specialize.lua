@@ -13,12 +13,15 @@ return function (
   --===========================================
   assert(type(f1) == "lVector")
   subs.max_num_in_chunk = f1:max_num_in_chunk()
-  if ( optargs.max_num_in_chunk ) then 
-    assert(type(optargs.max_num_in_chunk) == "number")
-    assert(optargs.max_num_in_chunk > 0)
-    assert( ( ( optargs.max_num_in_chunk / 64 ) * 64 ) == 
-      optargs.max_num_in_chunk )
-    subs.max_num_in_chunk = optargs.max_num_in_chunk 
+  if ( optargs ) then 
+    assert(type(optargs) == "table")
+    if ( optargs.max_num_in_chunk ) then 
+      assert(type(optargs.max_num_in_chunk) == "number")
+      assert(optargs.max_num_in_chunk > 0)
+      assert( ( ( optargs.max_num_in_chunk / 64 ) * 64 ) == 
+        optargs.max_num_in_chunk )
+      subs.max_num_in_chunk = optargs.max_num_in_chunk 
+    end 
   end 
   local in_qtype = f1:qtype()
   assert(f1:has_nulls() == false)   -- limitation of current implementation
