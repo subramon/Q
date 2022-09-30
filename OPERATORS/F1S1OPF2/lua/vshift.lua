@@ -13,6 +13,7 @@ local function vshift(f1, shift_by, newval, optargs )
   --=================================
   local sp_fn_name = "Q/OPERATORS/F1S1OPF2/lua/vshift_specialize"
   local spfn = assert(require(sp_fn_name))
+
   local subs = assert(spfn(f1, shift_by, newval, optargs ))
   assert(type(subs) == "table")
   --=================================
