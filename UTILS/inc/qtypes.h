@@ -84,4 +84,8 @@ extern bool
 is_qtype(
     const char *const str_qtype
     );
+extern const char *
+str_qtype_to_str_ispctype(
+    const char * const str_qtype
+    );
 #endif // __QTYPES_H

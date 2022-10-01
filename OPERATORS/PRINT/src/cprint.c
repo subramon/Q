@@ -1,28 +1,18 @@
 #include "q_incs.h"
+#include "qtypes.h"
 #include "cprint.h"
 #include "get_bit_u64.h"
 
-//-------- for fldtypes as enums
-// CAUTION: Needs to be in sync with Q/UTILS/lua/q_consts.lua
-#define QI1 1 
-#define QI2 2
-#define QI4 3
-#define QI8 4
-#define QF4 5
-#define QF8 6
-#define QSC 7
-#define QTM 8
-#define QB1 9
 int
 cprint(
-    char * opfile,
-    uint64_t * cfld, // TODO 
-    void **data, // [nC][nR] 
+    const char * const opfile,
+    const uint64_t * const cfld, // TODO 
+    void ** restrict data, // [nC][nR] 
     int nC,
     uint64_t lb,
     uint64_t ub,
-    int * enum_fldtypes,  
-    int * width // [nC]
+    const int  * const qtypes,  
+    const int * const width // [nC]
     )
 {
   int status = 0;
@@ -32,8 +22,8 @@ cprint(
   if ( nC <= 0 ) { go_BYE(-1); }
   for ( int j = 0; j < nC; j++ ) { if ( data[j] == NULL ) { go_BYE(-1); } }
   if ( ub <= lb ) { go_BYE(-1); }
-  if ( enum_fldtypes == NULL ) { go_BYE(-1); }
-  if ( width == NULL ) { go_BYE(-1); }
+  if ( qtypes == NULL ) { go_BYE(-1); }
+  if ( width  == NULL ) { go_BYE(-1); }
 
   //----------
   if ( ( opfile != NULL ) && ( *opfile != '\0' ) ) {
@@ -45,54 +35,31 @@ cprint(
   }
   for ( uint64_t i = lb; i < ub; i++ ) { // for each row 
     for ( int j = 0; j < nC; j++ ) { // for each column
-    if ( j > 0 ) { fprintf(fp, ","); }
-      if ( enum_fldtypes[j] == QI1 ) { 
-        int8_t *X = (int8_t *)data[j];
-        fprintf(fp, "%d", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QI2 ) { 
-        int16_t *X = (int16_t *)data[j];
-        fprintf(fp, "%d", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QI4 ) { 
-        int32_t *X = (int32_t *)data[j];
-        fprintf(fp, "%d", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QI8 ) { 
-        int64_t *X = (int64_t *)data[j];
-        fprintf(fp, "%ld", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QF4 ) { 
-        float *X = (float *)data[j];
-        fprintf(fp, "%f", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QF8 ) { 
-        double *X = (double *)data[j];
-        fprintf(fp, "%e", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QB1 ) { 
-        uint64_t *X = (uint64_t *)data[j];
-        int bval = get_bit_u64(X, i); 
-        fprintf(fp, "%d", bval);
-      }
-      else if ( enum_fldtypes[j] == QSC ) { 
-        if ( width[j] <= 1 ) { go_BYE(-1); }
-        char *X = (char *)data[j];
-        X += (i * width[j]);
-        fprintf(fp, "\"");
-        for ( int k = 0; k < width[j]; k++ ) { 
-          if ( *X == '\0' ) { break; } 
-          if ( ( *X == '\\' ) || ( *X == '"' ) ) {
-            fprintf(fp, "\\");
-          }
-          fprintf(fp, "%c", *X);
-          X++;
-        }
-        fprintf(fp, "\"");
-      }
-      else if ( enum_fldtypes[j] == QTM ) { 
-        // TODO 
-        go_BYE(-1); 
+      char *X = (char *)data[j];
+      if ( j > 0 ) { fprintf(fp, ","); }
+      switch ( qtypes[j] ) {
+        case I1 : fprintf(fp, "%d", ((int8_t *)X)[i]); break;
+        case I2 : fprintf(fp, "%d", ((int16_t *)X)[i]); break;
+        case I4 : fprintf(fp, "%d", ((int32_t *)X)[i]); break;
+        case I8 : fprintf(fp, "%ld", ((int64_t *)X)[i]); break;
+        case F4 : fprintf(fp, "%f", ((float *)X)[i]); break;
+        case F8 : fprintf(fp, "%lf", ((double *)X)[i]); break;
+        case SC :  // TODO NEEDS TO BE TESTED 
+                  {
+                    if ( width[j] <= 1 ) { go_BYE(-1); }
+                    X += (i * width[j]);
+                    fprintf(fp, "\"");
+                    for ( int k = 0; k < width[j]; k++ ) { 
+                      if ( *X == '\0' ) { break; } 
+                      if ( ( *X == '\\' ) || ( *X == '"' ) ) {
+                        fprintf(fp, "\\");
+                      }
+                      fprintf(fp, "%c", *X);
+                      X++;
+                    }
+                    fprintf(fp, "\"");
+                  }
+        default : go_BYE(-1); break;
       }
     }
     fprintf(fp, "\n");

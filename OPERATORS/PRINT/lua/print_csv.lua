@@ -19,13 +19,15 @@ local print_csv = function (
   local V -- table of vectors to be printed in desired order
   local opfile -- file to write output to 
   local filter -- if we don't want all rows
-  local lenV -- length of vectors
-  V, opfile, filter, lenV = process_opt_args(inV, opt_args)
+  local lenV -- length of vectors, must be same for all vectors
+  local max_num_in_chunk -- must be same for all vectors
+  V, opfile, filter, lenV, max_num_in_chunk = 
+    process_opt_args(inV, opt_args)
   local lb, ub, where = process_filter(filter, lenV)
   local nV = #V
   if ( opt_args and opt_args.impl == "C" ) then 
     -- print("Using C print implementation")
-    assert(cprint(opfile, where, lb, ub, V))
+    assert(cprint(opfile, where, lb, ub, V, max_num_in_chunk))
     return true 
   end
     -- print("Using Lua print implementation")
@@ -42,7 +44,7 @@ local print_csv = function (
   if ( lenV == 0 ) then io.close(fp) return true end 
   --==========================================
   
-  local bfalse = Scalar.new(false, "B1")
+  local bfalse = Scalar.new(false, "BL")
   for rowidx = lb, ub-1 do -- NOTE the -1 it is important
     local to_print = true
     if ( where ) then 
@@ -58,6 +60,7 @@ local print_csv = function (
         if ( type(s) == "Scalar" ) then 
           assert(io.write(s:to_str()))
         elseif ( type(s) == "CMEM" ) then 
+          -- TODO P1 Can we delete this else case?
           -- ffi.string is necessary to convert to Lua string
           local instr = ffi.string(get_ptr(s, "SC"))
           assert(io.write(cutils.quote_str(instr)))

@@ -11,7 +11,8 @@ local function cprint(
   where, -- nil or lVector of type B1
   lb, -- number
   ub, -- number
-  V -- table of lVectors to be printed
+  V, -- table of lVectors to be printed
+  max_num_in_chunk
   )
   local func_name = "cprint"
   local subs = {}
@@ -33,64 +34,60 @@ local function cprint(
   local function min(x, y) if x < y then return x else return y end end
   local function max(x, y) if x > y then return x else return y end end
   local nC = #V -- determine number of columns to be printed
-  local chunk_size = chunk_size
-  local chunk_num = math.floor(lb / chunk_size) -- first usable chunk
+  local chunk_num = math.floor(lb / max_num_in_chunk) -- first usable chunk
   -- C = pointers to data to be printed
-  local sz = nC * ffi.sizeof("void *")
-  local orig_C = assert(cmem.new(sz))
-  orig_C:zero()
-  local C = get_ptr(orig_C, "void **")
-  -- F array of fldtypes 
-  local F = assert(cmem.new({size = (nC * ffi.sizeof("int")), name = "F"}))
-  F:zero()
-  F = get_ptr(F, "I4")
+  local C = ffi.new("void *[?]", nC)
+  C = ffi.cast("void **", C)
+  -- F array of qtypes 
+  local F = ffi.new("int[?]", nC)
+  F = ffi.cast("int *", F)
   -- W array of widths 
-  local W = assert(cmem.new({size = nC * ffi.sizeof("int"), name = "W"}))
-  W:zero()
-  W = get_ptr(W, "I4")
+  local W = ffi.new("int[?]", nC)
+  W = ffi.cast("int *", W)
   -- START: Assemble F and W
   for i, v in ipairs(V) do 
-    local qtype = v:fldtype()
-    -- TODO We no longer have cenum
-    qtype = qconsts.qtypes[qtype].cenum -- convert string to integer for C
+    local str_qtype = v:qtype()
     local width = v:width()
     -- Note: we create temporary local variables because the
     -- function calls return 2 things not just a single number
     assert(( i >= 1 ) and ( i <= nC ))
-    F[i-1] = qtype
+    F[i-1] = cutils.get_c_qtype(str_qtype)
     W[i-1] = width
   end
   local c_opfile = ffi.NULL
   if ( opfile ) then 
-    c_opfile = cmem.new({ size = #opfile+1, qtype = "SC", name='fname'})
-    c_opfile:set(opfile)
-    c_opfile = get_ptr(c_opfile, "char *")
+    c_opfile = ffi.new("char[?]", #opfile+1) 
+    ffi.fill(c_opfile, #opfile+1)
+    c_opfile = ffi.cast("char *", c_opfile)
   end
   --======================
   while true do 
-    local clb = chunk_num * chunk_size
-    local cub = clb + chunk_size
+    local clb = chunk_num * max_num_in_chunk
+    local cub = clb + max_num_in_chunk
     if ( clb >= ub ) then break end -- TODO verify boundary conditions
     if ( cub <  lb ) then break end -- TODO verify boundary conditions
     -- [xlb, xub) is what we print from this chunk
     local xlb = max(lb, clb) 
     local xub = min(ub, cub)
     local wlen -- length of where fld if any 
-    local chk_len -- to make sure all get_chunk() calls return same length 
     local cfld -- pointer to where fld or nil
-    if ( where ) then 
-      local wchunk
-      wlen, wchunk = where:get_chunk(chunk_num)
-      assert(wlen > 0)
-      cfld = get_ptr(wchunk, "uint64_t *")
-    end
+    --=========================================
+    local chk_len -- to make sure all get_chunk() calls return same length 
     for i, v in ipairs(V) do
       local len, chnk = v:get_chunk(chunk_num)
       if ( not chk_len ) then chk_len = len else assert(chk_len == len) end 
       assert(len > 0)
       C[i-1] = get_ptr(chnk, "void *")
     end
-    if ( wlen ) then assert( chk_len == wlen) end 
+    --=========================================
+    if ( where ) then 
+      local wchunk
+      wlen, wchunk = where:get_chunk(chunk_num)
+      assert(wlen > 0)
+      cfld = get_ptr(wchunk, "uint64_t *")
+      assert(chk_len == wlen) 
+    end
+    --=========================================
     local status = qc[func_name](c_opfile, cfld, C, nC, xlb - clb, 
       xub - xlb, F, W)
     assert(status == 0)
@@ -103,7 +100,6 @@ local function cprint(
     end
     chunk_num = chunk_num + 1 
   end
-  orig_C:delete()
   return true
 end
 return cprint

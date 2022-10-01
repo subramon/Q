@@ -179,3 +179,31 @@ str_qtype_to_str_ctype(
   if ( strcmp(str_qtype, "TM") == 0 ) { return "struct tm"; } 
   return NULL; 
 }
+
+const char *
+str_qtype_to_str_ispctype(
+    const char * const str_qtype
+    )
+{
+  if ( strcmp(str_qtype, "Q0") == 0 ) { return NULL; } 
+
+  if ( strcmp(str_qtype, "B1") == 0 ) { return "uint64"; } 
+  if ( strcmp(str_qtype, "BL") == 0 ) { return "int8"; } 
+
+  if ( strcmp(str_qtype, "I1") == 0 ) { return "int8"; } 
+  if ( strcmp(str_qtype, "I2") == 0 ) { return "int16"; } 
+  if ( strcmp(str_qtype, "I4") == 0 ) { return "int32"; } 
+  if ( strcmp(str_qtype, "I8") == 0 ) { return "int64"; } 
+
+  if ( strcmp(str_qtype, "UI1") == 0 ) { return "uint8"; } 
+  if ( strcmp(str_qtype, "UI2") == 0 ) { return "uint16"; } 
+  if ( strcmp(str_qtype, "UI4") == 0 ) { return "uint32"; } 
+  if ( strcmp(str_qtype, "UI8") == 0 ) { return "uint64"; } 
+
+  if ( strcmp(str_qtype, "F4") == 0 ) { return "float"; } 
+  if ( strcmp(str_qtype, "F8") == 0 ) { return "double"; } 
+
+  if ( strcmp(str_qtype, "TM1") == 0 ) { return "tm_t"; } 
+  if ( strcmp(str_qtype, "TM") == 0 ) { return "struct tm"; } 
+  return NULL; 
+}

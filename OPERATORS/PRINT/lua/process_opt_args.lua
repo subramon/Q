@@ -20,17 +20,22 @@ local function process_opt_args(
     end
   end
 
+  local max_num_in_chunk = 0 
   for i, v in ipairs(outV) do 
     assert(type(v) == "lVector")
-    assert(v:is_eov(), i)
+    assert(v:is_eov())
     if ( i == 1 ) then
       lenV = v:num_elements()
+      max_num_in_chunk = v:max_num_in_chunk()
     else
       assert(lenV == v:num_elements())
+      print(i, max_num_in_chunk,  v:max_num_in_chunk())
+      assert(max_num_in_chunk == v:max_num_in_chunk())
     end
   end
+  assert(max_num_in_chunk > 0)
   assert(type(lenV) == "number")
   assert(lenV > 0)
-  return outV, opfile, filter, lenV
+  return outV, opfile, filter, lenV, max_num_in_chunk
 end
 return  process_opt_args

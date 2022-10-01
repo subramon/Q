@@ -99,7 +99,6 @@ static int l_cutils_is_qtype(
     lua_State *L
     )
 {
-  int status = 0;
   const char *const str_qtype = luaL_checkstring(L, 1);
   lua_pushboolean(L, is_qtype(str_qtype));
   return 1;
@@ -149,6 +148,21 @@ static int l_cutils_isfile(
   const char *const file_name = luaL_checkstring(L, 1);
   bool exists = isfile(file_name);
   lua_pushboolean(L, exists);
+  return 1;
+}
+//----------------------------------------
+static int l_cutils_str_qtype_to_str_ispctype( 
+    lua_State *L
+    )
+{
+  const char *const str_qtype = luaL_checkstring(L, 1);
+  const char * const x = str_qtype_to_str_ispctype(str_qtype);
+  if ( x == NULL ) { 
+    lua_pushnil(L);
+  }
+  else { 
+    lua_pushstring(L, x);
+  }
   return 1;
 }
 //----------------------------------------
@@ -520,6 +534,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
     { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
+    { "str_qtype_to_str_ispctype", l_cutils_str_qtype_to_str_ispctype },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };
@@ -544,6 +559,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
     { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
+    { "str_qtype_to_str_ispctype", l_cutils_str_qtype_to_str_ispctype },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };

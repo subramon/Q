@@ -1,4 +1,5 @@
 local T = {} 
+--[===[ TODO P1 Need to add all the rest of these back after testing 
 local function vvadd(x, y, optargs)
   local doc_string = [[ Signature: Q.vvadd(x, y, opt_optargs)
   -- This operator performs vvadd of x and y
@@ -314,6 +315,7 @@ end
 T.vvandnot = vvandnot
 require('Q/q_export').export('vvandnot', vvandnot)
     
+--]===]
 local function concat(x, y, optargs)
   local doc_string = [[ Signature: Q.concat(x, y, opt_optargs)
   -- This operator performs concat of x and y

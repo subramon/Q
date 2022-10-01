@@ -6,7 +6,6 @@ local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 local qcfg    =  require 'Q/UTILS/lua/qcfg'
-local max_num_in_chunk =  qcfg.max_num_in_chunk
 
 return function (a, largs)
   -- Get name of specializer function. By convention
@@ -32,15 +31,15 @@ return function (a, largs)
       cmem.new({size = subs.buf_size, qtype = subs.out_qtype}))
     assert(buf:stealable(true))
     --=============================
-    local lb = max_num_in_chunk * l_chunk_num
+    local lb = subs.max_num_in_chunk * l_chunk_num
     if ( lb >= subs.len) then 
       cargs:delete()
       return 0, nil 
     end 
     local num_elements = subs.len - lb
     -- generate no more than a chunk at a time 
-    if ( num_elements > max_num_in_chunk ) then 
-      num_elements = max_num_in_chunk 
+    if ( num_elements > subs.max_num_in_chunk ) then 
+      num_elements = subs.max_num_in_chunk 
     end
     -- quit if nothing more to produce 
     if ( num_elements <= 0 ) then 
@@ -58,7 +57,7 @@ return function (a, largs)
   end
   -- OLD return lVector{gen = generator, qtype = subs.out_qtype}
   -- We discontinued above in favor of below so as to allow user to
-  -- pass other information like memo_len, max_num_in_chnk, ... to 
+  -- pass other information like memo_len, subs.max_num_in_chnk, ... to 
   -- Vector.new(...)
   largs.gen = generator
   largs.qtype = subs.out_qtype
