@@ -29,7 +29,6 @@ local function validate_meta(
       fld_M.is_persist = false
     end
     --===========================================
-    --===========================================
     if fld_M.is_memo ~= nil then 
       assert(type(fld_M.is_memo) == "boolean")
     else

@@ -12,20 +12,19 @@ local bridge_C      = require "Q/OPERATORS/LOAD_CSV/lua/bridge_C"
 local qcfg          = require 'Q/UTILS/lua/qcfg'
 local setup_ptrs    = require 'Q/OPERATORS/LOAD_CSV/lua/setup_ptrs'
 
-local max_num_in_chunk = qcfg.max_num_in_chunk
  --======================================
 local function load_csv(
   infile,   -- input file to read (string)
   M,  -- metadata (table)
   opt_args
   )
-  local max_num_in_chunk = max_num_in_chunk
   assert( type(infile) == "string")
   assert(cutils.isfile(infile))
   assert(tonumber(cutils.getsize(infile)) > 0)
 
   assert(validate_meta(M))
-  local is_hdr, fld_sep, global_memo_len = process_opt_args(opt_args)
+  local is_hdr, fld_sep, global_memo_len, max_num_in_chunk, nn_qtype = 
+   process_opt_args(opt_args)
   -- see if you need to over ride per field memo_len with global
   if ( type(global_memo_len) == "number" ) then
     for k, v in pairs(M) do 
@@ -50,15 +49,22 @@ local function load_csv(
         --=== Set up pointers to the data buffers for each loadable column
         local databuf, nn_databuf = malloc_buffers_for_data(M)
         local cdata = ffi.new("char *[?]", #M)
-        local nn_cdata = ffi.new("uint64_t *[?]", #M)
-        setup_ptrs( M, databuf, nn_databuf, cdata, nn_cdata)
+        local nn_cdata
+        if ( nn_qtype == "B1" ) then 
+          nn_cdata = ffi.new("uint64_t *[?]", #M)
+        elseif ( nn_qtype == "BL" ) then 
+          nn_cdata = ffi.new("bool *[?]", #M)
+        else
+          error("")
+        end
+        setup_ptrs( M, databuf, nn_databuf, cdata, nn_cdata, nn_qtype)
         --===================================
         assert(chunk_num == l_chunk_num)
         l_chunk_num = l_chunk_num + 1 
         --===================================
         assert(bridge_C(M, infile, fld_sep, is_hdr, max_num_in_chunk,
           file_offset, num_rows_read, cdata, nn_cdata,
-          is_load, has_nulls, is_trim, width, c_qtypes))
+          is_load, has_nulls, is_trim, width, c_qtypes, nn_qtype))
         local l_num_rows_read = tonumber(num_rows_read[0])
         --===================================
         if ( l_num_rows_read > 0 ) then 
@@ -94,6 +100,7 @@ local function load_csv(
       tinfo.gen       = lgens[v.name]
       tinfo.has_nulls = v.has_nulls
       tinfo.qtype     = v.qtype
+      tinfo.nn_qtype  = nn_qtype
       if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
       local V = lVector(tinfo)
       V:set_name(v.name)

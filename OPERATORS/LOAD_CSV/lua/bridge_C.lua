@@ -18,7 +18,8 @@ local function bridge_C(
   has_nulls,
   is_trim,
   width,
-  c_qtypes
+  c_qtypes,
+  nn_qtype
   )
   assert( M and type(M) == "table")
   assert(infile and type(infile) == "string")
@@ -36,6 +37,7 @@ local function bridge_C(
     has_nulls[i-1] = M[i].has_nulls
     width[i-1]     = M[i].width
   end
+  local c_nn_qtype = cutils.get_c_qtype(nn_qtype)
   local subs = {}
   subs.fn = "load_csv_fast"
   subs.dotc = "OPERATORS/LOAD_CSV/src/load_csv_fast.c"
@@ -43,6 +45,7 @@ local function bridge_C(
   subs.incs = { "OPERATORS/LOAD_CSV/inc/", "UTILS/inc/" }
   subs.srcs = { "UTILS/src/is_valid_chars_for_num.c", 
     "UTILS/src/get_bit_u64.c",  
+    "UTILS/src/set_bit_u64.c",  
     "UTILS/src/rs_mmap.c",  
     "UTILS/src/trim.c",  
     "UTILS/src/txt_to_I1.c", 
@@ -56,9 +59,11 @@ local function bridge_C(
   local func_name = subs.fn
 
   local start_time = cutils.rdtsc()
+  nn_data = ffi.cast("char **", nn_data)
   local status = qc[func_name](infile, nC, 
     ffi.cast("char *", fld_sep),
-    max_num_in_chunk, max_width, num_rows_read, file_offset, c_qtypes, 
+    max_num_in_chunk, max_width, num_rows_read, file_offset, 
+    c_qtypes, c_nn_qtype, 
     is_trim, is_hdr, is_load, has_nulls, width, data, nn_data)
   assert(status == 0, "load_csv_fast failed")
   record_time(start_time, "load_csv_fast")

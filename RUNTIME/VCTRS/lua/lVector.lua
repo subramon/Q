@@ -42,7 +42,11 @@ function lVector:check(is_at_rest, is_for_all)
   local nn_status = true
   if ( not is_for_all ) then 
     if ( self._nn_vec ) then 
-      nn_status = cVector.chk(self._nn_vec, is_at_rest, is_for_all)
+      local nn_vector = assert(self._nn_vec)
+      assert(type(nn_vector) == "lVector")
+      assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+      local nn_vec = nn_vector._base_vec
+      nn_status = cVector.chk(nn_vec, is_at_rest, is_for_all)
     end
   end 
   return (status and nn_status)
@@ -206,7 +210,14 @@ function lVector.new(args)
   if ( args.has_nulls ) then 
     -- assemble args for nn Vector 
     local nn_args = {}
-    nn_args.qtype = "BL" -- TODO P1 Move this to B1 
+    local nn_qtype = "BL"
+    if ( args.nn_qtype ) then 
+      assert(type(args.nn_qtype) == "string")
+      nn_qtype = args.nn_qtype
+      assert((nn_qtype == "B1") or (nn_qtype == "BL"))
+    end
+    nn_args.qtype = nn_qtype
+    nn_args.qtype = nn_qtype
     if ( args.name ) then 
       nn_args.name = "nn_" .. args.name 
     end
@@ -219,7 +230,7 @@ function lVector.new(args)
     ----------------------------------- 
     local nn_vector = setmetatable({}, lVector)
     nn_vector._base_vec = assert(cVector.add1(nn_args))
-    nn_vector._qtype = "BL" -- TODO P2 Consider switch to B1 
+    nn_vector._qtype = nn_qtype
     vector._nn_vec = nn_vector 
   end 
   --=================================================
@@ -309,7 +320,9 @@ function lVector:put_chunk(c, n, nn_c)
   assert(cVector.put_chunk(self._base_vec, c, n))
   if ( self._nn_vec ) then 
     assert(type(nn_c) == "CMEM")
-    assert(cVector.put_chunk(self._nn_vec, nn_c, n))
+    local nn_vector = assert(self._nn_vec)
+    local nn_vec = nn_vector._base_vec
+    assert(cVector.put_chunk(nn_vec, nn_c, n))
   end
   self._chunk_num = self._chunk_num + 1 
 end

@@ -16,8 +16,15 @@ local function malloc_buffers_for_data(M)
       { size = bufsz, qtype = qtype, name = v.name})
       databuf[v.name]:stealable(true)
       if ( v.has_nulls ) then
-        nn_databuf[v.name] = cmem.new(
-        { size = max_num_in_chunk/8, "B1", name = "nn_ " .. v.name})
+        if ( v.nn_qtype == "B1" ) then 
+          nn_databuf[v.name] = cmem.new(
+          { size = max_num_in_chunk/8, "B1", name = "nn_ " .. v.name})
+        elseif ( v.nn_qtype == "BL" ) then 
+          nn_databuf[v.name] = cmem.new(
+          { size = max_num_in_chunk * 1 , "BL", name = "nn_ " .. v.name})
+        else
+          error("")
+        end
         nn_databuf[v.name]:stealable(true)
       end
     end

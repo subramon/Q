@@ -298,12 +298,42 @@ tests.t5 = function()
   -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
+-- Testing null values
+tests.t6 = function() 
+  local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in6.csv"
+  assert(plpath.isfile(datafile))
+  for _, nn_qtype in ipairs( { "B1", "BL", } ) do 
+    local O = { is_hdr = true, memo_len = -1, nn_qtype = nn_qtype, }
+    local M = {}
+    M[#M+1] = { name = "i4", qtype = "I4", nn_qtype = "B1", has_nulls = true, }
+    M[#M+1] = { name = "f4", qtype = "F4", nn_qtype = "BL", has_nulls = true, }
+    local T = Q.load_csv(datafile, M, O)
+    assert(T.i4:has_nulls() == true)
+    assert(T.f4:has_nulls() == true)
+  
+    local nn_i4 = T.i4:get_nulls()
+    assert(type(nn_i4) == "lVector")
+    assert(nn_i4:qtype() == nn_qtype)
+  
+    local nn_f4 = T.f4:get_nulls()
+    assert(type(nn_f4) == "lVector")
+    assert(nn_f4:qtype() == nn_qtype)
+  
+    print("-------------")
+    T.i4:eval()
+    T.i4:pr()
+    T.f4:pr()
+  end
+  print("Test t6 succeeded")
+  
+end
 -- tests.t1()
 -- tests.t2()
 -- tests.t3()
 -- tests.t4()
 -- tests.t4a()
-tests.t5()
-os.exit()
+-- tests.t5()
+tests.t6()
+-- os.exit()
 return tests
 --]]
