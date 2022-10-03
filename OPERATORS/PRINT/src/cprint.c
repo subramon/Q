@@ -11,7 +11,7 @@ cprint(
     int nC,
     uint64_t lb,
     uint64_t ub,
-    const int  * const qtypes,  
+    const int  * const qtypes,//[nC]
     const int * const width // [nC]
     )
 {
@@ -25,6 +25,13 @@ cprint(
   if ( qtypes == NULL ) { go_BYE(-1); }
   if ( width  == NULL ) { go_BYE(-1); }
 
+  for ( int i = 0; i < nC; i++ ) { 
+    if ( ( qtypes[i] <= 0 ) || ( qtypes[i] >= NUM_QTYPES ) ) { 
+      go_BYE(-1); }
+    // 256 is just a sanity check, could be tighter
+    if ( ( width[i] <= 0 ) || ( width[i] >= 256 ) ) { 
+      go_BYE(-1); }
+  }
   //----------
   if ( ( opfile != NULL ) && ( *opfile != '\0' ) ) {
     fp = fopen(opfile, "a");
@@ -38,6 +45,15 @@ cprint(
       char *X = (char *)data[j];
       if ( j > 0 ) { fprintf(fp, ","); }
       switch ( qtypes[j] ) {
+        case B1 : 
+          {
+            go_BYE(-1); // TODO 
+            int ival = get_bit_u64((uint64_t *)X, i); 
+            fprintf(fp, "%s\n", ival ? "true" : "false"); break;
+          }
+          break;
+        case BL : fprintf(fp, "%s", ((bool *)X)[i] ? "true" : "false");
+                  break;
         case I1 : fprintf(fp, "%d", ((int8_t *)X)[i]); break;
         case I2 : fprintf(fp, "%d", ((int16_t *)X)[i]); break;
         case I4 : fprintf(fp, "%d", ((int32_t *)X)[i]); break;
@@ -59,7 +75,11 @@ cprint(
                     }
                     fprintf(fp, "\"");
                   }
-        default : go_BYE(-1); break;
+                  break;
+        default : 
+                  fprintf(stderr, "Unknown qtypes[%d] = %d \n", j, qtypes[j]);
+                  go_BYE(-1); 
+                  break;
       }
     }
     fprintf(fp, "\n");

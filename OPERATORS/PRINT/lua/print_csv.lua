@@ -20,9 +20,22 @@ local print_csv = function (
   local opfile -- file to write output to 
   local filter -- if we don't want all rows
   local lenV -- length of vectors, must be same for all vectors
+  local hdr --- optional header line for output
   local max_num_in_chunk -- must be same for all vectors
-  V, opfile, filter, lenV, max_num_in_chunk = 
+  V, opfile, filter, lenV, max_num_in_chunk, hdr = 
     process_opt_args(inV, opt_args)
+  if ( opfile ) then 
+    cutils.delete(opfile)
+  end
+  --======================
+  if ( hdr ) then 
+    if ( opfile ) then 
+      assert(cutils.write(opfile, hdr .. "\n"))
+    else
+      print(hdr .. "\n")
+    end
+  end 
+  --======================
   local lb, ub, where = process_filter(filter, lenV)
   local nV = #V
   if ( opt_args and opt_args.impl == "C" ) then 
@@ -38,7 +51,7 @@ local print_csv = function (
     io.output(io.stdout)
   else
     assert(type(opfile) == "string")
-    fp = assert(io.open(opfile, "w+"))
+    fp = assert(io.open(opfile, "a+"))
     io.output(fp)
   end
   if ( lenV == 0 ) then io.close(fp) return true end 
@@ -58,7 +71,11 @@ local print_csv = function (
         local  s, s_nn = assert(v:get1(rowidx))
         assert(not s_nn, "To be implemented") -- TODO P2
         if ( type(s) == "Scalar" ) then 
-          assert(io.write(s:to_str()))
+          if ( v:qtype() == "SC" ) then 
+            assert(io.write(cutils.quote_str(s:to_str())))
+          else
+            assert(io.write(s:to_str()))
+          end 
         elseif ( type(s) == "CMEM" ) then 
           -- TODO P1 Can we delete this else case?
           -- ffi.string is necessary to convert to Lua string

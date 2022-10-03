@@ -26,14 +26,11 @@ local function cprint(
   subs.libs = nil -- no libaries need to be linked
   qc.q_add(subs); 
 
-  if ( opfile ) then 
-    cutils.delete(opfile) -- clean out any existing file
-  else
-    -- printing to stdout 
-  end
+  -- =======================
   local function min(x, y) if x < y then return x else return y end end
   local function max(x, y) if x > y then return x else return y end end
   local nC = #V -- determine number of columns to be printed
+  assert(nC > 0)
   local chunk_num = math.floor(lb / max_num_in_chunk) -- first usable chunk
   -- C = pointers to data to be printed
   local C = ffi.new("void *[?]", nC)
@@ -54,11 +51,13 @@ local function cprint(
     F[i-1] = cutils.get_c_qtype(str_qtype)
     W[i-1] = width
   end
+
   local c_opfile = ffi.NULL
   if ( opfile ) then 
     c_opfile = ffi.new("char[?]", #opfile+1) 
     ffi.fill(c_opfile, #opfile+1)
     c_opfile = ffi.cast("char *", c_opfile)
+    ffi.copy(c_opfile, opfile, #opfile)
   end
   --======================
   while true do 
@@ -70,7 +69,7 @@ local function cprint(
     local xlb = max(lb, clb) 
     local xub = min(ub, cub)
     local wlen -- length of where fld if any 
-    local cfld -- pointer to where fld or nil
+    local cfld = ffi.NULL -- pointer to where fld or nil
     --=========================================
     local chk_len -- to make sure all get_chunk() calls return same length 
     for i, v in ipairs(V) do
@@ -84,8 +83,15 @@ local function cprint(
       local wchunk
       wlen, wchunk = where:get_chunk(chunk_num)
       assert(wlen > 0)
-      cfld = get_ptr(wchunk, "uint64_t *")
+      if ( where:qtype() == "BL" ) then 
+        cfld = get_ptr(wchunk, "bool *")
+      elseif ( where:qtype() == "B1" ) then 
+        cfld = get_ptr(wchunk, "uint64_t *")
+      else
+        error("bad qtype for where Vector ")
+      end
       assert(chk_len == wlen) 
+      error("NOT YET IMPLEMENTED on THE C side")
     end
     --=========================================
     local status = qc[func_name](c_opfile, cfld, C, nC, xlb - clb, 

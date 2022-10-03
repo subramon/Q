@@ -8,7 +8,7 @@ local plutils= require 'pl.utils'
 local plfile = require 'pl.file'
 require 'Q/UTILS/lua/strict'
 -- TODO P1 Set below to true 
-local test_print  = false -- turn false if you want only load_csv tested
+local test_print  = true -- turn false if you want only load_csv tested
 --=======================================================
 local tests = {}
 tests.t1 = function()
@@ -65,7 +65,9 @@ tests.t1 = function()
       Q.print_csv(U, { impl = impl, opfile = opfile } )
       local expected = qcfg.q_src_root .. 
         "/OPERATORS/LOAD_CSV/test/chk_in1.csv"
-      assert(plutils.readfile(expected) == plutils.readfile(opfile))
+      assert(plutils.readfile(expected) == plutils.readfile(opfile),
+        "mismatch between " .. expected .. " and " .. opfile)
+
       print("Tested print with impl = ", impl)
     end
   end
@@ -121,7 +123,7 @@ tests.t2 = function()
       U[1] = T.i1
       U[2] = T.s1
       Q.print_csv(U, { impl = impl, opfile = opfile } )
-      local expected = qcfg.Q_SRC_ROOT .. "/OPERATORS/LOAD_CSV/test/chk_in2.csv"
+      local expected = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/chk_in2.csv"
       assert(plutils.readfile(expected) == plutils.readfile(opfile))
     end
   end
@@ -193,10 +195,15 @@ tests.t4 = function()
   if ( test_print ) then
     for _, impl in ipairs({"C", "L"}) do 
       local opfile = "/tmp/_x" .. impl
-      Q.print_csv(T.datetime, { opfile = opfile, impl = impl } )
+      local U = {}
+      U[1] = T.datetime
+      U[2] = T.store_id
+      Q.print_csv(U, 
+      { opfile = opfile, impl = impl, header = "datetime,store_id", })
       local expected = qcfg.q_src_root .. 
       "/OPERATORS/LOAD_CSV/test/chk_in4.csv"
-      assert(plutils.readfile(expected) == plutils.readfile(opfile))
+      assert(plutils.readfile(expected) == plutils.readfile(opfile), 
+      "Mismatch in " .. expected .. " and " .. opfile)
     end
   end
   --===================
@@ -224,14 +231,19 @@ tests.t4a = function()
   if ( test_print ) then
     for _, impl in ipairs({"C", "L"}) do 
       local opfile = "/tmp/_x" .. impl
-      Q.print_csv(T.datetime, { opfile = opfile, impl = impl } )
+      local U = {}
+      U[1] = T.datetime
+      U[2] = T.store_id
+      Q.print_csv(U, 
+      { opfile = opfile, impl = impl, header = "datetime,store_id", })
       local expected = qcfg.q_src_root .. 
       "/OPERATORS/LOAD_CSV/test/chk_in4.csv"
-      assert(plutils.readfile(expected) == plutils.readfile(opfile))
+      assert(plutils.readfile(expected) == plutils.readfile(opfile), 
+      "Mismatch in " .. expected .. " and " .. opfile)
     end
   end
   --===================
-  print("Test t4 succeeded")
+  print("Test t4a succeeded")
 end
 tests.t5 = function()
   local M = {}
@@ -323,17 +335,24 @@ tests.t6 = function()
     T.i4:eval()
     T.i4:pr()
     T.f4:pr()
+    local U = {}
+    U[1] = T.i4
+    U[2] = T.f4
+    U[3] = T.i4
+    U[4] = T.f4
+    local opfile = "/tmp/_xxx"
+    Q.print_csv(U, { impl = "C", opfile = opfile } )
   end
   print("Test t6 succeeded")
   
 end
--- tests.t1()
--- tests.t2()
--- tests.t3()
--- tests.t4()
--- tests.t4a()
+-- WORKS tests.t1()
+-- WORKS tests.t2()
+-- TODO tests.t3()
+-- WORKS tests.t4()
+-- WORKS tests.t4a()
 -- tests.t5()
 tests.t6()
--- os.exit()
+os.exit()
 return tests
 --]]
