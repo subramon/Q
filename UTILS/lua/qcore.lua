@@ -14,8 +14,9 @@ local cutils   = require 'libcutils'
 -- e.g., ffi.C.malloc, etc 
 ffi.cdef([[
        void *memcpy(void *dest, const void *src, size_t n);
+       void *malloc(size_t size);
+       void free(void *ptr);
        ]]);
--- TODO P2 Why isn't malloc, free, ... here?
 
 -- to make sure we do not dynamically compile the same function twice
 local known_functions = {}

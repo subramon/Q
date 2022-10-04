@@ -4,7 +4,6 @@ local ffi      = require 'ffi'
 local qc       = require 'Q/UTILS/lua/qcore'
 local qcfg     = require 'Q/UTILS/lua/qcfg'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
-local max_num_in_chunk = qcfg.max_num_in_chunk
 
 local function cprint( 
   opfile, -- file for destination fo print
@@ -32,39 +31,31 @@ local function cprint(
   local nC = #V -- determine number of columns to be printed
   assert(nC > 0)
   local chunk_num = math.floor(lb / max_num_in_chunk) -- first usable chunk
-  -- C = pointers to data to be printed
-  local C = ffi.new("void *[?]", nC)
-  C = ffi.cast("void **", C)
-  -- F array of qtypes 
-  local F = ffi.new("int[?]", nC)
-  F = ffi.cast("int *", F)
-  -- W array of widths 
-  local W = ffi.new("int[?]", nC)
-  W = ffi.cast("int *", W)
-  -- START: Assemble F and W
-  for i, v in ipairs(V) do 
-    local str_qtype = v:qtype()
-    local width = v:width()
-    -- Note: we create temporary local variables because the
-    -- function calls return 2 things not just a single number
-    assert(( i >= 1 ) and ( i <= nC ))
-    F[i-1] = cutils.get_c_qtype(str_qtype)
-    W[i-1] = width
+  -- adjust chunk_num upwards until it includes lb 
+  while ( true ) do
+    local clb = chunk_num * max_num_in_chunk
+    local cub = clb +  max_num_in_chunk
+    if ( ( lb >= clb ) and ( lb < cub ) ) then
+      break
+    end
+    chunk_num = chunk_num + 1 
   end
 
-  local c_opfile = ffi.NULL
-  if ( opfile ) then 
-    c_opfile = ffi.new("char[?]", #opfile+1) 
-    ffi.fill(c_opfile, #opfile+1)
-    c_opfile = ffi.cast("char *", c_opfile)
-    ffi.copy(c_opfile, opfile, #opfile)
+  -- Create array of qtypes/widths
+  local qtypes = {}
+  local widths = {}
+  for i, v in ipairs(V) do 
+    local str_qtype = v:qtype()
+    widths[i] = v:width()
+    qtypes[i] = cutils.get_c_qtype(str_qtype)
   end
+  --====================================
+  local c_opfile = opfile 
   --======================
   while true do 
     local clb = chunk_num * max_num_in_chunk
     local cub = clb + max_num_in_chunk
     if ( clb >= ub ) then break end -- TODO verify boundary conditions
-    if ( cub <  lb ) then break end -- TODO verify boundary conditions
     -- [xlb, xub) is what we print from this chunk
     local xlb = max(lb, clb) 
     local xub = min(ub, cub)
@@ -72,11 +63,17 @@ local function cprint(
     local cfld = ffi.NULL -- pointer to where fld or nil
     --=========================================
     local chk_len -- to make sure all get_chunk() calls return same length 
+    local c_data = ffi.C.malloc(ffi.sizeof("void *") * nC)
+    c_data = ffi.cast("const void **", c_data)
     for i, v in ipairs(V) do
       local len, chnk = v:get_chunk(chunk_num)
-      if ( not chk_len ) then chk_len = len else assert(chk_len == len) end 
       assert(len > 0)
-      C[i-1] = get_ptr(chnk, "void *")
+      if ( i == 1 ) then
+        chk_len = len
+      else
+        assert(chk_len == len)
+      end
+      c_data[i-1] = get_ptr(chnk, "void *")
     end
     --=========================================
     if ( where ) then 
@@ -94,9 +91,29 @@ local function cprint(
       error("NOT YET IMPLEMENTED on THE C side")
     end
     --=========================================
-    local status = qc[func_name](c_opfile, cfld, C, nC, xlb - clb, 
-      xub - xlb, F, W)
+    local chnk_lb = xlb - clb -- relative to chunk
+    local chnk_ub = xub - clb -- relative to chunk
+
+    local c_qtypes = ffi.C.malloc(ffi.sizeof("int32_t") * nC)
+    c_qtypes = ffi.cast("int32_t *", c_qtypes)
+    for i, v in ipairs(V) do
+      c_qtypes[i-1] = qtypes[i]
+    end
+    local c_widths = ffi.C.malloc(ffi.sizeof("int32_t") * nC)
+    c_widths = ffi.cast("int32_t *", c_widths)
+    for i, v in ipairs(V) do
+      c_widths[i-1] = widths[i]
+    end
+    local status = qc[func_name](
+    c_opfile, cfld, c_data, 
+    ffi.new("int", nC),
+    ffi.new("uint64_t", chnk_lb),
+    ffi.new("uint64_t", chnk_ub), c_qtypes, c_widths)
+    -- c_qtypes, widths)
     assert(status == 0)
+    ffi.C.free(c_qtypes)
+    ffi.C.free(c_widths)
+    ffi.C.free(c_data)
     -- release chunks 
     if ( where ) then 
       where:unget_chunk(chunk_num)

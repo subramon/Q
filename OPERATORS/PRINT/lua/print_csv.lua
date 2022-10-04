@@ -73,6 +73,8 @@ local print_csv = function (
         if ( type(s) == "Scalar" ) then 
           if ( v:qtype() == "SC" ) then 
             assert(io.write(cutils.quote_str(s:to_str())))
+          elseif ( ( v:qtype() == "TM" ) or ( v:qtype() == "TM1" ) ) then
+            error("NOT IMPLEMENTED")
           else
             assert(io.write(s:to_str()))
           end 

@@ -346,7 +346,10 @@ end
 function lVector:unget_chunk(chnk_idx)
   cVector.unget_chunk(self._base_vec, chnk_idx)
   if ( self._nn_vec ) then 
-    cVector.unget_chunk(self._nn_vec, chnk_idx)
+    local nn_vector = self._nn_vec
+    assert(type(nn_vector) == "lVector")
+    assert((nn_vector:qtype() == "B1") or (nn_vector:qtype() == "BL"))
+    cVector.unget_chunk(nn_vector._base_vec, chnk_idx)
   end
 end
 

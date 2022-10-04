@@ -157,6 +157,23 @@ vctr_print(
                     fprintf(fp, "%s\n", buf);
                   }
                   break;
+        case TM1 : {
+                     char buf[64]; 
+                     int len = sizeof(buf); 
+                     memset(buf, 0, len);
+                     tm_t * tptr = ((tm_t *)data);
+                     snprintf(buf, len-1, "\"%d:%02d:%02d:%d:%d:%d:%d\"", 
+                         tptr[i].tm_year + 1900,
+                         tptr[i].tm_mon + 1,
+                         tptr[i].tm_mday,
+                         tptr[i].tm_hour,
+                         tptr[i].tm_min,
+                         tptr[i].tm_sec,
+                         tptr[i].tm_yday);
+
+                     fprintf(fp, "%s\n", buf);
+                   }
+                  break;
         default : go_BYE(-1); break;
       }
     }

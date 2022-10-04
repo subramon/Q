@@ -5,32 +5,33 @@
 
 int
 cprint(
-    const char * const opfile,
-    const uint64_t * const cfld, // TODO 
-    void ** restrict data, // [nC][nR] 
+    const char * opfile,
+    const void * const cfld, // TODO 
+    const void ** data, // [nC][nR] 
     int nC,
     uint64_t lb,
     uint64_t ub,
-    const int  * const qtypes,//[nC]
-    const int * const width // [nC]
+    const int32_t  * const qtypes,//[nC]
+    const int32_t * const widths // [nC]
     )
 {
   int status = 0;
   FILE *fp = NULL;
+  if ( qtypes == NULL ) { go_BYE(-1); }
+  if ( widths == NULL ) { go_BYE(-1); }
   //----------
   if ( data == NULL ) { go_BYE(-1); }
+  if ( cfld != NULL ) { go_BYE(-1); } // TODO TODO TODO 
   if ( nC <= 0 ) { go_BYE(-1); }
   for ( int j = 0; j < nC; j++ ) { if ( data[j] == NULL ) { go_BYE(-1); } }
   if ( ub <= lb ) { go_BYE(-1); }
-  if ( qtypes == NULL ) { go_BYE(-1); }
-  if ( width  == NULL ) { go_BYE(-1); }
 
   for ( int i = 0; i < nC; i++ ) { 
-    if ( ( qtypes[i] <= 0 ) || ( qtypes[i] >= NUM_QTYPES ) ) { 
-      go_BYE(-1); }
-    // 256 is just a sanity check, could be tighter
-    if ( ( width[i] <= 0 ) || ( width[i] >= 256 ) ) { 
-      go_BYE(-1); }
+    if ( ( qtypes[i] <= 0 ) || ( qtypes[i] >= NUM_QTYPES ) ) { go_BYE(-1); }
+    // 32 is just a sanity check, could be tighter
+    if ( qtypes[i] != SC ) {
+    if ( ( widths[i] <= 0 ) || ( widths[i] >= 32 ) ) { go_BYE(-1); }
+    }
   }
   //----------
   if ( ( opfile != NULL ) && ( *opfile != '\0' ) ) {
@@ -42,30 +43,30 @@ cprint(
   }
   for ( uint64_t i = lb; i < ub; i++ ) { // for each row 
     for ( int j = 0; j < nC; j++ ) { // for each column
-      char *X = (char *)data[j];
+      const char * X = data[j];
       if ( j > 0 ) { fprintf(fp, ","); }
       switch ( qtypes[j] ) {
         case B1 : 
           {
             go_BYE(-1); // TODO 
-            int ival = get_bit_u64((uint64_t *)X, i); 
+            int ival = get_bit_u64((const uint64_t *)X, i); 
             fprintf(fp, "%s\n", ival ? "true" : "false"); break;
           }
           break;
-        case BL : fprintf(fp, "%s", ((bool *)X)[i] ? "true" : "false");
+        case BL : fprintf(fp, "%s", ((const bool *)X)[i] ? "true" : "false");
                   break;
-        case I1 : fprintf(fp, "%d", ((int8_t *)X)[i]); break;
-        case I2 : fprintf(fp, "%d", ((int16_t *)X)[i]); break;
-        case I4 : fprintf(fp, "%d", ((int32_t *)X)[i]); break;
-        case I8 : fprintf(fp, "%ld", ((int64_t *)X)[i]); break;
-        case F4 : fprintf(fp, "%f", ((float *)X)[i]); break;
-        case F8 : fprintf(fp, "%lf", ((double *)X)[i]); break;
-        case SC :  // TODO NEEDS TO BE TESTED 
+        case I1 : fprintf(fp, "%d", ((const int8_t *)X)[i]); break;
+        case I2 : fprintf(fp, "%d", ((const int16_t *)X)[i]); break;
+        case I4 : fprintf(fp, "%d", ((const int32_t *)X)[i]); break;
+        case I8 : fprintf(fp, "%ld", ((const int64_t *)X)[i]); break;
+        case F4 : fprintf(fp, "%f", ((const float *)X)[i]); break;
+        case F8 : fprintf(fp, "%lf", ((const double *)X)[i]); break;
+        case SC :  
                   {
-                    if ( width[j] <= 1 ) { go_BYE(-1); }
-                    X += (i * width[j]);
+                    if ( widths[j] <= 1 ) { go_BYE(-1); }
+                    X += (i * widths[j]);
                     fprintf(fp, "\"");
-                    for ( int k = 0; k < width[j]; k++ ) { 
+                    for ( int k = 0; k < widths[j]; k++ ) { 
                       if ( *X == '\0' ) { break; } 
                       if ( ( *X == '\\' ) || ( *X == '"' ) ) {
                         fprintf(fp, "\\");
@@ -74,6 +75,24 @@ cprint(
                       X++;
                     }
                     fprintf(fp, "\"");
+                  }
+                  break;
+        case TM1 : 
+                  { 
+                     char buf[64]; 
+                     int len = sizeof(buf); 
+                     memset(buf, 0, len);
+                     tm_t * tptr = ((const tm_t *)X);
+                     snprintf(buf, len-1, "\"%d:%02d:%02d:%d:%d:%d:%d\"", 
+                         tptr[i].tm_year + 1900,
+                         tptr[i].tm_mon + 1,
+                         tptr[i].tm_mday,
+                         tptr[i].tm_hour,
+                         tptr[i].tm_min,
+                         tptr[i].tm_sec,
+                         tptr[i].tm_yday);
+
+                     fprintf(fp, "%s", buf);
                   }
                   break;
         default : 

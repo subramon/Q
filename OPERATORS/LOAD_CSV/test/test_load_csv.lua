@@ -2,6 +2,7 @@ local Q       = require 'Q'
 local ffi     = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local Scalar  = require 'libsclr'
+local cVector = require 'libvctr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local plpath = require 'pl.path'
 local plutils= require 'pl.utils'
@@ -258,7 +259,9 @@ tests.t5 = function()
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   assert(T.datetime) 
+  cVector:check_all(true, true)
   local x = Q.SC_to_TM(T.datetime, format)
+  cVector:check_all(true, true)
 
   local tm_flds = { 
   "tm_sec",
@@ -276,6 +279,10 @@ tests.t5 = function()
     out[i] = Q.TM_to_I2(x, tm_fld)
     assert(type(out[i]) ==  "lVector")
   end
+  cVector:check_all(true, true)
+  for i, tm_fld in ipairs(tm_flds) do out[i]:eval() end -- TODO 
+  cVector:check_all(true, true)
+
   local chunk_idx = 0
   local n
   repeat 
@@ -299,15 +306,15 @@ tests.t5 = function()
   end
 
   if ( test_print ) then 
-    for _, impl in ipairs({"C", "L"}) do 
+    for _, impl in ipairs({"C", "L"}) do  
       local opfile = "/tmp/_x" .. impl
       Q.print_csv(out, {opfile = opfile, impl = impl})
       local expected = qcfg.q_src_root .. 
       "/OPERATORS/LOAD_CSV/test/chk_in5.csv"
       assert(plutils.readfile(expected) == plutils.readfile(opfile))
+      print("Tested print with impl = " .. impl)
     end
   end
-  -- TODO P3 verify that fields correctly extracted
   print("Test t5 succeeded")
 end
 -- Testing null values
@@ -346,13 +353,14 @@ tests.t6 = function()
   print("Test t6 succeeded")
   
 end
--- WORKS tests.t1()
--- WORKS tests.t2()
--- TODO tests.t3()
--- WORKS tests.t4()
--- WORKS tests.t4a()
--- tests.t5()
+tests.t1()
+tests.t2()
+tests.t3()
+tests.t4()
+tests.t4a()
+tests.t5()
 tests.t6()
 os.exit()
+--[[
 return tests
 --]]

@@ -20,6 +20,7 @@ typedef struct _sclr_rec_type {
     float f4;
     double f8;
     char *str;
+    tm_t tm1; 
   } val;
   qtype_t qtype;
 
