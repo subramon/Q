@@ -1,9 +1,9 @@
 local Q = require 'Q'
 -- DONE Q.load_csv
 -- DONE Test load_csv with null values
--- TODO Test load_csv with TM data type 
--- TODO Test print_csv with TM data type 
--- TODO Test print_csv with null values
+-- DONE Test load_csv with TM data type  (built SC_to_TM1)
+-- DONE Test print_csv with TM data type 
+-- DONE Test print_csv with null values
 -- DONE Q.concat
 -- DONE Q.is_prev
 -- DONE Q.seq 

@@ -41,20 +41,20 @@ local function expander_maxby_minby(op, a, b, nb, optargs)
   assert(qc[func_name], "Symbol not defined " .. func_name)
   local sz_out = nb
   local sz_out_in_bytes = sz_out * qconsts.qtypes[subs.out_qtype].width
-  local out_buf = nil
-  local first_call = true
-  local chunk_idx = 0
 
   local a_ctype = qconsts.qtypes[a:fldtype()].ctype 
   local b_ctype = qconsts.qtypes[b:fldtype()].ctype 
   local out_ctype = qconsts.qtypes[subs.out_qtype].ctype 
 
+  local chunk_idx = 0
+
   local function minby_gen(chunk_num)
-    -- Adding assert on chunk_idx to have sync between expected chunk_num and generator's chunk_idx state
+    -- sync between expected chunk_num and generator's chunk_idx state
     assert(chunk_num == chunk_idx)
+    local out_buf = assert(cmem.new(sz_out_in_bytes, a:fldtype()))
+    out_buf:stealable(true)
     if ( first_call ) then 
-      -- allocate buffer for output
-      out_buf = assert(cmem.new(sz_out_in_bytes, a:fldtype()))
+      -- TODO THINK 
       if op == "maxby" then
         out_buf:set_min()
       elseif op == "minby" then
@@ -80,15 +80,19 @@ local function expander_maxby_minby(op, a, b, nb, optargs)
       local casted_b_chunk = ffi.cast(b_ctype .. "*",  get_ptr(b_chunk))
       local casted_out_buf = ffi.cast(out_ctype .. "*",  get_ptr(out_buf))
       local status = qc[func_name](casted_a_chunk, a_len, casted_b_chunk, nb, casted_out_buf, is_safe)
-      assert(status == 0, "C error in MINBY")
+      assert(status == 0)
       chunk_idx = chunk_idx + 1
       if a_len < qconsts.chunk_size then
-        print(type(out_buf))
         return nb, out_buf, nil
       end
     end
   end
-  return lVector( { gen = minby_gen, has_nulls = false, qtype = subs.out_qtype } )
+  local vargs = {gen = minby_gen, has_nulls = false, qtype = subs.out_qtype}
+  for k, v in pairs(optargs) do 
+    assert(k ~= gen)
+    assert(k ~= qtype)
+    vargs[k] = v
+  end
+  return lVector(vargs)
 end
-
 return expander_maxby_minby
