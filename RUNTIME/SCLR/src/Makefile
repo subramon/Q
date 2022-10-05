@@ -54,16 +54,12 @@ EXT_OBJ = $(EXT_SRC:.c=.o)
 .c.o :
 	$(CC) -c -o $@ $< $(QC_FLAGS)  $(INCS)
 clean:
-	rm -f *.so ${EXT_OBJ} ${OBJ} _* ${GEN_SRC} ${EXTSO} ${CMEM_SO}
+	rm -f *.so ${EXT_OBJ} ${OBJ} _* ${GEN_SRC} ${EXTSO} 
 
-CMEM_SO = ../../CMEM/src/libcmem.so
-	
-${CMEM_SO} :
-	make -C ../../CMEM/src/
-
-CGUTILS_SO = ../../../QJIT/GUTILS/libcgutils.so
+CGUTILS_SO = ${Q_ROOT}/lib/libcgutils.so
 	
 ${CGUTILS_SO} :
+	make -C ../../../QJIT/GUTILS/
 
 libsclr.so:  ${GEN_SRC} ${EXT_OBJ} ${OBJ} outer_eval_cmp.c 
 	gcc  ${EXT_OBJ} ${OBJ} -shared -o libsclr.so ${CGUTILS_SO}

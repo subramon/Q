@@ -310,8 +310,12 @@ function lVector:putn(col, n, nn_col)
   if ( nn_col ) then assert(type(nn_col) == "CMEM") end
   --========================
   assert(cVector.putn(self._base_vec, col, n))
-  if ( self.nn_vec ) then 
-    assert(cVector.putn(self._nn_vec, nn_col, n))
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    local nn_vec = nn_vector._base_vec
+    assert(cVector.putn(nn_vec, nn_col, n))
+  else
+    assert(nn_col == nil)
   end
 end
 
@@ -323,6 +327,8 @@ function lVector:put_chunk(c, n, nn_c)
     local nn_vector = assert(self._nn_vec)
     local nn_vec = nn_vector._base_vec
     assert(cVector.put_chunk(nn_vec, nn_c, n))
+  else
+    assert(nn_c == nil)
   end
   self._chunk_num = self._chunk_num + 1 
 end

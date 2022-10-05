@@ -10,7 +10,7 @@ local Q = require 'Q'
 -- DONE Q.where 
 -- TODO test conjoin
 -- DONE Q.vshift
--- TODO Q.srt_join
+-- DONE Q.srt_join
 -- DONE Q.select_ranges
 -- DONE Q.print_csv
 -- Create big table 

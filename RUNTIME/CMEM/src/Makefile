@@ -1,3 +1,5 @@
+# make CFLAGS=-DUSE_GLOBALS=1
+
 CC=gcc
 
 # use QC_FLAGS
@@ -26,6 +28,8 @@ clean:
 	rm -f *.so *.o _* ${OBJS}
 	rm -f ${Q_ROOT}/lib/libcmem.so
 		
+QC_FLAGS += ${CFLAGS}
+
 SRCS := cmem.c
 SRCS += aux_cmem.c
 SRCS += aux_lua_to_c.c
@@ -45,9 +49,11 @@ OBJS = $(SRCS:.c=.o)
 	$(CC) -c -o $@ $< ${QC_FLAGS} ${DFLAGS} $(INCS) -DGLOBALS
 # GLOBALS needed for g_mem_used
 
-CGUTILS_SO = ../../../QJIT/GUTILS/libcgutils.so
+CGUTILS_SO = ${Q_ROOT}/lib/libcgutils.so
 	
 ${CGUTILS_SO} :
+	make -C ../../../QJIT/GUTILS/
+
 libcmem.so:   ${OBJS} 
 	$(CC) ${OBJS} -shared -o libcmem.so ${CGUTILS_SO}
 	cp libcmem.so ${Q_ROOT}/lib/libcmem.so

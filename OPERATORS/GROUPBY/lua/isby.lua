@@ -84,7 +84,7 @@ local function isby(src_val, src_lnk, dst_lnk, optargs)
     dst_chunk_idx = dst_chunk_idx + 1
     return dl_len, dv_chunk, nn_chunk
   end
-  local vargs = { gen = gen, has_nulls = false, 
+  local vargs = { gen = gen, has_nulls = true, 
     qtype = subs.dst_val_qtype, max_num_in_chunk = subs.max_num_in_chunk }
   if ( optargs ) then 
     assert(type(optargs) == "table")
@@ -96,4 +96,4 @@ local function isby(src_val, src_lnk, dst_lnk, optargs)
   end
   return lVector(vargs)
 end
-return isby
+return require('Q/q_export').export('isby', isby)

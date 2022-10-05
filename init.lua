@@ -21,6 +21,7 @@ require "Q/OPERATORS/F1S1OPF2/lua/is_prev"
 require "Q/OPERATORS/F1S1OPF2/lua/vshift"
 require "Q/OPERATORS/WHERE/lua/select_ranges"
 require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
+require "Q/OPERATORS/GROUPBY/lua/isby"
 --[[
 require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
 require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"

@@ -6,7 +6,7 @@ local function process_opt_args(opt_args)
   local fld_sep = "comma"
   local memo_len  -- value == nil => no global over ride 
   local max_num_in_chunk = qcfg.max_num_in_chunk
-  local nn_qtype = "B1" -- default 
+  local nn_qtype = "BL" -- default 
   if opt_args then
     assert(type(opt_args) == "table", "opt_args must be of type table")
     if opt_args["is_hdr"] ~= nil then

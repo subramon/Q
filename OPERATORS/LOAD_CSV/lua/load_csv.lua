@@ -22,9 +22,9 @@ local function load_csv(
   assert(cutils.isfile(infile))
   assert(tonumber(cutils.getsize(infile)) > 0)
 
-  assert(validate_meta(M))
   local is_hdr, fld_sep, global_memo_len, max_num_in_chunk, nn_qtype = 
    process_opt_args(opt_args)
+  assert(validate_meta(M, nn_qtype))
   -- see if you need to over ride per field memo_len with global
   if ( type(global_memo_len) == "number" ) then
     for k, v in pairs(M) do 

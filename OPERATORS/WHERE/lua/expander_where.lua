@@ -37,8 +37,6 @@ local function expander_where(a, b, optargs)
   local a_chunk_idx = 0
   local l_chunk_num = 0
 
-  -- n_out counts number of entries in output buffer
-  local n_out = ffi.new("uint64_t[?]", 1)
 
   -- aidx counts how much of input buffer we have consumed
   -- useful because we may have consumed half of it and have
@@ -50,6 +48,8 @@ local function expander_where(a, b, optargs)
   local num_in_out
   local function where_gen(chunk_num)
     assert(chunk_num == l_chunk_num)
+    -- n_out counts number of entries in output buffer
+    local n_out = ffi.new("uint64_t[?]", 1)
     n_out[0] = 0 
     local out_buf = cmem.new(subs.size)
     out_buf:stealable(true)

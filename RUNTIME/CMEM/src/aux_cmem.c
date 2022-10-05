@@ -2,7 +2,10 @@
 #include "cmem_consts.h"
 #include "cmem_struct.h"
 #include "aux_cmem.h"
+#define USE_GLOBALS // TODO THINK ABOUT THIS ONE 
+#ifdef USE_GLOBALS
 #include "mod_mem_used.h"
+#endif
 int 
 cmem_free( 
     CMEM_REC_TYPE *ptr_cmem
@@ -31,7 +34,9 @@ cmem_free(
         go_BYE(-1);
       }
       free_if_non_null(ptr_cmem->data);
+#ifdef USE_GLOBALS
       status = decr_mem_used((uint64_t)ptr_cmem->size);  cBYE(status);
+#endif
       ptr_cmem->size = 0;
     }
   }
@@ -79,7 +84,9 @@ cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
     status = posix_memalign(&data, CMEM_ALIGNMENT, size);
     cBYE(status);
     return_if_malloc_failed(data);
+#ifdef USE_GLOBALS
     status = incr_mem_used(size);  cBYE(status);
+#endif
   }
   ptr_cmem->data = data;
   ptr_cmem->size = size;

@@ -20,6 +20,7 @@ tests.t1 = function()
 
   local dv = isby(sv, sl, dl):eval()
   assert(type(dv) == "lVector")
+  assert(dv:has_nulls() == true)
   assert(dv:qtype() == sv:qtype())
   assert(dv:max_num_in_chunk() == dl:max_num_in_chunk())
   assert(dv:num_elements() == dl:num_elements())

@@ -8,7 +8,7 @@ local max_num_in_chunk = qcfg.max_num_in_chunk
 local function malloc_buffers_for_data(M)
   local databuf = {}
   local nn_databuf = {}
-  for _, v in ipairs(M) do
+  for k, v in ipairs(M) do
     local qtype = v.qtype
     local bufsz = v.width * max_num_in_chunk
     if ( v.is_load ) then 

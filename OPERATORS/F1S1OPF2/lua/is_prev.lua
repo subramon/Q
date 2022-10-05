@@ -39,16 +39,17 @@ local function is_prev(f1, cmp, optargs )
   local chunk_idx = 0
   local f1_cast_as = subs.in_ctype .. "*" 
   local f2_cast_as = subs.out_ctype .. "*" 
-  local last_val = assert(cmem.new({ size = ffi.sizeof(subs.in_ctype)}))
+  local last_val = cmem.new({ size = ffi.sizeof(subs.in_ctype)})
   local cst_last_val = ffi.cast(f1_cast_as, get_ptr(last_val))
   --============================================
   local first_call = true
   local f2_gen = function(chunk_num)
     -- sync between expected chunk_num and generator's chunk_idx state
     assert(chunk_num == chunk_idx)
-    local f2_buf = assert(cmem.new(bufsz))
-    local cst_f2_buf = ffi.cast(f2_cast_as, get_ptr(f2_buf))
+    local f2_buf = cmem.new(bufsz)
     f2_buf:zero()
+    f2_buf:stealable(true)
+    local cst_f2_buf = ffi.cast(f2_cast_as, get_ptr(f2_buf))
     local f1_len, f1_buf, _ = f1:get_chunk(chunk_idx)
     if f1_len > 0 then  
       local cst_f1_buf = ffi.cast(f1_cast_as, get_ptr(f1_buf))
@@ -59,6 +60,7 @@ local function is_prev(f1, cmp, optargs )
     end
     first_call = false
     chunk_idx = chunk_idx + 1
+    if ( f1_len == 0 ) then last_val:delete() end -- no more calls 
     return f1_len, f2_buf
   end
   return lVector{gen=f2_gen, has_nulls=false, qtype=out_qtype}
