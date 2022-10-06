@@ -22,7 +22,6 @@ my_extern vctr_rs_hmap_t g_vctr_hmap;
 my_extern uint32_t g_vctr_uqid;
 
 my_extern chnk_rs_hmap_t g_chnk_hmap;
-my_extern uint32_t g_chnk_uqid;
 // For master and memory manager
 my_extern bool g_mutex_created;
 my_extern pthread_cond_t  g_mem_cond;

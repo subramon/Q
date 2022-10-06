@@ -35,7 +35,6 @@ init_globals(
   g_vctr_uqid = 0; 
 
   memset(&g_chnk_hmap, 0, sizeof(chnk_rs_hmap_t));
-  g_chnk_uqid = 0; 
   //------------------------
   g_mutex_created = false;
 
@@ -116,6 +115,22 @@ init_globals(
     status = chnk_rs_hmap_unfreeze(&g_chnk_hmap, g_meta_dir_root,
         "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin");
     cBYE(status);
+    //-----------------------------------
+    g_vctr_uqid = 0;
+    for ( uint32_t i = 0; i < g_vctr_hmap.size; i++ ) { 
+      if ( !g_vctr_hmap.bkt_full[i] ) { continue; } 
+
+      vctr_rs_hmap_val_t key = g_vctr_hmap.bkt[i].key;
+      uint32_t vctr_uqid = key;
+      if ( vctr_uqid > g_vctr_uqid ) { g_vctr_uqid = vctr_uqid; } 
+    }
+    if ( g_vctr_hmap.nitems == 0 ) {
+      if ( g_vctr_uqid != 0 ) { go_BYE(-1); }
+    }
+    else {
+      if ( g_vctr_uqid == 0 ) { go_BYE(-1); }
+    }
+    //-----------------------------------
     printf("<<<<<<<<<<<< RESTORING SESSION ============\n");
   }
   else { 

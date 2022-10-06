@@ -28,7 +28,6 @@ vctr_rs_hmap_t g_vctr_hmap;
 uint32_t g_vctr_uqid;
 
 chnk_rs_hmap_t g_chnk_hmap;
-uint32_t g_chnk_uqid;
 
 uint64_t g_mem_used;
 uint64_t g_mem_allowed;
@@ -56,7 +55,6 @@ main(
   g_vctr_uqid = 0; 
   memset(&g_vctr_hmap, 0, sizeof(vctr_rs_hmap_t));
 
-  g_chnk_uqid = 0; 
   memset(&g_chnk_hmap, 0, sizeof(chnk_rs_hmap_t));
 
   g_mem_used = 0;

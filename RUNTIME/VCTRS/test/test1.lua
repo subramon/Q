@@ -147,7 +147,7 @@ tests.t4 = function()
   assert(x:is_eov() == true)
   --============================
   assert(x:memo_len() == qcfg.memo_len)
-  assert(x:max_num_in_chnk() == max_num_in_chnk)
+  assert(x:max_num_in_chunk() == max_num_in_chnk)
   x:pr("/tmp/_x")
   --============================
   local uqid = x:uqid()
