@@ -25,6 +25,7 @@ vctrs_chk(
   // Above check needed because (unfortunately) I have used
   // uint32_t everywhere instead of vctr_rs_hmap_key_t 
   if ( sizeof(uint32_t) != sizeof(vctr_rs_hmap_key_t)) { go_BYE(-1); }
+  uint32_t total_num_chunks = 0;
   for ( uint32_t i = 0; i < g_vctr_hmap.size; i++ ) { 
     vctr_rs_hmap_val_t vctr_val;
     memset(&vctr_val, 0, sizeof(vctr_rs_hmap_val_t));
@@ -43,7 +44,9 @@ vctrs_chk(
       continue; 
     }
     status = vctr_chk(g_vctr_hmap.bkts[i].key, is_at_rest); cBYE(status); 
+    total_num_chunks += g_vctr_hmap.bkts[i].val.num_chnks;
   }
+  if ( total_num_chunks != g_chnk_hmap.nitems ) { go_BYE(-1); }
 BYE:
   return status;
 }
