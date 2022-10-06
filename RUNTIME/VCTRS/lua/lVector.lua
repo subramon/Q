@@ -531,4 +531,8 @@ function lVector.null()
   return cVector.null()
 end
 
+function lVector:delete()
+  return  cVector.delete(self._base_vec)
+end
+
 return lVector

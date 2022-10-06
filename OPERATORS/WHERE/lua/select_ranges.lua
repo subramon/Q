@@ -33,7 +33,6 @@ local function select_ranges(f1, lb, ub, optargs )
     local num_in_f2   = 0
     local space_in_f2 = nC
 
-    local counter = 0
     while ( space_in_f2 > 0 ) do 
       if ( lbidx >= lbnum ) then break end -- no more input 
       local ilb = lb:get1(lbidx):to_num()
@@ -67,8 +66,6 @@ local function select_ranges(f1, lb, ub, optargs )
       num_in_f2 = num_in_f2 + num_to_copy
       lboff = lboff + num_to_copy
       space_in_f2 = space_in_f2 - num_to_copy
-      counter = counter + 1 
-      assert(counter <= 4)
     end
     chunk_idx = chunk_idx + 1
     return num_in_f2, f2_buf

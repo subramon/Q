@@ -1,6 +1,7 @@
 -- This version supports chunking in load_csv
 local ffi           = require 'ffi'
 local cutils        = require 'libcutils'
+local lgutils       = require 'liblgutils'
 local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local validate_meta = require "Q/OPERATORS/LOAD_CSV/lua/validate_meta"
 local process_opt_args = 
@@ -29,10 +30,11 @@ local function load_csv(
   assert(validate_meta(M))
   -- if memo_len not provided for field, use global over-ride
   for k, v in pairs(M) do 
-  if ( v.memo_len ) then 
-    assert(type(v.memo_len) == "number" )
-  else
-    v.memo_len = global_memo_len
+    if ( v.memo_len ) then 
+      assert(type(v.memo_len) == "number" )
+    else
+      v.memo_len = global_memo_len
+    end
   end
   --=======================================
 
@@ -54,7 +56,6 @@ local function load_csv(
     if ( v.is_load ) then 
       local name = v.name
       local function lgen(chunk_num)
-        print("chunk_num = ", chunk_num)
         l_file_offset:nop()
         l_num_rows_read:nop()
         l_is_load:nop()
@@ -73,31 +74,30 @@ local function load_csv(
             end
           end
         end
+        print("chunk_num/mem_used = ", chunk_num, lgutils.mem_used())
         --===================================
         assert(chunk_num == l_chunk_num)
         l_chunk_num = l_chunk_num + 1 
         --===================================
-        local l_num_rows_read = tonumber(num_rows_read[0])
-        local tmp_file_offset = tonumber(file_offset[0])
         local x = bridge_C(M, infile, fld_sep, is_hdr, max_num_in_chunk,
           file_offset, num_rows_read, c_data, nn_c_data,
           is_load, has_nulls, is_trim, width, c_qtypes, c_nn_qtype)
         assert(x == true)
-        local l_num_rows_read = tonumber(num_rows_read[0])
+        local this_num_rows_read = tonumber(num_rows_read[0])
         --===================================
-        if ( l_num_rows_read > 0 ) then 
+        if ( this_num_rows_read > 0 ) then 
           for _, v in ipairs(M) do 
             if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
               -- print("putting chunk for " .. v.name)
               vectors[v.name]:put_chunk(
-                l_data[v.name], l_num_rows_read, nn_l_data[v.name])
+                l_data[v.name], this_num_rows_read, nn_l_data[v.name])
               -- print("put chunk for " .. v.name)
             end
           end
         end 
-        -- print("put all chunks")
+        print("put all chunks")
         --=====================
-        if ( l_num_rows_read < max_num_in_chunk ) then 
+        if ( this_num_rows_read < max_num_in_chunk ) then 
           -- signal eov for all vectors other than yourself
           for _, v in ipairs(M) do 
             if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
@@ -105,8 +105,8 @@ local function load_csv(
             end
           end
         end
-        -- print("returning " ..  l_num_rows_read)
-        return l_num_rows_read, l_data[v.name], nn_l_data[v.name]
+        print("returning " ..  this_num_rows_read)
+        return this_num_rows_read, l_data[v.name], nn_l_data[v.name]
       end
       lgens[my_name] = lgen
     end

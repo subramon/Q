@@ -572,7 +572,6 @@ static int l_vctr_free( lua_State *L) {
     goto BYE;
   }
   status = vctr_del(ptr_v->uqid, &is_found); cBYE(status); 
-  // TODO P2 Investigate why Lua is deleting a Vector with uqid == 0
   lua_pushboolean(L, is_found);
   return 1;
 BYE:
@@ -746,6 +745,7 @@ BYE:
 //-----------------------
 static const struct luaL_Reg vector_methods[] = {
     { "__gc",    l_vctr_free   },
+    { "delete",    l_vctr_free   }, // try not to call this explicitly
     { "chk", l_vctr_chk },
     { "check_all", l_vctr_check_all },
 
@@ -785,6 +785,7 @@ static const struct luaL_Reg vector_methods[] = {
 };
  
 static const struct luaL_Reg vector_functions[] = {
+    { "delete",    l_vctr_free   }, // try not to call this explicitly
     { "chk", l_vctr_chk },
     { "check_all", l_vctr_check_all },
 
