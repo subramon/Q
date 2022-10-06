@@ -4,8 +4,7 @@ local qc      = require 'Q/UTILS/lua/qcore'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
   
 local function validate_meta(
-  M, -- meta data table 
-  nn_qtype -- default from optargs
+  M -- meta data table 
 )
   assert(type(M) == "table")
   -- this table must be indexed as 1, 2 . ...
@@ -30,10 +29,9 @@ local function validate_meta(
       fld_M.is_persist = false
     end
     --===========================================
-    if fld_M.nn_qtype == nil then 
-      fld_M.nn_qtype = nn_qtype
+    if fld_M.nn_qtype ~= nil then 
+      error("Cannot set nn_qtype per field")
     end
-    assert((fld_M.nn_qtype == "B1") or (fld_M.nn_qtype == "BL"))
     --===========================================
     if fld_M.is_memo ~= nil then 
       assert(type(fld_M.is_memo) == "boolean")

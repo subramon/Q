@@ -13,6 +13,7 @@
 #include "aux_lua_to_c.h"
 #include "qtypes.h"
 
+#include "BL_to_txt.h" 
 #include "I1_to_txt.h" 
 #include "I2_to_txt.h" 
 #include "I4_to_txt.h" 
@@ -499,6 +500,12 @@ static int l_cmem_free( lua_State *L)
   int num_args = lua_gettop(L);
   if ( num_args != 1 ) { go_BYE(-1); }
   CMEM_REC_TYPE *ptr_cmem = luaL_checkudata(L, 1, "CMEM");
+  /*
+  if ( ptr_cmem->cell_name[0] != '\0' ) {
+    printf("Freeing CMEM %s \n", ptr_cmem->cell_name);
+  }
+  */
+
   status = cmem_free(ptr_cmem);  cBYE(status);
   lua_pushboolean(L, true); 
   return 1; 

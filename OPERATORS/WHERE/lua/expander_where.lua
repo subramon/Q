@@ -42,14 +42,16 @@ local function expander_where(a, b, optargs)
   -- useful because we may have consumed half of it and have
   -- to return because output bufer is full. When we come back
   -- we need to know where we left off
-  local aidx = ffi.new("uint64_t[?]", 1)
+  local aidx = cmem.new(ffi.sizeof("uint64_t"))
+  aidx = ffi.cast("uint64_t *", get_ptr(aidx, "UI8"))
   aidx[0] = 0 
   
   local num_in_out
   local function where_gen(chunk_num)
     assert(chunk_num == l_chunk_num)
     -- n_out counts number of entries in output buffer
-    local n_out = ffi.new("uint64_t[?]", 1)
+    local n_out = cmem.new(ffi.sizeof("uint64_t"))
+    n_out = ffi.cast("uint64_t *", get_ptr(n_out, "UI8"))
     n_out[0] = 0 
     local out_buf = cmem.new(subs.size)
     out_buf:stealable(true)

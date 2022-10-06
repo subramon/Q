@@ -28,6 +28,10 @@ vctr_del(
     goto BYE;
   }
   val = g_vctr_hmap.bkts[where_found].val;
+  if ( val.name[0] != '\0' ) { 
+    printf("Deleting %s \n", val.name[0]);
+  }
+
 
   //-------------------------------------------
   // Delete chunks in vector before deleting vector 

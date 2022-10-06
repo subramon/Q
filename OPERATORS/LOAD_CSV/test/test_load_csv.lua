@@ -1,13 +1,13 @@
+local plutils= require 'pl.utils'
+local plfile = require 'pl.file'
+local plpath = require 'pl.path'
+require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local ffi     = require 'ffi'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
-local plpath = require 'pl.path'
-local plutils= require 'pl.utils'
-local plfile = require 'pl.file'
-require 'Q/UTILS/lua/strict'
 -- TODO P1 Set below to true 
 local test_print  = true -- turn false if you want only load_csv tested
 --=======================================================
@@ -37,17 +37,18 @@ tests.t1 = function()
   assert(num_cols == #M, num_cols)
   local chunk_idx = 0
   repeat 
-    -- if ( chunk_idx == 9 ) then break end -- TODO P1 
+    print("getting chunk " .. chunk_idx )
     local n 
     for k, v in pairs(T) do 
       n = v:get_chunk(chunk_idx)
       if  ( n ~= 0 ) then 
         v:unget_chunk(chunk_idx)
       end
-      -- print("got chunk " .. chunk_idx .. " for " .. k)
+      print("got chunk " .. chunk_idx .. " for " .. k)
     end
     chunk_idx = chunk_idx + 1
   until (n == 0)
+  print("got all chunks")
   -- This test is specific to the in1.csv we have crafted
   for i = 1, T.i4:num_elements() do
     assert(T.i4:get1(i-1):to_num() == i)
@@ -324,8 +325,8 @@ tests.t6 = function()
   for _, nn_qtype in ipairs( { "B1", "BL", } ) do 
     local O = { is_hdr = true, memo_len = -1, nn_qtype = nn_qtype, }
     local M = {}
-    M[#M+1] = { name = "i4", qtype = "I4", nn_qtype = "B1", has_nulls = true, }
-    M[#M+1] = { name = "f4", qtype = "F4", nn_qtype = "BL", has_nulls = true, }
+    M[#M+1] = { name = "i4", qtype = "I4", has_nulls = true, }
+    M[#M+1] = { name = "f4", qtype = "F4", has_nulls = true, }
     local T = Q.load_csv(datafile, M, O)
     assert(T.i4:has_nulls() == true)
     assert(T.f4:has_nulls() == true)
@@ -353,13 +354,13 @@ tests.t6 = function()
   print("Test t6 succeeded")
   
 end
-tests.t1()
-tests.t2()
-tests.t3()
-tests.t4()
-tests.t4a()
+-- WORKS tests.t1()
+-- WORKS tests.t2()
+-- WORKS tests.t3()
+-- WORKS tests.t4()
+-- WORKS tests.t4a()
 tests.t5()
-tests.t6()
+-- WORKS tests.t6()
 os.exit()
 --[[
 return tests

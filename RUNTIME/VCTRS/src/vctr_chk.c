@@ -66,22 +66,26 @@ vctr_chk(
   if ( qtype <= Q0 ) { go_BYE(-1); } 
   uint32_t width           = vctr_val.width;
   // Unfortunately, we have some special casing to do here
-  if ( qtype != SC ) {
-    if ( qtype == B1 ) { 
-      if  ( width != 0 ) { go_BYE(-1); }
-    }
-    else {
-      if ( get_width_c_qtype(qtype) != (int)width ) { go_BYE(-1); }
-    }
+  if ( qtype == B1 ) { 
+    if  ( width != 0 ) { go_BYE(-1); }
   }
-  else {
+  else if ( qtype == SC ) {
     if  ( width < 2 ) { go_BYE(-1); }
   }
+  else { 
+    if ( get_width_c_qtype(qtype) != (int)width ) { go_BYE(-1); }
+  }
+  //-----------------------------------------
   uint64_t num_elements    = vctr_val.num_elements;
   uint32_t num_chnks       = vctr_val.num_chnks;
   uint32_t max_num_in_chnk = vctr_val.max_num_in_chnk;
   uint64_t chk_num_elements    = 0;
-  if ( vctr_val.ref_count == 0 ) {  go_BYE(-1); }
+  // we can have an empty Vector (while it is being created)
+  if ( vctr_val.is_eov ) {  
+    if ( vctr_val.ref_count == 0 ) {  go_BYE(-1); }
+  }
+  // if ( num_elements == 0 ) { go_BYE(-1); } 
+  if (((max_num_in_chnk/8)*8) != max_num_in_chnk ) { go_BYE(-1); }
   // name must be null terminated 
   if ( vctr_val.name[MAX_LEN_VCTR_NAME] != '\0' ) { go_BYE(-1); }
   int good_filesz  = width * max_num_in_chnk;

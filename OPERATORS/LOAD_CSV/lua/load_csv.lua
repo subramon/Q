@@ -8,6 +8,7 @@ local process_opt_args =
 local malloc_buffers_for_data = 
   require "Q/OPERATORS/LOAD_CSV/lua/malloc_buffers_for_data"
 local malloc_aux    = require "Q/OPERATORS/LOAD_CSV/lua/malloc_aux"
+local aux_for_C     = require "Q/OPERATORS/LOAD_CSV/lua/aux_for_C"
 local bridge_C      = require "Q/OPERATORS/LOAD_CSV/lua/bridge_C"
 local qcfg          = require 'Q/UTILS/lua/qcfg'
 local setup_ptrs    = require 'Q/OPERATORS/LOAD_CSV/lua/setup_ptrs'
@@ -24,17 +25,24 @@ local function load_csv(
 
   local is_hdr, fld_sep, global_memo_len, max_num_in_chunk, nn_qtype = 
    process_opt_args(opt_args)
-  assert(validate_meta(M, nn_qtype))
-  -- see if you need to over ride per field memo_len with global
-  if ( type(global_memo_len) == "number" ) then
-    for k, v in pairs(M) do 
-      v.memo_len = global_memo_len
-    end
+  local c_nn_qtype = cutils.get_c_qtype(nn_qtype)
+  assert(validate_meta(M))
+  -- if memo_len not provided for field, use global over-ride
+  for k, v in pairs(M) do 
+  if ( v.memo_len ) then 
+    assert(type(v.memo_len) == "number" )
+  else
+    v.memo_len = global_memo_len
   end
   --=======================================
 
-  local file_offset, num_rows_read, is_load, has_nulls, is_trim, width, 
-    c_qtypes = malloc_aux(#M)
+  local l_file_offset, l_num_rows_read, l_is_load, l_has_nulls, 
+    l_is_trim, l_width, l_c_qtypes = 
+    malloc_aux(M)
+  local file_offset, num_rows_read, is_load, has_nulls, 
+    is_trim, width, c_qtypes = 
+    aux_for_C(M, l_file_offset, l_num_rows_read, l_is_load, l_has_nulls, 
+    l_is_trim, l_width, l_c_qtypes)
   --=======================================
   local vectors = {} 
 
@@ -46,35 +54,48 @@ local function load_csv(
     if ( v.is_load ) then 
       local name = v.name
       local function lgen(chunk_num)
+        print("chunk_num = ", chunk_num)
+        l_file_offset:nop()
+        l_num_rows_read:nop()
+        l_is_load:nop()
+        l_has_nulls:nop()
+        l_is_trim:nop()
+        l_width:nop()
+        l_c_qtypes:nop()
         --=== Set up pointers to the data buffers for each loadable column
-        local databuf, nn_databuf = malloc_buffers_for_data(M)
-        local cdata = ffi.new("char *[?]", #M)
-        local nn_cdata
-        if ( nn_qtype == "B1" ) then 
-          nn_cdata = ffi.new("uint64_t *[?]", #M)
-        elseif ( nn_qtype == "BL" ) then 
-          nn_cdata = ffi.new("bool *[?]", #M)
-        else
-          error("")
+        local l_data, nn_l_data, c_data, nn_c_data = 
+          malloc_buffers_for_data(M, max_num_in_chunk)
+        for k, v in ipairs(M) do
+          if ( v.is_load ) then 
+            l_data[v.name]:nop()
+            if ( v.has_nulls ) then
+              nn_l_data[v.name]:nop()
+            end
+          end
         end
-        setup_ptrs( M, databuf, nn_databuf, cdata, nn_cdata, nn_qtype)
         --===================================
         assert(chunk_num == l_chunk_num)
         l_chunk_num = l_chunk_num + 1 
         --===================================
-        assert(bridge_C(M, infile, fld_sep, is_hdr, max_num_in_chunk,
-          file_offset, num_rows_read, cdata, nn_cdata,
-          is_load, has_nulls, is_trim, width, c_qtypes, nn_qtype))
+        local l_num_rows_read = tonumber(num_rows_read[0])
+        local tmp_file_offset = tonumber(file_offset[0])
+        local x = bridge_C(M, infile, fld_sep, is_hdr, max_num_in_chunk,
+          file_offset, num_rows_read, c_data, nn_c_data,
+          is_load, has_nulls, is_trim, width, c_qtypes, c_nn_qtype)
+        assert(x == true)
         local l_num_rows_read = tonumber(num_rows_read[0])
         --===================================
         if ( l_num_rows_read > 0 ) then 
           for _, v in ipairs(M) do 
             if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
+              -- print("putting chunk for " .. v.name)
               vectors[v.name]:put_chunk(
-                databuf[v.name], l_num_rows_read, nn_databuf[v.name])
+                l_data[v.name], l_num_rows_read, nn_l_data[v.name])
+              -- print("put chunk for " .. v.name)
             end
           end
         end 
+        -- print("put all chunks")
         --=====================
         if ( l_num_rows_read < max_num_in_chunk ) then 
           -- signal eov for all vectors other than yourself
@@ -84,8 +105,8 @@ local function load_csv(
             end
           end
         end
-        assert(type(databuf[v.name]) == "CMEM")
-        return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
+        -- print("returning " ..  l_num_rows_read)
+        return l_num_rows_read, l_data[v.name], nn_l_data[v.name]
       end
       lgens[my_name] = lgen
     end

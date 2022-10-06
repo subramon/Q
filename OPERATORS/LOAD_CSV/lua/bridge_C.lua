@@ -1,5 +1,8 @@
+require 'Q/UTILS/lua/strict'
 local ffi     = require 'ffi'
+local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
+local cVector = require 'libvctr'
 local qc      = require 'Q/UTILS/lua/qcore'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local record_time   = require 'Q/UTILS/lua/record_time'
@@ -12,32 +15,22 @@ local function bridge_C(
   max_num_in_chunk,
   file_offset,
   num_rows_read,
-  data,
-  nn_data,
+  c_data,
+  nn_c_data,
   is_load,
   has_nulls,
   is_trim,
   width,
   c_qtypes,
-  nn_qtype
+  c_nn_qtype
   )
   assert( M and type(M) == "table")
-  assert(infile and type(infile) == "string")
+  assert(type(infile) == "string")
   assert(type(is_hdr) == "boolean")
-  assert(fld_sep and type(fld_sep) == "string")
+  assert(type(fld_sep) == "string")
 
   local max_width = qcfg.max_width_SC
   local nC = #M
-
-  for i = 1, nC do
-    c_qtypes[i-1] =  cutils.get_c_qtype(M[i].qtype)
-    is_trim[i-1] = false
-    if ( M[i].qtype == "SC" ) then is_trim[i-1] = true end 
-    is_load[i-1]   = M[i].is_load
-    has_nulls[i-1] = M[i].has_nulls
-    width[i-1]     = M[i].width
-  end
-  local c_nn_qtype = cutils.get_c_qtype(nn_qtype)
   local subs = {}
   subs.fn = "load_csv_fast"
   subs.dotc = "OPERATORS/LOAD_CSV/src/load_csv_fast.c"
@@ -59,12 +52,17 @@ local function bridge_C(
   local func_name = subs.fn
 
   local start_time = cutils.rdtsc()
-  nn_data = ffi.cast("char **", nn_data)
-  local status = qc[func_name](infile, nC, 
-    ffi.cast("char *", fld_sep),
+  -- print("About to call ", func_name)
+  local status = qc[func_name](infile, nC, fld_sep, max_num_in_chunk, max_width, num_rows_read, file_offset, c_qtypes, c_nn_qtype, is_trim, is_hdr,
+  is_load, has_nulls, width, c_data, nn_c_data)
+  --[[
+  local status = qc[func_name](infile, nC, fld_sep,
     max_num_in_chunk, max_width, num_rows_read, file_offset, 
     c_qtypes, c_nn_qtype, 
-    is_trim, is_hdr, is_load, has_nulls, width, data, nn_data)
+    is_trim, is_hdr, is_load, has_nulls, width, c_data, nn_c_data)
+    --]]
+  local l_file_offset = tonumber(file_offset[0])
+  -- print("C: l_file_offset = ", l_file_offset)
   assert(status == 0, "load_csv_fast failed")
   record_time(start_time, "load_csv_fast")
   return true

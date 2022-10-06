@@ -59,12 +59,12 @@ local function isby(src_val, src_lnk, dst_lnk, optargs)
       local slbuf = get_ptr(sl_chunk, subs.src_lnk_qtype)
       local svbuf = get_ptr(sv_chunk, subs.src_val_qtype)
   
-      local c_dst_idx = ffi.new("uint32_t[?]", 1)
-      c_dst_idx = ffi.cast("uint32_t *", c_dst_idx)
+      local c_dst_idx = cmem.new(ffi.sizeof("uint32_t"))
+      c_dst_idx = ffi.cast("uint32_t *", get_ptr(c_dst_idx, "UI4"))
       c_dst_idx[0] = dst_idx
 
-      local c_src_idx = ffi.new("uint32_t[?]", 1)
-      c_src_idx = ffi.cast("uint32_t *", c_src_idx)
+      local c_src_idx = cmem.new(ffi.sizeof("uint32_t"))
+      c_src_idx = ffi.cast("uint32_t *", get_ptr(c_src_idx, "UI4"))
       c_src_idx[0] = src_idx
 
       local status = qc[func_name]( slbuf, svbuf, sl_len, dlbuf, dvbuf, 

@@ -375,7 +375,7 @@ function lVector:get_chunk(chnk_idx)
     end
   end
   if ( to_generate ) then 
-    -- invoke the generator 
+    -- print(" invoke the generator  for " .. self._chunk_num)
     if ( type(self._generator) == "nil" ) then return 0, nil end 
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")

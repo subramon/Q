@@ -49,7 +49,6 @@ ${fn}(
   }
   for ( uint64_t i = 1; i < nR; i++ ) { 
     out[i] = (in[i] ${cmp_op} in[i-1]);
-    if ( out[i] ) { printf("i = %d\n", i); }
   }
   *ptr_last_val_prev_chunk = in[nR-1];
 BYE:

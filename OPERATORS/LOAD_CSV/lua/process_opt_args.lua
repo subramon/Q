@@ -4,7 +4,7 @@ local function process_opt_args(opt_args)
   -- is_hdr is set to false
   local is_hdr = false
   local fld_sep = "comma"
-  local memo_len  -- value == nil => no global over ride 
+  local memo_len  = qcfg.memo_len -- default 
   local max_num_in_chunk = qcfg.max_num_in_chunk
   local nn_qtype = "BL" -- default 
   if opt_args then

@@ -1,8 +1,8 @@
+-- TODO P1 DELETE THIS FILE 
 local ffi  = require 'ffi'
 local cmem = require 'libcmem'
 local get_ptr       = require "Q/UTILS/lua/get_ptr"
-local function setup_ptrs(M, databuf, nn_databuf, cdata, nn_cdata,
-  nn_qtype)
+local function setup_ptrs(M, databuf, nn_databuf, cdata, nn_cdata)
   assert(cdata)
   assert(nn_cdata)
   assert(type(databuf)    == "table")
@@ -22,9 +22,9 @@ local function setup_ptrs(M, databuf, nn_databuf, cdata, nn_cdata,
     if ( v.is_load ) then 
       cdata[i-1]  = get_ptr(databuf[v.name])
       if ( v.has_nulls ) then
-        if ( nn_qtype == "B1") then 
+        if ( v.nn_qtype == "B1") then 
           nn_cdata[i-1] = get_ptr(nn_databuf[v.name], "uint64_t *")
-        elseif ( nn_qtype == "BL") then 
+        elseif ( v.nn_qtype == "BL") then 
           nn_cdata[i-1] = get_ptr(nn_databuf[v.name], "bool *")
         else
           error("")
