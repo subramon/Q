@@ -92,12 +92,12 @@ local function read_configs(C)
   end
   --=== Put it into C struct 
   C = ffi.cast("q_config_t *", C)
-  C[0].save_session = T.save_session
+  C[0].save_session    = T.save_session
   C[0].restore_session = T.restore_session
   -----------------------
-  C[0].is_webserver = T.is_webserver
+  C[0].is_webserver   = T.is_webserver
   C[0].is_out_of_band = T.is_out_of_band
-  C[0].is_mem_mgr = T.is_mem_mgr
+  C[0].is_mem_mgr     = T.is_mem_mgr
   -----------------------
   C[0].data_dir_root = stringify(T.data_dir_root)
   C[0].meta_dir_root = stringify(T.meta_dir_root)
@@ -105,7 +105,7 @@ local function read_configs(C)
   C[0].mem_allowed = T.mem_allowed
   C[0].dsk_allowed = T.dsk_allowed
 
-  C[0].web_port = T.web_port
+  C[0].web_port         = T.web_port
   C[0].out_of_band_port = T.out_of_band_port
 
   C[0].vctr_hmap_min_size = vctr.min_size

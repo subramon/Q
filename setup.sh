@@ -22,6 +22,7 @@ mkdir -p $HOME/local/Q/
 mkdir -p $HOME/local/Q/lib/
 #-----------------------------------
 C_FLAGS=" -g -std=gnu99  -fPIC"
+C_FLAGS+=" -DDEBUG "
 C_FLAGS+=" -Wall -W -Waggregate-return -Wcast-align -Wmissing-prototypes"
 C_FLAGS+=" -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable "
 C_FLAGS+=" -Wunused-parameter -Wno-pedantic -fopenmp -Wno-unused-label " 

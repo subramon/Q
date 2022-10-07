@@ -16,6 +16,7 @@
 
 #include "webserver.h"
 #include "mem_mgr.h"
+#include "read_configs.h"
 #define MAIN_PGM
 #include "qjit_globals.h"
 #include "init_globals.h"
@@ -53,7 +54,7 @@ init_globals(
 
   status = read_configs(); cBYE(status);
   //------------------------
-  // START TODO Following must come from config file 
+  /* Hard coding below no longer needed. These come from config file 
   g_save_session    = true;
   g_restore_session = false;
   //-----------------------
@@ -79,7 +80,7 @@ init_globals(
 
   g_chnk_hmap_config.min_size = 32;
   g_chnk_hmap_config.max_size = 0;
-  //  STOP TODO Above must come from config file 
+  */
 
   // For webserver 
   if ( g_is_webserver ) {  
@@ -120,7 +121,7 @@ init_globals(
     for ( uint32_t i = 0; i < g_vctr_hmap.size; i++ ) { 
       if ( !g_vctr_hmap.bkt_full[i] ) { continue; } 
 
-      vctr_rs_hmap_val_t key = g_vctr_hmap.bkt[i].key;
+      vctr_rs_hmap_key_t key = g_vctr_hmap.bkts[i].key;
       uint32_t vctr_uqid = key;
       if ( vctr_uqid > g_vctr_uqid ) { g_vctr_uqid = vctr_uqid; } 
     }
@@ -134,6 +135,7 @@ init_globals(
     printf("<<<<<<<<<<<< RESTORING SESSION ============\n");
   }
   else { 
+    printf("<<<<<<<<<<<< STARTING NEW SESSION ============\n");
     g_vctr_hmap_config.so_file = strdup("libhmap_vctr.so"); 
     status = vctr_rs_hmap_instantiate(&g_vctr_hmap, &g_vctr_hmap_config); 
     cBYE(status);

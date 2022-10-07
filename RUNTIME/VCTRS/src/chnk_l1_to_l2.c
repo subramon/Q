@@ -35,6 +35,7 @@ chnk_l1_to_l2(
   size_t nr = fwrite(ptr_val->l1_mem, ptr_val->size, 1, fp);
   if ( nr != 1 ) { go_BYE(-1); }
   fclose_if_non_null(fp);
+  printf("writing to %s \n", l2_file);
   status = incr_dsk_used(ptr_val->size); cBYE(status);
   ptr_val->l2_exists = true; 
 

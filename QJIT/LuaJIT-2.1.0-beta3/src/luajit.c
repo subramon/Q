@@ -663,8 +663,12 @@ BYE:
     pthread_cond_destroy(&g_mem_cond);
     pthread_mutex_destroy(&g_mem_mutex);
   }
-  g_vctr_hmap.destroy(&g_vctr_hmap);
-  g_chnk_hmap.destroy(&g_chnk_hmap);
+  if ( g_vctr_hmap.bkts != NULL ) {
+    g_vctr_hmap.destroy(&g_vctr_hmap);
+  }
+  if ( g_chnk_hmap.bkts != NULL ) {
+    g_chnk_hmap.destroy(&g_chnk_hmap);
+  }
   // STOP : RAMESH
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

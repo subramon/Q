@@ -91,7 +91,11 @@ function lVector:drop(level)
   assert(type(level) == "number")
   assert(cVector.drop_l1_l2(self._base_vec, level))
   if ( self._nn_vec ) then 
-    assert(cVector.drop_l1_l2(self._nn_vec, level))
+    assert(self:has_nulls())
+    local nn_vector = self._nn_vec
+    assert(type(nn_vector) == "lVector")
+    assert((nn_vector:qtype() == "BL") or (nn_vector:qtype() == "B1"))
+    assert(cVector.drop_l1_l2(nn_vector._base_vec, level))
   end
   return self
 end

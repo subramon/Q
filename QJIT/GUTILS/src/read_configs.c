@@ -81,6 +81,8 @@ read_configs(
   g_is_webserver    = C.is_webserver;
   g_is_out_of_band  = C.is_out_of_band;
   g_is_mem_mgr      = C.is_mem_mgr;
+
+  printf("g_restore_session = %s \n", g_restore_session ? "true" : "false");
   
   if ( strlen(C.data_dir_root) >= Q_MAX_LEN_DIR_NAME ) { go_BYE(-1); } 
   if ( strlen(C.meta_dir_root) >= Q_MAX_LEN_DIR_NAME ) { go_BYE(-1); } 

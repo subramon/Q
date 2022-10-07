@@ -28,6 +28,13 @@ vctr_add1(
   if ( width == 0 ) { 
     width = get_width_c_qtype(qtype);
   }
+#ifdef DEBUG
+  {
+  bool is_found; uint32_t where_found;
+  status = vctr_is(*ptr_uqid, &is_found, &where_found); cBYE(status);
+  if ( is_found ) { go_BYE(-1); }
+#endif
+  }
 
   uint32_t max_num_in_chnk = in_max_num_in_chnk;
   if  ( max_num_in_chnk == 0 ) { 

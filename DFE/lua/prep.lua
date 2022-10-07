@@ -14,7 +14,7 @@ M[3] = { name = "dist_loc_i",  qtype = "I2", has_nulls = false  }
 M[4] = { name = "sls_unit_q",  qtype = "F4", has_nulls = true  }
 M[5] = { name = "week_start_date",  qtype = "SC", has_nulls = false, width = 15  }
 assert(plpath.isfile(datafile))
-local T1 = Q.load_csv(datafile, M, O)
+T1 = Q.load_csv(datafile, M, O)
 assert(T1.sls_unit_q:has_nulls() == true)
 T1.sls_unit_q:eval()
 cVector:check_all(true, true)
@@ -41,7 +41,7 @@ end
 local n = T1.tcin:num_elements()
 T1.id = Q.seq({len = n, start = 0, by = 1, qtype = "I8"})
 print("Created T1.id")
-local T2 = {}
+T2 = {}
 print("evaluating T2.lb")
 T2.lb = Q.where(T1.id, T1.x):eval()
 print("evaluating T2.ck")
@@ -65,6 +65,9 @@ if ( is_pr ) then
   U[#U+1] = T2.ub
   Q.print_csv(U, { impl = "C", opfile = "_T2", header = header })
 end
+Q.save()
+print("Quitting after PLP")
+os.exit()
 --== Following happens at run time 
 local datafile = qcfg.q_src_root .. "/DFE/data/run1.csv"
 local M = {}
@@ -93,7 +96,7 @@ end
 local T3 = {}
 for k, v in pairs(T1) do 
    if ( ( k == "x" ) or ( k == "week_start_date" ) or ( k == "sls_unit_q" ) ) then 
-     print("not yet implemented code to handle " .. k)
+     print("not yet implemented code to handle " .. k) -- TODO P1
    else
      print("Adding from T1 to T3 ", k)
      T3[k] = Q.select_ranges(v, T4.lb, T4.ub):eval()
