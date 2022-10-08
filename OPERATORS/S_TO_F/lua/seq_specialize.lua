@@ -6,6 +6,7 @@ local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local qc        = require 'Q/UTILS/lua/qcore'
 local qcfg      = require 'Q/UTILS/lua/qcfg'
+local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
 
 -- cdef the necessary struct within pcall to prevent error on second call
 local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
@@ -29,14 +30,7 @@ return function (
   subs.len	    = len
   subs.out_qtype    = qtype
   subs.out_ctype    = cutils.str_qtype_to_str_ctype(qtype)
-  local max_num_in_chunk = qcfg.max_num_in_chunk
-  if ( largs.max_num_in_chunk ) then 
-   assert(type(largs.max_num_in_chunk) == "number")
-   max_num_in_chunk = largs.max_num_in_chunk
-   assert(max_num_in_chunk > 0)
-   assert( ( ( ( max_num_in_chunk / 64 ) * 64 ) == max_num_in_chunk))
-  end
-  subs.max_num_in_chunk = max_num_in_chunk 
+  subs.max_num_in_chunk = get_max_num_in_chunk (largs)
   subs.buf_size     = subs.max_num_in_chunk * cutils.get_width_qtype(qtype)
   subs.cast_buf_as  = subs.out_ctype .. " * "
   --========================
@@ -44,7 +38,7 @@ return function (
   local sstart = assert(to_scalar(start, qtype))
   local sby    = assert(to_scalar(by, qtype))
 
-  -- allocate cargs
+  -- allocate cargslocal 
   subs.cargs_ctype = "SEQ_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(subs.cargs_ctype)
   subs.cargs = cmem.new(sz)

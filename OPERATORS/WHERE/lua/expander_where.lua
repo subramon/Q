@@ -38,28 +38,32 @@ local function expander_where(a, b, optargs)
   local l_chunk_num = 0
 
 
+  -- aidx must be in the closure of the generator 
   -- aidx counts how much of input buffer we have consumed
   -- useful because we may have consumed half of it and have
   -- to return because output bufer is full. When we come back
   -- we need to know where we left off
   local aidx = cmem.new(ffi.sizeof("uint64_t"))
-  aidx = ffi.cast("uint64_t *", get_ptr(aidx, "UI8"))
-  aidx[0] = 0 
+  local c_aidx = ffi.cast("uint64_t *", get_ptr(aidx, "UI8"))
+  c_aidx[0] = 0 
   
-  local num_in_out
   local function where_gen(chunk_num)
     assert(chunk_num == l_chunk_num)
     -- n_out counts number of entries in output buffer
     local n_out = cmem.new(ffi.sizeof("uint64_t"))
-    n_out = ffi.cast("uint64_t *", get_ptr(n_out, "UI8"))
-    n_out[0] = 0 
+    local c_n_out = ffi.cast("uint64_t *", get_ptr(n_out, "UI8"))
+    c_n_out[0] = 0 
     local out_buf = cmem.new(subs.size)
     out_buf:stealable(true)
+    local num_in_out
     repeat
+      aidx:nop()
+      n_out:nop()
       local a_len, a_chunk, a_nn_chunk = a:get_chunk(l_chunk_num)
       local b_len, b_chunk, b_nn_chunk = b:get_chunk(l_chunk_num)
-      if ( a_len == 0 ) then -- no more input, return whatever is in out
-        local buf_size = tonumber(n_out[0])
+      if ( a_len == 0 ) then 
+        -- no more input, flush whatever is in output buffer
+        local buf_size = tonumber(c_n_out[0])
         return buf_size, out_buf
       end
       assert(a_len == b_len)
@@ -67,20 +71,21 @@ local function expander_where(a, b, optargs)
       local cast_b_buf   = get_ptr(b_chunk, subs.cast_b_as)
       local cast_out_buf = get_ptr(out_buf, subs.cast_a_as)
       local start_time = cutils.rdtsc()
-      local status = qc[func_name](cast_a_buf, cast_b_buf, aidx, 
-        a_len, cast_out_buf, subs.max_num_in_chunk, n_out)
+      local status = qc[func_name](cast_a_buf, cast_b_buf, c_aidx, 
+        a_len, cast_out_buf, subs.max_num_in_chunk, c_n_out)
       assert(status == 0)
       record_time(start_time, func_name)
-      num_in_out = tonumber(n_out[0])
+      num_in_out = tonumber(c_n_out[0])
       -- if you have consumed all you got from the a_chunk,
       -- then you need to move to the next chunk
-      if ( tonumber(aidx[0]) == a_len ) then
+      if ( tonumber(c_aidx[0]) == a_len ) then
         a:unget_chunk(l_chunk_num)
         b:unget_chunk(l_chunk_num)
         l_chunk_num = l_chunk_num + 1
-        aidx[0] = 0
+        c_aidx[0] = 0
       end
-      if ( a_len < subs.max_num_in_chunk ) then
+      if ( a_len < a:max_num_in_chunk() ) then 
+        -- no more input, flush whatever is in output buffer
         return num_in_out, out_buf
       end
     until ( num_in_out == subs.max_num_in_chunk )

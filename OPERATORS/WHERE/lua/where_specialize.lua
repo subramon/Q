@@ -1,6 +1,8 @@
 local cutils        = require 'libcutils'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
+
 return function (a, b, optargs)
   local subs = {}; 
   assert(type(a) == "lVector")
@@ -26,8 +28,8 @@ return function (a, b, optargs)
   subs.tmpl    = "OPERATORS/WHERE/lua/where_" .. b_qtype .. ".tmpl"
 
   local width = cutils.get_width_qtype(a_qtype)
-  subs.max_num_in_chunk = max_num_in_chunk
-  subs.size = width * max_num_in_chunk
+  subs.max_num_in_chunk = get_max_num_in_chunk(optargs)
+  subs.size = width * subs.max_num_in_chunk
   subs.cast_a_as   = cutils.str_qtype_to_str_ctype(a_qtype) .. "*"
   subs.cast_b_as   = cutils.str_qtype_to_str_ctype(b_qtype) .. "*"
 

@@ -7,7 +7,7 @@ local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local qc        = require 'Q/UTILS/lua/qcore'
 local qcfg      = require 'Q/UTILS/lua/qcfg'
-local max_num_in_chunk = qcfg.max_num_in_chunk
+local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
 
 -- cdef the necessary struct within pcall to prevent error on second call
 local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
@@ -33,7 +33,8 @@ return function (
   subs.len	 = len
   subs.out_qtype = qtype
   subs.out_ctype = cutils.str_qtype_to_str_ctype(qtype)
-  subs.buf_size = max_num_in_chunk * cutils.get_width_qtype(qtype)
+  subs.max_num_in_chunk = get_max_num_in_chunk (largs)
+  subs.buf_size = subs.max_num_in_chunk * cutils.get_width_qtype(qtype)
   --========================
   -- set up args for C code
   local sstart = assert(to_scalar(start, qtype))
