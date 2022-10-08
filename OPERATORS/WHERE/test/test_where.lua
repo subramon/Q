@@ -99,11 +99,13 @@ end
 --=========================================
 
 tests.t7 = function ()
-  -- more than chunk size values present in a and b
-  local chunk_sz = cVector.chunk_size()
-  local len = chunk_sz * 2 + 5
-  local a = Q.seq( {start = 1, by = 1, qtype = "I4", len = len} )
-  local b = lVector.new({qtype = "BL"})
+  -- more than max_num_in_chunk  values present in a and b
+  local max_num_in_chunk = 64 
+  local len = max_num_in_chunk * 2 + 5
+  local a = Q.seq( {start = 1, by = 1, qtype = "I4", len = len,
+  max_num_in_chunk = max_num_in_chunk} )
+  a:eval()
+  local b = lVector.new({qtype = "BL", max_num_in_chunk = max_num_in_chunk} )
   local s1 = Scalar.new(1, "BL")
   local s0 = Scalar.new(0, "BL")
   local toggle = true
@@ -117,11 +119,20 @@ tests.t7 = function ()
     end
   end
   b:eov()
-  local c = Q.where(a, b):eval()
+
+  assert(a:max_num_in_chunk() == max_num_in_chunk)
+  assert(b:max_num_in_chunk() == max_num_in_chunk)
+
+  assert(a:num_elements()== len)
+  assert(b:num_elements() == len)
+
+  local c = Q.where(a, b, { max_num_in_chunk = max_num_in_chunk / 4 } ):eval()
   len = math.floor(len / 2) + 1 
-  local d = Q.seq( {start = 1, by = 2, qtype = "I4", len = len} )
-  local n1, n2 = Q.sum(Q.vveq(c, d)):eval()
-  assert(n1 == n2)
+  -- TODO local d = Q.seq( {start = 1, by = 2, qtype = "I4", len = len} )
+  -- TODO local n1, n2 = Q.sum(Q.vveq(c, d)):eval()
+  -- TODO assert(n1 == n2)
+  c:eval()
+  assert(c:num_elements() == 67)
   print("Test t7 succeeded")
 end
 
@@ -131,5 +142,6 @@ tests.t3()
 tests.t4()
 tests.t5()
 tests.t6()
+tests.t7()
 os.exit()
 -- return tests

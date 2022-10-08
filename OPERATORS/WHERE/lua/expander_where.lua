@@ -34,7 +34,9 @@ local function expander_where(a, b, optargs)
   qc.q_add(subs)
   
   --================================
-  local a_chunk_idx = 0
+  -- note that a and b have to have the same max_num_in_chunk but 
+  -- output does not. Hence, we need to track the following individually
+  local ab_chunk_num = 0 
   local l_chunk_num = 0
 
 
@@ -59,12 +61,12 @@ local function expander_where(a, b, optargs)
     repeat
       aidx:nop()
       n_out:nop()
-      local a_len, a_chunk, a_nn_chunk = a:get_chunk(l_chunk_num)
-      local b_len, b_chunk, b_nn_chunk = b:get_chunk(l_chunk_num)
+      local a_len, a_chunk, a_nn_chunk = a:get_chunk(ab_chunk_num)
+      local b_len, b_chunk, b_nn_chunk = b:get_chunk(ab_chunk_num)
       if ( a_len == 0 ) then 
         -- no more input, flush whatever is in output buffer
-        local buf_size = tonumber(c_n_out[0])
-        return buf_size, out_buf
+        local num_in_out = tonumber(c_n_out[0])
+        return num_in_out, out_buf
       end
       assert(a_len == b_len)
       local cast_a_buf   = get_ptr(a_chunk, subs.cast_a_as)
@@ -79,17 +81,18 @@ local function expander_where(a, b, optargs)
       -- if you have consumed all you got from the a_chunk,
       -- then you need to move to the next chunk
       if ( tonumber(c_aidx[0]) == a_len ) then
-        a:unget_chunk(l_chunk_num)
-        b:unget_chunk(l_chunk_num)
-        l_chunk_num = l_chunk_num + 1
+        a:unget_chunk(ab_chunk_num)
+        b:unget_chunk(ab_chunk_num)
+        ab_chunk_num = ab_chunk_num + 1
         c_aidx[0] = 0
       end
       if ( a_len < a:max_num_in_chunk() ) then 
         -- no more input, flush whatever is in output buffer
+        local num_in_out = tonumber(c_n_out[0])
         return num_in_out, out_buf
       end
     until ( num_in_out == subs.max_num_in_chunk )
-    -- l_chunk_num = l_chunk_num + 1 
+    l_chunk_num = l_chunk_num + 1 
     return num_in_out, out_buf
   end
   return lVector( { gen = where_gen, has_nulls = false, qtype = subs.a_qtype } )
