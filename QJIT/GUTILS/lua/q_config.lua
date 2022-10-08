@@ -1,6 +1,5 @@
 local T = {}
 
-T.save_session    = false
 T.restore_session = false
 
 T.is_webserver      = false

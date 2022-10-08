@@ -1,7 +1,6 @@
 #ifndef __Q_CONFIH
 #define __Q_CONFIH
 typedef struct  _q_config_t {
-  bool save_session;
   bool restore_session;
   //-----------------------
   bool is_webserver;

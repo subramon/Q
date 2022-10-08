@@ -76,7 +76,6 @@ read_configs(
   chk = lua_gettop(L); if ( chk != 0 ) { go_BYE(-1); }
   //-----------------------------------------------------
   // START: This is ugly to have to copy out of struct TODO P4
-  g_save_session    = C.save_session;
   g_restore_session = C.restore_session;
   g_is_webserver    = C.is_webserver;
   g_is_out_of_band  = C.is_out_of_band;

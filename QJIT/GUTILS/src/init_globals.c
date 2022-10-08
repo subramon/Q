@@ -55,7 +55,6 @@ init_globals(
   status = read_configs(); cBYE(status);
   //------------------------
   /* Hard coding below no longer needed. These come from config file 
-  g_save_session    = true;
   g_restore_session = false;
   //-----------------------
   g_is_webserver   = false;

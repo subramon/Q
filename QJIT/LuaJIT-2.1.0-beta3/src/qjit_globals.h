@@ -35,8 +35,7 @@ my_extern uint64_t g_dsk_used;    // amount of disk used
 // Disk stuff
 my_extern char g_data_dir_root[Q_MAX_LEN_DIR_NAME+1];
 my_extern char g_meta_dir_root[Q_MAX_LEN_DIR_NAME+1];
-// save/restore
-bool g_save_session;
+// restore
 bool g_restore_session;
 // for webserver
 bool       g_is_webserver;

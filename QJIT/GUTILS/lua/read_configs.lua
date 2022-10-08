@@ -12,7 +12,6 @@ end
 
 ffi.cdef([[
 typedef struct  _q_config_t {
-  bool save_session;
   bool restore_session;
   //-----------------------
   bool is_webserver;
@@ -38,18 +37,15 @@ typedef struct  _q_config_t {
 local function read_configs(C)
   assert(type(T) == "table") 
   -- T is a global table containing config info 
-  assert(type(T.save_session)    == "boolean")
   assert(type(T.restore_session) == "boolean")
 
   assert(type(T.is_webserver)   == "boolean")
   assert(type(T.is_out_of_band) == "boolean")
   assert(type(T.is_mem_mgr)     == "boolean")
 
-  if ( T.save_session ) then 
-    assert(type(T.data_dir_root) == "string")
-    assert(type(T.meta_dir_root) == "string")
-    -- TODO P3 Verify that these directories exist
-  end
+  assert(type(T.data_dir_root) == "string")
+  assert(type(T.meta_dir_root) == "string")
+  -- TODO P3 Verify that these directories exist
 
   assert(type(T.mem_allowed) == "number")
   assert(T.mem_allowed > 0)
@@ -92,7 +88,6 @@ local function read_configs(C)
   end
   --=== Put it into C struct 
   C = ffi.cast("q_config_t *", C)
-  C[0].save_session    = T.save_session
   C[0].restore_session = T.restore_session
   -----------------------
   C[0].is_webserver   = T.is_webserver
