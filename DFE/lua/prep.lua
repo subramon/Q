@@ -9,22 +9,26 @@ local datafile = qcfg.q_src_root .. "/DFE/data/100K_1"
 -- load big data set 
 local M = {}
 local O = { is_hdr = false } -- defualt memo_len == -1 
-M[1] = { name = "tcin", qtype = "I4", has_nulls = false }
-M[2] = { name = "co_loc_ref_i",  qtype = "I2", has_nulls = false  }
+M[1] = { name = "tcin", qtype = "I4", has_nulls = false, memo_len = 1 }
+M[2] = { name = "co_loc_ref_i",  qtype = "I2", has_nulls = false, memo_len = 1  }
 M[3] = { name = "dist_loc_i",  qtype = "I2", has_nulls = false  }
 M[4] = { name = "sls_unit_q",  qtype = "F4", has_nulls = true  }
 M[5] = { name = "str_week",  qtype = "SC", has_nulls = false, width = 15,
 memo_len = 1}
 assert(plpath.isfile(datafile))
 T1 = Q.load_csv(datafile, M, O)
+for k, v in pairs(T1) do 
+  print(k, v:memo_len())
+end
 assert(T1.sls_unit_q:has_nulls() == true)
-T1.week_start_date = Q.SC_to_TM(T1.str_week, "%Y-%m-%d", { out_qtype = "TM1" })
-T1.ck = Q.concat(T1.tcin, T1.dist_loc_i)
+T1.week_start_date = Q.SC_to_TM(T1.str_week, "%Y-%m-%d", 
+  { out_qtype = "TM1" , name = "week_start_date", })
+T1.ck = Q.concat(T1.tcin, T1.dist_loc_i, { name = "ck" })
 lVector.conjoin({T1.ck, T1.week_start_date})
 local tmp = T1.ck:siblings()
-for k, v in ipairs(tmp) do print(k, v) end 
 T1.week_start_date:eval()
-T1.week_start_date:pr()
+print("XX", T1.tcin:memo_len())
+print("YY", T1.tcin:num_chunks())
 cVector:check_all(true, true)
 local is_pr = true
 Q.save()

@@ -399,13 +399,12 @@ function lVector:get_chunk(chnk_idx)
     if ( num_elements == 0 ) then
       return 0
     else 
-      if ( self._siblings() ) then 
-        for _, v in ipairs(siblings) do
-          if ( self:name() and v:name() ) then 
-            print("Sibling ", self:name(), v:name(), chunk_idx)
-          end
+      if ( self._siblings ) then 
+        assert(type(self._siblings) == "table")
+        for _, v in ipairs(self._siblings) do
           assert(type(v) == "lVector")
-          local x, y, z = v:get_chunk(chunk_idx)
+          assert(type(v) == "lVector")
+          local x, y, z = v:get_chunk(chnk_idx)
           assert(x == num_elements)
         end
       end
@@ -446,9 +445,10 @@ function lVector:eval()
     -- NOTE that memo_len == 0 is meanignless 
     -- because we always keep the last chunk generated
     if ( ( self._memo_len >= 0 ) and ( num_elements > 0 ) ) then
+      print("XXXX")
       local chunk_to_release = (self._chunk_num-1) - self._memo_len
       if ( chunk_to_release >= 0 ) then 
-        -- print("Deleting chunk " .. chunk_to_release)
+        print("Deleting chunk " .. chunk_to_release)
         local is_found = 
           cVector.chunk_delete(self._base_vec, chunk_to_release)
         -- assert(is_found == true)
@@ -567,6 +567,7 @@ function lVector:add_sibling(v)
   if ( not self._siblings ) then 
     self._siblings = {}
   end
+  assert(type(self._siblings) == "table")
   self._siblings[#self._siblings+1] = v
   return self
 end

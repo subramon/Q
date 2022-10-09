@@ -105,7 +105,7 @@ local function load_csv(
             end
           end
         end
-        print("returning " ..  this_num_rows_read)
+        -- print("returning " ..  this_num_rows_read)
         return this_num_rows_read, l_data[v.name], nn_l_data[v.name]
       end
       lgens[my_name] = lgen

@@ -5,6 +5,7 @@ local cutils  = require 'libcutils'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local qc      = require 'Q/UTILS/lua/qcore'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local is_in   = require 'Q/UTILS/lua/is_in'
 local record_time = require 'Q/UTILS/lua/record_time'
 
 
@@ -56,7 +57,15 @@ local function expander_f1f2opf3(a, f1, f2, optargs )
   end
   local vargs = {gen=f3_gen, qtype=subs.f3_qtype, 
     has_nulls=false, max_num_in_chunk = subs.max_num_in_chunk}
-    -- TODO P3 Add stuff from optargs to vargs 
+  if ( optargs ) then 
+    for k, v in pairs(optargs) do 
+      if ( is_in(k, {"gen","qtype","has_nulls","max_num_in_chunk",}) )then
+        -- skip it 
+      else
+        vargs[k] = v
+      end
+    end
+  end
   return lVector(vargs)
 end
 return expander_f1f2opf3
