@@ -1,6 +1,7 @@
 local plpath  = require 'pl.path'
 local Q       = require 'Q'
 local Scalar  = require 'libsclr'
+local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local cVector = require 'libvctr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 -- configs 
@@ -12,16 +13,24 @@ M[1] = { name = "tcin", qtype = "I4", has_nulls = false }
 M[2] = { name = "co_loc_ref_i",  qtype = "I2", has_nulls = false  }
 M[3] = { name = "dist_loc_i",  qtype = "I2", has_nulls = false  }
 M[4] = { name = "sls_unit_q",  qtype = "F4", has_nulls = true  }
-M[5] = { name = "week_start_date",  qtype = "SC", has_nulls = false, width = 15  }
+M[5] = { name = "str_week",  qtype = "SC", has_nulls = false, width = 15,
+memo_len = 1}
 assert(plpath.isfile(datafile))
 T1 = Q.load_csv(datafile, M, O)
 assert(T1.sls_unit_q:has_nulls() == true)
-T1.sls_unit_q:eval()
+T1.week_start_date = Q.SC_to_TM(T1.str_week, "%Y-%m-%d", { out_qtype = "TM1" })
+T1.ck = Q.concat(T1.tcin, T1.dist_loc_i)
+lVector.conjoin({T1.ck, T1.week_start_date})
+local tmp = T1.ck:siblings()
+for k, v in ipairs(tmp) do print(k, v) end 
+T1.week_start_date:eval()
+T1.week_start_date:pr()
 cVector:check_all(true, true)
 local is_pr = true
+Q.save()
+os.exit()
 --==================================================o
 -- create I8 composite key, ck,  from T1.tcin and T1.dist_loc_i
-T1.ck = Q.concat(T1.tcin, T1.dist_loc_i)
 T1.ck:eval(); 
 print("Created T1.ck")
 T1.x = Q.is_prev(T1.ck, "neq", { default_val = true})

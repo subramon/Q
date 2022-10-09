@@ -399,6 +399,16 @@ function lVector:get_chunk(chnk_idx)
     if ( num_elements == 0 ) then
       return 0
     else 
+      if ( self._siblings() ) then 
+        for _, v in ipairs(siblings) do
+          if ( self:name() and v:name() ) then 
+            print("Sibling ", self:name(), v:name(), chunk_idx)
+          end
+          assert(type(v) == "lVector")
+          local x, y, z = v:get_chunk(chunk_idx)
+          assert(x == num_elements)
+        end
+      end
       return num_elements, buf, nn_buf
     end 
   else 
@@ -537,6 +547,41 @@ end
 
 function lVector:delete()
   return  cVector.delete(self._base_vec)
+end
+
+function lVector:siblings()
+  if ( not self._siblings ) then return nil end
+  local T = {}
+  if ( self._siblings ) then 
+    assert(type(self._siblings) == "table")
+    for k, v in ipairs(self._siblings ) do 
+      assert(type(v) == "lVector")
+      T[k] = v:name()
+    end
+  end
+  return T
+end
+
+function lVector:add_sibling(v)
+  assert(type(v) == "lVector")
+  if ( not self._siblings ) then 
+    self._siblings = {}
+  end
+  self._siblings[#self._siblings+1] = v
+  return self
+end
+
+function lVector.conjoin(T)
+  assert(type(T) == "table")
+  assert(#T > 1)
+  for k1, v1 in ipairs(T) do
+    assert(type(v1) == "lVector")
+    for k2, v2 in ipairs(T) do
+      if ( k1 ~= k2 ) then
+        v1:add_sibling(v2)
+      end
+    end
+  end
 end
 
 return lVector

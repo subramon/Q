@@ -23,7 +23,7 @@ SC_to_TM1(
   if ( offset == 0 ) { go_BYE(-1); }
 
   tm_t  *tptr = (tm_t *)outv;
-#pragma omp parallel for schedule(static, 1024)
+// TODO #pragma omp parallel for schedule(static, 1024)
   for ( uint64_t i = 0; i < n_in; i++ ) { 
     char *cptr = inv + (i*offset);
     memset(outv+i, '\0', sizeof(tm_t));
@@ -32,12 +32,12 @@ SC_to_TM1(
     memset(&l_tm, 0, sizeof(struct tm));
     char *rslt = strptime(cptr, format, &l_tm);
     if ( rslt == NULL ) { WHEREAMI; status = -1; }
-    tptr[i].tm_sec  = l_tm.tm_sec;
-    tptr[i].tm_min  = l_tm.tm_min;
-    tptr[i].tm_hour = l_tm.tm_hour;
-    tptr[i].tm_mday = l_tm.tm_mday;
-    tptr[i].tm_mon  = l_tm.tm_mon;
     tptr[i].tm_year = l_tm.tm_year;
+    tptr[i].tm_mon  = l_tm.tm_mon;
+    tptr[i].tm_mday = l_tm.tm_mday;
+    tptr[i].tm_hour = l_tm.tm_hour;
+    tptr[i].tm_min  = l_tm.tm_min;
+    tptr[i].tm_sec  = l_tm.tm_sec;
     tptr[i].tm_yday = l_tm.tm_yday;
   }
   cBYE(status);
