@@ -17,9 +17,6 @@ M[5] = { name = "str_week",  qtype = "SC", has_nulls = false, width = 15,
 memo_len = 1}
 assert(plpath.isfile(datafile))
 T1 = Q.load_csv(datafile, M, O)
-for k, v in pairs(T1) do 
-  print(k, v:memo_len())
-end
 assert(T1.sls_unit_q:has_nulls() == true)
 T1.week_start_date = Q.SC_to_TM(T1.str_week, "%Y-%m-%d", 
   { out_qtype = "TM1" , name = "week_start_date", })
