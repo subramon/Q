@@ -29,7 +29,7 @@ vctr_del(
   }
   val = g_vctr_hmap.bkts[where_found].val;
   if ( val.name[0] != '\0' ) { 
-    printf("Deleting %s \n", val.name);
+    printf("Deleting Vector: %s \n", val.name);
   }
 
 
@@ -37,7 +37,7 @@ vctr_del(
   // Delete chunks in vector before deleting vector 
   if ( val.num_elements > 0 ) { 
     if ( val.num_chnks == 0 ) { go_BYE(-1); }
-    for ( uint32_t chnk_idx = 0; chnk_idx < val.num_chnks; chnk_idx++ ) { 
+    for ( uint32_t chnk_idx = 0; chnk_idx <= val.max_chnk_idx; chnk_idx++ ){ 
       uint32_t old_nitems = g_chnk_hmap.nitems;
       if ( old_nitems == 0 ) { go_BYE(-1); }
       bool is_found = true;
@@ -52,7 +52,8 @@ vctr_del(
       }
       else {
         // we may have deleted chunks that are too 
-        if ( ( (int)val.num_chnks - (int)chnk_idx ) <= val.memo_len ) { 
+        uint32_t watermark = val.max_chnk_idx - val.memo_len;
+        if ( chnk_idx >= watermark ) {
           if ( !is_found ) { go_BYE(-1); }
         }
         else {

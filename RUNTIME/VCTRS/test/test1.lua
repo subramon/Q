@@ -15,6 +15,7 @@ tests.t1 = function()
   assert(type(y) == "nil") -- only one thing returned
   x = nil
   collectgarbage()
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 tests.t2 = function()
@@ -36,10 +37,9 @@ tests.t2 = function()
   local status = x:eov()
   assert(status)
   assert(x:is_eov() == true)
-  print(">>> START Deliberate error")
   assert(x:eov())
-  print("<<< STOP  Deliberate error")
 
+  assert(cVector.check_all())
   print("Test t2 succeeded")
 end
 tests.t3 = function()
@@ -90,12 +90,14 @@ tests.t3 = function()
   local status = pcall(lVector.put_chunk, x, buf, max_num_in_chnk-1)
   assert(status == false)
   print(">>> STOP  Deliberate error")
+  assert(cVector.check_all())
   -- test printing
   assert(x:pr("_x", 0, 10))
   x:nop()
   x = nil
   collectgarbage()
 
+  assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 tests.t4 = function()
@@ -179,6 +181,7 @@ tests.t4 = function()
     assert(ydata[i][1] == counter)
     counter = counter + 10 
   end
+  assert(cVector.check_all())
   print("Test t4 succeeded")
 end
 -- return tests

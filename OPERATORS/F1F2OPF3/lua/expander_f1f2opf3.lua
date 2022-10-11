@@ -17,6 +17,8 @@ local function expander_f1f2opf3(a, f1, f2, optargs )
   else
     optargs = {}
   end
+  local my_name 
+  if ( optargs  and optargs.name ) then my_name = optargs.name end 
   local subs = assert(spfn(f1, f2, optargs))
   -- subs should return 
   -- (1) f3_qtype (2) f1_cst_as (2) f2_cst_as (3) f3_cst_as
@@ -32,8 +34,12 @@ local function expander_f1f2opf3(a, f1, f2, optargs )
     --=============================
     local f1_len, f1_chunk, nn_f1_chunk
     local f2_len, f2_chunk, nn_f2_chunk
+    print("==================================")
     f1_len, f1_chunk, nn_f1_chunk = f1:get_chunk(l_chunk_num)
     f2_len, f2_chunk, nn_f2_chunk = f2:get_chunk(l_chunk_num)
+    print("Generating chunk " .. chunk_num .. " of " .. my_name)
+    print("f1_len, f2_len = ",  f1_len, f2_len)
+    print("f1_name, f2_name = ",  f1:name(), f2:name())
     assert(f1_len == f2_len)
     if f1_len > 0 then
       local chunk1 = get_ptr(f1_chunk, subs.f1_cast_as)

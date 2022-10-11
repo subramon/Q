@@ -13,6 +13,8 @@ typedef struct _vctr_meta_t {
   char name[MAX_LEN_VCTR_NAME+1];
   uint64_t num_elements;
   uint32_t num_chnks;
+  uint32_t max_chnk_idx;
+  // max_chnk_idx == num_chnks-1 except (possibly) when memo_len >= 1
   uint32_t max_num_in_chnk;
   uint32_t width;
   uint32_t ref_count; // reference count 

@@ -5,6 +5,7 @@
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_cnt.h"
+#include "chnk_is.h"
 #include "vctr_put_chunk.h"
 #include "mod_mem_used.h"
 
@@ -70,7 +71,7 @@ vctr_put_chunk(
     chnk_idx = 0;
   }
   else {
-    chnk_idx = vctr_val.num_chnks;
+    chnk_idx = g_vctr_hmap.bkts[vctr_where].val.max_chnk_idx + 1;
   }
   //-------------------------------
   char *l1_mem = NULL;
@@ -95,9 +96,13 @@ vctr_put_chunk(
   //-------------------------------
   status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
   cBYE(status);
+  bool chnk_is_found; uint32_t chnk_where_found;
+  status = chnk_is(vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);
+  if ( !chnk_is_found ) { go_BYE(-1); } 
   // update meta data in vector
   g_vctr_hmap.bkts[vctr_where].val.num_elements += n;
   g_vctr_hmap.bkts[vctr_where].val.num_chnks++; 
+  g_vctr_hmap.bkts[vctr_where].val.max_chnk_idx = chnk_idx; 
 BYE:
   return status;
 }

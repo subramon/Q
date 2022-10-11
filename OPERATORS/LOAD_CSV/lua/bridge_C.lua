@@ -1,4 +1,3 @@
-require 'Q/UTILS/lua/strict'
 local ffi     = require 'ffi'
 local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'

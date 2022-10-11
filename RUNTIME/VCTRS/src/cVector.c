@@ -533,7 +533,7 @@ static int l_vctr_get_chunk( lua_State *L) {
   if ( num_args != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t chnk_idx = luaL_checknumber(L, 2); 
-  uint32_t num_elements;
+  uint32_t num_elements = 0;
   //-- allocate CMEM to go back 
   CMEM_REC_TYPE *ptr_c = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
   return_if_malloc_failed(ptr_c);

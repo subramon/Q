@@ -368,6 +368,7 @@ function lVector:get_chunk(chnk_idx)
   assert(chnk_idx >= 0)
   local to_generate 
   if ( self:is_eov() ) then
+    print("Do not generate for " .. self:name())
     to_generate = false
   else
     if ( chnk_idx < self._chunk_num ) then 
@@ -396,22 +397,57 @@ function lVector:get_chunk(chnk_idx)
       -- keep consistency with put_chunk
     end
     --==============================
-    if ( num_elements == 0 ) then
-      return 0
-    else 
-      if ( self._siblings ) then 
-        assert(type(self._siblings) == "table")
-        for _, v in ipairs(self._siblings) do
-          assert(type(v) == "lVector")
-          assert(type(v) == "lVector")
-          local x, y, z = v:get_chunk(chnk_idx)
-          assert(x == num_elements)
+    -- check for early termination
+    if ( num_elements == 0 ) then return 0 end 
+    --===========================
+    -- release old chunks
+    -- NOTE that memo_len == 0 is meanignless 
+    -- because we always keep the last chunk generated
+    if ( ( self._memo_len >= 0 ) and ( num_elements > 0 ) ) then
+      -- Note the extra -1 below. This is to account for
+      -- the put_chunk above which would have incremented self._chunk_num
+      local chunk_to_release = self._chunk_num - 1 - self._memo_len - 1 
+      if ( chunk_to_release >= 0 ) then 
+        self:nop()
+        print(self:name() .. " is on chunk " .. self._chunk_num)
+        print("Deleting chunk " .. chunk_to_release .. " of " .. self:name())
+        local is_found = 
+          cVector.chunk_delete(self._base_vec, chunk_to_release)
+        -- assert(is_found == true)
+        if ( is_found == false ) then 
+          print("Chunk was not found " .. chunk_to_release)
         end
       end
-      return num_elements, buf, nn_buf
-    end 
+    end
+    --===========================
+    if ( self._siblings ) then 
+      assert(type(self._siblings) == "table")
+      for _, v in ipairs(self._siblings) do
+        assert(type(v) == "lVector") assert(type(v) == "lVector")
+        print(self:name(), " Getting chunk for sibling", chnk_idx, v:name())
+        local x, y, z = v:get_chunk(chnk_idx)
+        assert(x == num_elements)
+        -- Note the immediate unget which is done to decrement
+        -- the number of readers. Note that we throw away x, y, z 
+        cVector.unget_chunk(v:self(), chnk_idx)
+        -- Also, depending on memo_len, we may need to delete some chunks
+        if ( ( v:memo_len() >= 0 ) and ( v:num_elements() > 0 ) ) then
+          local chunk_to_release = chunk_idx - self._memo_len
+          if ( chunk_to_release >= 0 ) then 
+            print("Sibling: Deleting chunk " .. chunk_to_release)
+            local is_found = 
+              cVector.chunk_delete(self._base_vec, chunk_to_release)
+            -- assert(is_found == true)
+            if ( is_found == false ) then 
+              print("Chunk was not found " .. chunk_to_release)
+            end
+          end
+        end
+      end
+    end
+    return num_elements, buf, nn_buf
   else 
-    -- print("Archival get_chunk " .. chnk_idx)
+    self:check()
     local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
     if ( x == nil ) then return 0, nil end 
     assert(type(n) == "number")
@@ -440,23 +476,6 @@ function lVector:eval()
         cVector.unget_chunk(self._nn_vec, self._chunk_num-1) 
       end
     end 
-    --===========================
-    -- release old chunks
-    -- NOTE that memo_len == 0 is meanignless 
-    -- because we always keep the last chunk generated
-    if ( ( self._memo_len >= 0 ) and ( num_elements > 0 ) ) then
-      print("XXXX")
-      local chunk_to_release = (self._chunk_num-1) - self._memo_len
-      if ( chunk_to_release >= 0 ) then 
-        print("Deleting chunk " .. chunk_to_release)
-        local is_found = 
-          cVector.chunk_delete(self._base_vec, chunk_to_release)
-        -- assert(is_found == true)
-        if ( is_found == false ) then 
-          print("Chunk was not found " .. chunk_to_release)
-        end
-      end
-    end
   until ( num_elements ~= self._max_num_in_chunk ) 
   assert(self:is_eov())
   --[[ TODO THINK P1 
@@ -583,6 +602,10 @@ function lVector.conjoin(T)
       end
     end
   end
+end
+
+function lVector:self()
+  return self._base_vec
 end
 
 return lVector

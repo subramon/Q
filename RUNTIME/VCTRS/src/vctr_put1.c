@@ -37,22 +37,21 @@ vctr_put1(
   qtype_t qtype = vctr_val.qtype;
   uint32_t width = vctr_val.width;
   uint32_t chnk_size = width * vctr_val.max_num_in_chnk;
-  uint32_t chnk_idx;
   // handle special case for empty vector with no chunks in it 
   status = chnk_first(vctr_where); cBYE(status); 
   // reset vctr_val because chnk_first makes changes
   vctr_val = g_vctr_hmap.bkts[vctr_where].val;
 
-  chnk_idx = vctr_val.num_chnks - 1; 
+  uint32_t chnk_idx = vctr_val.max_chnk_idx;
   // find chunk in chunk hmap 
   status = chnk_is(vctr_uqid, chnk_idx, &is_found, &chnk_where); 
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); } 
-  // if insufficient space in this chunk, create one more 
   chnk_val = g_chnk_hmap.bkts[chnk_where].val;
   if ( chnk_val.l1_mem == NULL ) { go_BYE(-1); }
+  // if insufficient space in this chunk, create one more 
   if ( chnk_val.num_elements == vctr_val.max_num_in_chnk ) {
-    chnk_idx = vctr_val.num_chnks;
+    chnk_idx++;
     //--------------------------
     chnk_rs_hmap_key_t chnk_key = 
     { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
@@ -69,9 +68,11 @@ vctr_put1(
     status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
     cBYE(status);
     g_vctr_hmap.bkts[vctr_where].val.num_chnks++;
+    g_vctr_hmap.bkts[vctr_where].val.max_chnk_idx = chnk_idx;
     //--------------------------
     status = chnk_is(vctr_uqid, chnk_idx, &is_found, &chnk_where); 
     cBYE(status);
+    if ( !is_found ) { go_BYE(-1); } 
     chnk_val = g_chnk_hmap.bkts[chnk_where].val;
   }
   // now you have access to a chunk where you can write.

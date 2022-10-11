@@ -46,7 +46,9 @@ vctrs_chk(
     status = vctr_chk(g_vctr_hmap.bkts[i].key, is_at_rest); cBYE(status); 
     total_num_chunks += g_vctr_hmap.bkts[i].val.num_chnks;
   }
-  if ( total_num_chunks != g_chnk_hmap.nitems ) { go_BYE(-1); }
+  if ( total_num_chunks != g_chnk_hmap.nitems ) { 
+    go_BYE(-1); 
+  }
 BYE:
   return status;
 }
@@ -81,6 +83,7 @@ vctr_chk(
   //-----------------------------------------
   uint64_t num_elements    = vctr_val.num_elements;
   uint32_t num_chnks       = vctr_val.num_chnks;
+  uint32_t max_chnk_idx    = vctr_val.max_chnk_idx;
   uint32_t max_num_in_chnk = vctr_val.max_num_in_chnk;
   uint64_t chk_num_elements    = 0;
   // we can have an empty Vector (while it is being created)
@@ -93,7 +96,8 @@ vctr_chk(
   if ( vctr_val.name[MAX_LEN_VCTR_NAME] != '\0' ) { go_BYE(-1); }
   int good_filesz  = width * max_num_in_chnk;
   if ( vctr_uqid == 0 ) { goto BYE; }
-  for ( uint32_t chnk_idx = 0; chnk_idx < num_chnks; chnk_idx++ ) {
+  for ( uint32_t chnk_idx = 0; chnk_idx <= max_chnk_idx; chnk_idx++ ) {
+    if ( num_elements == 0 ) { break; } // NOTE: Special case
     bool chnk_is_found; uint32_t chnk_where_found;
     status = chnk_is(vctr_uqid, chnk_idx,&chnk_is_found,&chnk_where_found);
     cBYE(status);

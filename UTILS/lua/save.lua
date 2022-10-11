@@ -35,10 +35,12 @@ local function internal_save(
   elseif ( type(value) == "lVector" ) then
     local vec = value
     -- TODO P4 At some point, we might want to relax following
-    if ( ( vec:num_elements() == 0 ) or ( vec:has_gen() ) 
-        or ( vec:is_eov() == false ) ) then
+    if ( ( vec:num_elements() == 0 ) 
+        or ( vec:has_gen() ) 
+        or ( vec:is_eov() == false ) 
+        or ( vec:memo_len() >= 0 ) ) then
       -- skip ths vector
-      print("Not saving lVector" .. name )
+      print("Not saving lVector: " .. name )
     else
       -- flush vector to disk and mark for persistence
       vec:l1_to_l2() -- copy from level 1 to level 2 
