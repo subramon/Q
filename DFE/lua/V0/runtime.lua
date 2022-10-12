@@ -23,7 +23,7 @@ T4.ck = Q.concat(T4.tcin, T4.dist_loc_i)
 -- get lb/ub from T2 to T4 using composite key 
 T4.lb = Q.isby(T2.lb, T2.ck, T4.ck):eval()
 T4.ub = Q.isby(T2.ub, T2.ck, T4.ck):eval()
-local is_pr = true 
+local is_pr = false
 if ( is_pr ) then
   local U = {}
   local header = "tcin,dist_loc_i,ck,lb,ub"
@@ -34,6 +34,7 @@ if ( is_pr ) then
   U[#U+1] = T4.ub
   Q.print_csv(U, { impl = "C", opfile = "_T4", header = header,  })
 end
+print("Created T4")
 -- At this stage, T4 tells us what we need from T1 to put in T3
 
 --== copy relevant rows from T1 to T3 
@@ -50,9 +51,8 @@ for k, v in pairs(T3) do
 end
 assert(T3.sls_unit_q:has_nulls())
 T3.sls_unit_q:get_nulls():pr("_nn_sls_unit_q_T3")
-print("T3.sls_unit_q:uqid() = ", T3.sls_unit_q:uqid())
-print("NN T3.sls_unit_q:uqid() = ", T3.sls_unit_q:get_nulls():uqid())
 for k, v in pairs(T3) do assert(v:is_eov()) end
+assert(cVector.check_all(true, true))
 
 -- dump it out
 is_pr = true

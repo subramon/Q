@@ -48,7 +48,7 @@ cprint(
       const char * X = data[j];
       if ( j > 0 ) { fprintf(fp, ","); }
       if ( nn_data[j] != NULL ) {
-        if ( nn_data[j] == false ) {
+        if ( nn_data[j][i] == false ) {
           fprintf(fp, "\"\"");
           continue;
         }

@@ -470,7 +470,7 @@ static int l_vctr_memo_len( lua_State *L) {
   int num_args = lua_gettop(L); 
   if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  uint32_t memo_len;
+  int memo_len;
   status = vctr_get_memo_len(ptr_v->uqid, &memo_len);
   cBYE(status);
   lua_pushnumber(L, memo_len);

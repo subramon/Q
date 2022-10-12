@@ -408,9 +408,6 @@ function lVector:get_chunk(chnk_idx)
       -- the put_chunk above which would have incremented self._chunk_num
       local chunk_to_release = self._chunk_num - 1 - self._memo_len - 1 
       if ( chunk_to_release >= 0 ) then 
-        self:nop()
-        print(self:name() .. " is on chunk " .. self._chunk_num)
-        print("Deleting chunk " .. chunk_to_release .. " of " .. self:name())
         local is_found = 
           cVector.chunk_delete(self._base_vec, chunk_to_release)
         -- assert(is_found == true)
@@ -453,7 +450,6 @@ function lVector:get_chunk(chnk_idx)
     if ( x == nil ) then return 0, nil, nil end 
     if ( self._nn_vec ) then 
       local nn_vector = self._nn_vec
-      nn_vector:nop()
       nn_x, nn_n = cVector.get_chunk(nn_vector._base_vec, chnk_idx)
       assert(type(nn_n) == "number")
       assert(nn_n == n)

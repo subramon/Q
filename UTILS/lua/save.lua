@@ -41,6 +41,10 @@ local function internal_save(
         or ( vec:memo_len() >= 0 ) ) then
       -- skip ths vector
       print("Not saving lVector: " .. name )
+      print(vec:num_elements())
+      print(vec:has_gen() ) 
+      print(vec:is_eov() )
+      print(vec:memo_len() )
     else
       -- flush vector to disk and mark for persistence
       vec:l1_to_l2() -- copy from level 1 to level 2 

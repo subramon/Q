@@ -69,7 +69,6 @@ local function cprint(
     local nn_c_data = ffi.C.malloc(ffi.sizeof("bool *") * nC)
     nn_c_data = ffi.cast("const bool **", nn_c_data)
     for i, v in ipairs(V) do
-      print("Vector " .. i .. " has nulls? " .. tostring(v:has_nulls()))
       local len, chnk, nn_chnk = v:get_chunk(chunk_num)
       assert(len > 0)
       if ( i == 1 ) then
@@ -82,7 +81,6 @@ local function cprint(
       if ( nn_chnk ) then 
         assert(type(nn_chnk) == "CMEM")
         nn_c_data[i-1] = get_ptr(nn_chnk, "bool *")
-        print("Setting nn_c_data")
       end 
     end
     --=========================================
