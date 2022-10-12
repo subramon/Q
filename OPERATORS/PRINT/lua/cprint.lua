@@ -65,8 +65,12 @@ local function cprint(
     local chk_len -- to make sure all get_chunk() calls return same length 
     local c_data = ffi.C.malloc(ffi.sizeof("void *") * nC)
     c_data = ffi.cast("const void **", c_data)
+    -- TODO P4 Implement for B1 in addition to BL
+    local nn_c_data = ffi.C.malloc(ffi.sizeof("bool *") * nC)
+    nn_c_data = ffi.cast("const bool **", nn_c_data)
     for i, v in ipairs(V) do
-      local len, chnk = v:get_chunk(chunk_num)
+      print("Vector " .. i .. " has nulls? " .. tostring(v:has_nulls()))
+      local len, chnk, nn_chnk = v:get_chunk(chunk_num)
       assert(len > 0)
       if ( i == 1 ) then
         chk_len = len
@@ -74,6 +78,12 @@ local function cprint(
         assert(chk_len == len)
       end
       c_data[i-1] = get_ptr(chnk, "void *")
+      nn_c_data[i-1] = ffi.NULL
+      if ( nn_chnk ) then 
+        assert(type(nn_chnk) == "CMEM")
+        nn_c_data[i-1] = get_ptr(nn_chnk, "bool *")
+        print("Setting nn_c_data")
+      end 
     end
     --=========================================
     if ( where ) then 
@@ -105,7 +115,7 @@ local function cprint(
       c_widths[i-1] = widths[i]
     end
     local status = qc[func_name](
-    c_opfile, cfld, c_data, 
+    c_opfile, cfld, c_data, nn_c_data,
     ffi.new("int", nC),
     ffi.new("uint64_t", chnk_lb),
     ffi.new("uint64_t", chnk_ub), c_qtypes, c_widths)

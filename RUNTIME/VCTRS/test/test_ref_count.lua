@@ -53,9 +53,9 @@ tests.t2 = function()
     assert(type(Y[i]) == "lVector")
     assert(cVector:count() == 2)
   end
-  x:break_nulls()
+  x:drop_nulls()
   assert(x:has_nulls() == false)
-  x:break_nulls()
+  x:drop_nulls()
   Y[1]:pr()
   print("Test t2 succeeded")
 end

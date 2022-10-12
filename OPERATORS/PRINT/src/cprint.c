@@ -8,6 +8,7 @@ cprint(
     const char * opfile,
     const void * const cfld, // TODO 
     const void ** data, // [nC][nR] 
+    const bool ** nn_data, // [nC][nR] 
     int nC,
     uint64_t lb,
     uint64_t ub,
@@ -21,6 +22,7 @@ cprint(
   if ( widths == NULL ) { go_BYE(-1); }
   //----------
   if ( data == NULL ) { go_BYE(-1); }
+  if ( nn_data == NULL ) { go_BYE(-1); }
   if ( cfld != NULL ) { go_BYE(-1); } // TODO TODO TODO 
   if ( nC <= 0 ) { go_BYE(-1); }
   for ( int j = 0; j < nC; j++ ) { if ( data[j] == NULL ) { go_BYE(-1); } }
@@ -45,6 +47,12 @@ cprint(
     for ( int j = 0; j < nC; j++ ) { // for each column
       const char * X = data[j];
       if ( j > 0 ) { fprintf(fp, ","); }
+      if ( nn_data[j] != NULL ) {
+        if ( nn_data[j] == false ) {
+          fprintf(fp, "\"\"");
+          continue;
+        }
+      }
       switch ( qtypes[j] ) {
         case B1 : 
           {
@@ -82,7 +90,7 @@ cprint(
                      char buf[64]; 
                      int len = sizeof(buf); 
                      memset(buf, 0, len);
-                     tm_t * tptr = ((const tm_t *)X);
+                     const tm_t * tptr = ((const tm_t *)X);
                      snprintf(buf, len-1, "\"%d:%02d:%02d:%d:%d:%d:%d\"", 
                          tptr[i].tm_year + 1900,
                          tptr[i].tm_mon + 1,

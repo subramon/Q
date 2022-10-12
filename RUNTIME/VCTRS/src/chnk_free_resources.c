@@ -31,6 +31,10 @@ chnk_free_resources(
       status = unlink(l2_file); cBYE(status);
       status = decr_dsk_used(ptr_val->size); cBYE(status);
       ptr_val->l2_exists = false;
+      // TODO P3 Is following the best way to handle shut down case
+      ptr_val->num_readers = 0;
+      ptr_val->num_writers = 0; 
+      //----------
     }
   }
 BYE:

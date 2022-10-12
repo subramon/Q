@@ -47,6 +47,18 @@ local function internal_save(
       vec:persist()  -- indicate not to free level 2 upon delete
       vec:drop(1)    -- free memory held in level 1
       fp:write(name, " = lVector ( { uqid = ", vec:uqid(), " } )\n" )
+      -- repeat above for nn vector assuming it exists
+      if ( vec:has_nulls() ) then
+        local nn_vec  = vec:get_nulls()
+        local nn_uqid = nn_vec:uqid()
+        nn_vec:l1_to_l2() 
+        nn_vec:persist()  
+        nn_vec:drop(1)    
+        local nn_name = "_nn_" .. tostring(nn_uqid)
+        fp:write("local " .. nn_name, " = lVector({uqid = ",nn_uqid,"})\n" )
+        fp:write(name, ":set_nulls(" .. nn_name .. ")\n")
+      end
+
     end
   elseif ( type(value) == "Scalar" ) then
     local sclr = value

@@ -22,10 +22,8 @@ T1.week_start_date = Q.SC_to_TM(T1.str_week, "%Y-%m-%d",
   { out_qtype = "TM1" , name = "week_start_date", })
 T1.ck = Q.concat(T1.tcin, T1.dist_loc_i, { name = "ck" })
 lVector.conjoin({T1.ck, T1.week_start_date})
-local tmp = T1.ck:siblings()
 T1.week_start_date:eval()
 print("XX", T1.tcin:memo_len())
-print("YY", T1.tcin:num_chunks())
 cVector:check_all(true, true)
 local is_pr = true
 Q.save()

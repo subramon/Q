@@ -1,8 +1,12 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
 local mk_col          = require 'Q/OPERATORS/MK_COL/lua/mk_col'
-local select_ranges   = require 'Q/OPERATORS/WHERE/lua/select_ranges'
+local T   = require 'Q/OPERATORS/WHERE/lua/select_ranges'
+assert(type(T) == "table")
+local select_ranges = T.select_ranges
+assert(type(select_ranges) == "function")
 local cVector = require 'libvctr'
+local Scalar  = require 'libsclr'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 
 local tests = {}
@@ -31,5 +35,61 @@ tests.t1 = function ()
   cVector:check_all(true, true)
   print("Test t1 succeeded")
 end
-tests.t1()
+  -- testing select_ranges with nulls
+tests.t2 = function ()
+  local max_num_in_chunk = 64 
+  local optargs = { max_num_in_chunk = max_num_in_chunk }
+  local n = max_num_in_chunk + 1 
+
+  -- make data for nn column
+  local nn_tbl = {}
+  for i = 1, n do 
+    if ( ( i % 2 ) == 0 ) then nn_tbl[i] = true else nn_tbl[i] = false end
+  end
+  -- make data for actual column 
+  local tbl = {}
+  for i = 1, n do tbl[#tbl+1] = i+1 end
+  -- make data for output nn column
+  local good_nn_tbl = { false, false, true, false, true, false, false, 
+    true, false, true, false, true, false, true, false, true, false, 
+    true, false, true, false, true, false, true, false, true, false, }
+  local good_tbl = { 0, 0, 11, 0, 19, 0, 0, 35, 0, 37, 0, 43, 0, 45, 0,
+  47, 0, 49, 0, 51, 0, 53, 0, 55, 0, 57, 0, }
+  assert(#good_nn_tbl == #good_tbl)
+
+  -- for _, qtype in ipairs({"I1", "I2", "I4", "I8", "F4", "F8" }) do 
+  for _, qtype in ipairs({"I4", }) do 
+    local num_in_c = 0
+    local a = mk_col(tbl, qtype, optargs, nn_tbl)
+    a:set_name("a")
+    assert(a:has_nulls())
+    local tlb = { 0,  8, 16, 32, 40, 64, }
+    local tub = { 1, 10, 19, 36, 56, 65, }
+    for i = 1, #tlb do 
+      num_in_c = num_in_c + (tub[i] - tlb[i])
+    end
+    local lb = mk_col(tlb, "I4") 
+    local ub = mk_col(tub, "I8")
+    local c  = select_ranges(a, lb, ub)
+    c:eval()
+    assert(c:num_elements() == num_in_c)
+    for i = 1, num_in_c do 
+      local v, nn_v = c:get1(i-1)
+      assert(type(v) == "Scalar")
+      assert(type(nn_v) == "Scalar")
+      assert(v:qtype() == qtype)
+      assert(nn_v:qtype() == "BL")
+      local chk_nn_v = Scalar.new(good_nn_tbl[i], "BL")
+      assert(nn_v == chk_nn_v) 
+      if ( nn_v == Scalar.new(true, "BL") ) then 
+        assert(v:to_num() == good_tbl[i])
+      end
+    end
+
+  end
+  cVector:check_all(true, true)
+  print("Test t2 succeeded")
+end
+-- WORKS tests.t1()
+tests.t2()
 -- return tests

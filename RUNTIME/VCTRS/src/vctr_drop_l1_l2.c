@@ -41,6 +41,8 @@ vctr_drop_l1_l2(
 
     status = chnk_drop_l1_l2(ptr_chnk_key, ptr_chnk_val, level); 
     cBYE(status);
+    ptr_chnk_val->num_readers = 0;
+    ptr_chnk_val->num_writers = 0;
   }
 BYE:
   return status;

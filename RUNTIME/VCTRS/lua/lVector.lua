@@ -124,7 +124,7 @@ function lVector:get_nulls()
   if ( not self._nn_vec ) then return nil end 
   return self._nn_vec
 end
-function lVector:break_nulls()
+function lVector:drop_nulls()
   self._nn_vec = nil
 end
 function lVector:has_nulls()
@@ -167,6 +167,7 @@ function lVector.new(args)
     assert(type(args.uqid) == "number")
     assert(args.uqid > 0)
     vector._base_vec = assert(cVector.rehydrate(args))
+    assert(cVector.chk(vector._base_vec, true, false))
     -- get following from cVector
     -- max_num_in_chunk
     -- memo_len
@@ -258,11 +259,11 @@ end
 
 function lVector:set_nulls(nn_vec)
   assert(not self._nn_vec) -- must not have an nn_vec currently
-  assert(self:is_eov()) -- must be ended for input
+  -- TODO P1 MUST IT BE EOV? assert(self:is_eov()) -- must be ended for input
   --===============
   assert(type(nn_vec) == "lVector")
   assert(nn_vec:has_nulls() == false) -- nn cannot have nulls
-  assert(nn_vec:is_eov()) -- nn vec must also be ended for input
+  -- TODO P1 MUST IT BE EOV ?? assert(nn_vec:is_eov()) -- nn vec must also be ended for input
   assert(nn_vec:num_elements() == self:num_elements()) -- sizes must match
   local nn_qtype = nn_vec:qtype() 
   assert(nn_qtype == "BL") -- TODO consider adding B1 
@@ -368,7 +369,6 @@ function lVector:get_chunk(chnk_idx)
   assert(chnk_idx >= 0)
   local to_generate 
   if ( self:is_eov() ) then
-    print("Do not generate for " .. self:name())
     to_generate = false
   else
     if ( chnk_idx < self._chunk_num ) then 
@@ -448,11 +448,20 @@ function lVector:get_chunk(chnk_idx)
     return num_elements, buf, nn_buf
   else 
     self:check()
+    local nn_x, nn_n
     local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
-    if ( x == nil ) then return 0, nil end 
+    if ( x == nil ) then return 0, nil, nil end 
+    if ( self._nn_vec ) then 
+      local nn_vector = self._nn_vec
+      nn_vector:nop()
+      nn_x, nn_n = cVector.get_chunk(nn_vector._base_vec, chnk_idx)
+      assert(type(nn_n) == "number")
+      assert(nn_n == n)
+      assert(type(nn_x) == "CMEM")
+    end
     assert(type(n) == "number")
     assert(type(x) == "CMEM")
-    return n, x 
+    return n, x, nn_x
   end
 end
 -- evaluates the vector using a provided generator function
@@ -462,6 +471,8 @@ function lVector:eval()
   if ( self:is_eov() ) then return self end 
   repeat
     local num_elements, buf, nn_buf = self:get_chunk(self._chunk_num)
+    if ( nn_buf ) then assert(type(nn_buf) == "CMEM") end 
+    if (    buf ) then assert(type(   buf) == "CMEM") end 
     assert(type(num_elements) == "number")
     -- this unget needed because get_chunk increments num readers 
     -- and the eval doesn't actually get the chunk for itself

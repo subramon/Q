@@ -1,0 +1,22 @@
+Prevent ispc from generating .h file if it exists
+
+Restoring an SC file loses its type?
+Note that str_week has nil type below
+
+===== T1 ====
+x		BL
+ck	ck	I8
+str_week	str_week	nil
+co_loc_ref_i	co_loc_ref_i	I2
+sls_unit_q	sls_unit_q	F4
+week_start_date	week_start_date	TM1
+tcin	tcin	I4
+dist_loc_i	dist_loc_i	I2
+id		I8
+===== T2 ====
+lb		I8
+ub		I8
+tcin		I4
+dist_loc_i		I2
+ck	ck	I8
+
