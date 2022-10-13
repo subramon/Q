@@ -326,13 +326,12 @@ local function concat(x, y, optargs)
   end
 
   local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
-  if type(x) == "lVector" and type(y) == "lVector" then
-    local status, col = pcall(expander, "concat", x, y, optargs)
-    if ( not status ) then print(col) end
-    assert(status, "Could not execute concat")
-    return col
-  end
-  assert(nil, "Bad arguments to f1f2opf3")
+  assert(type(x) == "lVector")
+  assert(type(y) == "lVector")
+  local status, col = pcall(expander, "concat", x, y, optargs)
+  if ( not status ) then print(col) end
+  assert(status, "Could not execute concat")
+  return col
 end
 T.concat = concat
 require('Q/q_export').export('concat', concat)

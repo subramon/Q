@@ -68,6 +68,8 @@ local function expander_where(a, b, optargs)
         local num_in_out = tonumber(c_n_out[0])
         return num_in_out, out_buf
       end
+      print("WHERE", a:name(), b:name())
+      print("WHERE", chunk_num, a_len, b_len)
       assert(a_len == b_len)
       local cast_a_buf   = get_ptr(a_chunk, subs.cast_a_as)
       local cast_b_buf   = get_ptr(b_chunk, subs.cast_b_as)

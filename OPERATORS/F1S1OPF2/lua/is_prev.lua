@@ -29,12 +29,11 @@ local function is_prev(f1, cmp, optargs )
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Missing symbol " .. func_name)
   local in_qtype = assert(subs.in_qtype)
-  local out_qtype = assert(subs.out_qtype)
   local bufsz 
-  if ( out_qtype == "B1" ) then 
+  if ( subs.out_qtype == "B1" ) then 
     bufsz = max_num_in_chunk / 8
   else
-    bufsz = max_num_in_chunk * cutils.get_width_qtype(out_qtype)
+    bufsz = max_num_in_chunk * cutils.get_width_qtype(subs.out_qtype)
   end
   local chunk_idx = 0
   local f1_cast_as = subs.in_ctype .. "*" 
@@ -63,6 +62,14 @@ local function is_prev(f1, cmp, optargs )
     if ( f1_len == 0 ) then last_val:delete() end -- no more calls 
     return f1_len, f2_buf
   end
-  return lVector{gen=f2_gen, has_nulls=false, qtype=out_qtype}
+  local vargs = {}
+  if ( optargs ) then 
+    assert(type(optargs) == "table")
+    for k, v in pairs(optargs) do vargs[k] = v end 
+  end
+  vargs.gen = f2_gen
+  vargs.has_nulls = false
+  vargs.qtype = subs.out_qtype
+  return lVector(vargs)
 end
 return require('Q/q_export').export('is_prev', is_prev)
