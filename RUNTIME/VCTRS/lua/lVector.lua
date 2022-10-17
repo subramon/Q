@@ -392,9 +392,7 @@ function lVector:get_chunk(chnk_idx)
     --==============================, NUmber of elements
     if ( num_elements < self._max_num_in_chunk ) then 
       -- nothing more to generate
-      print("Regular  EOV for " .. self:name())
       self:eov()  -- vector is at an end 
-      print("#elements for " .. self:name() .. " = " .. self:num_elements())
     end
     --==============================
     -- check for early termination

@@ -12,13 +12,6 @@ local record_time = require 'Q/UTILS/lua/record_time'
 local function expander_f1f2opf3(a, f1, f2, optargs )
   local sp_fn_name = "Q/OPERATORS/F1F2OPF3/lua/" .. a .. "_specialize"
   local spfn = assert(require(sp_fn_name))
-  if ( optargs ) then 
-    assert(type(optargs) == "table") 
-  else
-    optargs = {}
-  end
-  local my_name 
-  if ( optargs  and optargs.name ) then my_name = optargs.name end 
   local subs = assert(spfn(f1, f2, optargs))
   -- subs should return 
   -- (1) f3_qtype (2) f1_cst_as (2) f2_cst_as (3) f3_cst_as

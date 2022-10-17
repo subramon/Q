@@ -13,7 +13,6 @@ local M = {}
 local O = { is_hdr = true, }
 M[1] = { name = "tcin", qtype = "I4", has_nulls = false }
 M[2] = { name = "dist_loc_i",  qtype = "I2", has_nulls = false  }
-print("datafile = ", datafile)
 local T4 = Q.load_csv(datafile, M, O)
 T4.tcin:eval()
 -- create composite key in T4
@@ -21,6 +20,7 @@ T4.ck = Q.concat(T4.tcin, T4.dist_loc_i)
 -- get lb/ub from T2 to T4 using composite key 
 T4.lb = Q.isby(T2.lb, T2.ck, T4.ck):eval()
 T4.ub = Q.isby(T2.ub, T2.ck, T4.ck):eval()
+T4.num = Q.vvsub(T2.ub, T2.lb):eval()
 local is_pr = true
 if ( is_pr ) then
   local U = {}
@@ -38,13 +38,14 @@ print("Created T4")
 --== copy relevant rows from T1 to T3 
 local xfer = { "co_loc_ref_i", "sls_unit_q", "week_start_date", }
 local T3 = {}
-print("=====================")
-for k, v in pairs(T1) do print(k, v) end 
 for _, col in ipairs(xfer) do 
   assert(type(T1[col]) == "lVector", "Missing from T1 " .. col)
   print("Adding from T1 to T3 ", col)
   T3[col] = Q.select_ranges(T1[col], T4.lb, T4.ub)
 end
+T3.tcin = Q.repeater(T4.tcin, T4.num)
+T3.dist_loc_i = Q.repeater(T4.dist_loc_i, T4.num)
+
 for k, v in pairs(T3) do 
   v:eval() 
   assert(v:is_eov())
