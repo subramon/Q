@@ -17,7 +17,7 @@ local function repeater(f1, f2, optargs )
   local spfn = assert(require(sp_fn_name))
   local subs = assert(spfn(f1, f2, optargs))
 
-  local in_idx        = 0
+  local in_idx        = -1 -- will be incremented before being used
   local l_chunk_num   = 0
   local num_to_repeat = 0
   -- num_in_out + space_in_out == subs.max_num_in_chunk 

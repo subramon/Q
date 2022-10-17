@@ -44,10 +44,6 @@ for _, col in ipairs(xfer) do
   print("Adding from T1 to T3 ", col)
   T3[col] = Q.select_ranges(T1[col], T4.lb, T4.ub)
 end
-print("==========")
-print(T4.tcin:num_elements())
-print(T4.num:num_elements())
-print("==========")
 T3.tcin       = Q.repeater(T4.tcin, T4.num)
 T3.dist_loc_i = Q.repeater(T4.dist_loc_i, T4.num)
 
