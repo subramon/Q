@@ -126,6 +126,7 @@ function lVector:get_nulls()
 end
 function lVector:drop_nulls()
   self._nn_vec = nil
+  return self
 end
 function lVector:has_nulls()
   if ( self._nn_vec ) then return true else return false end 

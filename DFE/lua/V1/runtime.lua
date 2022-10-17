@@ -18,18 +18,19 @@ T4.tcin:eval()
 -- create composite key in T4
 T4.ck = Q.concat(T4.tcin, T4.dist_loc_i)
 -- get lb/ub from T2 to T4 using composite key 
-T4.lb = Q.isby(T2.lb, T2.ck, T4.ck):eval()
-T4.ub = Q.isby(T2.ub, T2.ck, T4.ck):eval()
-T4.num = Q.vvsub(T2.ub, T2.lb):eval()
+T4.lb = Q.isby(T2.lb, T2.ck, T4.ck):eval():drop_nulls()
+T4.ub = Q.isby(T2.ub, T2.ck, T4.ck):eval():drop_nulls()
+T4.num = Q.vvsub(T4.ub, T4.lb):eval()
 local is_pr = true
 if ( is_pr ) then
   local U = {}
-  local header = "tcin,dist_loc_i,ck,lb,ub"
+  local header = "tcin,dist_loc_i,ck,lb,ub,num"
   U[#U+1] = T4.tcin
   U[#U+1] = T4.dist_loc_i
   U[#U+1] = T4.ck
   U[#U+1] = T4.lb
   U[#U+1] = T4.ub
+  U[#U+1] = T4.num
   Q.print_csv(U, { impl = "C", opfile = "_T4", header = header,  })
 end
 print("Created T4")
@@ -43,14 +44,25 @@ for _, col in ipairs(xfer) do
   print("Adding from T1 to T3 ", col)
   T3[col] = Q.select_ranges(T1[col], T4.lb, T4.ub)
 end
-T3.tcin = Q.repeater(T4.tcin, T4.num)
+print("==========")
+print(T4.tcin:num_elements())
+print(T4.num:num_elements())
+print("==========")
+T3.tcin       = Q.repeater(T4.tcin, T4.num)
 T3.dist_loc_i = Q.repeater(T4.dist_loc_i, T4.num)
 
 for k, v in pairs(T3) do 
   v:eval() 
   assert(v:is_eov())
+  print(k, v:num_elements())
 end
 assert(cVector.check_all(true, true))
+
+local tmp = { "tcin", "dist_loc_i", } 
+for _, v in ipairs(xfer) do 
+  tmp[#tmp+1] = v
+end
+xfer = tmp
 
 -- dump it out
 is_pr = true

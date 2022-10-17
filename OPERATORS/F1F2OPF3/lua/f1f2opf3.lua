@@ -15,7 +15,7 @@ local function vvsub(x, y, optargs)
     assert(status, "Could not execute vvsub")
     return col
   end
-  assert(nil, "Bad arguments to f1f2opf3")
+  error("Bad arguments to f1f2opf3")
 end
 T.vvsub = vvsub
 require('Q/q_export').export('vvsub', vvsub)

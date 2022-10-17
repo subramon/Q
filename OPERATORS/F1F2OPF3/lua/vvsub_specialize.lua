@@ -1,5 +1,6 @@
 local ffi     = require 'ffi'
 local cutils  = require 'libcutils'
+local cVector = require 'libvctr'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
 local is_in   = require 'Q/UTILS/lua/is_in'
@@ -10,8 +11,9 @@ return function (
   optargs
   )
   local subs = {}; 
-  assert(type(f1) == "lVector"); assert(not f1:has_nulls())
-  assert(type(f2) == "lVector"); assert(not f2:has_nulls())
+  assert(type(f1) == "lVector"); assert(f1:has_nulls() == false)
+  assert(type(f2) == "lVector"); assert(f2:has_nulls() == false)
+
   local f1_qtype = f1:qtype();   
   local f2_qtype = f2:qtype();   
   assert(is_in(f1_qtype, { "I1", "I2", "I4", "I8", "F4", "F8", }))
