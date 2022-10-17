@@ -21,8 +21,9 @@ local print_csv = function (
   local filter -- if we don't want all rows
   local lenV -- length of vectors, must be same for all vectors
   local hdr --- optional header line for output
+  local formats -- how a particular column should be printed
   local max_num_in_chunk -- must be same for all vectors
-  V, opfile, filter, lenV, max_num_in_chunk, hdr = 
+  V, opfile, filter, lenV, max_num_in_chunk, hdr, formats = 
     process_opt_args(inV, opt_args)
   if ( opfile ) then 
     cutils.delete(opfile)
@@ -40,7 +41,7 @@ local print_csv = function (
   local nV = #V
   if ( opt_args and opt_args.impl == "C" ) then 
     -- print("Using C print implementation")
-    assert(cprint(opfile, where, lb, ub, V, max_num_in_chunk))
+    assert(cprint(opfile, where, formats, lb, ub, V, max_num_in_chunk))
     return true 
   end
     -- print("Using Lua print implementation")

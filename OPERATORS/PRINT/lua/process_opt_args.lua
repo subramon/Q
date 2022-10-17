@@ -8,6 +8,7 @@ local function process_opt_args(
   local filter
   local lenV
   local hdr
+  local formats
   
   local outV = inV
   if opt_args then
@@ -24,6 +25,14 @@ local function process_opt_args(
     end
     if opt_args.filter then
       filter = opt_args.filter
+    end
+    if ( opt_args.formats ) then
+      assert(type(opt_args.formats) == "table")
+      assert(#opt_args.formats == #inV)
+      for k, v in ipairs(opt_args.formats) do 
+        assert(type(v) == "string")
+      end
+      formats = opt_args.formats
     end
   end
 
@@ -42,6 +51,6 @@ local function process_opt_args(
   assert(max_num_in_chunk > 0)
   assert(type(lenV) == "number")
   assert(lenV > 0)
-  return outV, opfile, filter, lenV, max_num_in_chunk, hdr
+  return outV, opfile, filter, lenV, max_num_in_chunk, hdr, formats
 end
 return  process_opt_args

@@ -13,8 +13,8 @@ local n = assert(cutils.num_lines(datafile))
 local M = {}
 local O = { is_hdr = false } 
 M[1] = { name = "tcin", qtype = "I4", has_nulls = false, memo_len = 1, }
-M[2] = { name = "co_loc_ref_i",  qtype = "I2", has_nulls = false, memo_len = 1, }
-M[3] = { name = "dist_loc_i",  qtype = "I2", has_nulls = false  }
+M[2] = { name = "co_loc_ref_i",  qtype = "I2", has_nulls = false, }
+M[3] = { name = "dist_loc_i",  qtype = "I2", has_nulls = false, memo_len = 1  }
 M[4] = { name = "sls_unit_q",  qtype = "F4", has_nulls = true  }
 M[5] = { name = "str_week",  qtype = "SC", has_nulls = false, width = 15, memo_len = 1, }
 T1 = Q.load_csv(datafile, M, O)

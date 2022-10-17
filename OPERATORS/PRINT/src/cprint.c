@@ -3,6 +3,7 @@
 #include "cprint.h"
 #include "get_bit_u64.h"
 
+// TODO P3 Need to fiully implement formats
 int
 cprint(
     const char * opfile,
@@ -13,7 +14,8 @@ cprint(
     uint64_t lb,
     uint64_t ub,
     const int32_t  * const qtypes,//[nC]
-    const int32_t * const widths // [nC]
+    const int32_t * const widths, // [nC]
+    char ** formats // [nC]
     )
 {
   int status = 0;
@@ -91,6 +93,15 @@ cprint(
                      int len = sizeof(buf); 
                      memset(buf, 0, len);
                      const tm_t * tptr = ((const tm_t *)X);
+                     if ( ( formats != NULL ) && ( formats[j] != NULL ) && 
+                         ( strcmp(formats[j], "%Y-%m-%d") == 0 ) ) {
+                       snprintf(buf, len-1, "\"%4d-%02d-%02d\"", 
+                         tptr[i].tm_year + 1900,
+                         tptr[i].tm_mon + 1,
+                         tptr[i].tm_mday
+                         );
+                     }
+                     else {
                      snprintf(buf, len-1, "\"%d:%02d:%02d:%d:%d:%d:%d\"", 
                          tptr[i].tm_year + 1900,
                          tptr[i].tm_mon + 1,
@@ -99,7 +110,7 @@ cprint(
                          tptr[i].tm_min,
                          tptr[i].tm_sec,
                          tptr[i].tm_yday);
-
+                     }
                      fprintf(fp, "%s", buf);
                   }
                   break;

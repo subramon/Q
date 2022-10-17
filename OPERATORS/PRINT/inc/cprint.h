@@ -9,6 +9,7 @@ cprint(
     uint64_t lb,
     uint64_t ub,
     const int32_t  * const qtypes,  
-    const int32_t * const widths // [nC]
+    const int32_t * const widths, // [nC]
+    char ** formats // [nC]
     );
 //STOP_FOR_CDEF
