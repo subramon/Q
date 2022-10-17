@@ -57,17 +57,15 @@ local function expander_f1f2opf3(a, f1, f2, optargs )
     l_chunk_num = l_chunk_num + 1
     return f1_len, buf
   end
-  local vargs = {gen=f3_gen, qtype=subs.f3_qtype, 
-    has_nulls=false, max_num_in_chunk = subs.max_num_in_chunk}
+  local vargs = {}
   if ( optargs ) then 
-    for k, v in pairs(optargs) do 
-      if ( is_in(k, {"gen","qtype","has_nulls","max_num_in_chunk",}) )then
-        -- skip it 
-      else
-        vargs[k] = v
-      end
-    end
+    assert(type(optargs) == "table")
+    for k, v in pairs(optargs) do vargs[k] = v end
   end
+  vargs.gen = f3_gen
+  vargs.qtype=subs.f3_qtype
+  vargs.has_nulls=false 
+  vargs.max_num_in_chunk = subs.max_num_in_chunk
   return lVector(vargs)
 end
 return expander_f1f2opf3

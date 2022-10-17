@@ -18,9 +18,11 @@
 #include "vctr_del.h"
 #include "vctr_drop_l1_l2.h"
 #include "vctr_eov.h"
+#include "vctr_early_free.h"
 #include "vctr_incr_ref_count.h"
 #include "vctr_is.h"
 #include "vctr_is_eov.h"
+#include "vctr_is_early_free.h"
 #include "vctr_l1_to_l2.h"
 #include "vctr_is_persist.h"
 #include "vctr_get_chunk.h"
@@ -274,6 +276,21 @@ static int l_vctr_is_eov( lua_State *L) {
   bool b_is_eov; 
   status = vctr_is_eov(ptr_v->uqid, &b_is_eov);
   lua_pushboolean(L, b_is_eov);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_is_early_free( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  bool b_is_early_free; 
+  status = vctr_is_early_free(ptr_v->uqid, &b_is_early_free);
+  lua_pushboolean(L, b_is_early_free);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -596,6 +613,20 @@ BYE:
   return 3;
 }
 //---------------------------------------------
+static int l_vctr_early_free( lua_State *L) {
+  int status = 0;
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_early_free(ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_chnk_delete( lua_State *L) {
   int status = 0;
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
@@ -753,7 +784,9 @@ static const struct luaL_Reg vector_methods[] = {
     { "chunk_delete", l_chnk_delete },
     //--------------------------------
     { "eov",    l_vctr_eov },
+    { "early_free",    l_vctr_early_free },
     { "is_eov", l_vctr_is_eov },
+    { "is_early_free", l_vctr_is_early_free },
     { "nop", l_vctr_nop },
     //--------------------------------
     { "set_memo", l_vctr_set_memo },
@@ -793,7 +826,9 @@ static const struct luaL_Reg vector_functions[] = {
     { "chunk_delete", l_chnk_delete },
     //--------------------------------
     { "eov",    l_vctr_eov },
+    { "early_free",    l_vctr_early_free },
     { "is_eov", l_vctr_is_eov },
+    { "is_early_free", l_vctr_is_early_free },
     { "persist", l_vctr_persist },
     { "is_persist", l_vctr_is_persist },
     { "nop",    l_vctr_nop },

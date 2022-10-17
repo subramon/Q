@@ -1,8 +1,8 @@
-require 'Q/UTILS/lua/strict'
 local is_in = require 'Q/UTILS/lua/is_in'
 local plpath = require 'pl.path'
 local plfile = require 'pl.file'
 local cutils = require 'libcutils'
+require 'Q/UTILS/lua/strict'
 
 local rootdir = os.getenv("Q_SRC_ROOT")
 plpath.isdir(rootdir)
@@ -71,7 +71,9 @@ tests.t1 = function()
   cutils.makepath("/tmp/_xxxx")
   assert(cutils.isdir("/tmp/_xxxx"))
   
+  local nl = assert(cutils.num_lines("./stress_test.lua"))
+  assert(nl == 12)
   print("Test t1 succeeded")
 end
--- tests.t1()
-return tests
+tests.t1()
+-- return tests

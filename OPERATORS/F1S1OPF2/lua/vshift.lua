@@ -20,9 +20,11 @@ local function vshift(f1, shift_by, newval, optargs )
   local chunk_idx = 0
   local nC = subs.max_num_in_chunk
   --=================================
+  local f1_name = f1:name()
   local f2_gen = function(chunk_num)
     -- sync between expected chunk_num and generator's chunk_idx state
     assert(chunk_num == chunk_idx)
+    print("Requesting chunk " .. chunk_num .. " from " .. f1_name)
     local f2_buf = assert(cmem.new(subs.bufsz))
     f2_buf:stealable(true)
     f2_buf:zero()

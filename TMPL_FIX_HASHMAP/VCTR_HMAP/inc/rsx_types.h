@@ -24,6 +24,7 @@ typedef struct _vctr_meta_t {
   bool is_eov;   // true => no appends allowed
   bool is_persist;   // l2 should not be deleted on vector delete
   bool is_writable;   // false => no changes allowed
+  bool is_early_free; // true => some chunk has been freed early
   bool is_trash; // true => marked for garbage collection 
   // Much more to put in here
 } vctr_meta_t;

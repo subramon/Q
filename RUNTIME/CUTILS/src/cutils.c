@@ -114,6 +114,31 @@ static int l_cutils_isdir(
   return 1;
 }
 //----------------------------------------
+static int l_cutils_num_lines( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  char *X = NULL; size_t nX = 0;
+  if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
+  const char *const file_name = luaL_checkstring(L, 1);
+  status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
+  if ( X[nX-1] != '\n' ) { go_BYE(-1); }
+  uint64_t num_lines = 0;
+  for ( uint64_t i = 0; i < nX; i++ ) { 
+    if ( X[i] == '\n' ) { num_lines++; }
+  }
+  lua_pushnumber(L, num_lines);
+  mcr_rs_munmap(X, nX);
+  return 1;
+BYE:
+  mcr_rs_munmap(X, nX);
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_cutils_makepath( 
     lua_State *L
     )
@@ -530,6 +555,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "isfile",      l_cutils_isfile },
     { "is_qtype",     l_cutils_is_qtype },
     { "makepath",    l_cutils_makepath },
+    { "num_lines",   l_cutils_num_lines },
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
@@ -555,6 +581,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },
+    { "num_lines",   l_cutils_num_lines },
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },

@@ -380,7 +380,7 @@ function lVector:get_chunk(chnk_idx)
     end
   end
   if ( to_generate ) then 
-    -- print(" invoke the generator  for " .. self._chunk_num)
+    -- print(" invoke the generator  for " .. self:name(), self._chunk_num)
     if ( type(self._generator) == "nil" ) then return 0, nil end 
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
@@ -392,9 +392,9 @@ function lVector:get_chunk(chnk_idx)
     --==============================, NUmber of elements
     if ( num_elements < self._max_num_in_chunk ) then 
       -- nothing more to generate
+      print("Regular  EOV for " .. self:name())
       self:eov()  -- vector is at an end 
-      -- Following increment seems unnecessary but is important to 
-      -- keep consistency with put_chunk
+      print("#elements for " .. self:name() .. " = " .. self:num_elements())
     end
     --==============================
     -- check for early termination
@@ -421,9 +421,17 @@ function lVector:get_chunk(chnk_idx)
       assert(type(self._siblings) == "table")
       for _, v in ipairs(self._siblings) do
         assert(type(v) == "lVector") assert(type(v) == "lVector")
-        print(self:name(), " Getting chunk for sibling", chnk_idx, v:name())
+        print("Vector " .. self:name(), " requesting chunk " .. chnk_idx .. 
+          " for sibling", v:name())
         local x, y, z = v:get_chunk(chnk_idx)
         assert(x == num_elements)
+        if ( x < self._max_num_in_chunk ) then 
+          print("Sibling EOV for " .. v:name())
+          v:eov()  -- vector is at an end 
+        end
+        -- -- TODO P1 Document whether above assert is okay
+        -- This was motivated by the use of Q.seq({len = n, ...}) as 
+        -- the first argument to Q.where() where n was not known a priori
         -- Note the immediate unget which is done to decrement
         -- the number of readers. Note that we throw away x, y, z 
         cVector.unget_chunk(v:self(), chnk_idx)
@@ -444,6 +452,7 @@ function lVector:get_chunk(chnk_idx)
     end
     return num_elements, buf, nn_buf
   else 
+    -- print(" Archival chunk for " .. self:name(), self._chunk_num)
     self:check()
     local nn_x, nn_n
     local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
@@ -605,12 +614,16 @@ function lVector.conjoin(T)
     assert(type(v1) == "lVector")
     for k2, v2 in ipairs(T) do
       if ( k1 ~= k2 ) then
+        assert(v1:max_num_in_chunk() == v2:max_num_in_chunk())
         v1:add_sibling(v2)
       end
     end
   end
 end
 
+function lVector:early_free()
+  return  cVector.delete(self._base_vec)
+end
 function lVector:self()
   return self._base_vec
 end

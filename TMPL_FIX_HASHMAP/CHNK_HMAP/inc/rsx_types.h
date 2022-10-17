@@ -18,11 +18,14 @@ typedef struct _chnk_rs_hmap_val_t {
   uint32_t num_elements;
   //-----
   qtype_t qtype; // backward reference for debugging 
-  bool     l2_exists; ;
+  bool     l2_exists;
+  // Sometimes we know that a vector is not needed before chunk n
+  // In that case, we do NOT delete the chunk but we delete its resources
+  // and mark is_early_free = true;
+  // Cannot save a vector if any of its chunks have is_early_free == true
+  bool is_early_free; 
   uint32_t size; // we do not expect a chunk to exceed 4G, a vector might
   //-----
-  // Details on converting l2_mem_id to filename elsewhere
-  // Much more to put in here
   char *l1_mem;
 } chnk_rs_hmap_val_t;
 #endif //  __CHNK_TYPES_TYPES_H

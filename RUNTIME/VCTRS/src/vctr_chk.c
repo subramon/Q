@@ -85,6 +85,9 @@ vctr_chk(
   uint32_t num_chnks       = vctr_val.num_chnks;
   uint32_t max_chnk_idx    = vctr_val.max_chnk_idx;
   uint32_t max_num_in_chnk = vctr_val.max_num_in_chnk;
+  bool is_early_free       = vctr_val.is_early_free;
+  bool chk_is_early_free = false;
+
   uint64_t chk_num_elements    = 0;
   // we can have an empty Vector (while it is being created)
   if ( vctr_val.is_eov ) {  
@@ -97,7 +100,7 @@ vctr_chk(
   int good_filesz  = width * max_num_in_chnk;
   if ( vctr_uqid == 0 ) { goto BYE; }
   for ( uint32_t chnk_idx = 0; chnk_idx <= max_chnk_idx; chnk_idx++ ) {
-    if ( num_elements == 0 ) { break; } // NOTE: Special case
+    if ( num_elements == 0 ) { break; } // NOTE: Special case for empty vec
     bool chnk_is_found; uint32_t chnk_where_found;
     status = chnk_is(vctr_uqid, chnk_idx,&chnk_is_found,&chnk_where_found);
     cBYE(status);
@@ -113,6 +116,7 @@ vctr_chk(
     memset(&chnk_key, 0, sizeof(chnk_rs_hmap_key_t));
     chnk_val = g_chnk_hmap.bkts[chnk_where_found].val;
     chnk_key = g_chnk_hmap.bkts[chnk_where_found].key;
+    if ( chnk_val.is_early_free ) { chk_is_early_free = true; } 
     if ( is_at_rest ) { 
       if ( chnk_val.num_readers != 0 ) { go_BYE(-1); } 
       if ( chnk_val.num_writers != 0 ) { go_BYE(-1); } 
@@ -133,18 +137,29 @@ vctr_chk(
     }
     chk_num_elements += chnk_val.num_elements;
     if ( chnk_val.qtype != qtype ) { go_BYE(-1); }
-    // if data not in L2, must be in L1 
-    if ( chnk_val.l2_exists == false ) { 
-      if ( chnk_val.l1_mem == NULL ) { go_BYE(-1); }
-    }
-    else { // check that file exists 
+    if ( chnk_val.is_early_free ) { 
+      if ( chnk_val.l2_exists ) { go_BYE(-1); } 
+      if ( chnk_val.l1_mem != NULL  ) { go_BYE(-1); } 
       char *l2_file = l2_file_name(vctr_uqid, chnk_idx);
-      if ( !isfile(l2_file) ) { go_BYE(-1); }
-      int64_t filesz = get_file_size(l2_file);
-      if ( filesz != good_filesz ) { go_BYE(-1); }
+      if ( isfile(l2_file) ) { go_BYE(-1); }
       free_if_non_null(l2_file);
     }
+    else {
+      // if data not in L2, must be in L1 
+      if ( chnk_val.l2_exists == false ) { 
+        if ( chnk_val.l1_mem == NULL ) { go_BYE(-1); }
+      }
+      else { // check that file exists 
+        char *l2_file = l2_file_name(vctr_uqid, chnk_idx);
+        if ( !isfile(l2_file) ) { go_BYE(-1); }
+        int64_t filesz = get_file_size(l2_file);
+        if ( filesz != good_filesz ) { go_BYE(-1); }
+        free_if_non_null(l2_file);
+      }
+    }
   }
+  if ( is_early_free ) { if ( !chk_is_early_free ) { go_BYE(-1); } }
+  if ( !is_early_free ) { if ( chk_is_early_free ) { go_BYE(-1); } }
   // if no memo, then num in chunk should match num in vector 
   if ( vctr_val.memo_len < 0 ) { 
     if ( chk_num_elements != num_elements ) { go_BYE(-1); }

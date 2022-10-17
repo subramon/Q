@@ -122,12 +122,14 @@ local function load_csv(
       tinfo.has_nulls = v.has_nulls
       tinfo.qtype     = v.qtype
       tinfo.nn_qtype  = nn_qtype
+      tinfo.max_num_in_chunk  = max_num_in_chunk
       if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
       local V = lVector(tinfo)
       V:set_name(v.name)
       if ( v.meaning ) then 
         V:set_meta("_meta.meaning", M[i].meaning)
       end
+      -- print("max_num_in_chunk for " .. v.name .. " is " ..  v.max_num_in_chunk)
       V:memo(v.memo_len)
       vectors[v.name] = V
     end

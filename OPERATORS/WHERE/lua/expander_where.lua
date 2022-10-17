@@ -7,6 +7,8 @@ local Scalar   = require 'libsclr'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
+local function lmin(x, y) if ( x < y ) then return x else return y end end
+
 local function expander_where(a, b, optargs)
   assert(type(a) == "lVector")
   assert(type(b) == "lVector")
@@ -49,8 +51,11 @@ local function expander_where(a, b, optargs)
   local c_aidx = ffi.cast("uint64_t *", get_ptr(aidx, "UI8"))
   c_aidx[0] = 0 
   
+  local a_name = a:name()
+  local b_name = b:name()
   local function where_gen(chunk_num)
     assert(chunk_num == l_chunk_num)
+    print("Get chunk " .. chunk_num .. " for " .. a_name .. " and " .. b_name)
     -- n_out counts number of entries in output buffer
     local n_out = cmem.new(ffi.sizeof("uint64_t"))
     local c_n_out = ffi.cast("uint64_t *", get_ptr(n_out, "UI8"))
@@ -63,32 +68,38 @@ local function expander_where(a, b, optargs)
       n_out:nop()
       local a_len, a_chunk, a_nn_chunk = a:get_chunk(ab_chunk_num)
       local b_len, b_chunk, b_nn_chunk = b:get_chunk(ab_chunk_num)
-      if ( a_len == 0 ) then 
+      if ( a_len ~= b_len ) then 
+        print("WHERE EOV a: " .. a_name .. " = " .. tostring(a:is_eov()))
+        print("WHERE EOV b: " .. b_name .. " = " .. tostring(b:is_eov()))
+        print("WHERE Length a: " .. a_name .. " = " .. a_len)
+        print("WHERE Length b: " .. b_name .. " = " .. b_len)
+      end
+      assert(a_len == b_len) -- See Detailed note at end 
+      local ab_len = a_len -- lmin(a_len, b_len)
+      -- See Detailed Note at end for why ab_len is needed
+      if ( ab_len == 0 ) then 
         -- no more input, flush whatever is in output buffer
         local num_in_out = tonumber(c_n_out[0])
         return num_in_out, out_buf
       end
-      print("WHERE", a:name(), b:name())
-      print("WHERE", chunk_num, a_len, b_len)
-      assert(a_len == b_len)
       local cast_a_buf   = get_ptr(a_chunk, subs.cast_a_as)
       local cast_b_buf   = get_ptr(b_chunk, subs.cast_b_as)
       local cast_out_buf = get_ptr(out_buf, subs.cast_a_as)
       local start_time = cutils.rdtsc()
       local status = qc[func_name](cast_a_buf, cast_b_buf, c_aidx, 
-        a_len, cast_out_buf, subs.max_num_in_chunk, c_n_out)
+        ab_len, cast_out_buf, subs.max_num_in_chunk, c_n_out)
       assert(status == 0)
       record_time(start_time, func_name)
       num_in_out = tonumber(c_n_out[0])
       -- if you have consumed all you got from the a_chunk,
       -- then you need to move to the next chunk
-      if ( tonumber(c_aidx[0]) == a_len ) then
+      if ( tonumber(c_aidx[0]) == ab_len ) then
         a:unget_chunk(ab_chunk_num)
         b:unget_chunk(ab_chunk_num)
         ab_chunk_num = ab_chunk_num + 1
         c_aidx[0] = 0
       end
-      if ( a_len < a:max_num_in_chunk() ) then 
+      if ( ab_len < a:max_num_in_chunk() ) then 
         -- no more input, flush whatever is in output buffer
         local num_in_out = tonumber(c_n_out[0])
         return num_in_out, out_buf
@@ -100,3 +111,16 @@ local function expander_where(a, b, optargs)
   return lVector( { gen = where_gen, has_nulls = false, qtype = subs.a_qtype } )
 end
 return expander_where
+
+--[[
+
+Explanation for the introduction of ab_len
+
+I had a case where I was doing Q.where(x, y) which were supposed to be
+the same length. But, I did not know the length of y and x was
+supposed to be a primary key i.e., Q.seq({ start = 0, by = 1, len =
+n}). The rub was that I did not know what n would be because x and y
+were both memo-ized. The solution was to make "n" much larger than it
+could ever be e.g., LLONG_MAX. But now x and y would not be the same
+length :-( The solution was to stop when either "x" or "y" stopped
+--]]
