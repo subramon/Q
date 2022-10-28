@@ -168,7 +168,9 @@ function lVector.new(args)
     assert(type(args.uqid) == "number")
     assert(args.uqid > 0)
     vector._base_vec = assert(cVector.rehydrate(args))
-    assert(cVector.chk(vector._base_vec, true, false))
+    if ( qcfg.debug ) then 
+      assert(cVector.chk(vector._base_vec, true, false))
+    end
     -- get following from cVector
     -- max_num_in_chunk
     -- memo_len
@@ -393,6 +395,7 @@ function lVector:get_chunk(chnk_idx)
     --==============================, NUmber of elements
     if ( num_elements < self._max_num_in_chunk ) then 
       -- nothing more to generate
+      print("Regular EOV for " .. self:name())
       self:eov()  -- vector is at an end 
     end
     --==============================
@@ -436,11 +439,13 @@ function lVector:get_chunk(chnk_idx)
         cVector.unget_chunk(v:self(), chnk_idx)
         -- Also, depending on memo_len, we may need to delete some chunks
         if ( ( v:memo_len() >= 0 ) and ( v:num_elements() > 0 ) ) then
-          local chunk_to_release = chunk_idx - self._memo_len
+          local chunk_to_release = chnk_idx - self._memo_len
           if ( chunk_to_release >= 0 ) then 
-            print("Sibling: Deleting chunk " .. chunk_to_release)
+            print(self:name() .. " deleting chunk " .. chunk_to_release ..
+              " of sibling " ..v:name())
             local is_found = 
-              cVector.chunk_delete(self._base_vec, chunk_to_release)
+              cVector.chunk_delete(v._base_vec, chunk_to_release)
+              -- WAS cVector.chunk_delete(self._base_vec, chunk_to_release)
             -- assert(is_found == true)
             if ( is_found == false ) then 
               print("Chunk was not found " .. chunk_to_release)
@@ -451,8 +456,8 @@ function lVector:get_chunk(chnk_idx)
     end
     return num_elements, buf, nn_buf
   else 
-    -- print(" Archival chunk for " .. self:name(), self._chunk_num)
-    self:check()
+    -- print(" Archival chunk for " .. self:name(), chnk_idx)
+    -- ONLY FOR DEBUGGING self:check()
     local nn_x, nn_n
     local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
     if ( x == nil ) then return 0, nil, nil end 

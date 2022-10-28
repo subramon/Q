@@ -66,7 +66,6 @@ if ( is_pr ) then
   local U = {}
   local header = table.concat(xfer, ",")
   local formats = {}
-  for k, v in ipairs(xfer) do U[k] = T3[v] end
   for k, v in ipairs(xfer) do 
     if ( v == "week_start_date" ) then
       formats[#formats+1] = "%Y-%m-%d"
@@ -74,6 +73,7 @@ if ( is_pr ) then
       formats[#formats+1] = ""
     end
   end
+  for k, v in ipairs(xfer) do U[k] = T3[v] end
   Q.print_csv(U, { impl = "C", opfile = "_T3", 
     header = header, formats = formats })
 end

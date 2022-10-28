@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 # Quick and dirty way of compiling. Need to improve this
+test -d $Q_ROOT/csos
+rm -f   $Q_ROOT/csos/*.so
+
 cd $Q_SRC_ROOT/TMPL_FIX_HASHMAP/src/; make clean && make
 cd $Q_SRC_ROOT/TMPL_FIX_HASHMAP/VCTR_HMAP/; make clean && make
 cd $Q_SRC_ROOT/TMPL_FIX_HASHMAP/CHNK_HMAP/; make clean && make

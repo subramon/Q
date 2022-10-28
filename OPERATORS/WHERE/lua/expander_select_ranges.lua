@@ -23,6 +23,9 @@ local function select_ranges(f1, lb, ub, optargs )
   local lbidx = 0 -- which range to read from 
   local lboff = 0 -- how many elements of range lbidx have been consumed
   --=================================
+  local total_get1_time = 0
+  local total_getc_time = 0
+  local total_copy_time = 0
   local f2_gen = function(chunk_num)
     -- sync between expected chunk_num and generator's chunk_idx state
     assert(chunk_num == chunk_idx)
@@ -44,8 +47,12 @@ local function select_ranges(f1, lb, ub, optargs )
 
     while ( space_in_f2 > 0 ) do 
       if ( lbidx >= lbnum ) then break end -- no more input 
+      local get1_time = cutils.rdtsc()
       local ilb = lb:get1(lbidx):to_num()
       local iub = ub:get1(lbidx):to_num()
+      total_get1_time = total_get1_time+(cutils.rdtsc() - get1_time)
+      -- print("Select: chunk_num, lbidx, ilb, iub = ", chunk_num, lbidx, ilb, iub)
+      -- print(total_get1_time, total_getc_time, total_copy_time)
       assert(ilb < iub)
       ilb = ilb + lboff 
       assert(ilb <= iub)
@@ -63,7 +70,9 @@ local function select_ranges(f1, lb, ub, optargs )
       assert(ilb < iub)
       local f1_chunk_idx = math.floor(ilb / nC)
       local f1_chunk_off = ilb % nC
+      local getc_time  = cutils.rdtsc()
       local f1_len, f1_buf, nn_f1_buf = f1:get_chunk(f1_chunk_idx)
+      total_getc_time = total_getc_time + (cutils.rdtsc() - getc_time)
       local cst_f1_buf  = ffi.cast(subs.f1_cast_as, get_ptr(f1_buf))
       local cst_nn_f1_buf
       if ( subs.has_nulls ) then assert(type(nn_f1_buf) == "CMEM") end
@@ -72,6 +81,7 @@ local function select_ranges(f1, lb, ub, optargs )
       end
       assert(f1_len > 0) 
       -- TODO P4 ignore bad ranges instead of asserting on them 
+      local copy_time = cutils.rdtsc()
       local num_in_f1 = f1_len - f1_chunk_off
       local num_to_copy = lmin(space_in_f2, num_in_f1)
       num_to_copy = lmin(num_to_copy, (iub-ilb))
@@ -82,6 +92,7 @@ local function select_ranges(f1, lb, ub, optargs )
         ffi.C.memcpy(cst_nn_f2_buf + num_in_f2, cst_nn_f1_buf+f1_chunk_off,
           num_to_copy * ffi.sizeof("bool"))
       end
+      total_copy_time = total_copy_time + (cutils.rdtsc() - copy_time)
       num_in_f2 = num_in_f2 + num_to_copy
       lboff = lboff + num_to_copy
       space_in_f2 = space_in_f2 - num_to_copy

@@ -5,18 +5,19 @@ local cVector = require 'libvctr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 --== Following happens at run time 
 
-assert(T1.sls_unit_q:has_nulls())
-
 assert(type(arg) == "table")
-local datafile = assert(arg[1])
-assert(type(datafile) == "string")
-datafile = qcfg.q_src_root .. "/DFE/data/" .. datafile 
+local infile = assert(arg[1])
+local outfile = assert(arg[2])
+assert(type(infile) == "string")
+assert(type(outfile) == "string")
+assert(infile ~= outfile)
+infile = qcfg.q_src_root .. "/DFE/data/" .. infile 
 local M = {}
 local O = { is_hdr = true, }
 M[1] = { name = "tcin", qtype = "I4", has_nulls = false }
 M[2] = { name = "dist_loc_i",  qtype = "I2", has_nulls = false  }
-print("datafile = ", datafile)
-local T4 = Q.load_csv(datafile, M, O)
+print("infile = ", infile)
+local T4 = Q.load_csv(infile, M, O)
 T4.tcin:eval()
 -- create composite key in T4
 T4.ck = Q.concat(T4.tcin, T4.dist_loc_i)
@@ -38,7 +39,7 @@ print("Created T4")
 -- At this stage, T4 tells us what we need from T1 to put in T3
 
 --== copy relevant rows from T1 to T3 
-local xfer = { "tcin", "dist_loc_i", "co_loc_ref_i", 
+local xfer = { "tcin", "co_loc_ref_i", "dist_loc_i", 
   "sls_unit_q", "week_start_date", }
 local T3 = {}
 for _, col in ipairs(xfer) do 
@@ -50,7 +51,6 @@ for k, v in pairs(T3) do
   assert(v:is_eov())
 end
 assert(T3.sls_unit_q:has_nulls())
-T3.sls_unit_q:get_nulls():pr("_nn_sls_unit_q_T3")
 for k, v in pairs(T3) do assert(v:is_eov()) end
 assert(cVector.check_all(true, true))
 
@@ -59,8 +59,18 @@ is_pr = true
 if ( is_pr ) then
   local U = {}
   local header = table.concat(xfer, ",")
+  local formats = {}
+  for k, v in ipairs(xfer) do 
+    if ( v == "week_start_date" ) then
+      formats[#formats+1] = "%Y-%m-%d"
+    else
+      formats[#formats+1] = ""
+    end
+  end
   for k, v in ipairs(xfer) do U[k] = T3[v] end
-  Q.print_csv(U, { impl = "C", opfile = "_T3", header = header })
+  Q.print_csv(U, { impl = "C", opfile = outfile, 
+    -- header = header,  Taking this out for demo purposes
+    formats= formats })
 end
 
 Q.save()

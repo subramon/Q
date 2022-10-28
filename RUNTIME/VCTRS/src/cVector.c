@@ -4,6 +4,7 @@
 #include "lualib.h"
 
 #include "q_incs.h"
+#include "rdtsc.h"
 #include "qtypes.h"
 #include "cmem_struct.h"
 #include "aux_lua_to_c.h" // get_int_from_tbl()
@@ -544,6 +545,8 @@ BYE:
 }
 //----------------------------------------
 static int l_vctr_get_chunk( lua_State *L) {
+  // static uint64_t getc_time = 0;
+  // uint64_t t_start = RDTSC();
   int status = 0;
   // get args from Lua 
   int num_args = lua_gettop(L); 
@@ -562,6 +565,9 @@ static int l_vctr_get_chunk( lua_State *L) {
   cBYE(status);
 
   lua_pushnumber(L, num_elements);
+  // uint64_t t_stop = RDTSC();
+  // getc_time += (t_stop - t_start);
+  // printf("OUT GETC = %" PRIu64 "\n", getc_time);
   return 2;
 BYE:
   lua_pushnil(L);

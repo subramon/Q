@@ -46,6 +46,7 @@ local function internal_save(
       print(vec:is_eov() )
       print(vec:memo_len() )
     else
+      print("Saving lVector: " .. name )
       -- flush vector to disk and mark for persistence
       vec:l1_to_l2() -- copy from level 1 to level 2 
       vec:persist()  -- indicate not to free level 2 upon delete

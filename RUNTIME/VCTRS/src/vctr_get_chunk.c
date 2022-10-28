@@ -1,5 +1,6 @@
 #include "q_incs.h"
 #include "qtypes.h"
+#include "rdtsc.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_is.h"
@@ -20,11 +21,13 @@ vctr_get_chunk(
     )
 {
   int status = 0;
+  // static uint64_t getc_time = 0; 
   bool vctr_is_found, chnk_is_found;
   uint32_t vctr_where_found, chnk_where_found;
   uint32_t chnk_size, width, max_num_in_chnk;
   bool is_write = false; // TODO P3 Handle case when this is true 
 
+  // uint64_t t_start = RDTSC();
   status = vctr_is(vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
   if ( !vctr_is_found ) { go_BYE(-1); }
@@ -59,6 +62,9 @@ vctr_get_chunk(
   if ( ptr_n != NULL ) { 
     *ptr_n = g_chnk_hmap.bkts[chnk_where_found].val.num_elements; 
   }
+  // uint64_t t_stop = RDTSC();
+  // getc_time += (t_stop - t_start);
+  // printf("IN  GETC = %" PRIu64 "\n", getc_time);
 BYE:
   return status;
 }

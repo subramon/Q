@@ -69,6 +69,7 @@ local function expander_where(a, b, optargs)
       local a_len, a_chunk, a_nn_chunk = a:get_chunk(ab_chunk_num)
       local b_len, b_chunk, b_nn_chunk = b:get_chunk(ab_chunk_num)
       if ( a_len ~= b_len ) then 
+        print("WHERE chunk_num = ", chunk_num)
         print("WHERE EOV a: " .. a_name .. " = " .. tostring(a:is_eov()))
         print("WHERE EOV b: " .. b_name .. " = " .. tostring(b:is_eov()))
         print("WHERE Length a: " .. a_name .. " = " .. a_len)

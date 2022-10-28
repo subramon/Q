@@ -46,12 +46,12 @@ qcfg.ld_library_path = os.getenv("LD_LIBRARY_PATH")
 -- Note that no cell in an input CSV file can have length greater
 -- than max_width_SC
 qcfg.max_width_SC = 32 -- => max length of constant length string = 32-1
-qcfg.max_num_in_chunk = 16384 -- this is default value
+qcfg.max_num_in_chunk = 4096 -- this is default value
 local x = math.ceil(qcfg.max_num_in_chunk/64.0)
 local y = math.floor(qcfg.max_num_in_chunk/64.0)
 assert(x == y) -- MUST Be a multiple o 64
 
-qcfg.debug = true -- set to TRUE only if you want debugging
+qcfg.debug = false -- set to TRUE only if you want debugging
 qcfg.memo_len = -1 --  Vector code uses this default value
 -- -1 means infinite memo, 0 means no memoization 
 -- 1 means 1 previous chunk kept, 2 means 2 previous chunks and so on
