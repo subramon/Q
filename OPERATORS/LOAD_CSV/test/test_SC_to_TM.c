@@ -1,10 +1,14 @@
 #define _XOPEN_SOURCE
-#include "q_incs.h"
 #include <time.h>
+
+#include "q_incs.h"
 #include <inttypes.h>
 #include "SC_to_TM.h"
 #include "TM_to_SC.h"
 #include "TM_to_I8.h"
+
+// extern char *strptime(const char *s, const char *format, struct tm *tm);
+
 int
 main(void)
 {
@@ -49,7 +53,9 @@ main(void)
   status = TM_to_I8(outv, N, secs); cBYE(status);
   for ( int i = 0; i < N; i++ ) { 
     // fprintf(stderr, "%d: %" PRIu64 "\n", i, secs[i]);
-    if ( secs[i] != 1005589861 ) { go_BYE(-1); }
+    uint64_t diff = llabs(secs[i] - 1005589861 );
+    if ( diff > 86400 ) { go_BYE(-1); } // not more than 1 day 
+    if ( ( ( diff/3600)*3600) != diff ) { go_BYE(-1); } //multiple of 1 hour
   }
 BYE:
   free_if_non_null(inv); 

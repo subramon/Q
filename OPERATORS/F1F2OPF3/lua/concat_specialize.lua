@@ -1,16 +1,60 @@
 local ffi     = require 'ffi'
 local cmem    = require 'libcmem'
-local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+local cutils  = require 'libcutils'
+local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local qc      = require 'Q/UTILS/lua/qcore'
-local qconsts = require 'Q/UTILS/lua/qconsts'
-local inttypes = { "I1", "I2", "I4", "I8" }
-local is_inttype = {}
-for _, inttype in ipairs(inttypes) do
-  is_inttype[inttype] = true
+local is_in   = require 'Q/UTILS/lua/is_in'
+
+qc.q_cdef("OPERATORS/F1F2OPF3/inc/f1f2opf3_concat.h") 
+
+local function set_defaults(f1_qtype, f2_qtype)
+  local shift_by, f3_qtype
+  if ( f1_qtype == "I1" ) then 
+    if ( f2_qtype == "I1" ) then 
+      f3_qtype = "I2"
+      shift_by = 8
+    elseif ( f2_qtype == "I2" ) then 
+      f3_qtype = "I4"
+      shift_by = 16
+    elseif ( f2_qtype == "I4" ) then 
+      f3_qtype = "I8"
+      shift_by = 32
+    else 
+      error("Cannot concat " ..  f1_qtype .. " and " ..  f2_qtype)
+    end
+  elseif ( f1_qtype == "I2" ) then 
+    if ( f2_qtype == "I1" ) then 
+      f3_qtype = "I4"
+      shift_by = 8
+    elseif ( f2_qtype == "I2" ) then 
+      f3_qtype = "I4"
+      shift_by = 16
+    elseif ( f2_qtype == "I4" ) then 
+      f3_qtype = "I8"
+      shift_by = 32
+    else 
+      error("Cannot concat " ..  f1_qtype .. " and " ..  f2_qtype)
+    end
+  elseif ( f1_qtype == "I4" ) then 
+    if ( f2_qtype == "I1" ) then 
+      f3_qtype = "I8"
+      shift_by = 8
+    elseif ( f2_qtype == "I2" ) then 
+      f3_qtype = "I8"
+      shift_by = 16
+    elseif ( f2_qtype == "I4" ) then 
+      f3_qtype = "I8"
+      shift_by = 32
+    else 
+      error("Cannot concat " ..  f1_qtype .. " and " ..  f2_qtype)
+    end
+  end
+  return f3_qtype, shift_by
 end
-qc.q_cdef("OPERATORS/F1F2OPF3/inc/f1f2opf3_concat.h")
+
+
 
 return function (
   f1, 
@@ -20,23 +64,35 @@ return function (
   local subs = {}; 
   assert(type(f1) == "lVector"); assert(not f1:has_nulls())
   assert(type(f2) == "lVector"); assert(not f2:has_nulls())
-  local f1_qtype = f1:qtype();   assert(is_inttype[f1_qtype])
-  local f2_qtype = f2:qtype();   assert(is_inttype[f2_qtype])
+  local f1_qtype = f1:qtype();   
+  assert(is_in(f1_qtype, { "I1", "I2", "I4", "I8", }))
+  local f2_qtype = f2:qtype();   
+  assert(is_in(f2_qtype, { "I1", "I2", "I4", "I8", }))
+  assert(f1:max_num_in_chunk() == f2:max_num_in_chunk())
+  subs.max_num_in_chunk = f1:max_num_in_chunk()
 
-  assert(type(optargs) == "table")
-  local f3_qtype = assert(optargs.f3_qtype)
-  assert(is_inttype[f3_qtype])
-  local shift_by = assert(optargs.shift_by )
+  local f3_qtype, shift_by = set_defaults(f1_qtype, f2_qtype)
+  assert(type(f3_qtype) == "string")
   assert(type(shift_by) == "number")
-  assert(shift_by >  0) 
-  assert(shift_by <= 32)
+  if ( optargs ) then 
+    assert(type(optargs) == "table")
+    if ( optargs.f3_qtype ) then 
+      f3_qtype = optargs.f3_qtype
+    end
+    if ( optargs.shift_by ) then 
+      shift_by = optargs.shift_by
+    end
+  end
+  assert(is_in(f3_qtype, { "I2", "I4", "I8", }))
+  assert( (shift_by >= 0 )  and ( shift_by < 63 ))
   
   subs.fn = "vvconcat_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
-  subs.f1_ctype = "u" .. qconsts.qtypes[f1_qtype].ctype
-  subs.f2_ctype = "u" .. qconsts.qtypes[f2_qtype].ctype
+  subs.f1_ctype = "u" .. cutils.str_qtype_to_str_ctype(f1_qtype)
+  subs.f2_ctype = "u" .. cutils.str_qtype_to_str_ctype(f2_qtype)
   subs.f3_qtype = f3_qtype
-  subs.f3_ctype = "u" .. qconsts.qtypes[f3_qtype].ctype
+  subs.f3_ctype = "u" .. cutils.str_qtype_to_str_ctype(f3_qtype)
+  subs.f3_width = cutils.get_width_qtype(subs.f3_qtype)
 
   -- allocate cargs
   local sz = ffi.sizeof("f1f2opf3_concat_t")
@@ -60,9 +116,9 @@ return function (
 
   subs.libs = { "-lgomp", "-lm" } 
   -- for ISPC
-  subs.f1_ctype_ispc = "u" .. qconsts.qtypes[f1_qtype].ispctype
-  subs.f2_ctype_ispc = "u" .. qconsts.qtypes[f2_qtype].ispctype
-  subs.f3_ctype_ispc = "u" .. qconsts.qtypes[f3_qtype].ispctype
+  subs.f1_ctype_ispc = "u" .. cutils.str_qtype_to_str_ispctype(f1_qtype)
+  subs.f2_ctype_ispc = "u" .. cutils.str_qtype_to_str_ispctype(f2_qtype)
+  subs.f3_ctype_ispc = "u" .. cutils.str_qtype_to_str_ispctype(f3_qtype)
   subs.tmpl_ispc   = "OPERATORS/F1F2OPF3/lua/concat_ispc.tmpl"
   return subs
 end

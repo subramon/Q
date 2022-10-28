@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include "q_macros.h"
+#include "qtypes.h"
 #include "txt_to_I1.h"
 #include "txt_to_I2.h"
 #include "txt_to_I4.h"
@@ -121,20 +122,22 @@ BYE:
 //START_FUNC_DECL
 int
 load_csv_fast(
-    const char * const infile,
-    uint32_t nC,
-    char *str_fld_sep,
-    uint32_t chunk_size,
+    const char * infile,
+    uint64_t nC,
+    const char *str_fld_sep,
+    uint64_t chunk_size,
+    uint64_t max_width,
     uint64_t *ptr_nR,
     uint64_t *ptr_file_offset,
-    const int *const fldtypes, /* [nC] */
+    const int *const c_qtypes, /* [nC] */
+    uint64_t in_c_nn_qtype,
     const bool * const is_trim, /* [nC] */
     bool is_hdr, /* [nC] */
     const bool *  const is_load, /* [nC] */
     const bool * const has_nulls, /* [nC] */
-    const int * const width, /* [nC] */
+    const uint32_t * const width, /* [nC] */
     char **data, /* [nC][chunk_size] */
-    uint64_t **nn_data /* [nC][chunk_size] */
+    char **nn_data /* [nC][chunk_size] */
     )
 //STOP_FUNC_DECL
 {
@@ -142,7 +145,17 @@ load_csv_fast(
   char *mmap_file = NULL; //X
   uint64_t file_size = 0; //nX
   char fld_sep;
+  char *lbuf = NULL;
+  char *buf = NULL;
 
+
+  qtype_t c_nn_qtype = (qtype_t)in_c_nn_qtype;
+  if (( c_nn_qtype <= Q0 ) || ( c_nn_qtype >= NUM_QTYPES )) { go_BYE(-1); }
+
+  buf = malloc(max_width * sizeof(char));
+  return_if_malloc_failed(buf);
+  lbuf = malloc(max_width * sizeof(char));
+  return_if_malloc_failed(lbuf);
   if ( strcasecmp(str_fld_sep, "comma") == 0 ) { 
     fld_sep = ',';
   }
@@ -175,11 +188,10 @@ load_csv_fast(
     }
     else {
       if ( nn_data[i] != NULL ) { 
-        fprintf(stderr, "hello world\n"); 
         WHEREAMI; // go_BYE(-1); 
       }
     }
-    if ( width[i] > BUFSZ ) { go_BYE(-1); }
+    if ( width[i] >= max_width ) { go_BYE(-1); } 
   }
   *ptr_nR = 0;
   // mmap the file
@@ -196,14 +208,11 @@ load_csv_fast(
   uint64_t row_ctr = 0;
   uint32_t col_ctr = 0;
   bool is_last_col;
-  // TODO P3 BUFSZ should come from max of qconsts.qtypes[*].max_txt_width
-  char lbuf[BUFSZ+1];
-  char buf[BUFSZ+1];
   bool is_val_null;
 
-  memset(lbuf, '\0', BUFSZ+1); 
+  memset(lbuf, '\0', max_width);
   while ( true ) {
-    memset(buf, '\0', BUFSZ+1); // Clear buffer into which cell is read
+    memset(buf, '\0', max_width); // Clear buffer into which cell is read
     // Decide whether this is the last column on the row. Needed by get_cell
     if ( col_ctr == nC-1 ) { 
       is_last_col = true;
@@ -215,7 +224,7 @@ load_csv_fast(
     char *tmp_buf = NULL;
     if ( is_trim[col_ctr] ) { tmp_buf = lbuf; }
     xidx = get_cell(mmap_file, file_size, xidx, fld_sep, is_last_col, buf, 
-        tmp_buf, BUFSZ);
+        tmp_buf, max_width-1);
 
     // xidx == 0 => means the file is empty. 
     // This should be checked for before we come here
@@ -262,12 +271,21 @@ load_csv_fast(
     }
     // write nn_data if needed
     if ( has_nulls[col_ctr] ) {
-      fprintf(stderr, "DELETT HIS TODO ");
-      status = set_bit_u64(nn_data[col_ctr], row_ctr, is_val_null); 
-      cBYE(status);
+      if ( c_nn_qtype == B1 ) {
+        // Note we are writing *NOT*-null. Hence, toggle is_val_null
+        status = set_bit_u64(
+            ((uint64_t **)nn_data)[col_ctr], row_ctr, !is_val_null); 
+        cBYE(status);
+      }
+      else if ( c_nn_qtype == BL ) {
+        ((bool **)nn_data)[col_ctr][row_ctr] = !is_val_null;
+      }
+      else {
+        go_BYE(-1);
+      }
     }
     // write data 
-    switch ( fldtypes[col_ctr] ) {
+    switch ( c_qtypes[col_ctr] ) {
       case B1:
         {
           int8_t tempI1 = 0;
@@ -373,6 +391,8 @@ load_csv_fast(
   // Set file offset so that next call knows where to pick up from
   *ptr_file_offset  = xidx; 
 BYE:
+  free_if_non_null(buf); 
+  free_if_non_null(lbuf); 
   mcr_rs_munmap(mmap_file, file_size);
   return status;
 }

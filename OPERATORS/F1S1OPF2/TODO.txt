@@ -1,0 +1,18 @@
+test vshift with both up and down and with shift_by > 1
+
+test is_prev with both B1 and BL
+
+Fix the Makefile
+
+
+Need to fix following tests
+../test/test_convert.lua
+../test/test_cum_cnt.lua
+../test/test_cum_cnt.sh
+../test/test_explog.lua
+../test/test_is_prev.lua
+../test/test_logit.lua
+../test/test_misc.sh
+../test/test_pow_sqr.lua
+../test/test_safe_convert.lua
+../test/test_shift.lua

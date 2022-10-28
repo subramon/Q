@@ -19,13 +19,29 @@ local print_csv = function (
   local V -- table of vectors to be printed in desired order
   local opfile -- file to write output to 
   local filter -- if we don't want all rows
-  local lenV -- length of vectors
-  V, opfile, filter, lenV = process_opt_args(inV, opt_args)
+  local lenV -- length of vectors, must be same for all vectors
+  local hdr --- optional header line for output
+  local formats -- how a particular column should be printed
+  local max_num_in_chunk -- must be same for all vectors
+  V, opfile, filter, lenV, max_num_in_chunk, hdr, formats = 
+    process_opt_args(inV, opt_args)
+  if ( opfile ) then 
+    cutils.delete(opfile)
+  end
+  --======================
+  if ( hdr ) then 
+    if ( opfile ) then 
+      assert(cutils.write(opfile, hdr .. "\n"))
+    else
+      print(hdr .. "\n")
+    end
+  end 
+  --======================
   local lb, ub, where = process_filter(filter, lenV)
   local nV = #V
   if ( opt_args and opt_args.impl == "C" ) then 
     -- print("Using C print implementation")
-    assert(cprint(opfile, where, lb, ub, V))
+    assert(cprint(opfile, where, formats, lb, ub, V, max_num_in_chunk))
     return true 
   end
     -- print("Using Lua print implementation")
@@ -36,13 +52,13 @@ local print_csv = function (
     io.output(io.stdout)
   else
     assert(type(opfile) == "string")
-    fp = assert(io.open(opfile, "w+"))
+    fp = assert(io.open(opfile, "a+"))
     io.output(fp)
   end
   if ( lenV == 0 ) then io.close(fp) return true end 
   --==========================================
   
-  local bfalse = Scalar.new(false, "B1")
+  local bfalse = Scalar.new(false, "BL")
   for rowidx = lb, ub-1 do -- NOTE the -1 it is important
     local to_print = true
     if ( where ) then 
@@ -56,8 +72,15 @@ local print_csv = function (
         local  s, s_nn = assert(v:get1(rowidx))
         assert(not s_nn, "To be implemented") -- TODO P2
         if ( type(s) == "Scalar" ) then 
-          assert(io.write(s:to_str()))
+          if ( v:qtype() == "SC" ) then 
+            assert(io.write(cutils.quote_str(s:to_str())))
+          elseif ( ( v:qtype() == "TM" ) or ( v:qtype() == "TM1" ) ) then
+            error("NOT IMPLEMENTED")
+          else
+            assert(io.write(s:to_str()))
+          end 
         elseif ( type(s) == "CMEM" ) then 
+          -- TODO P1 Can we delete this else case?
           -- ffi.string is necessary to convert to Lua string
           local instr = ffi.string(get_ptr(s, "SC"))
           assert(io.write(cutils.quote_str(instr)))

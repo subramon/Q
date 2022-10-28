@@ -1,5 +1,7 @@
 local ffi = require 'ffi'
-local qconsts = require 'Q/UTILS/lua/qconsts'
+local cutils = require 'libcutils'
+local qc      = require 'Q/UTILS/lua/qcore'
+qc.q_cdef("UTILS/inc/qtypes.h")
 
 local function ends_with(str, ending)
    return ending == "" or str:sub(-#ending) == ending
@@ -18,16 +20,17 @@ local function get_ptr(
   local ret_ptr
   assert(type(x) == "CMEM")
   local y = x:data()
+  if ( y == ffi.NULL ) then print("Empty CMEM") return nil end
   -- Made qtype optional
   if qtype then
     assert(type(qtype) == "string")
-    if ( qconsts.qtypes[qtype] ) then
-      local ctype = assert(qconsts.qtypes[qtype].ctype)
-      ret_ptr = ffi.cast(ctype .. " *", y)
-    else
+    local ctype = cutils.str_qtype_to_str_ctype(qtype)
+    if ( ctype == nil ) then
       local cast_as = qtype
       assert(ends_with(trim(qtype), "*"))
       ret_ptr = ffi.cast(cast_as, y)
+    else
+      ret_ptr = ffi.cast(ctype .. " *", y)
     end
   else
     ret_ptr = ffi.cast("char *", y)

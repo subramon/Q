@@ -6,11 +6,17 @@ local is_so_file  = require 'Q/UTILS/lua/is_so_file'
 local ffi      = require 'ffi'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 local for_cdef = require 'Q/UTILS/lua/for_cdef'
-local qcfg  = require 'Q/UTILS/lua/qcfg'
-local cutils  = require 'libcutils'
-local q_src_root   = qcfg.q_src_root .. "/"
-assert(cutils.isdir(q_src_root))
+local qcfg     = require 'Q/UTILS/lua/qcfg'
+local cutils   = require 'libcutils'
 --==================
+
+-- IMPORTANT: Place things here that you are likely to need via ffi
+-- e.g., ffi.C.malloc, etc 
+ffi.cdef([[
+       void *memcpy(void *dest, const void *src, size_t n);
+       void *malloc(size_t size);
+       void free(void *ptr);
+       ]]);
 
 -- to make sure we do not dynamically compile the same function twice
 local known_functions = {}
@@ -21,11 +27,15 @@ local libs            = {}
 -- Keeps track of struct files that have been cdef'd
 local cdefd = {}
 
+-- IMPORTANT: Document the assumption that no two files that can
+-- be sent to cdef can have the same struct in them
+-- we need q_cdef instead of just cdef because we do not want
+-- to error out by repeating a cdef that was done earlier
 local function q_cdef( infile, incs)
   if ( cdefd[infile] ) then
-    -- print("struct file: Skipping cdef of " .. infile)
+    print("Skipping cdef of " .. infile)
   else
-    -- print("cdef'ing " .. infile)
+    print("cdef'ing " .. infile)
     local y = for_cdef(infile, incs)
     ffi.cdef(y)
     cdefd[infile] = true

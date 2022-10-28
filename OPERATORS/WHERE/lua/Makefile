@@ -26,9 +26,8 @@ AUX_FILES = \
 	    ../../../UTILS/src/get_bit_u64.c \
 	    ../../../UTILS/src/set_bit_u64.c \
 
-libwhere.so : ${GEN_FILES} \
-	where.tmpl
-	luajit generator.lua
+libwhere.so : ${GEN_FILES} where_B1.tmpl where_BL.tmpl
+	qjit generator.lua
 	gcc ${GEN_FILES} ${AUX_FILES} ${CFLAGS} ${INCS} -shared -o libwhere.so
 
 test_q : libwhere.so
@@ -40,9 +39,17 @@ test_c :  libwhere.so
 test : test_q test_c
 
 GEN_FILES = \
-	../gen_src/where_F4.c \
-	../gen_src/where_F8.c \
-	../gen_src/where_I1.c \
-	../gen_src/where_I2.c \
-	../gen_src/where_I4.c \
-	../gen_src/where_I8.c \
+	../gen_src/where_F4_BL.c \
+	../gen_src/where_F8_BL.c \
+	../gen_src/where_I1_BL.c \
+	../gen_src/where_I2_BL.c \
+	../gen_src/where_I4_BL.c \
+	../gen_src/where_I8_BL.c \
+	../gen_src/where_F4_B1.c \
+	../gen_src/where_F8_B1.c \
+	../gen_src/where_I1_B1.c \
+	../gen_src/where_I2_B1.c \
+	../gen_src/where_I4_B1.c \
+	../gen_src/where_I8_B1.c \
+
+

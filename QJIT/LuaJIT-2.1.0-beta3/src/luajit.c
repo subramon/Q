@@ -1,8 +1,20 @@
 // START: RAMESH
 #include <pthread.h>
 #include <stdbool.h>
-#include "globals.h"
-#include "foo.h"
+#include <inttypes.h>
+#include "q_macros.h"
+
+#define MAIN_PGM
+#include "qjit_globals.h"
+#include "init_globals.h"
+/*
+#include "qtypes.h"// TODO DELETE JUST FOR TESTING 
+#include "vctr_new_uqid.h" // TODO DELETE JUST FOR TESTING 
+#include "vctr_add.h" // TODO DELETE JUST FOR TESTING 
+#include "vctr_is.h" // TODO DELETE JUST FOR TESTING 
+#include "vctr_del.h" // TODO DELETE JUST FOR TESTING 
+#include "vctr_cnt.h" // TODO DELETE JUST FOR TESTING 
+*/
 // STOP: RAMESH
 /*
 ** LuaJIT frontend. Runs commands, scripts, read-eval-print (REPL) etc.
@@ -253,22 +265,38 @@ static int loadline(lua_State *L)
 static void dotty(lua_State *L)
 {
   int status;
-  static int ctr;
   const char *oldprogname = progname;
   progname = NULL;
-  for ( int ctr = 0; ; ctr++ ) { 
-    for ( int i = 0; ; i++  ) {  // acquire lock 
-      int expected = 0; int desired = 1;
+  for ( int iter = 0; ; iter++ ) { 
+    // START RAMESH
+    int expected, desired; 
+    int l_L_status; __atomic_load(&g_L_status, &l_L_status, 0);
+    int l_web; __atomic_load(&g_webserver_interested, &l_web, 0);
+    printf("iter = %d, %d, %d \n", iter, l_L_status, l_web);
+    if ( ( l_web == 1 ) && 
+        ( ( l_L_status == 1 ) || ( l_L_status == 0 ) ) ) { 
+      // relinquish lua state 
+      printf("Master: Relinqushing Lua state \n"); 
+      expected = 1; desired = 0;
       bool rslt = __atomic_compare_exchange(
           &g_L_status, &expected, &desired, false, 0, 0);
-      if ( rslt ) { 
-        // printf("Master has control \n"); 
-        break; 
-      }
-      printf("Master Sleeping %d:%d \n", ctr, i); 
-      sleep(1); 
+      if ( rslt ) { WHEREAMI; exit(-1); } 
+      // take a short nap for 100 ms
+      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 100 * 1000000 };
+      nanosleep(&tmspec, NULL);
     }
-    fprintf(stdout, "Master: Please enter a command\n");
+    // acquire Lua state
+    for ( ; ; ) { 
+      expected = 0; desired = 1;
+      bool rslt = __atomic_compare_exchange(
+          &g_L_status, &expected, &desired, false, 0, 0);
+      if ( rslt ) { printf("Master: Acquired Lua state \n"); break; }
+      // take a short nap for 10 ms
+      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 10 * 1000000 };
+      nanosleep(&tmspec, NULL);
+    }
+    fprintf(stdout, "Master>> ");
+    // STOP RAMESH
     status = loadline(L); if ( status == -1) { break; }
 
     if (status == LUA_OK) status = docall(L, 0, 0);
@@ -281,6 +309,7 @@ static void dotty(lua_State *L)
 	  lua_pushfstring(L, "error calling " LUA_QL("print") " (%s)",
 			      lua_tostring(L, -1)));
     }
+    // START RAMESH
     { // release lock 
       int expected = 1; int desired = 0;
       bool rslt = __atomic_compare_exchange(
@@ -292,7 +321,7 @@ static void dotty(lua_State *L)
         printf("Master: %d Catastrophic error\n", __LINE__); exit(1);
       }
     }
-    sleep(2); // to give other thread a chance 
+    // STOP RAMESH
   }
   lua_settop(L, 0);  /* clear stack */
   fputs("\n", stdout);
@@ -607,28 +636,39 @@ int main(int argc, char **argv)
 {
   int status;
   // START: RAMESH 
-  g_halt = 0;
-  g_foobar = 1; 
-  g_L_status = 0;
-  pthread_t bar_thrd;
-  status = pthread_create(&bar_thrd, NULL, &bar_fn, NULL);
+  status = init_globals(); cBYE(status);
   // STOP: RAMESH 
   L = lua_open();
   if (L == NULL) {
     l_message(argv[0], "cannot create state: not enough memory");
     return EXIT_FAILURE;
   }
+
   smain.argc = argc;
   smain.argv = argv;
-  // printf("Starting\n"); foobar = 123; foo();
+  printf("QJIT Starting\n"); 
   status = lua_cpcall(L, pmain, NULL);
   report(L, status);
   lua_close(L);
-  // foo(); printf("Wrapping up\n");
   // START: RAMESH
-  g_halt = 1;
-  pthread_join(bar_thrd, NULL); 
+  int itmp = 1; __atomic_store(&g_halt, &itmp, 0);
+  pthread_cond_signal(&g_mem_cond);
+  printf("QJIT Wrapping up\n"); // RAMESH
+  // Wait for other threads to join
+  if ( g_is_webserver   ) { pthread_join(g_webserver,   NULL); }
+  if ( g_is_out_of_band ) { pthread_join(g_out_of_band, NULL); }
+  if ( g_is_mem_mgr     ) { pthread_join(g_mem_mgr,    NULL); }
+BYE:
+  if ( g_mutex_created ) { 
+    pthread_cond_destroy(&g_mem_cond);
+    pthread_mutex_destroy(&g_mem_mutex);
+  }
+  if ( g_vctr_hmap.bkts != NULL ) {
+    g_vctr_hmap.destroy(&g_vctr_hmap);
+  }
+  if ( g_chnk_hmap.bkts != NULL ) {
+    g_chnk_hmap.destroy(&g_chnk_hmap);
+  }
   // STOP : RAMESH
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
-

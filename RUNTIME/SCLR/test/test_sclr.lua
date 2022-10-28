@@ -1,26 +1,40 @@
+require 'Q/UTILS/lua/strict'
 cmem   = require 'libcmem' ; 
 Scalar = require 'libsclr' ; 
 num_trials = 32 -- 1024
 tbl_size = 4096 -- 1048576
 cmem   = require 'libcmem' ; 
+local status, x, s1, s2, s3, r1, r2
 local tests = {}
 tests.t1 = function()
   -- create boolean scalars in several different ways
-  sb = assert(Scalar.new("true", "B1"))
+  local sb = assert(Scalar.new("true", "B1"))
   sb = assert(Scalar.new(true, "B1"))
-  x = assert(Scalar.to_str(sb))
+  local x = assert(Scalar.to_str(sb))
   assert(x == "true")
   sb = Scalar.new("false", "B1")
   assert(Scalar.to_str(sb) == "false")
-  assert(sb:fldtype() == "B1")
+  print(sb:qtype())
+  assert(sb:qtype() == "B1")
   print("test 1 passed")
 end
 
 --================
 tests.t2 = function()
+  -- create SC scalar
+  s1 = Scalar.new("123", "SC")
+  assert(s1)
+  s2 = Scalar.new(123, "SC")
+  assert(s1 == s2)
   -- create integer and floating point scalars
   s1 = Scalar.new(123, "I4")
+  r1 = Scalar.new(123, "I4")
   assert(Scalar.to_num(s1) == 123)
+  assert(s1 == r1)
+  assert(Scalar.eq(s1, r1) == true)
+  s1 = Scalar.new(123, "I4")
+  assert(Scalar.to_num(s1) == 123)
+  r1 = Scalar.new(123, "I4")
 
   s2 = Scalar.new("123", "F4")
   assert(Scalar.to_num(s2) == 123)
@@ -30,19 +44,18 @@ tests.t2 = function()
   -- TODO y = x:to_str(x, "I4")
   -- TODO assert(y == "123")
   --================
-  assert(Scalar.eq(s1, s2) == true)
-  assert(Scalar.eq(s1, s3) == false)
+  assert(Scalar.eq(s1, s2) == false)
   print("test 2 passed")
 end
 
 tests.t3 = function()
   for i = 1, num_trials do
-    x = {}
+    local x = {}
     for j = 1, tbl_size do
-      in_val = i+j/10.0;
+      local in_val = i+j/10.0;
       x[j] = Scalar.new(in_val, "F4")
-      out_str = Scalar.to_str(x[j])
-      out_val = tonumber(out_str)
+      local out_str = Scalar.to_str(x[j])
+      local out_val = tonumber(out_str)
       assert( math.abs((out_val - in_val))/out_val < 0.001)
     end
   end
@@ -50,7 +63,7 @@ tests.t3 = function()
 end
 tests.t4 = function()
   -- testing userdata and creation of scalar from CMEM
-  qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
+  local qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
   for _, qtype in ipairs(qtypes) do
     local val = 123
     local s1 = Scalar.new(val, qtype)
@@ -88,7 +101,7 @@ tests.t6 = function ()
       for _, qtype in pairs(qtypes) do 
         s1 = Scalar.new(val, orig_qtype)
         s2 = s1:conv(qtype)
-        assert(s1:fldtype() == qtype)
+        assert(s1:qtype() == qtype)
         assert(s1 == s2)
         assert(s2:to_num() == val)
       end
@@ -237,7 +250,7 @@ end
 
 tests.t12 = function()
   -- negative cases for boolean scalars in several different ways
-  bval = {}
+  local bval = {}
   bval[#bval+1] = "truex"
   bval[#bval+1] = "True"
   bval[#bval+1] = "TRUE"
@@ -298,4 +311,21 @@ tests.t15 = function()
   -- TODO local valI8 = assert(Scalar.new("0x1", "I8"))
   -- TODO print("test t15 passed")
 end
-return tests
+-- return tests
+tests.t2()
+tests.t1()
+tests.t3()
+tests.t4()
+tests.t5()
+tests.t6()
+tests.t7()
+tests.t8()
+tests.t10_I1()
+tests.t10_I2()
+tests.t10_I4()
+tests.t10_I8()
+tests.t11()
+tests.t12()
+-- tests.t13()
+-- tests.t14()
+-- tests.t15()

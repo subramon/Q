@@ -1,5 +1,6 @@
-local cutils  = require 'libcutils'
-local cVector = require 'libvctr'
+local cutils   = require 'libcutils'
+local lgutils  = require 'liblgutils'
+local cVector  = require 'libvctr'
 local basic_serialize = require 'Q/UTILS/lua/basic_serialize'
 local should_save = require 'Q/UTILS/lua/should_save'
 
@@ -33,22 +34,35 @@ local function internal_save(
     end
   elseif ( type(value) == "lVector" ) then
     local vec = value
-    vec:eov() -- Debatable whether we should do this or not
-    local reincarnate_str = vec:shutdown()
-    if ( reincarnate_str ) then
-      assert(type(reincarnate_str) == "string")
-      local y = loadstring(reincarnate_str)()
-      assert(type(y) == "table")
-      y = string.gsub(reincarnate_str, "return ", "" )
-      fp:write(name, " = lVector ( ", y, " ) " )
-      fp:write("\n")
-      print(y)
-      --===========================
-      --TODO internal_save(name .. "._meta", vec._meta, Tsaved, fp)
-      fp:write(name .. ":persist(true)")
-      fp:write("\n")
+    -- TODO P4 At some point, we might want to relax following
+    if ( ( vec:num_elements() == 0 ) 
+        or ( vec:has_gen() ) 
+        or ( vec:is_eov() == false ) 
+        or ( vec:memo_len() >= 0 ) ) then
+      -- skip ths vector
+      print("Not saving lVector: " .. name )
+      print(vec:num_elements())
+      print(vec:has_gen() ) 
+      print(vec:is_eov() )
+      print(vec:memo_len() )
     else
-      print("Not saving lVector because eov=false or is_memo=false ", name)
+      -- flush vector to disk and mark for persistence
+      vec:l1_to_l2() -- copy from level 1 to level 2 
+      vec:persist()  -- indicate not to free level 2 upon delete
+      vec:drop(1)    -- free memory held in level 1
+      fp:write(name, " = lVector ( { uqid = ", vec:uqid(), " } )\n" )
+      -- repeat above for nn vector assuming it exists
+      if ( vec:has_nulls() ) then
+        local nn_vec  = vec:get_nulls()
+        local nn_uqid = nn_vec:uqid()
+        nn_vec:l1_to_l2() 
+        nn_vec:persist()  
+        nn_vec:drop(1)    
+        local nn_name = "_nn_" .. tostring(nn_uqid)
+        fp:write("local " .. nn_name, " = lVector({uqid = ",nn_uqid,"})\n" )
+        fp:write(name, ":set_nulls(" .. nn_name .. ")\n")
+      end
+
     end
   elseif ( type(value) == "Scalar" ) then
     local sclr = value
@@ -66,10 +80,11 @@ local function internal_save(
 end
 
 local function save()
-  local data_dir = cVector.get_globals("data_dir")
-  assert(cutils.isdir(data_dir))
-  local meta_file = data_dir .. "/q_meta.lua" -- note .lua suffix
-  local aux_file  = data_dir .. "/q_aux.lua"
+  local meta_dir = lgutils.meta_dir()
+  assert(type(meta_dir) == "string")
+  assert(cutils.isdir(meta_dir))
+  local meta_file = meta_dir .. "/q_meta.lua" -- note .lua suffix
+  local aux_file  = meta_dir .. "/q_aux.lua"
 
   if  cutils.isfile(meta_file) or  cutils.isfile(aux_file) then
     print("Warning! Over-writing meta data file ", meta_file)
@@ -77,21 +92,20 @@ local function save()
     cutils.delete(meta_file)
     cutils.delete(aux_file)
   end
-  print("Writing to ", meta_file, aux_file)
+  print("Writing to ", meta_file)
+  print("Writing to ", aux_file)
   --================================================
   local fp = assert(io.open(aux_file, "w+"))
-  local str = string.format(
-    "local T = {}; T.max_file_num = %s; return T",
-    cVector.get_globals("max_file_num"))
+  local str = string.format("status = %s", "TODO")
   fp:write(str)
   fp:close()
   --================================================
   fp = assert(io.open(meta_file, "w+"))
-  fp:write("local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'\n")
+  fp:write("local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'\n")
   fp:write("local cVector = require 'libvctr'\n")
   fp:write("local Scalar  = require 'libsclr'\n")
-  fp:write("local cmem    = require 'libcmem'\n")
-  fp:write("local cmem    = require 'libcutils'\n")
+  -- NEEDED ?? fp:write("local cmem    = require 'libcmem'\n")
+  -- NEEDED ?? fp:write("local cutils  = require 'libcutils'\n")
 
   -- saved is a table that keeps track of things we have already saved
   -- so that we don't save them a second time around
@@ -102,7 +116,7 @@ local function save()
     internal_save(k, v, Tsaved, fp); -- print("Saving ", k, v)
   end
   fp:close()
-  print("Saved to " .. meta_file)
+  lgutils.save_session() -- saves data structures from C side 
   return meta_file
 end
 return require('Q/q_export').export('save', save)

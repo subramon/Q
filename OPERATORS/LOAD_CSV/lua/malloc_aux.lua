@@ -1,58 +1,31 @@
 local ffi     = require 'ffi'
 local cmem    = require 'libcmem'
+local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local function malloc_aux(M)
+  local nC = #M
+  local l_file_offset   = cmem.new( 1 * ffi.sizeof("uint64_t"))
+  l_file_offset:set_name("l_file_offset"); -- for debugging 
 
-  local cmem_file_offset
-  local cmem_num_rows_read
-  local cmem_is_load
-  local cmem_has_nulls
-  local cmem_is_trim
-  local cmem_width
-  local cmem_fldtypes
+  local l_num_rows_read = cmem.new( 1 * ffi.sizeof("uint64_t"))
+  l_num_rows_read:set_name("l_num_rows_read"); -- for debugging 
 
-local F = {}
-F.malloc_aux = function (nC)
-  -- print("Malloc'ing auxiliary structures for load csv ")
-  cmem_file_offset = cmem.new(
-  { size = 1*ffi.sizeof("uint64_t"), qtype = "I8", name = "fo"})
-  local file_offset = get_ptr(cmem_file_offset, "I8")
-  file_offset[0] = 0
+  local l_is_load       = cmem.new(nC * ffi.sizeof("bool"))
+  l_is_load:set_name("l_is_load") -- for debugging 
 
-  cmem_num_rows_read = cmem.new(
-  { size = 1*ffi.sizeof("uint64_t"), qtype = "I8", name = "nR" })
-  local num_rows_read = get_ptr(cmem_num_rows_read, "uint64_t *")
+  local l_has_nulls     = cmem.new(nC * ffi.sizeof("bool"))
+  l_has_nulls:set_name("l_has_nulls") -- for debugging 
 
-  cmem_is_load = cmem.new(
-  { size = nC * ffi.sizeof("bool"), name = "isl", qtype = "B1" } )
-  local is_load = get_ptr(cmem_is_load, "bool *")
+  local l_is_trim       = cmem.new(nC * ffi.sizeof("bool"))
+  l_is_trim:set_name("l_is_trim") -- for debugging 
 
-  cmem_has_nulls = cmem.new(
-  { size = nC * ffi.sizeof("bool"), qtype = "B1", name = "hasn" } )
-  local has_nulls = get_ptr(cmem_has_nulls, "bool *")
-  
-  cmem_is_trim = cmem.new(
-  { size = nC * ffi.sizeof("bool"), qtype = "B1", name = "ist" })
-  local is_trim = get_ptr(cmem_is_trim, "bool *")
-  
-  cmem_width = cmem.new(
-  { size = nC * ffi.sizeof("int"), name = "wdth", qtype = "I4" })
-  local width = get_ptr(cmem_width, "int *")
-  
-  cmem_fldtypes = cmem.new(
-  { size = nC * ffi.sizeof("int"), name = "fldty", qtype = "I4"} )
-  local fldtypes = get_ptr(cmem_fldtypes, "I4")
+  local l_width         = cmem.new(nC * ffi.sizeof("uint32_t"))
+  l_width:set_name("l_width") -- for debugging 
 
-  return file_offset, num_rows_read, is_load, has_nulls, is_trim, 
-    width, fldtypes 
+  local l_c_qtypes      = cmem.new(nC * ffi.sizeof("int"))
+  l_c_qtypes:set_name("l_c_qtypes") -- for debugging 
+
+  return l_file_offset, l_num_rows_read, l_is_load, l_has_nulls, 
+    l_is_trim, l_width, l_c_qtypes
 end 
-F.free_aux =  function ()
-  -- print("Freeing auxiliary structures for load csv ")
-  cmem_num_rows_read:delete()
-  cmem_is_load:delete()
-  cmem_has_nulls:delete()
-  cmem_is_trim:delete()
-  cmem_width:delete()
-  cmem_fldtypes:delete()
-end
-
-return F
+return malloc_aux

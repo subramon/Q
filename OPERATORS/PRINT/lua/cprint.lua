@@ -1,18 +1,19 @@
-local cutils   = require 'libcutils'
-local cmem     = require 'libcmem'
-local ffi      = require 'ffi'
-local qc       = require 'Q/UTILS/lua/qcore'
-local qconsts  = require 'Q/UTILS/lua/qconsts'
-local get_ptr  = require 'Q/UTILS/lua/get_ptr'
-local qmem    = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local cutils    = require 'libcutils'
+local cmem      = require 'libcmem'
+local ffi       = require 'ffi'
+local qc        = require 'Q/UTILS/lua/qcore'
+local qcfg      = require 'Q/UTILS/lua/qcfg'
+local get_ptr   = require 'Q/UTILS/lua/get_ptr'
+local stringify = require 'Q/UTILS/lua/stringify'
 
 local function cprint( 
   opfile, -- file for destination fo print
   where, -- nil or lVector of type B1
+  formats, -- how to print a column
   lb, -- number
   ub, -- number
-  V -- table of lVectors to be printed
+  V, -- table of lVectors to be printed
+  max_num_in_chunk
   )
   local func_name = "cprint"
   local subs = {}
@@ -26,74 +27,120 @@ local function cprint(
   subs.libs = nil -- no libaries need to be linked
   qc.q_add(subs); 
 
-  if ( opfile ) then 
-    cutils.delete(opfile) -- clean out any existing file
-  else
-    -- printing to stdout 
-  end
+  -- =======================
   local function min(x, y) if x < y then return x else return y end end
   local function max(x, y) if x > y then return x else return y end end
   local nC = #V -- determine number of columns to be printed
-  local chunk_size = chunk_size
-  local chunk_num = math.floor(lb / chunk_size) -- first usable chunk
-  -- C = pointers to data to be printed
-  local sz = nC * ffi.sizeof("void *")
-  local orig_C = assert(cmem.new(sz))
-  orig_C:zero()
-  local C = get_ptr(orig_C, "void **")
-  -- F array of fldtypes 
-  local F = assert(cmem.new({size = (nC * ffi.sizeof("int")), name = "F"}))
-  F:zero()
-  F = get_ptr(F, "I4")
-  -- W array of widths 
-  local W = assert(cmem.new({size = nC * ffi.sizeof("int"), name = "W"}))
-  W:zero()
-  W = get_ptr(W, "I4")
-  -- START: Assemble F and W
+  assert(nC > 0)
+  local chunk_num = math.floor(lb / max_num_in_chunk) -- first usable chunk
+  -- adjust chunk_num upwards until it includes lb 
+  while ( true ) do
+    local clb = chunk_num * max_num_in_chunk
+    local cub = clb +  max_num_in_chunk
+    if ( ( lb >= clb ) and ( lb < cub ) ) then
+      break
+    end
+    chunk_num = chunk_num + 1 
+  end
+
+  -- Create array of qtypes/widths
+  local qtypes = {}
+  local widths = {}
   for i, v in ipairs(V) do 
-    local qtype = v:fldtype()
-    qtype = qconsts.qtypes[qtype].cenum -- convert string to integer for C
-    local width = v:width()
-    -- Note: we create temporary local variables because the
-    -- function calls return 2 things not just a single number
-    assert(( i >= 1 ) and ( i <= nC ))
-    F[i-1] = qtype
-    W[i-1] = width
+    local str_qtype = v:qtype()
+    widths[i] = v:width()
+    qtypes[i] = cutils.get_c_qtype(str_qtype)
   end
-  local c_opfile = ffi.NULL
-  if ( opfile ) then 
-    c_opfile = cmem.new({ size = #opfile+1, qtype = "SC", name='fname'})
-    c_opfile:set(opfile)
-    c_opfile = get_ptr(c_opfile, "char *")
-  end
+  --====================================
+  local c_opfile = opfile 
   --======================
   while true do 
-    local clb = chunk_num * chunk_size
-    local cub = clb + chunk_size
+    local clb = chunk_num * max_num_in_chunk
+    local cub = clb + max_num_in_chunk
     if ( clb >= ub ) then break end -- TODO verify boundary conditions
-    if ( cub <  lb ) then break end -- TODO verify boundary conditions
     -- [xlb, xub) is what we print from this chunk
     local xlb = max(lb, clb) 
     local xub = min(ub, cub)
     local wlen -- length of where fld if any 
+    local cfld = ffi.NULL -- pointer to where fld or nil
+    --=========================================
     local chk_len -- to make sure all get_chunk() calls return same length 
-    local cfld -- pointer to where fld or nil
+    local c_data = ffi.C.malloc(ffi.sizeof("void *") * nC)
+    c_data = ffi.cast("const void **", c_data)
+    -- TODO P4 Implement for B1 in addition to BL
+    local nn_c_data = ffi.C.malloc(ffi.sizeof("bool *") * nC)
+    nn_c_data = ffi.cast("const bool **", nn_c_data)
+    for i, v in ipairs(V) do
+      local len, chnk, nn_chnk = v:get_chunk(chunk_num)
+      assert(len > 0)
+      if ( i == 1 ) then
+        chk_len = len
+      else
+        assert(chk_len == len)
+      end
+      c_data[i-1] = get_ptr(chnk, "void *")
+      nn_c_data[i-1] = ffi.NULL
+      if ( nn_chnk ) then 
+        assert(type(nn_chnk) == "CMEM")
+        nn_c_data[i-1] = get_ptr(nn_chnk, "bool *")
+      end 
+    end
+    --=========================================
     if ( where ) then 
       local wchunk
       wlen, wchunk = where:get_chunk(chunk_num)
       assert(wlen > 0)
-      cfld = get_ptr(wchunk, "uint64_t *")
+      if ( where:qtype() == "BL" ) then 
+        cfld = get_ptr(wchunk, "bool *")
+      elseif ( where:qtype() == "B1" ) then 
+        cfld = get_ptr(wchunk, "uint64_t *")
+      else
+        error("bad qtype for where Vector ")
+      end
+      assert(chk_len == wlen) 
+      error("NOT YET IMPLEMENTED on THE C side")
     end
+    --=========================================
+    local chnk_lb = xlb - clb -- relative to chunk
+    local chnk_ub = xub - clb -- relative to chunk
+
+    --=======================
+    local c_qtypes = ffi.C.malloc(ffi.sizeof("int32_t") * nC)
+    c_qtypes = ffi.cast("int32_t *", c_qtypes)
     for i, v in ipairs(V) do
-      local len, chnk = v:get_chunk(chunk_num)
-      if ( not chk_len ) then chk_len = len else assert(chk_len == len) end 
-      assert(len > 0)
-      C[i-1] = get_ptr(chnk, "void *")
+      c_qtypes[i-1] = qtypes[i]
     end
-    if ( wlen ) then assert( chk_len == wlen) end 
-    local status = qc[func_name](c_opfile, cfld, C, nC, xlb - clb, 
-      xub - xlb, F, W)
+    --=======================
+    local c_widths = ffi.C.malloc(ffi.sizeof("int32_t") * nC)
+    c_widths = ffi.cast("int32_t *", c_widths)
+    for i, v in ipairs(V) do
+      c_widths[i-1] = widths[i]
+    end
+    --=======================
+    local c_formats = ffi.NULL
+    if ( formats ) then 
+      c_formats = ffi.C.malloc(ffi.sizeof("char *") * nC)
+      c_formats = ffi.cast("char **", c_formats)
+      for i, v in ipairs(V) do
+        c_formats[i-1] = stringify(formats[i])
+      end
+    end
+    --=======================
+    local status = qc[func_name](c_opfile, cfld, c_data, nn_c_data,
+      ffi.new("int", nC),
+      ffi.new("uint64_t", chnk_lb),
+      ffi.new("uint64_t", chnk_ub), 
+      c_qtypes, c_widths, c_formats)
     assert(status == 0)
+    ffi.C.free(c_qtypes)
+    ffi.C.free(c_widths)
+    if ( c_formats ~= ffi.NULL ) then 
+      for i, v in ipairs(V) do
+        ffi.C.free(c_formats[i-1])
+      end
+      ffi.C.free(c_formats) 
+    end 
+    ffi.C.free(c_data)
     -- release chunks 
     if ( where ) then 
       where:unget_chunk(chunk_num)
@@ -103,7 +150,6 @@ local function cprint(
     end
     chunk_num = chunk_num + 1 
   end
-  orig_C:delete()
   return true
 end
 return cprint

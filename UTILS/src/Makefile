@@ -1,13 +1,17 @@
-#!/bin/bash
+#!/bin/ballsh
+
+CC = gcc 
 INCS=-I../inc/ -I../inc/
 INCDIR=../inc/
 
+MYSO = libutils.so
 
-all : gen_src_files src_files gen_inc_files
+EXTSO=${Q_ROOT}/lib/${MYSO}
 
+all : ${MYSO} ${EXTSO}
 
 gen_inc_files : \
-	../inc/txt_to_B1.h \
+	../inc/txt_to_BL.h \
 	../inc/txt_to_SC.h \
 	../inc/txt_to_I1.h \
 	../inc/txt_to_I2.h \
@@ -15,7 +19,7 @@ gen_inc_files : \
 	../inc/txt_to_I8.h \
 	../inc/txt_to_F4.h \
 	../inc/txt_to_F8.h \
-	../inc/B1_to_txt.h \
+	../inc/BL_to_txt.h \
 	../inc/SC_to_txt.h \
 	../inc/I1_to_txt.h \
 	../inc/I2_to_txt.h \
@@ -39,51 +43,13 @@ gen_inc_files : \
 	../inc/set_bit_u64.h \
 	../inc/trim.h 
 
-
-src_files :  \
-	copy_file.c \
-	B1_to_txt.c \
-	file_exists.c \
-	get_bit_u64.c  \
-	get_file_size.c \
-	get_time_usec.c \
-	is_valid_chars_for_num.c \
-	isfile.c \
-	isdir.c \
-	q_omp_get_num_procs.c  \
-	rand_file_name.c \
-	rdtsc.c \
-	rs_mmap.c \
-	SC_to_txt.c \
-	set_bit_u64.c  \
-	spooky_hash.c \
-	trim.c \
-	txt_to_B1.c \
-	txt_to_SC.c 
-
-gen_src_files : \
-	../src/I1_to_txt.c  \
-	../src/I2_to_txt.c  \
-	../src/I4_to_txt.c  \
-	../src/I8_to_txt.c  \
-	../src/F4_to_txt.c  \
-	../src/F8_to_txt.c \
-	../src/txt_to_I1.c \
-	../src/txt_to_I2.c \
-	../src/txt_to_I4.c \
-	../src/txt_to_I8.c \
-	../src/txt_to_F4.c \
-	../src/txt_to_F8.c \
 #----------------------------------
 
-# the purpose of test is to run a quick test on *all* the code here
-test : libutils.so 
-	
-../inc/txt_to_B1.h : 
-	luajit ../src/cli_extract_func_decl.lua txt_to_B1.c ${INCDIR}
+../inc/txt_to_BL.h : 
+	luajit ../src/cli_extract_func_decl.lua txt_to_BL.c ${INCDIR}
 ../inc/txt_to_SC.h :
 	luajit ../src/cli_extract_func_decl.lua txt_to_SC.c ${INCDIR}
-txt_to_B1.c : ../inc/txt_to_B1.h
+txt_to_BL.c : ../inc/txt_to_BL.h
 txt_to_SC.c : ../inc/txt_to_SC.h
 #----------------------------------
 ../inc/txt_to_I1.h :
@@ -112,11 +78,11 @@ txt_to_SC.c : ../inc/txt_to_SC.h
 ../src/txt_to_F8.c :
 	luajit gen_code_F.lua 
 #----------------------------------
-../inc/B1_to_txt.h : 
-	lua ../src/cli_extract_func_decl.lua B1_to_txt.c ${INCDIR}
+../inc/BL_to_txt.h : 
+	lua ../src/cli_extract_func_decl.lua BL_to_txt.c ${INCDIR}
 ../inc/SC_to_txt.h : 
 	lua ../src/cli_extract_func_decl.lua SC_to_txt.c ${INCDIR}
-B1_to_txt.c : ../inc/B1_to_txt.h
+BL_to_txt.c : ../inc/BL_to_txt.h
 SC_to_txt.c : ../inc/SC_to_txt.h
 #----------------------------------
 ../inc/I1_to_txt.h :
@@ -188,7 +154,7 @@ SC_to_txt.c : ../inc/SC_to_txt.h
 	luajit ../src/cli_extract_func_decl.lua trim.c ${INCDIR}
 
 GEN_INC_FILES = \
-	../inc/B1_to_txt.h   \
+	../inc/BL_to_txt.h   \
 	../inc/file_exists.h  \
 	../inc/get_bit_u64.h \
 	../inc/get_file_size.h  \
@@ -203,57 +169,68 @@ GEN_INC_FILES = \
 	../inc/SC_to_txt.h   \
 	../inc/set_bit_u64.h \
 	../inc/trim.h  \
-
 #--------
-SRC_FILES =  \
-	copy_file.c \
-	B1_to_txt.c \
-	file_exists.c \
-	get_bit_u64.c  \
-	get_file_size.c \
-	get_time_usec.c \
-	is_valid_chars_for_num.c \
-	isfile.c \
-	isdir.c \
-	q_omp_get_num_procs.c  \
-	rand_file_name.c \
-	rdtsc.c \
-	rs_mmap.c \
-	SC_to_txt.c \
-	set_bit_u64.c  \
-	spooky_hash.c \
-	trim.c \
-	txt_to_B1.c \
-	txt_to_SC.c \
 
-GEN_SRC_FILES = \
-	../src/I1_to_txt.c  \
-	../src/I2_to_txt.c  \
-	../src/I4_to_txt.c  \
-	../src/I8_to_txt.c  \
-	../src/F4_to_txt.c  \
-	../src/F8_to_txt.c \
-	../src/txt_to_I1.c \
-	../src/txt_to_I2.c \
-	../src/txt_to_I4.c \
-	../src/txt_to_I8.c \
-	../src/txt_to_F4.c \
-	../src/txt_to_F8.c \
+.c.o :
+	$(CC) -c -o $@ $< $(QC_FLAGS)  $(INCS)
+
+SRCS := cat_to_buf.c 
+SRCS += copy_file.c 
+SRCS += BL_to_txt.c 
+SRCS += file_exists.c 
+SRCS += get_bit_u64.c  
+SRCS += get_file_size.c 
+SRCS += get_time_usec.c 
+SRCS += is_valid_chars_for_num.c 
+SRCS += isfile.c 
+SRCS += isdir.c 
+SRCS += q_omp_get_num_procs.c  
+SRCS += qtypes.c 
+SRCS += rand_file_name.c 
+SRCS += rdtsc.c 
+SRCS += rmtree.c 
+SRCS += rs_mmap.c 
+SRCS += SC_to_txt.c 
+SRCS += set_bit_u64.c  
+SRCS += spooky_hash.c 
+SRCS += trim.c 
+SRCS += txt_to_BL.c 
+SRCS += txt_to_SC.c 
+
+OBJS = $(SRCS:.c=.o)
+
+GEN_SRCS := ../src/I1_to_txt.c  
+GEN_SRCS += ../src/I2_to_txt.c  
+GEN_SRCS += ../src/I4_to_txt.c 
+GEN_SRCS += ../src/I8_to_txt.c
+GEN_SRCS += ../src/F4_to_txt.c
+GEN_SRCS += ../src/F8_to_txt.c
+GEN_SRCS += ../src/txt_to_I1.c
+GEN_SRCS += ../src/txt_to_I2.c
+GEN_SRCS += ../src/txt_to_I4.c
+GEN_SRCS += ../src/txt_to_I8.c
+GEN_SRCS += ../src/txt_to_F4.c
+GEN_SRCS += ../src/txt_to_F8.c
+
+GEN_OBJS = $(GEN_SRCS:.c=.o)
 #----------------------------------
 
 
-libutils.so : src_files gen_src_files gen_inc_files
+${EXTSO} : ${MYSO}
+	cp ${MYSO} ${EXTSO}
+
+${MYSO} : ${GEN_OBJS} ${OBJS} 
 	gcc -shared ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} \
-		${GEN_SRC_FILES} \
-		${SRC_FILES} -o libutils.so
+		${GEN_OBJS} ${OBJS} -o ${MYSO}
 
 clean :
 	rm -f _*
 	rm -f *.so
 	rm -f *.o
+	rm -f  ${EXTSO} ${MYSO}
 
 
 # do not use following unless you absolutely need to
 # else, it breaks the build from UTILS/build/
 hardclean :
-	rm -f ${GEN_SRC_FILES} ${GEN_INC_FILES}
+	rm -f ${GEN_SRCS} ${GEN_INC_FILES}

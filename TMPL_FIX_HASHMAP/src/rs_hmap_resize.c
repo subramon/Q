@@ -1,13 +1,11 @@
 #include "rs_hmap_common.h"
 #include "rs_hmap_struct.h"
-#include "rs_hmap_int_struct.h"
-#include "rs_hmap_aux.h"
-#include "rs_hmap_chk.h"
+#include "aux.h"
 #include "rs_hmap_insert.h"
 #include "rs_hmap_resize.h"
 
 int
-rs_hmap_resize(
+LCL_rs_hmap_resize(
     rs_hmap_t *ptr_hmap, 
     size_t newsize
     )
@@ -16,7 +14,7 @@ rs_hmap_resize(
   if ( ptr_hmap == NULL ) { go_BYE(-1); }
   const size_t oldsize = ptr_hmap->size;
   const size_t nitems  = ptr_hmap->nitems;
-  register bkt_t *bkts = ptr_hmap->bkts;
+  register rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   register bool *bkt_full = ptr_hmap->bkt_full;
 
   // some obvious logical checks
@@ -24,8 +22,16 @@ rs_hmap_resize(
   if ( newsize < (uint32_t)(HIGH_WATER_MARK * (double)nitems) ) { 
     go_BYE(-1); 
   }
-  ptr_hmap->bkts   = calloc(sizeof(bkt_t), newsize);
-  ptr_hmap->bkt_full   = calloc(sizeof(bool), newsize);
+  status = posix_memalign((void **)&(ptr_hmap->bkts), 16, 
+      sizeof(rs_hmap_bkt_t) * newsize);
+  cBYE(status);
+  memset(ptr_hmap->bkts, 0, sizeof(rs_hmap_bkt_t) * newsize);
+
+  status = posix_memalign((void **)&(ptr_hmap->bkt_full), 16,
+      sizeof(bool) * newsize);
+  cBYE(status);
+  memset((ptr_hmap->bkt_full), 0, sizeof(bool) * newsize);
+
   ptr_hmap->size   = newsize;
   uint32_t chk_nitems = ptr_hmap->nitems;
   ptr_hmap->nitems = 0;
@@ -39,7 +45,7 @@ rs_hmap_resize(
     // printf("Re-inserting %s \n", (char *)bkts[i].key);
     rs_hmap_key_t key  = bkts[i].key;
     rs_hmap_val_t val  = bkts[i].val;
-    status = rs_hmap_insert(ptr_hmap, 
+    status = LCL_rs_hmap_insert(ptr_hmap, 
         (const void * const)&key, (const void * const)&val);
     cBYE(status);
   }

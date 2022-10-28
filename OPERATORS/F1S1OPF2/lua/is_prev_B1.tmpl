@@ -1,0 +1,56 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include "set_bit_u64.h"
+
+extern int
+${fn}(  
+      const ${ctype} * restrict in,  
+      uint64_t nR,
+      bool default_val,
+      bool first,
+      uint64_t *out,
+      ${ctype} *ptr_last_val_prev_chunk
+      ) 
+;
+
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+
+int
+${fn}(  
+      const ${ctype} * restrict in,  
+      uint64_t nR,
+      bool default_val,
+      bool first,
+      uint64_t *out,
+      ${ctype} *ptr_last_val_prev_chunk
+      )
+
+{
+  int status = 0;
+
+  //-- Some basic checks
+  if ( nR  == 0 ) { go_BYE(-1); }
+  if ( in  == NULL ) { go_BYE(-1); }
+  if ( out == NULL ) { go_BYE(-1); }
+  //---------------------------------
+  if ( first ) {
+    set_bit_u64(out, 0, default_val);
+  }
+  else {
+    set_bit_u64(out, 0, (*ptr_last_val_prev_chunk ${cmp_op} in[0]));
+  }
+  for ( uint64_t i = 1; i < nR; i++ ) { 
+    set_bit_u64(out, i, (in[i] ${cmp_op} in[i-1]));
+  }
+  *ptr_last_val_prev_chunk = in[nR-1];
+BYE:
+  return status;
+}
+   ]]
+}

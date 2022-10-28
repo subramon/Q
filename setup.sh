@@ -22,6 +22,7 @@ mkdir -p $HOME/local/Q/
 mkdir -p $HOME/local/Q/lib/
 #-----------------------------------
 C_FLAGS=" -g -std=gnu99  -fPIC"
+C_FLAGS+=" -DDEBUG "
 C_FLAGS+=" -Wall -W -Waggregate-return -Wcast-align -Wmissing-prototypes"
 C_FLAGS+=" -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable "
 C_FLAGS+=" -Wunused-parameter -Wno-pedantic -fopenmp -Wno-unused-label " 
@@ -68,10 +69,12 @@ echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 CURR_PATH=`pwd`
 cd $Q_SRC_ROOT
 cd ../
-export LUA_PATH="`pwd`/?.lua;`pwd`/?/init.lua;;"
+#- first arg to LUA_PATH is for q_meta used to restore sessions
+export LUA_PATH="${Q_ROOT}/meta/?.lua;${Q_ROOT}/config/?.lua;`pwd`/?.lua;`pwd`/?/init.lua;;"
 export LUA_CPATH="${Q_ROOT}/lib/?.so;;"
 cd $CURR_PATH
 echo "LUA_PATH: $LUA_PATH"
 echo "LUA_CPATH: $LUA_CPATH"
 cd $PREV_DIR
 cd $CUR_DIR 
+export PATH=$PATH:$Q_ROOT/bin/

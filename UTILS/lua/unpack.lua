@@ -1,5 +1,5 @@
 local T = {}
-local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 
 -- Q.unpack(x) : gives table of scalars
             -- Return value:
@@ -16,9 +16,10 @@ local function unpack(x)
   end
 
   local tbl_of_sclr = {}
-  for i = 0, x:length()-1 do
-    local value = x:get1(i)
-    tbl_of_sclr[#tbl_of_sclr + 1] = value
+  for i = 1, x:num_elements() do
+    local value = x:get1(i-1)
+    assert(type(value) == "Scalar")
+    tbl_of_sclr[i] = value
   end
 
   return tbl_of_sclr

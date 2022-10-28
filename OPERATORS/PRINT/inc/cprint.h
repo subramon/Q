@@ -1,13 +1,15 @@
 //START_FOR_CDEF
 extern int
 cprint(
-    char * opfile,
-    uint64_t * cfld,
-    void **data, // [nC][nR] 
+    const char * opfile,
+    const void * const cfld, // TODO 
+    const void ** data, // [nC][nR] 
+    const bool ** nn_data, // [nC][nR] 
     int nC,
     uint64_t lb,
     uint64_t ub,
-    int * enum_fldtypes,  
-    int * widths // [nC]
+    const int32_t  * const qtypes,  
+    const int32_t * const widths, // [nC]
+    char ** formats // [nC]
     );
 //STOP_FOR_CDEF

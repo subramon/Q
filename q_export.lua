@@ -4,7 +4,12 @@ q_export (export) is used *ONLY* to register stuff
 All the operators register themselves with Q using q_export
 ]]
 local function setDefault (t, d)
-  local mt = {__index = function (t, k) print("Not registered", k) return d end}
+  local mt = {
+    __index = function (t, k
+      ) print("Not registered", k) 
+      return d 
+    end
+  }
   setmetatable(t, mt)
 end
 

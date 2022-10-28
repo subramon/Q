@@ -1,4 +1,0 @@
-      bool rslt = __atomic_compare_exchange(
-          &g_L_status, &expected, &desired, false, 0, 0);
-      if ( rslt ) { break; }
-      printf("Sleeping ... \n"); 

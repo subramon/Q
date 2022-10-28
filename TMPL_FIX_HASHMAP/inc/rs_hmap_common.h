@@ -5,8 +5,8 @@
  * Use is subject to license terms, as specified in the LICENSE file.
  */
 
-#ifndef _RS_HMAP_H
-#define _RS_HMAP_H
+#ifndef _RS_HMAP_COMMON_H
+#define _RS_HMAP_COMMON_H
 
 #include <string.h>
 #include <stdbool.h>
@@ -25,4 +25,4 @@
 #define IDEAL_WATER_MARK 0.6
 #define	HIGH_WATER_MARK 0.85
 
-#endif //  _RS_HMAP_H
+#endif //  _RS_HMAP_COMMON_H

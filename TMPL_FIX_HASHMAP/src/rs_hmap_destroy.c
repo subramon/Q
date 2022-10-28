@@ -1,4 +1,4 @@
-// EXTERNAL EXPOSIRE
+// EXTERNAL EXPOSURE
 #include "rs_hmap_common.h"
 #include "rs_hmap_struct.h"
 #include "rs_hmap_destroy.h"
@@ -15,6 +15,5 @@ rs_hmap_destroy(
     if ( status != 0 ) { WHEREAMI; }
   }
   free_if_non_null(ptr_hmap->config.so_file);
-  free_if_non_null(ptr_hmap->int_config);
   memset(ptr_hmap, '\0', sizeof(rs_hmap_t));
 }

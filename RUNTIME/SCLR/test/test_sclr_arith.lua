@@ -21,14 +21,17 @@ tests.t1 = function ()
     assert(Scalar.lt(z, 334))
     assert(Scalar.geq(z, 333))
     assert(Scalar.leq(z, 333))
-    --[[
+
+    --[[ TODO P4 Would be nice if following syntax would work
     assert(z > 331)
     assert(z < 333)
     assert(z >= 331)
     assert(z <= 333)
-    ==]]
+    --]]
+
   end
   print("Successfully completed test t1")
 end
 
-return tests
+-- return tests
+tests.t1()

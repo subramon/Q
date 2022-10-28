@@ -1,10 +1,13 @@
+// EXTERNAL EXPOSURE
 /*
  * hmap_del: remove the given key and return its value.
  * => If key was present, return its associated value
  */
 #include "rs_hmap_common.h"
 #include "rs_hmap_struct.h"
-#include "rs_hmap_aux.h"
+#include "aux.h"
+#include "set_probe_loc.h"
+#include "rsx_set_hash.h"
 #include "rs_hmap_resize.h"
 #include "rs_hmap_del.h"
 int
@@ -22,14 +25,14 @@ rs_hmap_del(
   const rs_hmap_key_t * const ptr_key = (const rs_hmap_key_t * const )in_ptr_key;
   rs_hmap_val_t * ptr_val = (rs_hmap_val_t * )in_ptr_val;
 
-  register uint32_t hash = set_hash(ptr_key, ptr_hmap);
-  register uint32_t probe_loc = set_probe_loc(hash, ptr_hmap);
-  register bkt_t *bkts = ptr_hmap->bkts;
+  register uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
+  register uint32_t probe_loc = 
+    set_probe_loc(hash, ptr_hmap->size, ptr_hmap->divinfo);
+  register rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   register bool *bkt_full = ptr_hmap->bkt_full;
   register uint32_t my_psl = 0;
   register uint32_t num_probes = 0;
-  rs_hmap_int_config_t *C = (rs_hmap_int_config_t *)ptr_hmap->int_config;
-  register key_cmp_fn_t key_cmp_fn = C->key_cmp_fn;
+  register key_cmp_fn_t key_cmp = ptr_hmap->key_cmp;
 
   // Start by assuming that key is not found. 
   *ptr_is_found = false;
@@ -48,7 +51,7 @@ rs_hmap_del(
       goto BYE;
     }
     // check if key matches incoming one 
-    if ( key_cmp_fn(&(bkts[probe_loc].key), ptr_key) ) { 
+    if ( key_cmp(&(bkts[probe_loc].key), ptr_key) ) { 
       *ptr_is_found = true;
       if ( ptr_val != NULL ) {  // return value of deleted key
         *ptr_val = bkts[probe_loc].val; 
@@ -72,16 +75,16 @@ rs_hmap_del(
    * The probe sequence must be preserved in the deletion case.
    * Use the backwards-shifting method to maintain low variance.
    */
-  bkt_t *this_bkt  = &(bkts[probe_loc]);
+  rs_hmap_bkt_t *this_bkt  = &(bkts[probe_loc]);
   uint32_t prev_probe_loc = probe_loc; 
   for ( ; ; ) {
     // mark this bucket as empty
-    memset(&(bkts[probe_loc]), 0, sizeof(bkt_t));
+    memset(&(bkts[probe_loc]), 0, sizeof(rs_hmap_bkt_t));
     bkt_full[probe_loc] = false; 
 
     probe_loc++;
     if ( probe_loc == ptr_hmap->size ) { probe_loc = 0; }
-    bkt_t *next_bkt = bkts + probe_loc;
+    rs_hmap_bkt_t *next_bkt = bkts + probe_loc;
     /*
      * Stop if we reach an empty bucket or hit a key which
      * is in its base (original) location.
@@ -107,7 +110,7 @@ rs_hmap_del(
     if ( new_size < ptr_hmap->config.min_size ) { 
       new_size = ptr_hmap->config.min_size;
     }
-    status = rs_hmap_resize(ptr_hmap, new_size); cBYE(status); 
+    status = LCL_rs_hmap_resize(ptr_hmap, new_size); cBYE(status); 
   }
 BYE:
   return status;

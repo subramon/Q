@@ -94,35 +94,26 @@ function gen_code(T1, T3)
   hdr = [[
 #include "q_incs.h"
 #include "sclr_struct.h"
-extern int 
+static int 
 eval_arith(
-    const char *const fldtype1,
-    const char *const fldtype2,
+    qtype_t qtype1,
+    qtype_t qtype2,
     const char *const op,
-    CDATA_TYPE cdata1,
-    CDATA_TYPE cdata2,
-    CDATA_TYPE *ptr_cdata
-    );
-int 
-eval_arith(
-    const char *const fldtype1,
-    const char *const fldtype2,
-    const char *const op,
-    CDATA_TYPE cdata1,
-    CDATA_TYPE cdata2,
-    CDATA_TYPE *ptr_cdata
+    SCLR_REC_TYPE sclr1,
+    SCLR_REC_TYPE sclr2,
+    SCLR_REC_TYPE *ptr_sclr
     )
 {
   int status = 0;
   ]]
   io.write(hdr)
-  s1 = 'if ( strcmp(fldtype1, "__QTYPE__") == 0 ) {\n'
-  s11 = 'else if ( strcmp(fldtype1, "__QTYPE__") == 0 ) {\n'
-  s2 = '    if ( strcmp(fldtype2, "__QTYPE__") == 0 ) {\n'
-  s21 = '\n    else if ( strcmp(fldtype2, "__QTYPE__") == 0 ) {\n'
+  s1 = 'if ( qtype1 == __QTYPE__ ) {\n'
+  s11 = 'else if ( qtype1 == __QTYPE__ ) {\n'
+  s2 = '    if ( qtype2 == __QTYPE__ ) {\n'
+  s21 = '\n    else if ( qtype2 == __QTYPE__ ) {\n'
   s3 = [[
       if ( strcmp(op, "__AOP__") == 0 ) {
-        ptr_cdata->val__QTYPE3__ = cdata1.val__QTYPE1__  __AOP__ cdata2.val__QTYPE2__ ;
+        ptr_sclr->val.__QTYPE3__ = sclr1.val.__QTYPE1__  __AOP__ sclr2.val.__QTYPE2__ ;
       }
 ]]
   for k1, v1 in pairs(T1) do
@@ -144,10 +135,10 @@ eval_arith(
       for k3, v3 in pairs(T3) do
         local str = ""
         if ( k3 > 1 ) then io.write("      else") end
-        str = string.gsub(s3, "__QTYPE1__", v1)
-        str = string.gsub(str, "__QTYPE2__", v2)
+        str = string.gsub(s3, "__QTYPE1__", string.lower(v1))
+        str = string.gsub(str, "__QTYPE2__", string.lower(v2))
         output_type = get_output_type(v1, v2)
-        str = string.gsub(str, "__QTYPE3__", output_type)
+        str = string.gsub(str, "__QTYPE3__", string.lower(output_type))
         str = string.gsub(str, "__AOP__", v3)
         io.write(str)
       end
@@ -176,13 +167,11 @@ static int l_sclr___KEY__(lua_State *L)
   SCLR_REC_TYPE *ptr_sclr2 = (SCLR_REC_TYPE *)luaL_checkudata(L, 2, "Scalar");
   SCLR_REC_TYPE *ptr_sclr = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));
   memset(ptr_sclr, '\0', sizeof(SCLR_REC_TYPE));
-  status = set_output_field_type(ptr_sclr1->field_type, ptr_sclr2->field_type, ptr_sclr);
+  status = set_output_qtype(ptr_sclr1->qtype, ptr_sclr2->qtype, ptr_sclr);
   cBYE(status);
-  CDATA_TYPE cdata;
-  status = eval_arith( ptr_sclr1->field_type, ptr_sclr2->field_type, 
-      "__VAL__", ptr_sclr1->cdata, ptr_sclr2->cdata, &cdata);
+  status = eval_arith( ptr_sclr1->qtype, ptr_sclr2->qtype, 
+      "__VAL__", *ptr_sclr1, *ptr_sclr2, ptr_sclr);
   cBYE(status);
-  ptr_sclr->cdata = cdata;
   /* Add the metatable to the stack. */
   luaL_getmetatable(L, "Scalar");
   /* Set the metatable on the userdata. */

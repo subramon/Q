@@ -6,10 +6,8 @@ local Scalar    = require 'libsclr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
-local qconsts   = require 'Q/UTILS/lua/qconsts'
 local qc        = require 'Q/UTILS/lua/qcore'
-local qmem      = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
 
 -- cdef the necessary struct within pcall to prevent error on second call
 local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
@@ -31,7 +29,8 @@ return function (
   subs.len = len
   subs.out_qtype = qtype
   subs.out_ctype = qconsts.qtypes[qtype].ctype
-  subs.out_buf_size = chunk_size * qconsts.qtypes[qtype].width
+  subs.max_num_in_chunk = get_max_num_in_chunk (largs)
+  subs.out_buf_size = subs.max_num_in_chunk * qconsts.qtypes[qtype].width
   subs.cst_out_as = subs.out_ctype .. " * "
   --=======================
   -- set up args for C code

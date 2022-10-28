@@ -21,6 +21,7 @@
 #include "get_bit_u64.h"
 #include "isdir.h"
 #include "isfile.h"
+#include "qtypes.h"
 #include "rdtsc.h"
 #include "rs_mmap.h"
 
@@ -94,6 +95,15 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_cutils_is_qtype( 
+    lua_State *L
+    )
+{
+  const char *const str_qtype = luaL_checkstring(L, 1);
+  lua_pushboolean(L, is_qtype(str_qtype));
+  return 1;
+}
+//----------------------------------------
 static int l_cutils_isdir( 
     lua_State *L
     )
@@ -102,6 +112,31 @@ static int l_cutils_isdir(
   bool exists = isdir(dir);
   lua_pushboolean(L, exists);
   return 1;
+}
+//----------------------------------------
+static int l_cutils_num_lines( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  char *X = NULL; size_t nX = 0;
+  if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
+  const char *const file_name = luaL_checkstring(L, 1);
+  status = rs_mmap(file_name, &X, &nX, 0); cBYE(status);
+  if ( X[nX-1] != '\n' ) { go_BYE(-1); }
+  uint64_t num_lines = 0;
+  for ( uint64_t i = 0; i < nX; i++ ) { 
+    if ( X[i] == '\n' ) { num_lines++; }
+  }
+  lua_pushnumber(L, num_lines);
+  mcr_rs_munmap(X, nX);
+  return 1;
+BYE:
+  mcr_rs_munmap(X, nX);
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
 }
 //----------------------------------------
 static int l_cutils_makepath( 
@@ -138,6 +173,56 @@ static int l_cutils_isfile(
   const char *const file_name = luaL_checkstring(L, 1);
   bool exists = isfile(file_name);
   lua_pushboolean(L, exists);
+  return 1;
+}
+//----------------------------------------
+static int l_cutils_str_qtype_to_str_ispctype( 
+    lua_State *L
+    )
+{
+  const char *const str_qtype = luaL_checkstring(L, 1);
+  const char * const x = str_qtype_to_str_ispctype(str_qtype);
+  if ( x == NULL ) { 
+    lua_pushnil(L);
+  }
+  else { 
+    lua_pushstring(L, x);
+  }
+  return 1;
+}
+//----------------------------------------
+static int l_cutils_str_qtype_to_str_ctype( 
+    lua_State *L
+    )
+{
+  const char *const str_qtype = luaL_checkstring(L, 1);
+  const char * const x = str_qtype_to_str_ctype(str_qtype);
+  if ( x == NULL ) { 
+    lua_pushnil(L);
+  }
+  else { 
+    lua_pushstring(L, x);
+  }
+  return 1;
+}
+//----------------------------------------
+static int l_cutils_get_width_qtype( 
+    lua_State *L
+    )
+{
+  const char *const str_qtype = luaL_checkstring(L, 1);
+  int width = get_width_qtype(str_qtype);
+  lua_pushnumber(L, width);
+  return 1;
+}
+//----------------------------------------
+static int l_cutils_get_c_qtype( 
+    lua_State *L
+    )
+{
+  const char *const str_qtype = luaL_checkstring(L, 1);
+  qtype_t qtype  = get_c_qtype(str_qtype);
+  lua_pushnumber(L, qtype);
   return 1;
 }
 //----------------------------------------
@@ -463,13 +548,19 @@ static const struct luaL_Reg cutils_methods[] = {
     { "getfiles",    l_cutils_getfiles },
     { "getsize",     l_cutils_getsize },
     { "gettime",     l_cutils_gettime },
+    { "get_width_qtype",   l_cutils_get_width_qtype },
+    { "get_c_qtype", l_cutils_get_c_qtype },
     { "delete",      l_cutils_delete },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
+    { "is_qtype",     l_cutils_is_qtype },
     { "makepath",    l_cutils_makepath },
+    { "num_lines",   l_cutils_num_lines },
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
+    { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
+    { "str_qtype_to_str_ispctype", l_cutils_str_qtype_to_str_ispctype },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };
@@ -484,12 +575,18 @@ static const struct luaL_Reg cutils_functions[] = {
     { "getfiles",    l_cutils_getfiles },
     { "getsize",     l_cutils_getsize },
     { "gettime",     l_cutils_gettime },
+    { "get_width_qtype",   l_cutils_get_width_qtype },
+    { "get_c_qtype", l_cutils_get_c_qtype },
+    { "is_qtype",     l_cutils_is_qtype },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },
+    { "num_lines",   l_cutils_num_lines },
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
+    { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
+    { "str_qtype_to_str_ispctype", l_cutils_str_qtype_to_str_ispctype },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };

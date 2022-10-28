@@ -1,34 +1,43 @@
-require 'Q/QTILS/lua/fold'
-require "Q/OPERATORS/F_TO_S/lua/f_to_s"
-require "Q/OPERATORS/MK_COL/lua/mk_col"
+local lgutils = require 'liblgutils'
+
 require "Q/OPERATORS/PRINT/lua/print_csv"
-require "Q/OPERATORS/S_TO_F/lua/s_to_f"
-require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
-require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
-require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
+require "Q/UTILS/lua/save"
 
 require "Q/OPERATORS/LOAD_CSV/lua/load_csv"
-require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
-require 'Q/OPERATORS/WHERE/lua/where'
-require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
+require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
 
-require 'Q/QTILS/lua/nop'
-require 'Q/QTILS/lua/avg'
-require 'Q/QTILS/lua/head'
-
-require "Q/UTILS/lua/restore"
-require "Q/UTILS/lua/save" 
-require "Q/UTILS/lua/register_qop" 
+require "Q/OPERATORS/MK_COL/lua/mk_col"
+require "Q/OPERATORS/S_TO_F/lua/s_to_f"
+require "Q/OPERATORS/F_TO_S/lua/f_to_s"
 
 require "Q/UTILS/lua/pack"
 require "Q/UTILS/lua/unpack"
 require "Q/UTILS/lua/set_memo"
--- TODO require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I8"
--- TODO require "Q/OPERATORS/LOAD_CSV/lua/SC_to_I4"
+
+require 'Q/OPERATORS/WHERE/lua/where'
+require "Q/OPERATORS/WHERE/lua/select_ranges"
+require "Q/OPERATORS/F1S1OPF2/lua/is_prev"
+require "Q/OPERATORS/F1S1OPF2/lua/vshift"
+require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
+require "Q/OPERATORS/F1F2OPF3/lua/repeater"
+require "Q/OPERATORS/GROUPBY/lua/isby"
+require "Q/OPERATORS/F1OPF2F3/lua/f1opf2f3"
 --[[
+require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
+require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
+
+require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
+
+--== These are from QTILS 
+require 'Q/QTILS/lua/fold'
+require 'Q/QTILS/lua/nop'
+require 'Q/QTILS/lua/avg'
+require 'Q/QTILS/lua/head'
+
+require "Q/UTILS/lua/register_qop" 
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/get_idx_by_val"
@@ -43,8 +52,6 @@ require "Q/OPERATORS/CLONE/lua/clone"
 
 require "Q/OPERATORS/DROP_NULLS/lua/drop_nulls"
 
-require "Q/OPERATORS/F1OPF2F3/lua/f1opf2f3"
-require "Q/OPERATORS/F1S1OPF2/lua/is_prev"
 
 require "Q/OPERATORS/GET/lua/get_val_by_idx"
 require "Q/OPERATORS/GET/lua/set_sclr_val_by_idx"
@@ -87,23 +94,11 @@ require "Q/UTILS/lua/view_meta"
 _G['g_time'] = {}
 _G['g_ctr']  = {}
 
---=== Stuff to do at first load time 
-local qmem = require 'Q/UTILS/lua/qmem'
-qmem.init()
-local reset      = os.getenv("Q_RESET")
-local reset_fn   = require 'Q/UTILS/lua/reset'
-local restore_fn = require 'Q/UTILS/lua/restore'
-if ( reset == "true" ) then 
-  reset_fn()
+if ( lgutils.is_restore_session() ) then
+  print("restoring session")
+  require "q_meta"
 else
-  status, msg = pcall(restore_fn)
-  if ( not status ) then 
-    print("WARNING!!! Restore failed. Wiping things out...")
-    print(msg)
-    reset_fn()
-  else
-    print("Restored data")
-  end
+  print("NOT restoring session")
 end
 --======================
 return require 'Q/q_export'

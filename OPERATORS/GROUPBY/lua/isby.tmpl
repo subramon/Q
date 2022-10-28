@@ -1,0 +1,63 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+#include "q_incs.h"
+//START_FOR_CDEF
+extern int
+${fn}(
+    const ${src_lnk_ctype}  * const src_lnk,
+    const ${src_val_ctype}  * const src_val,
+    uint32_t src_len,
+    const ${dst_lnk_ctype}  * const dst_lnk,
+    ${dst_val_ctype}  * restrict dst_val,
+    bool * restrict nn_dst_val,
+    uint32_t dst_len,
+    uint32_t *ptr_src_idx,
+    uint32_t *ptr_dst_idx
+    );
+//STOP_FOR_CDEF
+]],
+definition = [[
+#include "${fn}.h"
+
+int
+${fn}(
+    const ${src_lnk_ctype}  *const src_lnk,
+    const ${src_val_ctype}  *const src_val,
+    uint32_t src_len,
+    const ${dst_lnk_ctype}  *const dst_lnk,
+    ${dst_val_ctype}  * restrict dst_val,
+    bool * restrict nn_dst_val,
+    uint32_t dst_len,
+    uint32_t *ptr_src_idx,
+    uint32_t *ptr_dst_idx
+    )
+{
+  int status = 0;
+  uint32_t src_idx = *ptr_src_idx;
+  uint32_t dst_idx = *ptr_dst_idx;
+  while ( ( src_idx < src_len ) && ( dst_idx < dst_len ) ) {
+    ${src_lnk_ctype} l_src_lnk = src_lnk[src_idx];
+    ${dst_lnk_ctype} l_dst_lnk = dst_lnk[dst_idx];
+    if ( l_src_lnk == l_dst_lnk ) {
+      ${src_val_ctype} l_src_val = src_val[src_idx];
+      dst_val[dst_idx] = l_src_val;
+      nn_dst_val[dst_idx] = true;
+      dst_idx++;
+    }
+    else if ( l_src_lnk < l_dst_lnk ) {
+      src_idx++;
+    }
+    else {
+      dst_val[dst_idx] = 0;
+      nn_dst_val[dst_idx] = false;
+      dst_idx++;
+    }
+  }
+  *ptr_src_idx = src_idx;
+  *ptr_dst_idx = dst_idx;
+BYE:
+  return status;
+}
+]]
+}

@@ -9,9 +9,10 @@
 #include "rdtsc.h"
 #include "spooky_struct.h"
 #include "spooky_hash.h"
-#include "rs_hmap_aux.h"
+#include "set_probe_loc.h"
+#include "aux.h"
+#include "rsx_set_hash.h"
 #include "rs_hmap_chk.h"
-#include "rs_hmap_get.h"
 
 typedef struct _chk_t { 
   uint32_t idx;
@@ -47,7 +48,7 @@ rs_hmap_chk(
   // status = hmap_pr(ptr_hmap); cBYE(status);
   // check that number of items is correct
   uint32_t chk_nitems = 0;
-  bkt_t *bkts = ptr_hmap->bkts;
+  rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   bool *bkt_full = ptr_hmap->bkt_full;
   for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
     if ( bkt_full[i] ) {
@@ -95,12 +96,13 @@ rs_hmap_chk(
     if ( !bkt_full[i] ) { continue; }
     rs_hmap_val_t val; bool is_found; uint32_t where_found; 
     void *ptr_key    = &(bkts[i].key);
-    status = rs_hmap_get(ptr_hmap, ptr_key, (void *)&val, &is_found, 
+    status = ptr_hmap->get(ptr_hmap, ptr_key, (void *)&val, &is_found, 
         &where_found);
     cBYE(status);
     if ( !is_found ) { go_BYE(-1); }
-    uint32_t hash = set_hash(ptr_key, ptr_hmap);
-    uint32_t probe_loc = set_probe_loc(hash, ptr_hmap);
+    uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
+    uint32_t probe_loc = 
+      set_probe_loc(hash, ptr_hmap->size, ptr_hmap->divinfo);
     if ( probe_loc == i ) { 
       // this key was placed with no searching 
       continue;

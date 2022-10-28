@@ -8,6 +8,6 @@ local function conv(x)
   if ( x == "Friday" )   then return 6 end 
   if ( x == "Saturday" ) then return 7 end 
   if ( x == "XXXXXXX" ) then return 8 end 
-  assert(nil, x)
+  error(x)
 end
 return conv

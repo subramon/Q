@@ -517,7 +517,7 @@ ALL_RM= $(ALL_T) $(ALL_GEN) *.o host/*.o $(WIN_RM)
 
 # Mixed mode defaults.
 TARGET_O= $(LUAJIT_A)
-TARGET_T= $(LUAJIT_T) $(LUAJIT_SO)
+TARGET_T= $(LUAJIT_T) $(LUAJIT_SO) 
 TARGET_DEP= $(LIB_VMDEF) $(LUAJIT_SO)
 
 ifeq (Windows,$(TARGET_SYS))
@@ -594,7 +594,7 @@ E= @echo
 # Make targets.
 ##############################################################################
 
-default all:	$(TARGET_T)
+default all:	$(TARGET_T)  
 
 amalg:
 	@grep "^[+|]" ljamalg.c
@@ -673,10 +673,19 @@ lj_folddef.h: $(BUILDVM_T) lj_opt_fold.c
 # Object file rules.
 ##############################################################################
 
+INCS := -I.
+INCS += -I./inc/
+INCS += -I../../../TMPL_FIX_HASHMAP/inc/
+INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
+INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
+INCS += -I../../../RUNTIME/VCTRS/inc/
+INCS += -I../../../UTILS/inc/
+INCS += -I../../GUTILS/inc/
+
 %.o: %.c
-	$(E) "CC        $@"
-	$(Q)$(TARGET_DYNCC) $(TARGET_ACFLAGS) -c -o $(@:.o=_dyn.o) $<
-	$(Q)$(TARGET_CC) $(TARGET_ACFLAGS) -c -o $@ $<
+	$(E) "CC1       $@"
+	$(Q)$(TARGET_DYNCC) $(TARGET_ACFLAGS) ${INCS} -c -o $(@:.o=_dyn.o) $<
+	$(Q)$(TARGET_CC) $(TARGET_ACFLAGS) ${INCS} -c -o $@ $<
 
 %.o: %.S
 	$(E) "ASM       $@"
@@ -684,8 +693,8 @@ lj_folddef.h: $(BUILDVM_T) lj_opt_fold.c
 	$(Q)$(TARGET_CC) $(TARGET_ASFLAGS) -c -o $@ $<
 
 $(LUAJIT_O):
-	$(E) "CC        $@"
-	$(Q)$(TARGET_STCC) $(TARGET_ACFLAGS) -c -o $@ $<
+	$(E) "CC2       $@"
+	$(Q)$(TARGET_STCC) $(TARGET_ACFLAGS) ${INCS} -c -o $@ $<
 
 $(HOST_O): %.o: %.c
 	$(E) "HOSTCC    $@"
@@ -697,6 +706,13 @@ include Makefile.dep
 # Target file rules.
 ##############################################################################
 
+RS_LIBS := -lpthread
+RS_LIBS += -levent
+RS_LIBS += ${Q_ROOT}/lib/libqjitaux.so 
+RS_LIBS += ${Q_ROOT}/lib/libhmap_vctr.so 
+RS_LIBS += ${Q_ROOT}/lib/libhmap_chnk.so 
+RS_LIBS += ${Q_ROOT}/lib/libhmap.so 
+
 $(LUAJIT_A): $(LJVMCORE_O)
 	$(E) "AR        $@"
 	$(Q)$(TARGET_AR) $@ $(LJVMCORE_O)
@@ -707,10 +723,14 @@ $(LUAJIT_SO): $(LJVMCORE_O)
 	$(Q)$(TARGET_LD) $(TARGET_ASHLDFLAGS) -o $@ $(LJVMCORE_DYNO) $(TARGET_ALIBS)
 	$(Q)$(TARGET_STRIP) $@
 
-$(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP) foo.o 
+$(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP) 
 	$(E) "LINK      $@"
-	$(Q)$(TARGET_LD) $(TARGET_ALDFLAGS) -o $@ foo.o $(LUAJIT_O) $(TARGET_O) $(TARGET_ALIBS) -lpthread
+	$(Q)$(TARGET_LD) $(TARGET_ALDFLAGS) \
+		-o $@ $(LUAJIT_O) \
+		$(TARGET_O) $(TARGET_ALIBS) \
+		${RS_LIBS}
 	$(Q)$(TARGET_STRIP) $@
+	cp luajit ${Q_ROOT}/bin/qjit # TODO Improve this 
 	$(E) "OK        Successfully built LuaJIT"
 
 ##############################################################################

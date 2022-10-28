@@ -28,9 +28,9 @@ rs_hmap_put(
     cBYE(status);
   }
   if ( resize ) { 
-    status = rs_hmap_resize(ptr_hmap, newsize); cBYE(status);
+    status = LCL_rs_hmap_resize(ptr_hmap, newsize); cBYE(status);
   }
-  status = rs_hmap_insert(ptr_hmap, ptr_key, ptr_val); cBYE(status);
+  status = LCL_rs_hmap_insert(ptr_hmap, ptr_key, ptr_val); cBYE(status);
 BYE:
   return status;
 }

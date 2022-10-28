@@ -1,40 +1,42 @@
 #include "q_incs.h"
+#include "qtypes.h"
 #include "cprint.h"
 #include "get_bit_u64.h"
 
-//-------- for fldtypes as enums
-// CAUTION: Needs to be in sync with Q/UTILS/lua/q_consts.lua
-#define QI1 1 
-#define QI2 2
-#define QI4 3
-#define QI8 4
-#define QF4 5
-#define QF8 6
-#define QSC 7
-#define QTM 8
-#define QB1 9
+// TODO P3 Need to fiully implement formats
 int
 cprint(
-    char * opfile,
-    uint64_t * cfld, // TODO 
-    void **data, // [nC][nR] 
+    const char * opfile,
+    const void * const cfld, // TODO 
+    const void ** data, // [nC][nR] 
+    const bool ** nn_data, // [nC][nR] 
     int nC,
     uint64_t lb,
     uint64_t ub,
-    int * enum_fldtypes,  
-    int * width // [nC]
+    const int32_t  * const qtypes,//[nC]
+    const int32_t * const widths, // [nC]
+    char ** formats // [nC]
     )
 {
   int status = 0;
   FILE *fp = NULL;
+  if ( qtypes == NULL ) { go_BYE(-1); }
+  if ( widths == NULL ) { go_BYE(-1); }
   //----------
   if ( data == NULL ) { go_BYE(-1); }
+  if ( nn_data == NULL ) { go_BYE(-1); }
+  if ( cfld != NULL ) { go_BYE(-1); } // TODO TODO TODO 
   if ( nC <= 0 ) { go_BYE(-1); }
   for ( int j = 0; j < nC; j++ ) { if ( data[j] == NULL ) { go_BYE(-1); } }
   if ( ub <= lb ) { go_BYE(-1); }
-  if ( enum_fldtypes == NULL ) { go_BYE(-1); }
-  if ( width == NULL ) { go_BYE(-1); }
 
+  for ( int i = 0; i < nC; i++ ) { 
+    if ( ( qtypes[i] <= 0 ) || ( qtypes[i] >= NUM_QTYPES ) ) { go_BYE(-1); }
+    // 32 is just a sanity check, could be tighter
+    if ( qtypes[i] != SC ) {
+    if ( ( widths[i] <= 0 ) || ( widths[i] >= 32 ) ) { go_BYE(-1); }
+    }
+  }
   //----------
   if ( ( opfile != NULL ) && ( *opfile != '\0' ) ) {
     fp = fopen(opfile, "a");
@@ -45,54 +47,77 @@ cprint(
   }
   for ( uint64_t i = lb; i < ub; i++ ) { // for each row 
     for ( int j = 0; j < nC; j++ ) { // for each column
-    if ( j > 0 ) { fprintf(fp, ","); }
-      if ( enum_fldtypes[j] == QI1 ) { 
-        int8_t *X = (int8_t *)data[j];
-        fprintf(fp, "%d", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QI2 ) { 
-        int16_t *X = (int16_t *)data[j];
-        fprintf(fp, "%d", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QI4 ) { 
-        int32_t *X = (int32_t *)data[j];
-        fprintf(fp, "%d", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QI8 ) { 
-        int64_t *X = (int64_t *)data[j];
-        fprintf(fp, "%ld", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QF4 ) { 
-        float *X = (float *)data[j];
-        fprintf(fp, "%f", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QF8 ) { 
-        double *X = (double *)data[j];
-        fprintf(fp, "%e", X[i]);
-      }
-      else if ( enum_fldtypes[j] == QB1 ) { 
-        uint64_t *X = (uint64_t *)data[j];
-        int bval = get_bit_u64(X, i); 
-        fprintf(fp, "%d", bval);
-      }
-      else if ( enum_fldtypes[j] == QSC ) { 
-        if ( width[j] <= 1 ) { go_BYE(-1); }
-        char *X = (char *)data[j];
-        X += (i * width[j]);
-        fprintf(fp, "\"");
-        for ( int k = 0; k < width[j]; k++ ) { 
-          if ( *X == '\0' ) { break; } 
-          if ( ( *X == '\\' ) || ( *X == '"' ) ) {
-            fprintf(fp, "\\");
-          }
-          fprintf(fp, "%c", *X);
-          X++;
+      const char * X = data[j];
+      if ( j > 0 ) { fprintf(fp, ","); }
+      if ( nn_data[j] != NULL ) {
+        if ( nn_data[j][i] == false ) {
+          fprintf(fp, "\"\"");
+          continue;
         }
-        fprintf(fp, "\"");
       }
-      else if ( enum_fldtypes[j] == QTM ) { 
-        // TODO 
-        go_BYE(-1); 
+      switch ( qtypes[j] ) {
+        case B1 : 
+          {
+            go_BYE(-1); // TODO 
+            int ival = get_bit_u64((const uint64_t *)X, i); 
+            fprintf(fp, "%s\n", ival ? "true" : "false"); break;
+          }
+          break;
+        case BL : fprintf(fp, "%s", ((const bool *)X)[i] ? "true" : "false");
+                  break;
+        case I1 : fprintf(fp, "%d", ((const int8_t *)X)[i]); break;
+        case I2 : fprintf(fp, "%d", ((const int16_t *)X)[i]); break;
+        case I4 : fprintf(fp, "%d", ((const int32_t *)X)[i]); break;
+        case I8 : fprintf(fp, "%ld", ((const int64_t *)X)[i]); break;
+        case F4 : fprintf(fp, "%f", ((const float *)X)[i]); break;
+        case F8 : fprintf(fp, "%lf", ((const double *)X)[i]); break;
+        case SC :  
+                  {
+                    if ( widths[j] <= 1 ) { go_BYE(-1); }
+                    X += (i * widths[j]);
+                    fprintf(fp, "\"");
+                    for ( int k = 0; k < widths[j]; k++ ) { 
+                      if ( *X == '\0' ) { break; } 
+                      if ( ( *X == '\\' ) || ( *X == '"' ) ) {
+                        fprintf(fp, "\\");
+                      }
+                      fprintf(fp, "%c", *X);
+                      X++;
+                    }
+                    fprintf(fp, "\"");
+                  }
+                  break;
+        case TM1 : 
+                  { 
+                     char buf[64]; 
+                     int len = sizeof(buf); 
+                     memset(buf, 0, len);
+                     const tm_t * tptr = ((const tm_t *)X);
+                     if ( ( formats != NULL ) && ( formats[j] != NULL ) && 
+                         ( strcmp(formats[j], "%Y-%m-%d") == 0 ) ) {
+                       snprintf(buf, len-1, "\"%4d-%02d-%02d\"", 
+                         tptr[i].tm_year + 1900,
+                         tptr[i].tm_mon + 1,
+                         tptr[i].tm_mday
+                         );
+                     }
+                     else {
+                     snprintf(buf, len-1, "\"%d:%02d:%02d:%d:%d:%d:%d\"", 
+                         tptr[i].tm_year + 1900,
+                         tptr[i].tm_mon + 1,
+                         tptr[i].tm_mday,
+                         tptr[i].tm_hour,
+                         tptr[i].tm_min,
+                         tptr[i].tm_sec,
+                         tptr[i].tm_yday);
+                     }
+                     fprintf(fp, "%s", buf);
+                  }
+                  break;
+        default : 
+                  fprintf(stderr, "Unknown qtypes[%d] = %d \n", j, qtypes[j]);
+                  go_BYE(-1); 
+                  break;
       }
     }
     fprintf(fp, "\n");

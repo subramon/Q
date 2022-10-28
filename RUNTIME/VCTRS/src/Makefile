@@ -1,0 +1,171 @@
+CC=gcc
+
+CFLAGS := -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align 
+CFLAGS += -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings 
+CFLAGS += -Wunused-variable -Wunused-parameter -Wno-pedantic 
+CFLAGS += -Wno-unused-label 
+CFLAGS += -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith 
+CFLAGS += -Wmissing-declarations -Wredundant-decls -Wnested-externs 
+CFLAGS += -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings 
+CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn 
+CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
+CFLAGS += -Wduplicated-branches -Wrestrict
+
+# CFLAGS += -fsanitize=address -fno-omit-frame-pointer 
+# CFLAGS += -fsanitize=undefined 
+# CFLAGS +=  -static-libasan # for address sanitizer
+
+DFLAGS = -g -DDEBUG 
+# DFLAGS = -O4
+# Add -pg for grpof 
+
+INCS := -I../inc/ 
+INCS += -I../../../UTILS/inc/
+INCS += -I../../CMEM/inc/
+INCS += -I../../SCLR/inc/
+INCS += -I../../../TMPL_FIX_HASHMAP/inc/
+INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
+INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
+INCS += -I../../../QJIT/GUTILS/inc
+INCS += -I../../../QJIT/LuaJIT-2.1.0-beta3/src/inc
+
+TMPL=CASE1
+
+
+all: core_libvctr.so  ut1 ut2 libvctr.so 
+
+SRCS :=	vctr_add.c  
+SRCS +=	vctr_cnt.c  
+SRCS +=	vctr_chk.c
+SRCS +=	vctr_del.c  
+SRCS +=	vctr_drop_l1_l2.c  
+SRCS +=	vctr_early_free.c  
+SRCS +=	vctr_eov.c  
+SRCS +=	vctr_get1.c  
+SRCS +=	vctr_get_chunk.c  
+SRCS +=	vctr_incr_ref_count.c  
+SRCS +=	vctr_is.c  
+SRCS +=	vctr_is_early_free.c  
+SRCS +=	vctr_is_eov.c  
+SRCS +=	vctr_is_persist.c  
+SRCS +=	vctr_l1_to_l2.c  
+SRCS +=	vctr_name.c  
+SRCS +=	vctr_num_chunks.c  
+SRCS +=	vctr_num_elements.c  
+SRCS +=	vctr_new_uqid.c  
+SRCS +=	vctr_persist.c  
+SRCS +=	vctr_print.c  
+SRCS +=	vctr_putn.c  
+SRCS +=	vctr_put1.c 
+SRCS +=	vctr_put_chunk.c  
+SRCS +=	vctr_set_memo.c  
+SRCS +=	vctr_width.c  
+
+SRCS +=	chnk_cnt.c  
+SRCS +=	chnk_del.c  
+SRCS +=	chnk_first.c  
+SRCS +=	chnk_free_resources.c  
+SRCS +=	chnk_get_data.c  
+SRCS +=	chnk_is.c  
+SRCS +=	chnk_l1_to_l2.c  
+SRCS +=	chnk_drop_l1_l2.c  
+
+OBJS = $(SRCS:.c=.o)
+
+TEST1_SRCS := ../test/ut1.c
+TEST1_OBJS = $(TEST1_SRCS:.c=.o)
+
+TEST2_SRCS := ../test/ut2.c
+TEST2_SRCS += ../../CMEM/src/aux_cmem.c 
+TEST2_OBJS = $(TEST2_SRCS:.c=.o)
+
+.c.o : 
+	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
+
+#-------------------------------------------
+TMPL_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/src/
+TMPL_HMAP_SO  = ${Q_ROOT}/lib/libhmap.so
+
+${TMPL_HMAP_SO} : 
+	make -C ${TMPL_HMAP_LOC} ${TMPL_HMAP_SO}
+#-------------------------------------------
+UTILS_LOC = ../../../UTILS/src/
+UTILS_SO  = ${Q_ROOT}/lib/libutils.so
+
+${UTILS_SO} : 
+	make -C ${UTILS_LOC} ${UTILS_SO}
+#-------------------------------------------
+GUTILS_LOC = ../../../QJIT/GUTILS/
+GUTILS_SO  = ${Q_ROOT}/lib/libcgutils.so
+
+${GUTILS_SO} : 
+	make -C ${GUTILS_LOC} ${GUTILS_SO}
+#-------------------------------------------
+VCTR_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/VCTR_HMAP
+VCTR_HMAP_SO  = ${Q_ROOT}/lib/libhmap_vctr.so
+
+${VCTR_HMAP_SO} : 
+	make -C ${VCTR_HMAP_LOC} ${VCTR_HMAP_SO}
+#-------------------------------------------
+CHNK_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/CHNK_HMAP
+CHNK_HMAP_SO  = ${Q_ROOT}/lib/libhmap_chnk.so
+
+${CHNK_HMAP_SO} : 
+	make -C ${CHNK_HMAP_LOC} ${CHNK_HMAP_SO}
+#-------------------------------------------
+core_libvctr.so :  ${OBJS} \
+	${TMPL_HMAP_SO} \
+	${VCTR_HMAP_SO} \
+	${CHNK_HMAP_SO} \
+	${GUTILS_SO}  \
+	${UTILS_SO} 
+	gcc ${OBJS}  \
+	-shared -o core_libvctr.so \
+	${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${GUTILS_SO} ${UTILS_SO} 
+	cp core_libvctr.so ${Q_ROOT}/lib/
+#-------------------------------------------
+EXT_SRCS := cVector.c
+EXT_SRCS += ../../CMEM/src/aux_lua_to_c.c
+EXT_SRCS += ../../CMEM/src/aux_cmem.c
+EXT_SRCS += ../../../UTILS/src/qtypes.c
+
+EXT_OBJS = $(EXT_SRCS:.c=.o)
+
+libvctr.so: ${EXT_OBJS} core_libvctr.so cVector.o 
+	gcc ${EXT_OBJS} \
+	core_libvctr.so \
+	-shared -o libvctr.so 
+	cp libvctr.so ${Q_ROOT}/lib/
+
+#-------------------------------------------
+ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so 
+	gcc ${TEST1_OBJS} \
+	core_libvctr.so \
+	${VCTR_HMAP_SO} \
+	${CHNK_HMAP_SO} \
+	${TMPL_HMAP_SO} \
+	${UTILS_SO} \
+	${GUTILS_SO} \
+	-o ut1  
+#-------------------------------------------
+ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
+	gcc ${TEST2_OBJS} -o ut2 \
+	core_libvctr.so \
+	${VCTR_HMAP_SO} \
+	${CHNK_HMAP_SO} \
+	${TMPL_HMAP_SO} \
+	${UTILS_SO} \
+	${GUTILS_SO} \
+	-lm
+#-------------------------------------------
+
+
+clean:
+	rm -f *.o *.so ut1 ut2 ../test/*.o
+	rm -f  ${Q_ROOT}/lib/core_libvctr.so 
+	rm -f  ${Q_ROOT}/lib/libvctr.so 
+	rm -f ${TMPL_HMAP_SO}
+	rm -f ${VCTR_HMAP_SO}
+	rm -f ${CHNK_HMAP_SO}
+	rm -f ${GUTILS_SO} 
+	rm -f ${UTILS_SO} 

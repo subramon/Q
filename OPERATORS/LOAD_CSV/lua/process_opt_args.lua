@@ -1,10 +1,12 @@
+local qcfg = require 'Q/UTILS/lua/qcfg'
 local function process_opt_args(opt_args)
   -- opt_args default values
   -- is_hdr is set to false
   local is_hdr = false
   local fld_sep = "comma"
-  local is_memo = "undefined" -- this means no global over ride 
-  local is_persist = "undefined"-- this means no global over ride 
+  local memo_len  = qcfg.memo_len -- default 
+  local max_num_in_chunk = qcfg.max_num_in_chunk
+  local nn_qtype = "BL" -- default 
   if opt_args then
     assert(type(opt_args) == "table", "opt_args must be of type table")
     if opt_args["is_hdr"] ~= nil then
@@ -16,15 +18,22 @@ local function process_opt_args(opt_args)
       fld_sep = opt_args["fld_sep"]
       assert( ( fld_sep == "comma" ) or ( fld_sep == "tab" ) )
     end
-    if opt_args["is_memo"] ~= nil then
-      assert(type(opt_args["is_memo"]) == "boolean")
-      is_memo = opt_args["is_memo"]
+    if opt_args["memo_len"] ~= nil then
+      assert(type(opt_args["memo_len"]) == "number")
+      memo_len = opt_args["memo_len"]
     end
-    if opt_args["is_persist"] ~= nil then
-      assert(type(opt_args["is_persist"]) == "boolean")
-      is_persist = opt_args["is_persist"]
+    if opt_args["nn_qtype"] ~= nil then
+      assert(type(opt_args["nn_qtype"]) == "string")
+      nn_qtype = opt_args["nn_qtype"]
+      assert((nn_qtype == "B1") or (nn_qtype == "BL"))
+    end
+    if opt_args["max_num_in_chunk"] ~= nil then
+      assert(type(opt_args["max_num_in_chunk"]) == "number")
+      max_num_in_chunk = opt_args["max_num_in_chunk"]
+      assert(max_num_in_chunk > 0)
+      assert( ( ( max_num_in_chunk / 64 ) * 64 ) == max_num_in_chunk)
     end
   end
-  return is_hdr, fld_sep, is_memo, is_persist
+  return is_hdr, fld_sep, memo_len, max_num_in_chunk, nn_qtype
 end
 return  process_opt_args

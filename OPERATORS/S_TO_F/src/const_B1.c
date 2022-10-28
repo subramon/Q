@@ -5,8 +5,8 @@ int
 const_B1(
   uint64_t *X,
   uint64_t nX,
-  CONST_B1_REC_TYPE *ptr_arg,
-  uint64_t lb // not used but for consistency with others
+  CONST_BL_REC_TYPE *ptr_arg,
+  uint64_t dummy // not used but for consistency with others
   )
 //STOP_FUNC_DECL
 {
@@ -30,8 +30,10 @@ const_B1(
   if ( ( nXprime * 64 ) != nX ) {
     // Now set nX-Xprime least significant bits to 1 
     lval = 0; 
-    for ( unsigned int k = 0; k < nX - nXprime; k++  ) { 
-      lval = ( lval << 1 ) | 1 ;
+    if ( lval ) { 
+      for ( unsigned int k = 0; k < nX - nXprime; k++  ) { 
+        lval = ( lval << 1 ) | 1 ;
+      }
     }
     X[nXprime] = 0; // set to 0
     X[nXprime] = lval;

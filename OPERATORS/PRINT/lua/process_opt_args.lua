@@ -7,30 +7,50 @@ local function process_opt_args(
   local opfile
   local filter
   local lenV
+  local hdr
+  local formats
   
   local outV = inV
   if opt_args then
     assert(type(opt_args) == "table")
+    if ( opt_args.header ) then 
+      hdr = opt_args.header
+      assert(type(hdr) == "string")
+      assert(#hdr > 0)
+    end 
     if opt_args.opfile ~= nil then
       opfile = opt_args.opfile
       assert(type(opfile) == "string")
+      assert(#opfile > 0)
     end
     if opt_args.filter then
       filter = opt_args.filter
     end
-  end
-
-  for i, v in ipairs(outV) do 
-    assert(type(v) == "lVector")
-    assert(v:is_eov(), i)
-    if ( i == 1 ) then
-      lenV = v:num_elements()
-    else
-      assert(lenV == v:num_elements())
+    if ( opt_args.formats ) then
+      assert(type(opt_args.formats) == "table")
+      assert(#opt_args.formats == #inV)
+      for k, v in ipairs(opt_args.formats) do 
+        assert(type(v) == "string")
+      end
+      formats = opt_args.formats
     end
   end
+
+  local max_num_in_chunk = 0 
+  for i, v in ipairs(outV) do 
+    assert(type(v) == "lVector")
+    assert(v:is_eov())
+    if ( i == 1 ) then
+      lenV = v:num_elements()
+      max_num_in_chunk = v:max_num_in_chunk()
+    else
+      assert(lenV == v:num_elements())
+      assert(max_num_in_chunk == v:max_num_in_chunk())
+    end
+  end
+  assert(max_num_in_chunk > 0)
   assert(type(lenV) == "number")
   assert(lenV > 0)
-  return outV, opfile, filter, lenV
+  return outV, opfile, filter, lenV, max_num_in_chunk, hdr, formats
 end
 return  process_opt_args

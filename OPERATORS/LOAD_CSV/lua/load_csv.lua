@@ -1,98 +1,50 @@
 -- This version supports chunking in load_csv
 local ffi           = require 'ffi'
 local cutils        = require 'libcutils'
-local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
+local lgutils       = require 'liblgutils'
+local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local validate_meta = require "Q/OPERATORS/LOAD_CSV/lua/validate_meta"
-local get_ptr       = require "Q/UTILS/lua/get_ptr"
 local process_opt_args = 
   require "Q/OPERATORS/LOAD_CSV/lua/process_opt_args"
 local malloc_buffers_for_data = 
   require "Q/OPERATORS/LOAD_CSV/lua/malloc_buffers_for_data"
-local F             = require "Q/OPERATORS/LOAD_CSV/lua/malloc_aux"
+local malloc_aux    = require "Q/OPERATORS/LOAD_CSV/lua/malloc_aux"
+local aux_for_C     = require "Q/OPERATORS/LOAD_CSV/lua/aux_for_C"
 local bridge_C      = require "Q/OPERATORS/LOAD_CSV/lua/bridge_C"
-local record_time   = require 'Q/UTILS/lua/record_time'
-local qmem    = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local qcfg          = require 'Q/UTILS/lua/qcfg'
+local setup_ptrs    = require 'Q/OPERATORS/LOAD_CSV/lua/setup_ptrs'
 
- --======================================
-local function setup_ptrs(M, databuf, nn_databuf, cdata, nn_cdata)
-  assert(cdata)
-  assert(nn_cdata)
-  assert(type(databuf)    == "table")
-  assert(type(nn_databuf) == "table")
-  for k, v in pairs(M) do 
-    if ( v.is_load ) then 
-      assert(databuf[v.name])
-      if ( v.has_nulls) then 
-        assert(nn_databuf[v.name])
-      end
-    end
-  end
-
-  local ptr_cdata    = get_ptr(cdata, "char     **")
-  local ptr_nn_cdata = get_ptr(nn_cdata, "uint64_t **")
-  assert(ptr_cdata)
-  assert(ptr_nn_cdata)
-  for i, v in ipairs(M) do
-    ptr_nn_cdata[i-1] = ffi.NULL
-    ptr_cdata   [i-1] = ffi.NULL
-    if ( v.is_load ) then 
-      ptr_cdata[i-1]  = get_ptr(databuf[v.name])
-      if ( v.has_nulls ) then
-        ptr_nn_cdata[i-1] = get_ptr(nn_databuf[v.name])
-      end
-    end
-  end
-  return ptr_cdata, ptr_nn_cdata
-end
- --======================================
-local function free_buffers(M, databuf, nn_databuf, my_name)
-  -- print(" Free buffers since you won't need them again")
-  for i, v in ipairs(M) do 
-    if ( v.name ~= my_name ) then
-      -- Note subtlety of above if condition.  You can't delete 
-      -- buffer for vector whose chunk you are returning
-      if ( v.is_load ) then
-        -- print("Freeing buffer for ", v.name)
-        databuf[v.name]:delete() 
-        if ( v.has_nulls ) then 
-          nn_databuf[v.name]:delete() 
-        end
-      end
-    end
-  end
-end
  --======================================
 local function load_csv(
   infile,   -- input file to read (string)
   M,  -- metadata (table)
   opt_args
   )
-  local chunk_size = chunk_size
   assert( type(infile) == "string")
   assert(cutils.isfile(infile))
   assert(tonumber(cutils.getsize(infile)) > 0)
 
+  local is_hdr, fld_sep, global_memo_len, max_num_in_chunk, nn_qtype = 
+   process_opt_args(opt_args)
+  local c_nn_qtype = cutils.get_c_qtype(nn_qtype)
   assert(validate_meta(M))
-  local is_hdr, fld_sep, global_is_memo, global_is_persist = 
-  process_opt_args(opt_args)
-  -- see if you need to over ride per field is_memo with global
-  if ( type(global_is_memo) == "boolean" ) then
-    for k, v in pairs(M) do 
-      v.is_memo = global_is_memo
-    end
-  end
-  -- see if you need to over ride per field is_persist with global
-  if ( type(global_is_persist) == "boolean" ) then
-    for k, v in pairs(M) do 
-      v.is_persist = global_is_persist
+  -- if memo_len not provided for field, use global over-ride
+  for k, v in pairs(M) do 
+    if ( v.memo_len ) then 
+      assert(type(v.memo_len) == "number" )
+    else
+      v.memo_len = global_memo_len
     end
   end
   --=======================================
-  local databuf, nn_databuf, cdata, nn_cdata = malloc_buffers_for_data(M)
 
-  local file_offset, num_rows_read, is_load, has_nulls, is_trim, width, 
-    fldtypes = F.malloc_aux(#M)
+  local l_file_offset, l_num_rows_read, l_is_load, l_has_nulls, 
+    l_is_trim, l_width, l_c_qtypes = 
+    malloc_aux(M)
+  local file_offset, num_rows_read, is_load, has_nulls, 
+    is_trim, width, c_qtypes = 
+    aux_for_C(M, l_file_offset, l_num_rows_read, l_is_load, l_has_nulls, 
+    l_is_trim, l_width, l_c_qtypes)
   --=======================================
   local vectors = {} 
 
@@ -104,41 +56,57 @@ local function load_csv(
     if ( v.is_load ) then 
       local name = v.name
       local function lgen(chunk_num)
+        l_file_offset:nop()
+        l_num_rows_read:nop()
+        l_is_load:nop()
+        l_has_nulls:nop()
+        l_is_trim:nop()
+        l_width:nop()
+        l_c_qtypes:nop()
         --=== Set up pointers to the data buffers for each loadable column
-        local ptr_cdata, ptr_nn_cdata = setup_ptrs(
-          M, databuf, nn_databuf, cdata, nn_cdata)
+        local l_data, nn_l_data, c_data, nn_c_data = 
+          malloc_buffers_for_data(M, max_num_in_chunk)
+        for k, v in ipairs(M) do
+          if ( v.is_load ) then 
+            l_data[v.name]:nop()
+            if ( v.has_nulls ) then
+              nn_l_data[v.name]:nop()
+            end
+          end
+        end
+        -- print("chunk_num/mem_used = ", chunk_num, lgutils.mem_used())
         --===================================
         assert(chunk_num == l_chunk_num)
         l_chunk_num = l_chunk_num + 1 
         --===================================
-        local start_time = cutils.rdtsc()
-        assert(bridge_C(M, infile, fld_sep, is_hdr, chunk_size,
-          file_offset, num_rows_read, ptr_cdata, ptr_nn_cdata,
-          is_load, has_nulls, is_trim, width, fldtypes))
-        record_time(start_time, "load_csv_fast")
-        local l_num_rows_read = tonumber(num_rows_read[0])
+        local x = bridge_C(M, infile, fld_sep, is_hdr, max_num_in_chunk,
+          file_offset, num_rows_read, c_data, nn_c_data,
+          is_load, has_nulls, is_trim, width, c_qtypes, c_nn_qtype)
+        assert(x == true)
+        local this_num_rows_read = tonumber(num_rows_read[0])
         --===================================
-        if ( l_num_rows_read > 0 ) then 
+        if ( this_num_rows_read > 0 ) then 
           for _, v in ipairs(M) do 
             if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
+              -- print("putting chunk for " .. v.name)
               vectors[v.name]:put_chunk(
-                databuf[v.name], nn_databuf[v.name], l_num_rows_read)
+                l_data[v.name], this_num_rows_read, nn_l_data[v.name])
+              -- print("put chunk for " .. v.name)
             end
           end
         end 
+        -- print("put all chunks")
         --=====================
-        if ( l_num_rows_read < chunk_size ) then 
+        if ( this_num_rows_read < max_num_in_chunk ) then 
           -- signal eov for all vectors other than yourself
           for _, v in ipairs(M) do 
             if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
               vectors[v.name]:eov()
             end
           end
-          -- free buffers, you won't need them any more
-          F.free_aux()
-          free_buffers(M, databuf, nn_databuf, my_name)
         end
-        return l_num_rows_read, databuf[v.name], nn_databuf[v.name]
+        -- print("returning " ..  this_num_rows_read)
+        return this_num_rows_read, l_data[v.name], nn_l_data[v.name]
       end
       lgens[my_name] = lgen
     end
@@ -153,14 +121,16 @@ local function load_csv(
       tinfo.gen       = lgens[v.name]
       tinfo.has_nulls = v.has_nulls
       tinfo.qtype     = v.qtype
+      tinfo.nn_qtype  = nn_qtype
+      tinfo.max_num_in_chunk  = max_num_in_chunk
       if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
       local V = lVector(tinfo)
       V:set_name(v.name)
       if ( v.meaning ) then 
-        V:set_meta("__meaning", M[i].meaning)
+        V:set_meta("_meta.meaning", M[i].meaning)
       end
-      V:memo(v.is_memo)
-      V:persist(v.is_persist)
+      -- print("max_num_in_chunk for " .. v.name .. " is " ..  v.max_num_in_chunk)
+      V:memo(v.memo_len)
       vectors[v.name] = V
     end
   end

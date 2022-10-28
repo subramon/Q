@@ -1,9 +1,10 @@
-// EXTERNAL EXPOSUER
+// EXTERNAL EXPOSURE
 // lookup an value given the key.
 #include "rs_hmap_common.h"
-#include "rs_hmap_int_struct.h" 
 #include "rs_hmap_struct.h" 
-#include "rs_hmap_aux.h"
+#include "aux.h"
+#include "set_probe_loc.h"
+#include "rsx_set_hash.h"
 #include "rs_hmap_get.h"
 
 int
@@ -20,14 +21,13 @@ rs_hmap_get(
   if ( in_ptr_key == NULL ) { go_BYE(-1); } // not a valid key 
   const rs_hmap_key_t * const ptr_key = (const rs_hmap_key_t * const)in_ptr_key;
   rs_hmap_val_t *ptr_val = (rs_hmap_val_t *)in_ptr_val;
-  rs_hmap_int_config_t *int_config = (rs_hmap_int_config_t *)ptr_hmap->int_config;
-  if ( int_config == NULL ) { go_BYE(-1); }
-  key_cmp_fn_t key_cmp_fn = int_config->key_cmp_fn;
-  if ( key_cmp_fn == NULL ) { go_BYE(-1); }
+  key_cmp_fn_t key_cmp = ptr_hmap->key_cmp;
+  if ( key_cmp == NULL ) { go_BYE(-1); }
   
-  register uint32_t hash = set_hash(ptr_key, ptr_hmap);
-  register uint32_t probe_loc = set_probe_loc(hash, ptr_hmap);
-  register bkt_t *bkts = ptr_hmap->bkts;
+  register uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
+  register uint32_t probe_loc = 
+    set_probe_loc(hash, ptr_hmap->size,  ptr_hmap->divinfo);
+  register rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   register bool *bkt_full = ptr_hmap->bkt_full;
   register uint32_t my_psl = 0;
   register uint32_t num_probes = 0;
@@ -37,9 +37,9 @@ rs_hmap_get(
   // Lookup is a linear probe.
   for ( ; ; ) { 
     if ( num_probes >= ptr_hmap->size ) { go_BYE(-1); }
-    register bkt_t *this_bkt = bkts + probe_loc;
+    register rs_hmap_bkt_t *this_bkt = bkts + probe_loc;
 
-    if ( !key_cmp_fn(&(this_bkt->key), ptr_key) ) { // mismatch 
+    if ( !key_cmp(&(this_bkt->key), ptr_key) ) { // mismatch 
       goto keep_searching;   
     }
     *ptr_val = this_bkt->val;

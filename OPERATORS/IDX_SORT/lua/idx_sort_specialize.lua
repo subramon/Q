@@ -8,7 +8,7 @@ return function(idx_qtype, val_qtype, ordr)
   local good_idx_types = { I1 = true, I2 = true, I4 = true, I8 = true }
   assert(good_idx_types[idx_qtype])
 
-  assert(qconsts.base_types[val_qtype])
+  -- TODO Replace this with somethine else: assert(qconsts.base_types[val_qtype])
 
   local subs = {}
   subs.srt_ordr = ordr

@@ -1,57 +1,83 @@
 local qc          = require 'Q/UTILS/lua/qcore'
 local ffi         = require 'ffi'
 local cmem        = require 'libcmem'
-local qconsts     = require 'Q/UTILS/lua/qconsts'
+local cutils      = require 'libcutils'
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
-local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
-local qmem    = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local lVector     = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local qcfg        = require 'Q/UTILS/lua/qcfg'
+local max_num_in_chunk = qcfg.max_num_in_chunk
+
 local function SC_to_TM(
   invec, 
   format,
   optargs
   )
   assert(type(invec) == "lVector")
-  assert(invec:fldtype() == "SC")
+  assert(invec:qtype() == "SC")
   assert(invec:has_nulls() == false)
-  local in_width = invec:field_width()
+  local in_width = invec:width()
   assert(type(format) == "string")
   assert(#format > 0)
 
   local subs = {}
-  subs.fn = "SC_to_TM"
-  subs.dotc = "OPERATORS/LOAD_CSV/src/SC_to_TM.c"
-  subs.doth = "OPERATORS/LOAD_CSV/inc/SC_to_TM.h"
+  subs.out_qtype = "TM" -- default assumption
+  if ( optargs ) then
+    assert(type(optargs) == "table")
+    if ( optargs.out_qtype ) then
+      assert(type(optargs.out_qtype) == "string")
+      subs.out_qtype = optargs.out_qtype
+    end
+  end
+  if ( subs.out_qtype == "TM" ) then 
+    subs.fn = "SC_to_TM"
+    subs.dotc = "OPERATORS/LOAD_CSV/src/SC_to_TM.c"
+    subs.doth = "OPERATORS/LOAD_CSV/inc/SC_to_TM.h"
+  elseif ( subs.out_qtype == "TM1" ) then 
+    subs.fn = "SC_to_TM1"
+    subs.dotc = "OPERATORS/LOAD_CSV/src/SC_to_TM1.c"
+    subs.doth = "OPERATORS/LOAD_CSV/inc/SC_to_TM1.h"
+  else
+    error("bad output qtype")
+  end
   subs.incs = { "OPERATORS/LOAD_CSV/inc/", "UTILS/inc/" }
-  -- subs.srcs = {}
+
   qc.q_add(subs)
   
-  local chunk_size = chunk_size
-  local out_qtype = "TM"
-  local out_ctype = qconsts.qtypes[out_qtype].ctype
-  local out_width = qconsts.qtypes[out_qtype].width
-  local buf  = assert(cmem.new(0))
+  local out_ctype = cutils.str_qtype_to_str_ctype(subs.out_qtype)
+  local out_width = cutils.get_width_qtype(subs.out_qtype)
   local l_chunk_num = 0
   local function gen(chunk_num)
     assert(chunk_num == l_chunk_num)
-    if ( not buf:is_data() ) then 
-      buf = assert(cmem.new(
-        { size = chunk_size * out_width, qtype = out_qtype}))
-      buf:stealable(true)
-    end
+    local buf = assert(cmem.new(
+        { size = max_num_in_chunk * out_width, qtype = subs.out_qtype}))
+    buf:stealable(true)
     local cst_buf = get_ptr(buf, out_ctype .. "  *")
     local len, base_data = invec:get_chunk(l_chunk_num)
     if ( len > 0 ) then 
-      local ptr_to_chars = get_ptr(base_data, "char *")
-      local status = qc[subs.fn](ptr_to_chars, in_width, len, format, 
+      assert(type(base_data) == "CMEM")
+      local base_ptr = get_ptr(base_data, "char *")
+      assert(base_ptr ~= ffi.NULL)
+      local start_time = cutils.rdtsc()
+      local status = qc[subs.fn](base_ptr, in_width, len, format, 
         cst_buf)
+      record_time(start_time, "load_csv_fast")
       assert(status == 0)
       l_chunk_num = l_chunk_num + 1
     end
     return len, buf
   end
-  local outv = lVector({qtype = out_qtype, gen = gen, has_nulls = false})
-  return outv
+  --===============================================
+  local args = {qtype = subs.out_qtype, gen = gen, has_nulls = false}
+  if ( optargs ) then 
+    assert(type(optargs) == "table")
+    for k, v in pairs(optargs) do 
+      assert(k ~= "qtype")
+      assert(k ~= "gen")
+      args[k] = v 
+    end
+  end
+  --===============================================
+  return lVector(args)
 end
 return require('Q/q_export').export('SC_to_TM', SC_to_TM)

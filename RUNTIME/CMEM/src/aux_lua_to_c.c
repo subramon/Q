@@ -102,7 +102,7 @@ int get_str_from_tbl(
       )
 {
   int status = 0; 
-  *ptr_cptr = false; *ptr_is_key = false;
+  *ptr_cptr = NULL; *ptr_is_key = false;
   //----------------------------
   int n = lua_gettop(L); if ( n < stack_index ) { go_BYE(-1); }
   lua_getfield (L, stack_index, key); 

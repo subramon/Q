@@ -1,0 +1,38 @@
+-- FUNCTIONAL
+require 'Q/UTILS/lua/strict'
+local Scalar = require 'libsclr'
+local mk_col = require 'Q/OPERATORS/MK_COL/lua/mk_col'
+local cVector = require 'libvctr'
+
+local tests = {}
+tests.t1 = function() 
+  local input = {1,0,0,0,1,1,0,1,0}
+  local col  =  mk_col(input, "BL")
+  assert(type(col) == "lVector", " Output of mk_col is not lVector")
+  assert(col:num_elements() == #input)
+  for i = 1, col:num_elements() do
+    local s = Scalar.new(input[i], "BL")
+    assert(col:get1(i-1) == s)
+  end
+  cVector.check_all(true, true)
+  print("Test t1 succeeded")
+end
+tests.t2 = function() 
+  local input = {true, false, true, false}
+  local col  =  mk_col(input, "BL")
+  assert(col)
+  assert(type(col) == "lVector", " Output of mk_col is not lVector")
+  for i=1,col:num_elements() do
+    local x = col:get1(i-1)
+    assert(x)
+    assert(type(x) == "Scalar")
+    assert(x:to_str() == tostring(input[i]))
+  end
+  cVector.check_all(true, true)
+  print("Test t2 succeeded")
+end
+tests.t1()
+tests.t2()
+--[[
+return tests
+--]]

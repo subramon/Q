@@ -1,14 +1,13 @@
-local Q             = require 'Q/q_export'
+-- Provides a slow but easy way to convert a string into a number
 local qc            = require 'Q/UTILS/lua/qcore'
 local ffi           = require 'ffi'
 local cmem          = require 'libcmem'
-local qconsts       = require 'Q/UTILS/lua/qconsts'
+local cutils        = require 'libcutils'
 local get_ptr       = require 'Q/UTILS/lua/get_ptr'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-local record_time   = require 'Q/UTILS/lua/record_time'
-local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
-local qmem    = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local qcfg          = require 'Q/UTILS/lua/qcfg'
+local max_num_in_chunk = qcfg.max_num_in_chunk
 local function SC_to_XX(
   invec, 
   lfn, -- Lua function 
@@ -18,25 +17,23 @@ local function SC_to_XX(
   assert(type(lfn) == "function")
   assert(type(out_qtype) == "string")
   assert(is_base_qtype(out_qtype))
-  assert(invec:fldtype() == "SC")
+  assert(invec:qtype() == "SC")
   assert(invec:has_nulls() == false)
-  local in_width = invec:field_width()
+  local in_width = invec:width()
   
-  local chunk_size = chunk_size
-  local out_ctype = qconsts.qtypes[out_qtype].ctype
-  local out_width = qconsts.qtypes[out_qtype].width
-  local buf = cmem.new(0)
+  local out_ctype = cutils.str_qtype_to_str_ctype(out_qtype)
+  local cast_out_as = out_ctype .. " *"
+  local out_width = cutils.get_width_qtype(out_qtype)
+  local bufsz = max_num_in_chunk * out_width
   local chunk_idx = 0
-  local first_call = true
   local function gen(chunk_num)
     assert(chunk_num == chunk_idx)
-    if ( not buf:is_data() ) then 
-      buf = cmem.new(
-        { size = chunk_size * out_width, qtype = out_qtype})
-      buf:stealable(true)
-    end
-    local cst_buf = get_ptr(buf, out_ctype .. " *")
+    local buf = cmem.new({ size = bufsz * out_width, qtype = out_qtype})
+    buf:stealable(true)
+
+    local cst_buf = get_ptr(buf, cast_out_as)
     local len, base_data = invec:get_chunk(chunk_idx)
+    assert(type(len) == "number")
     local ptr_to_chars = get_ptr(base_data, "char *")
     local out_len = 0
     for i = 1, len do

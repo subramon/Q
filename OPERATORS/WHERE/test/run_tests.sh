@@ -8,7 +8,7 @@ gcc -g -std=gnu99 \
   -I../gen_inc  \
   -I../../../UTILS/inc \
   -I../../../UTILS/gen_inc \
-  ../gen_src/_where_I4.c \
+  ../gen_src/where_I4_BL.c \
   ../../../UTILS/src/get_bit_u64.c \
   -o a.out -lm
 VG=" "

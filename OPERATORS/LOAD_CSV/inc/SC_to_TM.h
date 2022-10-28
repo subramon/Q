@@ -1,7 +1,6 @@
 #ifndef __SC_to_TM
 #define __SC_to_TM
 #include "q_incs.h"
-extern char *strptime(const char *s, const char *format, struct tm *tm);
 //START_FOR_CDEF
 extern int
 SC_to_TM(

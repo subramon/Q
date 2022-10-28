@@ -1,31 +1,9 @@
 require 'Q/UTILS/lua/strict'
-local cmem = require 'libcmem' ; 
-local ffi = require 'ffi'
-local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local ffi     = require 'ffi'
+local cmem    = require 'libcmem' ; 
+local cutils  = require 'libcutils' ; 
+local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local tests = {}
-local qconsts = require 'Q/UTILS/lua/qconsts'
-local qc      = require  'Q/UTILS/lua/qcore' -- to cdef CMEM_REC_TYPE 
-
-ffi.cdef([[
-char *strncpy(char *dest, const char *src, size_t n);
-]]
-)
-local for_cdef = require 'Q/UTILS/lua/for_cdef'
-local infile = "RUNTIME/CMEM/inc/cmem_struct.h"
-local incs = { "UTILS/inc/" }
-local x = for_cdef(infile, incs)
-ffi.cdef(x)
-
-tests.t0 = function()
-  -- basic test 
-  local buf = cmem.new(16)
-  assert(type(buf) == "CMEM")
-  buf:zero()
-  local y = buf:to_str("I4")
-  assert(y == "0")
-  buf:prbuf(4)
-  print("test 0 passed")
-end
 
 tests.t1 = function()
   -- basic test 
@@ -42,10 +20,11 @@ tests.t2 = function()
   local num_trials = 10 -- 1024*1048576
   local sz = 65537
   local qtype = "I4"
+  local width = cutils.get_width(qtype)
   for j = 1, num_trials do 
     local buf = cmem.new( {size = sz, qtype = qtype, name = "inbuf"})
-    buf:set_width(qconsts.qtypes[qtype].width)
-    assert(buf:width() == qconsts.qtypes[qtype].width)
+    buf:set_width(width)
+    assert(buf:width() == width)
     buf:set(j, qtype)
     local x = buf:to_str(qtype)
     assert(j == tonumber(x))
@@ -53,7 +32,7 @@ tests.t2 = function()
   end
   local num_elements = 1024
   local buf = cmem.new( { size = num_elements * 4, qtype = qtype})
-  buf:set_width(qconsts.qtypes[qtype].width)
+  buf:set_width(width)
   local start = 123
   local incr  = 1
   buf:seq(start, incr, num_elements, qtype)
@@ -70,9 +49,10 @@ end
 
 tests.t3 = function()
   -- setting data using ffi and verifying using to_str()
-  local buf = cmem.new( {size = ffi.sizeof("int32_t"), qtype = "I4"})
-  local cbuf = ffi.cast("CMEM_REC_TYPE *", buf)
-  ffi.C.strncpy(cbuf[0].fldtype, "I4", 2)
+  local qtype = "I4"
+  local width = cutils.get_width(qtype)
+  local size = 1 * width
+  local buf = cmem.new( {size = size, qtype = qtype})
   buf:set_name("some bogus name"); 
   local iptr = assert(get_ptr(buf, "I4"))
   iptr[0] = 123456789;
@@ -86,11 +66,15 @@ end
 
 tests.t4 = function()
   -- using set 
-  local buf = cmem.new( { size = ffi.sizeof("int"), qtype = "I4"})
+  local qtype = "I4"
+  local width = cutils.get_width(qtype)
+  local size = 1 * width
+  local buf = cmem.new( {size = size, qtype = qtype})
   buf:set(123456789)
   local y = buf:to_str("I4")
   assert(y == "123456789")
-  assert(buf:qtype() == "I4")
+  local chk_qtype = buf:qtype()
+  assert(chk_qtype == qtype)
   print("test t4 passed")
 end
 
@@ -101,7 +85,7 @@ tests.t5 = function()
   local size = 1024
   local qtype = "I4"
   local name = "some bogus name"
-  local c1 = cmem.new( { size = size, qtypei = qtype, name = name})
+  local c1 = cmem.new( { size = size, qtype = qtype, name = name})
   c1:set(123456789)
 
   local niters = 100000
@@ -171,8 +155,11 @@ tests.t9 = function()
   -- this is a regression test to guard against malloc'ing less
   -- than what user asked for 
   local n = 1048576
-  local size = 4*n
-  local c1 = assert(cmem.new(size))
+  local qtype = "I4"
+  local width = cutils.get_width(qtype)
+  local size = n * width
+  local name = "some junk name"
+  local c1 = assert(cmem.new({ size = size, qtype = qtype, name = name}))
   local iptr = get_ptr(c1, "I4")
   for i = 1, n do
     iptr[i-1] = i
@@ -205,19 +192,21 @@ end
 tests.t11 = function()
   local num_elements = 10
   local qtype = "I4"
-  local buf = cmem.new({ size = (num_elements * 4), qtype = qtype})
+  local width = cutils.get_width(qtype)
+  local size = num_elements * width
+  local buf = cmem.new({ size = size, qtype = qtype})
   local iptr = get_ptr(buf, qtype)
   
   buf:set_min()
   -- verify min values
   for i = 1, num_elements do
-    assert(iptr[i-1] == qconsts.qtypes[qtype].min)
+    assert(iptr[i-1] == -2147483648)
   end
 
   buf:set_max()
-  -- verify min values
+  -- verify max values
   for i = 1, num_elements do
-    assert(iptr[i-1] == qconsts.qtypes[qtype].max)
+    assert(iptr[i-1] == 2147483647)
   end
 
   local val = -1
@@ -233,7 +222,6 @@ end
 tests.t12 = function()
   -- test set cell name 
   local size = 1024
-  local qtype = "I4"
   local name = "some bigus name"
   local c1 = cmem.new({size = size, name = name})
   assert(c1:name() == name)
@@ -245,7 +233,7 @@ tests.t13 = function()
   local size = 1024
   local qtype = "I4"
   local c1 = cmem.new({ size = size, qtype = qtype})
-  local width = qconsts.qtypes[qtype].width
+  local width = cutils.get_width(qtype)
   assert(c1:set_width(width))
   assert(c1:width() == width)
   -- cannot set width twice 
@@ -277,7 +265,7 @@ tests.t15 = function()
   assert(x.size == size)
   assert(x.cell_name == "hello world")
   -- assert(x.is_stealable ==false)TODO Why is this failing?
-  assert(x.fldtype == qtype)
+  assert(x.qtype == qtype)
   print("test t15 passed")
 end
 tests.t16 = function()
@@ -299,4 +287,21 @@ tests.t16 = function()
 
   print("test t16 passed")
 end
-return tests
+-- return tests
+tests.t1();
+tests.t2();
+tests.t3();
+tests.t4();
+tests.t5();
+tests.t6();
+tests.t7();
+tests.t8();
+tests.t9();
+tests.t10();
+tests.t11();
+tests.t12();
+tests.t13();
+tests.t14();
+tests.t15();
+tests.t16();
+print("All tests passed")
