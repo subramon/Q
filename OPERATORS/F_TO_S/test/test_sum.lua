@@ -30,9 +30,9 @@ tests.t2 = function()
 end
 --=========================================
 tests.t3 = function()
-  local n = 1048576+17
+  local n = max_num_in_chunk + 17
   
-  local qtypes = { "BL", "B1" }
+  local qtypes = { "BL", "B1", }
   for k, qtype in pairs(qtypes) do 
     local y = Q.const({val = true, qtype = qtype, len = n })
     local outval, outcnt = Q.sum(y):eval()
@@ -70,8 +70,8 @@ end
 return tests
 os.exit()
 --]]
--- TODO tests.t1() -- Need Q.rand() to work 
--- DONE tests.t2()
--- tests.t3() -- TODO Need const.B1 to work, const BL works 
+-- TODO TODO tests.t1() -- Need Q.rand() to work 
+tests.t2()
+tests.t3() 
 tests.t4()
 os.exit()

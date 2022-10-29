@@ -6,11 +6,12 @@ local lVector   = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local rev_lkp   = require 'Q/UTILS/lua/rev_lkp'
 local qcfg      = require 'Q/UTILS/lua/qcfg'
-local good_qtypes = rev_lkp({ "BL", "B1", "I1", "I2", "I4", "I8", "F4", "F8"})
 local qc        = require 'Q/UTILS/lua/qcore'
+local is_in     = require 'Q/UTILS/lua/is_in'
 
-local i_qtypes = rev_lkp({"BL", "B1", "I1", "I2", "I4", "I8"})
-local f_qtypes = rev_lkp({"F4", "F8"})
+local i_qtypes = {"BL", "B1", "I1", "I2", "I4", "I8"}
+local f_qtypes = {"F4", "F8"}
+local good_qtypes = { "BL", "B1", "I1", "I2", "I4", "I8", "F4", "F8"}
 
 qc.q_cdef("OPERATORS/F_TO_S/inc/sum_struct.h", { "UTILS/inc/" })
 
@@ -18,7 +19,7 @@ return function (x, optargs)
   assert(type(x) == "lVector")
   assert(x:has_nulls() == false) -- TODO P4 Relax this assumption
   local qtype = x:qtype()
-  assert(good_qtypes[qtype])
+  assert(is_in(qtype, good_qtypes))
 
   local subs = {}
   subs.operator   = "sum"
@@ -33,11 +34,11 @@ return function (x, optargs)
   -- (2) need not be the same as number of elements because one can ask
   -- for partial values -- num_seen is  of type I8
   -- sum has type F8  or I8
-  if ( i_qtypes[qtype] ) then 
+  if ( is_in(qtype, i_qtypes) ) then 
     subs.accumulator_ctype = "SUM_I_ARGS"
     subs.outval_qtype ="I8"
     subs.outval_ctype ="int64_t"
-  elseif ( f_qtypes[qtype] ) then 
+  elseif ( is_in(qtype, f_qtypes) ) then 
     subs.accumulator_ctype = "SUM_F_ARGS"
     subs.outval_qtype = "F8" 
     subs.outval_ctype ="double"
@@ -45,7 +46,7 @@ return function (x, optargs)
     error(qtype)
   end
   --==========
-  subs.accumulator = cmem.new({size = ffi.sizeof(subs.accumulator_ctype)})
+  subs.accumulator = cmem.new(ffi.sizeof(subs.accumulator_ctype))
   subs.accumulator:zero()
   subs.cast_accumulator_as = subs.accumulator_ctype .. " *"
   --==========
@@ -53,7 +54,7 @@ return function (x, optargs)
     -- x is where the Reducer saves partial values
     -- Purpose of this function is to take x and return 3 Scalars
     -- (1) is for the value that has been computed
-    -- (2) the number of values that have been consumed
+    -- TODO TODO -- (2) the number of values that have been consumed
     -- (3) the number of values that have been seen
     -- Note that (2) and (3) might be different because of null values
     assert(type(x) == "CMEM") -- value into which reduction happens

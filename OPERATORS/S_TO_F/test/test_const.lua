@@ -104,11 +104,27 @@ tests.t3 = function() -- this is a stress test
   assert(c1:is_eov())
   print("Test t3 succeeded")
   assert(cVector.check_all(true, true)) -- checking on all vectors
-  os.exit() -- WHY IS THIS NEEDED?
 end
+-- test t4 is to handle const B1 case
+tests.t4 = function() 
+  local len = blksz + 17 
+  for _, val in ipairs({true, false}) do 
+    local c1 = Q.const( {val = val, qtype = "B1", len = len })
+    c1:eval()
+    for i = 1, len do 
+      local chk_val = c1:get1(i-1)
+      assert(chk_val == Scalar.new(val, "BL"))
+    end
+    print("Test t4 succeeded for B1 = " .. tostring(val))
+  end
+  
+  print("Test t4 succeeded")
+end
+
 tests.t1()
 tests.t2()
 tests.t3()
+tests.t4()
 --[[
 return tests
 --]]

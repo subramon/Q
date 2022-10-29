@@ -553,27 +553,41 @@ function lVector:pr(opfile, lb, ub, format)
   assert(cVector.pr(self._base_vec, nn_vec, opfile, lb, ub, format))
   return true
 end
+--========================================================
 function lVector:get_meta(key)
   assert(type(key) == "string")
-  if ( self._meta[key] ) then 
-    return self._meta[key] 
+  if ( self._meta ) then 
+    assert(type(self._meta) == "table")
+    if self._meta[key] then 
+      return self._meta[key] 
+    else
+      return nil
+    end
   else
     return nil
   end
 end
+--========================================================
 function lVector:unset_meta(key)
   assert(type(key) == "string")
-  if ( self._meta[key] ) then 
-    self._meta[key] = nil
+  if ( not self._meta ) then return self end 
+  if ( self._meta ) then 
+    assert(type(self._meta) == "table")
+    if ( self._meta[key] ) then 
+      self._meta[key] = nil
+    end
   end
   return self
 end
+--========================================================
 function lVector:set_meta(key, value)
   assert(type(key) == "string")
   assert(value)
+  if ( not self._meta ) then self._meta = {} end 
   self._meta[key] = value
   return self
 end
+--========================================================
 
 function lVector.null()
   return cVector.null()

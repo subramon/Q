@@ -11,7 +11,7 @@ ${fn}(
       const ${ctype} * restrict in,  
       uint64_t nR,
       ${accumulator_ctype}  *ptr_args,
-      uint64_t idx
+      uint64_t unused // for compatibility with min, max, ...
       ) 
 ;
 //STOP_FOR_CDEF
@@ -23,7 +23,7 @@ ${fn}(
       const ${ctype} * restrict in,
       uint64_t nR,  
       ${accumulator_ctype}  *ptr_args,
-      uint64_t idx
+      uint64_t unused // for compatibility with min, max, ...
       )
 
 {
