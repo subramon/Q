@@ -633,12 +633,56 @@ function lVector.conjoin(T)
     end
   end
 end
-
+--==================================================
 function lVector:early_free()
   return  cVector.delete(self._base_vec)
 end
+--==================================================
 function lVector:self()
   return self._base_vec
 end
+--==================================================
+function lVector:make_lma()
+  local status = cVector.make_lma(self._uqid)
+  assert(status == 0)
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_status = cVector.make_lma(self.nn_vec)
+    assert(nn_status == 0)
+  end
+  return self
+end
+--==================================================
+function lVector:lma_to_chunks()
+  local status = cVector.lma_to_chunks(self._uqid)
+  assert(status == 0)
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_status = cVector.lma_to_chunks(self.nn_vec)
+    assert(nn_status == 0)
+  end
+  return self
+end
+--==================================================
+function lVector:unmake_lma()
+  local status = cVector.unmake_lma(self._uqid)
+  assert(status == 0)
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_status = cVector.unmake_lma(self.nn_vec)
+    assert(nn_status == 0)
+  end
+  return self
+end
+--==================================================
 
 return lVector

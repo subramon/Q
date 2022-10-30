@@ -37,6 +37,7 @@ gen_inc_files : \
 	../inc/get_time_usec.h \
 	../inc/get_bit_u64.h \
 	../inc/is_valid_chars_for_num.h \
+	../inc/mk_file.h \
 	../inc/q_omp_get_num_procs.h \
 	../inc/rdtsc.h \
 	../inc/rs_mmap.h \
@@ -138,6 +139,9 @@ SC_to_txt.c : ../inc/SC_to_txt.h
 ../inc/is_valid_chars_for_num.h : 
 	luajit ../src/cli_extract_func_decl.lua is_valid_chars_for_num.c ${INCDIR}
 
+../inc/mk_file.h :
+	luajit ../src/cli_extract_func_decl.lua mk_file.c ${INCDIR}
+
 ../inc/q_omp_get_num_procs.h :
 	luajit ../src/cli_extract_func_decl.lua q_omp_get_num_procs.c ${INCDIR}
 
@@ -162,6 +166,7 @@ GEN_INC_FILES = \
 	../inc/isdir.h  \
 	../inc/isfile.h  \
 	../inc/is_valid_chars_for_num.h  \
+	../inc/mk_file.h \
 	../inc/q_omp_get_num_procs.h \
 	../inc/rand_file_name.h  \
 	../inc/rdtsc.h \
@@ -184,6 +189,7 @@ SRCS += get_time_usec.c
 SRCS += is_valid_chars_for_num.c 
 SRCS += isfile.c 
 SRCS += isdir.c 
+SRCS += mk_file.c 
 SRCS += q_omp_get_num_procs.c  
 SRCS += qtypes.c 
 SRCS += rand_file_name.c 
