@@ -1,5 +1,8 @@
 #!/bin/bash
 set -e
+test -d $Q_ROOT
+rm -f $Q_ROOT/csos/*.so
+rm -f $Q_ROOT/lib/*.so
 # Quick and dirty way of compiling. Need to improve this
 cd $Q_SRC_ROOT/TMPL_FIX_HASHMAP/src/; make clean && make
 cd $Q_SRC_ROOT/TMPL_FIX_HASHMAP/VCTR_HMAP/; make clean && make

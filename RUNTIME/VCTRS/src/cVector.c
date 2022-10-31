@@ -16,6 +16,12 @@
 #include "vctr_chk.h"
 #include "vctr_cnt.h"
 #include "vctr_del.h"
+
+// TODO #include "vctr_add_lma.h"
+#include "vctr_del_lma.h"
+#include "vctr_chnks_to_lma.h"
+// TODO #include "vctr_lma_to_chnks.h"
+
 #include "vctr_drop_l1_l2.h"
 #include "vctr_eov.h"
 #include "vctr_early_free.h"
@@ -276,6 +282,34 @@ static int l_vctr_is_eov( lua_State *L) {
   bool b_is_eov; 
   status = vctr_is_eov(ptr_v->uqid, &b_is_eov);
   lua_pushboolean(L, b_is_eov);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_del_lma( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_del_lma(ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_chnks_to_lma( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_chnks_to_lma(ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -789,6 +823,11 @@ static const struct luaL_Reg vector_methods[] = {
     { "is_early_free", l_vctr_is_early_free },
     { "nop", l_vctr_nop },
     //--------------------------------
+// TODO    { "add_lma",    l_vctr_add_lma },
+    { "del_lma",    l_vctr_del_lma },
+    { "chnks_to_lma",    l_vctr_chnks_to_lma },
+// TODO    { "lma_to_chnks",    l_vctr_lma_to_chnks },
+    //--------------------------------
     { "set_memo", l_vctr_set_memo },
     { "set_name", l_vctr_set_name },
     //--------------------------------
@@ -832,6 +871,11 @@ static const struct luaL_Reg vector_functions[] = {
     { "persist", l_vctr_persist },
     { "is_persist", l_vctr_is_persist },
     { "nop",    l_vctr_nop },
+    //--------------------------------
+// TODO    { "add_lma",    l_vctr_add_lma },
+    { "del_lma",    l_vctr_del_lma },
+    { "chnks_to_lma",    l_vctr_chnks_to_lma },
+// TODO    { "lma_to_chnks",    l_vctr_lma_to_chnks },
     //--------------------------------
     { "set_memo", l_vctr_set_memo},
     { "set_name", l_vctr_set_name },

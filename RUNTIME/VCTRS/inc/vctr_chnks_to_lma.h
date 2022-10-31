@@ -1,4 +1,4 @@
 extern int
-vctr_make_lma(
+vctr_chnks_to_lma(
     uint32_t uqid
     );

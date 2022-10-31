@@ -43,7 +43,13 @@ l2_file_name(
   // top 8 bits of vctr_uqid and top 8 bits of chnk_idx used for directory 
   uint32_t part1 = vctr_uqid >> 24;
   uint32_t part2 = chnk_idx >> 24; 
-  uint32_t dir_num = (part1 << 8 ) | part2;
+  uint32_t dir_num;
+  if ( chnk_idx == ((uint32_t)~0) ) {  // special case
+    dir_num = 0;
+  }
+  else { 
+    dir_num = (part1 << 8 ) | part2;
+  }
   // bottom 20 bits of vctr_uqid and 32 bits of chnk_idx used for file
   int len1 = 8/4 + 8/4 + 8 ; // for directory  (+8 for kosuru)
   int len2 = 24/4 + 24/4 + 8 ; // for file name  (+8 for kosuru)

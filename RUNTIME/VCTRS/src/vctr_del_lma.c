@@ -6,12 +6,12 @@
 #include "mod_mem_used.h"
 #include "get_file_size.h"
 #include "file_exists.h"
-#include "vctr_unmake_lma.h"
+#include "vctr_del_lma.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 
 int
-vctr_unmake_lma(
+vctr_del_lma(
     uint32_t vctr_uqid
     )
 {

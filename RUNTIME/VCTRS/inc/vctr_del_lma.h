@@ -1,4 +1,4 @@
 extern int
-vctr_unmake_lma(
+vctr_del_lma(
     uint32_t vctr_uqid
     );

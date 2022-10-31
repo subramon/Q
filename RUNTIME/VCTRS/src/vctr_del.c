@@ -2,6 +2,8 @@
 #include "qtypes.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
+#include "l2_file_name.h"
+#include "file_exists.h"
 #include "vctr_is.h"
 #include "chnk_del.h"
 #include "vctr_del.h"
@@ -17,6 +19,7 @@ vctr_del(
 {
   int status = 0;
   uint32_t where_found;
+  char *lma_file = NULL;
 
   status = vctr_is(uqid, ptr_is_found, &where_found); cBYE(status);
   if ( !*ptr_is_found ) { goto BYE; }
@@ -31,8 +34,14 @@ vctr_del(
   if ( val.name[0] != '\0' ) { 
     printf("Deleting Vector: %s \n", val.name);
   }
-
-
+  // delete lma file if it exists
+  if ( !is_persist ) { 
+    lma_file = l2_file_name(uqid, ((uint32_t)~0));
+    if ( lma_file == NULL ) { go_BYE(-1); }
+    if ( file_exists(lma_file) ) { 
+      unlink(lma_file);
+    }
+  }
   //-------------------------------------------
   // Delete chunks in vector before deleting vector 
   if ( val.num_elements > 0 ) { 
@@ -75,5 +84,6 @@ vctr_del(
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
 BYE:
+  free_if_non_null(lma_file);
   return status;
 }

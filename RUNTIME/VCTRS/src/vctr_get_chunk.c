@@ -22,13 +22,14 @@ vctr_get_chunk(
   int status = 0;
   bool vctr_is_found, chnk_is_found;
   uint32_t vctr_where_found, chnk_where_found;
-  uint32_t chnk_size, width, max_num_in_chnk;
+  uint32_t chnk_size, width, is_lma, max_num_in_chnk;
   bool is_write = false; // TODO P3 Handle case when this is true 
 
   status = vctr_is(vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
   if ( !vctr_is_found ) { go_BYE(-1); }
 
+  is_lma = g_vctr_hmap.bkts[vctr_where_found].val.is_lma;
   width  = g_vctr_hmap.bkts[vctr_where_found].val.width;
   max_num_in_chnk = g_vctr_hmap.bkts[vctr_where_found].val.max_num_in_chnk;
   chnk_size = width * max_num_in_chnk;

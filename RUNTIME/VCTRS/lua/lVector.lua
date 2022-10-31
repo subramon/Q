@@ -642,16 +642,14 @@ function lVector:self()
   return self._base_vec
 end
 --==================================================
-function lVector:make_lma()
-  local status = cVector.make_lma(self._uqid)
-  assert(status == 0)
+function lVector:chunks_to_lma()
+  assert(cVector.chnks_to_lma(self._base_vec))
   if ( self._nn_vec ) then 
     local nn_vector = assert(self._nn_vec)
     assert(type(nn_vector) == "lVector")
     assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
     local nn_vec = nn_vector._base_vec
-    local nn_status = cVector.make_lma(self.nn_vec)
-    assert(nn_status == 0)
+    assert(cVector.chnks_to_lma(nn_vec))
   end
   return self
 end
@@ -670,16 +668,66 @@ function lVector:lma_to_chunks()
   return self
 end
 --==================================================
-function lVector:unmake_lma()
-  local status = cVector.unmake_lma(self._uqid)
-  assert(status == 0)
+function lVector:del_lma()
+  assert(cVector.del_lma(self._base_vec))
   if ( self._nn_vec ) then 
     local nn_vector = assert(self._nn_vec)
     assert(type(nn_vector) == "lVector")
     assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
     local nn_vec = nn_vector._base_vec
-    local nn_status = cVector.unmake_lma(self.nn_vec)
-    assert(nn_status == 0)
+    assert(cVector.del_lma(nn_vec))
+  end
+  return self
+end
+--==================================================
+function lVector:get_lma_read()
+  local x, nn_x
+  local x = assert(cVector.get_lma_read(self._base_vec))
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_x = assert(cVector.get_lma_read(nn_vec._base_vec))
+  end
+  return x, nn_x
+end
+--==================================================
+function lVector:get_lma_write()
+  local x, nn_x
+  local x = assert(cVector.get_lma_write(self._base_vec))
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_x = assert(cVector.get_lma_write(nn_vec._base_vec))
+  end
+  return x, nn_x
+end
+--==================================================
+function lVector:unget_lma_read()
+  local x, nn_x
+  local x = assert(cVector.unget_lma_read(self._base_vec))
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_x = assert(cVector.unget_lma_read(nn_vec._base_vec))
+  end
+  return self
+end
+--==================================================
+function lVector:unget_lma_write()
+  local x, nn_x
+  local x = assert(cVector.unget_lma_write(self._base_vec))
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_x = assert(cVector.unget_lma_write(nn_vec._base_vec))
   end
   return self
 end
