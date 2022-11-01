@@ -27,6 +27,10 @@ typedef struct _vctr_meta_t {
   bool is_early_free; // true => some chunk has been freed early
   bool is_trash; // true => marked for garbage collection 
   bool is_lma; // true => there exists a file that allows Linear Memory Access (lma) 
+  int num_readers; // for lma 
+  int num_writers; // for lma 
+  char *X; // for lma 
+  size_t nX; // for lma 
 } vctr_meta_t;
 typedef vctr_meta_t vctr_rs_hmap_val_t;
 #endif //  __HMAP_INT_TYPES_H

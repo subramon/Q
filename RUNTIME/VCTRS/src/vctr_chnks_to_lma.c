@@ -41,6 +41,8 @@ vctr_chnks_to_lma(
     goto BYE; 
   } 
   else { 
+    if ( val.num_readers != 0 ) { go_BYE(-1); }
+    if ( val.num_writers != 0 ) { go_BYE(-1); }
     if ( file_exists(lma_file) ) { 
       fprintf(stderr, "STRANGE! lma file %s exists\n", lma_file);
       unlink(lma_file);

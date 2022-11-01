@@ -25,7 +25,9 @@ vctr_del(
   if ( !*ptr_is_found ) { goto BYE; }
   vctr_rs_hmap_val_t val = g_vctr_hmap.bkts[where_found].val;
   bool is_persist = val.is_persist;
-  if ( val.ref_count == 0 ) { go_BYE(-1); }
+  // Following is okay but happens rarely. Happens when you create a
+  // vector but do not eval() it or get_chunk() it 
+  // if ( val.ref_count == 0 ) { go_BYE(-1); }
   g_vctr_hmap.bkts[where_found].val.ref_count--;
   if ( g_vctr_hmap.bkts[where_found].val.ref_count > 0 ) {
     goto BYE;
@@ -36,11 +38,15 @@ vctr_del(
   }
   // delete lma file if it exists
   if ( !is_persist ) { 
+    if ( val.num_readers != 0 ) { go_BYE(-1); }
+    if ( val.num_writers != 0 ) { go_BYE(-1); }
     lma_file = l2_file_name(uqid, ((uint32_t)~0));
     if ( lma_file == NULL ) { go_BYE(-1); }
-    if ( file_exists(lma_file) ) { 
-      unlink(lma_file);
-    }
+    if ( file_exists(lma_file) ) { unlink(lma_file); }
+    char *X = g_vctr_hmap.bkts[where_found].val.X;
+    size_t nX = g_vctr_hmap.bkts[where_found].val.nX;
+    if ( ( X != NULL ) && ( nX != 0 ) ) { munmap(X, nX); }
+    g_vctr_hmap.bkts[where_found].val.is_lma = false;
   }
   //-------------------------------------------
   // Delete chunks in vector before deleting vector 

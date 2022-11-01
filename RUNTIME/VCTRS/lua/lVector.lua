@@ -168,7 +168,9 @@ function lVector.new(args)
     assert(type(args.uqid) == "number")
     assert(args.uqid > 0)
     vector._base_vec = assert(cVector.rehydrate(args))
-    assert(cVector.chk(vector._base_vec, true, false))
+    if ( qcfg.debug ) then 
+      assert(cVector.chk(vector._base_vec, true, false))
+    end
     -- get following from cVector
     -- max_num_in_chunk
     -- memo_len

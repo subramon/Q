@@ -91,6 +91,33 @@ vctr_chk(
   bool is_early_free       = vctr_val.is_early_free;
   bool chk_is_early_free = false;
 
+  if ( vctr_val.is_lma == false ) { 
+    if ( vctr_val.X != NULL ) { go_BYE(-1); }
+    if ( vctr_val.nX != 0 ) { go_BYE(-1); }
+    if ( ( vctr_val.num_readers != 0 ) || ( vctr_val.num_writers != 0 ) ) { 
+      go_BYE(-1);
+    }
+  }
+  //----------------------------------------------
+  if ( ( vctr_val.num_readers == 0 ) && ( vctr_val.num_writers == 0 ) ) { 
+    if ( vctr_val.X != NULL ) { go_BYE(-1); }
+    if ( vctr_val.nX != 0 ) { go_BYE(-1); }
+  }
+  //---------------------------
+  if ( vctr_val.num_readers > 0 ) {
+    if ( vctr_val.num_writers != 0 ) { go_BYE(-1); }
+    if ( vctr_val.X == NULL ) { go_BYE(-1); }
+    if ( vctr_val.nX == 0 ) { go_BYE(-1); }
+  }
+  //----------------------------------------------
+  if ( vctr_val.num_writers > 0 ) {
+    if ( vctr_val.num_readers != 0 ) { go_BYE(-1); }
+    if ( vctr_val.num_writers != 1 ) { go_BYE(-1); }
+    if ( vctr_val.X != NULL ) { go_BYE(-1); }
+    if ( vctr_val.nX != 0 ) { go_BYE(-1); }
+  }
+  //----------------------------------------------
+
   if ( vctr_val.is_lma ) { 
     if ( !vctr_val.is_eov ) { go_BYE(-1); }
     uint32_t good_filesz = num_elements * width;
