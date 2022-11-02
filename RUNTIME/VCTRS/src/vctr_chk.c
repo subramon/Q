@@ -121,8 +121,7 @@ vctr_chk(
   if ( vctr_val.is_lma ) { 
     if ( !vctr_val.is_eov ) { go_BYE(-1); }
     uint32_t good_filesz = num_elements * width;
-    uint32_t chnk_idx = ~0; // Not a valid chnk_idx value 
-    char *l2_file = l2_file_name(vctr_uqid, chnk_idx); 
+    char *l2_file = l2_file_name(vctr_uqid, ((uint32_t)~0)); 
     if ( !isfile(l2_file) ) { go_BYE(-1); }
     int64_t filesz = get_file_size(l2_file);
     if ( filesz != good_filesz ) { go_BYE(-1); }

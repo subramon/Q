@@ -41,7 +41,7 @@ vctr_steal_lma(
   return_if_malloc_failed(new_file);
   sprintf(new_file, "%s_%" PRIu64 "", lma_file, RDTSC());
   status = rename(lma_file, new_file); cBYE(status);
-  val.is_lma = false; 
+  g_vctr_hmap.bkts[where_found].val.is_lma = false; 
 BYE:
   free_if_non_null(lma_file);
   if ( status == 0 ) { return new_file; } else { return NULL; } 

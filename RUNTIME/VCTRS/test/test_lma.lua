@@ -23,6 +23,7 @@ tests.t1 = function()
     assert(x1:chunks_to_lma())
     assert(x1:del_lma())
   end
+  cVector.check_all(true, true)
   print("Test t1 succeeded")
 end
 -- test read access
@@ -55,6 +56,7 @@ tests.t2 = function()
   local status = pcall(lVector.unget_lma_read, x1)
   assert(not status)
   print(">>> STOP  DELIBERATE ERROR")
+  cVector.check_all(true, true)
   print("Test t2 succeeded")
 end
 -- test write access
@@ -86,6 +88,7 @@ tests.t3 = function()
   local c = x1:get_lma_write()
   assert(type(c) == "CMEM")
   x1:unget_lma_write()
+  cVector.check_all(true, true)
   print("Test t3 succeeded")
 end
 -- test steal
@@ -119,6 +122,7 @@ tests.t4 = function()
   local status = pcall(lVector.get_lma_read, x1)
   assert(not status)
   print(">>> STOP  DELIBERATE ERROR")
+  cVector.check_all(true, true)
   print("Test t4 succeeded")
 end
 -- test print
@@ -129,6 +133,7 @@ tests.t5 = function()
   assert(x1:is_eov())
   assert(x1:chunks_to_lma())
   -- x1:pr()
+  cVector.check_all(true, true)
   print("Test t5 succeeded")
 end
 -- test modify 
@@ -151,6 +156,7 @@ tests.t6 = function()
     print(i*10)
     assert(s == Scalar.new(i*10, qtype))
   end 
+  cVector.check_all(true, true)
   print("Test t6 succeeded")
 end
 -- return tests
