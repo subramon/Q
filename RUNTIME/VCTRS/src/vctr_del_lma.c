@@ -31,7 +31,7 @@ vctr_del_lma(
   if ( filesz <= 0 ) { go_BYE(-1); } 
   if ( !file_exists(lma_file) ) { go_BYE(-1); } 
   unlink(lma_file);
-  incr_dsk_used(filesz);
+  status = decr_dsk_used(filesz); cBYE(status);
 
   g_vctr_hmap.bkts[vctr_where_found].val.is_lma = false; 
 BYE:

@@ -164,6 +164,7 @@ function lVector.new(args)
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector
   assert(type(args) == "table")
+  --=================================================
   if ( args.uqid )  then 
     assert(type(args.uqid) == "number")
     assert(args.uqid > 0)
@@ -187,6 +188,7 @@ function lVector.new(args)
     vector:persist(false) -- IMPORTANT
     return vector 
   end
+  --=================================================
 
   vector._siblings = {} -- no conjoined vectors
   vector._chunk_num = 0 -- next chunk to ask for 
@@ -204,6 +206,8 @@ function lVector.new(args)
   end
   assert(type(vector._max_num_in_chunk) == "number")
   assert(vector._max_num_in_chunk > 0)
+  assert( math.floor(vector._max_num_in_chunk / 64 ) == 
+          math.ceil(vector._max_num_in_chunk / 64 ) )
   --=================================================
   if ( args.memo_len ) then 
     vector._memo_len = args.memo_len
@@ -732,6 +736,12 @@ function lVector:unget_lma_write()
     local nn_x = assert(cVector.unget_lma_write(nn_vec._base_vec))
   end
   return self
+end
+--==================================================
+function lVector:steal_lma()
+  -- TODO P3 What about nn vector?
+  local file_name, file_sz = cVector.steal_lma(self._base_vec)
+  return file_name, file_sz 
 end
 --==================================================
 

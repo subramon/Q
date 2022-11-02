@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #ifndef __file_exists_H
 #define __file_exists_H
 extern bool 

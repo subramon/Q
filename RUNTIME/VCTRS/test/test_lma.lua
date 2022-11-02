@@ -1,14 +1,18 @@
+local plpath = require 'pl.path'
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
+local cutils  = require 'libcutils'
+local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
-local max_num_in_chunk = 16 
+local qtype = "I4"
+local max_num_in_chunk = 64
 local len = 3 * max_num_in_chunk + 7
 local tests = {}
 tests.t1 = function()
-  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = "I4",
+  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   print(">>> START DELIBERATE ERROR")
   local status = pcall(lVector.chunks_to_lma, x1)
@@ -23,7 +27,7 @@ tests.t1 = function()
 end
 -- test read access
 tests.t2 = function()
-  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = "I4",
+  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   assert(x1:eval())
   assert(x1:is_eov())
@@ -37,7 +41,7 @@ tests.t2 = function()
   for i = 1, 1000 do 
     local c = x1:get_lma_read()
     assert(type(c) == "CMEM")
-    -- TODO check size of c 
+    assert(c:size() == x1:num_elements() * cutils.get_width_qtype(qtype))
     assert(x1:unget_lma_read())
   end
   local C = {}
@@ -55,7 +59,7 @@ tests.t2 = function()
 end
 -- test write access
 tests.t3 = function()
-  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = "I4",
+  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
     name = "x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   assert(x1:eval())
   assert(x1:is_eov())
@@ -69,7 +73,6 @@ tests.t3 = function()
   for i = 1, 1000 do 
     local c = x1:get_lma_write()
     assert(type(c) == "CMEM")
-    -- TODO check size of c 
     assert(x1:unget_lma_write())
   end
   -- check for write after read: should fail 
@@ -85,8 +88,76 @@ tests.t3 = function()
   x1:unget_lma_write()
   print("Test t3 succeeded")
 end
+-- test steal
+tests.t4 = function()
+  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
+    name = "x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+  assert(x1:eval())
+  assert(x1:is_eov())
+  assert(x1:chunks_to_lma())
+  local file_name, file_sz = x1:steal_lma()
+  assert(type(file_name) == "string")
+  assert(plpath.isfile(file_name))
+  local chk_file_sz = plpath.getsize(file_name)
+  assert(file_sz == chk_file_sz)
+  local vargs = {}
+  vargs.file_name = file_name
+  vargs.name = "clone of x1"
+  vargs.qtype = qtype
+  vargs.max_num_in_chunk = 64 
+  vargs.num_elements = len
+  local y = lVector(vargs)
+  assert(type(y) == "lVector")
+  assert(y:name() == "clone of x1")
+  assert(y:qtype() == qtype)
+  assert(y:num_elements() == len)
+  assert(y:is_eov() == true)
+  -- y.pr()
+
+  --========================================
+  print(">>> START DELIBERATE ERROR")
+  local status = pcall(lVector.get_lma_read, x1)
+  assert(not status)
+  print(">>> STOP  DELIBERATE ERROR")
+  print("Test t4 succeeded")
+end
+-- test print
+tests.t5 = function()
+  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
+    name = "x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+  assert(x1:eval())
+  assert(x1:is_eov())
+  assert(x1:chunks_to_lma())
+  -- x1:pr()
+  print("Test t5 succeeded")
+end
+-- test modify 
+tests.t6 = function()
+  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
+    name = "x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+  assert(x1:eval())
+  assert(x1:chunks_to_lma())
+  local c = x1:get_lma_write()
+  assert(type(c) == "CMEM")
+  assert(c:is_foreign())
+  local data = get_ptr(c, qtype)
+  for i = 1, x1:num_elements() do 
+    data[i-1] = i * 10
+  end
+  x1:unget_lma_write()
+  for i = 1, x1:num_elements() do 
+    local s = x1:get1(i-1)
+    print(s)
+    print(i*10)
+    assert(s == Scalar.new(i*10, qtype))
+  end 
+  print("Test t6 succeeded")
+end
 -- return tests
 tests.t1()
 tests.t2()
 tests.t3()
+tests.t4()
+tests.t5()
+-- TODO TODO TODO tests.t6()
 -- os.exit()

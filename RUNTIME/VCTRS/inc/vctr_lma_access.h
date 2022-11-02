@@ -1,3 +1,7 @@
+extern char *
+vctr_steal_lma(
+    uint32_t uqid
+    );
 extern int
 vctr_get_lma_read(
     uint32_t uqid,

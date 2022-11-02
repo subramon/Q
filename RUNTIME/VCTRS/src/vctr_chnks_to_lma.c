@@ -54,8 +54,8 @@ vctr_chnks_to_lma(
   uint64_t dsk_allowed = get_dsk_allowed(); 
   if ( dsk_allowed < dsk_used ) { go_BYE(-1); }
   if ( dsk_allowed - dsk_used < filesz ) { go_BYE(-1); }
+  status = incr_dsk_used(filesz); cBYE(status);
   status = mk_file(NULL, lma_file, filesz); cBYE(status);
-  incr_dsk_used(filesz);
   status = rs_mmap(lma_file, &X, &nX, 1); cBYE(status); 
   if ( ( X == NULL ) || ( nX == 0 ) ) { go_BYE(-1); }
   bak_X = X; bak_nX = nX;

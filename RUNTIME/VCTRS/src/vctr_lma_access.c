@@ -5,6 +5,7 @@
 #include "chnk_rs_hmap_struct.h"
 #include "l2_file_name.h"
 #include "rs_mmap.h"
+#include "rdtsc.h"
 #include "file_exists.h"
 #include "vctr_is.h"
 #include "chnk_del.h"
@@ -13,6 +14,38 @@
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
+
+char *
+vctr_steal_lma(
+    uint32_t uqid
+    )
+{
+  int status = 0;
+  bool is_found; uint32_t where_found;
+  char *lma_file = NULL;
+  char *new_file = NULL;
+
+  status = vctr_is(uqid, &is_found, &where_found); cBYE(status);
+  if ( !is_found ) { go_BYE(-1); }
+  vctr_rs_hmap_val_t val = g_vctr_hmap.bkts[where_found].val;
+  if ( !val.is_lma )          { go_BYE(-1); } 
+  if ( val.num_writers != 0 ) { go_BYE(-1); }
+  if ( val.num_readers != 0 ) { go_BYE(-1); }
+  if ( val.X           != NULL ) { go_BYE(-1); }
+  if ( val.nX          != 0 ) { go_BYE(-1); }
+
+  lma_file = l2_file_name(uqid, ((uint32_t)~0));
+  if ( lma_file == NULL ) { go_BYE(-1); }
+  if ( !file_exists(lma_file) ) { go_BYE(-1); }
+  new_file = malloc(strlen(lma_file) + 64);
+  return_if_malloc_failed(new_file);
+  sprintf(new_file, "%s_%" PRIu64 "", lma_file, RDTSC());
+  status = rename(lma_file, new_file); cBYE(status);
+  val.is_lma = false; 
+BYE:
+  free_if_non_null(lma_file);
+  if ( status == 0 ) { return new_file; } else { return NULL; } 
+}
 
 int
 vctr_get_lma_read(
@@ -31,7 +64,6 @@ vctr_get_lma_read(
   if ( !val.is_lma ) { go_BYE(-1); } 
   if ( val.num_writers != 0 ) { go_BYE(-1); }
 
-  g_vctr_hmap.bkts[where_found].val.num_readers++; 
   char * X  = val.X;
   size_t nX = val.nX;
   if ( ( X == NULL ) || ( nX == 0 ) )  {
@@ -44,6 +76,7 @@ vctr_get_lma_read(
     g_vctr_hmap.bkts[where_found].val.X  = X;
     g_vctr_hmap.bkts[where_found].val.nX = nX;
   }
+  g_vctr_hmap.bkts[where_found].val.num_readers++; 
 
   ptr_cmem->data = X; 
   ptr_cmem->size = nX;
@@ -72,7 +105,6 @@ vctr_get_lma_write(
   if ( val.num_writers != 0 ) { go_BYE(-1); }
   if ( val.num_readers != 0 ) { go_BYE(-1); }
 
-  g_vctr_hmap.bkts[where_found].val.num_writers++; 
   if ( ( val.X != NULL ) || ( val.nX != 0 ) )  { go_BYE(-1); }
   //-------------------------------------
   lma_file = l2_file_name(uqid, ((uint32_t)~0));
@@ -82,6 +114,7 @@ vctr_get_lma_write(
   status = rs_mmap(lma_file, &X, &nX, 1); cBYE(status);
   g_vctr_hmap.bkts[where_found].val.X  = X;
   g_vctr_hmap.bkts[where_found].val.nX = nX;
+  g_vctr_hmap.bkts[where_found].val.num_writers++; 
 
   ptr_cmem->data = X; 
   ptr_cmem->size = nX;

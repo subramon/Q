@@ -25,6 +25,8 @@ require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
 require "Q/OPERATORS/F1F2OPF3/lua/repeater"
 require "Q/OPERATORS/GROUPBY/lua/isby"
 require "Q/OPERATORS/F1OPF2F3/lua/f1opf2f3"
+
+require "Q/OPERATORS/SORT1/lua/sort1"
 --[[
 require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
 require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
