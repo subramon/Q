@@ -38,7 +38,7 @@ vctr_del(
     printf("Deleting Vector: %s \n", val.name);
   }
   // delete lma file if it exists
-  if ( ( is_lma ) && ( !is_persist ) ) { 
+  if ( ( is_lma ) && ( !is_persist ) ) {
     if ( val.num_readers != 0 ) { go_BYE(-1); }
     if ( val.num_writers != 0 ) { go_BYE(-1); }
     lma_file = l2_file_name(uqid, ((uint32_t)~0));
@@ -51,9 +51,10 @@ vctr_del(
   }
   //-------------------------------------------
   // Delete chunks in vector before deleting vector 
-  if ( ( val.num_elements > 0 )  && ( val.is_lma == false ) ) { 
-    if ( val.num_chnks == 0 ) { go_BYE(-1); }
-    for ( uint32_t chnk_idx = 0; chnk_idx <= val.max_chnk_idx; chnk_idx++ ){ 
+  if ( val.num_elements > 0 )  {
+    if ( val.is_lma == false ) { if ( val.num_chnks == 0 ) { go_BYE(-1); } }
+    for ( uint32_t chnk_idx = 0; chnk_idx <= val.max_chnk_idx; chnk_idx++ ){
+    if ( val.num_chnks == 0 ) { break; } 
       uint32_t old_nitems = g_chnk_hmap.nitems;
       if ( old_nitems == 0 ) { go_BYE(-1); }
       bool is_found = true;

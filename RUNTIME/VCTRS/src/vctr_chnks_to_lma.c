@@ -61,7 +61,6 @@ vctr_chnks_to_lma(
   bak_X = X; bak_nX = nX;
 
   uint32_t max_chnk_idx = val.max_chnk_idx; 
-  if ( max_chnk_idx == 0 ) { go_BYE(-1); }
   for ( uint32_t chnk_idx = 0; chnk_idx <= max_chnk_idx; chnk_idx++ ) { 
     bool chnk_is_found; uint32_t chnk_where_found;
     status = chnk_is(vctr_uqid, chnk_idx, &chnk_is_found,&chnk_where_found);
