@@ -4,12 +4,46 @@
 
 #include "mod_mem_used.h"
 
+// TODO P2 Need to protect atomic accesses better 
+
 extern uint64_t g_mem_used;
 extern uint64_t g_mem_allowed;
 
 extern uint64_t g_dsk_used;
 extern uint64_t g_dsk_allowed;
 
+uint64_t 
+get_mem_used(
+    void
+    )
+{
+  return g_mem_used;
+}
+//-------------------------------------------------------
+uint64_t 
+get_mem_allowed(
+    void
+    )
+{
+  return g_mem_allowed;
+}
+//-------------------------------------------------------
+uint64_t 
+get_dsk_used(
+    void
+    )
+{
+  return g_dsk_used;
+}
+//-------------------------------------------------------
+uint64_t 
+get_dsk_allowed(
+    void
+    )
+{
+  return g_dsk_allowed;
+}
+//-------------------------------------------------------
 int
 incr_mem_used(
     uint64_t x

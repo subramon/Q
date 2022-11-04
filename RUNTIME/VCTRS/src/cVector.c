@@ -5,6 +5,7 @@
 
 #include "q_incs.h"
 #include "qtypes.h"
+#include "get_file_size.h"
 #include "cmem_struct.h"
 #include "aux_lua_to_c.h" // get_int_from_tbl()
 // #include "aux_lua_to_c.h" // get_str_from_tbl()
@@ -16,6 +17,14 @@
 #include "vctr_chk.h"
 #include "vctr_cnt.h"
 #include "vctr_del.h"
+
+// TODO #include "vctr_add_lma.h"
+#include "vctr_del_lma.h"
+#include "vctr_set_lma.h"
+#include "vctr_chnks_to_lma.h"
+#include "vctr_lma_access.h"
+// TODO #include "vctr_lma_to_chnks.h"
+
 #include "vctr_drop_l1_l2.h"
 #include "vctr_eov.h"
 #include "vctr_early_free.h"
@@ -276,6 +285,34 @@ static int l_vctr_is_eov( lua_State *L) {
   bool b_is_eov; 
   status = vctr_is_eov(ptr_v->uqid, &b_is_eov);
   lua_pushboolean(L, b_is_eov);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_del_lma( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_del_lma(ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_chnks_to_lma( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_chnks_to_lma(ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -691,7 +728,7 @@ static int l_vctr_add1( lua_State *L)
   int status = 0;
   VCTR_REC_TYPE *ptr_v = NULL;
   bool is_key; int64_t itmp; 
-  const char * str_qtype = NULL, *str_name = NULL;
+  const char * str_qtype = NULL, *str_name = NULL, *file_name = NULL;
   uint32_t width = 0; 
   uint32_t max_num_in_chnk;
   int memo_len;
@@ -703,6 +740,9 @@ static int l_vctr_add1( lua_State *L)
   // CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
   //------------------- get name
   status = get_str_from_tbl(L, 1, "name", &is_key, &str_name);  
+  cBYE(status);
+  //------------------- get file_name
+  status = get_str_from_tbl(L, 1, "file_name", &is_key, &file_name);  
   cBYE(status);
   //------------------- get qtype 
   status = get_str_from_tbl(L, 1, "qtype", &is_key, &str_qtype);  
@@ -748,6 +788,17 @@ static int l_vctr_add1( lua_State *L)
   if ( ( str_name != NULL ) && ( * str_name != '\0' ) ) {
     status = vctr_set_name(ptr_v->uqid, str_name); cBYE(status);
   }
+  if ( ( file_name != NULL ) && ( *file_name != '\0' ) ) {
+    uint64_t num_elements = 0;
+    status = get_int_from_tbl(L, 1, "num_elements", &is_key, &itmp); 
+    cBYE(status);
+    if ( is_key )  { 
+      if ( itmp < 1 ) { go_BYE(-1); } 
+      num_elements = (uint64_t)itmp;
+    }
+    status = vctr_set_lma(ptr_v->uqid, file_name, num_elements); 
+    cBYE(status);
+  }
 
   return 1; 
 BYE:
@@ -772,6 +823,103 @@ BYE:
   lua_pushnumber(L, status);
   return 3;
 }
+//----------------------------------------------------
+static int l_steal_lma( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  char *file_name  = vctr_steal_lma(ptr_v->uqid); cBYE(status);
+  int64_t file_sz = get_file_size(file_name); 
+  lua_pushstring(L, file_name);
+  lua_pushnumber(L, file_sz);
+  return 2;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------------------
+static int l_get_lma_write( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  //-- allocate CMEM to go back 
+  CMEM_REC_TYPE *ptr_x = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
+  return_if_malloc_failed(ptr_x);
+  memset(ptr_x, '\0', sizeof(CMEM_REC_TYPE));
+  luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
+  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+
+  status = vctr_get_lma_write(ptr_v->uqid, ptr_x); cBYE(status);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------------------
+static int l_get_lma_read( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  //-- allocate CMEM to go back 
+  CMEM_REC_TYPE *ptr_x = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
+  return_if_malloc_failed(ptr_x);
+  memset(ptr_x, '\0', sizeof(CMEM_REC_TYPE));
+  luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
+  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+
+  status = vctr_get_lma_read(ptr_v->uqid, ptr_x); cBYE(status);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_unget_lma_read( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+
+  status = vctr_unget_lma_read(ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_unget_lma_write( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+
+  status = vctr_unget_lma_write(ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 
 //-----------------------
 static const struct luaL_Reg vector_methods[] = {
@@ -788,6 +936,16 @@ static const struct luaL_Reg vector_methods[] = {
     { "is_eov", l_vctr_is_eov },
     { "is_early_free", l_vctr_is_early_free },
     { "nop", l_vctr_nop },
+    //--------------------------------
+// TODO    { "add_lma",    l_vctr_add_lma },
+    { "del_lma",         l_vctr_del_lma },
+    { "chnks_to_lma",    l_vctr_chnks_to_lma },
+    { "get_lma_read",    l_get_lma_read },
+    { "get_lma_write",   l_get_lma_write },
+    { "steal_lma",       l_steal_lma },
+    { "unget_lma_read",  l_unget_lma_read },
+    { "unget_lma_write", l_unget_lma_write },
+// TODO    { "lma_to_chnks",    l_vctr_lma_to_chnks },
     //--------------------------------
     { "set_memo", l_vctr_set_memo },
     { "set_name", l_vctr_set_name },
@@ -832,6 +990,16 @@ static const struct luaL_Reg vector_functions[] = {
     { "persist", l_vctr_persist },
     { "is_persist", l_vctr_is_persist },
     { "nop",    l_vctr_nop },
+    //--------------------------------
+// TODO    { "add_lma",    l_vctr_add_lma },
+    { "del_lma",         l_vctr_del_lma },
+    { "chnks_to_lma",    l_vctr_chnks_to_lma },
+    { "get_lma_read",    l_get_lma_read },
+    { "get_lma_write",   l_get_lma_write },
+    { "steal_lma",       l_steal_lma },
+    { "unget_lma_read",  l_unget_lma_read },
+    { "unget_lma_write", l_unget_lma_write },
+// TODO    { "lma_to_chnks",    l_vctr_lma_to_chnks },
     //--------------------------------
     { "set_memo", l_vctr_set_memo},
     { "set_name", l_vctr_set_name },

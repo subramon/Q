@@ -164,11 +164,14 @@ function lVector.new(args)
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector
   assert(type(args) == "table")
+  --=================================================
   if ( args.uqid )  then 
     assert(type(args.uqid) == "number")
     assert(args.uqid > 0)
     vector._base_vec = assert(cVector.rehydrate(args))
-    assert(cVector.chk(vector._base_vec, true, false))
+    if ( qcfg.debug ) then 
+      assert(cVector.chk(vector._base_vec, true, false))
+    end
     -- get following from cVector
     -- max_num_in_chunk
     -- memo_len
@@ -185,6 +188,7 @@ function lVector.new(args)
     vector:persist(false) -- IMPORTANT
     return vector 
   end
+  --=================================================
 
   vector._siblings = {} -- no conjoined vectors
   vector._chunk_num = 0 -- next chunk to ask for 
@@ -202,6 +206,8 @@ function lVector.new(args)
   end
   assert(type(vector._max_num_in_chunk) == "number")
   assert(vector._max_num_in_chunk > 0)
+  assert( math.floor(vector._max_num_in_chunk / 64 ) == 
+          math.ceil(vector._max_num_in_chunk / 64 ) )
   --=================================================
   if ( args.memo_len ) then 
     vector._memo_len = args.memo_len
@@ -553,27 +559,41 @@ function lVector:pr(opfile, lb, ub, format)
   assert(cVector.pr(self._base_vec, nn_vec, opfile, lb, ub, format))
   return true
 end
+--========================================================
 function lVector:get_meta(key)
   assert(type(key) == "string")
-  if ( self._meta[key] ) then 
-    return self._meta[key] 
+  if ( self._meta ) then 
+    assert(type(self._meta) == "table")
+    if self._meta[key] then 
+      return self._meta[key] 
+    else
+      return nil
+    end
   else
     return nil
   end
 end
+--========================================================
 function lVector:unset_meta(key)
   assert(type(key) == "string")
-  if ( self._meta[key] ) then 
-    self._meta[key] = nil
+  if ( not self._meta ) then return self end 
+  if ( self._meta ) then 
+    assert(type(self._meta) == "table")
+    if ( self._meta[key] ) then 
+      self._meta[key] = nil
+    end
   end
   return self
 end
+--========================================================
 function lVector:set_meta(key, value)
   assert(type(key) == "string")
   assert(value)
+  if ( not self._meta ) then self._meta = {} end 
   self._meta[key] = value
   return self
 end
+--========================================================
 
 function lVector.null()
   return cVector.null()
@@ -619,12 +639,110 @@ function lVector.conjoin(T)
     end
   end
 end
-
+--==================================================
 function lVector:early_free()
   return  cVector.delete(self._base_vec)
 end
+--==================================================
 function lVector:self()
   return self._base_vec
 end
+--==================================================
+function lVector:chunks_to_lma()
+  assert(cVector.chnks_to_lma(self._base_vec))
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    assert(cVector.chnks_to_lma(nn_vec))
+  end
+  return self
+end
+--==================================================
+function lVector:lma_to_chunks()
+  local status = cVector.lma_to_chunks(self._uqid)
+  assert(status == 0)
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_status = cVector.lma_to_chunks(self.nn_vec)
+    assert(nn_status == 0)
+  end
+  return self
+end
+--==================================================
+function lVector:del_lma()
+  assert(cVector.del_lma(self._base_vec))
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    assert(cVector.del_lma(nn_vec))
+  end
+  return self
+end
+--==================================================
+function lVector:get_lma_read()
+  local x, nn_x
+  local x = assert(cVector.get_lma_read(self._base_vec))
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_x = assert(cVector.get_lma_read(nn_vec._base_vec))
+  end
+  return x, nn_x
+end
+--==================================================
+function lVector:get_lma_write()
+  local x, nn_x
+  local x = assert(cVector.get_lma_write(self._base_vec))
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_x = assert(cVector.get_lma_write(nn_vec._base_vec))
+  end
+  return x, nn_x
+end
+--==================================================
+function lVector:unget_lma_read()
+  local x, nn_x
+  local x = assert(cVector.unget_lma_read(self._base_vec))
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_x = assert(cVector.unget_lma_read(nn_vec._base_vec))
+  end
+  return self
+end
+--==================================================
+function lVector:unget_lma_write()
+  local x, nn_x
+  local x = assert(cVector.unget_lma_write(self._base_vec))
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    local nn_vec = nn_vector._base_vec
+    local nn_x = assert(cVector.unget_lma_write(nn_vec._base_vec))
+  end
+  return self
+end
+--==================================================
+function lVector:steal_lma()
+  -- TODO P3 What about nn vector?
+  local file_name, file_sz = cVector.steal_lma(self._base_vec)
+  return file_name, file_sz 
+end
+--==================================================
 
 return lVector

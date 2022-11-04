@@ -49,6 +49,12 @@ SRCS +=	vctr_is_early_free.c
 SRCS +=	vctr_is_eov.c  
 SRCS +=	vctr_is_persist.c  
 SRCS +=	vctr_l1_to_l2.c  
+
+SRCS +=	vctr_chnks_to_lma.c  
+SRCS +=	vctr_del_lma.c  
+SRCS +=	vctr_lma_access.c  
+SRCS +=	vctr_set_lma.c  
+
 SRCS +=	vctr_name.c  
 SRCS +=	vctr_num_chunks.c  
 SRCS +=	vctr_num_elements.c  

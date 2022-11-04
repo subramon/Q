@@ -9,7 +9,7 @@ extern int
 ${fn}(  
       const ${ctype} * restrict in,  // [nR] 
       uint64_t nR,
-      ${cargs_ctype} *ptr_args,
+      ${accumulator_ctype} *ptr_args,
       uint64_t offset
       ) 
 ;
@@ -21,7 +21,7 @@ int
 ${fn}(  
       const ${ctype} * restrict in,  // [nR] 
       uint64_t nR,
-      ${cargs_ctype} *ptr_args,
+      ${accumulator_ctype} *ptr_args,
       uint64_t offset
       )
 {

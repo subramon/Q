@@ -9,8 +9,6 @@ local max_num_in_chunk       = qcfg.max_num_in_chunk
 return function (a, x, optargs)
   -- Return early if you have cached the result of a previous call
   if ( x:is_eov() ) then 
-    -- Note that reserved keywords are prefixed by __
-    -- For example, minval is stored with key = "__min"
     local rslt = x:get_meta(a)
     if ( rslt ) then 
       assert(type(rslt) == "table") 
@@ -24,6 +22,7 @@ return function (a, x, optargs)
   local subs = assert(spfn(x, optargs))
   -- subs must return (1) args (2) getter ..... TODO P3 finish doc
   local func_name = assert(subs.fn)
+  -- accumulator contains partial results 
   local accumulator = assert(subs.accumulator)
   assert(type(accumulator) == "CMEM")
 

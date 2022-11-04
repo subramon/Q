@@ -4,12 +4,103 @@
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_is.h"
 #include "vctr_is.h"
+#include "l2_file_name.h"
+#include "file_exists.h"
+#include "rs_mmap.h"
 #include "chnk_get_data.h"
 #include "get_bit_u64.h"
 #include "vctr_print.h"
 
 extern vctr_rs_hmap_t g_vctr_hmap;
 extern chnk_rs_hmap_t g_chnk_hmap;
+
+int
+vctr_print_lma(
+    FILE *fp,
+    const char * const format,
+    uint32_t vctr_uqid,
+    vctr_rs_hmap_val_t *ptr_val,
+    uint64_t lb,
+    uint64_t ub
+    )
+{
+  int status = 0;
+  char *lma_file = NULL; 
+  char *X = NULL, *Y = NULL; size_t nX = 0;
+  if ( !ptr_val->is_lma ) { go_BYE(-1); } 
+  if ( ptr_val->num_writers > 0 ) { go_BYE(-1); } 
+  if ( ptr_val->num_readers > 0 ) { 
+    X = ptr_val->X;
+    nX = ptr_val->nX;
+  }
+  else {
+    if ( ptr_val->X != NULL ) { go_BYE(-1); } 
+    if ( ptr_val->nX != 0   ) { go_BYE(-1); } 
+    lma_file = l2_file_name(vctr_uqid, ((uint32_t)~0));
+    if ( lma_file == NULL ) { go_BYE(-1); }
+    if ( !file_exists(lma_file) ) { go_BYE(-1); }
+    status = rs_mmap(lma_file, &X, &nX, 0); cBYE(status);
+  }
+  if ( ( X == NULL ) || ( nX == 0 ) ) { go_BYE(-1); }
+  uint32_t width = ptr_val->width;
+  qtype_t qtype  = ptr_val->qtype;
+  size_t offset = lb * width;
+  Y = X + offset;
+  for ( uint64_t i = 0; i < (ub-lb); i++ ) {
+    switch ( qtype ) {
+      case B1 : go_BYE(-1); // TODO P3 break;
+      case BL : fprintf(fp, "%s\n", 
+                    ((bool *)Y)[i] ? "true" : "false"); break;
+      case I1 : fprintf(fp, "%d\n", ((int8_t *)Y)[i]); break; 
+      case I2 : fprintf(fp, "%d\n", ((int16_t *)Y)[i]); break; 
+      case I4 : fprintf(fp, "%d\n", ((int32_t *)Y)[i]); break; 
+      case I8 : fprintf(fp, "%" PRIi64 "\n", ((int64_t *)Y)[i]); break; 
+      case F4 : fprintf(fp, "%f\n", ((float *)Y)[i]); break; 
+      case F8 : fprintf(fp, "%lf\n", ((double *)Y)[i]); break; 
+      case SC : { 
+                  char *cptr = (char *)Y;
+                  cptr += (i*width);
+                  fprintf(fp, "%s\n", cptr);
+                }
+                break;
+      case TM : {
+                  char buf[64]; 
+                  int len = sizeof(buf); 
+                  memset(buf, 0, len);
+                  struct tm * tptr = ((struct tm *)Y) + i;
+                  size_t nw = strftime(buf, len-1, format, tptr);
+                  if ( nw == 0 ) { go_BYE(-1); }
+                  fprintf(fp, "%s\n", buf);
+                }
+                break;
+      case TM1 : {
+                   char buf[64]; 
+                   int len = sizeof(buf); 
+                   memset(buf, 0, len);
+                   tm_t * tptr = ((tm_t *)Y);
+                   snprintf(buf, len-1, "\"%d-%02d-%02d %d:%d:%d %d\"", 
+                       tptr[i].tm_year + 1900,
+                       tptr[i].tm_mon + 1,
+                       tptr[i].tm_mday,
+                       tptr[i].tm_hour,
+                       tptr[i].tm_min,
+                       tptr[i].tm_sec,
+                       tptr[i].tm_yday);
+
+                   fprintf(fp, "%s\n", buf);
+                 }
+                 break;
+      default : go_BYE(-1); break;
+    }
+  }
+
+  // release resources you might have acquired
+  if ( ptr_val->num_readers > 0 ) { 
+    munmap(X, nX); 
+  }
+BYE:
+  return status;
+}
 
 int
 vctr_print(
@@ -79,6 +170,15 @@ vctr_print(
   }
   num_to_pr = ub - lb;
   pr_idx = lb;
+  //-----------------------------------------
+  if ( g_vctr_hmap.bkts[vctr_where_found].val.is_lma ) {
+    status = vctr_print_lma(fp, format, vctr_uqid, 
+        &(g_vctr_hmap.bkts[vctr_where_found].val), lb, ub);
+    cBYE(status);
+    goto BYE; 
+  }
+  //-----------------------------------------
+
   for ( ; num_to_pr > 0; ) {
 
     uint32_t chnk_idx = pr_idx / max_num_in_chnk;
@@ -108,7 +208,7 @@ vctr_print(
     data += (chnk_off * width);
     num_in_chnk -= chnk_off;  
     uint32_t l_num_to_pr = mcr_min(num_in_chnk, num_to_pr); 
-    for ( uint64_t i = 0; i < l_num_to_pr; i++ ) { 
+    for ( uint64_t i = 0; i < l_num_to_pr; i++ ) {
       if ( nn_vctr_uqid > 0 ) { 
         switch ( nn_qtype ) {
           case BL : 

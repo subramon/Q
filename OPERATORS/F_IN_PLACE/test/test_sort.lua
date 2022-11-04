@@ -1,4 +1,4 @@
--- FUNCTIONAL require 'Q/UTILS/lua/strict'
+require 'Q/UTILS/lua/strict'
 local Q      = require 'Q'
 local Scalar = require 'libsclr'
 local orders = require 'Q/OPERATORS/F_IN_PLACE/lua/orders'

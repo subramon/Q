@@ -1,13 +1,11 @@
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
+local cutils    = require 'libcutils'
 local Scalar    = require 'libsclr'
-local lVector   = require 'Q/RUNTIME/VCTR/lua/lVector'
+local lVector   = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
-local rev_lkp   = require 'Q/UTILS/lua/rev_lkp'
-local qconsts   = require 'Q/UTILS/lua/qconsts'
-local qmem      = require 'Q/UTILS/lua/qmem'
-local good_qtypes = rev_lkp({ "I1", "I2", "I4", "I8", "F4", "F8"})
+local good_qtypes =  { "I1", "I2", "I4", "I8", "F4", "F8"}
 local qc        = require 'Q/UTILS/lua/qcore'
 
 qc.q_cdef("OPERATORS/F_TO_S/inc/minmax_struct.h", { "UTILS/inc/" })
@@ -18,12 +16,12 @@ return function (operator, x, optargs)
   assert(type(x) == "lVector")
   assert(not x:has_nulls())
   local qtype = x:qtype()
-  assert(good_qtypes[qtype])
+  assert(is_in(qtype, good_qtypes))
   --====================
   local subs = {}
   subs.fn        = operator ..  "_" .. qtype 
-  subs.ctype     = qconsts.qtypes[qtype].ctype
-  subs.cst_in_as = subs.ctype .. " *"
+  subs.ctype     = cutils.str_qtype_to_str_ctype(qtype)
+  subs.cast_in_as = "const " .. subs.ctype .. " *"
   subs.reduce_qtype = qtype
   if ( operator == "min" ) then 
     subs.comparator     = " < "
@@ -37,29 +35,28 @@ return function (operator, x, optargs)
   subs.operator = operator -- used by check_subs()
   --=====================================
   -- set up args for C code
-  subs.cargs_ctype = "MINMAX_" .. qtype .. "_ARGS";
-  subs.cargs = cmem.new({size = ffi.sizeof(subs.cargs_ctype)})
-  subs.cargs:zero()
-  subs.cst_cargs_as = subs.cargs_ctype .. " *"
+  subs.accumulator_ctype = "MINMAX_" .. qtype .. "_ARGS";
+  subs.accumulator = cmem.new(ffi.sizeof(subs.accumulator_ctype))
+  subs.accumulator:zero()
+  subs.cast_accumulator_as = subs.accumulator_ctype .. " *"
   --==========
   local getter = function (x)
-    assert(type(x) == "CMEM") -- this contains the value into which reduction happens
-    x = get_ptr(x, subs.cst_cargs_as)
+    -- x contains the value into which reduction happens
+    assert(type(x) == "CMEM") 
+    x = get_ptr(x, subs.cast_accumulator_as)
 
     local sval = Scalar.new(0, subs.reduce_qtype) -- out_qtype from closure
-    local s = ffi.cast("SCLR_REC_TYPE *", sval)
-    local key = "val" .. subs.reduce_qtype
-    s[0].cdata[key] = x[0].val
+    local tmps = ffi.cast("SCLR_REC_TYPE *", sval)
+    local key = string.lower(subs.reduce_qtype)
+    tmps[0].val[key] = x[0].val
     -------------------
     local snum = Scalar.new(0, "I8")
-    local s = ffi.cast("SCLR_REC_TYPE *", snum)
-    local key = "valI8"
-    s[0].cdata[key] = x[0].num
+    local tmps = ffi.cast("SCLR_REC_TYPE *", snum)
+    tmps[0].val["i8"] = x[0].num
     -------------------
     local sidx = Scalar.new(0, "I8")
-    local s = ffi.cast("SCLR_REC_TYPE *", sidx)
-    local key = "valI8"
-    s[0].cdata[key] = x[0].idx
+    local tmps = ffi.cast("SCLR_REC_TYPE *", sidx)
+    tmps[0].val["i8"] = x[0].idx
     -------------------
     return sval, snum, sidx
   end

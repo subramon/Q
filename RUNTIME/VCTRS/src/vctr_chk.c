@@ -60,6 +60,9 @@ vctr_chk(
 {
   int status = 0;
 
+  // early exit case
+  if ( vctr_uqid == 0 ) { goto BYE; }
+
   bool vctr_is_found; uint32_t vctr_where_found;
   status = vctr_is(vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
@@ -88,6 +91,48 @@ vctr_chk(
   bool is_early_free       = vctr_val.is_early_free;
   bool chk_is_early_free = false;
 
+  if ( vctr_val.is_lma == false ) { 
+    if ( vctr_val.X != NULL ) { go_BYE(-1); }
+    if ( vctr_val.nX != 0 ) { go_BYE(-1); }
+    if ( ( vctr_val.num_readers != 0 ) || ( vctr_val.num_writers != 0 ) ) { 
+      go_BYE(-1);
+    }
+  }
+  //----------------------------------------------
+  if ( ( vctr_val.num_readers == 0 ) && ( vctr_val.num_writers == 0 ) ) { 
+    if ( vctr_val.X != NULL ) { go_BYE(-1); }
+    if ( vctr_val.nX != 0 ) { go_BYE(-1); }
+  }
+  //---------------------------
+  if ( vctr_val.num_readers > 0 ) {
+    if ( vctr_val.num_writers != 0 ) { go_BYE(-1); }
+    if ( vctr_val.X == NULL ) { go_BYE(-1); }
+    if ( vctr_val.nX == 0 ) { go_BYE(-1); }
+  }
+  //----------------------------------------------
+  if ( vctr_val.num_writers > 0 ) {
+    if ( vctr_val.num_readers != 0 ) { go_BYE(-1); }
+    if ( vctr_val.num_writers != 1 ) { go_BYE(-1); }
+    if ( vctr_val.X != NULL ) { go_BYE(-1); }
+    if ( vctr_val.nX != 0 ) { go_BYE(-1); }
+  }
+  //----------------------------------------------
+
+  if ( vctr_val.is_lma ) { 
+    if ( !vctr_val.is_eov ) { go_BYE(-1); }
+    uint32_t good_filesz = num_elements * width;
+    char *l2_file = l2_file_name(vctr_uqid, ((uint32_t)~0)); 
+    if ( !isfile(l2_file) ) { go_BYE(-1); }
+    int64_t filesz = get_file_size(l2_file);
+    if ( filesz != good_filesz ) { go_BYE(-1); }
+    free_if_non_null(l2_file);
+  }
+  else {
+    if ( num_elements > 0 ) {
+      if ( num_chnks == 0 ) { go_BYE(-1);
+      }
+    }
+  }
   uint64_t chk_num_elements    = 0;
   // we can have an empty Vector (while it is being created)
   if ( vctr_val.is_eov ) {  
@@ -98,7 +143,9 @@ vctr_chk(
   // name must be null terminated 
   if ( vctr_val.name[MAX_LEN_VCTR_NAME] != '\0' ) { go_BYE(-1); }
   int good_filesz  = width * max_num_in_chnk;
-  if ( vctr_uqid == 0 ) { goto BYE; }
+  // early exit case
+  if ( ( vctr_val.is_lma ) && ( num_chnks == 0 ) ) { goto BYE; }
+  //------------
   for ( uint32_t chnk_idx = 0; chnk_idx <= max_chnk_idx; chnk_idx++ ) {
     if ( num_elements == 0 ) { break; } // NOTE: Special case for empty vec
     bool chnk_is_found; uint32_t chnk_where_found;

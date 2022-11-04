@@ -29,7 +29,7 @@ chnk_drop_l1_l2(
       if ( !isfile(l2_file) ) { goto BYE; } // cannot delete 
       //-------------------------
       free_if_non_null(ptr_chnk_val->l1_mem);
-      decr_mem_used(ptr_chnk_val->size);
+      status = decr_mem_used(ptr_chnk_val->size); cBYE(status);
       break;
       //-----------------
     case 2 : 
@@ -42,7 +42,7 @@ chnk_drop_l1_l2(
       if ( !isfile(l2_file) ) { goto BYE; } // nothing to do 
       unlink(l2_file); 
       ptr_chnk_val->l2_exists = false; 
-      decr_dsk_used(ptr_chnk_val->size);
+      status = decr_dsk_used(ptr_chnk_val->size); cBYE(status);
       break;
       //-----------------
     default : 

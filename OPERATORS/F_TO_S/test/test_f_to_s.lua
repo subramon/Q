@@ -2,11 +2,13 @@
 require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local Scalar  = require 'libsclr'
-local qmem    = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local cVector = require 'libvctr'
+local qcfg    = require 'Q/UTILS/lua/qcfg'
+local max_num_in_chunk = qcfg.max_num_in_chunk
+
 local tests = {}
 local qtype = "I4"
-local len = 2 * chunk_size + 19
+local len = 2 * max_num_in_chunk + 19
 local invals = {}
 for i = 1, len do 
   invals[i] = i
@@ -26,6 +28,7 @@ tests.t_sum = function ()
   assert(val == exp_val)
   assert(type(num) == "Scalar")
   assert(num == Scalar.new(len, "I8"))
+  cVector.check_all(true, true)
   print("t_sum succeeded")
 end
 
@@ -38,8 +41,9 @@ tests.t_min = function ()
   assert(type(num) == "Scalar")
   assert(type(idx) == "Scalar")
   assert(val == Scalar.new(1, qtype))
-  assert(num == Scalar.new(len, qtype))
-  assert(idx == Scalar.new(1-1, qtype))
+  assert(num == Scalar.new(len, "I8"))
+  assert(idx == Scalar.new(1-1, "I8"))
+  cVector.check_all(true, true)
   print("t_min succeeded")
 end
 
@@ -52,14 +56,15 @@ tests.t_max = function ()
   assert(type(num) == "Scalar")
   assert(type(idx) == "Scalar")
   assert(val == Scalar.new(len, qtype))
-  assert(num == Scalar.new(len, qtype))
-  assert(idx == Scalar.new(len-1, qtype))
+  assert(num == Scalar.new(len, "I8"))
+  assert(idx == Scalar.new(len-1, "I8"))
+  cVector.check_all(true, true)
   print("t_max succeeded")
 end
 
-return tests
--- tests.t_sum()
--- tests.t_min()
--- tests.t_max()
--- os.exit()
+-- return tests
+tests.t_sum()
+tests.t_min()
+tests.t_max()
+os.exit()
 

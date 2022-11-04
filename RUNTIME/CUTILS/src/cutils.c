@@ -18,9 +18,11 @@
 #include "lualib.h"
 
 #include "get_file_size.h"
+#include "file_exists.h"
 #include "get_bit_u64.h"
 #include "isdir.h"
 #include "isfile.h"
+#include "mk_file.h"
 #include "qtypes.h"
 #include "rdtsc.h"
 #include "rs_mmap.h"
@@ -148,6 +150,46 @@ static int l_cutils_makepath(
   if ( !isdir(dir_name) ) { 
     status = mkdir(dir_name, 0777); cBYE(status);
   }
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
+static int l_cutils_mk_file( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  int nargs = lua_gettop(L);
+  if ( ( nargs < 3 ) || ( nargs > 4 ) ) { go_BYE(-1); }
+  const char *const dir_name  = luaL_checkstring(L, 1);
+  const char *const file_name = luaL_checkstring(L, 2);
+  uint64_t file_size = luaL_checknumber(L, 3); 
+  bool over_write = false;
+  if ( nargs == 4 ) { 
+    over_write = lua_toboolean(L, 4);
+  }
+  //--------------------------------------
+  if ( file_exists(file_name) ) {
+    if ( over_write ) {
+      unlink(file_name);
+    }
+    else {
+      fprintf(stderr, "File %s exists \n", file_name);
+      go_BYE(-1);
+    }
+  }
+  //--------------------------------------
+  if ( *dir_name == '\0' )  {
+    status = mk_file(NULL, file_name, file_size);
+  }
+  else {
+    status = mk_file(dir_name, file_name, file_size);
+  }
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -555,6 +597,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "isfile",      l_cutils_isfile },
     { "is_qtype",     l_cutils_is_qtype },
     { "makepath",    l_cutils_makepath },
+    { "mk_file",     l_cutils_mk_file },
     { "num_lines",   l_cutils_num_lines },
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
@@ -581,6 +624,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },
+    { "mk_file",     l_cutils_mk_file },
     { "num_lines",   l_cutils_num_lines },
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },

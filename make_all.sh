@@ -1,10 +1,14 @@
 #!/bin/bash
 set -e
+
+test -d $Q_ROOT
+rm -f $Q_ROOT/csos/*.so
+rm -f $Q_ROOT/lib/*.so
+
 test -d $Q_SRC_ROOT
 find $Q_SRC_ROOT -name "*.o" -print | xargs rm 
 find $Q_SRC_ROOT -name "*.so" -print | xargs rm 
-test -d $Q_ROOT
-find $Q_ROOT/csos/*.so -print | xargs rm 
+
 # Quick and dirty way of compiling. Need to improve this
 cd $Q_SRC_ROOT/TMPL_FIX_HASHMAP/src/; make clean && make
 cd $Q_SRC_ROOT/TMPL_FIX_HASHMAP/VCTR_HMAP/; make clean && make
