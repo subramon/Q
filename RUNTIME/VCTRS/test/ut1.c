@@ -1,6 +1,7 @@
 #include "q_incs.h"
 #include "q_macros.h"
 #include "qtypes.h"
+#include "qjit_consts.h"
 #include "sclr_struct.h"
 #include "vctr_consts.h"
 
@@ -24,10 +25,9 @@
 
 #include "chnk_cnt.h" 
 
-vctr_rs_hmap_t g_vctr_hmap;
-uint32_t g_vctr_uqid;
-
-chnk_rs_hmap_t g_chnk_hmap;
+vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
+uint32_t g_vctr_uqid[Q_MAX_NUM_TABLESPACES];
+chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
 
 uint64_t g_mem_used;
 uint64_t g_mem_allowed;
@@ -52,10 +52,12 @@ main(
   int status;
   bool b; uint32_t where; int l_vctr_cnt, l_chnk_cnt; char *name = NULL;
   // Initialize global variables
-  g_vctr_uqid = 0; 
-  memset(&g_vctr_hmap, 0, sizeof(vctr_rs_hmap_t));
-
-  memset(&g_chnk_hmap, 0, sizeof(chnk_rs_hmap_t));
+  for ( int i = 0; i < Q_MAX_NUM_TABLESPACES; i++ ) { 
+    g_vctr_uqid[i] = 0; 
+    memset(&g_vctr_hmap[i], 0, sizeof(vctr_rs_hmap_t));
+    memset(&g_chnk_hmap[i], 0, sizeof(chnk_rs_hmap_t));
+  }
+  int tbsp = 0;
 
   g_mem_used = 0;
   g_mem_allowed = (uint64_t)1048576 * (uint64_t)(1024 * 4);
@@ -69,8 +71,8 @@ main(
   HC1.max_size = 0;
   HC1.so_file = strdup("libhmap_vctr.so"); 
 
-  status = vctr_rs_hmap_instantiate(&g_vctr_hmap, &HC1); cBYE(status);
-  status = g_vctr_hmap.bkt_chk(g_vctr_hmap.bkts, g_vctr_hmap.size);
+  status = vctr_rs_hmap_instantiate(&g_vctr_hmap[tbsp], &HC1); cBYE(status);
+  status = g_vctr_hmap[tbsp].bkt_chk(g_vctr_hmap[tbsp].bkts, g_vctr_hmap[tbsp].size);
   cBYE(status);
   if ( HC1.so_file != NULL ) { go_BYE(-1); } 
   //-------------------------------------------------------
@@ -79,8 +81,8 @@ main(
   HC2.max_size = 0;
   HC2.so_file = strdup("libhmap_chnk.so"); 
 
-  status = chnk_rs_hmap_instantiate(&g_chnk_hmap, &HC2); cBYE(status);
-  status = g_chnk_hmap.bkt_chk(g_chnk_hmap.bkts, g_chnk_hmap.size);
+  status = chnk_rs_hmap_instantiate(&g_chnk_hmap[tbsp], &HC2); cBYE(status);
+  status = g_chnk_hmap[tbsp].bkt_chk(g_chnk_hmap[tbsp].bkts, g_chnk_hmap[tbsp].size);
   cBYE(status);
   if ( HC2.so_file != NULL ) { go_BYE(-1); } 
   //----------------------------------
@@ -89,11 +91,11 @@ main(
   cBYE(status);
   if ( uqid != 1 ) { go_BYE(-1); }
   //----------------------------------
-  status = vctr_is(uqid, &b, &where); cBYE(status);
+  status = vctr_is(tbsp, uqid, &b, &where); cBYE(status);
   if ( !b ) { go_BYE(-1); }
-  l_vctr_cnt = vctr_cnt(); 
+  l_vctr_cnt = vctr_cnt(tbsp); 
   if ( l_vctr_cnt != 1 ) { go_BYE(-1); }
-  l_chnk_cnt = chnk_cnt(); 
+  l_chnk_cnt = chnk_cnt(tbsp); 
   if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
   // check empty name  -----------------------------
   name = vctr_get_name(uqid); 
@@ -117,20 +119,20 @@ main(
       go_BYE(-1); 
     }
   }
-  status = g_vctr_hmap.freeze(&g_vctr_hmap,
+  status = g_vctr_hmap[0].freeze(&g_vctr_hmap[0],
       "/tmp/", "_meta.csv", "_bkts.bin","_full.bin");
   cBYE(status);
   //-- bogus delete -----------------
-  status = vctr_del(123445, &b); cBYE(status);
+  status = vctr_del(0, 123445, &b); cBYE(status);
   if ( b ) { go_BYE(-1); }
-  l_vctr_cnt = vctr_cnt(); 
+  l_vctr_cnt = vctr_cnt(tbsp); 
   if ( l_vctr_cnt != 1 ) { go_BYE(-1); }
   //-- good delete -----------------
-  status = vctr_del(uqid, &b); cBYE(status);
+  status = vctr_del(0, uqid, &b); cBYE(status);
   if ( !b ) { go_BYE(-1); }
-  l_vctr_cnt = vctr_cnt(); 
+  l_vctr_cnt = vctr_cnt(tbsp); 
   if ( l_vctr_cnt != 0 ) { go_BYE(-1); }
-  l_chnk_cnt = chnk_cnt(); 
+  l_chnk_cnt = chnk_cnt(tbsp); 
   if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
   //----------------------------------
 
@@ -153,18 +155,18 @@ main(
     sclr.val.i4++;
   }
   //----------------------------------
-  status = vctr_del(uqid, &b); cBYE(status);
+  status = vctr_del(0, uqid, &b); cBYE(status);
   if ( !b ) { go_BYE(-1); }
-  l_vctr_cnt = vctr_cnt(); 
+  l_vctr_cnt = vctr_cnt(tbsp); 
   if ( l_vctr_cnt != 0 ) { go_BYE(-1); }
-  l_chnk_cnt = chnk_cnt(); 
+  l_chnk_cnt = chnk_cnt(tbsp); 
   if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
   //----------------------------------
 
   if ( g_mem_used != 0 ) { go_BYE(-1); }
   fprintf(stderr, "Successfully completed %s \n", argv[0]);
 BYE:
-  g_vctr_hmap.destroy(&g_vctr_hmap);
-  g_chnk_hmap.destroy(&g_chnk_hmap);
+  g_vctr_hmap[0].destroy(&g_vctr_hmap[0]);
+  g_chnk_hmap[0].destroy(&g_chnk_hmap[0]);
   return status;
 }

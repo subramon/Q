@@ -1,5 +1,6 @@
 #include "q_incs.h"
 #include "qtypes.h"
+#include "qjit_consts.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
 #include "l2_file_name.h"
@@ -8,11 +9,12 @@
 #include "chnk_del.h"
 #include "vctr_del.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap;
-extern chnk_rs_hmap_t g_chnk_hmap;
+extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
+extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
 
 int
 vctr_del(
+    uint32_t tbsp, // table space 
     uint32_t uqid,
     bool *ptr_is_found
     )
@@ -21,19 +23,19 @@ vctr_del(
   uint32_t where_found;
   char *lma_file = NULL;
 
-  status = vctr_is(uqid, ptr_is_found, &where_found); cBYE(status);
+  status = vctr_is(tbsp, uqid, ptr_is_found, &where_found); cBYE(status);
   if ( !*ptr_is_found ) { goto BYE; }
-  vctr_rs_hmap_val_t val = g_vctr_hmap.bkts[where_found].val;
+  vctr_rs_hmap_val_t val = g_vctr_hmap[tbsp].bkts[where_found].val;
   bool is_persist = val.is_persist;
   bool is_lma     = val.is_lma;
   // Following is okay but happens rarely. Happens when you create a
   // vector but do not eval() it or get_chunk() it 
   // if ( val.ref_count == 0 ) { go_BYE(-1); }
-  g_vctr_hmap.bkts[where_found].val.ref_count--;
-  if ( g_vctr_hmap.bkts[where_found].val.ref_count > 0 ) {
+  g_vctr_hmap[tbsp].bkts[where_found].val.ref_count--;
+  if ( g_vctr_hmap[tbsp].bkts[where_found].val.ref_count > 0 ) {
     goto BYE;
   }
-  val = g_vctr_hmap.bkts[where_found].val;
+  val = g_vctr_hmap[tbsp].bkts[where_found].val;
   if ( val.name[0] != '\0' ) { 
     printf("Deleting Vector: %s \n", val.name);
   }
@@ -44,10 +46,10 @@ vctr_del(
     lma_file = l2_file_name(uqid, ((uint32_t)~0));
     if ( lma_file == NULL ) { go_BYE(-1); }
     if ( file_exists(lma_file) ) { unlink(lma_file); }
-    char *X = g_vctr_hmap.bkts[where_found].val.X;
-    size_t nX = g_vctr_hmap.bkts[where_found].val.nX;
+    char *X = g_vctr_hmap[tbsp].bkts[where_found].val.X;
+    size_t nX = g_vctr_hmap[tbsp].bkts[where_found].val.nX;
     if ( ( X != NULL ) && ( nX != 0 ) ) { munmap(X, nX); }
-    g_vctr_hmap.bkts[where_found].val.is_lma = false;
+    g_vctr_hmap[tbsp].bkts[where_found].val.is_lma = false;
   }
   //-------------------------------------------
   // Delete chunks in vector before deleting vector 
@@ -55,10 +57,10 @@ vctr_del(
     if ( val.is_lma == false ) { if ( val.num_chnks == 0 ) { go_BYE(-1); } }
     for ( uint32_t chnk_idx = 0; chnk_idx <= val.max_chnk_idx; chnk_idx++ ){
     if ( val.num_chnks == 0 ) { break; } 
-      uint32_t old_nitems = g_chnk_hmap.nitems;
+      uint32_t old_nitems = g_chnk_hmap[tbsp].nitems;
       if ( old_nitems == 0 ) { go_BYE(-1); }
       bool is_found = true;
-      status = chnk_del(uqid, chnk_idx, is_persist); 
+      status = chnk_del(tbsp, uqid, chnk_idx, is_persist); 
       if ( status == -3 ) { status = 0; is_found = false; } 
       cBYE(status);
       if ( val.memo_len < 0 ) {  
@@ -80,7 +82,7 @@ vctr_del(
           }
         }
       }
-      uint32_t new_nitems = g_chnk_hmap.nitems;
+      uint32_t new_nitems = g_chnk_hmap[tbsp].nitems;
       if ( is_found ) { 
         if ( new_nitems != (old_nitems-1) ) { go_BYE(-1); }
       }
@@ -88,7 +90,7 @@ vctr_del(
   }
   bool is_found;
   vctr_rs_hmap_key_t key = uqid; 
-  status = g_vctr_hmap.del(&g_vctr_hmap, &key, &val, &is_found); 
+  status = g_vctr_hmap[0].del(&g_vctr_hmap[tbsp], &key, &val, &is_found); 
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
 BYE:

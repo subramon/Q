@@ -1,5 +1,6 @@
 #include "q_incs.h"
 #include "qtypes.h"
+#include "qjit_consts.h"
 #include "vctr_consts.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
@@ -9,9 +10,10 @@
 #include "vctr_putn.h"
 #include "mod_mem_used.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap;
+extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
 extern chnk_rs_hmap_t g_chnk_hmap;
 
+// cannot add to a different tablespace => tbsp = 0
 int
 vctr_putn(
     uint32_t vctr_uqid,
@@ -29,7 +31,7 @@ vctr_putn(
 
   vctr_rs_hmap_key_t vctr_key = vctr_uqid;
   vctr_rs_hmap_val_t vctr_val; 
-  status = g_vctr_hmap.get(&g_vctr_hmap, &vctr_key, &vctr_val, &is_found, 
+  status = g_vctr_hmap[0].get(&g_vctr_hmap[0], &vctr_key, &vctr_val, &is_found, 
       &vctr_where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); } // vector exists 
@@ -41,7 +43,7 @@ vctr_putn(
   // handle special case for empty vector with no chunks in it 
   status = chnk_first(vctr_where); cBYE(status); 
   // reset vctr_val because chnk_first makes changes
-  vctr_val = g_vctr_hmap.bkts[vctr_where].val;
+  vctr_val = g_vctr_hmap[0].bkts[vctr_where].val;
 
   uint32_t chnk_idx = vctr_val.max_chnk_idx; 
   // find chunk in chunk hmap 
@@ -68,8 +70,8 @@ vctr_putn(
     //-------------------------------
     status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
     cBYE(status);
-    g_vctr_hmap.bkts[vctr_where].val.num_chnks++;
-    g_vctr_hmap.bkts[vctr_where].val.max_chnk_idx = chnk_idx; 
+    g_vctr_hmap[0].bkts[vctr_where].val.num_chnks++;
+    g_vctr_hmap[0].bkts[vctr_where].val.max_chnk_idx = chnk_idx; 
     //--------------------------
     status = chnk_is(vctr_uqid, chnk_idx, &is_found, &chnk_where); 
     cBYE(status);
@@ -87,7 +89,7 @@ vctr_putn(
   uint32_t num_in_chnk = chnk_val.num_elements;
   memcpy(chnk_val.l1_mem + (num_in_chnk * width), X, (n_to_copy*width));
   // update chunk and vector meta data base on above copy
-  g_vctr_hmap.bkts[vctr_where].val.num_elements += n_to_copy;
+  g_vctr_hmap[0].bkts[vctr_where].val.num_elements += n_to_copy;
   g_chnk_hmap.bkts[chnk_where].val.num_elements += n_to_copy;
   // if you still have stuff to copy, then tail recursive call // to deal with leftover
   if ( n > space_in_chunk ) {

@@ -32,10 +32,11 @@ init_globals(
   g_webserver_interested = 0; 
   g_L_status = 0;
 
-  memset(&g_vctr_hmap, 0, sizeof(vctr_rs_hmap_t));
-  g_vctr_uqid = 0; 
-
-  memset(&g_chnk_hmap, 0, sizeof(chnk_rs_hmap_t));
+  for ( int i = 0; i < Q_MAX_NUM_TABLESPACES; i++ ) { 
+    memset(&g_vctr_hmap[i], 0, sizeof(vctr_rs_hmap_t));
+    g_vctr_uqid[i] = 0; 
+    memset(&g_chnk_hmap[i], 0, sizeof(chnk_rs_hmap_t));
+  }
   //------------------------
   g_mutex_created = false;
 
@@ -105,30 +106,31 @@ init_globals(
     cBYE(status);
     pthread_cond_signal(&g_mem_cond);
   }
+  int tbsp = 0;  // init_globals() only for primary tablespace
 
   // START For hashmaps  for vector, ...
   if ( g_restore_session ) { 
     printf(">>>>>>>>>>>> RESTORING SESSION ============\n");
-    status = vctr_rs_hmap_unfreeze(&g_vctr_hmap, g_meta_dir_root,
+    status = vctr_rs_hmap_unfreeze(&g_vctr_hmap[tbsp], g_meta_dir_root,
         "_vctr_meta.csv", "_vctr_bkts.bin", "_vctr_full.bin");
     cBYE(status);
-    status = chnk_rs_hmap_unfreeze(&g_chnk_hmap, g_meta_dir_root,
+    status = chnk_rs_hmap_unfreeze(&g_chnk_hmap[tbsp], g_meta_dir_root,
         "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin");
     cBYE(status);
     //-----------------------------------
-    g_vctr_uqid = 0;
-    for ( uint32_t i = 0; i < g_vctr_hmap.size; i++ ) { 
-      if ( !g_vctr_hmap.bkt_full[i] ) { continue; } 
+    g_vctr_uqid[tbsp] = 0;
+    for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) { 
+      if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
 
-      vctr_rs_hmap_key_t key = g_vctr_hmap.bkts[i].key;
+      vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
       uint32_t vctr_uqid = key;
-      if ( vctr_uqid > g_vctr_uqid ) { g_vctr_uqid = vctr_uqid; } 
+      if ( vctr_uqid > g_vctr_uqid[tbsp] ) { g_vctr_uqid[tbsp] = vctr_uqid; } 
     }
-    if ( g_vctr_hmap.nitems == 0 ) {
-      if ( g_vctr_uqid != 0 ) { go_BYE(-1); }
+    if ( g_vctr_hmap[tbsp].nitems == 0 ) {
+      if ( g_vctr_uqid[tbsp] != 0 ) { go_BYE(-1); }
     }
     else {
-      if ( g_vctr_uqid == 0 ) { go_BYE(-1); }
+      if ( g_vctr_uqid[tbsp] == 0 ) { go_BYE(-1); }
     }
     //-----------------------------------
     printf("<<<<<<<<<<<< RESTORING SESSION ============\n");
@@ -136,11 +138,12 @@ init_globals(
   else { 
     printf("<<<<<<<<<<<< STARTING NEW SESSION ============\n");
     g_vctr_hmap_config.so_file = strdup("libhmap_vctr.so"); 
-    status = vctr_rs_hmap_instantiate(&g_vctr_hmap, &g_vctr_hmap_config); 
+    status = vctr_rs_hmap_instantiate(&g_vctr_hmap[tbsp], 
+        &g_vctr_hmap_config); 
     cBYE(status);
 
     g_chnk_hmap_config.so_file = strdup("libhmap_chnk.so"); 
-    status = chnk_rs_hmap_instantiate(&g_chnk_hmap, &g_chnk_hmap_config); 
+    status = chnk_rs_hmap_instantiate(&g_chnk_hmap[tbsp], &g_chnk_hmap_config); 
     cBYE(status);
 
     rmtree(g_data_dir_root);

@@ -18,10 +18,9 @@ my_extern int g_L_status; // values as described below
 // 1 => Master owns Lua State 
 // 2 => WebServer owns Lua State 
 // hash map for vectors, chunks, vectors x chunks
-my_extern vctr_rs_hmap_t g_vctr_hmap;
-my_extern uint32_t g_vctr_uqid;
-
-my_extern chnk_rs_hmap_t g_chnk_hmap;
+my_extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
+my_extern uint32_t g_vctr_uqid[Q_MAX_NUM_TABLESPACES];
+my_extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
 // For master and memory manager
 my_extern bool g_mutex_created;
 my_extern pthread_cond_t  g_mem_cond;
