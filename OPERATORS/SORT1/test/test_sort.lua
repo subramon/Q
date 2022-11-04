@@ -55,6 +55,59 @@ tests.t1 = function()
   end
   print("Successfully completed test t1")
 end
+tests.t2 = function()
+  local len = 1048576 
+  local args = {
+  len = len,
+  start = 1, by = 1,
+  period = 127,
+}
+
+local qtypes = { "I1", "I2", "I4", "I8", } 
+  for _, order in ipairs(orders) do
+    for _, qtype in ipairs(qtypes) do
+      args.qtype = qtype 
+      local x = Q.period(args):eval()
+      local y = Q.sort(x, order)
+      local cmp
+      if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
+      local z = Q.is_prev(y, cmp, { default_val = false})
+      local n1, n2 = Q.sum(z):eval()
+      assert(type(n1) == "Scalar")
+      assert(type(n2) == "Scalar")
+      assert(n1:to_num() == 0)
+      print("Successfully completed test t2 for ", order, qtype)
+    end
+  end
+  print("Successfully completed test t2")
+end
+tests.t3 = function()
+  local len = 1048576 
+  local args = {
+  len = len,
+  start = 1, 
+  by = 1,
+}
+
+local qtypes = { "F4", "F8" }
+  for _, order in ipairs(orders) do
+    for _, qtype in ipairs(qtypes) do
+      args.qtype = qtype 
+      local x = Q.seq(args):eval()
+      local y = Q.sort(x, order)
+      local cmp
+      if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
+      local z = Q.is_prev(y, cmp, { default_val = false})
+      local n1, n2 = Q.sum(z):eval()
+      assert(type(n1) == "Scalar")
+      assert(type(n2) == "Scalar")
+      assert(n1:to_num() == 0)
+      print("Successfully completed test t2 for ", order, qtype)
+    end
+  end
+  print("Successfully completed test t3")
+end
 tests.t1()
-os.exit()
+tests.t2()
+tests.t3()
 -- return tests

@@ -23,7 +23,8 @@ return function (
   local start = assert(largs.start)
   local by    = assert(largs.by)
   local period= assert(largs.period)
-  assert(is_in(qtype, { "I1", "I2", "I4", "I8", "F4", "F8"}))
+  assert(is_in(qtype, { "I1", "I2", "I4", "I8", } ))
+  -- "F4", "F8" not supported TODO for period P4
   assert(len > 0, "vector length must be positive")
   assert(period > 0, "period must be positive")
 
