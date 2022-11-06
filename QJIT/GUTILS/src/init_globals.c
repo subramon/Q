@@ -111,10 +111,12 @@ init_globals(
   // START For hashmaps  for vector, ...
   if ( g_restore_session ) { 
     printf(">>>>>>>>>>>> RESTORING SESSION ============\n");
-    status = vctr_rs_hmap_unfreeze(&g_vctr_hmap[tbsp], g_meta_dir_root,
+    status = vctr_rs_hmap_unfreeze(&g_vctr_hmap[tbsp], 
+        g_meta_dir_root[tbsp],
         "_vctr_meta.csv", "_vctr_bkts.bin", "_vctr_full.bin");
     cBYE(status);
-    status = chnk_rs_hmap_unfreeze(&g_chnk_hmap[tbsp], g_meta_dir_root,
+    status = chnk_rs_hmap_unfreeze(&g_chnk_hmap[tbsp], 
+        g_meta_dir_root[tbsp],
         "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin");
     cBYE(status);
     //-----------------------------------

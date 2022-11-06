@@ -259,13 +259,13 @@ static int l_vctr_chk( lua_State *L) {
   int status = 0;
   int num_args =  lua_gettop(L); if ( num_args != 3 ) { go_BYE(-1); } 
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  bool is_all_done = lua_toboolean(L, 2); 
+  bool is_at_rest = lua_toboolean(L, 2); 
   bool is_forall   = lua_toboolean(L, 3); // just for this Vector or all
   if ( is_forall ) { 
-    status = vctrs_chk(ptr_v->tbsp, is_all_done);  cBYE(status);
+    status = vctrs_chk(ptr_v->tbsp, is_at_rest);  cBYE(status);
   }
   else {
-    status = vctr_chk(ptr_v->tbsp, ptr_v->uqid, is_all_done);  cBYE(status);
+    status = vctr_chk(ptr_v->tbsp, ptr_v->uqid, is_at_rest);  cBYE(status);
   }
   lua_pushboolean(L, true);
   return 1;

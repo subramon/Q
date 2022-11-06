@@ -31,7 +31,7 @@ tests.t2 = function()
     x:put1(s)
   end
   x:eov()
-  assert(cVector:count() == 1)
+  assert(cVector.count(0) == 1)
   -- create a nnn vector for it 
   local nn_x = lVector({ qtype = "BL"})
   assert(type(nn_x) == "lVector")
@@ -42,7 +42,7 @@ tests.t2 = function()
     nn_x:put1(s)
   end
   nn_x:eov()
-  assert(cVector:count() == 2)
+  assert(cVector.count() == 2)
   -- associate nn_x with x 
   x:set_nulls(nn_x)
   assert(x:has_nulls())
@@ -51,7 +51,7 @@ tests.t2 = function()
   for i = 1, 10000 do 
     Y[i] = x:get_nulls()
     assert(type(Y[i]) == "lVector")
-    assert(cVector:count() == 2)
+    assert(cVector.count() == 2)
   end
   x:drop_nulls()
   assert(x:has_nulls() == false)

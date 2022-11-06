@@ -38,7 +38,6 @@ l2_file_name(
     )
 {
   int status = 0;
-  go_BYE(-1); // TODO Implement tbsp
   if ( tbsp >= Q_MAX_NUM_TABLESPACES ) { WHEREAMI; return NULL; } 
   if ( vctr_uqid == 0 ) { WHEREAMI; return NULL; }
   if ( g_data_dir_root[tbsp][0] == '\0' ) { go_BYE(-1); }

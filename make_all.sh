@@ -1,11 +1,15 @@
 #!/bin/bash
 set -e
 
+if [ "$Q_ROOT"     == "" ]; then echo "ERROR: source setup.sh"; exit 1; fi
+if [ "$Q_SRC_ROOT" == "" ]; then echo "ERROR: source setup.sh"; exit 1; fi
+
 test -d $Q_ROOT
+test -d $Q_SRC_ROOT
+
 rm -f $Q_ROOT/csos/*.so
 rm -f $Q_ROOT/lib/*.so
 
-test -d $Q_SRC_ROOT
 find $Q_SRC_ROOT -name "*.o" -print | xargs rm 
 find $Q_SRC_ROOT -name "*.so" -print | xargs rm 
 

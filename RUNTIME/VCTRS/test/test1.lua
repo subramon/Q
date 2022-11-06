@@ -20,7 +20,7 @@ tests.t1 = function()
 end
 tests.t2 = function()
   local qtype = "I4"
-  local max_num_in_chnk = 16
+  local max_num_in_chnk = 64
   local x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chnk })
   local width = cutils.get_width_qtype(qtype)
   assert(x:width() == width)
@@ -44,7 +44,7 @@ tests.t2 = function()
 end
 tests.t3 = function()
   local qtype = "I4"
-  local max_num_in_chnk = 16
+  local max_num_in_chnk = 64
   -- NOTE: x is a global below 
   x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chnk })
   local width = cutils.get_width_qtype(qtype)
@@ -105,7 +105,7 @@ tests.t4 = function()
   -- in the way it rehydrates a Vector
   -- But good as a test
   local qtype = "I4"
-  local max_num_in_chnk = 16
+  local max_num_in_chnk = 64
   local width = cutils.get_width_qtype(qtype)
 
   -- NOTE: x is a global below 
@@ -157,6 +157,7 @@ tests.t4 = function()
   assert(uqid > 0)
   local args = { uqid = uqid }
   assert(cVector.check_all())
+  x:nop()
   y = lVector(args)
   assert(type(y) == "lVector")
   print("Created vector " .. y:name() .. " with uqid = " .. y:uqid())
@@ -185,8 +186,8 @@ tests.t4 = function()
   print("Test t4 succeeded")
 end
 -- return tests
-tests.t1()
-tests.t2()
-tests.t3()
+-- ORKS tests.t1()
+-- ORKS tests.t2()
+-- ORKS tests.t3()
 tests.t4()
 

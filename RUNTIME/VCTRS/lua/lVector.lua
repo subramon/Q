@@ -168,9 +168,13 @@ function lVector.new(args)
   if ( args.uqid )  then 
     assert(type(args.uqid) == "number")
     assert(args.uqid > 0)
+    -- TODO TODO P0   THINK  ABOUT FOLLOWING 
+    if ( not args.tbsp ) then  args.tbsp = 0 end 
+    assert(type(args.uqid) == "number")
+    assert(args.uqid >= 0)
     vector._base_vec = assert(cVector.rehydrate(args))
     if ( qcfg.debug ) then 
-      assert(cVector.chk(vector._base_vec, true, false))
+      assert(cVector.chk(vector._base_vec, false, false))
     end
     -- get following from cVector
     -- max_num_in_chunk
