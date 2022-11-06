@@ -23,7 +23,7 @@ chnk_del(
   bool vctr_is_found, chnk_is_found;
   uint32_t vctr_where_found, chnk_where_found;
 
-  status = vctr_is(vctr_uqid, &vctr_is_found, &vctr_where_found);
+  status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
   if ( !vctr_is_found ) { return -2; } // NOTE
 
@@ -34,7 +34,8 @@ chnk_del(
   if ( chnk_is_found == false ) { return -3; } // NOTE 
   if ( g_chnk_hmap[tbsp].nitems == 0 ) { go_BYE(-1); }
   //----------------------------------------------------
-  status = chnk_free_resources( &(g_chnk_hmap[tbsp].bkts[chnk_where_found].key), 
+  status = chnk_free_resources(tbsp, 
+      &(g_chnk_hmap[tbsp].bkts[chnk_where_found].key), 
       &(g_chnk_hmap[tbsp].bkts[chnk_where_found].val), is_persist);
   cBYE(status);
   //-- delete entry in hash table 

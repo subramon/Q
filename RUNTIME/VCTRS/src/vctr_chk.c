@@ -19,11 +19,11 @@ extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
 
 int
 vctrs_chk(
+    uint32_t tbsp,
     bool is_at_rest
     )
 {
   int status = 0;
-  uint32_t tbsp = 0; // you can check only your own tablespace
   // relax above restriction TODO P4 
   // Above check needed because (unfortunately) I have used
   // uint32_t everywhere instead of vctr_rs_hmap_key_t 
@@ -46,7 +46,8 @@ vctrs_chk(
       }
       continue; 
     }
-    status = vctr_chk(g_vctr_hmap[tbsp].bkts[i].key, is_at_rest); cBYE(status); 
+    status = vctr_chk(tbsp, g_vctr_hmap[tbsp].bkts[i].key, is_at_rest); 
+    cBYE(status); 
     total_num_chunks += g_vctr_hmap[tbsp].bkts[i].val.num_chnks;
   }
   if ( total_num_chunks != g_chnk_hmap[tbsp].nitems ) { 
@@ -57,12 +58,12 @@ BYE:
 }
 int
 vctr_chk(
+    uint32_t tbsp,
     uint32_t vctr_uqid,
     bool is_at_rest
     )
 {
   int status = 0;
-  uint32_t tbsp = 0; // you can check only your own tablespace
 
   // early exit case
   if ( vctr_uqid == 0 ) { goto BYE; }
@@ -125,7 +126,7 @@ vctr_chk(
   if ( vctr_val.is_lma ) { 
     if ( !vctr_val.is_eov ) { go_BYE(-1); }
     uint32_t good_filesz = num_elements * width;
-    char *l2_file = l2_file_name(vctr_uqid, ((uint32_t)~0)); 
+    char *l2_file = l2_file_name(tbsp, vctr_uqid, ((uint32_t)~0)); 
     if ( !isfile(l2_file) ) { go_BYE(-1); }
     int64_t filesz = get_file_size(l2_file);
     if ( filesz != good_filesz ) { go_BYE(-1); }
@@ -153,7 +154,7 @@ vctr_chk(
   for ( uint32_t chnk_idx = 0; chnk_idx <= max_chnk_idx; chnk_idx++ ) {
     if ( num_elements == 0 ) { break; } // NOTE: Special case for empty vec
     bool chnk_is_found; uint32_t chnk_where_found;
-    status = chnk_is(vctr_uqid, chnk_idx,&chnk_is_found,&chnk_where_found);
+    status = chnk_is(tbsp, vctr_uqid, chnk_idx,&chnk_is_found,&chnk_where_found);
     cBYE(status);
     // TODO P3 Tighten following test 
     if ( vctr_val.memo_len < 0 ) { 
@@ -191,7 +192,7 @@ vctr_chk(
     if ( chnk_val.is_early_free ) { 
       if ( chnk_val.l2_exists ) { go_BYE(-1); } 
       if ( chnk_val.l1_mem != NULL  ) { go_BYE(-1); } 
-      char *l2_file = l2_file_name(vctr_uqid, chnk_idx);
+      char *l2_file = l2_file_name(tbsp, vctr_uqid, chnk_idx);
       if ( isfile(l2_file) ) { go_BYE(-1); }
       free_if_non_null(l2_file);
     }
@@ -201,7 +202,7 @@ vctr_chk(
         if ( chnk_val.l1_mem == NULL ) { go_BYE(-1); }
       }
       else { // check that file exists 
-        char *l2_file = l2_file_name(vctr_uqid, chnk_idx);
+        char *l2_file = l2_file_name(tbsp, vctr_uqid, chnk_idx);
         if ( !isfile(l2_file) ) { go_BYE(-1); }
         int64_t filesz = get_file_size(l2_file);
         if ( filesz != good_filesz ) { go_BYE(-1); }

@@ -2,7 +2,7 @@
 #include "q_incs.h"
 #include "q_macros.h"
 #include "qjit_consts.h"
-extern char g_data_dir_root[Q_MAX_LEN_DIR_NAME];
+extern char g_data_dir_root[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME];
 #include "l2_file_name.h"
 
 static char
@@ -32,14 +32,17 @@ hex(
 }
 char *
 l2_file_name(
+    uint32_t tbsp,
     uint32_t vctr_uqid,
     uint32_t chnk_idx
     )
 {
   int status = 0;
-  if ( vctr_uqid == 0 ) { return NULL; }
-  if ( g_data_dir_root == NULL ) { go_BYE(-1); }
-  int len = strlen(g_data_dir_root);
+  go_BYE(-1); // TODO Implement tbsp
+  if ( tbsp >= Q_MAX_NUM_TABLESPACES ) { WHEREAMI; return NULL; } 
+  if ( vctr_uqid == 0 ) { WHEREAMI; return NULL; }
+  if ( g_data_dir_root[tbsp][0] == '\0' ) { go_BYE(-1); }
+  int len = strlen(g_data_dir_root[tbsp]);
   // top 8 bits of vctr_uqid and top 8 bits of chnk_idx used for directory 
   uint32_t part1 = vctr_uqid >> 24;
   uint32_t part2 = chnk_idx >> 24; 
@@ -59,7 +62,7 @@ l2_file_name(
   return_if_malloc_failed(file_name);
   memset(file_name, 0, len);
 
-  sprintf(file_name, "%s/_", g_data_dir_root);
+  sprintf(file_name, "%s/_", g_data_dir_root[tbsp]);
   len = strlen(file_name);
   if ( dir_num != 0 ) { go_BYE(-1); } // TODO TO BE IMPLEMENTED 
   uint32_t mask = 0xFF000000; mask = ~mask; // to mask out top 8 bits

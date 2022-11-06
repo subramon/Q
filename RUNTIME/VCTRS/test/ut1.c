@@ -28,6 +28,8 @@
 vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
 uint32_t g_vctr_uqid[Q_MAX_NUM_TABLESPACES];
 chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+char g_data_dir_root[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
+char g_meta_dir_root[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
 
 uint64_t g_mem_used;
 uint64_t g_mem_allowed;
@@ -40,8 +42,6 @@ pthread_mutex_t g_mem_mutex;
 int g_L_status;
 int g_halt;
 int g_webserver_interested;
-char *g_data_dir_root;
-char *g_meta_dir_root;
 
 int 
 main(
@@ -56,6 +56,8 @@ main(
     g_vctr_uqid[i] = 0; 
     memset(&g_vctr_hmap[i], 0, sizeof(vctr_rs_hmap_t));
     memset(&g_chnk_hmap[i], 0, sizeof(chnk_rs_hmap_t));
+    memset(g_data_dir_root[i], 0, Q_MAX_LEN_DIR_NAME+1);
+    memset(g_meta_dir_root[i], 0, Q_MAX_LEN_DIR_NAME+1);
   }
   int tbsp = 0;
 
@@ -98,23 +100,23 @@ main(
   l_chnk_cnt = chnk_cnt(tbsp); 
   if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
   // check empty name  -----------------------------
-  name = vctr_get_name(uqid); 
+  name = vctr_get_name(tbsp, uqid); 
   if ( name == NULL ) { go_BYE(-1); }
   if ( *name != '\0' ) { go_BYE(-1); }
   // set name  -----------------------------
-  status = vctr_set_name(uqid, "test name");  cBYE(status);
+  status = vctr_set_name(tbsp, uqid, "test name");  cBYE(status);
   // check good name  -----------------------------
-  name = vctr_get_name(uqid); 
+  name = vctr_get_name(tbsp, uqid); 
   if ( name == NULL ) { go_BYE(-1); }
   if ( strcmp(name, "test name") != 0 ) { go_BYE(-1); }
   // add a few elements to the vector
   for ( uint32_t i = 0; i < 2*vctr_chnk_size+1; i++ ) { 
     float f4 = i+1;
-    status = vctr_putn(uqid, (char *)&f4, 1); cBYE(status);
+    status = vctr_putn(tbsp, uqid, (char *)&f4, 1); cBYE(status);
     uint64_t num_elements; uint32_t num_chunks;
-    status = vctr_num_elements(uqid, &num_elements); cBYE(status);
+    status = vctr_num_elements(tbsp, uqid, &num_elements); cBYE(status);
     if ( num_elements != (i+1) ) { go_BYE(-1); }
-    status = vctr_num_chunks(uqid, &num_chunks); cBYE(status);
+    status = vctr_num_chunks(tbsp, uqid, &num_chunks); cBYE(status);
     if ( num_chunks != ((i / vctr_chnk_size)+1) ) { 
       go_BYE(-1); 
     }
@@ -145,10 +147,10 @@ main(
   sclr.qtype = I4;
   sclr.val.i4 = 1; 
   for ( uint32_t i = 0; i < vctr_chnk_size*2+ 3; i++ ) { 
-    status = vctr_put1(uqid, &sclr); 
+    status = vctr_put1(tbsp, uqid, &sclr); 
     // check that what you put is what you get 
     SCLR_REC_TYPE chk_sclr; memset(&chk_sclr, 0, sizeof(SCLR_REC_TYPE));
-    status = vctr_get1(uqid, i, &chk_sclr); 
+    status = vctr_get1(tbsp, uqid, i, &chk_sclr); 
     if ( memcmp(&sclr, &chk_sclr, sizeof(SCLR_REC_TYPE)) != 0 ) {
       go_BYE(-1);
     }

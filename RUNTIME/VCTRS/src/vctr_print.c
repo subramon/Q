@@ -1,5 +1,6 @@
 #include "q_incs.h"
 #include "qtypes.h"
+#include "qjit_consts.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_is.h"
@@ -11,13 +12,14 @@
 #include "get_bit_u64.h"
 #include "vctr_print.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap;
-extern chnk_rs_hmap_t g_chnk_hmap;
+extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
+extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
 
 int
 vctr_print_lma(
     FILE *fp,
     const char * const format,
+    uint32_t tbsp,
     uint32_t vctr_uqid,
     vctr_rs_hmap_val_t *ptr_val,
     uint64_t lb,
@@ -36,7 +38,7 @@ vctr_print_lma(
   else {
     if ( ptr_val->X != NULL ) { go_BYE(-1); } 
     if ( ptr_val->nX != 0   ) { go_BYE(-1); } 
-    lma_file = l2_file_name(vctr_uqid, ((uint32_t)~0));
+    lma_file = l2_file_name(tbsp, vctr_uqid, ((uint32_t)~0));
     if ( lma_file == NULL ) { go_BYE(-1); }
     if ( !file_exists(lma_file) ) { go_BYE(-1); }
     status = rs_mmap(lma_file, &X, &nX, 0); cBYE(status);
@@ -104,6 +106,7 @@ BYE:
 
 int
 vctr_print(
+    uint32_t tbsp,
     uint32_t vctr_uqid,
     uint32_t nn_vctr_uqid,
     const char * const opfile,
@@ -133,26 +136,26 @@ vctr_print(
   uint32_t width, max_num_in_chnk;
   uint32_t nn_width, nn_max_num_in_chnk;
 
-  status = vctr_is(vctr_uqid, &vctr_is_found, &vctr_where_found);
+  status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
   if ( !vctr_is_found ) { go_BYE(-1); }
 
   if ( nn_vctr_uqid > 0 ) { 
-    status = vctr_is(nn_vctr_uqid, &nn_vctr_is_found, &nn_vctr_where_found);
+    status = vctr_is(tbsp, nn_vctr_uqid, &nn_vctr_is_found, &nn_vctr_where_found);
     cBYE(status);
     if ( !nn_vctr_is_found ) { go_BYE(-1); }
   }
 
-  qtype  = g_vctr_hmap.bkts[vctr_where_found].val.qtype;
-  width  = g_vctr_hmap.bkts[vctr_where_found].val.width;
-  max_num_in_chnk = g_vctr_hmap.bkts[vctr_where_found].val.max_num_in_chnk;
-  num_elements = g_vctr_hmap.bkts[vctr_where_found].val.num_elements;
+  qtype  = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.qtype;
+  width  = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.width;
+  max_num_in_chnk = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.max_num_in_chnk;
+  num_elements = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_elements;
 
   if ( nn_vctr_uqid > 0 ) { 
-    nn_qtype  = g_vctr_hmap.bkts[nn_vctr_where_found].val.qtype;
-    nn_width  = g_vctr_hmap.bkts[nn_vctr_where_found].val.width;
-    nn_max_num_in_chnk = g_vctr_hmap.bkts[nn_vctr_where_found].val.max_num_in_chnk;
-    nn_num_elements = g_vctr_hmap.bkts[nn_vctr_where_found].val.num_elements;
+    nn_qtype  = g_vctr_hmap[tbsp].bkts[nn_vctr_where_found].val.qtype;
+    nn_width  = g_vctr_hmap[tbsp].bkts[nn_vctr_where_found].val.width;
+    nn_max_num_in_chnk = g_vctr_hmap[tbsp].bkts[nn_vctr_where_found].val.max_num_in_chnk;
+    nn_num_elements = g_vctr_hmap[tbsp].bkts[nn_vctr_where_found].val.num_elements;
     if ( ( nn_qtype != BL ) && ( nn_qtype != B1 ) ) { go_BYE(-1); }
     if ( nn_qtype == BL ) { if ( nn_width != 1  ) { go_BYE(-1); } }
     if ( nn_max_num_in_chnk != max_num_in_chnk ) { go_BYE(-1); }
@@ -171,9 +174,9 @@ vctr_print(
   num_to_pr = ub - lb;
   pr_idx = lb;
   //-----------------------------------------
-  if ( g_vctr_hmap.bkts[vctr_where_found].val.is_lma ) {
-    status = vctr_print_lma(fp, format, vctr_uqid, 
-        &(g_vctr_hmap.bkts[vctr_where_found].val), lb, ub);
+  if ( g_vctr_hmap[tbsp].bkts[vctr_where_found].val.is_lma ) {
+    status = vctr_print_lma(fp, format, tbsp, vctr_uqid, 
+        &(g_vctr_hmap[tbsp].bkts[vctr_where_found].val), lb, ub);
     cBYE(status);
     goto BYE; 
   }
@@ -184,24 +187,24 @@ vctr_print(
     uint32_t chnk_idx = pr_idx / max_num_in_chnk;
     uint32_t chnk_off = pr_idx % max_num_in_chnk;
     //-------------------------------
-    status = chnk_is(vctr_uqid, chnk_idx, &chnk_is_found,&chnk_where_found);
+    status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found,&chnk_where_found);
     cBYE(status);
     if ( !chnk_is_found ) { go_BYE(-1); }
     uint32_t num_in_chnk = 
-      g_chnk_hmap.bkts[chnk_where_found].val.num_elements;
-    char *data  = chnk_get_data(chnk_where_found, false);
+      g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_elements;
+    char *data  = chnk_get_data(tbsp, chnk_where_found, false);
     char *orig_data = data;
     //-----------------------------------------------------
     char *nn_data = NULL, *nn_orig_data = NULL;
     if ( nn_vctr_uqid > 0 ) {
-      status = chnk_is(nn_vctr_uqid, chnk_idx, &nn_chnk_is_found, 
+      status = chnk_is(tbsp, nn_vctr_uqid, chnk_idx, &nn_chnk_is_found, 
           &nn_chnk_where_found);
       cBYE(status);
       if ( !nn_chnk_is_found ) { go_BYE(-1); }
       uint32_t nn_num_in_chnk = 
-        g_chnk_hmap.bkts[nn_chnk_where_found].val.num_elements;
+        g_chnk_hmap[tbsp].bkts[nn_chnk_where_found].val.num_elements;
       if ( nn_num_in_chnk != num_in_chnk ) { go_BYE(-1); }
-      nn_data  = chnk_get_data(nn_chnk_where_found, false);
+      nn_data  = chnk_get_data(tbsp, nn_chnk_where_found, false);
       nn_orig_data = nn_data;
     }
     //-----------------------------------------------------
@@ -278,7 +281,7 @@ vctr_print(
       }
     }
     // indicate that you no longer need it 
-    g_chnk_hmap.bkts[chnk_where_found].val.num_readers--;
+    g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers--;
     //-------------
     lb += l_num_to_pr; 
     num_to_pr = ub - lb;

@@ -43,9 +43,12 @@ vctr_del(
   if ( ( is_lma ) && ( !is_persist ) ) {
     if ( val.num_readers != 0 ) { go_BYE(-1); }
     if ( val.num_writers != 0 ) { go_BYE(-1); }
-    lma_file = l2_file_name(uqid, ((uint32_t)~0));
+    lma_file = l2_file_name(tbsp, uqid, ((uint32_t)~0));
     if ( lma_file == NULL ) { go_BYE(-1); }
-    if ( file_exists(lma_file) ) { unlink(lma_file); }
+    // delete file only if in your own tablespace
+    if ( ( file_exists(lma_file) ) && ( tbsp == 0 ) ) { 
+      unlink(lma_file); 
+    }
     char *X = g_vctr_hmap[tbsp].bkts[where_found].val.X;
     size_t nX = g_vctr_hmap[tbsp].bkts[where_found].val.nX;
     if ( ( X != NULL ) && ( nX != 0 ) ) { munmap(X, nX); }
