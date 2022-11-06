@@ -731,7 +731,7 @@ static int l_vctr_rehydrate( lua_State *L)
   bool  is_found; uint32_t where_found;
   status = vctr_is(tbsp, uqid, &is_found, &where_found); cBYE(status);
   if ( !is_found ) { go_BYE(-1); } 
-  status = vctr_incr_ref_count(where_found); cBYE(status);
+  status = vctr_incr_ref_count(tbsp, where_found); cBYE(status);
   ptr_v->uqid = uqid; 
 
   return 1; 

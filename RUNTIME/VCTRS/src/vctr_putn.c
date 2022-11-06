@@ -35,8 +35,8 @@ vctr_putn(
 
   vctr_rs_hmap_key_t vctr_key = vctr_uqid;
   vctr_rs_hmap_val_t vctr_val; 
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &vctr_key, &vctr_val, &is_found, 
-      &vctr_where);
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &vctr_key, &vctr_val, 
+      &is_found, &vctr_where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); } // vector exists 
   if ( vctr_val.is_trash  ) { go_BYE(-1); }
