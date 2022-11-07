@@ -19,6 +19,28 @@ local function vvsub(x, y, optargs)
 end
 T.vvsub = vvsub
 require('Q/q_export').export('vvsub', vvsub)
+
+local function vveq(x, y, optargs)
+  local doc_string = [[ Signature: Q.vveq(x, y, opt_optargs)
+  -- This operator performs vveq of x and y
+  ]]
+  -- this call has been just done for docstring
+  if x and x == "help" then
+    return doc_string
+  end
+
+  local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
+  if type(x) == "lVector" and type(y) == "lVector" then
+    local status, col = pcall(expander, "vveq", x, y, optargs)
+    if ( not status ) then print(col) end
+    assert(status, "Could not execute vveq")
+    return col
+  end
+  assert(nil, "Bad arguments to f1f2opf3")
+end
+T.vveq = vveq
+require('Q/q_export').export('vveq', vveq)
+    
 --[===[ TODO P1 Need to add all the rest of these back after testing 
 local function vvadd(x, y, optargs)
   local doc_string = [[ Signature: Q.vvadd(x, y, opt_optargs)
@@ -188,27 +210,6 @@ local function vvlt(x, y, optargs)
 end
 T.vvlt = vvlt
 require('Q/q_export').export('vvlt', vvlt)
-    
-local function vveq(x, y, optargs)
-  local doc_string = [[ Signature: Q.vveq(x, y, opt_optargs)
-  -- This operator performs vveq of x and y
-  ]]
-  -- this call has been just done for docstring
-  if x and x == "help" then
-    return doc_string
-  end
-
-  local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
-  if type(x) == "lVector" and type(y) == "lVector" then
-    local status, col = pcall(expander, "vveq", x, y, optargs)
-    if ( not status ) then print(col) end
-    assert(status, "Could not execute vveq")
-    return col
-  end
-  assert(nil, "Bad arguments to f1f2opf3")
-end
-T.vveq = vveq
-require('Q/q_export').export('vveq', vveq)
     
 local function vvneq(x, y, optargs)
   local doc_string = [[ Signature: Q.vvneq(x, y, opt_optargs)

@@ -1,4 +1,4 @@
-local lVector  = require 'Q/RUNTIME/VCTR/lua/lVector'
+local lVector  = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local gen_code = require 'Q/UTILS/lua/gen_code'
 local plpath   = require "pl.path"
 

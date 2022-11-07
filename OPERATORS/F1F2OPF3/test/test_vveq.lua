@@ -1,10 +1,10 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
-local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local qcfg    = require 'Q/UTILS/lua/qcfg'
 local Scalar  = require 'libsclr'
-local qmem    = require 'Q/UTILS/lua/qmem'
-local chunk_size = qmem.chunk_size
+local max_num_in_chunk = qcfg.max_num_in_chunk
 
 local tests = {}
 tests.t1 = function()
@@ -18,8 +18,8 @@ tests.t1 = function()
   for _, qtype in ipairs({"I1", "I2", "I4", "I8", "F4", "F8"}) do
     local c1 = Q.mk_col(T1, qtype)
     local c2 = Q.mk_col(T2, qtype)
-    assert(c1:length() == len)
-    assert(c2:length() == len)
+    assert(c1:num_elements() == len)
+    assert(c2:num_elements() == len)
     -- Q.print_csv({c1, c2})
     local c3 = Q.vveq(c1, c2)
     local n1, n2 = Q.sum(c3):eval()
@@ -32,9 +32,10 @@ tests.t1 = function()
   print("Test t1 succeeded")
 end
 tests.t2 = function()
-  local len =  2*chunk_size + 17
+  local len =  2*max_num_in_chunk + 17
   for _, qtype in ipairs({"I1", "I2", "I4", "I8", "F4", "F8"}) do
-    local c1 = Q.const({ val = 1, len = len, qtype = qtype} )
+    local c1 = Q.const({ val = 1, len = len, qtype = qtype, 
+      max_num_in_chunk = max_num_in_chunk} )
     local c3 = Q.vveq(c1, c1)
     local n1, n2 = Q.sum(c3):eval()
     local n1, n2 = Q.sum(c3):eval()
@@ -43,9 +44,9 @@ tests.t2 = function()
   print("Test t2 succeeded")
 end
 tests.t2 = function()
-  local len =  2*chunk_size + 17
-  local c1 = lVector.new({ qtype = "I1" })
-  local c2 = lVector.new({ qtype = "I1" })
+  local len =  2*max_num_in_chunk + 17
+  local c1 = lVector.new({ qtype = "I1", max_num_in_chunk = max_num_in_chunk })
+  local c2 = lVector.new({ qtype = "I1", max_num_in_chunk = max_num_in_chunk })
   for i = 1, len do 
     c1:put1(Scalar.new(1, "I1"))
     c2:put1(Scalar.new(0, "I1"))
@@ -59,6 +60,7 @@ tests.t2 = function()
   assert(n1 == Scalar.new(0))
   print("Test t2 succeeded")
 end
-return tests
--- tests.t1()
+-- return tests
+tests.t1()
+tests.t2()
 -- os.exit()
