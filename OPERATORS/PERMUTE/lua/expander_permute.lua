@@ -8,6 +8,7 @@ local record_time = require 'Q/UTILS/lua/record_time'
 local function expander_permute(x, p, direction, optargs)
   local specializer = "Q/OPERATORS/PERMUTE/lua/permute_specialize"
   local spfn = assert(require(specializer))
+  local subs = assert(spfn(x, p, direction, optargs))
   assert(type(subs) == "table")
   local func_name = assert(subs.fn)
   qc.q_add(subs)
@@ -24,9 +25,9 @@ local function expander_permute(x, p, direction, optargs)
     end
   end
   vargs.file_name = subs.dir_name .. "/" .. subs.file_name
-  vargs.num_elements = subs.num_elements()
-  vargs.qtype = subs.qtype
-  vargs.width = subs.width
+  vargs.num_elements = subs.num_elements
+  vargs.qtype = subs.val_qtype
+  vargs.width = subs.val_width
   vargs.memo_len = -1
   local y = lVector(vargs)
   --======================================
@@ -34,7 +35,7 @@ local function expander_permute(x, p, direction, optargs)
   local ycmem = y:get_lma_write()
   assert(type(ycmem) == "CMEM")
   assert(ycmem:is_foreign() == true)
-  local yptr = get_ptr(ycmem, subs.cast_y_as)
+  local yptr = get_ptr(ycmem, subs.cast_x_as)
 
   local chunk_num = 0
   while ( true ) do
@@ -49,6 +50,7 @@ local function expander_permute(x, p, direction, optargs)
   end
   -- Indicate write is over 
   y:unget_lma_write()
+  y:eov()
   record_time(t_start, "permute")
   return y
 end
