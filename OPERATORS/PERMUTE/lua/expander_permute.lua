@@ -5,29 +5,15 @@ local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local qc       = require 'Q/UTILS/lua/qcore'
 local record_time = require 'Q/UTILS/lua/record_time'
 
-local function expander_sort1(x, p, direction, optargs)
-  local specializer = "Q/OPERATORS/SORT1/lua/permute_specialize"
+local function expander_permute(x, p, direction, optargs)
+  local specializer = "Q/OPERATORS/PERMUTE/lua/permute_specialize"
   local spfn = assert(require(specializer))
-  local subs = assert(spfn(x, sort_order))
   assert(type(subs) == "table")
   local func_name = assert(subs.fn)
   qc.q_add(subs)
-
-  -- Check is already sorted correct way and don't repeat
-  local curr_sort_order = x:get_meta("sort_order")
-  if ( subs.sort_order == curr_sort_order ) then return x end 
   --=============================
   local t_start = cutils.rdtsc()
-  assert(x:chunks_to_lma())
-  local file_name, file_sz = x:steal_lma()
-  assert(type(file_name) == "string"); assert(#file_name > 0)
-  assert(type(file_sz) == "number");   assert(file_sz    > 0)
-
-  local qtype = x:qtype()
-  local width = x:width()
-  local nx = math.floor(file_sz / width)
-  assert(nx == math.ceil(file_sz / width))
-  assert(nx == x:num_elements())
+  assert(cutils.mk_file(subs.dir_name, subs.file_name, subs.file_sz))
 
   -- Create output vector y 
   local vargs = {}
@@ -37,13 +23,12 @@ local function expander_sort1(x, p, direction, optargs)
       vargs[k] = v
     end
   end
-  vargs.file_name = file_name
-  vargs.num_elements = nx
-  vargs.qtype = qtype
-  vargs.width = width
+  vargs.file_name = subs.dir_name .. "/" .. subs.file_name
+  vargs.num_elements = subs.num_elements()
+  vargs.qtype = subs.qtype
+  vargs.width = subs.width
   vargs.memo_len = -1
   local y = lVector(vargs)
-  y:set_meta("sort_order", subs.sort_order)
   --======================================
   -- Now, get access to y's data and perform the operation
   local ycmem = y:get_lma_write()
@@ -51,13 +36,20 @@ local function expander_sort1(x, p, direction, optargs)
   assert(ycmem:is_foreign() == true)
   local yptr = get_ptr(ycmem, subs.cast_y_as)
 
-  print("calling " .. func_name)
-  qc[func_name](yptr, nx)
-  -- Above is an unusual function: returns void instead of int status 
-
+  local chunk_num = 0
+  while ( true ) do
+    local xlen, x_chunk, _ = x:get_chunk(chunk_num) 
+    local plen, p_chunk, _ = p:get_chunk(chunk_num) 
+    assert(xlen == plen)
+    if ( xlen == 0 ) then break end 
+    local xptr = get_ptr(x_chunk, subs.cast_x_as)
+    local pptr = get_ptr(p_chunk, subs.cast_p_as)
+    qc[func_name](xptr, pptr, xlen, yptr)
+    chunk_num = chunk_num + 1 
+  end
   -- Indicate write is over 
   y:unget_lma_write()
-  record_time(t_start, "sort1")
+  record_time(t_start, "permute")
   return y
 end
-return expander_sort1
+return expander_permute

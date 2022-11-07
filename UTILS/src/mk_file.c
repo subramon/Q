@@ -34,11 +34,10 @@ mk_file(
 
   /* Check that directory is accessible */
   if ( dir != NULL ) { 
-  status = chdir(dir); 
-  if ( status != 0 ) { 
-    fprintf(stderr, "Directory [%s] not accessible \n", dir);
-    go_BYE(-1);
-  }
+    char cwd[MAX_LEN_DIR_NAME+1];
+    if ( getcwd(cwd, MAX_LEN_DIR_NAME) == NULL ) { go_BYE(-1); }
+    status = chdir(dir);  cBYE(status);
+    status = chdir(cwd);  cBYE(status);
   }
   /* Open a file for writing.  - Creating the file if it doesn't
    *  exist.  - Truncating it to 0 size if it already exists. (not
@@ -47,10 +46,10 @@ mk_file(
    * Note: "O_WRONLY" mode is not sufficient when mmaping.
    */
   // create fully qualified file name 
-  if ( dir != NULL ) { 
-  int len = strlen(filename) + strlen(dir) + 4;
-  full_name = malloc(len); return_if_malloc_failed(full_name);
-  sprintf(full_name, "%s/%s", dir, filename); 
+  if ( dir != NULL ) {
+    int len = strlen(filename) + strlen(dir) + 4;
+    full_name = malloc(len); return_if_malloc_failed(full_name);
+    sprintf(full_name, "%s/%s", dir, filename); 
   }
   else {
     full_name = strdup(filename);

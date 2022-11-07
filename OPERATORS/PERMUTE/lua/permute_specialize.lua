@@ -1,5 +1,6 @@
-local cutils = require 'libcutils'
-local is_in = require 'Q/UTILS/lua/is_in'
+local cutils  = require 'libcutils'
+local lgutils = require 'liblgutils'
+local is_in   = require 'Q/UTILS/lua/is_in'
 
 local function permute_specialize(invec, p, direction, optargs)
   local subs = {}
@@ -23,6 +24,7 @@ local function permute_specialize(invec, p, direction, optargs)
   else
     error("invalid direction" .. direction)
   end
+  subs.width = x:width()
   if ( subs.num_elements <= 127 ) then 
     assert(is_in(subs.perm_qtype, { "I1", "I2", "I4", "I8" }))
   elseif ( subs.num_elements <= 32767 ) then 
@@ -34,6 +36,9 @@ local function permute_specialize(invec, p, direction, optargs)
   end
 
   subs.direction = direction
+  subs.file_name = "_permute_" .. cutils.rdtsc() -- some temp name 
+  subs.dir_name  = lgutils.data_dir()
+  subs.file_sz   = subs.width * subs.num_elements()
   --========================================
   subs.in_qtype   = invec:qtype()
   subs.perm_qtype = p:qtype()
