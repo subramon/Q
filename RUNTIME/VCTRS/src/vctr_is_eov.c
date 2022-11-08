@@ -24,3 +24,22 @@ vctr_is_eov(
 BYE:
   return status;
 }
+
+int
+vctr_is_lma(
+    uint32_t tbsp,
+    uint32_t vctr_uqid,
+    bool *ptr_is_lma
+    )
+{
+  int status = 0;
+  bool is_found; uint32_t where_found;
+  vctr_rs_hmap_key_t key = vctr_uqid;
+  vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap, &key, &val, &is_found, 
+      &where_found);
+  if ( !is_found ) { go_BYE(-1); }
+  *ptr_is_lma = val.is_lma;
+BYE:
+  return status;
+}

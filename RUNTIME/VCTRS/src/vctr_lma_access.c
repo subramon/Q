@@ -4,10 +4,11 @@
 #include "cmem_struct.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
-#include "l2_file_name.h"
 #include "rs_mmap.h"
 #include "rdtsc.h"
 #include "file_exists.h"
+#include "l2_file_name.h"
+#include "rs_mmap.h"
 #include "vctr_is.h"
 #include "chnk_del.h"
 #include "vctr_del.h"
@@ -15,6 +16,57 @@
 
 extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
 extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+
+int 
+vctr_unget_lma_X_nX(
+    vctr_rs_hmap_val_t *ptr_val,
+    char **ptr_X,
+    size_t *ptr_nX
+    )
+{
+  int status = 0;
+  char *X = *ptr_X;
+  size_t nX = *ptr_nX;
+
+  if ( ptr_val->num_readers == 0 ) { go_BYE(-1); } 
+  ptr_val->num_readers--; 
+  munmap(X, nX);
+  ptr_val->X = NULL;
+  ptr_val->nX = 0;
+BYE:
+  return status;
+}
+//------------------------------
+int
+vctr_get_lma_X_nX(
+    uint32_t tbsp,
+    uint32_t vctr_uqid,
+    vctr_rs_hmap_val_t *ptr_val,
+    char **ptr_X,
+    size_t *ptr_nX
+    )
+{
+  int status = 0; 
+  char *X = NULL; size_t nX = 0;
+  char *lma_file = NULL; 
+
+  *ptr_X = NULL; *ptr_nX = 0;
+  if ( ptr_val->num_readers > 0 ) { 
+    X = ptr_val->X;
+    nX = ptr_val->nX;
+  }
+  else {
+    lma_file = l2_file_name(tbsp, vctr_uqid, ((uint32_t)~0));
+    if ( lma_file == NULL ) { go_BYE(-1); }
+    status = rs_mmap(lma_file, &X, &nX, 0); cBYE(status);
+    ptr_val->X  = X;
+    ptr_val->nX = nX;
+  }
+  ptr_val->num_readers++; 
+  *ptr_X = X; *ptr_nX = nX;
+BYE:
+  return status;
+}
 
 char *
 vctr_steal_lma(

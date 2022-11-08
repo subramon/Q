@@ -72,6 +72,11 @@ function lVector:max_num_in_chunk()
   return max_num_in_chunk
 end
 
+function lVector:num_readers(chnk_idx)
+  local num_readers = cVector.num_readers(self._base_vec, chnk_idx)
+  return num_readers
+end
+
 function lVector:num_elements()
   local num_elements = cVector.num_elements(self._base_vec)
   return num_elements
@@ -130,6 +135,11 @@ function lVector:drop_nulls()
 end
 function lVector:has_nulls()
   if ( self._nn_vec ) then return true else return false end 
+end
+function lVector:is_lma()
+  local is_lma = cVector.is_lma(self._base_vec)
+  assert(type(is_lma) == "boolean")
+  return is_lma
 end
 function lVector:is_eov()
   local is_eov = cVector.is_eov(self._base_vec)
@@ -459,7 +469,8 @@ function lVector:get_chunk(chnk_idx)
         end
       end
     end
-    return num_elements, buf, nn_buf
+    -- last return arg of true => generator was invoked
+    return num_elements, buf, nn_buf, true 
   else 
     -- print(" Archival chunk for " .. self:name(), self._chunk_num)
     self:check()
@@ -475,7 +486,8 @@ function lVector:get_chunk(chnk_idx)
     end
     assert(type(n) == "number")
     assert(type(x) == "CMEM")
-    return n, x, nn_x
+    -- last return arg of false => generator was NOT invoked
+    return n, x, nn_x, false
   end
 end
 -- evaluates the vector using a provided generator function
@@ -484,7 +496,7 @@ end
 function lVector:eval()
   if ( self:is_eov() ) then return self end 
   repeat
-    local num_elements, buf, nn_buf = self:get_chunk(self._chunk_num)
+    local num_elements, buf, nn_buf, is_gen = self:get_chunk(self._chunk_num)
     if ( nn_buf ) then assert(type(nn_buf) == "CMEM") end 
     if (    buf ) then assert(type(   buf) == "CMEM") end 
     assert(type(num_elements) == "number")
@@ -494,11 +506,13 @@ function lVector:eval()
     -- called put_chunk which would have incremented chunk_num
     -- TODO THINK. I added ( self._chunk_num > 0 ) 
     -- to handle the zero element array case. Consider this caefully
-    if ( ( num_elements == 0 ) and ( self._chunk_num > 0 ) )  then
-      print("Ungetting " .. self._chunk_num .. " for " .. self:uqid())
-      cVector.unget_chunk(self._base_vec, self._chunk_num-1)
-      if ( self._nn_vec ) then 
-        cVector.unget_chunk(self._nn_vec, self._chunk_num-1) 
+    if ( is_gen == false ) then
+      if ( ( num_elements == 0 ) and ( self._chunk_num > 0 ) )  then
+        print("Ungetting " .. self._chunk_num .. " for " .. self:uqid())
+        cVector.unget_chunk(self._base_vec, self._chunk_num-1)
+        if ( self._nn_vec ) then 
+          cVector.unget_chunk(self._nn_vec, self._chunk_num-1) 
+        end
       end
     end 
   until ( num_elements ~= self._max_num_in_chunk ) 
@@ -678,18 +692,6 @@ function lVector:lma_to_chunks()
   return self
 end
 --==================================================
-function lVector:del_lma()
-  assert(cVector.del_lma(self._base_vec))
-  if ( self._nn_vec ) then 
-    local nn_vector = assert(self._nn_vec)
-    assert(type(nn_vector) == "lVector")
-    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-    local nn_vec = nn_vector._base_vec
-    assert(cVector.del_lma(nn_vec))
-  end
-  return self
-end
---==================================================
 function lVector:get_lma_read()
   local x, nn_x
   local x = assert(cVector.get_lma_read(self._base_vec))
@@ -742,9 +744,9 @@ function lVector:unget_lma_write()
   return self
 end
 --==================================================
-function lVector:steal_lma()
+function lVector:make_lma()
   -- TODO P3 What about nn vector?
-  local file_name, file_sz = cVector.steal_lma(self._base_vec)
+  local file_name, file_sz = cVector.make_lma(self._base_vec)
   return file_name, file_sz 
 end
 --==================================================

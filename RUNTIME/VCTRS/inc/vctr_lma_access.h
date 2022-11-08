@@ -1,3 +1,19 @@
+#include "cmem_struct.h"
+#include "vctr_rs_hmap_struct.h"
+extern int 
+vctr_unget_lma_X_nX(
+    vctr_rs_hmap_val_t *ptr_val,
+    char **ptr_X,
+    size_t *ptr_nX
+    );
+extern int
+vctr_get_lma_X_nX(
+    uint32_t tbsp,
+    uint32_t vctr_uqid,
+    vctr_rs_hmap_val_t *ptr_val,
+    char **ptr_X,
+    size_t *ptr_nX
+    );
 extern char *
 vctr_steal_lma(
     uint32_t tbsp,

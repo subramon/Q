@@ -36,9 +36,7 @@ vctr_del(
     goto BYE;
   }
   val = g_vctr_hmap[tbsp].bkts[where_found].val;
-  if ( val.name[0] != '\0' ) { 
-    printf("Deleting Vector: %s \n", val.name);
-  }
+  //if ( val.name[0] != '\0' ) { printf("Deleting Vctr: %s \n", val.name); }
   // delete lma file if it exists
   if ( ( is_lma ) && ( !is_persist ) ) {
     if ( val.num_readers != 0 ) { go_BYE(-1); }

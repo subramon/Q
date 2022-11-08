@@ -28,6 +28,7 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
   local l_chunk_num = 0
   --============================================
   local f2_gen = function(chunk_num)
+    error("XXX")
     assert(chunk_num == l_chunk_num)
     if ( not f2_buf:is_data() ) then 
       f2_buf = assert(cmem.new( 
@@ -44,7 +45,9 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
     local status = qc[func_name](cst_f1_chunk, f1_len, subs.cst_cargs, 
       cst_f2_buf)
     assert(status == 0)
+    print("VVVV", f1:name(), f1:num_readers())
     f1:unget_chunk(l_chunk_num)
+    print("XXXX", f1:name(), f1:num_readers())
     record_time(start_time, func_name)
     l_chunk_num = l_chunk_num + 1
     if ( f1_len < chunk_size ) then 

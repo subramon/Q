@@ -67,11 +67,12 @@ local qtypes = { "I1", "I2", "I4", "I8", }
   for _, order in ipairs(orders) do
     for _, qtype in ipairs(qtypes) do
       args.qtype = qtype 
-      local x = Q.period(args):eval()
-      local y = Q.sort(x, order)
+      local x = Q.period(args):set_name("x" .. qtype):eval()
+      local y = Q.sort(x, order):set_name("y" .. qtype)
       local cmp
       if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
       local z = Q.is_prev(y, cmp, { default_val = false})
+      z:set_name("z" .. qtype)
       local n1, n2 = Q.sum(z):eval()
       assert(type(n1) == "Scalar")
       assert(type(n2) == "Scalar")
@@ -94,20 +95,34 @@ local qtypes = { "F4", "F8" }
     for _, qtype in ipairs(qtypes) do
       args.qtype = qtype 
       local x = Q.seq(args):eval()
-      local y = Q.sort(x, order)
+      assert(x:check())
+      local yname = "y_" .. order .. "_" .. qtype
+      local y = Q.sort(x, order):set_name(yname)
+      assert(y:check())
       local cmp
+      --==================================
       if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
-      local z = Q.is_prev(y, cmp, { default_val = false})
+      local zname = "z_" .. order .. "_" .. qtype
+      local z = Q.is_prev(y, cmp, { default_val = false}):set_name(zname)
       local n1, n2 = Q.sum(z):eval()
       assert(type(n1) == "Scalar")
       assert(type(n2) == "Scalar")
       assert(n1:to_num() == 0)
+      --==================================
+      if ( order == "asc" ) then cmp = "gt" else cmp = "lt" end 
+      local wname = "w_" .. order .. "_" .. qtype
+      local w = Q.is_prev(y, cmp, { default_val = true}):set_name(wname)
+      local n1, n2 = Q.sum(w):eval()
+      assert(type(n1) == "Scalar")
+      assert(type(n2) == "Scalar")
+      assert(n1 == n2)
+      --==================================
       print("Successfully completed test t2 for ", order, qtype)
     end
   end
   print("Successfully completed test t3")
 end
-tests.t1()
-tests.t2()
+-- tests.t1()
+-- tests.t2()
 tests.t3()
 -- return tests

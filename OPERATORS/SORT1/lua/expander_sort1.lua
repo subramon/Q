@@ -19,7 +19,7 @@ local function expander_sort1(x, sort_order, optargs)
   --=============================
   local t_start = cutils.rdtsc()
   assert(x:chunks_to_lma())
-  local file_name, file_sz = x:steal_lma()
+  local file_name, file_sz = x:make_lma()
   assert(type(file_name) == "string"); assert(#file_name > 0)
   assert(type(file_sz) == "number");   assert(file_sz    > 0)
 
@@ -51,12 +51,12 @@ local function expander_sort1(x, sort_order, optargs)
   assert(ycmem:is_foreign() == true)
   local yptr = get_ptr(ycmem, subs.cast_y_as)
 
-  print("calling " .. func_name)
   qc[func_name](yptr, nx)
   -- Above is an unusual function: returns void instead of int status 
 
   -- Indicate write is over 
   y:unget_lma_write()
+  assert(y:num_readers() == 0)
   record_time(t_start, "sort1")
   return y
 end

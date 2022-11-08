@@ -18,12 +18,11 @@
 #include "vctr_cnt.h"
 #include "vctr_del.h"
 
-// TODO #include "vctr_add_lma.h"
-#include "vctr_del_lma.h"
 #include "vctr_set_lma.h"
-#include "vctr_chnks_to_lma.h"
 #include "vctr_lma_access.h"
-// TODO #include "vctr_lma_to_chnks.h"
+#include "vctr_make_lma.h"
+#include "vctr_lma_to_chnks.h"
+#include "vctr_chnks_to_lma.h"
 
 #include "vctr_drop_l1_l2.h"
 #include "vctr_eov.h"
@@ -291,6 +290,21 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_is_lma( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  bool b_is_lma; 
+  status = vctr_is_lma(ptr_v->tbsp, ptr_v->uqid, &b_is_lma);
+  lua_pushboolean(L, b_is_lma);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_vctr_is_eov( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
@@ -306,11 +320,11 @@ BYE:
   return 3;
 }
 //----------------------------------------
-static int l_vctr_del_lma( lua_State *L) {
+static int l_vctr_chnks_to_lma( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vctr_del_lma(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
+  status = vctr_chnks_to_lma(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -320,11 +334,11 @@ BYE:
   return 3;
 }
 //----------------------------------------
-static int l_vctr_chnks_to_lma( lua_State *L) {
+static int l_vctr_lma_to_chnks( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vctr_chnks_to_lma(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
+  status = vctr_lma_to_chnks(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -467,7 +481,8 @@ static int l_vctr_unget_chunk( lua_State *L) {
   if ( num_args != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t chnk_idx = luaL_checknumber(L, 2); 
-  status = vctr_unget_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx); cBYE(status);
+  status = vctr_unget_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx);
+  cBYE(status);
   lua_pushboolean(L, 1);
   return 1;
 BYE:
@@ -555,10 +570,18 @@ static int l_vctr_num_readers( lua_State *L) {
   int num_args = lua_gettop(L); 
   if ( num_args != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  uint32_t chnk_idx = luaL_checknumber(L, 2); 
-  uint32_t num_readers;;
-
-  status = vctr_get_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx, NULL, NULL, &num_readers);
+  uint32_t num_readers;
+  uint32_t chnk_idx = ~0; // some fake number
+  int mode;
+  if ( lua_isnil(L, 2) ) { 
+    mode = 2;
+  }
+  else {
+    chnk_idx = luaL_checknumber(L, 2); 
+    mode = 1;
+  }
+  status = vctr_get_num_readers(mode, ptr_v->tbsp, ptr_v->uqid, 
+        chnk_idx, &num_readers);
   cBYE(status);
 
   lua_pushnumber(L, num_readers);
@@ -600,7 +623,7 @@ static int l_vctr_get_chunk( lua_State *L) {
   if ( num_args != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t chnk_idx = luaL_checknumber(L, 2); 
-  uint32_t num_elements = 0;
+  uint32_t num_in_chunk = 0;
   //-- allocate CMEM to go back 
   CMEM_REC_TYPE *ptr_c = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
   return_if_malloc_failed(ptr_c);
@@ -608,10 +631,11 @@ static int l_vctr_get_chunk( lua_State *L) {
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vctr_get_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx, ptr_c, &num_elements,NULL);
+  status = vctr_get_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx, ptr_c, 
+      &num_in_chunk);
   cBYE(status);
 
-  lua_pushnumber(L, num_elements);
+  lua_pushnumber(L, num_in_chunk);
   return 2;
 BYE:
   lua_pushnil(L);
@@ -842,13 +866,14 @@ BYE:
   return 3;
 }
 //----------------------------------------------------
-static int l_steal_lma( lua_State *L) {
+static int l_make_lma( lua_State *L) {
   int status = 0;
   // get args from Lua 
   int num_args = lua_gettop(L); 
   if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  char *file_name  = vctr_steal_lma(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
+  char *file_name  = vctr_make_lma(ptr_v->tbsp, ptr_v->uqid); 
+  if ( file_name == NULL ) { go_BYE(-1); } 
   int64_t file_sz = get_file_size(file_name); 
   lua_pushstring(L, file_name);
   lua_pushnumber(L, file_sz);
@@ -952,18 +977,17 @@ static const struct luaL_Reg vector_methods[] = {
     { "eov",    l_vctr_eov },
     { "early_free",    l_vctr_early_free },
     { "is_eov", l_vctr_is_eov },
+    { "is_lma", l_vctr_is_lma },
     { "is_early_free", l_vctr_is_early_free },
     { "nop", l_vctr_nop },
     //--------------------------------
-// TODO    { "add_lma",    l_vctr_add_lma },
-    { "del_lma",         l_vctr_del_lma },
-    { "chnks_to_lma",    l_vctr_chnks_to_lma },
-    { "get_lma_read",    l_get_lma_read },
-    { "get_lma_write",   l_get_lma_write },
-    { "steal_lma",       l_steal_lma },
-    { "unget_lma_read",  l_unget_lma_read },
-    { "unget_lma_write", l_unget_lma_write },
-// TODO    { "lma_to_chnks",    l_vctr_lma_to_chnks },
+    { "lma_to_chnks", l_vctr_lma_to_chnks },
+    { "chnks_to_lma", l_vctr_chnks_to_lma },
+    { "get_lma_read",     l_get_lma_read },
+    { "get_lma_write",    l_get_lma_write },
+    { "make_lma",         l_make_lma },
+    { "unget_lma_read",   l_unget_lma_read },
+    { "unget_lma_write",  l_unget_lma_write },
     //--------------------------------
     { "set_memo", l_vctr_set_memo },
     { "set_name", l_vctr_set_name },
@@ -1004,20 +1028,19 @@ static const struct luaL_Reg vector_functions[] = {
     { "eov",    l_vctr_eov },
     { "early_free",    l_vctr_early_free },
     { "is_eov", l_vctr_is_eov },
+    { "is_lma", l_vctr_is_lma },
     { "is_early_free", l_vctr_is_early_free },
     { "persist", l_vctr_persist },
     { "is_persist", l_vctr_is_persist },
     { "nop",    l_vctr_nop },
     //--------------------------------
-// TODO    { "add_lma",    l_vctr_add_lma },
-    { "del_lma",         l_vctr_del_lma },
-    { "chnks_to_lma",    l_vctr_chnks_to_lma },
-    { "get_lma_read",    l_get_lma_read },
-    { "get_lma_write",   l_get_lma_write },
-    { "steal_lma",       l_steal_lma },
-    { "unget_lma_read",  l_unget_lma_read },
-    { "unget_lma_write", l_unget_lma_write },
-// TODO    { "lma_to_chnks",    l_vctr_lma_to_chnks },
+    { "lma_to_chnks", l_vctr_lma_to_chnks },
+    { "chnks_to_lma", l_vctr_chnks_to_lma },
+    { "get_lma_read",     l_get_lma_read },
+    { "get_lma_write",    l_get_lma_write },
+    { "make_lma",         l_make_lma },
+    { "unget_lma_read",   l_unget_lma_read },
+    { "unget_lma_write",  l_unget_lma_write },
     //--------------------------------
     { "set_memo", l_vctr_set_memo},
     { "set_name", l_vctr_set_name },

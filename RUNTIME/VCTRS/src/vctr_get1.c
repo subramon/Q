@@ -1,11 +1,11 @@
 #include "q_incs.h"
 #include "qtypes.h"
 #include "qjit_consts.h"
-#include "get_bit_u64.h"
-#include "l2_file_name.h"
-#include "rs_mmap.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
+#include "get_bit_u64.h"
+#include "rs_mmap.h"
+#include "vctr_lma_access.h"
 #include "chnk_is.h"
 #include "vctr_is.h"
 #include "vctr_get1.h"
@@ -24,21 +24,13 @@ vctr_get1_lma(
     )
 {
   int status = 0;
-  char *lma_file = NULL;
   char *X = NULL; size_t nX = 0;
 
   if ( ptr_val->is_lma == false ) { go_BYE(-1); }
   if ( ptr_val->num_writers != 0 ) { go_BYE(-1); }
   if ( elem_idx >= ptr_val->num_elements ) { go_BYE(-1); }
-  if ( ptr_val->num_readers > 0 ) { 
-    X = ptr_val->X;
-    nX = ptr_val->nX;
-  }
-  else {
-    lma_file = l2_file_name(tbsp, vctr_uqid, ((uint32_t)~0));
-    if ( lma_file == NULL ) { go_BYE(-1); }
-    status = rs_mmap(lma_file, &X, &nX, 0); cBYE(status);
-  }
+  status = vctr_get_lma_X_nX(tbsp, vctr_uqid, ptr_val, &X, &nX);
+  cBYE(status);
   //---------------------------------------------------
   if ( ptr_val->qtype == SC ) { 
     go_BYE(-1); // TODO P2 
@@ -52,13 +44,8 @@ vctr_get1_lma(
     char *data = X + offset;
     memcpy(&(ptr_sclr->val), data, ptr_val->width); 
   }
-  if ( ptr_val->num_readers == 0 ) { 
-    munmap(X, nX);
-    ptr_val->X = NULL;
-    ptr_val->nX = 0;
-  }
+  status = vctr_unget_lma_X_nX(ptr_val, &X, &nX); cBYE(status);
 BYE:
-  free_if_non_null(lma_file);
   return status;
 }
 //-------------------------------------------------------

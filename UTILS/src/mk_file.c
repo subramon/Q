@@ -34,6 +34,7 @@ mk_file(
 
   /* Check that directory is accessible */
   if ( dir != NULL ) { 
+#define MAX_LEN_DIR_NAME 255
     char cwd[MAX_LEN_DIR_NAME+1];
     if ( getcwd(cwd, MAX_LEN_DIR_NAME) == NULL ) { go_BYE(-1); }
     status = chdir(dir);  cBYE(status);

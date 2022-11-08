@@ -103,6 +103,10 @@ vctr_chk(
       go_BYE(-1);
     }
   }
+  else {
+    if ( vctr_val.num_chnks != 0 ) { go_BYE(-1); } 
+    if ( vctr_val.max_chnk_idx != 0 ) { go_BYE(-1); } 
+  }
   //----------------------------------------------
   if ( ( vctr_val.num_readers == 0 ) && ( vctr_val.num_writers == 0 ) ) { 
     if ( vctr_val.X != NULL ) { go_BYE(-1); }

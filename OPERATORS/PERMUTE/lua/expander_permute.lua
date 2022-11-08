@@ -39,13 +39,15 @@ local function expander_permute(x, p, direction, optargs)
 
   local chunk_num = 0
   while ( true ) do
-    local xlen, x_chunk, _ = x:get_chunk(chunk_num) 
-    local plen, p_chunk, _ = p:get_chunk(chunk_num) 
+    local xlen, x_chunk, _, x_is_lma, _  = x:get_chunk(chunk_num) 
+    local plen, p_chunk, _, p_is_lma, _  = p:get_chunk(chunk_num) 
     assert(xlen == plen)
     if ( xlen == 0 ) then break end 
     local xptr = get_ptr(x_chunk, subs.cast_x_as)
     local pptr = get_ptr(p_chunk, subs.cast_p_as)
     qc[func_name](xptr, pptr, xlen, yptr)
+    x:unget_chunk(chunk_num, x_is_lma)
+    p:unget_chunk(chunk_num, p_is_lma)
     chunk_num = chunk_num + 1 
   end
   -- Indicate write is over 

@@ -292,7 +292,7 @@ BYE:
     // nothing to do 
   }
   else {
-    fclose(fp);
+    fclose_if_non_null(fp);
   }
   return status;
 }

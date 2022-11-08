@@ -39,7 +39,8 @@ l2_file_name(
 {
   int status = 0;
   if ( tbsp >= Q_MAX_NUM_TABLESPACES ) { WHEREAMI; return NULL; } 
-  if ( vctr_uqid == 0 ) { WHEREAMI; return NULL; }
+  // We will allow the following because it is used for make_lma()
+  // if ( vctr_uqid == 0 ) { WHEREAMI; return NULL; }
   if ( g_data_dir_root[tbsp][0] == '\0' ) { go_BYE(-1); }
   int len = strlen(g_data_dir_root[tbsp]);
   // top 8 bits of vctr_uqid and top 8 bits of chnk_idx used for directory 

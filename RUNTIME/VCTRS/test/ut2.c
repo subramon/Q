@@ -130,14 +130,16 @@ main(
     if ( num_elements != (i+1)*max_num_in_chunk ) { go_BYE(-1); }
 
     // some tests on the chunk just created
-    CMEM_REC_TYPE chk_cmem; uint32_t chk_n;
-    status = vctr_get_chunk(tbsp, uqid, i, &chk_cmem, &chk_n, NULL);
+    CMEM_REC_TYPE chk_cmem; uint32_t chk_n; 
+    status = vctr_get_chunk(tbsp, uqid, i, &chk_cmem, &chk_n); 
+    cBYE(status);
     if ( chk_cmem.qtype != qtype ) { go_BYE(-1); }
     if ( chk_cmem.size  != vctr_chnk_size ) { go_BYE(-1); }
     for ( uint32_t j = 0; j < max_num_in_chunk; j++ ) { 
       if ( ((float *)chk_cmem.data)[j] != (i*100 + j) ) { go_BYE(-1); } 
     }
     cmem_free(&chk_cmem);
+    status = vctr_unget_chunk(tbsp, uqid, i); cBYE(status);
   }
   // vector should NOT be eov 
   status = vctr_is_eov(tbsp, uqid, &b); cBYE(status);

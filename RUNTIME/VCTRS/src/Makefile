@@ -51,7 +51,8 @@ SRCS +=	vctr_is_persist.c
 SRCS +=	vctr_l1_to_l2.c  
 
 SRCS +=	vctr_chnks_to_lma.c  
-SRCS +=	vctr_del_lma.c  
+SRCS +=	vctr_lma_to_chnks.c  
+SRCS +=	vctr_make_lma.c  
 SRCS +=	vctr_lma_access.c  
 SRCS +=	vctr_set_lma.c  
 

@@ -7,12 +7,12 @@
 #include "mod_mem_used.h"
 #include "get_file_size.h"
 #include "file_exists.h"
-#include "vctr_del_lma.h"
+#include "vctr_lma_to_chnks.h"
 
 
 extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
 int
-vctr_del_lma(
+vctr_lma_to_chnks(
     uint32_t tbsp,
     uint32_t vctr_uqid
     )
@@ -20,14 +20,31 @@ vctr_del_lma(
   int status = 0;
   char *lma_file = NULL;
 
+  if ( tbsp != 0 ) { go_BYE(-1); } 
+  if ( vctr_uqid == 0 ) { go_BYE(-1); } 
+
   bool vctr_is_found; uint32_t vctr_where_found;
   status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where_found); 
   cBYE(status);
   if ( !vctr_is_found ) { go_BYE(-1); }
   vctr_rs_hmap_val_t val = g_vctr_hmap[tbsp].bkts[vctr_where_found].val;
+  //
+  //--------------------------
+  char *X = val.X;
+  size_t nX = val.nX;
+  if ( X != NULL ) { 
+    munmap(X, nX);
+    g_vctr_hmap[tbsp].bkts[vctr_where_found].val.X = NULL;
+    g_vctr_hmap[tbsp].bkts[vctr_where_found].val.nX = 0;
+  }
+  if ( val.num_readers != 0 ) { go_BYE(-1); }
+  if ( val.num_writers != 0 ) { go_BYE(-1); }
+  //--------------------------
+
+  go_BYE(-1); // TODO TODO P0
+#ifdef TODO 
   if ( !val.is_lma ) { go_BYE(-1); }
 
-  // TODO TODO P0
   // Note that file is created in your table space even if
   // vector is not from your table space
   // THINK ABOUT chnks_to_lma.c 
@@ -39,6 +56,7 @@ vctr_del_lma(
   unlink(lma_file);
   status = decr_dsk_used(filesz); cBYE(status);
 
+#endif
   g_vctr_hmap[tbsp].bkts[vctr_where_found].val.is_lma = false; 
 BYE:
   free_if_non_null(lma_file);
