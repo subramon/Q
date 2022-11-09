@@ -36,6 +36,7 @@ mk_file(
   if ( dir != NULL ) { 
 #define MAX_LEN_DIR_NAME 255
     char cwd[MAX_LEN_DIR_NAME+1];
+    memset(cwd, 0, MAX_LEN_DIR_NAME+1);
     if ( getcwd(cwd, MAX_LEN_DIR_NAME) == NULL ) { go_BYE(-1); }
     status = chdir(dir);  cBYE(status);
     status = chdir(cwd);  cBYE(status);
@@ -55,7 +56,7 @@ mk_file(
   else {
     full_name = strdup(filename);
   }
-  fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
+  fd = open(full_name, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
   if (fd == -1) {
     fprintf(stderr, "Error opening %s file for writing\n", filename);
     go_BYE(-1);

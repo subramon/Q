@@ -403,6 +403,7 @@ function lVector:get_chunk(chnk_idx)
   if ( to_generate ) then 
     -- print(" invoke the generator  for " .. self:name(), self._chunk_num)
     if ( type(self._generator) == "nil" ) then return 0, nil end 
+    print("Gen Getting " .. self._chunk_num .. " for " .. self:name())
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
     --==============================
@@ -469,8 +470,10 @@ function lVector:get_chunk(chnk_idx)
         end
       end
     end
-    -- last return arg of true => generator was invoked
-    return num_elements, buf, nn_buf, true 
+    self:incr_num_readers() -- TODO EXPERIMENTAL 
+    print("Returning " .. num_elements .. " for " .. self:name())
+    print("Num readers = ", self:num_readers(chnk_idx))
+    return num_elements, buf, nn_buf
   else 
     -- print(" Archival chunk for " .. self:name(), self._chunk_num)
     self:check()
@@ -486,8 +489,7 @@ function lVector:get_chunk(chnk_idx)
     end
     assert(type(n) == "number")
     assert(type(x) == "CMEM")
-    -- last return arg of false => generator was NOT invoked
-    return n, x, nn_x, false
+    return n, x, nn_x
   end
 end
 -- evaluates the vector using a provided generator function
@@ -496,7 +498,7 @@ end
 function lVector:eval()
   if ( self:is_eov() ) then return self end 
   repeat
-    local num_elements, buf, nn_buf, is_gen = self:get_chunk(self._chunk_num)
+    local num_elements, buf, nn_buf = self:get_chunk(self._chunk_num)
     if ( nn_buf ) then assert(type(nn_buf) == "CMEM") end 
     if (    buf ) then assert(type(   buf) == "CMEM") end 
     assert(type(num_elements) == "number")
@@ -506,15 +508,13 @@ function lVector:eval()
     -- called put_chunk which would have incremented chunk_num
     -- TODO THINK. I added ( self._chunk_num > 0 ) 
     -- to handle the zero element array case. Consider this caefully
-    if ( is_gen == false ) then
-      if ( ( num_elements == 0 ) and ( self._chunk_num > 0 ) )  then
-        print("Ungetting " .. self._chunk_num .. " for " .. self:uqid())
-        cVector.unget_chunk(self._base_vec, self._chunk_num-1)
-        if ( self._nn_vec ) then 
-          cVector.unget_chunk(self._nn_vec, self._chunk_num-1) 
-        end
+    if ( ( num_elements == 0 ) and ( self._chunk_num > 0 ) )  then
+      print("Ungetting " .. self._chunk_num .. " for " .. self:name())
+      cVector.unget_chunk(self._base_vec, self._chunk_num-1)
+      if ( self._nn_vec ) then 
+        cVector.unget_chunk(self._nn_vec, self._chunk_num-1) 
       end
-    end 
+    end
   until ( num_elements ~= self._max_num_in_chunk ) 
   assert(self:is_eov())
   --[[ TODO THINK P1 

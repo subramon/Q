@@ -57,7 +57,7 @@ local function permute_specialize(invec, p, direction, optargs)
   end
 
   subs.direction = direction
-  subs.file_name = "_permute_" .. cutils.rdtsc() -- some temp name 
+  subs.file_name = "_permute_" .. (cutils.rdtsc() % 2^32)-- some temp name 
   subs.dir_name  = lgutils.data_dir()
   subs.file_sz   = subs.val_width * subs.num_elements
   --========================================

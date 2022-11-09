@@ -29,20 +29,19 @@ local prm_qtypes = { "I2", }
     for _, prm_qtype in ipairs(prm_qtypes) do
       vargs.qtype = val_qtype 
       pargs.qtype = prm_qtype 
-      local x = Q.seq(vargs)
-      local p = Q.seq(pargs)
-      local y = Q.permute(x, p, "to", { num_elements = len})
+      local x = Q.seq(vargs):set_name("x")
+      local p = Q.seq(pargs):set_name("p")
+      local y = Q.permute(x, p, "to", { num_elements = len}):set_name("y")
+      assert(type(y) == "lVector")
       assert(y:is_eov())
-      y:pr()
-      local z = Q.permute(y, p, "to")
+      -- y:pr()
+      local z = Q.permute(y, p, "to"):set_name("z")
       assert(z:is_eov())
-      z:pr()
-      --[[
+      -- z:pr()
       local n1, n2 = Q.vveq(x, z):sum():eval()
       assert(n1 == n2)
       local n1, n2 = Q.vveq(x, y):sum():eval()
       assert(n1:to_num() == 0)
-      --]]
       print("Successfully completed test t1 for ", val_qtype, prm_qtype)
     end
   end

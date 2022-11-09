@@ -18,7 +18,8 @@ vctr_get_chunk_lma(
     uint32_t tbsp,
     uint32_t vctr_uqid,
     uint64_t chnk_idx,
-    CMEM_REC_TYPE *ptr_cmem
+    CMEM_REC_TYPE *ptr_cmem,
+    uint32_t *ptr_num_in_chunk // number in chunk
     )
 {
   int status = 0;
@@ -39,10 +40,15 @@ vctr_get_chunk_lma(
     chunk_size = width * max_num_in_chnk;
   }
   size_t offset = chunk_size * chnk_idx;
-  if ( (offset + chunk_size) > nX ) { go_BYE(-1); }
+  if ( offset > nX ) { go_BYE(-1); }
+  // TODO P3 FIX THIS CHECK if ((offset + chunk_size) > nX ) { go_BYE(-1); }
   ptr_cmem->data = X + offset;
-  ptr_cmem->size = nX - offset; 
+  // The min(..) is to handle case of last chunk which has 
+  // fewer elements than max_num_in_chunk
+  ptr_cmem->size = mcr_min(nX - offset, chunk_size);
   ptr_cmem->is_foreign = true;
+
+  *ptr_num_in_chunk = ptr_cmem->size / width;
 
 BYE:
   return status;
@@ -64,6 +70,7 @@ vctr_get_chunk(
   bool is_write = false; // TODO P3 Handle case when this is true 
 
   if ( ptr_cmem == NULL ) { go_BYE(-1); } 
+  *ptr_num_in_chunk = 0;
   status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
   if ( !vctr_is_found ) { go_BYE(-1); }
@@ -77,7 +84,7 @@ vctr_get_chunk(
   if ( is_lma ) { 
     status = vctr_get_chunk_lma(
         &(g_vctr_hmap[tbsp].bkts[vctr_where_found].val),
-        tbsp, vctr_uqid, chnk_idx, ptr_cmem);
+        tbsp, vctr_uqid, chnk_idx, ptr_cmem, ptr_num_in_chunk);
     cBYE(status);
     goto BYE;
   }
@@ -134,7 +141,8 @@ vctr_unget_chunk(
     if ( chnk_is_found == false ) { go_BYE(-1); } 
     chnk_rs_hmap_val_t *ptr_chnk = 
       &g_chnk_hmap[tbsp].bkts[chnk_where_found].val;
-    if ( ptr_chnk->num_readers == 0 ) { go_BYE(-1); }
+    if ( ptr_chnk->num_readers == 0 ) { 
+      go_BYE(-1); }
     ptr_chnk->num_readers--;
   }
 BYE:
@@ -143,7 +151,8 @@ BYE:
 
 int
 vctr_get_num_readers(
-    int mode, 
+    bool is_incr,
+    bool is_lma,
     uint32_t tbsp,
     uint32_t vctr_uqid,
     uint32_t chnk_idx,
@@ -158,23 +167,21 @@ vctr_get_num_readers(
   cBYE(status);
   if ( !vctr_is_found ) { go_BYE(-1); }
 
-  switch ( mode ) {
-    //-------------------------------------
-    case 1 : 
-      status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);
-      cBYE(status);
-      if ( chnk_is_found == false ) { go_BYE(-1); }
-      *ptr_num_readers = g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers;
-      break;
-      //-------------------------------------
-    case 2 : 
-      *ptr_num_readers = 
-        g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_readers;
-      break;
-      //-------------------------------------
-    default : 
-      go_BYE(-1);
-      break;
+  if ( is_lma ) { 
+    if ( is_incr ) { 
+      g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_readers++;
+    }
+    *ptr_num_readers = 
+      g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_readers;
+  }
+  else { 
+    status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);
+    cBYE(status);
+    if ( chnk_is_found == false ) { go_BYE(-1); }
+    if ( is_incr ) { 
+    g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers++;
+    }
+    *ptr_num_readers = g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers;
   }
 BYE:
   return status;
