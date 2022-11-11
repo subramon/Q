@@ -37,15 +37,11 @@ local function expander_permute(x, p, direction, optargs)
   assert(ycmem:is_foreign() == true)
   local yptr = get_ptr(ycmem, subs.cast_x_as)
 
+  local x_max_num_in_chunk = x:max_num_in_chunk()
   local chunk_num = 0
   while ( true ) do
-    print("chunk_num = ", chunk_num)
     local xlen, x_chunk = x:get_chunk(chunk_num) 
     local plen, p_chunk = p:get_chunk(chunk_num) 
-  print("===")
-    print(xlen,  plen)
-    print(x:num_readers(chunk_num),  p:num_readers(chunk_num))
-  print("===")
     assert(xlen == plen)
     if ( xlen == 0 ) then break end 
     local xptr = get_ptr(x_chunk, subs.cast_x_as)
@@ -53,7 +49,10 @@ local function expander_permute(x, p, direction, optargs)
     qc[func_name](xptr, pptr, xlen, yptr)
     x:unget_chunk(chunk_num)
     p:unget_chunk(chunk_num)
+    -- assert(x:num_readers(chunk_num) == 0) -- JUST FOR TESTING 
+    -- assert(p:num_readers(chunk_num) == 0) -- JUST FOR TESTING 
     chunk_num = chunk_num + 1 
+    if ( xlen < x_max_num_in_chunk ) then break end 
   end
   -- Indicate write is over 
   y:unget_lma_write()

@@ -31,6 +31,8 @@ permute_${val_qtype}_${perm_qtype}(
   for ( uint32_t i = 0; i < n; i++ ) { 
     ${val_ctype} xval = x[i];
     ${perm_ctype} pos = p[i];
+    // TODO P2: if ( pos >= ny ) { go_BYE(-1); } 
+    if ( pos < 0 ) { go_BYE(-1); } 
     y[pos] = xval;
   }
 BYE:

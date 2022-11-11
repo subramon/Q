@@ -580,7 +580,7 @@ static int l_vctr_incr_num_readers( lua_State *L) {
     chnk_idx = luaL_checknumber(L, 2); 
     is_lma = false;
   }
-  status = vctr_get_num_readers(is_lma, is_incr, ptr_v->tbsp, ptr_v->uqid, 
+  status = vctr_get_num_readers(is_incr, is_lma, ptr_v->tbsp, ptr_v->uqid, 
         chnk_idx, &num_readers);
   cBYE(status);
 
@@ -1079,6 +1079,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "name", l_vctr_get_name },
     { "qtype", l_vctr_get_qtype },
     { "num_elements", l_vctr_num_elements },
+    { "num_readers", l_vctr_get_num_readers },
     { "incr_num_readers", l_vctr_incr_num_readers },
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },

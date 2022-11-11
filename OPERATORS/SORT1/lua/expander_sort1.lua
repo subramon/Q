@@ -56,7 +56,7 @@ local function expander_sort1(x, sort_order, optargs)
 
   -- Indicate write is over 
   y:unget_lma_write()
-  assert(y:num_readers() == 0)
+  -- assert(y:num_readers() == 0)
   record_time(t_start, "sort1")
   return y
 end

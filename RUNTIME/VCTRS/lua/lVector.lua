@@ -72,6 +72,11 @@ function lVector:max_num_in_chunk()
   return max_num_in_chunk
 end
 
+function lVector:incr_num_readers(chnk_idx)
+  local num_readers = cVector.incr_num_readers(self._base_vec, chnk_idx)
+  return num_readers
+end
+
 function lVector:num_readers(chnk_idx)
   local num_readers = cVector.num_readers(self._base_vec, chnk_idx)
   return num_readers
@@ -376,12 +381,12 @@ function lVector:get1(elem_idx)
 end
 
 function lVector:unget_chunk(chnk_idx)
-  cVector.unget_chunk(self._base_vec, chnk_idx)
+  assert(cVector.unget_chunk(self._base_vec, chnk_idx))
   if ( self._nn_vec ) then 
     local nn_vector = self._nn_vec
     assert(type(nn_vector) == "lVector")
     assert((nn_vector:qtype() == "B1") or (nn_vector:qtype() == "BL"))
-    cVector.unget_chunk(nn_vector._base_vec, chnk_idx)
+    assert(cVector.unget_chunk(nn_vector._base_vec, chnk_idx))
   end
 end
 
@@ -403,7 +408,7 @@ function lVector:get_chunk(chnk_idx)
   if ( to_generate ) then 
     -- print(" invoke the generator  for " .. self:name(), self._chunk_num)
     if ( type(self._generator) == "nil" ) then return 0, nil end 
-    print("Gen Getting " .. self._chunk_num .. " for " .. self:name())
+    -- print("Gen Getting chunk " .. self._chunk_num .. " for " .. self:name())
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
     --==============================
@@ -449,12 +454,17 @@ function lVector:get_chunk(chnk_idx)
           print("Sibling EOV for " .. v:name())
           v:eov()  -- vector is at an end 
         end
+        -- following because we aren't really consuming the chunk
+        -- we are just getting it 
+        assert(cVector.unget_chunk(self._base_vec, chnk_idx))
+        if ( self._nn_vec ) then
+          assert(cVector.unget_chunk(self._nn_vec, chnk_idx))
+        end
         -- -- TODO P1 Document whether above assert is okay
         -- This was motivated by the use of Q.seq({len = n, ...}) as 
         -- the first argument to Q.where() where n was not known a priori
         -- Note the immediate unget which is done to decrement
-        -- the number of readers. Note that we throw away x, y, z 
-        cVector.unget_chunk(v:self(), chnk_idx)
+        -- the number of readers. Note that we throw away x, y, z cVector.unget_chunk(v:self(), chnk_idx)
         -- Also, depending on memo_len, we may need to delete some chunks
         if ( ( v:memo_len() >= 0 ) and ( v:num_elements() > 0 ) ) then
           local chunk_to_release = chunk_idx - self._memo_len
@@ -470,9 +480,10 @@ function lVector:get_chunk(chnk_idx)
         end
       end
     end
-    self:incr_num_readers() -- TODO EXPERIMENTAL 
-    print("Returning " .. num_elements .. " for " .. self:name())
-    print("Num readers = ", self:num_readers(chnk_idx))
+    self:incr_num_readers(chnk_idx) -- TODO EXPERIMENTAL 
+    -- print("Returning " .. num_elements .. " for " .. self:name())
+    -- TODO print("XXX", chnk_idx, self:num_readers(chnk_idx), self:name())
+    assert(self:num_readers(chnk_idx) == 1)
     return num_elements, buf, nn_buf
   else 
     -- print(" Archival chunk for " .. self:name(), self._chunk_num)
@@ -508,11 +519,14 @@ function lVector:eval()
     -- called put_chunk which would have incremented chunk_num
     -- TODO THINK. I added ( self._chunk_num > 0 ) 
     -- to handle the zero element array case. Consider this caefully
-    if ( ( num_elements == 0 ) and ( self._chunk_num > 0 ) )  then
-      print("Ungetting " .. self._chunk_num .. " for " .. self:name())
-      cVector.unget_chunk(self._base_vec, self._chunk_num-1)
+    local chunk_to_unget = self._chunk_num - 1
+    if ( num_elements == 0 ) then
+      -- nothing to unget
+    else
+      -- print("Ungetting " .. self._chunk_num .. " for " .. self:name())
+      assert(cVector.unget_chunk(self._base_vec, chunk_to_unget))
       if ( self._nn_vec ) then 
-        cVector.unget_chunk(self._nn_vec, self._chunk_num-1) 
+        assert(cVector.unget_chunk(self._nn_vec, chunk_to_unget))
       end
     end
   until ( num_elements ~= self._max_num_in_chunk ) 

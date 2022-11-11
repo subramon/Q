@@ -83,9 +83,11 @@ local qtypes = { "I1", "I2", "I4", "I8", }
   print("Successfully completed test t2")
 end
 tests.t3 = function()
-  local len = 1048576 
+  local len = 128
+  local max_num_in_chunk = 64
   local args = {
   len = len,
+  max_num_in_chunk = max_num_in_chunk, 
   start = 1, 
   by = 1,
 }
@@ -96,6 +98,7 @@ local qtypes = { "F4", "F8" }
       args.qtype = qtype 
       local x = Q.seq(args):eval()
       assert(x:check())
+      assert(x:num_readers(0) == 0) 
       local yname = "y_" .. order .. "_" .. qtype
       local y = Q.sort(x, order):set_name(yname)
       assert(y:check())
@@ -104,6 +107,7 @@ local qtypes = { "F4", "F8" }
       if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
       local zname = "z_" .. order .. "_" .. qtype
       local z = Q.is_prev(y, cmp, { default_val = false}):set_name(zname)
+      assert(z:qtype() == "BL")
       local n1, n2 = Q.sum(z):eval()
       assert(type(n1) == "Scalar")
       assert(type(n2) == "Scalar")
@@ -122,7 +126,7 @@ local qtypes = { "F4", "F8" }
   end
   print("Successfully completed test t3")
 end
--- tests.t1()
--- tests.t2()
+tests.t1()
+tests.t2()
 tests.t3()
 -- return tests
