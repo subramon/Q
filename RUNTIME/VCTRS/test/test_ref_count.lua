@@ -56,7 +56,7 @@ tests.t2 = function()
   x:drop_nulls()
   assert(x:has_nulls() == false)
   x:drop_nulls()
-  Y[1]:pr()
+  -- Y[1]:pr()
   print("Test t2 succeeded")
 end
 -- return tests

@@ -92,8 +92,8 @@ local function save()
     cutils.delete(meta_file)
     cutils.delete(aux_file)
   end
-  print("Writing to ", meta_file)
-  print("Writing to ", aux_file)
+  -- print("Writing to ", meta_file)
+  -- print("Writing to ", aux_file)
   --================================================
   local fp = assert(io.open(aux_file, "w+"))
   local str = string.format("status = %s", "TODO")

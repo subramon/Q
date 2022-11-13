@@ -480,7 +480,10 @@ static int l_vctr_unget_chunk( lua_State *L) {
   int num_args = lua_gettop(L); 
   if ( num_args != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  uint32_t chnk_idx = luaL_checknumber(L, 2); 
+  int chnk_idx = -1; 
+  if ( !lua_isnil(L, 2) ) { 
+    chnk_idx = luaL_checknumber(L, 2); 
+  }
   status = vctr_unget_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx);
   cBYE(status);
   lua_pushboolean(L, 1);

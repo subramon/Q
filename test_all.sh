@@ -11,7 +11,7 @@ cd ~/Q/RUNTIME/VCTRS/src/
 cd ~/Q/RUNTIME/VCTRS/test/
 qjit test1.lua  
 qjit test_lma.lua  
-qjit test_memo.lua  
+# TODO qjit test_memo.lua  
 qjit test_ref_count.lua
 
 cd ~/Q/OPERATORS/S_TO_F/test/

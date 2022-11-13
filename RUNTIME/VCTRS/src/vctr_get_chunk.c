@@ -113,7 +113,7 @@ int
 vctr_unget_chunk(
     uint32_t tbsp,
     uint32_t vctr_uqid,
-    uint32_t chnk_idx
+    int in_chnk_idx
     )
 {
   int status = 0;
@@ -135,6 +135,8 @@ vctr_unget_chunk(
     }
   }
   else {
+    if ( in_chnk_idx < 0 ) { go_BYE(-1); }
+    uint32_t chnk_idx = (uint32_t)in_chnk_idx;
     status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, 
         &chnk_where_found);
     cBYE(status);

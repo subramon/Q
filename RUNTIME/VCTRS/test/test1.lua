@@ -112,7 +112,7 @@ tests.t4 = function()
   x = lVector({ name = "xvec", qtype = qtype, max_num_in_chunk = max_num_in_chnk })
   assert(cVector.check_all())
   assert(x:name() == "xvec")
-  print("Created vector " .. x:name() .. " with uqid = " .. x:uqid())
+  -- print("Created vector " .. x:name() .. " with uqid = " .. x:uqid())
   -- create a buffer for data to put into vector 
   local size = max_num_in_chnk * width
   local buf = cmem.new( {size = size, qtype = qtype, name = "inbuf"})
@@ -160,7 +160,7 @@ tests.t4 = function()
   x:nop()
   y = lVector(args)
   assert(type(y) == "lVector")
-  print("Created vector " .. y:name() .. " with uqid = " .. y:uqid())
+  -- print("Created vector " .. y:name() .. " with uqid = " .. y:uqid())
   y:pr("/tmp/_y")
   y:set_name("yvec")
   -- Check that x and y are in globals
@@ -186,8 +186,8 @@ tests.t4 = function()
   print("Test t4 succeeded")
 end
 -- return tests
--- ORKS tests.t1()
--- ORKS tests.t2()
--- ORKS tests.t3()
+tests.t1()
+tests.t2()
+tests.t3()
 tests.t4()
 
