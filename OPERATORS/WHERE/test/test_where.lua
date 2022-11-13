@@ -53,7 +53,6 @@ tests.t4 = function ()
   b:set_meta("min", Scalar.new(0, "I4"))
   b:set_meta("max", Scalar.new(0, "I4"))
   local c = Q.where(a, b)
-  print(type(c))
   assert(c == nil)
   print("Test t4 succeeded")
 end

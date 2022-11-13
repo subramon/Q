@@ -55,7 +55,7 @@ local function expander_where(a, b, optargs)
   local b_name = b:name()
   local function where_gen(chunk_num)
     assert(chunk_num == l_chunk_num)
-    print("Get chunk " .. chunk_num .. " for " .. a_name .. " and " .. b_name)
+    -- print("Get chunk " .. chunk_num .. " for " .. a_name .. " and " .. b_name)
     -- n_out counts number of entries in output buffer
     local n_out = cmem.new(ffi.sizeof("uint64_t"))
     local c_n_out = ffi.cast("uint64_t *", get_ptr(n_out, "UI8"))

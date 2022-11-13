@@ -23,7 +23,6 @@ local function repeater(f1, f2, optargs )
   -- num_in_out + space_in_out == subs.max_num_in_chunk 
   local f3_gen = function(chunk_num)
     assert(chunk_num == l_chunk_num)
-    assert(l_chunk_num <= 20 ) -- TODO 
     local buf = assert(cmem.new({size = subs.bufsz, qtype = subs.f3_qtype}))
     buf:stealable(true)
     local space_in_out = subs.max_num_in_chunk
@@ -62,7 +61,6 @@ local function repeater(f1, f2, optargs )
           return num_in_out, buf 
         end
       end
-      if ( i > 10 ) then error("XXX") end 
     end
   end
   local vargs = {}

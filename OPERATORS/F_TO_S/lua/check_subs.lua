@@ -2,15 +2,15 @@ local function check_subs(subs)
   assert(type(subs.fn) == "string")
   assert(type(subs.getter) == "function")
   assert(type(subs.reduce_qtype) == "string")
-  assert(type(subs.in_ctype) == "string")
+  assert(type(subs.ctype) == "string")
   if ( subs.tmpl ) then 
     assert(type(subs.tmpl) == "string" )
   else
     assert(type(subs.dotc) == "string" )
     assert(type(subs.doth) == "string" )
   end
-  assert(type(subs.args_ctype) == "string")
-  assert(type(subs.args) == "cdata")
+  assert(type(subs.accumulator_ctype) == "string")
+  assert(type(subs.accumulator) == "CMEM")
   assert(subs.operator)
   if ( subs.operator == "sum" ) then 
     assert(type(subs.reduce_ctype) == "string")

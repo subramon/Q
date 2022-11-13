@@ -43,14 +43,17 @@ tests.t2 = function()
   end
   print("Test t2 succeeded")
 end
-tests.t2 = function()
+tests.t3 = function()
   local len =  2*max_num_in_chunk + 17
   local c1 = lVector.new({ qtype = "I1", max_num_in_chunk = max_num_in_chunk })
   local c2 = lVector.new({ qtype = "I1", max_num_in_chunk = max_num_in_chunk })
   for i = 1, len do 
     c1:put1(Scalar.new(1, "I1"))
     c2:put1(Scalar.new(0, "I1"))
-   end
+  end
+  c1:eov()
+  c2:eov()
+
   local c3 = Q.vveq(c1, c1)
   local n1, n2 = Q.sum(c3):eval()
   assert(n1 == n2)
@@ -58,9 +61,10 @@ tests.t2 = function()
   local c3 = Q.vveq(c1, c2)
   local n1, n2 = Q.sum(c3):eval()
   assert(n1 == Scalar.new(0))
-  print("Test t2 succeeded")
+  print("Test t3 succeeded")
 end
 -- return tests
 tests.t1()
 tests.t2()
--- os.exit()
+tests.t3()
+os.exit()

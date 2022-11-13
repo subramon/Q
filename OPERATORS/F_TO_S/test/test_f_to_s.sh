@@ -3,9 +3,9 @@ set -e
 make -C ../lua/
 INCS=" -I../inc/  -I../gen_inc -I../../../UTILS/inc -I../../../UTILS/gen_inc/ "
 gcc -g -std=gnu99 test_f_to_s.c $INCS \
-  ../gen_src/_sum_F8.c \
-  ../gen_src/_min_I4.c \
-  ../gen_src/_max_I1.c \
+  ../gen_src/sum_F8.c \
+  ../gen_src/min_I4.c \
+  ../gen_src/max_I1.c \
   ../../../UTILS/src/get_bit_u64.c \
   ../src/sum_B1.c \
   -o tst_f_to_s

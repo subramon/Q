@@ -1,9 +1,9 @@
 #include "q_incs.h"
 #include "sum_struct.h"
 #include "minmax_struct.h"
-#include "_sum_F8.h"
-#include "_min_I4.h"
-#include "_max_I1.h"
+#include "sum_F8.h"
+#include "min_I4.h"
+#include "max_I1.h"
 #include "sum_B1.h"
 int
 main(

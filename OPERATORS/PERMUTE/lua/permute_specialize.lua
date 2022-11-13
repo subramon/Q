@@ -66,7 +66,7 @@ local function permute_specialize(invec, p, direction, optargs)
   subs.tmpl   = "OPERATORS/PERMUTE/lua/permute.tmpl"
   subs.incdir = "OPERATORS/PERMUTE/gen_inc/"
   subs.srcdir = "OPERATORS/PERMUTE/gen_src/"
-  subs.incs = { "OPERATORS/PERMUTE/gen_inc/" }
+  subs.incs = { "UTILS/inc/", "OPERATORS/PERMUTE/gen_inc/" }
   return subs
 end
 return permute_specialize

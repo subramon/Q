@@ -371,7 +371,7 @@ function lVector:get1(elem_idx)
   local sclr = cVector.get1(self._base_vec, elem_idx)
   if ( type(sclr) ~= "nil" ) then assert(type(sclr) == "Scalar") end
   local nn_vector = self._nn_vec
-  if ( nn_vector ) then
+  if ( nn_vector and sclr ) then
     assert(type(nn_vector) == "lVector")
     nn_sclr = cVector.get1(nn_vector._base_vec, elem_idx)
     assert(type(nn_sclr) == "Scalar") 
@@ -418,6 +418,7 @@ function lVector:get_chunk(chnk_idx)
     end
     --==============================, NUmber of elements
     if ( num_elements < self._max_num_in_chunk ) then 
+      -- print("EOV for " .. self:name() .. ". num_elements = ", num_elements)
       -- nothing more to generate
       self:eov()  -- vector is at an end 
     end
@@ -446,30 +447,24 @@ function lVector:get_chunk(chnk_idx)
       assert(type(self._siblings) == "table")
       for _, v in ipairs(self._siblings) do
         assert(type(v) == "lVector") assert(type(v) == "lVector")
+        --[[
         print("Vector " .. self:name(), " requesting chunk " .. chnk_idx .. 
           " for sibling", v:name())
+          --]]
         local x, y, z = v:get_chunk(chnk_idx)
         assert(x == num_elements)
         if ( x < self._max_num_in_chunk ) then 
-          print("Sibling EOV for " .. v:name())
+          -- print("Sibling EOV for " .. v:name())
           v:eov()  -- vector is at an end 
         end
         -- following because we aren't really consuming the chunk
         -- we are just getting it 
-        assert(cVector.unget_chunk(self._base_vec, chnk_idx))
-        if ( self._nn_vec ) then
-          assert(cVector.unget_chunk(self._nn_vec, chnk_idx))
-        end
-        -- -- TODO P1 Document whether above assert is okay
-        -- This was motivated by the use of Q.seq({len = n, ...}) as 
-        -- the first argument to Q.where() where n was not known a priori
-        -- Note the immediate unget which is done to decrement
-        -- the number of readers. Note that we throw away x, y, z cVector.unget_chunk(v:self(), chnk_idx)
+        v:unget_chunk(chnk_idx)
         -- Also, depending on memo_len, we may need to delete some chunks
         if ( ( v:memo_len() >= 0 ) and ( v:num_elements() > 0 ) ) then
           local chunk_to_release = chunk_idx - self._memo_len
           if ( chunk_to_release >= 0 ) then 
-            print("Sibling: Deleting chunk " .. chunk_to_release)
+            -- print("Sibling: Deleting chunk " .. chunk_to_release)
             local is_found = 
               cVector.chunk_delete(self._base_vec, chunk_to_release)
             -- assert(is_found == true)
@@ -480,10 +475,14 @@ function lVector:get_chunk(chnk_idx)
         end
       end
     end
-    self:incr_num_readers(chnk_idx) -- TODO EXPERIMENTAL 
+    assert(self:incr_num_readers(chnk_idx))
+    if ( self._nn_vec ) then 
+      local nn_vector = self._nn_vec
+      assert(nn_vector:incr_num_readers(chnk_idx))
+    end
     -- print("Returning " .. num_elements .. " for " .. self:name())
     -- TODO print("XXX", chnk_idx, self:num_readers(chnk_idx), self:name())
-    assert(self:num_readers(chnk_idx) == 1)
+    -- TODO assert(self:num_readers(chnk_idx) == 1)
     return num_elements, buf, nn_buf
   else 
     -- print(" Archival chunk for " .. self:name(), self._chunk_num)
@@ -526,7 +525,8 @@ function lVector:eval()
       -- print("Ungetting " .. self._chunk_num .. " for " .. self:name())
       assert(cVector.unget_chunk(self._base_vec, chunk_to_unget))
       if ( self._nn_vec ) then 
-        assert(cVector.unget_chunk(self._nn_vec, chunk_to_unget))
+        local nn_vector = self._nn_vec
+        assert(cVector.unget_chunk(nn_vector._base_vec, chunk_to_unget))
       end
     end
   until ( num_elements ~= self._max_num_in_chunk ) 

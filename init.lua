@@ -28,6 +28,8 @@ require "Q/OPERATORS/F1OPF2F3/lua/f1opf2f3"
 
 require "Q/OPERATORS/SORT1/lua/sort1"
 require "Q/OPERATORS/PERMUTE/lua/permute"
+--== These are from QTILS 
+require 'Q/QTILS/lua/fold'
 --[[
 require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
 require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
@@ -35,7 +37,6 @@ require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
 require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
 
 --== These are from QTILS 
-require 'Q/QTILS/lua/fold'
 require 'Q/QTILS/lua/nop'
 require 'Q/QTILS/lua/avg'
 require 'Q/QTILS/lua/head'

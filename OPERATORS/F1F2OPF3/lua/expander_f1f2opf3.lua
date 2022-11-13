@@ -7,6 +7,7 @@ local qc      = require 'Q/UTILS/lua/qcore'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local is_in   = require 'Q/UTILS/lua/is_in'
 local record_time = require 'Q/UTILS/lua/record_time'
+local copy_optargs_to_vctr_args = require 'Q/UTILS/lua/copy_optargs_to_vctr_args'
 
 
 local function expander_f1f2opf3(a, f1, f2, optargs )
@@ -50,11 +51,8 @@ local function expander_f1f2opf3(a, f1, f2, optargs )
     l_chunk_num = l_chunk_num + 1
     return f1_len, buf
   end
-  local vargs = {}
-  if ( optargs ) then 
-    assert(type(optargs) == "table")
-    for k, v in pairs(optargs) do vargs[k] = v end
-  end
+  local vargs = copy_optargs_to_vctr_args(optargs)
+
   vargs.gen = f3_gen
   vargs.qtype=subs.f3_qtype
   vargs.has_nulls=false 

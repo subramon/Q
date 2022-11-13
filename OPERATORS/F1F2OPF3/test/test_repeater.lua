@@ -7,7 +7,7 @@ local tests = {}
 assert(type(Q.seq) == "function")
 assert(type(Q.repeater) == "function")
 tests.t1 = function()
-  local max_num_in_chunk = 16  -- must be multiple of 64 for B1
+  local max_num_in_chunk = 64  -- must be multiple of 64 for B1
   local len = max_num_in_chunk
 
   local vals = {}

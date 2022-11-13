@@ -4,7 +4,6 @@ local qc          = require 'Q/UTILS/lua/qcore'
 local qcfg        = require 'Q/UTILS/lua/qcfg'
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
-local max_num_in_chunk       = qcfg.max_num_in_chunk
 
 return function (a, x, optargs)
   -- Return early if you have cached the result of a previous call
@@ -20,6 +19,7 @@ return function (a, x, optargs)
   local sp_fn_name = "Q/OPERATORS/F_TO_S/lua/" .. a .. "_specialize"
   local spfn = assert(require(sp_fn_name))
   local subs = assert(spfn(x, optargs))
+  local max_num_in_chunk = assert(subs.max_num_in_chunk)
   -- subs must return (1) args (2) getter ..... TODO P3 finish doc
   local func_name = assert(subs.fn)
   -- accumulator contains partial results 

@@ -4,6 +4,8 @@ return require 'Q/UTILS/lua/code_gen' {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include "q_macros.h"
 //START_FOR_CDEF
 extern int
 permute_${val_qtype}_${perm_qtype}(

@@ -18,7 +18,11 @@ return function (
   local f2_qtype = f2:qtype();   
   assert(is_in(f1_qtype, { "I1", "I2", "I4", "I8", "F4", "F8", }))
   assert(is_in(f2_qtype, { "I1", "I2", "I4", "I8", "F4", "F8", }))
-  subs.max_num_in_chunk = get_max_num_in_chunk(optargs)
+  local f1_max_num_in_chunk = assert(f1:max_num_in_chunk())
+  local f2_max_num_in_chunk = assert(f2:max_num_in_chunk())
+  assert( f1_max_num_in_chunk == f2_max_num_in_chunk)
+  subs.max_num_in_chunk = f1_max_num_in_chunk
+  -- WRONG! subs.max_num_in_chunk = get_max_num_in_chunk(optargs)
   local f3_qtype = "BL" 
 
   subs.f3_qtype = f3_qtype
@@ -37,6 +41,10 @@ return function (
   subs.f3_ctype = cutils.str_qtype_to_str_ctype(f3_qtype)
   subs.f3_cast_as = subs.f3_ctype .. "*"
 
+  -- following is to stop gcc warning about passing bool to int8
+  subs.f3_for_ispctype = subs.f3_ctype
+  if ( subs.f3_ctype == "bool" ) then subs.f3_for_ispctype = "int8_t" end
+  --===============
   subs.cargs = nil
   subs.cst_cargs = ffi.NULL
 

@@ -45,7 +45,7 @@ ${fn}(
     if ( ub > nB ) { ub = nB; }
     uint32_t off = lb * block_size;
     uint32_t n_for_me = (ub-lb)*block_size;
-    ${fn_ispc}(in1+off, in2+off, out+off, n_for_me);
+    ${fn_ispc}(in1+off, in2+off, (${f3_for_ispctype} *)out+off, n_for_me);
   }
 
   // handle the balance 

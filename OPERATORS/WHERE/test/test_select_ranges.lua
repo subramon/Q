@@ -11,10 +11,10 @@ local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 
 local tests = {}
 tests.t1 = function ()
-  local max_num_in_chunk = 8   -- Normally should be multiple of 64
+  local max_num_in_chunk = 64   -- Normally should be multiple of 64
   local optargs = { max_num_in_chunk = max_num_in_chunk }
   local tbl = {}
-  local n = 8*max_num_in_chunk + 1 
+  local n = max_num_in_chunk +  7
   for i = 1, n do tbl[#tbl+1] = i end 
   for _, qtype in ipairs({"I1", "I2", "I4", "I8", "F4", "F8" }) do 
     local a = mk_col(tbl, qtype, optargs)
@@ -49,19 +49,18 @@ tests.t2 = function ()
   -- make data for actual column 
   local tbl = {}
   for i = 1, n do tbl[#tbl+1] = i+1 end
+  -- make data for output column
+  local good_tbl = { 0, 0, 11, 0, 19, 0, 0, 35, 0, 37, 0, 43, 0, 45, 0,
+  47, 0, 49, 0, 51, 0, 53, 0, 55, 0, 57, 0, }
   -- make data for output nn column
   local good_nn_tbl = { false, false, true, false, true, false, false, 
     true, false, true, false, true, false, true, false, true, false, 
     true, false, true, false, true, false, true, false, true, false, }
-  local good_tbl = { 0, 0, 11, 0, 19, 0, 0, 35, 0, 37, 0, 43, 0, 45, 0,
-  47, 0, 49, 0, 51, 0, 53, 0, 55, 0, 57, 0, }
   assert(#good_nn_tbl == #good_tbl)
 
-  -- for _, qtype in ipairs({"I1", "I2", "I4", "I8", "F4", "F8" }) do 
-  for _, qtype in ipairs({"I4", }) do 
+  for _, qtype in ipairs({"I1", "I2", "I4", "I8", "F4", "F8" }) do 
     local num_in_c = 0
-    local a = mk_col(tbl, qtype, optargs, nn_tbl)
-    a:set_name("a")
+    local a = mk_col(tbl, qtype, optargs, nn_tbl):set_name("a")
     assert(a:has_nulls())
     local tlb = { 0,  8, 16, 32, 40, 64, }
     local tub = { 1, 10, 19, 36, 56, 65, }
@@ -70,8 +69,7 @@ tests.t2 = function ()
     end
     local lb = mk_col(tlb, "I4") 
     local ub = mk_col(tub, "I8")
-    local c  = select_ranges(a, lb, ub)
-    c:eval()
+    local c  = select_ranges(a, lb, ub):eval()
     assert(c:num_elements() == num_in_c)
     for i = 1, num_in_c do 
       local v, nn_v = c:get1(i-1)
@@ -90,6 +88,6 @@ tests.t2 = function ()
   cVector:check_all(true, true)
   print("Test t2 succeeded")
 end
--- WORKS tests.t1()
+tests.t1()
 tests.t2()
 -- return tests

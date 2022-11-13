@@ -33,9 +33,9 @@ local cdefd = {}
 -- to error out by repeating a cdef that was done earlier
 local function q_cdef( infile, incs)
   if ( cdefd[infile] ) then
-    print("Skipping cdef of " .. infile)
+    -- print("Skipping cdef of " .. infile)
   else
-    print("cdef'ing " .. infile)
+    -- print("cdef'ing " .. infile)
     local y = for_cdef(infile, incs)
     ffi.cdef(y)
     cdefd[infile] = true
