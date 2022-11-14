@@ -583,11 +583,40 @@ static int l_vctr_incr_num_readers( lua_State *L) {
     chnk_idx = luaL_checknumber(L, 2); 
     is_lma = false;
   }
-  status = vctr_get_num_readers(is_incr, is_lma, ptr_v->tbsp, ptr_v->uqid, 
-        chnk_idx, &num_readers);
+  status = vctr_get_num_readers(true, is_incr, is_lma, ptr_v->tbsp, 
+      ptr_v->uqid, chnk_idx, &num_readers);
   cBYE(status);
 
   lua_pushnumber(L, num_readers);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_get_num_writers( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 2 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint32_t num_writers;
+  uint32_t chnk_idx = ~0; // some fake number
+  bool is_lma; bool is_incr = false;
+  if ( lua_isnil(L, 2) ) { 
+    is_lma = true;
+  }
+  else {
+    chnk_idx = luaL_checknumber(L, 2); 
+    is_lma = false;
+  }
+  status = vctr_get_num_readers(false, is_lma, is_incr, ptr_v->tbsp, 
+      ptr_v->uqid, chnk_idx, &num_writers);
+  cBYE(status);
+
+  lua_pushnumber(L, num_writers);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -612,8 +641,8 @@ static int l_vctr_get_num_readers( lua_State *L) {
     chnk_idx = luaL_checknumber(L, 2); 
     is_lma = false;
   }
-  status = vctr_get_num_readers(is_lma, is_incr, ptr_v->tbsp, ptr_v->uqid, 
-        chnk_idx, &num_readers);
+  status = vctr_get_num_readers(true, is_lma, is_incr, ptr_v->tbsp, 
+      ptr_v->uqid, chnk_idx, &num_readers);
   cBYE(status);
 
   lua_pushnumber(L, num_readers);
@@ -1028,6 +1057,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "qtype", l_vctr_get_qtype },
     { "num_elements", l_vctr_num_elements },
     { "num_readers", l_vctr_get_num_readers },
+    { "num_writers", l_vctr_get_num_writers },
     { "incr_num_readers", l_vctr_incr_num_readers },
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },
     { "memo_len", l_vctr_memo_len },
@@ -1083,6 +1113,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "qtype", l_vctr_get_qtype },
     { "num_elements", l_vctr_num_elements },
     { "num_readers", l_vctr_get_num_readers },
+    { "num_writers", l_vctr_get_num_writers },
     { "incr_num_readers", l_vctr_incr_num_readers },
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },

@@ -47,8 +47,24 @@ function lVector:check(is_at_rest, is_for_all)
       assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
       local nn_vec = nn_vector._base_vec
       nn_status = cVector.chk(nn_vec, is_at_rest, is_for_all)
+      -- check congruence between base vector and nn vector
+      assert(nn_vector:num_elements()  == self:num_elements())
+      assert(nn_vector:is_eov()        == self:is_eov())
+      assert(nn_vector:is_persist()    == self:is_persist())
+      assert(nn_vector:num_readers()   == self:num_readers())
+      assert(nn_vector:num_writers()   == self:num_writers())
+      assert(nn_vector:is_early_free() == self:is_early_free())
     end
   end 
+  -- check congruence between base vector and siblings
+  if ( self._siblings ) then 
+    assert(type(self._siblings) == "table")
+    for _, v in ipairs(self._siblings) do
+      assert(v:num_elements() == self:num_elements())
+      assert(v:is_eov()       == self:is_eov())
+    end
+  end
+  --================================================
   return (status and nn_status)
 end
 
@@ -75,6 +91,11 @@ end
 function lVector:incr_num_readers(chnk_idx)
   local num_readers = cVector.incr_num_readers(self._base_vec, chnk_idx)
   return num_readers
+end
+
+function lVector:num_writers(chnk_idx)
+  local num_writers = cVector.num_writers(self._base_vec, chnk_idx)
+  return num_writers
 end
 
 function lVector:num_readers(chnk_idx)
@@ -146,11 +167,19 @@ function lVector:is_lma()
   assert(type(is_lma) == "boolean")
   return is_lma
 end
+
+function lVector:is_early_free()
+  local early_free = cVector.early_free(self._base_vec)
+  assert(type(early_free) == "boolean")
+  return early_free
+end
+
 function lVector:is_eov()
   local is_eov = cVector.is_eov(self._base_vec)
   assert(type(is_eov) == "boolean")
   return is_eov
 end
+
 function lVector:nop()
   local status = cVector.nop(self._base_vec)
   assert(type(status) == "boolean")

@@ -99,9 +99,8 @@ vctr_chk(
   if ( vctr_val.is_lma == false ) { 
     if ( vctr_val.X != NULL ) { go_BYE(-1); }
     if ( vctr_val.nX != 0 ) { go_BYE(-1); }
-    if ( ( vctr_val.num_readers != 0 ) || ( vctr_val.num_writers != 0 ) ) { 
-      go_BYE(-1);
-    }
+    if ( vctr_val.num_readers != 0 ) { go_BYE(-1); }
+    if ( vctr_val.num_writers != 0 ) { go_BYE(-1); }
   }
   else {
     if ( vctr_val.num_chnks != 0 ) { go_BYE(-1); } 

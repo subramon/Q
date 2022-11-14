@@ -153,12 +153,13 @@ BYE:
 
 int
 vctr_get_num_readers(
+    bool is_read,
     bool is_incr,
     bool is_lma,
     uint32_t tbsp,
     uint32_t vctr_uqid,
     uint32_t chnk_idx,
-    uint32_t *ptr_num_readers
+    uint32_t *ptr_num
     )
 {
   int status = 0;
@@ -171,19 +172,38 @@ vctr_get_num_readers(
 
   if ( is_lma ) { 
     if ( is_incr ) { 
-      g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_readers++;
+      if ( is_read ) { 
+        g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_readers++;
+      }
+      else {
+        go_BYE(-1);
+      }
     }
-    *ptr_num_readers = 
-      g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_readers;
+    if ( is_read ) { 
+      *ptr_num = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_readers;
+    }
+    else {
+      *ptr_num = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_writers;
+    }
   }
   else { 
     status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);
     cBYE(status);
     if ( chnk_is_found == false ) { go_BYE(-1); }
     if ( is_incr ) { 
-    g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers++;
+      if ( is_read ) { 
+        g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers++;
+      }
+      else {
+        go_BYE(-1);
+      }
     }
-    *ptr_num_readers = g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers;
+    if ( is_read ) { 
+      *ptr_num = g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers;
+    }
+    else {
+      *ptr_num = g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_writers;
+    }
   }
 BYE:
   return status;

@@ -15,6 +15,7 @@ vctr_unget_chunk(
     );
 extern int
 vctr_get_num_readers(
+    bool is_read,
     bool is_lma,
     bool is_incr,
     uint32_t tbsp,

@@ -25,5 +25,6 @@ tests.t1 = function()
   local stop_time = cutils.rdtsc()
 end
 tests.t1()
+os.exit()
 
 -- return tests
