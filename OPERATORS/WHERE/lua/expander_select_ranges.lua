@@ -24,7 +24,7 @@ local function select_ranges(f1, lb, ub, optargs )
   local lboff = 0 -- how many elements of range lbidx have been consumed
   --=================================
   local f2_gen = function(chunk_num)
-    -- sync between expected chunk_num and generator's chunk_idx state
+    -- check expected chunk_num and generator's chunk_idx state
     assert(chunk_num == chunk_idx)
     local f2_buf = assert(cmem.new(subs.bufsz))
     f2_buf:stealable(true)

@@ -122,6 +122,7 @@ local c3 = Q.mk_col( {
   for i = 1, c3:num_elements() do 
     assert(c3:get1(i-1) == c2:get1(i-1))
   end
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 

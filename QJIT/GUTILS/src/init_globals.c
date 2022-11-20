@@ -36,6 +36,8 @@ init_globals(
     memset(&g_vctr_hmap[i], 0, sizeof(vctr_rs_hmap_t));
     g_vctr_uqid[i] = 0; 
     memset(&g_chnk_hmap[i], 0, sizeof(chnk_rs_hmap_t));
+    memset(g_data_dir_root[i], 0, Q_MAX_LEN_DIR_NAME+1);
+    memset(g_meta_dir_root[i], 0, Q_MAX_LEN_DIR_NAME+1);
   }
   //------------------------
   g_mutex_created = false;
@@ -43,8 +45,6 @@ init_globals(
   g_mem_used    = 0;
   g_dsk_used    = 0;
 
-  memset(g_data_dir_root, 0, Q_MAX_LEN_DIR_NAME+1);
-  memset(g_meta_dir_root, 0, Q_MAX_LEN_DIR_NAME+1);
   //------------------------
   memset(&g_web_info,         0, sizeof(web_info_t));
   memset(&g_out_of_band_info, 0, sizeof(web_info_t));
@@ -62,8 +62,8 @@ init_globals(
   g_is_out_of_band = false;
   g_is_mem_mgr     = false;
   //-----------------------
-  strcpy(g_data_dir_root, "/home/subramon/local/Q/data/"); 
-  strcpy(g_meta_dir_root, "/home/subramon/local/Q/meta/"); 
+  strcpy(g_data_dir_root[0], "/home/subramon/local/Q/data/"); 
+  strcpy(g_meta_dir_root[0], "/home/subramon/local/Q/meta/"); 
 
   g_mem_allowed = 4 * 1024 * (uint64_t)1048576 ; // in Bytes
   g_dsk_allowed = 32 * 1024 * (uint64_t)1048576 ; // in Bytes
@@ -148,10 +148,11 @@ init_globals(
     status = chnk_rs_hmap_instantiate(&g_chnk_hmap[tbsp], &g_chnk_hmap_config); 
     cBYE(status);
 
-    rmtree(g_data_dir_root);
-    rmtree(g_meta_dir_root);
-    status = mkdir(g_data_dir_root, 0744); cBYE(status);
-    status = mkdir(g_meta_dir_root, 0744); cBYE(status);
+    rmtree(g_data_dir_root[tbsp]);
+    rmtree(g_meta_dir_root[tbsp]);
+    status = mkdir(g_data_dir_root[tbsp], 0744); cBYE(status);
+    status = mkdir(g_meta_dir_root[tbsp], 0744); cBYE(status);
+    printf("<<<<<<<<<<<< STARTED  NEW SESSION ============\n");
   }
 
 

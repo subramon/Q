@@ -51,6 +51,7 @@ local prm_qtypes = { "I1", "I2", "I4", "I8", }
       print("Successfully completed test t1 for ", val_qtype, prm_qtype)
     end
   end
+  assert(cVector.check_all())
   print("Successfully completed test t1")
 end
 tests.t1()

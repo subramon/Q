@@ -3,6 +3,7 @@ local Q      = require 'Q'
 local Scalar = require 'libsclr'
 local orders = require 'Q/OPERATORS/F_IN_PLACE/lua/orders'
 local qtypes = require 'Q/OPERATORS/F_IN_PLACE/lua/qtypes'
+local cVector = require 'libvctr'
 local tests = {}
 tests.t1 = function()
   -- Set up some vals that work for all qtypes
@@ -53,6 +54,7 @@ tests.t1 = function()
       end
     end
   end
+  assert(cVector.check_all())
   print("Successfully completed test t1")
 end
 tests.t2 = function()
@@ -80,6 +82,7 @@ local qtypes = { "I1", "I2", "I4", "I8", }
       print("Successfully completed test t2 for ", order, qtype)
     end
   end
+  assert(cVector.check_all())
   print("Successfully completed test t2")
 end
 tests.t3 = function()
@@ -124,6 +127,7 @@ local qtypes = { "F4", "F8" }
       print("Successfully completed test t2 for ", order, qtype)
     end
   end
+  assert(cVector.check_all())
   print("Successfully completed test t3")
 end
 tests.t1()

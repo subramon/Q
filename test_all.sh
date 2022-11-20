@@ -6,6 +6,7 @@ if [ "$LUA_PATH"  == "" ]; then echo "ERROR: source setup.sh"; exit 1; fi
 if [ "$LUA_CPATH" == "" ]; then echo "ERROR: source setup.sh"; exit 1; fi
 # TODO P0 Put cVector.check_all(true, true) at end of every script
 # TODO P0 Put vector:check() for every vector created 
+# TODO P0 Put DFE scripts as part of tests 
 
 cd ~/Q/RUNTIME/VCTRS/src/
 ./ut1
@@ -50,7 +51,7 @@ qjit test_permute.lua
 cd ~/Q/OPERATORS/WHERE/test/
 qjit test_where.lua
 qjit test_where_gen.lua
-# TODO P0 qjit test_select_ranges.lua
+qjit test_select_ranges.lua
 bash run_tests.sh
 
 echo "Successfully completed $0 in $PWD"

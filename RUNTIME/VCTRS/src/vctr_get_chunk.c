@@ -66,7 +66,8 @@ vctr_get_chunk(
   int status = 0;
   bool vctr_is_found, chnk_is_found;
   uint32_t vctr_where_found, chnk_where_found;
-  uint32_t chnk_size, width, is_lma, max_num_in_chnk;
+  uint32_t chnk_size, width, max_num_in_chnk;
+  bool is_lma;
   bool is_write = false; // TODO P3 Handle case when this is true 
 
   if ( ptr_cmem == NULL ) { go_BYE(-1); } 

@@ -33,6 +33,7 @@ tests.t1 = function()
     assert(xout:get1(i-1) == good_xout:get1(i-1))
   end
   -- xout:pr()
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 

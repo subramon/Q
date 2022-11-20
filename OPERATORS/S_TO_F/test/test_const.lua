@@ -118,6 +118,7 @@ tests.t4 = function()
     print("Test t4 succeeded for B1 = " .. tostring(val))
   end
   
+  assert(cVector.check_all(true, true)) -- checking on all vectors
   print("Test t4 succeeded")
 end
 

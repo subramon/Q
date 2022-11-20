@@ -3,6 +3,7 @@ require 'Q/UTILS/lua/strict'
 local Q      = require 'Q'
 local qcfg   = require 'Q/UTILS/lua/qcfg'
 local Scalar = require 'libsclr'
+local cVector = require 'libvctr'
 
 local blksz = qcfg.max_num_in_chunk 
 local tests = {}
@@ -23,7 +24,7 @@ tests.t1 = function()
   local status = pcall(c1.get1, len) -- deliberate error
   assert(not status)
   assert(c1:qtype() == qtype)
-  assert(c1:check(true, true)) -- checking on all vectors
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 tests.t1()

@@ -74,6 +74,7 @@ tests.t1 = function()
     end
   end
   --===================
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 --=======================================================
@@ -129,6 +130,7 @@ tests.t2 = function()
       assert(plutils.readfile(expected) == plutils.readfile(opfile))
     end
   end
+  assert(cVector.check_all())
   print("Test t2 succeeded")
 end
 --=======================================================
@@ -165,6 +167,7 @@ tests.t3 = function()
       Q.print_csv(U, {opfile = opfile, impl = impl})
     end
   end
+  assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 --==============================================================
@@ -209,6 +212,7 @@ tests.t4 = function()
     end
   end
   --===================
+  assert(cVector.check_all())
   print("Test t4 succeeded")
 end
 --==============================================================
@@ -245,6 +249,7 @@ tests.t4a = function()
     end
   end
   --===================
+  assert(cVector.check_all())
   print("Test t4a succeeded")
 end
 tests.t5 = function()
@@ -316,6 +321,7 @@ tests.t5 = function()
       print("Tested print with impl = " .. impl)
     end
   end
+  assert(cVector.check_all())
   print("Test t5 succeeded")
 end
 -- Testing null values
@@ -351,16 +357,17 @@ tests.t6 = function()
     local opfile = "/tmp/_xxx"
     Q.print_csv(U, { impl = "C", opfile = opfile } )
   end
+  assert(cVector.check_all())
   print("Test t6 succeeded")
   
 end
--- WORKS tests.t1()
--- WORKS tests.t2()
--- WORKS tests.t3()
--- WORKS tests.t4()
--- WORKS tests.t4a()
+tests.t1()
+tests.t2()
+tests.t3()
+tests.t4()
+tests.t4a()
 tests.t5()
--- WORKS tests.t6()
+tests.t6()
 os.exit()
 --[[
 return tests

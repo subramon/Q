@@ -575,7 +575,7 @@ static int l_vctr_incr_num_readers( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t num_readers;
   uint32_t chnk_idx = ~0; // some fake number
-  bool is_lma; bool is_incr = true;
+  bool is_lma; bool is_incr = true; bool is_read = true;
   if ( lua_isnil(L, 2) ) { 
     is_lma = true;
   }
@@ -583,7 +583,7 @@ static int l_vctr_incr_num_readers( lua_State *L) {
     chnk_idx = luaL_checknumber(L, 2); 
     is_lma = false;
   }
-  status = vctr_get_num_readers(true, is_incr, is_lma, ptr_v->tbsp, 
+  status = vctr_get_num_readers(is_read, is_incr, is_lma, ptr_v->tbsp, 
       ptr_v->uqid, chnk_idx, &num_readers);
   cBYE(status);
 
@@ -604,7 +604,7 @@ static int l_vctr_get_num_writers( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t num_writers;
   uint32_t chnk_idx = ~0; // some fake number
-  bool is_lma; bool is_incr = false;
+  bool is_lma; bool is_incr = false; bool is_read = false;
   if ( lua_isnil(L, 2) ) { 
     is_lma = true;
   }
@@ -612,7 +612,7 @@ static int l_vctr_get_num_writers( lua_State *L) {
     chnk_idx = luaL_checknumber(L, 2); 
     is_lma = false;
   }
-  status = vctr_get_num_readers(false, is_lma, is_incr, ptr_v->tbsp, 
+  status = vctr_get_num_readers(is_read, is_incr, is_lma, ptr_v->tbsp, 
       ptr_v->uqid, chnk_idx, &num_writers);
   cBYE(status);
 
@@ -633,7 +633,7 @@ static int l_vctr_get_num_readers( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t num_readers;
   uint32_t chnk_idx = ~0; // some fake number
-  bool is_lma; bool is_incr = false;
+  bool is_lma; bool is_incr = false; bool is_read = true;
   if ( lua_isnil(L, 2) ) { 
     is_lma = true;
   }
@@ -641,7 +641,7 @@ static int l_vctr_get_num_readers( lua_State *L) {
     chnk_idx = luaL_checknumber(L, 2); 
     is_lma = false;
   }
-  status = vctr_get_num_readers(true, is_lma, is_incr, ptr_v->tbsp, 
+  status = vctr_get_num_readers(is_read, is_incr, is_lma, ptr_v->tbsp, 
       ptr_v->uqid, chnk_idx, &num_readers);
   cBYE(status);
 

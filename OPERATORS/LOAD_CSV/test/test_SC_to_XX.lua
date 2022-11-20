@@ -3,6 +3,7 @@ local plfile    = require 'pl.file'
 require 'Q/UTILS/lua/strict'
 local Q         = require 'Q'
 local qcfg      = require 'Q/UTILS/lua/qcfg'
+local cVector = require 'libvctr'
 local converter = require 'Q/OPERATORS/LOAD_CSV/test/converter_1'
 --=======================================================
 local tests = {}
@@ -28,6 +29,7 @@ tests.t1 = function()
   local x = plfile.read(tmpfile)
   local y = plfile.read(outfile)
   assert(x == y)
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 tests.t1()

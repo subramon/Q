@@ -35,8 +35,15 @@ return function (
   assert(type(ub) == "lVector")
   local lb_qtype = lb:qtype()
   local ub_qtype = ub:qtype()
+  -- Following eov check can be relaxed but will need work
+  -- because get1 does not trigger a generator call 
+  assert(lb:is_eov())
+  assert(ub:is_eov())
+  --=======================
   assert(is_in(lb_qtype, { "I1", "I2", "I4", "I8", }))
   assert(is_in(ub_qtype, { "I1", "I2", "I4", "I8", }))
+  assert(lb:num_elements() == ub:num_elements())
+  assert(lb:num_elements() > 0)
   --=================================
   subs.in_qtype = in_qtype
   subs.in_ctype = cutils.str_qtype_to_str_ctype(in_qtype)

@@ -4,6 +4,7 @@ require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local cVector = require 'libvctr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
+local cVector = require 'libvctr'
 -- Set below to true if you want printing 
 local test_print  = true -- turn false if you want only load_csv tested
 --=======================================================
@@ -51,6 +52,7 @@ tests.t1 = function()
   end
   cVector:check_all(true, true)
   --===================
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 tests.t1()

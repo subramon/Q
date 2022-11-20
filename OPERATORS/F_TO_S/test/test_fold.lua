@@ -2,6 +2,7 @@
 require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local Scalar  = require 'libsclr'
+local cVector = require 'libvctr'
 
 local tests = {}
 tests.t1 = function( to_memo)
@@ -41,12 +42,14 @@ tests.t1 = function( to_memo)
   assert(T["max"][1] == maxval)
   assert(T["max"][2] == maxnum)
 
+  assert(cVector.check_all())
   print("Test t1 succeeded")
   return true
 end
 tests.t2 = function()
   assert(tests.t1(true))
   assert(tests.t1(false))
+  assert(cVector.check_all())
   print("Test t2 succeeded")
   return true
 end

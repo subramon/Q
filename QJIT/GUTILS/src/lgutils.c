@@ -34,10 +34,10 @@ static int l_lgutils_save_session(
 {
   int status = 0;
   int tbsp = 0; // you can freeze only primary tablespace
-  status = g_vctr_hmap[tbsp].freeze(&g_vctr_hmap, g_meta_dir_root, 
+  status = g_vctr_hmap[tbsp].freeze(&g_vctr_hmap, g_meta_dir_root[tbsp], 
       "_vctr_meta.csv", "_vctr_bkts.bin", "_vctr_full.bin"); 
   cBYE(status);
-  status = g_chnk_hmap[tbsp].freeze(&g_chnk_hmap, g_meta_dir_root, 
+  status = g_chnk_hmap[tbsp].freeze(&g_chnk_hmap, g_meta_dir_root[tbsp], 
       "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin"); 
   cBYE(status);
   lua_pushboolean(L, true); 
@@ -100,8 +100,9 @@ static int l_lgutils_meta_dir(
     )
 {
   int status = 0;
+  int tbsp = 0;
   if ( lua_gettop(L) != 0 ) { go_BYE(-1); }
-  lua_pushstring(L, g_meta_dir_root); 
+  lua_pushstring(L, g_meta_dir_root[tbsp]); 
   return 1; 
 BYE:
   lua_pushnil(L);
@@ -115,8 +116,9 @@ static int l_lgutils_data_dir(
     )
 {
   int status = 0;
+  int tbsp = 0;
   if ( lua_gettop(L) != 0 ) { go_BYE(-1); }
-  lua_pushstring(L, g_data_dir_root); 
+  lua_pushstring(L, g_data_dir_root[tbsp]); 
   return 1; 
 BYE:
   lua_pushnil(L);

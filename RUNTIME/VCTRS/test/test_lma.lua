@@ -24,7 +24,7 @@ tests.t1 = function()
     -- assert(x1:lma_to_chunks()) TODO TODO P2 
   end
   x1 = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 -- test read access
@@ -60,7 +60,7 @@ tests.t2 = function()
   print(">>> STOP  DELIBERATE ERROR")
 
   x1 = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t2 succeeded")
 end
 -- test write access
@@ -93,7 +93,7 @@ tests.t3 = function()
   assert(type(c) == "CMEM")
   x1:unget_lma_write()
   x1 = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 -- test steal
@@ -140,7 +140,7 @@ tests.t4 = function()
   end
   assert(x1:unget_lma_read())
   x1 = nil; y = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t4 succeeded")
 end
 -- test print
@@ -152,7 +152,7 @@ tests.t5 = function()
   assert(x1:chunks_to_lma())
   -- x1:pr()
   x1 = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t5 succeeded")
 end
 -- test modify 
@@ -174,7 +174,7 @@ tests.t6 = function()
     assert(s == Scalar.new(i*10, qtype))
   end 
   x1 = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t6 succeeded")
 end
 -- return tests

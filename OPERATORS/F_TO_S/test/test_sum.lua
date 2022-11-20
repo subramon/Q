@@ -3,6 +3,7 @@ require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local qcfg = require 'Q/UTILS/lua/qcfg'
 local max_num_in_chunk = qcfg.max_num_in_chunk
+local cVector = require 'libvctr'
 local tests = {}
 --=========================================
 tests.t1 = function()
@@ -17,6 +18,7 @@ tests.t1 = function()
     assert(n:qtype() == "F8")
     assert(m:qtype() == "I8")
   end
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 --=========================================
@@ -26,6 +28,7 @@ tests.t2 = function()
   assert(type(y) == "lVector")
   local z = Q.sum(y):eval():to_num()
   assert( z == (n * (n+1) / 2 ) )
+  assert(cVector.check_all())
   print("Test t2 succeeded")
 end
 --=========================================
@@ -45,6 +48,7 @@ tests.t3 = function()
     
     print("Test t3 " .. qtype .. " succeeded")
   end
+  assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 --=========================================
@@ -63,6 +67,7 @@ tests.t4 = function()
     
     print("Test t4, qtype =  " .. qtype .. " succeeded")
   end
+  assert(cVector.check_all())
   print("Test t4 succeeded")
 end
 --=========================================

@@ -60,15 +60,18 @@ tests.t2 = function ()
 
   for _, qtype in ipairs({"I1", "I2", "I4", "I8", "F4", "F8" }) do 
     local num_in_c = 0
-    local a = mk_col(tbl, qtype, optargs, nn_tbl):set_name("a")
+    optargs.name = "a"
+    local a = mk_col(tbl, qtype, optargs, nn_tbl)
+    optargs.name = nil
+    assert(a:name() == "a")
     assert(a:has_nulls())
     local tlb = { 0,  8, 16, 32, 40, 64, }
     local tub = { 1, 10, 19, 36, 56, 65, }
     for i = 1, #tlb do 
       num_in_c = num_in_c + (tub[i] - tlb[i])
     end
-    local lb = mk_col(tlb, "I4") 
-    local ub = mk_col(tub, "I8")
+    local lb = mk_col(tlb, "I4"):set_name("lb")
+    local ub = mk_col(tub, "I8"):set_name("ub")
     local c  = select_ranges(a, lb, ub):eval()
     assert(c:num_elements() == num_in_c)
     for i = 1, num_in_c do 

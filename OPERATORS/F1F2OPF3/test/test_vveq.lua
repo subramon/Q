@@ -4,6 +4,7 @@ local Q = require 'Q'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local Scalar  = require 'libsclr'
+local cVector = require 'libvctr'
 local max_num_in_chunk = qcfg.max_num_in_chunk
 
 local tests = {}
@@ -29,6 +30,7 @@ tests.t1 = function()
     local n1, n2 = Q.sum(c3):eval()
     assert(n1 == n2)
   end
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 tests.t2 = function()
@@ -41,6 +43,7 @@ tests.t2 = function()
     local n1, n2 = Q.sum(c3):eval()
     assert(n1 == n2)
   end
+  assert(cVector.check_all())
   print("Test t2 succeeded")
 end
 tests.t3 = function()
@@ -61,6 +64,7 @@ tests.t3 = function()
   local c3 = Q.vveq(c1, c2)
   local n1, n2 = Q.sum(c3):eval()
   assert(n1 == Scalar.new(0))
+  assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 -- return tests

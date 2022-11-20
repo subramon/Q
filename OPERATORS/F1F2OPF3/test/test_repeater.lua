@@ -27,6 +27,7 @@ tests.t1 = function()
   assert(s:qtype() == "I4")
   s:eval()
   assert(s:num_elements() == num_in_s)
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 

@@ -18,7 +18,7 @@ tests.t1 = function ()
     -- TODO local n1, n2 = Q.sum(Q.vveq(c, goodc)):eval()
     -- TODO assert(n1 == n2)
   end
-  cVector:check_all(true, true)
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 --======================================
@@ -30,7 +30,7 @@ tests.t2 = function ()
   assert(type(c) == "lVector")
   c:eval()
   assert(c:num_elements() == 0)
-  cVector:check_all(true, true)
+  assert(cVector.check_all())
   print("Test t2 succeeded")
 end
 --======================================
@@ -44,6 +44,7 @@ tests.t3 = function ()
     -- TODO local n1, n2 = Q.sum(Q.vveq(a, c)):eval()
     -- TODO assert(n1 == n2)
   end
+  assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 --======================================
@@ -54,6 +55,7 @@ tests.t4 = function ()
   b:set_meta("max", Scalar.new(0, "I4"))
   local c = Q.where(a, b)
   assert(c == nil)
+  assert(cVector.check_all())
   print("Test t4 succeeded")
 end
 --======================================
@@ -64,6 +66,7 @@ tests.t5 = function ()
   b:set_meta("max", Scalar.new(1, "I4"))
   local c = Q.where(a, b)
   assert(c == a)
+  assert(cVector.check_all())
   print("Test t5 succeeded")
 end
 --======================================
@@ -93,6 +96,7 @@ tests.t6 = function ()
     -- TODO local n1, n2 = Q.sum(c):eval()
     -- TODO assert(n1 == Scalar.new(len))
   end
+  assert(cVector.check_all())
   print("Test t6 succeeded")
 end
 --=========================================
@@ -132,6 +136,7 @@ tests.t7 = function ()
   -- TODO assert(n1 == n2)
   c:eval()
   assert(c:num_elements() == 67)
+  assert(cVector.check_all())
   print("Test t7 succeeded")
 end
 

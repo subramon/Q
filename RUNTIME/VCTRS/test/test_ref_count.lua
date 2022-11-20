@@ -18,6 +18,7 @@ tests.t1 = function()
   x = nil
   collectgarbage()
   assert(y:ref_count() == 1)
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 tests.t2 = function()
@@ -57,6 +58,7 @@ tests.t2 = function()
   assert(x:has_nulls() == false)
   x:drop_nulls()
   -- Y[1]:pr()
+  assert(cVector.check_all())
   print("Test t2 succeeded")
 end
 -- return tests

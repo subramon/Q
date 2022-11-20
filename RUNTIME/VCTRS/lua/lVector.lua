@@ -38,6 +38,7 @@ function lVector:check(is_at_rest, is_for_all)
   end
   assert(type(is_for_all) == "boolean")
 
+  local status = true; local nn_status = true
   local status = cVector.chk(self._base_vec, is_at_rest, is_for_all)
   local nn_status = true
   if ( not is_for_all ) then 
@@ -45,8 +46,7 @@ function lVector:check(is_at_rest, is_for_all)
       local nn_vector = assert(self._nn_vec)
       assert(type(nn_vector) == "lVector")
       assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-      local nn_vec = nn_vector._base_vec
-      nn_status = cVector.chk(nn_vec, is_at_rest, is_for_all)
+      nn_status = cVector.chk(nn_vector._base_vec, is_at_rest, is_for_all)
       -- check congruence between base vector and nn vector
       assert(nn_vector:num_elements()  == self:num_elements())
       assert(nn_vector:is_eov()        == self:is_eov())
@@ -159,25 +159,27 @@ function lVector:drop_nulls()
   self._nn_vec = nil
   return self
 end
+
 function lVector:has_nulls()
   if ( self._nn_vec ) then return true else return false end 
 end
+
 function lVector:is_lma()
-  local is_lma = cVector.is_lma(self._base_vec)
-  assert(type(is_lma) == "boolean")
-  return is_lma
+  local b_is_lma = cVector.is_lma(self._base_vec)
+  assert(type(b_is_lma) == "boolean")
+  return b_is_lma
 end
 
 function lVector:is_early_free()
-  local early_free = cVector.early_free(self._base_vec)
-  assert(type(early_free) == "boolean")
-  return early_free
+  local b_is_early_free = cVector.is_early_free(self._base_vec)
+  assert(type(b_is_early_free) == "boolean")
+  return b_is_early_free
 end
 
 function lVector:is_eov()
-  local is_eov = cVector.is_eov(self._base_vec)
-  assert(type(is_eov) == "boolean")
-  return is_eov
+  local b_is_eov = cVector.is_eov(self._base_vec)
+  assert(type(b_is_eov) == "boolean")
+  return b_is_eov
 end
 
 function lVector:nop()
@@ -185,25 +187,31 @@ function lVector:nop()
   assert(type(status) == "boolean")
   return status
 end
+
 function lVector:is_persist()
-  local is_persist = cVector.is_persist(self._base_vec)
-  assert(type(is_persist) == "boolean")
-  return is_persist
+  local b_is_persist = cVector.is_persist(self._base_vec)
+  assert(type(b_is_persist) == "boolean")
+  return b_is_persist
 end
+
 function lVector:has_gen()
   if ( self._generator ) then return true  else return false end 
 end
+
 function lVector:uqid()
   local uqid = cVector.uqid(self._base_vec)
   assert(type(uqid) == "number")
   return uqid
 end
+
 function lVector:memo_len()
   return self._memo_len
 end
+
 function lVector:qtype()
   return self._qtype
 end
+
 function lVector.new(args)
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector
@@ -276,7 +284,6 @@ function lVector.new(args)
       nn_qtype = args.nn_qtype
       assert((nn_qtype == "B1") or (nn_qtype == "BL"))
     end
-    nn_args.qtype = nn_qtype
     nn_args.qtype = nn_qtype
     if ( args.name ) then 
       nn_args.name = "nn_" .. args.name 
@@ -515,7 +522,7 @@ function lVector:get_chunk(chnk_idx)
     return num_elements, buf, nn_buf
   else 
     -- print(" Archival chunk for " .. self:name(), self._chunk_num)
-    self:check()
+    if ( qcfg.debug ) then self:check() end 
     local nn_x, nn_n
     local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
     if ( x == nil ) then return 0, nil, nil end 

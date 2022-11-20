@@ -21,6 +21,7 @@ tests.t1 = function()
   assert(cVector.check_all(true, true))
   Q.save()
   x = nil; y1 = nil; y2 = nil; collectgarbage()
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 -- return tests

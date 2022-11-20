@@ -1,10 +1,14 @@
+#include "q_incs.h"
+#include "import_tbsp.h"
 
 int
-import_tablespace(
-    const char * const q_root
+import_tbsp(
+    const char * const q_meta_dir_root
     )
 {
   int status = 0;
+  // Check that this q_root is a new one 
+
 
   if ( g_restore_session ) { 
     printf(">>>>>>>>>>>> RESTORING SESSION ============\n");
