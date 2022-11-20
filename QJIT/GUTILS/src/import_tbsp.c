@@ -7,7 +7,20 @@ import_tbsp(
     )
 {
   int status = 0;
+  // TODO Make realpath
   // Check that this q_root is a new one 
+  int tbsp = -1;
+  for ( int i = 0; i i<  Q_MAX_NUM_TABLESPACES; i++ ) { 
+    if ( ( tbsp < 0 ) && ( g_meta_dir_root[i][0] ==  '\0' ) ) { 
+      tbsp = i; 
+    }
+    if ( strcmp(q_meta_dir_root, g_meta_dir_root[i]) == 0 )  {
+      g_BYE(-1);
+    }
+  }
+  if ( tbsp < 0 ) { go_BYE(-1); } // no space
+  //-- Put it in an empty  spot
+  //-------------------------------
 
 
   if ( g_restore_session ) { 
