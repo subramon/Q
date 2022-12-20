@@ -7,7 +7,7 @@
 #include "qtypes.h"
 typedef uint32_t vctr_rs_hmap_key_t; // a vector is identified by a number
 
-#define MAX_LEN_VCTR_NAME 15 // for debugging 
+#define MAX_LEN_VCTR_NAME 31 // for debugging 
 
 typedef struct _vctr_meta_t {
   char name[MAX_LEN_VCTR_NAME+1];

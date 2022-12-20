@@ -124,9 +124,11 @@ local function q_add(
   end
   --============================================
   if ( subs.tmpl_ispc ) then
-    assert(not subs.isph) assert(not subs.ispc)
-    -- creates a .ispc file and corresponding .h file
-    ispc = gen_code.ispc(subs, subs.srcdir, subs.incdir)
+    if ( qcfg.use_ispc ) then
+      assert(not subs.isph) assert(not subs.ispc)
+        -- creates a .ispc file and corresponding .h file
+      ispc = gen_code.ispc(subs, subs.srcdir, subs.incdir)
+    end
   else
     ispc = subs.ispc -- Optional, hence no assert on it
   end
@@ -137,6 +139,7 @@ local function q_add(
     if ( not ispc ) then
       assert(compile_and_link( dotc, subs.srcs, subs.incs, subs.libs, fn))
     else
+      print("YYYYYYYY")
       local dotos      = assert(
         compile("C", dotc, subs.srcs, subs.incs))
       dotos = assert(

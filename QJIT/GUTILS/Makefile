@@ -38,6 +38,7 @@ ${CHNK_HMAP_SO} :
 	make -C ${CHNK_HMAP_LOC} ${CHNK_HMAP_SO}
 RS_LIBS := -lpthread
 RS_LIBS += -levent
+RS_LIBS += -latomic  # TDODO P0 experrimental:wq
 
 AUX_SRCS := ./src/read_configs.c 
 AUX_SRCS += ./src/init_globals.c 

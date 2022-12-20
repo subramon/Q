@@ -11,7 +11,6 @@ extern int
 ${fn}(  
       const ${f1_ctype} * restrict in,  
       uint64_t nR,
-      const ${s1_ctype} * const ptr_sval,
       ${f2_ctype} * restrict out
       ) ;
 //STOP_FOR_CDEF
@@ -19,20 +18,16 @@ ${fn}(
    ]],
    definition = [[
 #include "${fn}.h"
-// TODO P2 #include "${fn_ispc}.h"
 int
 ${fn}(  
       const ${f1_ctype} * restrict in,
       uint64_t nR,  
-      const ${s1_ctype} * const ptr_sval,
       ${f2_ctype} * restrict out
       )
 {
   int status = 0;
-  ${s1_ctype} b = 0;
   // Following needed because we may not always have b for some operations
   // like incr, decr, ....
-  if ( ptr_sval != NULL ) { b = *ptr_sval; }
 #pragma omp parallel for schedule(static, ${chunk_size})
   for ( uint32_t i = 0; i < nR; i++ ) {  
     ${f1_ctype} a = in[i]; 

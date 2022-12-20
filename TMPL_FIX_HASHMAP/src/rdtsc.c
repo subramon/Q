@@ -13,11 +13,5 @@ RDTSC(
     )
 //STOP_FUNC_DECL
 {
-#ifdef ARM
   return get_time_usec();
-#else
-  unsigned int lo, hi;
-  asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
-  return ((uint64_t)hi << 32) | lo;
-#endif
 }

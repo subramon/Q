@@ -4,9 +4,10 @@
 // Hence, some of the names use here are from Penlight. 
 #define LUA_LIB
 
-#include <fcntl.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <libgen.h>
+#include <omp.h>
 #include <regex.h>
 #include <sys/stat.h>
 #include <stdint.h>
@@ -140,6 +141,23 @@ BYE:
   lua_pushnumber(L, status);
   return 3;
 }
+static int l_cutils_omp_get_num_procs( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  char *X = NULL; size_t nX = 0;
+  if ( lua_gettop(L) != 0 ) { go_BYE(-1); }
+  lua_pushnumber(L, omp_get_num_procs());
+  return 1; 
+BYE:
+  mcr_rs_munmap(X, nX);
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 //----------------------------------------
 static int l_cutils_makepath( 
     lua_State *L
@@ -626,6 +644,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "makepath",    l_cutils_makepath },
     { "mk_file",     l_cutils_mk_file },
     { "num_lines",   l_cutils_num_lines },
+    { "omp_get_num_procs",   l_cutils_omp_get_num_procs },
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },

@@ -21,10 +21,12 @@ require 'Q/OPERATORS/WHERE/lua/where'
 require "Q/OPERATORS/WHERE/lua/select_ranges"
 require "Q/OPERATORS/F1S1OPF2/lua/is_prev"
 require "Q/OPERATORS/F1S1OPF2/lua/vshift"
+require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
 require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
 require "Q/OPERATORS/F1F2OPF3/lua/repeater"
 require "Q/OPERATORS/GROUPBY/lua/isby"
 require "Q/OPERATORS/F1OPF2F3/lua/f1opf2f3"
+require "Q/OPERATORS/F1OPF2/lua/f1opf2"
 
 require "Q/OPERATORS/SORT1/lua/sort1"
 require "Q/OPERATORS/PERMUTE/lua/permute"
@@ -34,7 +36,6 @@ require 'Q/QTILS/lua/fold'
 require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
 require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
 
-require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
 
 --== These are from QTILS 
 require 'Q/QTILS/lua/nop'

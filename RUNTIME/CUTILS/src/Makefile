@@ -34,5 +34,5 @@ clean:
 	rm -f *.so *.o _* ${OBJS} ${EXTSO}
 		
 libcutils.so:   ${OBJS} 
-	gcc ${OBJS} -shared -o libcutils.so
+	gcc ${OBJS} -shared -o libcutils.so -lgomp
 

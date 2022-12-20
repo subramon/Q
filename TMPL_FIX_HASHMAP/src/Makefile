@@ -30,9 +30,10 @@ SRCS +=	./calc_new_size.c
 SRCS +=	./fasthash.c  
 SRCS +=	./mk_dir_file_name.c  
 SRCS +=	./murmurhash.c  
-SRCS +=	./rdtsc.c  
 SRCS +=	./set_probe_loc.c  
 SRCS +=	./spooky_hash.c  
+SRCS +=	../../UTILS/src/get_time_usec.c  
+SRCS +=	../../UTILS/src/rdtsc.c  
 SRCS +=	../../UTILS/src/rs_mmap.c  
 
 OBJS = $(SRCS:.c=.o)

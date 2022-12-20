@@ -35,6 +35,9 @@ qjit test_fold.lua
 qjit test_sum.lua
 bash test_f_to_s.sh
 
+cd ~/Q/OPERATORS/F1S1PF2/test/
+qjit test_cmp.lua
+
 cd ~/Q/OPERATORS/F1F2OPF3/test/
 qjit test_concat.lua
 qjit test_vveq.lua
@@ -53,5 +56,8 @@ qjit test_where.lua
 qjit test_where_gen.lua
 qjit test_select_ranges.lua
 bash run_tests.sh
+
+cd ~/Q/OPERATORS/F1OPF2/test/
+qjit test_vnot.lua
 
 echo "Successfully completed $0 in $PWD"

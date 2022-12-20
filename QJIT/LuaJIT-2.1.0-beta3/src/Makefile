@@ -730,6 +730,7 @@ $(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP)
 		$(TARGET_O) $(TARGET_ALIBS) \
 		${RS_LIBS}
 	$(Q)$(TARGET_STRIP) $@
+	mkdir -p ${Q_ROOT}/bin/
 	cp luajit ${Q_ROOT}/bin/qjit # TODO Improve this 
 	$(E) "OK        Successfully built LuaJIT"
 

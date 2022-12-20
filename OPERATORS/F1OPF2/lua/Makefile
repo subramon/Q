@@ -1,12 +1,8 @@
+# TODO 
 
-all : vseq_specialize.lua \
-	vsneq_specialize.lua \
-	vsleq_specialize.lua \
-	vsgeq_specialize.lua \
-	vslt_specialize.lua \
-	vsgt_specialize.lua 
+all : vlog_specialize.lua \
 
-vseq_specialize.lua : cmp_specialize.tmpl gen_cmp_specializers.lua
+vnot_specialize.lua : unary_specialize.tmpl gen_unary_specializers.lua
 	lua gen_cmp_specializers.lua
 
 vsneq_specialize.lua : cmp_specialize.tmpl gen_cmp_specializers.lua

@@ -31,8 +31,11 @@ else
 end
 --==================================
 qcfg.use_ispc = false
-if ( os.getenv("QISPC") ) then
+local x = os.getenv("QISPC") 
+if ( x and x == "true" ) then 
   qcfg.use_ispc = true
+else
+  qcfg.use_ispc = false
 end
 if ( not os.getenv("QISPC_FLAGS") ) then
   qcfg.qispc_flags = " --pic "
@@ -45,7 +48,7 @@ qcfg.ld_library_path = os.getenv("LD_LIBRARY_PATH")
 --=================================
 -- Note that no cell in an input CSV file can have length greater
 -- than max_width_SC
-qcfg.max_width_SC = 32 -- => max length of constant length string = 32-1
+qcfg.max_width_SC = 64 -- => max length of constant length string = 32-1
 qcfg.max_num_in_chunk = 16384 -- this is default value
 local x = math.ceil(qcfg.max_num_in_chunk/64.0)
 local y = math.floor(qcfg.max_num_in_chunk/64.0)

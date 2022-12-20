@@ -6,14 +6,12 @@ local cmem     = require 'libcmem'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
-local no_scalar_ops = { "vnot", "incr", "decr", "exp", "log", "sqrt" }
-
-local function expander_f1s1opf2(a, f1, sclr, optargs )
-  local sp_fn_name = "Q/OPERATORS/F1S1OPF2/lua/" .. a .. "_specialize"
+local function expander_f1opf2(a, f1, optargs )
+  local sp_fn_name = "Q/OPERATORS/F1OPF2/lua/" .. a .. "_specialize"
   local spfn = assert(require(sp_fn_name))
   optargs = optargs or {}
   optargs.__operator = a -- for use in specializer if needed
-  local subs = assert(spfn(f1, sclr, optargs))
+  local subs = assert(spfn(f1, optargs))
 
   local func_name = assert(subs.fn)
   qc.q_add(subs); 
@@ -33,7 +31,7 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
       local chunk2 = get_ptr(buf,      subs.cast_f2_as)
       local start_time = cutils.rdtsc()
       local status = 
-      qc[func_name](chunk1, f1_len, subs.ptr_to_sclr_for_C, chunk2)
+      qc[func_name](chunk1, f1_len, chunk2)
       assert(status == 0)
       record_time(start_time, func_name)
     end
@@ -48,4 +46,4 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
   vargs.qtype = subs.f2_qtype
   return lVector(vargs)
 end 
-return expander_f1s1opf2
+return expander_f1opf2

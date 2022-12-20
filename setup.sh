@@ -7,8 +7,7 @@ unset Q_ROOT
 unset QC_FLAGS
 unset Q_DATA_DIR
 
-# TODO FIX Should not be hard coded here
-export QISPC="true"
+export QISPC="false" # TODO P1 Should not be hard coded here
 
 # Wont work with simlinks
 Q_SRC_ROOT="$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
@@ -20,6 +19,9 @@ echo "Q_ROOT: $Q_ROOT"
 mkdir -p $HOME/local/
 mkdir -p $HOME/local/Q/
 mkdir -p $HOME/local/Q/lib/
+mkdir -p $HOME/local/Q/bin/
+mkdir -p $HOME/local/Q/config/
+mkdir -p $HOME/local/Q/csos/
 #-----------------------------------
 C_FLAGS=" -g -std=gnu99  -fPIC"
 C_FLAGS+=" -DDEBUG "

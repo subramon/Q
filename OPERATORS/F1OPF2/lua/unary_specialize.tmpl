@@ -40,7 +40,7 @@ return function (
   subs.max_num_in_chunk = f1:max_num_in_chunk()
   subs.f2_buf_sz = subs.max_num_in_chunk * subs.f2_width
 
-  subs.fn = 'vsgt'
+  subs.fn = __operator__
     .. "_" .. subs.f1_qtype 
     .. "_" .. subs.s1_qtype 
     .. "_" .. subs.f2_qtype 
@@ -54,7 +54,7 @@ return function (
     subs.cast_cargs = ffi.NULL
   end
 
-  subs.code = 'c = a > b;'
+  subs.code = __code__
   subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"

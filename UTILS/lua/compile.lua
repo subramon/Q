@@ -61,10 +61,14 @@ local function compile(
          qispc_flags, str_incs, dotc, doto)
     end
     -- print("compiling ", q_cmd)
-    local status = os.execute(q_cmd)
-    assert(status == 0)
-    assert(cutils.isfile(doto))
-    dotos[#dotos+1] = doto
+    if ( ( lang == "ISPC" ) and ( qcfg.use_ispc == false ) ) then 
+      -- do nothing 
+    else
+      local status = os.execute(q_cmd)
+      assert(status == 0)
+      assert(cutils.isfile(doto))
+      dotos[#dotos+1] = doto
+    end
   end
   return dotos
 end
