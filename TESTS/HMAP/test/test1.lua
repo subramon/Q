@@ -49,5 +49,20 @@ end
 
 local t_plp1, n2 = Q.sum(T.t_plp1):eval()
 print("Time for plp1 =  ", t_plp1:to_num() / n2:to_num())
+-- stats for plp2
+
+local plp2_err_bmask = Q.where(T.plp2_err_bmask, x):eval()
+local nF = 5
+local zero = Q.const({val = 0, qtype = I8, len = n}):eval()
+local mask = Q.const({val = 15, qtype = I8, len = n}):eval()
+for i = 1, nF do
+  local x = Q.vshift_right(plp2_err_bmask, 4*(i-1))
+  local y = Q.vvand(x, mask)
+  local z = Q.sum(Q.vveq(y, zero))
+  local n1, n2 = z:eval()
+  print("Formula " .. i .. " succeeded " .. n1:to_num() .. " out of " .. 
+    n2:to_num() .. " attempts")
+end
+Q.print_csv({plp2_err_bmask})
 
 print("Completed test")
