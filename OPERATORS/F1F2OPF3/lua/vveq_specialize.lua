@@ -7,6 +7,7 @@ local get_max_num_in_chunk   = require 'Q/UTILS/lua/get_max_num_in_chunk'
 local is_in   = require 'Q/UTILS/lua/is_in'
 
 return function (
+  op,
   f1, 
   f2,
   optargs
@@ -28,7 +29,7 @@ return function (
   subs.f3_qtype = f3_qtype
   subs.f3_width = cutils.get_width_qtype(subs.f3_qtype)
 
-  subs.fn = "vveq_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
+  subs.fn = op .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
 
   subs.f1_ctype = cutils.str_qtype_to_str_ctype(f1_qtype)

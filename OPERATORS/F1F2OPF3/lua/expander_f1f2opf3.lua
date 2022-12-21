@@ -10,10 +10,10 @@ local record_time = require 'Q/UTILS/lua/record_time'
 local copy_optargs_to_vctr_args = require 'Q/UTILS/lua/copy_optargs_to_vctr_args'
 
 
-local function expander_f1f2opf3(a, f1, f2, optargs )
-  local sp_fn_name = "Q/OPERATORS/F1F2OPF3/lua/" .. a .. "_specialize"
+local function expander_f1f2opf3(op, f1, f2, optargs )
+  local sp_fn_name = "Q/OPERATORS/F1F2OPF3/lua/" .. op .. "_specialize"
   local spfn = assert(require(sp_fn_name))
-  local subs = assert(spfn(f1, f2, optargs))
+  local subs = assert(spfn(op, f1, f2, optargs))
   -- subs should return 
   -- (1) f3_qtype (2) f1_cst_as (2) f2_cst_as (3) f3_cst_as
   local func_name = assert(subs.fn)

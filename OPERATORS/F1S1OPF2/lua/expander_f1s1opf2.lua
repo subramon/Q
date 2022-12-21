@@ -1,5 +1,6 @@
 local ffi      = require 'ffi' 
 local cutils   = require 'libcutils' 
+local Scalar   = require 'libsclr'
 local qc       = require 'Q/UTILS/lua/qcore'
 local lVector  = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local cmem     = require 'libcmem'
@@ -13,6 +14,9 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
   local spfn = assert(require(sp_fn_name))
   optargs = optargs or {}
   optargs.__operator = a -- for use in specializer if needed
+  if ( type(sclr) == "number" ) then 
+    sclr = Scalar.new(sclr, f1:qtype()) 
+  end
   local subs = assert(spfn(f1, sclr, optargs))
 
   local func_name = assert(subs.fn)
@@ -33,7 +37,7 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
       local chunk2 = get_ptr(buf,      subs.cast_f2_as)
       local start_time = cutils.rdtsc()
       local status = 
-      qc[func_name](chunk1, f1_len, subs.ptr_to_sclr_for_C, chunk2)
+      qc[func_name](chunk1, f1_len, subs.ptr_to_sclr, chunk2)
       assert(status == 0)
       record_time(start_time, func_name)
     end

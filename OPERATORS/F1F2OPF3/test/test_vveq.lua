@@ -26,9 +26,17 @@ tests.t1 = function()
     local n1, n2 = Q.sum(c3):eval()
     assert(n1 == Scalar.new(0))
 
+    local c3 = Q.vvneq(c1, c2)
+    local n1, n2 = Q.sum(c3):eval()
+    assert(n1 == n2)
+
     local c3 = Q.vveq(c1, c1)
     local n1, n2 = Q.sum(c3):eval()
     assert(n1 == n2)
+
+    local c3 = Q.vvneq(c1, c1)
+    local n1, n2 = Q.sum(c3):eval()
+    assert(n1 == Scalar.new(0))
   end
   assert(cVector.check_all())
   print("Test t1 succeeded")
@@ -40,8 +48,11 @@ tests.t2 = function()
       max_num_in_chunk = max_num_in_chunk} )
     local c3 = Q.vveq(c1, c1)
     local n1, n2 = Q.sum(c3):eval()
-    local n1, n2 = Q.sum(c3):eval()
     assert(n1 == n2)
+
+    local c3 = Q.vvneq(c1, c1)
+    local n1, n2 = Q.sum(c3):eval()
+    assert(n1 == Scalar.new(0))
   end
   assert(cVector.check_all())
   print("Test t2 succeeded")
@@ -61,9 +72,18 @@ tests.t3 = function()
   local n1, n2 = Q.sum(c3):eval()
   assert(n1 == n2)
 
+  local c3 = Q.vvneq(c1, c1)
+  local n1, n2 = Q.sum(c3):eval()
+  assert(n1 == Scalar.new(0))
+
   local c3 = Q.vveq(c1, c2)
   local n1, n2 = Q.sum(c3):eval()
   assert(n1 == Scalar.new(0))
+
+  local c3 = Q.vvneq(c1, c2)
+  local n1, n2 = Q.sum(c3):eval()
+  assert(n1 == n2)
+
   assert(cVector.check_all())
   print("Test t3 succeeded")
 end

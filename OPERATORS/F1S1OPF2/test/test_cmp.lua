@@ -47,6 +47,7 @@ tests.t1 = function()
     assert(n2:to_num() == len)
     --===============================================
   end
+  print("Test t1 succeeded")
 end
 tests.t1()
 -- return tests

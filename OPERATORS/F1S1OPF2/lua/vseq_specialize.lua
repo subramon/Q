@@ -12,19 +12,14 @@ return function (
   assert(type(f1) == "lVector"); assert(not f1:has_nulls())
 
   subs.f1_qtype = f1:qtype()
-  assert(is_in(subs.f1_qtype,{ "I1", "I2", "I4", "I8", "F4", "F8" }))
+  assert(is_in(subs.f1_qtype, { "I1", "I2", "I4", "I8", "F4", "F8" }))
  
-  if ( s1 ) then 
-    if ( type(s1) == "number" ) then 
-      s1 = Scalar.new(s1, subs.f1_qtype)
-    end
-    assert(type(s1) == "Scalar")
-    subs.s1_qtype = s1:qtype()
-    assert(is_in(subs.s1_qtype,{ "I1", "I2", "I4", "I8", "F4", "F8" }))
-    subs.s1_ctype = cutils.str_qtype_to_str_ctype(subs.s1_qtype)
-    subs.cast_s1_as  = subs.s1_ctype .. " *"
-  end
-  assert(type(s1) == "Scalar") -- for vseq
+  assert(type(s1) == "Scalar")
+  subs.s1_qtype = s1:qtype()
+  assert(is_in(subs.s1_qtype, { "I1", "I2", "I4", "I8", "F4", "F8" }))
+  subs.s1_ctype = cutils.str_qtype_to_str_ctype(subs.s1_qtype)
+  subs.cast_s1_as  = subs.s1_ctype .. " *"
+  assert(type(s1) == "Scalar") 
 
   subs.f1_ctype = cutils.str_qtype_to_str_ctype(subs.f1_qtype)
   subs.cast_f1_as  = subs.f1_ctype .. " *"
