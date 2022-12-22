@@ -12,5 +12,6 @@ local function do_subs(tmpl_file, out_file, replacements)
   end
   plfile.write(out_file, out)
   assert(plpath.isfile(out_file), "file not created " .. out_file)
+  return true
 end
 return do_subs

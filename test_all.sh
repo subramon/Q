@@ -61,4 +61,7 @@ bash run_tests.sh
 cd ~/Q/OPERATORS/F1OPF2/test/
 qjit test_vnot.lua
 
+cd ~/Q/OPERATORS/GROUPBY/test/
+qjit test_numby.lua
+
 echo "Successfully completed $0 in $PWD"
