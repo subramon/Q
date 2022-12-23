@@ -60,6 +60,7 @@ bash run_tests.sh
 
 cd ~/Q/OPERATORS/F1OPF2/test/
 qjit test_vnot.lua
+qjit test_popcount.lua
 
 cd ~/Q/OPERATORS/GROUPBY/test/
 qjit test_numby.lua

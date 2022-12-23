@@ -95,16 +95,16 @@ vctr_get_chunk(
   if ( chnk_is_found == false ) { go_BYE(-1);  }
   //-----------------------------------------------------
   // TODO Handle case when data has been flushed to l2/l4 mem
-    char *data = chnk_get_data(tbsp, chnk_where_found, is_write); 
-    if ( data == NULL ) { go_BYE(-1); }
+  char *data = chnk_get_data(tbsp, chnk_where_found, is_write); 
+  if ( data == NULL ) { go_BYE(-1); }
 
-    memset(ptr_cmem, 0, sizeof(CMEM_REC_TYPE));
-    ptr_cmem->data  = data;
-    ptr_cmem->qtype = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.qtype; 
-    ptr_cmem->size  = chnk_size;
-    ptr_cmem->is_foreign  = true;
-    ptr_cmem->is_stealable  = false;
-    g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers++;
+  memset(ptr_cmem, 0, sizeof(CMEM_REC_TYPE));
+  ptr_cmem->data  = data;
+  ptr_cmem->qtype = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.qtype; 
+  ptr_cmem->size  = chnk_size;
+  ptr_cmem->is_foreign  = true;
+  ptr_cmem->is_stealable  = false;
+  // DONE in chnk_get_data: g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers++;
   *ptr_num_in_chunk = g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_elements; 
 BYE:
   return status;

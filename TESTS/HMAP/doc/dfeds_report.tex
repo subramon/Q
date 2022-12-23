@@ -32,12 +32,11 @@
 \newcommand{\NumPLPAttemptsB}{__NumPLPAttemptsB__}
 \newcommand{\AvgTimePLPB}{__AvgTimePLPB__}
 
-\newcommand{\NumDataSetsForModel}{X}
-\newcommand{\NumModelsAttempted}{X}
-\newcommand{\NumModelsSucceeded}{X}
-\newcommand{\ModelMinTime}{X}
-\newcommand{\ModelMaxTime}{X}
-\newcommand{\ModelAvgTime}{X}
+\newcommand{\NumModelsAttempted}{__NumModelsAttempted__}
+\newcommand{\NumModelsSucceeded}{__NumModelsSucceeded__}
+\newcommand{\ModelMinTime}{__min_t_model_building__}
+\newcommand{\ModelMaxTime}{__max_t_model_building__}
+\newcommand{\ModelAvgTime}{__avg_t_model_building__}
 
 \begin{document}
 \title{Overview of DFE Run}
@@ -131,8 +130,6 @@ Distribution of errors by formula and type is shown in Table~\ref{plp2_errs_B}
 
 \section{Model Building}
 \bi
-\item The number of data sets for which model building was attempted was
-  \NumDataSetsForModel
 \item The number of models attempted was \NumModelsAttempted
 \item The number of models that were built was \NumModelsSucceeded
 \item Summary statistics of time (in seconds) to build a model
@@ -141,18 +138,18 @@ Distribution of errors by formula and type is shown in Table~\ref{plp2_errs_B}
 \item Maximum \ModelMaxTime
 \item Average \ModelAvgTime
 \ei
-\item Distribution of build times is in Figure~\ref{fig_model_build_times}
+\item Distribution of build times is in Table~\ref{tbl_model_build_times}
 \ei
-\begin{figure}
-\fbox{
-  \begin{minipage}{6.0in}
+\begin{table}
   \centering
-  \includegraphics[width=4.5in]{model_build_times.png}
-    \caption{Distribution of model build times (seconds)}
-  \label{fig_model_build_times}
-  \end{minipage}
-}
-\end{figure}
+  \begin{tabular}{|l|l|l|} \hline \hline
+    {\bf Decile} & {\bf Value}  \\ \hline
+    \input{model_build_deciles} 
+    \hline
+  \end{tabular}
+  \caption{Deciles for model build times (seconds)}
+  \label{tbl_model_build_times}
+\end{table}
 
 \section{Explanations of Terms}
 \subsection{Formulas}
@@ -160,7 +157,7 @@ Distribution of errors by formula and type is shown in Table~\ref{plp2_errs_B}
 \begin{table}
   \centering
   \begin{tabular}{|l|l|l|} \hline \hline
-    {\bf Index} & {\bf Key} {\bf Explanation} \\ \hline 
+    {\bf Index} & {\bf Key} & {\bf Explanation} \\ \hline 
     \input{formula_explanations} 
     \hline
   \end{tabular}

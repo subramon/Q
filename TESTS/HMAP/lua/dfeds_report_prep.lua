@@ -5,7 +5,7 @@ local qcfg = require 'Q/UTILS/lua/qcfg'
 local Q = require 'Q'
 local do_subs = require 'Q/UTILS/lua/do_subs'
 
-local function mma(col, fld, subs)
+local function mma(col, fld, subs, denom )
   -- --TODO P1 Using fold for this purpose so that we don't scan input
   -- multiple times 
   assert(type(col) == "lVector")
@@ -16,10 +16,9 @@ local function mma(col, fld, subs)
   local max, n  = Q.max(col):eval()
   local sum, n  = Q.sum(col):eval()
   local avg = sum:to_num() / n:to_num()
-  print("Min/Max/Average for " .. fld )
-  subs["__min_" .. fld .. "__"] = min:to_num()
-  subs["__max_" .. fld .. "__"] = max:to_num()
-  subs["__avg_" .. fld .. "__"] = avg
+  subs["__min_" .. fld .. "__"] = min:to_num() / denom
+  subs["__max_" .. fld .. "__"] = max:to_num() / denom
+  subs["__avg_" .. fld .. "__"] = avg / denom
 end
 
 --[[
@@ -40,19 +39,18 @@ local function dfeds_report_prep(datafile, metafile)
   local T = Q.load_csv(datafile, M, O)
   assert(type(T) == "table")
   T.tcin:eval()
+
   -- how many entries
   local n = T.tcin:num_elements()
-  print("Number of data sets = " .. n)
   subs.__NumDataSets__  = n
-  mma(T.num_rows_read, "num_rows_read", subs)
+  mma(T.num_rows_read, "num_rows_read", subs, 1.0)
+  
   
   -- stats for plp1 
   assert(type(T.plp1_error) == "lVector")
   local x = Q.vseq(T.plp1_error, 0)
-  print(type(x))
   assert(type(x) == "lVector")
   local n_plp1_good, n2 = Q.sum(x):eval()
-  print("Number of data sets where PLP1 succeded = " .. n_plp1_good:to_num())
   subs.__NumPLPSuccessA__ = n_plp1_good:to_num()
   subs.__NumPLPErrorsA__  = n2:to_num() - n_plp1_good:to_num()
   if ( n_plp1_good:to_num() < n2:to_num() ) then 
@@ -64,7 +62,6 @@ local function dfeds_report_prep(datafile, metafile)
   
   local sum_t_plp1, n_plp1 = Q.sum(T.t_plp1):eval()
   local avg_t_plp1 = sum_t_plp1:to_num() / n_plp1:to_num()
-  print("Time for plp1 =  ", avg_t_plp1)
   subs.__AvgTimePLPA__ = avg_t_plp1
   -- distribution of errors for plp1
   local plp1_err_file = 
@@ -86,7 +83,6 @@ local function dfeds_report_prep(datafile, metafile)
   local t_plp2 = Q.where(T.t_plp2, x):eval()
   local sum_t_plp2, n_plp2 = Q.sum(t_plp2):eval()
   local avg_t_plp2 = sum_t_plp2:to_num() / n_plp2:to_num()
-  print("Time for plp2 =  ", avg_t_plp2)
   subs.__AvgTimePLPB__ = avg_t_plp2
   
   local frmla_file = 
@@ -131,6 +127,29 @@ local function dfeds_report_prep(datafile, metafile)
   end
   fp:close()
   fpB:close()
+  -- Stats on model building 
+  local n1, n2 = Q.sum(T.num_models_attempted):eval()
+  -- Q.print_csv({T.plp2_err_bmask, T.num_models_attempted, T.succ_frmla_bmask})
+  subs.__NumModelsAttempted__ = n1:to_num()
+  -- mma for t_model_building 
+  mma(T.t_model_building, "t_model_building", subs, 1000000.0)
+  -- num successes on model building 
+  local n1, n2 = Q.sum(Q.popcount(T.succ_frmla_bmask)):eval()
+  subs.__NumModelsSucceeded__ = n1:to_num()
+  -- deciles for model build time 
+  local x = Q.sort(T.t_model_building, "asc")
+  local n = T.t_model_building:num_elements()
+  local incr = n / 10.0
+  local decile_file = 
+    qcfg.q_src_root .. "/TESTS/HMAP/doc/model_build_deciles.tex"
+  local fp = io.open(decile_file, "w")
+  for i = 1, 9 do 
+    local str = string.format("%d & %.3f \\\\ \\hline \n",
+    i, (x:get1(incr*i):to_num() / 1000000.0 ))
+    fp:write(str)
+  end
+  fp:close()
+
   return subs
 end
 local infile = qcfg.q_src_root .. "/TESTS/HMAP/doc/dfeds_report.tex"

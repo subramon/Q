@@ -1,5 +1,15 @@
 local T = {} 
     
+local function popcount(x, y, optargs)
+  local expander = require 'Q/OPERATORS/F1OPF2/lua/expander_f1opf2'
+  local status, col = pcall(expander, "popcount", x, y, optargs)
+  if ( not status ) then print(col) end
+  assert(status, "Could not execute popcount")
+  return col
+end
+T.popcount = popcount
+require('Q/q_export').export('popcount', popcount)
+    
 local function decr(x, y, optargs)
   local expander = require 'Q/OPERATORS/F1OPF2/lua/expander_f1opf2'
   local status, col = pcall(expander, "decr", x, y, optargs)
