@@ -13,13 +13,9 @@ end
 T.numby = numby
 require('Q/q_export').export('numby', numby)
 
---[[
-local function sumby(x, g, ng, optargs)
+local function sumby(val, grp, n_grp, cnd, optargs)
   local expander = require 'Q/OPERATORS/GROUPBY/lua/expander_sumby'
-  assert(x, "no arg x to sumby")
-  assert(g, "no arg g to sumby")
-  assert(type(ng) == "number")
-  local status, col = pcall(expander, x, g, ng, optargs)
+  local status, col = pcall(expander, val, grp, n_grp, cnd, optargs)
   if not status then print(col) end
   assert(status, "Could not execute SUMBY")
   return col
@@ -27,6 +23,7 @@ end
 T.sumby = sumby
 require('Q/q_export').export('sumby', sumby)
 
+--[[
 
 local function raw_maxby(x, g, ng, optargs)
   local expander = require 'Q/OPERATORS/GROUPBY/lua/expander_maxby_minby'

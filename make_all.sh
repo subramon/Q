@@ -24,5 +24,5 @@ cd $Q_SRC_ROOT/RUNTIME/VCTRS/src/; make clean && make
 cd $Q_SRC_ROOT/QJIT/LuaJIT-2.1.0-beta3/src; rm -f ./luajit; make
 
 #--- generate specializers
-pushd; cd $Q_SRC_ROOT/OPERATORS/F1S1OPF2/lua; make clean && make; popd;
+pushd . ; cd $Q_SRC_ROOT/OPERATORS/F1S1OPF2/lua; make clean && make; popd;
 echo "Q is good to go"

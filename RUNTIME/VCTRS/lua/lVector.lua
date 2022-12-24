@@ -29,7 +29,7 @@ register_type(lVector, "lVector")
 
 function lVector:check(is_at_rest, is_for_all)
   if ( type(is_at_rest) == "nil" ) then
-    is_at_rest = false
+    is_at_rest = true
   end
   assert(type(is_at_rest) == "boolean")
 

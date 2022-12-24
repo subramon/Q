@@ -1,25 +1,30 @@
-local Q = require 'Q'
-local qconsts = require 'Q/UTILS/lua/q_consts'
 require 'Q/UTILS/lua/strict'
+local Q = require 'Q'
+local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
 
 local tests = {}
 
 tests.t1 = function()
-  local a = Q.mk_col({1, 2, 4, 5, 6, 7, 8, 9}, "I4")
-  local b = Q.mk_col({0, 1, 2, 1, 1, 2, 0, 2}, "I2")
+  local val = Q.mk_col({1, 2, 4, 5, 6, 7, 8, 9}, "I8")
+  local grp = Q.mk_col({0, 1, 2, 1, 1, 2, 0, 2}, "I2")
   local exp_val = {9, 13, 20}
+  local exp_cnt = {2, 3, 3}
   local nb = 3
-  local res = Q.sumby(a, b, nb, {is_safe = true})
+  local cnd = nil
+  local optargs= nil
+  local res = Q.sumby(val, grp, nb, cnd, optargs)
   assert(type(res) == "Reducer")
-  local vres = res:eval()
-  assert(type(vres) == "lVector")
+  local out_val, out_cnt = res:eval()
+  assert(type(out_val) == "lVector")
+  assert(type(out_cnt) == "lVector")
   -- vefiry
-  assert(vres:length() == nb)
-  assert(vres:length() == #exp_val)
-  local val, nn_val
-  for i = 1, vres:length() do
-    val, nn_val = vres:get_one(i-1)
-    assert(val:to_num() == exp_val[i])
+  assert(out_val:num_elements() == nb)
+  assert(out_cnt:num_elements() == nb)
+  for i = 1, nb do 
+    local chk_val = out_val:get1(i-1)
+    local chk_cnt = out_cnt:get1(i-1)
+    assert(chk_val:to_num() == exp_val[i])
+    assert(chk_cnt:to_num() == exp_cnt[i])
   end
   print("Test t1 completed")
 end
@@ -27,31 +32,29 @@ end
 tests.t2 = function()
   -- sumby test in safe mode ( default is safe mode )
   -- group by column exceeds limit
-  local a = Q.mk_col({1, 2, 4, 5, 6, 7, 8, 9}, "I4")
-  local b = Q.mk_col({0, 1, 4, 1, 1, 2, 0, 2}, "I2")
-  local nb = 3
-  local res = Q.sumby(a, b, nb)
+  local val = Q.mk_col({1, 2, 4, 5, 6, 7, 8, 9}, "I4")
+  local grp = Q.mk_col({0, 1, 4, 1, 1, 2, 0, 2}, "I2")
+  local n_grp = 3
+  print(">>> START DELIBERATE ERROR")
+  local res = Q.sumby(val, grp, n_grp)
   local status = pcall(res.eval, res)
+  print("<<< START DELIBERATE ERROR")
   assert(status == false)
   print("Test t2 completed")
 end
 
 tests.t3 = function()
   -- Values of b, not having 0
-  local a = Q.mk_col({1, 2, 4, 5, 6, 7, 8, 9}, "I4")
-  local b = Q.mk_col({1, 1, 2, 1, 1, 2, 1, 2}, "I2")
+  local val = Q.mk_col({1, 2, 4, 5, 6, 7, 8, 9}, "F4")
+  local grp = Q.mk_col({1, 1, 2, 1, 1, 2, 1, 2}, "I2")
   local exp_val = {0, 22, 20}
-  local nb = 3
-  local res = Q.sumby(a, b, nb)
-  local vres = res:eval()
+  local n_grp = 3
+  local res = Q.sumby(val, grp, n_grp):eval()
 
   -- vefiry
-  assert(vres:length() == nb)
-  assert(vres:length() == #exp_val)
-  local val, nn_val
-  for i = 1, vres:length() do
-    val, nn_val = vres:get_one(i-1)
-    assert(val:to_num() == exp_val[i])
+  for i = 1, n_grp do 
+    local chk_val = res:get1(i-1)
+    assert(chk_val:to_num() == exp_val[i])
   end
 
   print("Test t3 completed")
@@ -59,52 +62,30 @@ end
 
 
 tests.t4 = function()
-  -- Length of input vector more than chunk size
-  -- note that len must be a mutlple of period  for this test
-  local len = qconsts.chunk_size * 2 + 655
-  local period = 3
-  local a = Q.seq( {start = 1, by = 1, qtype = "I4", len = len} )
-  local b = Q.period({ len = len, start = 0, by = 1, period = period, qtype = "I4"})
-  local value = len/period
-  local exp_sum = period*(value*(value+1)/2)
-  local exp_val = {exp_sum-(value+value), exp_sum-value, exp_sum}
-  local nb = 3
+  local len = get_max_num_in_chunk() * 2 + (get_max_num_in_chunk()/2-1)
+  local n_grp = 3
 
-  local res = Q.sumby(a, b, nb)
-  local vres = res:eval()
+  local val = Q.seq( {start = 1, by = 1, qtype = "I4", len = len} )
+  local grp = Q.period({ len = len, start = 0, by = 1, period = n_grp, qtype = "I4"})
+  local exp_val = { 279599787, 279613440, 279627093, }
 
-  assert(vres:length() == nb)
-  local val, nn_val
-  for i = 1, vres:length() do
-    val, nn_val = vres:get_one(i-1)
-    assert(val:to_num() == exp_val[i])
+  local res, cnt = Q.sumby(val, grp, n_grp):eval()
+  -- Q.print_csv({res, cnt})
+
+  local n1, n2 = Q.sum(cnt):eval()
+  assert(n1:to_num() == len)
+
+  -- vefiry
+  for i = 1, n_grp do 
+    local chk_val = res:get1(i-1)
+    assert(chk_val:to_num() == exp_val[i])
   end
-  print("Test t4 completed")
-end
-tests.t5 = function()
-  local len = qconsts.chunk_size * 2 + 7491
-  local period = 3
-  local nb = 3
-  local p = 0.5
 
-  local a = Q.seq( {start = 1, by = 1, qtype = "I4", len = len} )
-  local b = Q.period({ len = len, start = 0, by = 1, period = period, qtype = "I4"})
-  local c = Q.const( { val = true, qtype = "B1", len = len })
-  -- local c = Q.rand( { probability = p, qtype = "B1", len = len })
-
-  -- TODO local res = Q.sumby(a, b, nb, { where = c })
-  local res = Q.sumby(a, b, nb)
-  local vres = res:eval()
-
-  assert(vres:length() == nb)
-  local val, nn_val
-  for i = 1, vres:length() do
-    local act_val, nn_val = vres:get_one(i-1)
-    local exp_val, n2 = Q.sum(Q.where(a, Q.vvand(c, Q.vseq(b, i-1)))):eval()
-    -- print("i/actual/expected", i, act_val:to_num(), exp_val:to_num())
-    assert(act_val:to_num() == exp_val:to_num())
-  end
   print("Test t5 completed")
 end
+tests.t1()
+tests.t2()
+tests.t3()
+tests.t4()
 
-return tests
+-- return tests

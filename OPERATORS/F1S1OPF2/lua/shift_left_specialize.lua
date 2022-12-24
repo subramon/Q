@@ -9,46 +9,47 @@ return function (
   optargs
   )
   local subs = {}; 
-  assert(type(optargs) == "table")
   assert(type(f1) == "lVector"); assert(not f1:has_nulls())
 
   subs.f1_qtype = f1:qtype()
   assert(is_in(subs.f1_qtype, { "I1", "I2", "I4", "I8", }))
  
   assert(type(s1) == "Scalar")
-  assert(is_in(s1:qtype(), { "I1", "I2", "I4", "I8", }))
-  -- convert to I1 type 
-  local snum = s1:to_num()
-  s1 = Scalar.new(snum, "I1")
-  subs.s1_qtype = "I1"
+  subs.s1_qtype = s1:qtype()
+  assert(is_in(subs.s1_qtype, { "I1", "I2", "I4", "I8", }))
   subs.s1_ctype = cutils.str_qtype_to_str_ctype(subs.s1_qtype)
   subs.cast_s1_as  = subs.s1_ctype .. " *"
   assert(type(s1) == "Scalar") 
 
-  subs.f1_ctype = "u" .. cutils.str_qtype_to_str_ctype(subs.f1_qtype)
+  subs.f1_ctype = cutils.str_qtype_to_str_ctype(subs.f1_qtype)
   subs.cast_f1_as  = subs.f1_ctype .. " *"
 
-  assert( (snum >= 0 ) and ( snum < 8*ffi.sizeof(subs.f1_ctype)) )
+  subs.f2_qtype = optargs.f2_qtype or "BL"
+  assert(( subs.f2_qtype == "B1" ) or ( subs.f2_qtype == "BL" ))
+  assert(subs.f2_qtype == "BL") -- TODO P4 Restriction For now 
 
-  subs.f2_qtype = subs.f1_qtype
-
-  subs.f2_ctype = "u" .. cutils.str_qtype_to_str_ctype(subs.f2_qtype)
+  subs.f2_ctype = cutils.str_qtype_to_str_ctype(subs.f2_qtype)
   subs.cast_f2_as  = subs.f2_ctype .. " *"
 
   subs.f2_width = cutils.get_width_qtype(subs.f2_qtype)
   subs.max_num_in_chunk = f1:max_num_in_chunk()
   subs.f2_buf_sz = subs.max_num_in_chunk * subs.f2_width
 
-  subs.fn = optargs.__operator
+  subs.fn = 'shift_left'
     .. "_" .. subs.f1_qtype 
+    .. "_" .. subs.s1_qtype 
     .. "_" .. subs.f2_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
 
   subs.chunk_size = 1024 -- TODO experiment with this 
 
-  subs.ptr_to_sclr = ffi.cast(subs.cast_s1_as, s1:to_data())
+  if ( s1 ) then 
+    subs.ptr_to_sclr = ffi.cast(subs.cast_s1_as, s1:to_data())
+  else
+    subs.cast_cargs = ffi.NULL
+  end
 
-  subs.code = 'c = a << b;'
+  subs.code = 'c = a < b;'
   subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"
