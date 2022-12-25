@@ -15,6 +15,11 @@ return function (
   assert(type(nb) == "number")
   assert(nb > 1)
 
+  assert(type(optargs) == "table")
+  local operator = optargs.operator 
+  assert(type(operator) == "string")
+  assert(is_in(operator, { "sumby", "minby", "maxby", }))
+
   subs.max_num_in_chunk = get_max_num_in_chunk(optargs)
   assert(nb <= subs.max_num_in_chunk) -- TODO P3 Relax this assumption
   --==============================================
@@ -55,12 +60,7 @@ return function (
 
   --==============================================
   subs.is_safe = true 
-  if ( optargs ) then
-    assert(type(optargs) == "table")
-    if ( optargs.is_safe ) then 
-      subs.is_safe = optargs.is_safe 
-    end
-  end
+  if ( type(optargs.is_safe) ~= "nil" ) then subs.is_safe = optargs.is_safe end
   assert(type(subs.is_safe) == "boolean")
   --==============================================
 
@@ -80,9 +80,22 @@ return function (
     subs.checking_code = ""
     subs.bye = ""
   end
-  subs.operating_code = "out_val_fld[x] += val_fld[i]; "
+  if ( operator == "sumby" ) then 
+    subs.operating_code = "out_val_fld[x] += val_fld[i]; "
+  elseif ( operator == "minby" ) then 
+    subs.operating_code = 
+      "if ( val_fld[i] < out_val_fld[x]  ) then " ..
+      "out_val_fld[x] = val_fld[i] "
+  elseif ( operator == "sumby" ) then 
+    subs.operating_code = 
+      "if ( val_fld[i] > out_val_fld[x]  ) then " ..
+      "out_val_fld[x] = val_fld[i] "
+  else
+    error("")
+  end
+
   --=======================
-  subs.fn = "sumby_" .. subs.val_qtype .. "_" ..subs.grp_qtype 
+  subs.fn = operator .. "_" .. subs.val_qtype .. "_" ..subs.grp_qtype 
   if ( subs.is_safe ) then 
     subs.fn = subs.fn .. "_safe" 
   end

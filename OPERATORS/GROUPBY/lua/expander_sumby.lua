@@ -5,7 +5,9 @@ local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local qc      = require 'Q/UTILS/lua/qcore'
 local Reducer = require 'Q/RUNTIME/RDCR/lua/Reducer'
 
-local function expander_sumby(val, grp, nb, cnd, optargs)
+local function expander_sumby(operator, val, grp, nb, cnd, optargs)
+  if ( type(optargs) == "nil" ) then optargs = {} end
+  optargs.operator = operator
   local sp_fn_name = "Q/OPERATORS/GROUPBY/lua/sumby_specialize"
   local spfn = assert(require(sp_fn_name))
 
@@ -24,10 +26,12 @@ local function expander_sumby(val, grp, nb, cnd, optargs)
   -- allocate buffer for output
   local out_val_buf = assert(cmem.new(subs.out_val_buf_size))
   out_val_buf:zero() -- IMPORTANT 
+  out_val_buf:stealable(true) 
   local cast_out_val_buf = get_ptr(out_val_buf, subs.cast_out_val_as)
 
   local out_cnt_buf = assert(cmem.new(subs.out_cnt_buf_size))
   out_cnt_buf:zero() -- IMPORTANT 
+  out_cnt_buf:stealable(true) 
   local cast_out_cnt_buf = get_ptr(out_cnt_buf, subs.cast_out_cnt_as)
 
   local vectorizer = function(rdcr_val)
@@ -58,7 +62,7 @@ local function expander_sumby(val, grp, nb, cnd, optargs)
     local cnd_len, cnd_chunk
     local cast_cnd_chunk = ffi.NULL
     if ( cnd ) then 
-      cnd_len, cnd_chunk = cnd:chunk(chunk_idx)
+      cnd_len, cnd_chunk = cnd:get_chunk(chunk_idx)
     end
     assert(val_len == grp_len)
     if ( chunk_idx == 0 ) then assert(val_len > 0 ) end
@@ -75,6 +79,11 @@ local function expander_sumby(val, grp, nb, cnd, optargs)
         cast_val_chnk, val_len, cast_grp_chnk, cast_cnd_chunk, 
         cast_out_val_buf, cast_out_cnt_buf, nb)
     assert(status == 0, "C error in SUMBY")
+    val:unget_chunk(chunk_idx)
+    grp:unget_chunk(chunk_idx)
+    if ( cnd ) then 
+      cnd:unget_chunk(chunk_idx)
+    end
     if ( val_len < val:max_num_in_chunk() ) then 
       return nil
     end

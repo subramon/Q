@@ -12,10 +12,10 @@ local function numby(g, ng, optargs)
 end
 T.numby = numby
 require('Q/q_export').export('numby', numby)
-
+--=========================================
 local function sumby(val, grp, n_grp, cnd, optargs)
   local expander = require 'Q/OPERATORS/GROUPBY/lua/expander_sumby'
-  local status, col = pcall(expander, val, grp, n_grp, cnd, optargs)
+  local status, col = pcall(expander, "sumby", val, grp, n_grp, cnd, optargs)
   if not status then print(col) end
   assert(status, "Could not execute SUMBY")
   return col
@@ -23,81 +23,26 @@ end
 T.sumby = sumby
 require('Q/q_export').export('sumby', sumby)
 
---[[
-
-local function raw_maxby(x, g, ng, optargs)
-  local expander = require 'Q/OPERATORS/GROUPBY/lua/expander_maxby_minby'
-  assert(x, "no arg x to maxby")
-  assert(g, "no arg g to maxby")
-  local status, col = pcall(expander, "maxby", x, g, ng, optargs)
+--=========================================
+local function minby(val, grp, n_grp, cnd, optargs)
+  local expander = require 'Q/OPERATORS/GROUPBY/lua/expander_sumby'
+  local status, col = pcall(expander, "minby", val, grp, n_grp, cnd, optargs)
   if not status then print(col) end
-  assert(status, "Could not execute MAXBY")
+  assert(status, "Could not execute minBY")
   return col
-end
-T.raw_maxby = raw_maxby
-require('Q/q_export').export('raw_maxby', raw_maxby)
-
-
-local function raw_minby(x, g, ng, optargs)
-  local expander = require 'Q/OPERATORS/GROUPBY/lua/expander_maxby_minby'
-  assert(x, "no arg x to minby")
-  assert(g, "no arg g to minby")
-  local status, col = pcall(expander, "minby", x, g, ng, optargs)
-  if not status then print(col) end
-  assert(status, "Could not execute MINBY")
-  return col
-end
-T.raw_minby = raw_minby
-require('Q/q_export').export('raw_minby', raw_minby)
-
-
-local function minby(x, g, ng, optargs)
-  local Scalar    = require 'libsclr'
-  local Q         = require 'Q'
-
-  -- call raw_minby
-  local minby_col = T.raw_minby(x, g, ng, optargs)
-  minby_col:eval()
-  -- call numby to get goal value occurance count
-  local numby_col = T.numby(g, ng, optargs)
-  -- get B1 vector according to occurance count
-  local szero = Scalar.new(0, "I8")
-  local vsgt_res = Q.vsgt(numby_col, szero):eval()
-  -- Set null vector for raw_minby result i.e minby_col
-  -- Set null vector if any goal value occurance count is 0
-  local vsgt_res_sum = Q.sum(vsgt_res):eval():to_num()
-  if vsgt_res_sum ~= vsgt_res:length() then 
-    minby_col:make_nulls(vsgt_res)
-  end
-  return minby_col
 end
 T.minby = minby
 require('Q/q_export').export('minby', minby)
-
-
-local function maxby(x, g, ng, optargs)
-  local Scalar    = require 'libsclr'
-  local Q         = require 'Q'
-
-  -- call raw_maxby
-  local maxby_col = T.raw_maxby(x, g, ng, optargs)
-  maxby_col:eval()
-  -- call numby to get goal value occurance count
-  local numby_col = T.numby(g, ng, optargs)
-  -- get B1 vector according to occurance count
-  local szero = Scalar.new(0, "I8")
-  local vsgt_res = Q.vsgt(numby_col, szero):eval()
-  -- Set null vector for raw_maxby result i.e maxby_col
-  -- Set null vector if any goal value occurance count is 0
-  local vsgt_res_sum = Q.sum(vsgt_res):eval():to_num()
-  if vsgt_res_sum ~= vsgt_res:length() then 
-    maxby_col:make_nulls(vsgt_res)
-  end
-  return maxby_col
+--=========================================
+local function maxby(val, grp, n_grp, cnd, optargs)
+  local expander = require 'Q/OPERATORS/GROUPBY/lua/expander_sumby'
+  local status, col = pcall(expander, "maxby", val, grp, n_grp, cnd, optargs)
+  if not status then print(col) end
+  assert(status, "Could not execute maxby")
+  return col
 end
 T.maxby = maxby
 require('Q/q_export').export('maxby', maxby)
 
---]]
 
 return T
