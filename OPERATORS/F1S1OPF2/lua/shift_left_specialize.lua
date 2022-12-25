@@ -8,6 +8,7 @@ return function (
   s1,
   optargs
   )
+  assert(type(optargs) == "table")
   local subs = {}; 
   assert(type(f1) == "lVector"); assert(not f1:has_nulls())
 
@@ -20,13 +21,14 @@ return function (
   subs.s1_ctype = cutils.str_qtype_to_str_ctype(subs.s1_qtype)
   subs.cast_s1_as  = subs.s1_ctype .. " *"
   assert(type(s1) == "Scalar") 
+  local snum = s1:to_num()
+  local max_shift = 8*ffi.sizeof(cutils.str_qtype_to_str_ctype(subs.f1_qtype))
+  assert( ( snum >= 0 ) and ( snum < max_shift ) ) 
 
   subs.f1_ctype = cutils.str_qtype_to_str_ctype(subs.f1_qtype)
   subs.cast_f1_as  = subs.f1_ctype .. " *"
 
-  subs.f2_qtype = optargs.f2_qtype or "BL"
-  assert(( subs.f2_qtype == "B1" ) or ( subs.f2_qtype == "BL" ))
-  assert(subs.f2_qtype == "BL") -- TODO P4 Restriction For now 
+  subs.f2_qtype = optargs.f2_qtype or subs.f1_qtype 
 
   subs.f2_ctype = cutils.str_qtype_to_str_ctype(subs.f2_qtype)
   subs.cast_f2_as  = subs.f2_ctype .. " *"
@@ -35,7 +37,7 @@ return function (
   subs.max_num_in_chunk = f1:max_num_in_chunk()
   subs.f2_buf_sz = subs.max_num_in_chunk * subs.f2_width
 
-  subs.fn = 'shift_left'
+  subs.fn = optargs.__operator 
     .. "_" .. subs.f1_qtype 
     .. "_" .. subs.s1_qtype 
     .. "_" .. subs.f2_qtype 
@@ -43,13 +45,9 @@ return function (
 
   subs.chunk_size = 1024 -- TODO experiment with this 
 
-  if ( s1 ) then 
-    subs.ptr_to_sclr = ffi.cast(subs.cast_s1_as, s1:to_data())
-  else
-    subs.cast_cargs = ffi.NULL
-  end
+  subs.ptr_to_sclr = ffi.cast(subs.cast_s1_as, s1:to_data())
 
-  subs.code = 'c = a < b;'
+  subs.code = 'c = a << b;'
   subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"

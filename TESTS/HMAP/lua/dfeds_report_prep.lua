@@ -32,7 +32,7 @@ local function dfeds_report_prep(datafile, metafile)
   assert(type(metafile) == "string")
 
   local subs = {}
-  local O = { is_hdr = true }
+  local O = { is_hdr = false }
   local M = require 'Q/TESTS/HMAP/lua/in_meta'
   local datafile = qcfg.q_src_root .. "/TESTS/HMAP/data/data1.csv"
   assert(plpath.isfile(datafile))
@@ -110,8 +110,7 @@ local function dfeds_report_prep(datafile, metafile)
   for i = 1, nF do
     local x = Q.shift_right(plp2_err_bmask, 4*(i-1))
     local y = Q.vvand(x, mask)
-    local z = Q.sum(Q.vveq(y, zero))
-    local n1, n2 = z:eval()
+    local n1, n2  = Q.sum(Q.vveq(y, zero)):eval()
     local str = string.format("%d & %d & %d \\\\ \\hline \n",
       i-1, n2:to_num(), n1:to_num())
     fp:write(str)
@@ -127,6 +126,41 @@ local function dfeds_report_prep(datafile, metafile)
   end
   fp:close()
   fpB:close()
+  -- START: Find out how many skips per formula 
+  local skip_cnt_file = qcfg.q_src_root .. "/TESTS/HMAP/doc/skip_count.csv"
+  local fp = io.open(skip_cnt_file, "w")
+  local m = plp2_err_bmask:num_elements()
+  for i = 1, nF do
+    print("Formula " .. i-1)
+    -- Let p1_good identify where there was no plp1 error
+    local p1_good = Q.vseq(T.plp1_error, 0)
+    -- Let p2_good identify where there was no plp2 error
+    local x = Q.shift_right(T.plp2_err_bmask, 4*(i-1))
+    local y = Q.vvand(x, mask)
+    local p2_good = Q.vseq(y, 0)
+    -- Let p1p2_good identify no pl1 error and no plp2 error 
+    local p1p2_good = Q.vvand(p1_good, p2_good):eval()
+
+    -- Let v identify where there NO skip 
+    local cmp = Q.shift_left(
+      Q.const({val = 1, qtype = "I2", len = m}), (i-1))
+    local v1 = Q.vvand(T.skip_frmla_bmask, cmp)
+    local v = Q.vseq(v1, 0) 
+    -- Let u identify where no plp1/plp2 error and formula was NOT skipped
+    local u = Q.vvand(p1p2_good, v)
+    local nu, _ = Q.sum(u):eval(); nu = nu:to_num()
+    -- Let t identify where no plp1/plp2 error and no skip and yes model 
+    local t1 = Q.vvand(T.succ_frmla_bmask, cmp)
+    local t2 = Q.popcount(t1)
+    local t3 = Q.vseq(t2, 1)
+    local t  = Q.vvand(u, t3):eval()
+    local nt, _ = Q.sum(t):eval(); nt = nt:to_num()
+    local str = string.format("%d & %d & %d \\\\ \\hline \n", i-1, nu, nt)
+    fp:write(str)
+    -- Q.print_csv({p1_good, p2_good, p1p2_good, v, u, t2, t})
+  end
+  fp:close()
+  -- STOP : Find out how many skips per formula 
   -- Stats on model building 
   local n1, n2 = Q.sum(T.num_models_attempted):eval()
   -- Q.print_csv({T.plp2_err_bmask, T.num_models_attempted, T.succ_frmla_bmask})

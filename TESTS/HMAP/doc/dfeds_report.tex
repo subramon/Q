@@ -63,8 +63,8 @@ of analysis that can be performed in LightR.
 \item Summary statistics of number of rows in data set:
   \bi
 \item Minimum \MinNumRows
-\item Maximum \MaxNumRows
 \item Average \AvgNumRows
+\item Maximum \MaxNumRows
   \ei
 \item The number of formulas per model was \NumFormulas.
   Explanation of the formulas is in Table~\ref{tbl_formulas}.
@@ -101,10 +101,12 @@ Explanation of error codes is in Table~\ref{explanation_plp1_errs}
   \NumPLPErrorsB.
 \item The average time taken (in \(\mu\,\)seconds) was \AvgTimePLPB
 \ei
+Explanation of error codes is in Table~\ref{explanation_plp2_errs}
 
 Distribution of occurrence of error codes (by formula) is shown in Table~\ref{plp2_errs}
 
-Explanation of error codes is in Table~\ref{explanation_plp2_errs}
+Distribution of errors by formula and type is shown in Table~\ref{plp2_errs_B}
+
 \begin{table}
   \centering
   \begin{tabular}{|l|l|l|} \hline \hline
@@ -116,7 +118,6 @@ Explanation of error codes is in Table~\ref{explanation_plp2_errs}
   \label{plp2_errs}
 \end{table}
 
-Distribution of errors by formula and type is shown in Table~\ref{plp2_errs_B}
 \begin{table}
   \centering
   \begin{tabular}{|l|l|l|} \hline \hline
@@ -128,6 +129,23 @@ Distribution of errors by formula and type is shown in Table~\ref{plp2_errs_B}
   \label{plp2_errs_B}
 \end{table}
 
+\section{Skipped Formulas}
+
+We do not build a model for a formula if it depends on a formula for which model
+building failed. A report for this situation is in Table~\ref{tbl_frmla_skips}.
+
+\begin{table}
+  \centering
+  \begin{tabular}{|l|l|l|} \hline \hline
+    {\bf Formula} & {\bf Formula Attempted } & {\bf Model Built} \\ \hline
+    \hline
+    \input{skip_count.csv}
+    \hline
+  \end{tabular}
+  \caption{Skipped model building by formula }
+  \label{tbl_frmla_skips}
+\end{table}
+
 \section{Model Building}
 \bi
 \item The number of models attempted was \NumModelsAttempted
@@ -135,8 +153,8 @@ Distribution of errors by formula and type is shown in Table~\ref{plp2_errs_B}
 \item Summary statistics of time (in seconds) to build a model
   \bi
 \item Minimum \ModelMinTime
-\item Maximum \ModelMaxTime
 \item Average \ModelAvgTime
+\item Maximum \ModelMaxTime
 \ei
 \item Distribution of build times is in Table~\ref{tbl_model_build_times}
 \ei

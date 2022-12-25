@@ -30,7 +30,9 @@ tests.t1 = function()
   end 
   local y = Q.mk_col(yvals, "I8")
   local z = Q.shift_left(x, 1)
+  assert(z:qtype() == x:qtype())
   local n1, n2 = Q.sum(Q.vveq(y, z)):eval()
+
   assert(n1:to_num() == n2:to_num())
 
   local w = Q.shift_right(z, 1)

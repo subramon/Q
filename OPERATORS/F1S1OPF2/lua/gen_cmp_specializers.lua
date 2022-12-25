@@ -39,16 +39,3 @@ do_subs(tmpl, "vslt_specialize.lua",
   __good_s1_types__ = '{ "I1", "I2", "I4", "I8", "F4", "F8" }', 
 })
 --=======================
-do_subs(tmpl, "shift_left_specialize.lua", 
-{ __operator__ = "'shift_left'", 
-  __code__ = "'c = a < b;'", 
-  __good_f1_types__ = '{ "I1", "I2", "I4", "I8", }', 
-  __good_s1_types__ = '{ "I1", "I2", "I4", "I8", }', 
-})
-do_subs(tmpl, "shift_right.lua", 
-{ __operator__ = "'shift_right'", 
-  __code__ = "'c = a < b;'", 
-  __good_f1_types__ = '{ "I1", "I2", "I4", "I8", }', 
-  __good_s1_types__ = '{ "I1", "I2", "I4", "I8", }', 
-})
---=======================

@@ -28,24 +28,27 @@ return function (
   subs.f3_qtype = subs.f1_qtype
   subs.f3_width = cutils.get_width_qtype(subs.f3_qtype)
 
-  subs.fn = op 
+  subs.fn = op .. "_" 
     ..  subs.f1_qtype .. "_" 
     .. subs.f2_qtype .. "_" 
     .. subs.f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
 
-  if ( subs.f1_qtype == "bool" ) then 
+  if ( subs.f1_qtype == "BL" ) then 
     subs.f1_ctype = "uint8_t"
   else
     subs.f1_ctype = "u" .. cutils.str_qtype_to_str_ctype(subs.f1_qtype)
   end
   subs.f1_cast_as = subs.f1_ctype .. "*"
 
-  subs.f2_ctype = cutils.str_qtype_to_str_ctype(subs.f2_qtype)
+  if ( subs.f2_qtype == "BL" ) then 
+    subs.f2_ctype = "uint8_t"
+  else
+    subs.f2_ctype = "u" .. cutils.str_qtype_to_str_ctype(subs.f2_qtype)
+  end
   subs.f2_cast_as = subs.f2_ctype .. "*"
 
-  assert(ffi.sizeof(subs.f1_ctype) == ffi.sizeof(subs.f2_ctype))
-  if ( subs.f3_qtype == "bool" ) then 
+  if ( subs.f3_qtype == "BL" ) then 
     subs.f3_ctype = "uint8_t"
   else
     subs.f3_ctype = "u" .. cutils.str_qtype_to_str_ctype(subs.f3_qtype)
@@ -57,10 +60,21 @@ return function (
   subs.f3_for_ispctype = subs.f3_ctype
   if ( subs.f3_ctype == "bool" ) then subs.f3_for_ispctype = "int8_t" end
   --===============
+  local common_qtype = promote(subs.f1_qtype, subs.f2_qtype)
+  if ( common_qtype == "BL" ) then 
+    common_qtype = "(uint8_t)"
+  else
+    common_qtype  = "(u" .. 
+      cutils.str_qtype_to_str_ctype(subs.f3_qtype) .. ")"
+  end
+  
+  --===============
   subs.cargs = nil
   subs.cst_cargs = ffi.NULL
 
-  subs.code = "c = a | b;"
+  subs.code = "c = " ..
+    "(" .. common_qtype .. "a) | " .. 
+    "(" .. common_qtype .. "b);"
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
