@@ -41,6 +41,7 @@ for i = 1, math.huge do
   T1.ck:early_free()
 end
 assert(T1.ck:check())
+assert(T1.id:check())
 print("===== get_chunk error before this is okay =====")
 assert(T2.lb:num_elements() == T2.ck:num_elements())
 -- throw away stuff you don't need any more
