@@ -48,8 +48,8 @@ local function internal_save(
     assert(type(is_eov) == "boolean")
     assert(type(memo_len) == "number")
 
-    if ( ( num_elements == 0 ) or ( has_gen ) or 
-         ( is_eov ) or ( memo_len >= 0 ) ) then
+    if ( ( num_elements == 0 ) or ( has_gen == true ) or 
+         ( is_eov == false ) or ( memo_len >= 0 ) ) then
       -- skip ths vector
       print("Not saving lVector: " .. name )
       -- print(vec:num_elements())
