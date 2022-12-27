@@ -33,11 +33,11 @@ cd ~/Q/OPERATORS/F_TO_S/test/
 qjit test_f_to_s.lua
 qjit test_fold.lua
 qjit test_sum.lua
-bash test_f_to_s.sh
 
 cd ~/Q/OPERATORS/F1S1OPF2/test/
 qjit test_cmp.lua
 qjit test_shift_lr.lua
+qjit test_vshift.lua
 
 cd ~/Q/OPERATORS/F1F2OPF3/test/
 qjit test_concat.lua
@@ -64,5 +64,14 @@ qjit test_popcount.lua
 
 cd ~/Q/OPERATORS/GROUPBY/test/
 qjit test_numby.lua
+
+cd ~/Q/TESTS/HMAP/lua/
+qjit dfeds_report_prep.lua
+
+cd ~/Q/TESTS/SELECT/lua/V0/
+qjit prep.lua 
+
+cd ~/Q/TESTS/SELECT/lua/V1/
+qjit prep.lua 
 
 echo "Successfully completed $0 in $PWD"

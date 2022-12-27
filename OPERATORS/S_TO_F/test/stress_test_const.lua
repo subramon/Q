@@ -14,7 +14,7 @@ end
 tests.t1 = function()
   local start_time = cutils.rdtsc()
   local z = Q.const({val = 10, len = 10, qtype = "F8"})
-  for i = 1, 1000000 do
+  for i = 1, 10000 do
   --[[
     local z = foo(z) === THIS WORKS
     z = foo(z) === THIS BLOWS UP

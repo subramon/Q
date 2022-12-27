@@ -6,7 +6,6 @@ local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 local lVector     = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local qcfg        = require 'Q/UTILS/lua/qcfg'
-local max_num_in_chunk = qcfg.max_num_in_chunk
 
 local function SC_to_TM(
   invec, 
@@ -22,6 +21,7 @@ local function SC_to_TM(
 
   local subs = {}
   subs.out_qtype = "TM" -- default assumption
+  subs.max_num_in_chunk = invec:max_num_in_chunk()
   if ( optargs ) then
     assert(type(optargs) == "table")
     if ( optargs.out_qtype ) then
@@ -50,21 +50,22 @@ local function SC_to_TM(
   local function gen(chunk_num)
     assert(chunk_num == l_chunk_num)
     local buf = assert(cmem.new(
-        { size = max_num_in_chunk * out_width, qtype = subs.out_qtype}))
+        { size = subs.max_num_in_chunk * out_width, qtype = subs.out_qtype}))
     buf:stealable(true)
     local cst_buf = get_ptr(buf, out_ctype .. "  *")
     local len, base_data = invec:get_chunk(l_chunk_num)
-    if ( len > 0 ) then 
-      assert(type(base_data) == "CMEM")
-      local base_ptr = get_ptr(base_data, "char *")
-      assert(base_ptr ~= ffi.NULL)
-      local start_time = cutils.rdtsc()
-      local status = qc[subs.fn](base_ptr, in_width, len, format, 
-        cst_buf)
-      record_time(start_time, "load_csv_fast")
-      assert(status == 0)
-      l_chunk_num = l_chunk_num + 1
-    end
+    if ( len == 0 ) then return 0, nil end 
+    assert(type(base_data) == "CMEM")
+    local base_ptr = get_ptr(base_data, "char *")
+    assert(base_ptr ~= ffi.NULL)
+    local start_time = cutils.rdtsc()
+    local status = qc[subs.fn](base_ptr, in_width, len, format, 
+      cst_buf)
+    record_time(start_time, "load_csv_fast")
+    assert(status == 0)
+    invec:unget_chunk(l_chunk_num)
+    if ( len <  subs.max_num_in_chunk ) then return len, buf end 
+    l_chunk_num = l_chunk_num + 1
     return len, buf
   end
   --===============================================

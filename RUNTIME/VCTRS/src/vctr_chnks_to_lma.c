@@ -80,6 +80,11 @@ vctr_chnks_to_lma(
     memcpy(X, data, bytes_to_copy); 
     X  += bytes_to_copy;
     nX -= bytes_to_copy;
+    if ( g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers != 1 ) {
+      go_BYE(-1); 
+    }
+    g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers = 0;
+
   }
   // Now delete all the chunks 
   for ( uint32_t chnk_idx = 0; chnk_idx <= max_chnk_idx; chnk_idx++ ) { 
@@ -92,7 +97,7 @@ vctr_chnks_to_lma(
 BYE:
   if ( status < 0 ) { 
     if ( lma_file != NULL ) { 
-      if ( file_exists(lma_file) ) { 
+      if ( ( file_exists(lma_file) ) && ( tbsp == 0 ) ) {
         unlink(lma_file);
       }
     }

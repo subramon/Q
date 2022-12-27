@@ -58,6 +58,7 @@ vctr_get1(
     )
 {
   int status = 0;
+  bool got_chunk = false;
 
   bool vctr_is_found, chnk_is_found;
   qtype_t qtype; bool is_lma;
@@ -90,6 +91,7 @@ vctr_get1(
   //-----------------------------------------------------
   char *data  = chnk_get_data(tbsp, chnk_where_found, false); 
   if ( data == NULL ) { go_BYE(-1); }
+  got_chunk = true;
   uint32_t num_in_chnk = g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_elements;
   if ( (chnk_off+1) > num_in_chnk ) { go_BYE(-1); } // TODO Check boundary
   // offset the pointer to the base of the chunk
@@ -110,8 +112,10 @@ vctr_get1(
     data += (width * chnk_off);
     memcpy(&(ptr_sclr->val), data, width); 
   }
+BYE:
+  if ( got_chunk ) { 
   // Following is needed because chnk_get_data increments num_readers
   g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers--; 
-BYE:
+  }
   return status;
 }

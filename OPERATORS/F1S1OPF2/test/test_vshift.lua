@@ -16,14 +16,16 @@ tests.t1 = function()
     for i = 1, n do 
       tbl[#tbl+1] = i
     end
-    local c1 = mk_col(tbl,  qtype, optargs)
+    local c1 = mk_col(tbl,  qtype, optargs):set_name("c1")
     assert(c1:max_num_in_chunk() == max_num_in_chunk)
-    local c2 = vshift(c1, 1, Scalar.new(0, qtype))
+    local c2 = vshift(c1, 1, Scalar.new(0, qtype)):set_name("c2")
     c2:eval()
+    assert(c2:check())
     for i = 1, c1:num_elements() - 1 do 
       assert(c2:get1(i-1) == c1:get1(i))
     end
     assert(c1:num_elements() == c2:num_elements())
+    print("test t1 passed for qtype " ..  qtype)
   end
   print("test t1 passed")
 end

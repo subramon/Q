@@ -5,7 +5,7 @@ local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local cVector = require 'libvctr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 -- configs 
-local datafile = qcfg.q_src_root .. "/DFE/data/100K_1"
+local datafile = qcfg.q_src_root .. "/TESTS/SELECT/data/100K_1"
 -- load big data set 
 local M = {}
 local O = { is_hdr = false } 

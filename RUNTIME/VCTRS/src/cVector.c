@@ -167,7 +167,7 @@ static int l_vctr_nop( lua_State *L) {
   if ( ptr_v == NULL ) { go_BYE(-1); }
   uint32_t uqid = ptr_v->uqid; 
   uint32_t tbsp = ptr_v->tbsp; 
-  bool  is_found; uint32_t where_found;
+  bool  is_found; uint32_t where_found = ~0;
   status = vctr_is(tbsp, uqid, &is_found, &where_found); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
@@ -813,7 +813,7 @@ static int l_vctr_rehydrate( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  bool  is_found; uint32_t where_found;
+  bool  is_found; uint32_t where_found = ~0;
   status = vctr_is(tbsp, uqid, &is_found, &where_found); cBYE(status);
   if ( !is_found ) { go_BYE(-1); } 
   status = vctr_incr_ref_count(tbsp, where_found); cBYE(status);

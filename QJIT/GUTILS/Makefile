@@ -38,18 +38,21 @@ ${CHNK_HMAP_SO} :
 	make -C ${CHNK_HMAP_LOC} ${CHNK_HMAP_SO}
 RS_LIBS := -lpthread
 RS_LIBS += -levent
-RS_LIBS += -latomic  # TDODO P0 experrimental:wq
+RS_LIBS += -latomic  # This was neeeded on Raspberry Pi 
+# Otherwise, some of the atomics were not found 
 
-AUX_SRCS := ./src/read_configs.c 
-AUX_SRCS += ./src/init_globals.c 
+AUX_SRCS := ./src/extract_api_args.c 
 AUX_SRCS += ./src/get_req_type.c 
-AUX_SRCS += ./src/webserver.c 
-AUX_SRCS += ./src/mem_mgr.c 
-AUX_SRCS += ./src/extract_api_args.c 
-AUX_SRCS += ./src/process_req.c 
 AUX_SRCS += ./src/handler.c 
+AUX_SRCS += ./src/import_tbsp.c 
+AUX_SRCS += ./src/init_globals.c 
+AUX_SRCS += ./src/mem_mgr.c 
+AUX_SRCS += ./src/read_configs.c 
+AUX_SRCS += ./src/process_req.c 
+AUX_SRCS += ./src/webserver.c 
 
 AUX_SRCS += ./../../UTILS/src/rmtree.c 
+AUX_SRCS += ./../../UTILS/src/isdir.c 
 AUX_OBJS = $(AUX_SRCS:.c=.o)
 
 SRCS := ./src/l2_file_name.c 

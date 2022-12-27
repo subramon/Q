@@ -9,10 +9,12 @@
 #include "isfile.h"
 #include "vctr_early_free.h"
 
-
 extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
 extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
 
+// Deletes all but the most recent chunk
+// Does not do anything to lma memory, assuming it exists
+// Can be called multiple times
 int
 vctr_early_free(
     uint32_t tbsp,
@@ -22,9 +24,10 @@ vctr_early_free(
   int status = 0;
   bool vctr_is_found; uint32_t vctr_where;
 
-  status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where); cBYE(status);
+  status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where); 
+  cBYE(status);
   if ( vctr_is_found == false ) { goto BYE; }
-    vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[vctr_where].val);
+  vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[vctr_where].val);
   // conditions under which early free not allowed
   if ( ptr_vctr_val->is_persist ) { go_BYE(-1); }
   if ( ptr_vctr_val->is_writable ) { go_BYE(-1); }
@@ -33,7 +36,7 @@ vctr_early_free(
   // conditions under which early free ignored
   if ( ptr_vctr_val->num_elements == 0 ) { goto BYE; }
   if ( ptr_vctr_val->num_chnks    == 0 ) { goto BYE; }
-
+  if ( ptr_vctr_val->is_early_free ) { goto BYE; } 
   // Note that we have < and not <= below. 
   // We do not delete most recent chunk
   for ( uint32_t chnk_idx = 0; 
@@ -41,6 +44,7 @@ vctr_early_free(
     bool chnk_is_found; uint32_t chnk_where; 
     status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where);
     if ( chnk_is_found == false ) { go_BYE(-1); }
+    chnk_rs_hmap_key_t *ptr_chnk_key = &(g_chnk_hmap[tbsp].bkts[chnk_where].key);
     chnk_rs_hmap_val_t *ptr_chnk_val = &(g_chnk_hmap[tbsp].bkts[chnk_where].val);
     // handle case where chunk has already been early freed
     if ( ptr_chnk_val->is_early_free ) { 
@@ -52,19 +56,17 @@ vctr_early_free(
         ( ptr_chnk_val->l2_exists == false ) ) {
       go_BYE(-1);
     }
-    free_if_non_null(ptr_chnk_val->l1_mem); 
-    if ( ptr_chnk_val->l2_exists ) {
-      char *l2_file = l2_file_name(tbsp, vctr_uqid, chnk_idx);
-      // TODO TODO P0 What is going on here?????
-      if ( !isfile(l2_file) ) { go_BYE(-1); }
-      free_if_non_null(l2_file);
-      ptr_chnk_val->l2_exists = false;
-    }
+    // free resources for the chunk. Note that we do NOT free the chunk
+    status = chnk_free_resources(tbsp, ptr_chnk_key, ptr_chnk_val,
+        ptr_vctr_val->is_persist); 
+    cBYE(status); 
     //------------------------
     ptr_chnk_val->l2_exists = false;
     ptr_chnk_val->is_early_free = true;
-    ptr_vctr_val->is_early_free = true;
     //------------------------
+    // Important: If we do not delete a chunk, then we do not mark
+    // the vector as early free. 
+    ptr_vctr_val->is_early_free = true;
   }
 BYE:
   return status;

@@ -19,6 +19,7 @@ tests.t1 = function()
   assert(not status)
   print(">>> STOP  DELIBERATE ERROR")
   x1:eval()
+  assert(x1:check())
   for i = 1, 1000 do 
     assert(x1:chunks_to_lma())
     -- assert(x1:lma_to_chunks()) TODO TODO P2 

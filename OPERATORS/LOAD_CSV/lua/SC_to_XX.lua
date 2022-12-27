@@ -7,7 +7,6 @@ local get_ptr       = require 'Q/UTILS/lua/get_ptr'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local qcfg          = require 'Q/UTILS/lua/qcfg'
-local max_num_in_chunk = qcfg.max_num_in_chunk
 local function SC_to_XX(
   invec, 
   lfn, -- Lua function 
@@ -24,6 +23,7 @@ local function SC_to_XX(
   local out_ctype = cutils.str_qtype_to_str_ctype(out_qtype)
   local cast_out_as = out_ctype .. " *"
   local out_width = cutils.get_width_qtype(out_qtype)
+  local max_num_in_chunk  = invec:max_num_in_chunk()
   local bufsz = max_num_in_chunk * out_width
   local chunk_idx = 0
   local function gen(chunk_num)
@@ -34,6 +34,7 @@ local function SC_to_XX(
     local cst_buf = get_ptr(buf, cast_out_as)
     local len, base_data = invec:get_chunk(chunk_idx)
     assert(type(len) == "number")
+    if ( len == 0 ) then return 0, nil end 
     local ptr_to_chars = get_ptr(base_data, "char *")
     local out_len = 0
     for i = 1, len do
@@ -44,9 +45,11 @@ local function SC_to_XX(
       out_len   = out_len   + 1
       ptr_to_chars = ptr_to_chars + in_width
     end
+    invec:unget_chunk(chunk_idx)
     assert(out_len == len)
     chunk_idx = chunk_idx + 1
-    return out_len, buf
+    if ( len <  max_num_in_chunk ) then return len, buf end 
+    return len, buf
   end
   local outv = lVector({qtype = out_qtype, gen = gen, has_nulls = false})
   return outv

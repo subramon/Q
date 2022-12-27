@@ -50,6 +50,7 @@ local function cprint(
     local str_qtype = v:qtype()
     widths[i] = v:width()
     qtypes[i] = cutils.get_c_qtype(str_qtype)
+    -- assert(v:check())
   end
   --====================================
   local c_opfile = opfile 
@@ -70,6 +71,10 @@ local function cprint(
     -- TODO P4 Implement for B1 in addition to BL
     local nn_c_data = ffi.C.malloc(ffi.sizeof("bool *") * nC)
     nn_c_data = ffi.cast("const bool **", nn_c_data)
+    local pre_num_readers = {}
+    for i, v in ipairs(V) do
+      pre_num_readers[i] = v:num_readers(chunk_num)
+    end
     for i, v in ipairs(V) do
       local len, chnk, nn_chnk = v:get_chunk(chunk_num)
       assert(len > 0)
@@ -147,6 +152,9 @@ local function cprint(
     end
     for i, v in ipairs(V) do
       v:unget_chunk(chunk_num)
+    end
+    for i, v in ipairs(V) do
+      assert(pre_num_readers[i] == v:num_readers(chunk_num))
     end
     chunk_num = chunk_num + 1 
   end

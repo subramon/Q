@@ -32,7 +32,7 @@ vctr_add1(
   }
 #ifdef DEBUG
   {
-  bool is_found; uint32_t where_found;
+  bool is_found; uint32_t where_found = ~0;
   status = vctr_is(tbsp, *ptr_uqid, &is_found, &where_found); cBYE(status);
   if ( is_found ) { go_BYE(-1); }
 #endif
@@ -56,7 +56,7 @@ vctr_add1(
   new_vctr_cnt = vctr_cnt(tbsp);
   if ( new_vctr_cnt != old_vctr_cnt + 1 ) { go_BYE(-1); }
   // initializations below for debugging. Not needed
-  bool is_found = true; uint32_t where_found = 123456789;
+  bool is_found = true; uint32_t where_found = ~0;
   status = vctr_is(tbsp, *ptr_uqid, &is_found, &where_found); 
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }

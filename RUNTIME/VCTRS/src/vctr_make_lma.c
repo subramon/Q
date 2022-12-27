@@ -26,7 +26,7 @@ vctr_make_lma(
     )
 {
   int status = 0;
-  bool is_found; uint32_t where_found;
+  bool is_found; uint32_t where_found = ~0;
   char *dst_lma_file = NULL;
   char *src_lma_file = NULL;
   char *X = NULL, *bak_X = NULL; size_t nX = 0, bak_nX = 0; 

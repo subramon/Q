@@ -73,6 +73,8 @@ tests.t3 = function()
     for  j = 1, max_num_in_chnk do 
       assert(iptr[j-1] == (i+1)*100 + (j+1))
     end
+    x:unget_chunk(i-1)
+    x:check(false)
   end
   assert(x:is_eov() == false)
   x:put_chunk(buf, max_num_in_chnk-1)
@@ -82,6 +84,7 @@ tests.t3 = function()
     (num_chunks*max_num_in_chnk) + (max_num_in_chnk-1))
   -- get what you put 
   local n, c = x:get_chunk(num_chunks)
+  x:unget_chunk(num_chunks)
   assert(type(c) == "CMEM")
   assert(type(n) == "number")
   assert(n == max_num_in_chnk-1)
@@ -90,7 +93,7 @@ tests.t3 = function()
   local status = pcall(lVector.put_chunk, x, buf, max_num_in_chnk-1)
   assert(status == false)
   print(">>> STOP  Deliberate error")
-  assert(cVector.check_all())
+  assert(x:check())
   -- test printing
   assert(x:pr("_x", 0, 10))
   x:nop()
@@ -143,6 +146,7 @@ tests.t4 = function()
     for k, v in pairs(z1) do 
       assert(z1[k] == z2[k])
     end
+    x:unget_chunk(i-1)
   end
   assert(x:is_eov() == false)
   x:put_chunk(buf, max_num_in_chnk-1)

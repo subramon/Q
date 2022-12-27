@@ -7,11 +7,13 @@ local should_save = require 'Q/UTILS/lua/should_save'
 -- TODO Indrajeet make 2 args, one is name of table, other is filename
 -- function internal_save(name, value, saved)
 local function internal_save(
+  depth, 
   name,
   value,
   Tsaved,
   fp
   )
+  -- print("Internal save of " .. name .. " at depth " .. depth)
   if not should_save(name, value) then return end
   assert(type(Tsaved) == "table")
   if ( ( type(value) == "number" ) or
@@ -29,24 +31,34 @@ local function internal_save(
       fp:write("{}\n")     -- create a new table
       for k, v in pairs(tbl) do      -- save its fields
         local fieldname = string.format("%s[%s]", name, basic_serialize(k))
-        internal_save(fieldname, v, Tsaved, fp)
+        internal_save(depth+1, fieldname, v, Tsaved, fp)
       end
     end
   elseif ( type(value) == "lVector" ) then
     local vec = value
+    vec:nop()
     -- TODO P4 At some point, we might want to relax following
-    if ( ( vec:num_elements() == 0 ) 
-        or ( vec:has_gen() ) 
-        or ( vec:is_eov() == false ) 
-        or ( vec:memo_len() >= 0 ) ) then
+    local num_elements = vec:num_elements()
+    local has_gen = vec:has_gen() 
+    local is_eov = vec:is_eov() 
+    local memo_len = vec:memo_len() 
+
+    assert(type(num_elements) == "number")
+    assert(type(has_gen) == "boolean")
+    assert(type(is_eov) == "boolean")
+    assert(type(memo_len) == "number")
+
+    if ( ( num_elements == 0 ) or ( has_gen ) or 
+         ( is_eov ) or ( memo_len >= 0 ) ) then
       -- skip ths vector
       print("Not saving lVector: " .. name )
-      print(vec:num_elements())
-      print(vec:has_gen() ) 
-      print(vec:is_eov() )
-      print(vec:memo_len() )
+      -- print(vec:num_elements())
+      -- print(vec:has_gen() ) 
+      -- print(vec:is_eov() )
+      -- print(vec:memo_len() )
     else
       -- flush vector to disk and mark for persistence
+      print("Saving " .. vec:name())
       vec:l1_to_l2() -- copy from level 1 to level 2 
       vec:persist()  -- indicate not to free level 2 upon delete
       vec:drop(1)    -- free memory held in level 1
@@ -113,7 +125,7 @@ local function save()
   local Tsaved = {}
   -- For all globals,
   for k, v in pairs(_G) do
-    internal_save(k, v, Tsaved, fp); -- print("Saving ", k, v)
+    internal_save(0, k, v, Tsaved, fp); -- print("Saving ", k, v)
   end
   fp:close()
   lgutils.save_session() -- saves data structures from C side 

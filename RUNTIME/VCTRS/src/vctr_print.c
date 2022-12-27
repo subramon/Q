@@ -50,7 +50,7 @@ vctr_print_lma(
   Y = X + offset;
   for ( uint64_t i = 0; i < (ub-lb); i++ ) {
     switch ( qtype ) {
-      case B1 : go_BYE(-1); // TODO P3 break;
+      case B1 : go_BYE(-1); break; // TODO P2 
       case BL : fprintf(fp, "%s\n", 
                     ((bool *)Y)[i] ? "true" : "false"); break;
       case I1 : fprintf(fp, "%d\n", ((int8_t *)Y)[i]); break; 
@@ -282,6 +282,9 @@ vctr_print(
     }
     // indicate that you no longer need it 
     g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers--;
+    if ( nn_vctr_uqid > 0 ) {
+      g_chnk_hmap[tbsp].bkts[nn_chnk_where_found].val.num_readers--;
+    }
     //-------------
     lb += l_num_to_pr; 
     num_to_pr = ub - lb;

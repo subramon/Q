@@ -6,7 +6,7 @@ local cVector = require 'libvctr'
 local cutils  = require 'libcutils'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 -- configs 
-local datafile = qcfg.q_src_root .. "/DFE/data/100K_1"
+local datafile = qcfg.q_src_root .. "/TESTS/SELECT/data/100K_1"
 assert(plpath.isfile(datafile))
 local n = assert(cutils.num_lines(datafile))
 -- load big data set 
@@ -40,9 +40,12 @@ for i = 1, math.huge do
   T1.id:early_free()
   T1.ck:early_free()
 end
+assert(T1.ck:check())
+print("===== get_chunk error before this is okay =====")
 assert(T2.lb:num_elements() == T2.ck:num_elements())
 -- throw away stuff you don't need any more
 T1.id = nil; T1.x = nil; collectgarbage()
+assert(T1.ck:check())
 local is_pr = true
 if ( is_pr ) then
   local U = {} 

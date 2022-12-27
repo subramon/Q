@@ -16,12 +16,15 @@ chnk_free_resources(
 {
   int status = 0;
   char * l2_file = NULL;
+  // chunk should not be in use 
+  if ( ptr_val->num_readers > 0 ) { go_BYE(-1); }
+  if ( ptr_val->num_writers > 0 ) { go_BYE(-1); }
   //---------------------------------------------------
   if ( ptr_val->l1_mem != NULL ) { 
     free_if_non_null(ptr_val->l1_mem);
     status = decr_mem_used(ptr_val->size); cBYE(status);
   }
-  // TODO P3 If it takes time to free resources, we should
+  // TODO P4 If it takes time to free resources, we should
   // put this in a shared memory queue for the memory manager to deal with
   //---------------------------------------------------
   // You should delete a file only if it is in your tablespace (tbsp==0)
@@ -31,12 +34,9 @@ chnk_free_resources(
       if ( l2_file == NULL ) { go_BYE(-1); }
       if ( !isfile (l2_file) ) { go_BYE(-1); }
       status = unlink(l2_file); cBYE(status);
+      free_if_non_null(l2_file);
       status = decr_dsk_used(ptr_val->size); cBYE(status);
       ptr_val->l2_exists = false;
-      // TODO P3 Is following the best way to handle shut down case
-      ptr_val->num_readers = 0;
-      ptr_val->num_writers = 0; 
-      //----------
     }
   }
 BYE:

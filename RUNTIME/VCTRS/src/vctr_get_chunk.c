@@ -64,7 +64,7 @@ vctr_get_chunk(
     )
 {
   int status = 0;
-  bool vctr_is_found, chnk_is_found;
+  bool vctr_is_found = false, chnk_is_found;
   uint32_t vctr_where_found, chnk_where_found;
   uint32_t chnk_size, width, max_num_in_chnk;
   bool is_lma;
@@ -107,6 +107,12 @@ vctr_get_chunk(
   // DONE in chnk_get_data: g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers++;
   *ptr_num_in_chunk = g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_elements; 
 BYE:
+  if ( status < 0 ) { 
+    if ( vctr_is_found ) { 
+      printf("Error get_chunk %d of %s \n", chnk_idx, 
+          g_vctr_hmap[tbsp].bkts[vctr_where_found].val.name);
+    }
+  }
   return status;
 }
 

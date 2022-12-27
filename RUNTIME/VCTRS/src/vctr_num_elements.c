@@ -14,7 +14,7 @@ vctr_num_elements(
     )
 {
   int status = 0;
-  bool is_found; uint32_t where_found;
+  bool is_found; uint32_t where_found = ~0;
   vctr_rs_hmap_key_t key = vctr_uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap, &key, &val, &is_found, 

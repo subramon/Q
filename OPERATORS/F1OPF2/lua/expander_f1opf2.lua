@@ -26,15 +26,15 @@ local function expander_f1opf2(a, f1, optargs )
     buf:stealable(true)
     --========================================
     local f1_len, f1_chunk, _ = f1:get_chunk(l_chunk_num)
-    if ( f1_len > 0 ) then 
-      local chunk1 = get_ptr(f1_chunk, subs.cast_f1_as)
-      local chunk2 = get_ptr(buf,      subs.cast_f2_as)
-      local start_time = cutils.rdtsc()
-      local status = 
+    if ( f1_len == 0 ) then return 0, nil end 
+
+    local chunk1 = get_ptr(f1_chunk, subs.cast_f1_as)
+    local chunk2 = get_ptr(buf,      subs.cast_f2_as)
+    local start_time = cutils.rdtsc()
+    local status = 
       qc[func_name](chunk1, f1_len, chunk2)
-      assert(status == 0)
-      record_time(start_time, func_name)
-    end
+    assert(status == 0)
+    record_time(start_time, func_name)
     f1:unget_chunk(l_chunk_num)
     --==================================
     l_chunk_num = l_chunk_num + 1

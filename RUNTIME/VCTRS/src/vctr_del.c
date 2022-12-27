@@ -20,7 +20,7 @@ vctr_del(
     )
 {
   int status = 0;
-  uint32_t where_found;
+  uint32_t where_found = ~0;
   char *lma_file = NULL;
 
   status = vctr_is(tbsp, uqid, ptr_is_found, &where_found); cBYE(status);
@@ -95,6 +95,9 @@ vctr_del(
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
 BYE:
+  if ( status < 0 ) { 
+    printf("Error in deleting Vector %s \n", val.name);
+  }
   free_if_non_null(lma_file);
   return status;
 }

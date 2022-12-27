@@ -5,6 +5,9 @@
 #include "min_I4.h"
 #include "max_I1.h"
 #include "sum_B1.h"
+#define MAIN_PGM
+#include "qjit_globals.h"
+
 int
 main(
     int argc,

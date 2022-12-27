@@ -522,7 +522,7 @@ function lVector:get_chunk(chnk_idx)
     return num_elements, buf, nn_buf
   else 
     -- print(" Archival chunk for " .. self:name(), self._chunk_num)
-    if ( qcfg.debug ) then self:check() end 
+    if ( qcfg.debug ) then self:check(false) end 
     local nn_x, nn_n
     local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
     if ( x == nil ) then return 0, nil, nil end 
@@ -709,7 +709,7 @@ function lVector.conjoin(T)
 end
 --==================================================
 function lVector:early_free()
-  return  cVector.delete(self._base_vec)
+  return  cVector.early_free(self._base_vec)
 end
 --==================================================
 function lVector:self()

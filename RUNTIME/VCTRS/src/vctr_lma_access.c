@@ -75,7 +75,7 @@ vctr_steal_lma(
     )
 {
   int status = 0;
-  bool is_found; uint32_t where_found;
+  bool is_found; uint32_t where_found = ~0;
   char *lma_file = NULL;
   char *new_file = NULL;
 
@@ -112,7 +112,7 @@ vctr_get_lma_read(
     )
 {
   int status = 0;
-  bool is_found; uint32_t where_found;
+  bool is_found; uint32_t where_found = ~0;
   char *lma_file = NULL;
 
   memset(ptr_cmem, 0, sizeof(CMEM_REC_TYPE));
@@ -152,7 +152,7 @@ vctr_get_lma_write(
     )
 {
   int status = 0;
-  bool is_found; uint32_t where_found;
+  bool is_found; uint32_t where_found = ~0;
   char *lma_file = NULL;
   char *X = NULL; size_t nX = 0; 
 
@@ -193,7 +193,7 @@ vctr_unget_lma_read(
     )
 {
   int status = 0;
-  bool is_found; uint32_t where_found;
+  bool is_found; uint32_t where_found = ~0;
 
   status = vctr_is(tbsp, uqid, &is_found, &where_found); cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
@@ -220,7 +220,7 @@ vctr_unget_lma_write(
     )
 {
   int status = 0;
-  bool is_found; uint32_t where_found;
+  bool is_found; uint32_t where_found = ~0;
 
   // Cannot write to lma from a different tablespace 
   if ( tbsp != 0 ) { go_BYE(-1); } 

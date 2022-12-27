@@ -27,4 +27,4 @@ tests.t1 = function()
 end
 -- return tests
 tests.t1()
--- os.exit
+os.exit()

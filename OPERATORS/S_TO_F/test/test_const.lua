@@ -18,7 +18,7 @@ tests.t1 = function()
     len = len 
   }
   print("Calling const")
-  local c1 = Q.const(args)
+  local c1 = Q.const(args):set_name("c1")
   assert(c1:memo_len() == qcfg.memo_len)
 
   local memo_len = 2
@@ -41,7 +41,9 @@ tests.t1 = function()
      end
   end
   print(">>> START Deliberate error")
+  assert(c1 == c2)
   local ival = c1:get1(len)
+  assert(c2:check())
   assert(ival == nil)
   local ival = c1:get1(-1)
   assert(ival == nil)
@@ -56,8 +58,8 @@ tests.t1 = function()
   assert(not status)
 
   -- make a few more vectors just for fun
-  local c3 = Q.const(args):eval()
-  local c4 = Q.const(args):eval()
+  local c3 = Q.const(args):set_name("c3"):eval()
+  local c4 = Q.const(args):set_name("c4"):eval()
   assert(cVector.check_all(true, true)) -- checking on all vectors
   print("Test t1 succeeded")
   -- os.exit() -- WHY IS THIS NEEDED? 

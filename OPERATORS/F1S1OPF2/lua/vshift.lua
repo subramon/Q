@@ -24,7 +24,7 @@ local function vshift(f1, shift_by, newval, optargs )
   local f2_gen = function(chunk_num)
     -- sync between expected chunk_num and generator's chunk_idx state
     assert(chunk_num == chunk_idx)
-    print("Requesting chunk " .. chunk_num .. " from " .. f1_name)
+    -- print("Requesting chunk " .. chunk_num .. " from " .. f1_name)
     local f2_buf = assert(cmem.new(subs.bufsz))
     f2_buf:stealable(true)
     f2_buf:zero()
@@ -38,15 +38,17 @@ local function vshift(f1, shift_by, newval, optargs )
       f1_len, f1_buf = f1:get_chunk(chunk_idx)
       local m = lmin(nC, f1_len)
       local num_to_copy = m - shift_by
-      if ( num_to_copy > 0 ) then
-        n_f1_a = num_to_copy
-        local cst_f1_buf = ffi.cast(subs.f1_cast_as, get_ptr(f1_buf))
-        local f1_offset = shift_by 
-        local bytes_to_copy = num_to_copy * subs.width
-        ffi.C.memcpy(cst_f2_buf, cst_f1_buf + f1_offset, bytes_to_copy)
-        f1:unget_chunk(chunk_idx)
-        num_in_f2 = num_in_f2 + num_to_copy
-      end
+      if ( num_to_copy == 0 ) then 
+        if ( f1_len > 0 ) then f1:unget_chunk(chunk_idx) end 
+        return 0, nil 
+      end 
+      n_f1_a = num_to_copy
+      local cst_f1_buf = ffi.cast(subs.f1_cast_as, get_ptr(f1_buf))
+      local f1_offset = shift_by 
+      local bytes_to_copy = num_to_copy * subs.width
+      ffi.C.memcpy(cst_f2_buf, cst_f1_buf + f1_offset, bytes_to_copy)
+      f1:unget_chunk(chunk_idx)
+      num_in_f2 = num_in_f2 + num_to_copy
       -- get "shift_by" from next  chunk
       if ( f1_len < nC ) then 
         -- no point looking any further
@@ -76,6 +78,7 @@ local function vshift(f1, shift_by, newval, optargs )
         num_in_f2 = num_in_f2 + 1
       end
     end
+    f1:unget_chunk(chunk_idx)
     --=== STOP : Put in newval in place of missing values
     chunk_idx = chunk_idx + 1
     return num_in_f2, f2_buf

@@ -103,6 +103,8 @@ vctr_chk(
     if ( vctr_val.num_writers != 0 ) { go_BYE(-1); }
   }
   else {
+    // NOTE that we do not maintain 2 representations of the data
+    // If it is in lma, then it cannot be in chunks
     if ( vctr_val.num_chnks != 0 ) { go_BYE(-1); } 
     if ( vctr_val.max_chnk_idx != 0 ) { go_BYE(-1); } 
   }
@@ -121,8 +123,8 @@ vctr_chk(
   if ( vctr_val.num_writers > 0 ) {
     if ( vctr_val.num_readers != 0 ) { go_BYE(-1); }
     if ( vctr_val.num_writers != 1 ) { go_BYE(-1); }
-    if ( vctr_val.X != NULL ) { go_BYE(-1); }
-    if ( vctr_val.nX != 0 ) { go_BYE(-1); }
+    if ( vctr_val.X == NULL ) { go_BYE(-1); }
+    if ( vctr_val.nX == 0 ) { go_BYE(-1); }
   }
   //----------------------------------------------
 
@@ -171,7 +173,7 @@ vctr_chk(
     memset(&chnk_key, 0, sizeof(chnk_rs_hmap_key_t));
     chnk_val = g_chnk_hmap[tbsp].bkts[chnk_where_found].val;
     chnk_key = g_chnk_hmap[tbsp].bkts[chnk_where_found].key;
-    if ( chnk_val.is_early_free ) { chk_is_early_free = true; } 
+    if ( chnk_val.is_early_free == true ) { chk_is_early_free = true; } 
     if ( is_at_rest ) { 
       if ( chnk_val.num_readers != 0 ) { go_BYE(-1); } 
       if ( chnk_val.num_writers != 0 ) { go_BYE(-1); } 
