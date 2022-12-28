@@ -45,7 +45,15 @@
 #include "vctr_set_memo.h"
 #include "vctr_width.h"
 
+#ifdef NEEDED
   /*
+cVector.c:52:18: warning: redundant redeclaration of ‘luaL_testudata’ [-Wredundant-decls]
+ LUALIB_API void *luaL_testudata (
+                  ^~~~~~~~~~~~~~
+In file included from cVector.c:3:
+../../../QJIT/LuaJIT-2.1.0-beta3/src/lauxlib.h:91:19: note: previous declaration of ‘luaL_testudata’ was here
+ LUALIB_API void *(luaL_testudata) (lua_State *L, int ud, const char *tname);
+                   ^~~~~~~~~~~~~~
   ** Implementation of luaL_testudata which will return NULL in case 
   if udata is not of type tname
   */
@@ -72,6 +80,7 @@ LUALIB_API void *luaL_testudata (
   }
   return NULL;  /* to avoid warnings */
 }
+#endif
 
 int luaopen_libvctr (lua_State *L);
 //-----------------------------------

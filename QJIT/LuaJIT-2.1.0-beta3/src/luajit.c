@@ -7,14 +7,9 @@
 #define MAIN_PGM
 #include "qjit_globals.h"
 #include "init_globals.h"
-/*
-#include "qtypes.h"// TODO DELETE JUST FOR TESTING 
-#include "vctr_new_uqid.h" // TODO DELETE JUST FOR TESTING 
-#include "vctr_add.h" // TODO DELETE JUST FOR TESTING 
-#include "vctr_is.h" // TODO DELETE JUST FOR TESTING 
-#include "vctr_del.h" // TODO DELETE JUST FOR TESTING 
-#include "vctr_cnt.h" // TODO DELETE JUST FOR TESTING 
-*/
+#include "read_configs.h"
+#include "init_session.h"
+#include "free_globals.h"
 // STOP: RAMESH
 /*
 ** LuaJIT frontend. Runs commands, scripts, read-eval-print (REPL) etc.
@@ -637,6 +632,8 @@ int main(int argc, char **argv)
   int status;
   // START: RAMESH 
   status = init_globals(); cBYE(status);
+  status = read_configs(); cBYE(status);
+  status = init_session(); cBYE(status);
   // STOP: RAMESH 
   L = lua_open();
   if (L == NULL) {
@@ -659,48 +656,7 @@ int main(int argc, char **argv)
   if ( g_is_out_of_band ) { pthread_join(g_out_of_band, NULL); }
   if ( g_is_mem_mgr     ) { pthread_join(g_mem_mgr,    NULL); }
 BYE:
-  if ( g_mutex_created ) { 
-    pthread_cond_destroy(&g_mem_cond);
-    pthread_mutex_destroy(&g_mem_mutex);
-  }
-  free_if_non_null(g_vctr_uqid); 
-  if ( g_vctr_hmap == NULL ) {
-    for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
-      if ( g_vctr_hmap[i].bkts != NULL ) {
-        if ( i > 0 ) { printf("Destroying imported tablespace %d \n", i); }
-        g_vctr_hmap[i].destroy(&g_vctr_hmap[i]);
-      }
-    }
-  }
-  //---------------------------------
-  if ( g_chnk_hmap == NULL ) {
-    for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
-      if ( g_chnk_hmap[i].bkts != NULL ) {
-        if ( i > 0 ) { printf("Destroying imported tablespace %d \n", i); }
-        g_chnk_hmap[i].destroy(&g_chnk_hmap[i]);
-      }
-    }
-  }
-  if ( g_data_dir_root != NULL ) { 
-    for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
-      free_if_non_null(g_data_dir_root[i]);
-    }
-  }
-  if ( g_meta_dir_root != NULL ) { 
-    for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
-      free_if_non_null(g_meta_dir_root[i]);
-    }
-  }
-  if ( g_tbsp_name != NULL ) { 
-    for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
-      free_if_non_null(g_tbsp_name[i]);
-    }
-  }
-  free_if_non_null(g_meta_dir_root);
-  free_if_non_null(g_data_dir_root);
-  free_if_non_null(g_tbsp_name);
-
-  //---------------------------------
+  status = free_globals(); if ( status < 0 ) { WHEREAMI; } 
   // STOP : RAMESH
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

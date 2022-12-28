@@ -6,7 +6,7 @@
 
 #include "vctr_rs_hmap_struct.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
 int
 vctr_set_name(
     uint32_t tbsp,
@@ -19,7 +19,7 @@ vctr_set_name(
   if ( strlen(name) > MAX_LEN_VCTR_NAME ) { go_BYE(-1); }
   vctr_rs_hmap_key_t key = uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap, &key, &val, &is_found, 
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
@@ -41,7 +41,7 @@ vctr_get_name(
   bool is_found; uint32_t where;
   vctr_rs_hmap_key_t key = uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap, &key, &val, &is_found, &where);
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
   cBYE(status);
   if ( !is_found ) { return NULL; } 
   if ( val.is_trash ) { return NULL; } 
@@ -61,7 +61,7 @@ vctr_get_max_num_in_chunk(
   bool is_found; uint32_t where;
   vctr_rs_hmap_key_t key = uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap, &key, &val, &is_found, &where);
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); } 
   if ( val.is_trash ) { go_BYE(-1); } 
@@ -82,7 +82,7 @@ vctr_get_memo_len(
   bool is_found; uint32_t where;
   vctr_rs_hmap_key_t key = uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap, &key, &val, &is_found, &where);
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
   if ( val.is_trash ) { go_BYE(-1); }
@@ -103,7 +103,7 @@ vctr_get_qtype(
   bool is_found; uint32_t where;
   vctr_rs_hmap_key_t key = uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap, &key, &val, &is_found, &where);
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
   if ( val.is_trash ) { go_BYE(-1); }
@@ -124,7 +124,7 @@ vctr_get_ref_count(
   bool is_found; uint32_t where;
   vctr_rs_hmap_key_t key = uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap, &key, &val, &is_found, &where);
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
   if ( val.is_trash ) { go_BYE(-1); }

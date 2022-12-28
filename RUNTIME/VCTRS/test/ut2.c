@@ -36,17 +36,18 @@
 #include "aux_cmem.h" 
 #include "chnk_cnt.h" 
 
+#include "init_globals.h" 
+#include "init_session.h" 
+#include "free_globals.h" 
 
-uint64_t g_mem_used;
-uint64_t g_mem_allowed;
-uint64_t g_dsk_used;
-uint64_t g_dsk_allowed;
+#define MAIN_PGM
+#include "qjit_globals.h"
 
-vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
-chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
-uint32_t g_vctr_uqid[Q_MAX_NUM_TABLESPACES];
-char g_data_dir_root[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME];
-char g_meta_dir_root[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME];
+extern void * webserver(void *arg);
+void * webserver(void *arg) { return arg; }  //Just for testing 
+
+extern void * mem_mgr(void *arg);
+void * mem_mgr(void *arg) { return arg; }  //Just for testing 
 
 int 
 main(
@@ -55,43 +56,23 @@ main(
     )
 {
   int status;
-  int tbsp = 0;
-  bool b; int l_vctr_cnt, l_chnk_cnt; 
-  // Initialize global variables
-  for ( int i = 0; i < Q_MAX_NUM_TABLESPACES; i++ ) { 
-    g_vctr_uqid[i] = 0; 
-    memset(&g_vctr_hmap[i], 0, sizeof(vctr_rs_hmap_t));
-    memset(&g_chnk_hmap[i], 0, sizeof(chnk_rs_hmap_t));
-    memset(g_data_dir_root[i], 0, Q_MAX_LEN_DIR_NAME+1);
-    memset(g_meta_dir_root[i], 0, Q_MAX_LEN_DIR_NAME+1);
-  }
+  int tbsp = 0; bool b; int l_vctr_cnt, l_chnk_cnt; char * buf = NULL;
 
-  g_mem_used = 0;
-  g_mem_allowed = (uint64_t)1048576 * (uint64_t)(1024 * 4);
-  g_dsk_used = 0;
-  g_dsk_allowed = (uint64_t)1048576 * (uint64_t)(1024 * 32);
-  //-----------------------
   if ( argc != 1 ) { go_BYE(-1); }
   //-------------------------------------------------------
-  rs_hmap_config_t HC1; memset(&HC1, 0, sizeof(rs_hmap_config_t));
-  HC1.min_size = 8;
-  HC1.max_size = 0;
-  HC1.so_file = strdup("libhmap_vctr.so"); 
+  status = init_globals(); cBYE(status); 
+  // START: Fake configs. we do not read_configs()
+  char *q_root = getenv("Q_ROOT");
+  if ( q_root == NULL ) { go_BYE(-1); } 
+  int len = strlen(q_root) + strlen("/meta/") + 16;
+  buf = malloc(len);
+  sprintf(buf, "%s/meta", q_root); 
+  strcpy(g_meta_dir_root[0], buf); 
+  sprintf(buf, "%s/data", q_root); 
+  strcpy(g_data_dir_root[0], buf); 
+  // STOP: Fake configs 
 
-  status = vctr_rs_hmap_instantiate(&g_vctr_hmap[tbsp], &HC1); cBYE(status);
-  status = g_vctr_hmap[tbsp].bkt_chk(g_vctr_hmap[tbsp].bkts, g_vctr_hmap[tbsp].size);
-  cBYE(status);
-  if ( HC1.so_file != NULL ) { go_BYE(-1); } 
-  //-------------------------------------------------------
-  rs_hmap_config_t HC2; memset(&HC2, 0, sizeof(rs_hmap_config_t));
-  HC2.min_size = 8;
-  HC2.max_size = 0;
-  HC2.so_file = strdup("libhmap_chnk.so"); 
-
-  status = chnk_rs_hmap_instantiate(&g_chnk_hmap[tbsp], &HC2); cBYE(status);
-  status = g_chnk_hmap[tbsp].bkt_chk(g_chnk_hmap[tbsp].bkts, g_chnk_hmap[tbsp].size);
-  cBYE(status);
-  if ( HC2.so_file != NULL ) { go_BYE(-1); } 
+  status = init_session(); cBYE(status); 
   //----------------------------------
   uint32_t max_num_in_chunk = 32; // for easy testing 
   qtype_t qtype = F4;
@@ -233,7 +214,7 @@ main(
   // cleanup
   status = rmtree(g_data_dir_root[tbsp]); 
 BYE:
-  g_vctr_hmap[tbsp].destroy(&g_vctr_hmap[tbsp]);
-  g_chnk_hmap[tbsp].destroy(&g_chnk_hmap[tbsp]);
+  status = free_globals(); if ( status < 0 ) { WHEREAMI; } 
+  free_if_non_null(buf);
   return status;
 }

@@ -11,8 +11,8 @@
 #include "mod_mem_used.h"
 
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
-extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
 // cannot add to a different tablespace => tbsp = 0
 int
@@ -72,7 +72,7 @@ vctr_putn(
     chnk_val.size  = chnk_size;
     status = incr_mem_used( chnk_size);
     //-------------------------------
-    status = g_chnk_hmap[tbsp].put(&g_chnk_hmap, &chnk_key, &chnk_val); 
+    status = g_chnk_hmap[tbsp].put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
     cBYE(status);
     g_vctr_hmap[tbsp].bkts[vctr_where].val.num_chnks++;
     g_vctr_hmap[tbsp].bkts[vctr_where].val.max_chnk_idx = chnk_idx; 

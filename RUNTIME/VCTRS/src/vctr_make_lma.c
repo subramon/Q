@@ -16,8 +16,8 @@
 #include "chnk_get_data.h"
 #include "vctr_make_lma.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
-extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
 char *
 vctr_make_lma(

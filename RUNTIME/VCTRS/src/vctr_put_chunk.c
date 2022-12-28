@@ -10,8 +10,8 @@
 #include "vctr_put_chunk.h"
 #include "mod_mem_used.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
-extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
 // is_stealable is for the most common way in which we will put 
 // data into vectors. In this case, we put a chunk at a time
@@ -40,8 +40,8 @@ vctr_put_chunk(
 
   vctr_rs_hmap_key_t vctr_key = vctr_uqid;
   vctr_rs_hmap_val_t vctr_val; 
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap, &vctr_key, &vctr_val, &is_found, 
-      &vctr_where);
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &vctr_key, 
+      &vctr_val, &is_found, &vctr_where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); } // vector exists 
   if ( vctr_val.is_trash  ) { go_BYE(-1); }
@@ -96,7 +96,7 @@ vctr_put_chunk(
   chnk_rs_hmap_val_t chnk_val = { 
     .qtype = qtype, .l1_mem = l1_mem, .num_elements = n, .size = chnk_size };
   //-------------------------------
-  status = g_chnk_hmap[tbsp].put(&g_chnk_hmap, &chnk_key, &chnk_val); 
+  status = g_chnk_hmap[tbsp].put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
   cBYE(status);
   bool chnk_is_found; uint32_t chnk_where_found;
   status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);

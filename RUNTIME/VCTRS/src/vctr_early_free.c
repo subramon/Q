@@ -9,8 +9,8 @@
 #include "isfile.h"
 #include "vctr_early_free.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
-extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
 // Deletes all but the most recent chunk
 // Does not do anything to lma memory, assuming it exists

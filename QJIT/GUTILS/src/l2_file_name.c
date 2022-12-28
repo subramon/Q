@@ -2,7 +2,7 @@
 #include "q_incs.h"
 #include "q_macros.h"
 #include "qjit_consts.h"
-extern char g_data_dir_root[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME];
+extern char **g_data_dir_root; 
 #include "l2_file_name.h"
 
 static char

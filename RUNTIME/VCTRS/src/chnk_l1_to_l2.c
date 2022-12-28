@@ -9,7 +9,7 @@
 #include "chnk_l1_to_l2.h"
 #include "mod_mem_used.h"
 
-extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+extern chnk_rs_hmap_t *g_chnk_hmap;
 int  
 chnk_l1_to_l2(
     uint32_t tbsp,

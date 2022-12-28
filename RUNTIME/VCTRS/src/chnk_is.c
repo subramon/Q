@@ -5,7 +5,8 @@
 #include "chnk_is.h"
 
 
-extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+extern chnk_rs_hmap_t *g_chnk_hmap;
+
 int
 chnk_is(
     uint32_t tbsp,
@@ -18,7 +19,7 @@ chnk_is(
   int status = 0;
   chnk_rs_hmap_key_t key = { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
   chnk_rs_hmap_val_t val; memset(&val, 0, sizeof(chnk_rs_hmap_val_t));
-  status = g_chnk_hmap[tbsp].get(&g_chnk_hmap, &key, &val, ptr_is_found, 
+  status = g_chnk_hmap[tbsp].get(&g_chnk_hmap[tbsp], &key, &val, ptr_is_found, 
       ptr_where_found);
   /*
   if ( *ptr_is_found ) { 

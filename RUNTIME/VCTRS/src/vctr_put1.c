@@ -11,8 +11,8 @@
 #include "vctr_put1.h"
 #include "mod_mem_used.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
-extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
 int
 vctr_put1(
@@ -32,8 +32,8 @@ vctr_put1(
 
   vctr_rs_hmap_key_t vctr_key = vctr_uqid;
   vctr_rs_hmap_val_t vctr_val; 
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap, &vctr_key, &vctr_val, &is_found, 
-      &vctr_where);
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &vctr_key, 
+      &vctr_val, &is_found, &vctr_where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); } // vector exists 
   if ( vctr_val.is_trash  ) { go_BYE(-1); }
@@ -69,7 +69,7 @@ vctr_put1(
     chnk_val.size  = chnk_size;
     status = incr_mem_used( chnk_size);
     //-------------------------------
-    status = g_chnk_hmap[tbsp].put(&g_chnk_hmap, &chnk_key, &chnk_val); 
+    status = g_chnk_hmap[tbsp].put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
     cBYE(status);
     g_vctr_hmap[tbsp].bkts[vctr_where].val.num_chnks++;
     g_vctr_hmap[tbsp].bkts[vctr_where].val.max_chnk_idx = chnk_idx;

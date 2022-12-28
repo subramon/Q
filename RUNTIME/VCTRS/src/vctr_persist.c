@@ -5,7 +5,7 @@
 #include "vctr_is.h"
 #include "vctr_persist.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
 
 // persist means that when we delete this vector, we keep information
 // on disk that allows us to rehydrate it 

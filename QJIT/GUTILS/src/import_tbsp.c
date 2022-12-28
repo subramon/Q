@@ -10,12 +10,11 @@
 
 #include "import_tbsp.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
-extern uint32_t g_vctr_uqid[Q_MAX_NUM_TABLESPACES];
-extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
-extern char g_meta_dir_root[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
-extern char g_data_dir_root[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
+extern char **g_meta_dir_root;
+extern char **g_data_dir_root;
 
 int
 import_tbsp(
@@ -73,9 +72,8 @@ import_tbsp(
         "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin");
   cBYE(status);
   //-----------------------------------
-  g_vctr_uqid[tbsp] = 0;
   // Note that since we cannot add to an imported tablespace,
-  // we can leave g_vctr_uqid[tbsp] as 0
+  // we do not set g_vctr_uqid 
   *ptr_tbsp = tbsp;
 BYE:
   free_if_non_null(q_meta_dir_root);

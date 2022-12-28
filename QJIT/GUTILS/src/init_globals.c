@@ -16,7 +16,6 @@
 
 #include "webserver.h"
 #include "mem_mgr.h"
-#include "read_configs.h"
 #undef MAIN_PGM
 #include "qjit_globals.h"
 #include "init_globals.h"
@@ -27,25 +26,22 @@ init_globals(
     )
 {
   int status = 0;
-  int *dummy = NULL;
   // Initialize global variables
   g_halt = 0;
   g_webserver_interested = 0; 
   g_L_status = 0;
 
   g_vctr_hmap     = NULL;
-  g_vctr_uqid     = NULL;
+  g_vctr_uqid     = 0;
   g_chnk_hmap     = NULL;
   g_data_dir_root = NULL;
   g_meta_dir_root = NULL;
   g_tbsp_name     = NULL;
 
-  dummy = malloc(1024);
   int n = Q_MAX_NUM_TABLESPACES; 
 
   int sz = n * sizeof(vctr_rs_hmap_t);
   g_vctr_hmap = malloc(sz);
-  g_vctr_uqid = malloc(n * sizeof(uint32_t));
   g_chnk_hmap = malloc(n * sizeof(chnk_rs_hmap_t));
 
   g_data_dir_root = malloc(n * sizeof(char *));
@@ -53,7 +49,6 @@ init_globals(
   g_tbsp_name     = malloc(n * sizeof(char *));
 
   memset(g_vctr_hmap,     0, n * sizeof(vctr_rs_hmap_t));
-  memset(g_vctr_uqid,     0, n * sizeof(uint32_t *));
   memset(g_chnk_hmap,     0, n * sizeof(chnk_rs_hmap_t));
   memset(g_data_dir_root, 0, n * sizeof(char *));
   memset(g_meta_dir_root, 0, n * sizeof(char *));
@@ -84,111 +79,30 @@ init_globals(
   memset(&g_vctr_hmap_config, 0, sizeof(rs_hmap_config_t));
   memset(&g_chnk_hmap_config, 0, sizeof(rs_hmap_config_t));
 
-  status = read_configs(); cBYE(status);
   //------------------------
-  /* Hard coding below no longer needed. These come from config file 
+  // START: Some default values  to be over-ridden by read_configs
   g_restore_session = false;
   //-----------------------
   g_is_webserver   = false;
   g_is_out_of_band = false;
   g_is_mem_mgr     = false;
   //-----------------------
-  strcpy(g_data_dir_root[0], "/home/subramon/local/Q/data/"); 
-  strcpy(g_meta_dir_root[0], "/home/subramon/local/Q/meta/"); 
-
   g_mem_allowed = 4 * 1024 * (uint64_t)1048576 ; // in Bytes
   g_dsk_allowed = 32 * 1024 * (uint64_t)1048576 ; // in Bytes
 
-  g_is_webserver = false;
+  g_is_webserver   = false;
   g_is_out_of_band = false; 
-  g_is_mem_mgr  = false; 
+  g_is_mem_mgr     = false; 
 
-  g_web_info.port         = 8004; 
-  g_out_of_band_info.port = 8008; 
+  g_web_info.port         = 0; 
+  g_out_of_band_info.port = 0; 
 
   g_vctr_hmap_config.min_size = 32;
   g_vctr_hmap_config.max_size = 0;
 
   g_chnk_hmap_config.min_size = 32;
   g_chnk_hmap_config.max_size = 0;
-  */
-
-  // For webserver 
-  if ( g_is_webserver ) {  
-    g_web_info.is_out_of_band = false;
-    status = pthread_create(&g_webserver, NULL, &webserver, &g_web_info);
-    cBYE(status);
-  }
-  // For out of band 
-  if ( g_is_out_of_band ) {  
-    g_out_of_band_info.is_out_of_band = true;
-    status = pthread_create(&g_out_of_band, NULL, &webserver, 
-        &g_out_of_band_info);
-    cBYE(status);
-  }
-  // For memory manager
-  if ( g_is_mem_mgr ) { 
-    pthread_cond_init(&g_mem_cond, NULL);
-    pthread_mutex_init(&g_mem_mutex, NULL);
-    g_mutex_created = true;
-
-    g_mem_mgr_info.dummy = 123456789;
-    status = pthread_create(&g_mem_mgr, NULL, &mem_mgr, &g_mem_mgr_info);
-    cBYE(status);
-    pthread_cond_signal(&g_mem_cond);
-  }
-  int tbsp = 0;  // init_globals() only for primary tablespace
-
-  // START For hashmaps  for vector, ...
-  if ( g_restore_session ) { 
-    printf(">>>>>>>>>>>> RESTORING SESSION ============\n");
-    status = vctr_rs_hmap_unfreeze(&g_vctr_hmap[tbsp], 
-        g_meta_dir_root[tbsp],
-        "_vctr_meta.csv", "_vctr_bkts.bin", "_vctr_full.bin");
-    cBYE(status);
-    status = chnk_rs_hmap_unfreeze(&g_chnk_hmap[tbsp], 
-        g_meta_dir_root[tbsp],
-        "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin");
-    cBYE(status);
-    //-----------------------------------
-    g_vctr_uqid[tbsp] = 0;
-    for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) { 
-      if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
-
-      vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
-      uint32_t vctr_uqid = key;
-      if ( vctr_uqid > g_vctr_uqid[tbsp] ) { g_vctr_uqid[tbsp] = vctr_uqid; } 
-    }
-    if ( g_vctr_hmap[tbsp].nitems == 0 ) {
-      if ( g_vctr_uqid[tbsp] != 0 ) { go_BYE(-1); }
-    }
-    else {
-      if ( g_vctr_uqid[tbsp] == 0 ) { go_BYE(-1); }
-    }
-    //-----------------------------------
-    printf("<<<<<<<<<<<< RESTORING SESSION ============\n");
-  }
-  else { 
-    printf("<<<<<<<<<<<< STARTING NEW SESSION ============\n");
-    g_vctr_hmap_config.so_file = strdup("libhmap_vctr.so"); 
-    status = vctr_rs_hmap_instantiate(&g_vctr_hmap[tbsp], 
-        &g_vctr_hmap_config); 
-    cBYE(status);
-
-    g_chnk_hmap_config.so_file = strdup("libhmap_chnk.so"); 
-    status = chnk_rs_hmap_instantiate(&g_chnk_hmap[tbsp], &g_chnk_hmap_config); 
-    cBYE(status);
-
-    rmtree(g_data_dir_root[tbsp]);
-    rmtree(g_meta_dir_root[tbsp]);
-    status = mkdir(g_data_dir_root[tbsp], 0744); cBYE(status);
-    status = mkdir(g_meta_dir_root[tbsp], 0744); cBYE(status);
-    printf("<<<<<<<<<<<< STARTED  NEW SESSION ============\n");
-  }
-
-
-  // STOP  For hashmaps  for vector, ...
+  // STOP: Some default values  to be over-ridden by read_configs
 BYE:
-  free_if_non_null(dummy);
   return status;
 }

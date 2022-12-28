@@ -4,7 +4,7 @@
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_cnt.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
 
 uint32_t
 vctr_cnt(

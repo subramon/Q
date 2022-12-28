@@ -27,7 +27,7 @@ INCS += -I../../../TMPL_FIX_HASHMAP/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
 INCS += -I../../../QJIT/GUTILS/inc
-INCS += -I../../../QJIT/LuaJIT-2.1.0-beta3/src/inc
+INCS += -I../../../QJIT/LuaJIT-2.1.0-beta3/src/
 
 TMPL=CASE1
 
@@ -80,10 +80,16 @@ SRCS +=	chnk_drop_l1_l2.c
 OBJS = $(SRCS:.c=.o)
 
 TEST1_SRCS := ../test/ut1.c
+TEST1_SRCS += ../../../QJIT/GUTILS/src/init_globals.c
+TEST1_SRCS += ../../../QJIT/GUTILS/src/init_session.c
+TEST1_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
 TEST1_OBJS = $(TEST1_SRCS:.c=.o)
 
 TEST2_SRCS := ../test/ut2.c
 TEST2_SRCS += ../../CMEM/src/aux_cmem.c 
+TEST2_SRCS += ../../../QJIT/GUTILS/src/init_globals.c
+TEST2_SRCS += ../../../QJIT/GUTILS/src/init_session.c
+TEST2_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
 TEST2_OBJS = $(TEST2_SRCS:.c=.o)
 
 .c.o : 
@@ -147,13 +153,14 @@ libvctr.so: ${EXT_OBJS} core_libvctr.so cVector.o
 #-------------------------------------------
 ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST1_OBJS} \
+	${INCS} \
 	core_libvctr.so \
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
 	${TMPL_HMAP_SO} \
 	${UTILS_SO} \
 	${GUTILS_SO} \
-	-o ut1  
+	-o ut1  -lpthread
 #-------------------------------------------
 ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST2_OBJS} -o ut2 \
@@ -163,7 +170,7 @@ ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so
 	${TMPL_HMAP_SO} \
 	${UTILS_SO} \
 	${GUTILS_SO} \
-	-lm
+	-lm -lpthread
 #-------------------------------------------
 
 

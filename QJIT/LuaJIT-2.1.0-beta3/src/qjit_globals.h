@@ -19,7 +19,10 @@ my_extern int g_L_status; // values as described below
 // 2 => WebServer owns Lua State 
 // hash map for vectors, chunks, vectors x chunks
 my_extern vctr_rs_hmap_t *g_vctr_hmap; // [Q_MAX_NUM_TABLESPACES];
-my_extern uint32_t *g_vctr_uqid; // [Q_MAX_NUM_TABLESPACES];
+// Note that we have only one g_vctr_uqid, not one per tablespace
+// This is because the only use of g_vctr_uqid is when you add vectors
+// and you cannot add vectors to any tablespace other than yor own (0)
+my_extern uint32_t g_vctr_uqid; 
 my_extern chnk_rs_hmap_t *g_chnk_hmap; // [Q_MAX_NUM_TABLESPACES];
 // For master and memory manager
 my_extern bool g_mutex_created;

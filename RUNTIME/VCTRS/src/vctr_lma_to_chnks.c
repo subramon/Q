@@ -10,7 +10,7 @@
 #include "vctr_lma_to_chnks.h"
 
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
 int
 vctr_lma_to_chnks(
     uint32_t tbsp,

@@ -8,8 +8,8 @@
 #include "chnk_free_resources.h"
 #include "chnk_del.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
-extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
 int
 chnk_del(
@@ -29,8 +29,8 @@ chnk_del(
 
   chnk_rs_hmap_key_t key = { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
   chnk_rs_hmap_val_t val; memset(&val, 0, sizeof(chnk_rs_hmap_val_t));
-  status = g_chnk_hmap[tbsp].get(&g_chnk_hmap, &key, &val, &chnk_is_found, 
-      &chnk_where_found);
+  status = g_chnk_hmap[tbsp].get(&g_chnk_hmap[tbsp], &key, &val, 
+      &chnk_is_found, &chnk_where_found);
   if ( chnk_is_found == false ) { return -3; } // NOTE 
   if ( g_chnk_hmap[tbsp].nitems == 0 ) { go_BYE(-1); }
   //----------------------------------------------------
@@ -40,7 +40,7 @@ chnk_del(
   cBYE(status);
   //-- delete entry in hash table 
   bool is_found;
-  status = g_chnk_hmap[tbsp].del(&g_chnk_hmap, &key, &val, &is_found); 
+  status = g_chnk_hmap[tbsp].del(&g_chnk_hmap[tbsp], &key, &val, &is_found); 
   cBYE(status);
   //-- reduce number of chunks in this vector
   if ( g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_chnks == 0 ) { go_BYE(-1); }

@@ -9,7 +9,7 @@
 #include "mod_mem_used.h"
 #include "chnk_get_data.h"
 
-extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
 char *
 chnk_get_data(

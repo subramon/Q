@@ -9,8 +9,8 @@
 #include "vctr_drop_l1_l2.h"
 #include "chnk_drop_l1_l2.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
-extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+extern vctr_rs_hmap_t *g_vctr_hmap;
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
 int
 vctr_drop_l1_l2(
