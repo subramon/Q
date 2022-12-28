@@ -16,6 +16,7 @@ qjit test1.lua
 qjit test_lma.lua  
 qjit test_memo.lua  
 qjit test_ref_count.lua
+qjit test_import.lua
 
 cd ~/Q/OPERATORS/LOAD_CSV/test/
 qjit test_load_csv.lua

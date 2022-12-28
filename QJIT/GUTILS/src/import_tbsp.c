@@ -20,7 +20,8 @@ extern char g_data_dir_root[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
 int
 import_tbsp(
     const char * const in_q_meta_dir_root,
-    const char * const in_q_data_dir_root
+    const char * const in_q_data_dir_root,
+    int *ptr_tbsp
     )
 {
   int status = 0;
@@ -29,11 +30,17 @@ import_tbsp(
   // Make realpath so thatall names are comparable 
 
   if ( in_q_meta_dir_root == NULL ) { go_BYE(-1); } 
-  if ( !isdir(in_q_meta_dir_root) ) { go_BYE(-1); } 
+  if ( !isdir(in_q_meta_dir_root) ) { 
+    fprintf(stderr, "Missing meta dir %s \n", in_q_meta_dir_root);
+    go_BYE(-1);
+  } 
   q_meta_dir_root = realpath(in_q_meta_dir_root, NULL);
   
   if ( in_q_data_dir_root == NULL ) { go_BYE(-1); } 
-  if ( !isdir(in_q_data_dir_root) ) { go_BYE(-1); } 
+  if ( !isdir(in_q_data_dir_root) ) { 
+    fprintf(stderr, "Missing data dir %s \n", in_q_data_dir_root);
+    go_BYE(-1); 
+  } 
   q_data_dir_root = realpath(in_q_data_dir_root, NULL);
   
   // Check that this q_root is a new one 
@@ -69,6 +76,7 @@ import_tbsp(
   g_vctr_uqid[tbsp] = 0;
   // Note that since we cannot add to an imported tablespace,
   // we can leave g_vctr_uqid[tbsp] as 0
+  *ptr_tbsp = tbsp;
 BYE:
   free_if_non_null(q_meta_dir_root);
   free_if_non_null(q_data_dir_root);

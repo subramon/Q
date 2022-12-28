@@ -22,6 +22,8 @@
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_rs_hmap_instantiate.h"
 
+#include "import_tbsp.h"
+
 
 #undef MAIN_PGMN
 #include "qjit_globals.h"
@@ -100,9 +102,40 @@ static int l_lgutils_meta_dir(
     )
 {
   int status = 0;
-  int tbsp = 0;
-  if ( lua_gettop(L) != 0 ) { go_BYE(-1); }
+  int tbsp;
+  if ( lua_gettop(L) == 0 ) { 
+    tbsp = 0;
+  }
+  else if ( lua_gettop(L) == 1 ) { 
+    if ( !lua_isnumber(L, 1) ) { go_BYE(-1); } 
+    tbsp = luaL_checknumber(L, 1); 
+  }
+  else {
+    go_BYE(-1);
+  }
   lua_pushstring(L, g_meta_dir_root[tbsp]); 
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
+//----------------------------------------
+static int l_lgutils_import_tbsp( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  int tbsp = -1;
+  if ( lua_gettop(L) != 2 ) {  go_BYE(-1); } 
+  if ( !lua_isstring(L, 1) ) { go_BYE(-1); } 
+  if ( !lua_isstring(L, 2) ) { go_BYE(-1); } 
+  const char * const meta_dir = luaL_checkstring(L, 1); 
+  const char * const data_dir = luaL_checkstring(L, 2); 
+  status = import_tbsp( meta_dir, data_dir, &tbsp);  cBYE(status);
+  if ( tbsp <= 0 ) { go_BYE(-1); } 
+  lua_pushnumber(L, tbsp);
   return 1; 
 BYE:
   lua_pushnil(L);
@@ -116,9 +149,43 @@ static int l_lgutils_data_dir(
     )
 {
   int status = 0;
-  int tbsp = 0;
-  if ( lua_gettop(L) != 0 ) { go_BYE(-1); }
+  int tbsp;
+  if ( lua_gettop(L) == 0 ) { 
+    tbsp = 0;
+  }
+  else if ( lua_gettop(L) == 1 ) { 
+    if ( !lua_isnumber(L, 1) ) { go_BYE(-1); } 
+    tbsp = luaL_checknumber(L, 1); 
+  }
+  else {
+    go_BYE(-1);
+  }
   lua_pushstring(L, g_data_dir_root[tbsp]); 
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
+//----------------------------------------
+static int l_lgutils_tbsp_name( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  int tbsp;
+  if ( lua_gettop(L) == 0 ) { 
+    tbsp = 0;
+  }
+  else if ( lua_gettop(L) == 1 ) { 
+    if ( !lua_isnumber(L, 1) ) { go_BYE(-1); } 
+    tbsp = luaL_checknumber(L, 1); 
+  }
+  else {
+    go_BYE(-1);
+  }
+  lua_pushstring(L, g_tbsp_name[tbsp]); 
   return 1; 
 BYE:
   lua_pushnil(L);
@@ -129,9 +196,11 @@ BYE:
 //----------------------------------------
 //----------------------------------------
 static const struct luaL_Reg lgutils_methods[] = {
+    { "import_tbsp", l_lgutils_import_tbsp },
     { "is_restore_session", l_lgutils_is_restore_session },
     { "mem_used", l_lgutils_mem_used },
     { "dsk_used", l_lgutils_dsk_used },
+    { "tbsp_name",           l_lgutils_tbsp_name },
     { "data_dir",           l_lgutils_data_dir },
     { "meta_dir",           l_lgutils_meta_dir },
     { "save_session",       l_lgutils_save_session },
@@ -139,9 +208,11 @@ static const struct luaL_Reg lgutils_methods[] = {
 };
  
 static const struct luaL_Reg lgutils_functions[] = {
+    { "import_tbsp", l_lgutils_import_tbsp },
     { "is_restore_session", l_lgutils_is_restore_session },
     { "mem_used", l_lgutils_mem_used },
     { "dsk_used", l_lgutils_dsk_used },
+    { "tbsp_name",           l_lgutils_tbsp_name },
     { "data_dir",           l_lgutils_data_dir },
     { "meta_dir",           l_lgutils_meta_dir },
     { "save_session",       l_lgutils_save_session },

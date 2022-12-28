@@ -222,6 +222,7 @@ function lVector.new(args)
     assert(args.uqid > 0)
     -- TODO TODO P0   THINK  ABOUT FOLLOWING 
     if ( not args.tbsp ) then  args.tbsp = 0 end 
+    print("tbsp = ", args.tbsp) -- TODO P0 Delete
     assert(type(args.uqid) == "number")
     assert(args.uqid >= 0)
     vector._base_vec = assert(cVector.rehydrate(args))

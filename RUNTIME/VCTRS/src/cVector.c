@@ -805,6 +805,7 @@ static int l_vctr_rehydrate( lua_State *L)
   status = get_int_from_tbl(L, 1, "tbsp", &is_key, &itmp); cBYE(status);
   if ( !is_key )  { go_BYE(-1); } 
   tbsp = (uint32_t)itmp;
+  printf("cVector: tbsp = %d \n", tbsp); 
   //-------------------------------------------
 
   ptr_v = (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
@@ -818,6 +819,7 @@ static int l_vctr_rehydrate( lua_State *L)
   if ( !is_found ) { go_BYE(-1); } 
   status = vctr_incr_ref_count(tbsp, where_found); cBYE(status);
   ptr_v->uqid = uqid; 
+  ptr_v->tbsp = tbsp; 
 
   return 1; 
 BYE:

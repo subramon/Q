@@ -21,10 +21,10 @@ T1 = Q.load_csv(datafile, M, O)
 --=================
 T1.week_start_date = Q.SC_to_TM(T1.str_week, "%Y-%m-%d", 
   { out_qtype = "TM1" , name = "T1_wk_strt_dt", })
-T1.ck = Q.concat(T1.tcin, T1.dist_loc_i, { name = "ck" })
-lVector.conjoin({T1.ck, T1.week_start_date})
---==================================================o
 -- create I8 composite key, ck,  from T1.tcin and T1.dist_loc_i
+T1.ck = Q.concat(T1.tcin, T1.dist_loc_i, { name = "ck" })
+--==================================================o
+lVector.conjoin({T1.ck, T1.week_start_date})
 T1.x = Q.is_prev(T1.ck, "neq", { default_val = true}):set_name("T1_x")
 T1.id = Q.seq({len = n, start = 0, by = 1, qtype = "I8"}):set_name("T1.id")
 
@@ -38,7 +38,6 @@ for i = 1, math.huge do
   local n = T2.ub:get_chunk(i-1)
   if ( n == 0 ) then break end 
   T1.id:early_free()
-  T1.ck:early_free()
 end
 assert(T1.ck:check())
 assert(T1.id:check())

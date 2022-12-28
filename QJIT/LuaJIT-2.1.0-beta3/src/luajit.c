@@ -665,6 +665,7 @@ BYE:
   }
   for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
     if ( g_vctr_hmap[i].bkts != NULL ) {
+      if ( i > 0 ) { printf("Destroying imported tablespace %d \n", i); }
       g_vctr_hmap[i].destroy(&g_vctr_hmap[i]);
     }
     if ( g_chnk_hmap[i].bkts != NULL ) {

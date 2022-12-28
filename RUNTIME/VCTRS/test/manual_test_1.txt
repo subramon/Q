@@ -1,0 +1,5 @@
+Make sure that restore_session == false in q_config.lua 
+qjit test_save.lua
+Set restore_session == true in q_config.lua 
+qjit test_restore.lua
+qjit test_restore.lua #- repeat a few times 

@@ -38,7 +38,9 @@ init_globals(
     memset(&g_chnk_hmap[i], 0, sizeof(chnk_rs_hmap_t));
     memset(g_data_dir_root[i], 0, Q_MAX_LEN_DIR_NAME+1);
     memset(g_meta_dir_root[i], 0, Q_MAX_LEN_DIR_NAME+1);
+    memset(g_tbsp_name[i], 0, Q_MAX_LEN_DIR_NAME+1);
   }
+  strcpy(g_tbsp_name[0], "original writable tablespace");
   //------------------------
   g_mutex_created = false;
 
