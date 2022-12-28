@@ -17,7 +17,7 @@
 #include "webserver.h"
 #include "mem_mgr.h"
 #include "read_configs.h"
-#define MAIN_PGM
+#undef MAIN_PGM
 #include "qjit_globals.h"
 #include "init_globals.h"
 
@@ -27,19 +27,48 @@ init_globals(
     )
 {
   int status = 0;
+  int *dummy = NULL;
   // Initialize global variables
   g_halt = 0;
   g_webserver_interested = 0; 
   g_L_status = 0;
 
-  for ( int i = 0; i < Q_MAX_NUM_TABLESPACES; i++ ) { 
-    memset(&g_vctr_hmap[i], 0, sizeof(vctr_rs_hmap_t));
-    g_vctr_uqid[i] = 0; 
-    memset(&g_chnk_hmap[i], 0, sizeof(chnk_rs_hmap_t));
-    memset(g_data_dir_root[i], 0, Q_MAX_LEN_DIR_NAME+1);
-    memset(g_meta_dir_root[i], 0, Q_MAX_LEN_DIR_NAME+1);
-    memset(g_tbsp_name[i], 0, Q_MAX_LEN_DIR_NAME+1);
+  g_vctr_hmap     = NULL;
+  g_vctr_uqid     = NULL;
+  g_chnk_hmap     = NULL;
+  g_data_dir_root = NULL;
+  g_meta_dir_root = NULL;
+  g_tbsp_name     = NULL;
+
+  dummy = malloc(1024);
+  int n = Q_MAX_NUM_TABLESPACES; 
+
+  int sz = n * sizeof(vctr_rs_hmap_t);
+  g_vctr_hmap = malloc(sz);
+  g_vctr_uqid = malloc(n * sizeof(uint32_t));
+  g_chnk_hmap = malloc(n * sizeof(chnk_rs_hmap_t));
+
+  g_data_dir_root = malloc(n * sizeof(char *));
+  g_meta_dir_root = malloc(n * sizeof(char *));
+  g_tbsp_name     = malloc(n * sizeof(char *));
+
+  memset(g_vctr_hmap,     0, n * sizeof(vctr_rs_hmap_t));
+  memset(g_vctr_uqid,     0, n * sizeof(uint32_t *));
+  memset(g_chnk_hmap,     0, n * sizeof(chnk_rs_hmap_t));
+  memset(g_data_dir_root, 0, n * sizeof(char *));
+  memset(g_meta_dir_root, 0, n * sizeof(char *));
+  memset(g_tbsp_name,     0, n * sizeof(char *));
+
+  for ( int i = 0; i < n; i++ ) { 
+    g_data_dir_root[i] = malloc(sizeof(char) * (Q_MAX_LEN_DIR_NAME+1));
+    g_meta_dir_root[i] = malloc(sizeof(char) * (Q_MAX_LEN_DIR_NAME+1));
+    g_tbsp_name[i]     = malloc(sizeof(char) * (Q_MAX_LEN_DIR_NAME+1));
+
+    memset(g_data_dir_root[i], 0, (sizeof(char) * (Q_MAX_LEN_DIR_NAME+1)));
+    memset(g_meta_dir_root[i], 0, (sizeof(char) * (Q_MAX_LEN_DIR_NAME+1)));
+    memset(g_tbsp_name[i]    , 0, (sizeof(char) * (Q_MAX_LEN_DIR_NAME+1)));
   }
+
   strcpy(g_tbsp_name[0], "original writable tablespace");
   //------------------------
   g_mutex_created = false;
@@ -160,5 +189,6 @@ init_globals(
 
   // STOP  For hashmaps  for vector, ...
 BYE:
+  free_if_non_null(dummy);
   return status;
 }

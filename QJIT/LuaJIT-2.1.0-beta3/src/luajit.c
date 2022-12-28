@@ -663,15 +663,44 @@ BYE:
     pthread_cond_destroy(&g_mem_cond);
     pthread_mutex_destroy(&g_mem_mutex);
   }
-  for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
-    if ( g_vctr_hmap[i].bkts != NULL ) {
-      if ( i > 0 ) { printf("Destroying imported tablespace %d \n", i); }
-      g_vctr_hmap[i].destroy(&g_vctr_hmap[i]);
-    }
-    if ( g_chnk_hmap[i].bkts != NULL ) {
-      g_chnk_hmap[i].destroy(&g_chnk_hmap[i]);
+  free_if_non_null(g_vctr_uqid); 
+  if ( g_vctr_hmap == NULL ) {
+    for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
+      if ( g_vctr_hmap[i].bkts != NULL ) {
+        if ( i > 0 ) { printf("Destroying imported tablespace %d \n", i); }
+        g_vctr_hmap[i].destroy(&g_vctr_hmap[i]);
+      }
     }
   }
+  //---------------------------------
+  if ( g_chnk_hmap == NULL ) {
+    for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
+      if ( g_chnk_hmap[i].bkts != NULL ) {
+        if ( i > 0 ) { printf("Destroying imported tablespace %d \n", i); }
+        g_chnk_hmap[i].destroy(&g_chnk_hmap[i]);
+      }
+    }
+  }
+  if ( g_data_dir_root != NULL ) { 
+    for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
+      free_if_non_null(g_data_dir_root[i]);
+    }
+  }
+  if ( g_meta_dir_root != NULL ) { 
+    for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
+      free_if_non_null(g_meta_dir_root[i]);
+    }
+  }
+  if ( g_tbsp_name != NULL ) { 
+    for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
+      free_if_non_null(g_tbsp_name[i]);
+    }
+  }
+  free_if_non_null(g_meta_dir_root);
+  free_if_non_null(g_data_dir_root);
+  free_if_non_null(g_tbsp_name);
+
+  //---------------------------------
   // STOP : RAMESH
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

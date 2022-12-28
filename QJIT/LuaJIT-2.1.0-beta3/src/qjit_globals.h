@@ -18,9 +18,9 @@ my_extern int g_L_status; // values as described below
 // 1 => Master owns Lua State 
 // 2 => WebServer owns Lua State 
 // hash map for vectors, chunks, vectors x chunks
-my_extern vctr_rs_hmap_t g_vctr_hmap[Q_MAX_NUM_TABLESPACES];
-my_extern uint32_t g_vctr_uqid[Q_MAX_NUM_TABLESPACES];
-my_extern chnk_rs_hmap_t g_chnk_hmap[Q_MAX_NUM_TABLESPACES];
+my_extern vctr_rs_hmap_t *g_vctr_hmap; // [Q_MAX_NUM_TABLESPACES];
+my_extern uint32_t *g_vctr_uqid; // [Q_MAX_NUM_TABLESPACES];
+my_extern chnk_rs_hmap_t *g_chnk_hmap; // [Q_MAX_NUM_TABLESPACES];
 // For master and memory manager
 my_extern bool g_mutex_created;
 my_extern pthread_cond_t  g_mem_cond;
@@ -32,10 +32,10 @@ my_extern uint64_t g_mem_used;    // amount of memory malloc'd
 my_extern uint64_t g_dsk_allowed; // maximum disk that C can use
 my_extern uint64_t g_dsk_used;    // amount of disk used
 // Disk stuff
-my_extern char g_data_dir_root[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
-my_extern char g_meta_dir_root[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
+my_extern char **g_data_dir_root; // [[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
+my_extern char **g_meta_dir_root; // [Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
 // following is used to help debugging by giving logical names to tbsp
-my_extern char g_tbsp_name[Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
+my_extern char **g_tbsp_name; // [Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
 // restore
 bool g_restore_session;
 // for webserver
