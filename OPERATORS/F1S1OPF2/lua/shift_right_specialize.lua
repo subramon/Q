@@ -18,12 +18,10 @@ return function (
   subs.s1_qtype = s1:qtype()
   assert(is_in(subs.s1_qtype, { "I1", "I2", "I4", "I8", }))
   local snum = s1:to_num()
+
   local max_shift = 8 * cutils.get_width_qtype(subs.f1_qtype)
   assert( (snum >= 0 ) and ( snum <= max_shift ) ) 
-  -- convert scalar to type I1 
-  s1 = Scalar.new(snum, "I1")
-  subs.s1_qtype = s1:qtype()
-  subs.s1_ctype = cutils.str_qtype_to_str_ctype(subs.s1_qtype)
+  subs.s1_ctype = "u" .. cutils.str_qtype_to_str_ctype(subs.s1_qtype)
   subs.cast_s1_as  = subs.s1_ctype .. " *"
 
   subs.f1_ctype = "u" .. cutils.str_qtype_to_str_ctype(subs.f1_qtype)
@@ -39,8 +37,8 @@ return function (
   subs.max_num_in_chunk = f1:max_num_in_chunk()
   subs.f2_buf_sz = subs.max_num_in_chunk * subs.f2_width
 
-  assert(type(subs.__operator) == "string")
-  subs.fn = subs.__operator
+  assert(type(optargs.__operator) == "string")
+  subs.fn = optargs.__operator
     .. "_" .. subs.f1_qtype 
     .. "_" .. subs.s1_qtype 
     .. "_" .. subs.f2_qtype 
@@ -49,8 +47,9 @@ return function (
   subs.chunk_size = 1024 -- TODO experiment with this 
 
   subs.ptr_to_sclr = ffi.cast(subs.cast_s1_as, s1:to_data())
+  print("Scalar in specializer = ", subs.ptr_to_sclr[0])
 
-  subs.code = 'c = a >> b;'
+  subs.code = 'c = (uint64_t)a >> b;'
   subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"

@@ -7,8 +7,6 @@ local cmem     = require 'libcmem'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
-local no_scalar_ops = { "vnot", "incr", "decr", "exp", "log", "sqrt" }
-
 local function expander_f1s1opf2(a, f1, sclr, optargs )
   local sp_fn_name = "Q/OPERATORS/F1S1OPF2/lua/" .. a .. "_specialize"
   local spfn = assert(require(sp_fn_name))
@@ -18,6 +16,7 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
     sclr = Scalar.new(sclr, f1:qtype()) 
   end
   local subs = assert(spfn(f1, sclr, optargs))
+
 
   local func_name = assert(subs.fn)
   qc.q_add(subs); 

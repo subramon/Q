@@ -39,7 +39,7 @@ tests.t1 = function()
   local n1, n2 = Q.sum(Q.vveq(x, w)):eval()
   assert(n1:to_num() == n2:to_num())
 
-  -- Q.print_csv({x, y, z, w})
+  Q.print_csv({x, y, z, w}, { opfile = "_x.csv"} )
   print("test t1 passed")
 end
 -- return tests
