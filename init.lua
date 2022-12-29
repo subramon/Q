@@ -31,6 +31,9 @@ require "Q/OPERATORS/F1OPF2/lua/f1opf2"
 
 require "Q/OPERATORS/SORT1/lua/sort1"
 require "Q/OPERATORS/PERMUTE/lua/permute"
+
+require "Q/UTILS/lua/import"
+require "Q/UTILS/lua/register_qop" 
 --== These are from QTILS 
 require 'Q/QTILS/lua/fold'
 --[[
@@ -43,7 +46,6 @@ require 'Q/QTILS/lua/nop'
 require 'Q/QTILS/lua/avg'
 require 'Q/QTILS/lua/head'
 
-require "Q/UTILS/lua/register_qop" 
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/get_idx_by_val"

@@ -1,4 +1,3 @@
-require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local lgutils = require 'liblgutils'
 local mysplit = require 'Q/UTILS/lua/mysplit'
@@ -11,31 +10,14 @@ tests.t1 = function()
   print("Test 1 of test_import completed")
 end
 tests.t2 = function()
+  -- create a vector x which will get over-written by import
+  x = Q.const({ val = 2, qtype = "F4", len = 3 }):eval()
+  assert(x:num_elements() == 3)
+  assert(x:qtype() == "F4")
   local new_meta_dir = "/home/subramon/local/Q/TEST_IMPORT/meta/"
   local new_data_dir = "/home/subramon/local/Q/TEST_IMPORT/data/"
-  local tbsp = lgutils.import_tbsp(new_meta_dir, new_data_dir)
-  assert(type(tbsp) == "number")
-  assert(tbsp == 1)
+  Q.import(new_meta_dir, new_data_dir)
 
-  local oldpath = os.getenv("LUA_PATH")
-  local T = mysplit(oldpath, ";")
-  local newpath = new_meta_dir .. "/?.lua;" .. table.concat(T, ";") .. ";;"
-  package.path = newpath
-  --[[
-  print(oldpath)
-  print(newpath)
-  local foo = require 'foo'
-  assert(type(foo) == "function")
-  assert(foo(2) == 4)
-  -- contents of foo.lua shown below
-print("Hello World")
-local function foo(x)
-  return x * x
-end
-return foo
-  --]]
-  -- g_tbsp = tbsp
-  require 'q_meta'
   assert(type(x) == "lVector")
   local max_num_in_chunk = get_max_num_in_chunk()
   local len = 2 * max_num_in_chunk + 3 

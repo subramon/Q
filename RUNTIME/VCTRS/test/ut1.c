@@ -56,7 +56,7 @@ main(
   int len = strlen(q_root) + strlen("/meta/") + 16;
   buf = malloc(len);
   sprintf(buf, "%s/meta", q_root); 
-  strcpy(g_meta_dir_root[0], buf); 
+  strcpy(g_meta_dir_root, buf); 
   sprintf(buf, "%s/data", q_root); 
   strcpy(g_data_dir_root[0], buf); 
   // STOP: Fake configs 

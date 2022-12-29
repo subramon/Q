@@ -45,22 +45,20 @@ init_globals(
   g_chnk_hmap = malloc(n * sizeof(chnk_rs_hmap_t));
 
   g_data_dir_root = malloc(n * sizeof(char *));
-  g_meta_dir_root = malloc(n * sizeof(char *));
   g_tbsp_name     = malloc(n * sizeof(char *));
 
   memset(g_vctr_hmap,     0, n * sizeof(vctr_rs_hmap_t));
   memset(g_chnk_hmap,     0, n * sizeof(chnk_rs_hmap_t));
   memset(g_data_dir_root, 0, n * sizeof(char *));
-  memset(g_meta_dir_root, 0, n * sizeof(char *));
   memset(g_tbsp_name,     0, n * sizeof(char *));
 
+  g_meta_dir_root = malloc(sizeof(char) * (Q_MAX_LEN_DIR_NAME+1));
+  memset(g_meta_dir_root, 0, (sizeof(char) * (Q_MAX_LEN_DIR_NAME+1)));
   for ( int i = 0; i < n; i++ ) { 
     g_data_dir_root[i] = malloc(sizeof(char) * (Q_MAX_LEN_DIR_NAME+1));
-    g_meta_dir_root[i] = malloc(sizeof(char) * (Q_MAX_LEN_DIR_NAME+1));
     g_tbsp_name[i]     = malloc(sizeof(char) * (Q_MAX_LEN_DIR_NAME+1));
 
     memset(g_data_dir_root[i], 0, (sizeof(char) * (Q_MAX_LEN_DIR_NAME+1)));
-    memset(g_meta_dir_root[i], 0, (sizeof(char) * (Q_MAX_LEN_DIR_NAME+1)));
     memset(g_tbsp_name[i]    , 0, (sizeof(char) * (Q_MAX_LEN_DIR_NAME+1)));
   }
 

@@ -1,3 +1,7 @@
+-- Note that this is not the same as math.hypot() in Python
+-- --[[
+-- https://stackoverflow.com/questions/58397779/why-is-sqrtxx-yy-math-hypotx-y-in-python-3-8
+-- --]]
 local ffi     = require 'ffi'
 local cutils  = require 'libcutils'
 local cVector = require 'libvctr'
@@ -24,14 +28,14 @@ return function (
   subs.max_num_in_chunk = f1:max_num_in_chunk()
   assert(f1:max_num_in_chunk() == f2:max_num_in_chunk())
 
-  local f3_qtype = promote(f1_qtype, f2_qtype)
+  local f3_qtype = "F8"
   if ( optargs ) then
     assert(type(optargs) == "table")
     if ( optargs.f3_qtype ) then
       f3_qtype = optargs.f3_qtype
     end
   end
-  assert(is_in(f3_qtype, { "I1", "I2", "I4", "I8", "F4", "F8", }))
+  assert(is_in(f3_qtype, { "F4", "F8", }))
 
   subs.fn = operator .. "_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
@@ -50,12 +54,11 @@ return function (
 
   -- following is to stop gcc warning about passing bool to int8
   subs.f3_for_ispctype = subs.f3_ctype
-  if ( subs.f3_ctype == "bool" ) then subs.f3_for_ispctype = "int8_t" end
   --===============
   subs.cargs = nil
   subs.cst_cargs = ffi.NULL
 
-  subs.code = "c = a / b; "
+  subs.code = "c = sqrt(a*a+b*b); "
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"

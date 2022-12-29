@@ -44,8 +44,10 @@ cd ~/Q/OPERATORS/F1F2OPF3/test/
 qjit test_concat.lua
 qjit test_vveq.lua
 qjit test_vvsub.lua
+qjit test_vvadd.lua # Does vvmul, vvdiv as well 
 qjit test_repeater.lua
 qjit test_logical_op.lua
+qjit test_register_hypot.lua
 
 cd ~/Q/OPERATORS/SORT1/test/
 qjit test_sort.lua

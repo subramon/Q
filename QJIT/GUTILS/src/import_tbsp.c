@@ -13,7 +13,7 @@
 extern vctr_rs_hmap_t *g_vctr_hmap;
 extern chnk_rs_hmap_t *g_chnk_hmap;
 
-extern char **g_meta_dir_root;
+extern char *g_meta_dir_root;
 extern char **g_data_dir_root;
 
 int
@@ -42,33 +42,31 @@ import_tbsp(
   } 
   q_data_dir_root = realpath(in_q_data_dir_root, NULL);
   
+  // check that imported tablespace does not clash with default 
+  if ( strcmp(q_meta_dir_root, g_meta_dir_root) == 0 )  { go_BYE(-1); }
   // Check that this q_root is a new one 
   for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
-    if ( strcmp(q_meta_dir_root, g_meta_dir_root[i]) == 0 )  { go_BYE(-1); }
     if ( strcmp(q_data_dir_root, g_data_dir_root[i]) == 0 )  { go_BYE(-1); }
   }
   // Find a spot to put this in
   int tbsp = -1;
   for ( int i = 0; i<  Q_MAX_NUM_TABLESPACES; i++ ) { 
-    if ( g_meta_dir_root[i][0] ==  '\0' ) { 
       if ( g_data_dir_root[i][0] !=  '\0' ) { go_BYE(-1); }
       tbsp = i; break; 
     }
   }
   if ( tbsp < 0 ) { go_BYE(-1); } // no space
   //-- Put it in an empty  spot
-  if ( strlen(in_q_meta_dir_root) >= Q_MAX_LEN_DIR_NAME ) { go_BYE(-1); }
   if ( strlen(in_q_data_dir_root) >= Q_MAX_LEN_DIR_NAME ) { go_BYE(-1); }
-  strcpy(g_meta_dir_root[tbsp], in_q_meta_dir_root);
   strcpy(g_data_dir_root[tbsp], in_q_data_dir_root);
   //-------------------------------
   printf(">>>>>>>>>>>> IMPORTING TABLESPACE ============\n");
   status = vctr_rs_hmap_unfreeze(&g_vctr_hmap[tbsp], 
-        g_meta_dir_root[tbsp],
+        q_meta_dir_root,
         "_vctr_meta.csv", "_vctr_bkts.bin", "_vctr_full.bin");
   cBYE(status);
   status = chnk_rs_hmap_unfreeze(&g_chnk_hmap[tbsp], 
-        g_meta_dir_root[tbsp],
+        q_meta_dir_root,
         "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin");
   cBYE(status);
   //-----------------------------------

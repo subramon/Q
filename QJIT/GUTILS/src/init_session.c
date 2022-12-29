@@ -56,11 +56,11 @@ init_session(
   if ( g_restore_session ) { 
     printf(">>>>>>>>>>>> RESTORING SESSION ============\n");
     status = vctr_rs_hmap_unfreeze(&g_vctr_hmap[tbsp], 
-        g_meta_dir_root[tbsp],
+        g_meta_dir_root,
         "_vctr_meta.csv", "_vctr_bkts.bin", "_vctr_full.bin");
     cBYE(status);
     status = chnk_rs_hmap_unfreeze(&g_chnk_hmap[tbsp], 
-        g_meta_dir_root[tbsp],
+        g_meta_dir_root,
         "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin");
     cBYE(status);
     //-----------------------------------
@@ -93,9 +93,9 @@ init_session(
     cBYE(status);
 
     rmtree(g_data_dir_root[tbsp]);
-    rmtree(g_meta_dir_root[tbsp]);
+    rmtree(g_meta_dir_root);
     status = mkdir(g_data_dir_root[tbsp], 0744); cBYE(status);
-    status = mkdir(g_meta_dir_root[tbsp], 0744); cBYE(status);
+    status = mkdir(g_meta_dir_root, 0744); cBYE(status);
     printf("<<<<<<<<<<<< STARTED  NEW SESSION ============\n");
   }
 

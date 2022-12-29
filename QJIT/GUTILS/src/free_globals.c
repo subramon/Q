@@ -51,17 +51,12 @@ free_globals(
       free_if_non_null(g_data_dir_root[i]);
     }
   }
-  if ( g_meta_dir_root != NULL ) { 
-    for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
-      free_if_non_null(g_meta_dir_root[i]);
-    }
-  }
+  free_if_non_null(g_meta_dir_root);
   if ( g_tbsp_name != NULL ) { 
     for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
       free_if_non_null(g_tbsp_name[i]);
     }
   }
-  free_if_non_null(g_meta_dir_root);
   free_if_non_null(g_data_dir_root);
   free_if_non_null(g_tbsp_name);
 

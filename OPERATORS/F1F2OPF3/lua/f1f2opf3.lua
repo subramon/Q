@@ -62,7 +62,6 @@ end
 T.vvneq = vvneq
 require('Q/q_export').export('vvneq', vvneq)
     
---[===[ TODO P1 Need to add all the rest of these back after testing 
 local function vvadd(x, y, optargs)
   local doc_string = [[ Signature: Q.vvadd(x, y, opt_optargs)
   -- This operator performs vvadd of x and y
@@ -127,6 +126,7 @@ end
 T.vvdiv = vvdiv
 require('Q/q_export').export('vvdiv', vvdiv)
     
+--[===[ TODO P1 Need to add all the rest of these back after testing 
 local function vvrem(x, y, optargs)
   local doc_string = [[ Signature: Q.vvrem(x, y, opt_optargs)
   -- This operator performs vvrem of x and y

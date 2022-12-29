@@ -88,7 +88,7 @@ read_configs(
   if ( strlen(C.meta_dir_root) >= Q_MAX_LEN_DIR_NAME ) { go_BYE(-1); } 
   // TODO P0 Use realpath
   strcpy(g_data_dir_root[tbsp], C.data_dir_root);
-  strcpy(g_meta_dir_root[tbsp], C.meta_dir_root);
+  strcpy(g_meta_dir_root, C.meta_dir_root);
 
   g_mem_allowed = C.mem_allowed * 1024 * 1048576; // convert GBytes to bytes
   g_dsk_allowed = C.dsk_allowed * 1024 * 1048576; // convert GBytes to bytes

@@ -810,11 +810,9 @@ static int l_vctr_rehydrate( lua_State *L)
   if ( !is_key )  { go_BYE(-1); } 
   uqid = (uint32_t)itmp;
   //-------------------------------------------
-  // TODO TODO P0 FIX THIS ONE 
   status = get_int_from_tbl(L, 1, "tbsp", &is_key, &itmp); cBYE(status);
   if ( !is_key )  { go_BYE(-1); } 
   tbsp = (uint32_t)itmp;
-  printf("cVector: tbsp = %d \n", tbsp); 
   //-------------------------------------------
 
   ptr_v = (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
