@@ -47,7 +47,6 @@ return function (
   subs.chunk_size = 1024 -- TODO experiment with this 
 
   subs.ptr_to_sclr = ffi.cast(subs.cast_s1_as, s1:to_data())
-  print("Scalar in specializer = ", subs.ptr_to_sclr[0])
 
   subs.code = 'c = (uint64_t)a >> b;'
   subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"

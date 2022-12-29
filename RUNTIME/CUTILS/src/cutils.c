@@ -158,6 +158,26 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_cutils_mkstemp( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  const char *const template = luaL_checkstring(L, 1);
+  if ( template == NULL ) { go_BYE(-1); } 
+  char * temp_file_name = strdup(template); 
+  int fd = mkstemp(temp_file_name); 
+  if ( fd < 0 ) { go_BYE(-1); }
+  close(fd); 
+  lua_pushstring(L, temp_file_name);
+  free_if_non_null(temp_file_name);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
 //----------------------------------------
 static int l_cutils_makepath( 
     lua_State *L
@@ -616,6 +636,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "is_qtype",     l_cutils_is_qtype },
     { "makepath",    l_cutils_makepath },
     { "mk_file",     l_cutils_mk_file },
+    { "mkstemp",     l_cutils_mkstemp },
     { "num_lines",   l_cutils_num_lines },
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
@@ -643,6 +664,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },
     { "mk_file",     l_cutils_mk_file },
+    { "mkstemp",     l_cutils_mkstemp },
     { "num_lines",   l_cutils_num_lines },
     { "omp_get_num_procs",   l_cutils_omp_get_num_procs },
     { "quote_str",   l_cutils_quote_str },

@@ -17,7 +17,8 @@ vctr_persist(
     )
 {
   int status = 0;
-  if ( tbsp != 0 ) { go_BYE(-1); } 
+  // nothing to do for vectors in other tablespaces
+  if ( tbsp != 0 ) { goto BYE; } 
   bool is_found; uint32_t where_found = ~0;
   vctr_rs_hmap_key_t key = vctr_uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
