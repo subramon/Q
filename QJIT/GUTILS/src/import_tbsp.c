@@ -53,7 +53,6 @@ import_tbsp(
   for ( int i = 0; i<  Q_MAX_NUM_TABLESPACES; i++ ) { 
       if ( g_data_dir_root[i][0] !=  '\0' ) { go_BYE(-1); }
       tbsp = i; break; 
-    }
   }
   if ( tbsp < 0 ) { go_BYE(-1); } // no space
   //-- Put it in an empty  spot
