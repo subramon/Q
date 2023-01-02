@@ -14,8 +14,8 @@ tests.t2 = function()
   x = Q.const({ val = 2, qtype = "F4", len = 3 }):eval()
   assert(x:num_elements() == 3)
   assert(x:qtype() == "F4")
-  local new_meta_dir = "/home/subramon/local/Q/TEST_IMPORT/meta/"
-  local new_data_dir = "/home/subramon/local/Q/TEST_IMPORT/data/"
+  local new_meta_dir = "./TEST_IMPORT/meta/"
+  local new_data_dir = "./TEST_IMPORT/data/"
   Q.import(new_meta_dir, new_data_dir)
 
   assert(type(x) == "lVector")
@@ -32,5 +32,5 @@ tests.t2 = function()
   print("Test 2 of test_import completed")
 end
 
--- WORKS tests.t1()
+tests.t1()
 tests.t2()

@@ -1,19 +1,11 @@
-# make CFLAGS=-DUSE_GLOBALS=1
 
 CC=gcc
 
-# use QC_FLAGS
-# QCFLAGS := -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align 
-# CFLAGS += -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings 
-# CFLAGS += -Wunused-variable -Wunused-parameter -Wno-pedantic 
-# CFLAGS += -Wno-unused-label 
-# CFLAGS := -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined 
-# CFLAGS += -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith 
-# CFLAGS += -Wmissing-declarations -Wredundant-decls -Wnested-externs 
-# CFLAGS += -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings 
-# CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn 
-# CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
-# CFLAGS += -Wduplicated-branches -Wrestrict
+CFLAGS := -fsanitize=address 
+CFLAGS += -fno-omit-frame-pointer
+
+LDFLAGS := -static-libasan # for address sanitizer
+LDFLAGS += -fsanitize=address 
 
 # Why are we depending on print and load csv?
 INCS := -I../inc/ 
@@ -46,7 +38,7 @@ SRCS +=	../../../UTILS/src/cat_to_buf.c
 OBJS = $(SRCS:.c=.o)
 
 .c.o : 
-	$(CC) -c -o $@ $< ${QC_FLAGS} ${DFLAGS} $(INCS) -DGLOBALS
+	$(CC) -c -o $@ $< ${QC_FLAGS} ${CFLAGS} $(INCS) -DGLOBALS
 # GLOBALS needed for g_mem_used
 
 CGUTILS_SO = ${Q_ROOT}/lib/libcgutils.so
@@ -55,5 +47,5 @@ ${CGUTILS_SO} :
 	make -C ../../../QJIT/GUTILS/
 
 libcmem.so:   ${OBJS} 
-	$(CC) ${OBJS} -shared -o libcmem.so ${CGUTILS_SO}
-	cp libcmem.so ${Q_ROOT}/lib/libcmem.so
+	$(CC) ${OBJS} -shared -o libcmem.so ${CGUTILS_SO} ${LDFLAGS}
+	cp libcmem.so ${Q_ROOT}/lib/libcmem.so 

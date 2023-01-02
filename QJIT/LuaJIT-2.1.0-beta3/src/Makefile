@@ -708,6 +708,9 @@ include Makefile.dep
 
 RS_LIBS := -lpthread
 RS_LIBS += -levent
+# TODO TODO P1 WARNING!! Take out asan for performance 
+RS_LIBS += -static-libasan
+RS_LIBS += -fsanitize=address
 RS_LIBS += ${Q_ROOT}/lib/libqjitaux.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap_vctr.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap_chnk.so 

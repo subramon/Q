@@ -7,6 +7,12 @@ INCS += -I../../TMPL_FIX_HASHMAP/inc/
 INCS += -I../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
 INCS += -I../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
 
+CFLAGS := -fsanitize=address 
+CFLAGS += -fno-omit-frame-pointer
+
+LDFLAGS := -static-libasan # for address sanitizer
+LDFLAGS += -fsanitize=address 
+
 QJIT_AUX_SO  = libqjitaux.so
 EXT_QJIT_AUX_SO = ${Q_ROOT}/lib/${QJIT_AUX_SO}
 
@@ -71,7 +77,7 @@ ALTOBJS = $(ALTSRCS:.c=.o)
 
 
 .c.o : 
-	$(CC) -c -o $@ $< ${QC_FLAGS} ${DFLAGS} $(INCS) 
+	$(CC) -c -o $@ $< ${QC_FLAGS} ${CFLAGS} $(INCS) 
 
 ${MYSO} : ${OBJS}
 	gcc -shared ${OBJS} -o ${MYSO} ${RS_LIBS} 
@@ -89,7 +95,7 @@ ${EXT_QJIT_AUX_SO} : ${QJIT_AUX_SO}
 	cp ${QJIT_AUX_SO} ${EXT_QJIT_AUX_SO}
 
 ${ALTSO} : ${ALTOBJS} ${UTILS_SO}
-	gcc -shared ${ALTOBJS}  ${UTILS_SO} -o ${ALTSO} ${RS_LIBS}
+	gcc -shared ${ALTOBJS}  ${UTILS_SO} -o ${ALTSO} ${RS_LIBS} ${LDFLAGS}
 
 ${EXTALTSO} : ${ALTSO}
 	cp ${ALTSO} ${EXTALTSO}

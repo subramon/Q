@@ -11,9 +11,11 @@ CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn
 CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
 CFLAGS += -Wduplicated-branches -Wrestrict
 
-# CFLAGS += -fsanitize=address -fno-omit-frame-pointer 
-# CFLAGS += -fsanitize=undefined 
-# CFLAGS +=  -static-libasan # for address sanitizer
+CFLAGS += -fsanitize=address 
+CFLAGS += -fno-omit-frame-pointer
+
+LDFLAGS := -static-libasan # for address sanitizer
+LDFLAGS += -fsanitize=address 
 
 DFLAGS = -g -DDEBUG 
 # DFLAGS = -O4
@@ -133,7 +135,7 @@ core_libvctr.so :  ${OBJS} \
 	${GUTILS_SO}  \
 	${UTILS_SO} 
 	gcc ${OBJS}  \
-	-shared -o core_libvctr.so \
+	-shared -o core_libvctr.so ${LDFLAGS} \
 	${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${GUTILS_SO} ${UTILS_SO} 
 	cp core_libvctr.so ${Q_ROOT}/lib/
 #-------------------------------------------
@@ -160,7 +162,7 @@ ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so
 	${TMPL_HMAP_SO} \
 	${UTILS_SO} \
 	${GUTILS_SO} \
-	-o ut1  -lpthread
+	-o ut1  -lpthread ${LDFLAGS}
 #-------------------------------------------
 ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST2_OBJS} -o ut2 \
@@ -170,7 +172,7 @@ ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so
 	${TMPL_HMAP_SO} \
 	${UTILS_SO} \
 	${GUTILS_SO} \
-	-lm -lpthread
+	-lm -lpthread ${LDFLAGS}
 #-------------------------------------------
 
 

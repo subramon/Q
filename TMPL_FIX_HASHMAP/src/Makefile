@@ -1,20 +1,10 @@
 CC = gcc
 
-CFLAGS := -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align 
-CFLAGS += -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings 
-CFLAGS += -Wunused-variable -Wunused-parameter -Wno-pedantic 
-CFLAGS += -Wno-unused-label 
-# CFLAGS := -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined 
-CFLAGS += -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith 
-CFLAGS += -Wmissing-declarations -Wredundant-decls -Wnested-externs 
-CFLAGS += -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings 
-CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn 
-CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
-CFLAGS += -Wduplicated-branches -Wrestrict
+CFLAGS := -fsanitize=address 
+CFLAGS += -fno-omit-frame-pointer
 
-DFLAGS = -g -DDEBUG 
-# DFLAGS = -O4
-# Add -pg for grpof 
+LDFLAGS := -static-libasan # for address sanitizer
+LDFLAGS += -fsanitize=address 
 
 INCS := -I../inc/ 
 INCS += -I../../UTILS/inc/
@@ -71,10 +61,10 @@ MERGE_SRCS := ../test/test_merge.c
 MERGE_OBJS = $(MERGE_SRCS:.c=.o)
 
 .c.o : 
-	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
+	$(CC) -c -o $@ $< ${QC_FLAGS} ${CFLAGS} $(INCS) 
 
 libhmap.so: ${OBJS} 
-	gcc  ${OBJS} -shared -lm -o libhmap.so  -ldl
+	gcc  ${OBJS} -shared -lm -o libhmap.so  -ldl ${LDFLAGS}
 
 
 ${EXTSO} : libhmap.so
@@ -82,18 +72,20 @@ ${EXTSO} : libhmap.so
 
 libhmap_test.so: ${HMAP_OBJS} ${CUSTOM_OBJS}  
 	gcc  ${HMAP_OBJS} ${CUSTOM_OBJS} ${INCS} -shared -lm \
-		-o libhmap_test.so libhmap.so  -ldl 
+		-o libhmap_test.so \
+		libhmap.so  -ldl ${LDFLAGS}
 
 test1 : libhmap.so libhmap_test.so ${TEST_OBJS} ../inc/rs_hmap_struct.h
-	gcc ${TEST_OBJS} libhmap_test.so libhmap.so -o test1  -ldl
+	gcc ${TEST_OBJS} libhmap_test.so libhmap.so -o test1   \
+		-ldl ${LDFLAGS}
 
 test_merge : libhmap.so libhmap_test.so ${MERGE_OBJS}
-	gcc  ${MERGE_OBJS} libhmap_test.so libhmap.so -o test_merge -ldl
+	gcc  ${MERGE_OBJS} libhmap_test.so libhmap.so -o test_merge -ldl ${LDFLAGS}
 
 test_fastrem : ./test/test_fastrem.c 
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_fastrem.c \
 	  src/get_time_usec.c \
-	-o test_fastrem
+	-o test_fastrem ${LDFLAGS} 
 
 clean:
 	rm -f *.o test_hmap *.so ./src/*.o ../test/*.o \

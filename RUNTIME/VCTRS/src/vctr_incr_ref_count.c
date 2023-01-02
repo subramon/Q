@@ -14,7 +14,9 @@ vctr_incr_ref_count(
   int status = 0;
   if ( where_found >= g_vctr_hmap[tbsp].size ) { go_BYE(-1); }
   if ( g_vctr_hmap[tbsp].bkts[where_found].key == 0 ) { go_BYE(-1); }
+  if ( tbsp == 0 ) { 
   if ( g_vctr_hmap[tbsp].bkts[where_found].val.ref_count == 0 ) { go_BYE(-1); }
+  }
   g_vctr_hmap[tbsp].bkts[where_found].val.ref_count++;
 BYE:
   return status;

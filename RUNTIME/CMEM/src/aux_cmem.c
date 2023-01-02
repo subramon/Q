@@ -2,7 +2,7 @@
 #include "cmem_consts.h"
 #include "cmem_struct.h"
 #include "aux_cmem.h"
-#define USE_GLOBALS // TODO THINK ABOUT THIS ONE 
+#define USE_GLOBALS // TODO P2 THINK ABOUT THIS ONE 
 #ifdef USE_GLOBALS
 #include "mod_mem_used.h"
 #endif

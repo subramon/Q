@@ -1,19 +1,11 @@
 CC=gcc
 
-CFLAGS := -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align 
-CFLAGS += -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings 
-CFLAGS += -Wunused-variable -Wunused-parameter -Wno-pedantic 
-CFLAGS += -Wno-unused-label 
-# CFLAGS := -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined 
-CFLAGS += -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith 
-CFLAGS += -Wmissing-declarations -Wredundant-decls -Wnested-externs 
-CFLAGS += -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings 
-CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn 
-CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
-CFLAGS += -Wduplicated-branches -Wrestrict
+CFLAGS := -fsanitize=address 
+CFLAGS += -fno-omit-frame-pointer
 
-DFLAGS = -g -DDEBUG 
-# DFLAGS = -O4
+LDFLAGS := -static-libasan # for address sanitizer
+LDFLAGS += -fsanitize=address 
+
 # Add -pg for grpof 
 
 INCS += -I./inc/ 
@@ -95,7 +87,7 @@ CUSTOM_SRCS +=	./src/rsx_set_hash.c
 CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
 
 .c.o : 
-	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
+	$(CC) -c -o $@ $< ${QC_FLAGS} ${CFLAGS} $(INCS) 
 
 
 
@@ -103,12 +95,12 @@ ${EXTSO} : ${MYSO}
 	cp ${MYSO} ${EXTSO}
 
 libhmap_${TMPL}.so: ${OBJS} ${CUSTOM_OBJS}   ./inc/*.h 
-	gcc  ${CFLAGS} ${DFLAGS} ${OBJS} ${CUSTOM_OBJS} \
-	${INCS} -shared -lm -o libhmap_${TMPL}.so  -ldl
+	gcc  ${QC_FLAGS} ${CFLAGS} ${OBJS} ${CUSTOM_OBJS} \
+	${INCS} -shared -lm -o libhmap_${TMPL}.so  -ldl ${LDFLAGS}
 
 test_${TMPL} : libhmap_${TMPL}.so ./test/test_${TMPL}.c 
-	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_${TMPL}.c \
-	libhmap_${TMPL}.so -o test_${TMPL} -ldl
+	gcc  ${QC_FLAGS} ${CFLAGS} ${INCS} ./test/test_${TMPL}.c \
+	libhmap_${TMPL}.so -o test_${TMPL} -ldl ${LDFLAGS}
 
 # TODO Need to delete INCS2 as well.
 clean:

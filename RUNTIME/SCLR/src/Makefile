@@ -8,6 +8,12 @@ INCS += -I../../CMEM/inc
 INCS += -I/usr/include/lua5.1 
 INCS += -I../../../QJIT/GUTILS/inc 
 
+CFLAGS := -fsanitize=address 
+CFLAGS += -fno-omit-frame-pointer
+
+LDFLAGS := -static-libasan # for address sanitizer
+LDFLAGS += -fsanitize=address 
+
 EXTSO = ${Q_ROOT}/lib/libsclr.so
 
 ${EXTSO} : libsclr.so 
@@ -52,7 +58,7 @@ EXT_SRC += ../../CMEM/src/aux_cmem.c
 EXT_OBJ = $(EXT_SRC:.c=.o)
 
 .c.o :
-	$(CC) -c -o $@ $< $(QC_FLAGS)  $(INCS)
+	$(CC) -c -o $@ $< $(QC_FLAGS) ${CFLAGS} $(INCS)
 clean:
 	rm -f *.so ${EXT_OBJ} ${OBJ} _* ${GEN_SRC} ${EXTSO} 
 
@@ -62,7 +68,8 @@ ${CGUTILS_SO} :
 	make -C ../../../QJIT/GUTILS/
 
 libsclr.so:  ${GEN_SRC} ${EXT_OBJ} ${OBJ} outer_eval_cmp.c 
-	gcc  ${EXT_OBJ} ${OBJ} -shared -o libsclr.so ${CGUTILS_SO}
+	gcc  ${EXT_OBJ} ${OBJ} -shared \
+		-o libsclr.so ${CGUTILS_SO} ${LDFLAGS} 
 
 #------------------------------------------------------
 _eval_arith.c: gen_arith.lua

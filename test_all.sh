@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+# For address sanitizer set -e
 # TODO P2 
 # This is a very clumsy script. Should be replaced by testrunner
 if [ "$LUA_PATH"  == "" ]; then echo "ERROR: source setup.sh"; exit 1; fi
