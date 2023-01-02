@@ -8,6 +8,8 @@ test -d $Q_ROOT
 rm -f $Q_ROOT/csos/*.so
 rm -f $Q_ROOT/lib/*.so
 
+test -f $Q_ROOT/config/q_config.lua
+
 test -d $Q_SRC_ROOT
 find $Q_SRC_ROOT -name "*.o" -print | xargs rm  -f 
 find $Q_SRC_ROOT -name "*.so" -print | xargs rm  -f

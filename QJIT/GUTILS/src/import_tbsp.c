@@ -50,11 +50,12 @@ import_tbsp(
   }
   // Find a spot to put this in
   int tbsp = -1;
-  for ( int i = 0; i<  Q_MAX_NUM_TABLESPACES; i++ ) { 
-      if ( g_data_dir_root[i][0] !=  '\0' ) { go_BYE(-1); }
+  for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) {
+    if ( g_data_dir_root[i][0] ==  '\0' ) { 
       tbsp = i; break; 
+    }
   }
-  if ( tbsp < 0 ) { go_BYE(-1); } // no space
+  if ( tbsp <= 0 ) { go_BYE(-1); } // no space
   //-- Put it in an empty  spot
   if ( strlen(in_q_data_dir_root) >= Q_MAX_LEN_DIR_NAME ) { go_BYE(-1); }
   strcpy(g_data_dir_root[tbsp], in_q_data_dir_root);

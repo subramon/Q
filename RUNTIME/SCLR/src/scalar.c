@@ -205,6 +205,35 @@ BYE:
        y = x;  \
 }
 
+static int l_sclr_set_name( lua_State *L) {
+  int status = 0;
+
+  if ( lua_gettop(L) != 2 ) { WHEREAMI; goto BYE; }
+  SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
+  if ( !lua_isstring(L, 2) ) { go_BYE(1); } 
+  const char * const name = luaL_checkstring(L, 2); 
+  strncpy(ptr_sclr->name, name, 15); // 
+  lua_pushboolean(L, true); 
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+static int l_sclr_name( lua_State *L) {
+  int status = 0;
+
+  if ( lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
+  SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
+  lua_pushstring(L, ptr_sclr->name); 
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
 static int l_sclr_abs( lua_State *L) {
   int status = 0;
 
@@ -563,6 +592,24 @@ BYE:
   return 2;
 }
 
+static int l_sclr_free( lua_State *L) 
+{
+  int status = 0;
+  SCLR_REC_TYPE *ptr_sclr = NULL;
+  if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
+  ptr_sclr = (SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
+  if ( ptr_sclr == NULL ) { go_BYE(-1); }
+  if ( ptr_sclr->name[0] != '\0' ) { 
+    printf("Destructor for %s \n", ptr_sclr->name); 
+  }
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
 //----------------------------------------
 
 #include "outer_eval_cmp.c"
@@ -570,14 +617,17 @@ BYE:
 #include "_outer_eval_arith.c"
 //-----------------------
 static const struct luaL_Reg sclr_methods[] = {
+    { "__gc", l_sclr_free },
     { "abs", l_sclr_abs },
     { "conv", l_sclr_conv },
+    { "name", l_sclr_name },
     { "to_str", l_sclr_to_str },
     { "to_num", l_sclr_to_num },
     { "to_cmem", l_sclr_to_cmem },
     { "to_data", l_sclr_to_data },
     { "qtype", l_qtype },
     { "reincarnate", l_sclr_reincarnate },
+    { "set_name", l_sclr_set_name },
     { NULL,          NULL               },
 };
  
@@ -592,10 +642,12 @@ static const struct luaL_Reg sclr_functions[] = {
     { "leq", l_sclr_leq },
     { "lt", l_sclr_lt },
     { "mul", l_sclr_mul },
+    { "name", l_sclr_name },
     { "neq", l_sclr_neq },
     { "new", l_sclr_new },
     { "qtype", l_qtype },
     { "reincarnate", l_sclr_reincarnate },
+    { "set_name", l_sclr_set_name },
     { "sub", l_sclr_sub },
     { "to_cmem", l_sclr_to_cmem },
     { "to_data", l_sclr_to_data },

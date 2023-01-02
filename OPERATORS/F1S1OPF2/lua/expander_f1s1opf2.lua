@@ -15,6 +15,7 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
   if ( type(sclr) == "number" ) then 
     sclr = Scalar.new(sclr, f1:qtype()) 
   end
+  sclr:set_name("f1s1opf2")
   local subs = assert(spfn(f1, sclr, optargs))
 
 
@@ -24,6 +25,11 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
   local l_chunk_num = 0
   --============================================
   local f2_gen = function(chunk_num)
+    -- IMPORTANT: I still don't fully understand why the following
+    -- is needed. But when I don't put it in there, LuaJIT
+    -- garbage collects the variable "sclr" and my ptr_to_sclr
+    -- is meaingless
+    subs.ptr_to_sclr = ffi.cast(subs.cast_s1_as, sclr:to_data())
     assert(chunk_num == l_chunk_num)
     local buf = assert(cmem.new(
       {size = subs.f2_buf_sz, qtype = subs.f2_qtype}))

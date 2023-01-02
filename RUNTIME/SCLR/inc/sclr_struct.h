@@ -3,6 +3,7 @@
 #include "qtypes.h"
 //START_FOR_CDEF
 typedef struct _sclr_rec_type { 
+  char name[15+1]; // used for debugging. TODO P3 Keep in sync with Scalar.c
   union { 
     bool bl;
 
