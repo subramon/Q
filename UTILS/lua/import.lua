@@ -38,9 +38,11 @@ local function import(new_meta_dir, new_data_dir)
   local newpath = "/tmp/?.lua;" .. table.concat(T, ";") .. ";;"
   package.path = newpath
   -- delete the prefix directory and .lua suffix 
+  local bak_temp_meta_file = temp_meta_file
   temp_meta_file = string.gsub(temp_meta_file, "/tmp/", "")
   temp_meta_file = string.gsub(temp_meta_file, ".lua", "")
   require(temp_meta_file)
+  cutils.unlink(bak_temp_meta_file)
   -- reset the lua path to what it was 
   package.path = oldpath
 

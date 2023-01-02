@@ -186,10 +186,16 @@ local function dfeds_report_prep(datafile, metafile)
 
   return subs
 end
+local datafile 
+if ( arg[1] ) then 
+  datafile = arg[1]
+else
+  datafile = qcfg.q_src_root .. "/TESTS/HMAP/data/data1.csv"
+end 
+
 local infile = qcfg.q_src_root .. "/TESTS/HMAP/doc/dfeds_report.tex"
 local outfile = qcfg.q_src_root .. "/TESTS/HMAP/doc/_dfeds_report.tex"
 local metafile = 'Q/TESTS/HMAP/lua/in_meta'
-local datafile = qcfg.q_src_root .. "/TESTS/HMAP/data/data1.csv"
 local subs = dfeds_report_prep(datafile, metafile)
 assert(type(subs) == "table")
 for k, v in pairs(subs) do 

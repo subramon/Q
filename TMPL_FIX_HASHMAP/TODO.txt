@@ -1,3 +1,5 @@
+TODO P1:  Why does VCTR_HMAP/src/rsx_key_ordr.c contain kv instead of key?
+
 The specialize_one.sh script is hopeless naive but it works for now
 
 For example, I had to change the name of rs_hmap_thaw to rs_hmap_unfreeze

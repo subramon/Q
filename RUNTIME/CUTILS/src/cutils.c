@@ -236,6 +236,21 @@ BYE:
   return 2;
 }
 //----------------------------------------
+static int l_cutils_unlink( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  const char *const file_name = luaL_checkstring(L, 1);
+  status = unlink(file_name); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_cutils_getsize( 
     lua_State *L
     )
@@ -643,6 +658,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "rdtsc",       l_cutils_rdtsc },
     { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
     { "str_qtype_to_str_ispctype", l_cutils_str_qtype_to_str_ispctype },
+    { "unlink",     l_cutils_unlink },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };
@@ -672,6 +688,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "rdtsc",       l_cutils_rdtsc },
     { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
     { "str_qtype_to_str_ispctype", l_cutils_str_qtype_to_str_ispctype },
+    { "unlink",     l_cutils_unlink },
     { "write",       l_cutils_write },
     { NULL,  NULL         }
 };
