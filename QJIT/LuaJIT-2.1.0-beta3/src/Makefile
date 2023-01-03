@@ -709,8 +709,9 @@ include Makefile.dep
 RS_LIBS := -lpthread
 RS_LIBS += -levent
 # TODO TODO P1 WARNING!! Take out asan for performance 
-RS_LIBS += -static-libasan
-RS_LIBS += -fsanitize=address
+# RS_LIBS += -static-libasan
+# RS_LIBS += -fsanitize=address
+# RS_LIBS += -fsanitize=undefined
 RS_LIBS += ${Q_ROOT}/lib/libqjitaux.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap_vctr.so 
 RS_LIBS += ${Q_ROOT}/lib/libhmap_chnk.so 
@@ -731,7 +732,7 @@ $(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP)
 	$(Q)$(TARGET_LD) $(TARGET_ALDFLAGS) \
 		-o $@ $(LUAJIT_O) \
 		$(TARGET_O) $(TARGET_ALIBS) \
-		${RS_LIBS}
+		${RS_LIBS} 
 	$(Q)$(TARGET_STRIP) $@
 	mkdir -p ${Q_ROOT}/bin/
 	cp luajit ${Q_ROOT}/bin/qjit # TODO Improve this 

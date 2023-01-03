@@ -3,7 +3,7 @@ local qcfg       = require 'Q/UTILS/lua/qcfg'
 local exec       = require 'Q/UTILS/lua/exec_and_capture_stdout'
 local is_so_file = require 'Q/UTILS/lua/is_so_file'
 
-local qc_flags   = qcfg.qc_flags
+local qcflags   = qcfg.qcflags
 local q_src_root = qcfg.q_src_root
 
 -- some basic checks
@@ -58,7 +58,7 @@ local function compile_and_link(
   end
   --===============================
   local q_cmd = string.format("gcc -shared %s %s %s %s -o %s %s",
-       qc_flags, str_incs, dotc, str_srcs, sofile, str_libs)
+       qcflags, str_incs, dotc, str_srcs, sofile, str_libs)
   print("q_cmd = ", q_cmd)
   assert(exec(q_cmd), q_cmd)
   assert(cutils.isfile(sofile))

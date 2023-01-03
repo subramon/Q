@@ -1,11 +1,5 @@
 CC = gcc
 
-CFLAGS := -fsanitize=address 
-CFLAGS += -fno-omit-frame-pointer
-
-LDFLAGS := -static-libasan # for address sanitizer
-LDFLAGS += -fsanitize=address 
-
 INCS := -I../inc/ 
 INCS += -I../../UTILS/inc/
 
@@ -61,10 +55,10 @@ MERGE_SRCS := ../test/test_merge.c
 MERGE_OBJS = $(MERGE_SRCS:.c=.o)
 
 .c.o : 
-	$(CC) -c -o $@ $< ${QC_FLAGS} ${CFLAGS} $(INCS) 
+	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
 libhmap.so: ${OBJS} 
-	gcc  ${OBJS} -shared -lm -o libhmap.so  -ldl ${LDFLAGS}
+	gcc  ${OBJS} -shared -lm -o libhmap.so  -ldl ${QLDFLAGS}
 
 
 ${EXTSO} : libhmap.so
@@ -73,19 +67,20 @@ ${EXTSO} : libhmap.so
 libhmap_test.so: ${HMAP_OBJS} ${CUSTOM_OBJS}  
 	gcc  ${HMAP_OBJS} ${CUSTOM_OBJS} ${INCS} -shared -lm \
 		-o libhmap_test.so \
-		libhmap.so  -ldl ${LDFLAGS}
+		libhmap.so  -ldl ${QLDFLAGS}
 
 test1 : libhmap.so libhmap_test.so ${TEST_OBJS} ../inc/rs_hmap_struct.h
-	gcc ${TEST_OBJS} libhmap_test.so libhmap.so -o test1   \
-		-ldl ${LDFLAGS}
+	gcc ${QCFLAGS} ${TEST_OBJS} libhmap_test.so libhmap.so -o test1   \
+		-ldl ${QLDFLAGS}
 
 test_merge : libhmap.so libhmap_test.so ${MERGE_OBJS}
-	gcc  ${MERGE_OBJS} libhmap_test.so libhmap.so -o test_merge -ldl ${LDFLAGS}
+	gcc  ${QCFLAGS} ${MERGE_OBJS} libhmap_test.so libhmap.so -o test_merge \
+		-ldl ${QLDFLAGS}
 
 test_fastrem : ./test/test_fastrem.c 
-	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_fastrem.c \
+	gcc  ${QCFLAGS} ${INCS} ./test/test_fastrem.c \
 	  src/get_time_usec.c \
-	-o test_fastrem ${LDFLAGS} 
+	-o test_fastrem ${QLDFLAGS} 
 
 clean:
 	rm -f *.o test_hmap *.so ./src/*.o ../test/*.o \

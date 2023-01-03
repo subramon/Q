@@ -1,13 +1,5 @@
 CC=gcc
 
-CFLAGS := -fsanitize=address 
-CFLAGS += -fno-omit-frame-pointer
-
-LDFLAGS := -static-libasan # for address sanitizer
-LDFLAGS += -fsanitize=address 
-
-# Add -pg for grpof 
-
 INCS += -I./inc/ 
 INCS += -I../inc/ 
 INCS += -I../../UTILS/inc/
@@ -87,7 +79,7 @@ CUSTOM_SRCS +=	./src/rsx_set_hash.c
 CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
 
 .c.o : 
-	$(CC) -c -o $@ $< ${QC_FLAGS} ${CFLAGS} $(INCS) 
+	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
 
 
@@ -95,12 +87,12 @@ ${EXTSO} : ${MYSO}
 	cp ${MYSO} ${EXTSO}
 
 libhmap_${TMPL}.so: ${OBJS} ${CUSTOM_OBJS}   ./inc/*.h 
-	gcc  ${QC_FLAGS} ${CFLAGS} ${OBJS} ${CUSTOM_OBJS} \
-	${INCS} -shared -lm -o libhmap_${TMPL}.so  -ldl ${LDFLAGS}
+	gcc  ${OBJS} ${CUSTOM_OBJS} \
+	${INCS} -shared -lm -o libhmap_${TMPL}.so  -ldl ${QLDFLAGS}
 
 test_${TMPL} : libhmap_${TMPL}.so ./test/test_${TMPL}.c 
-	gcc  ${QC_FLAGS} ${CFLAGS} ${INCS} ./test/test_${TMPL}.c \
-	libhmap_${TMPL}.so -o test_${TMPL} -ldl ${LDFLAGS}
+	gcc ${QCFLAGS} ${INCS} ./test/test_${TMPL}.c \
+	libhmap_${TMPL}.so -o test_${TMPL} -ldl ${QLDFLAGS}
 
 # TODO Need to delete INCS2 as well.
 clean:

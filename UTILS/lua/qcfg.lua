@@ -10,25 +10,10 @@ qcfg.q_root	= add_trailing_slash(os.getenv("Q_ROOT"))
 assert(cutils.isdir(qcfg.q_src_root))
 assert(cutils.isdir(qcfg.q_root))
 
-if ( not os.getenv("QC_FLAGS") ) then
-  qcfg.qc_flags = [[
--g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align
--Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings
--Wunused-variable -Wunused-parameter -Wno-pedantic
--fopenmp -mavx2 -mfma -Wno-unused-label
--fsanitize=address -fno-omit-frame-pointer
--fsanitize=undefined
--Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith
--Wmissing-declarations -Wredundant-decls -Wnested-externs
--Wshadow -Wcast-qual -Wcast-align -Wwrite-strings
--Wold-style-definition
--Wsuggest-attribute=noreturn
--Wduplicated-cond -Wmisleading-indentation -Wnull-dereference
--Wduplicated-branches -Wrestrict
-  ]]
-else
-  qcfg.qc_flags	= assert(os.getenv("QC_FLAGS"))
-end
+local qcflags = os.getenv("QCFLAGS") 
+assert(type(qcflags) == "string")
+assert(#qcflags > 32) -- some simple check 
+qcfg.qcflags = qcflags
 --==================================
 qcfg.use_ispc = false
 local x = os.getenv("QISPC") 

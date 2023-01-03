@@ -1,12 +1,6 @@
 
 CC=gcc
 
-CFLAGS := -fsanitize=address 
-CFLAGS += -fno-omit-frame-pointer
-
-LDFLAGS := -static-libasan # for address sanitizer
-LDFLAGS += -fsanitize=address 
-
 # Why are we depending on print and load csv?
 INCS := -I../inc/ 
 INCS += -I../../../UTILS/gen_inc/ 
@@ -20,8 +14,6 @@ clean:
 	rm -f *.so *.o _* ${OBJS}
 	rm -f ${Q_ROOT}/lib/libcmem.so
 		
-QC_FLAGS += ${CFLAGS}
-
 SRCS := cmem.c
 SRCS += aux_cmem.c
 SRCS += aux_lua_to_c.c
@@ -38,7 +30,7 @@ SRCS +=	../../../UTILS/src/cat_to_buf.c
 OBJS = $(SRCS:.c=.o)
 
 .c.o : 
-	$(CC) -c -o $@ $< ${QC_FLAGS} ${CFLAGS} $(INCS) -DGLOBALS
+	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) -DGLOBALS
 # GLOBALS needed for g_mem_used
 
 CGUTILS_SO = ${Q_ROOT}/lib/libcgutils.so
@@ -47,5 +39,5 @@ ${CGUTILS_SO} :
 	make -C ../../../QJIT/GUTILS/
 
 libcmem.so:   ${OBJS} 
-	$(CC) ${OBJS} -shared -o libcmem.so ${CGUTILS_SO} ${LDFLAGS}
+	$(CC) ${OBJS} -shared -o libcmem.so ${CGUTILS_SO} ${QLDFLAGS}
 	cp libcmem.so ${Q_ROOT}/lib/libcmem.so 

@@ -177,7 +177,7 @@ GEN_INC_FILES = \
 #--------
 
 .c.o :
-	$(CC) -c -o $@ $< $(QC_FLAGS)  $(INCS)
+	$(CC) -c -o $@ $< $(QCFLAGS)  $(INCS)
 
 SRCS := cat_to_buf.c 
 SRCS += copy_file.c 
@@ -226,7 +226,7 @@ ${EXTSO} : ${MYSO}
 	cp ${MYSO} ${EXTSO}
 
 ${MYSO} : ${GEN_OBJS} ${OBJS} 
-	gcc -shared ${QC_FLAGS} ${Q_LINK_FLAGS} ${INCS} \
+	gcc -shared ${QCFLAGS} ${QLDFLAGS} ${INCS} \
 		${GEN_OBJS} ${OBJS} -o ${MYSO}
 
 clean :

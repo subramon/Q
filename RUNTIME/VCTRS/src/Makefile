@@ -1,26 +1,5 @@
 CC=gcc
 
-CFLAGS := -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align 
-CFLAGS += -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings 
-CFLAGS += -Wunused-variable -Wunused-parameter -Wno-pedantic 
-CFLAGS += -Wno-unused-label 
-CFLAGS += -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith 
-CFLAGS += -Wmissing-declarations -Wredundant-decls -Wnested-externs 
-CFLAGS += -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings 
-CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn 
-CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
-CFLAGS += -Wduplicated-branches -Wrestrict
-
-CFLAGS += -fsanitize=address 
-CFLAGS += -fno-omit-frame-pointer
-
-LDFLAGS := -static-libasan # for address sanitizer
-LDFLAGS += -fsanitize=address 
-
-DFLAGS = -g -DDEBUG 
-# DFLAGS = -O4
-# Add -pg for grpof 
-
 INCS := -I../inc/ 
 INCS += -I../../../UTILS/inc/
 INCS += -I../../CMEM/inc/
@@ -95,7 +74,7 @@ TEST2_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
 TEST2_OBJS = $(TEST2_SRCS:.c=.o)
 
 .c.o : 
-	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
+	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
 #-------------------------------------------
 TMPL_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/src/
@@ -155,24 +134,25 @@ libvctr.so: ${EXT_OBJS} core_libvctr.so cVector.o
 #-------------------------------------------
 ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST1_OBJS} \
-	${INCS} \
+	${QCFLAGS} ${INCS} \
 	core_libvctr.so \
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
 	${TMPL_HMAP_SO} \
 	${UTILS_SO} \
 	${GUTILS_SO} \
-	-o ut1  -lpthread ${LDFLAGS}
+	-o ut1  -lpthread ${QLDFLAGS}
 #-------------------------------------------
 ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST2_OBJS} -o ut2 \
+	${QCFLAGS} ${INCS} \
 	core_libvctr.so \
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
 	${TMPL_HMAP_SO} \
 	${UTILS_SO} \
 	${GUTILS_SO} \
-	-lm -lpthread ${LDFLAGS}
+	-lm -lpthread ${QLDFLAGS}
 #-------------------------------------------
 
 

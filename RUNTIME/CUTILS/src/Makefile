@@ -1,10 +1,4 @@
 
-CFLAGS := -fsanitize=address 
-CFLAGS += -fno-omit-frame-pointer
-
-LDFLAGS := -static-libasan # for address sanitizer
-LDFLAGS += -fsanitize=address 
-
 INCS=-I. \
      	-I../inc/ \
 	-I../../../UTILS/inc/ \
@@ -34,11 +28,11 @@ SRCS += ../../../UTILS/src/rs_mmap.c
 OBJS = $(SRCS:.c=.o)
 
 .c.o : 
-	$(CC) -c -o $@ $< ${QC_FLAGS} ${CFLAGS} $(INCS) 
+	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
 clean:
 	rm -f *.so *.o _* ${OBJS} ${EXTSO}
 		
 libcutils.so:   ${OBJS} 
-	gcc ${OBJS} -shared -o libcutils.so -lgomp ${LDFLAGS}
+	gcc ${OBJS} -shared -o libcutils.so -lgomp ${QLDFLAGS}
 
