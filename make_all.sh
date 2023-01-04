@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+unset LD_PRELOAD 
 if [ "$Q_ROOT" == "" ]; then echo "source setup.sh"; exit 1; fi 
 if [ "$Q_SRC_ROOT" == "" ]; then echo "source setup.sh"; exit 1; fi 
 
@@ -27,4 +28,7 @@ cd $Q_SRC_ROOT/QJIT/LuaJIT-2.1.0-beta3/src; rm -f ./luajit; make
 
 #--- generate specializers
 pushd . ; cd $Q_SRC_ROOT/OPERATORS/F1S1OPF2/lua; make clean && make; popd;
+
+export LD_PRELOAD=/usr/lib/gcc/arm-linux-gnueabihf/8/libasan.so
+
 echo "Q is good to go"

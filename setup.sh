@@ -7,6 +7,7 @@ unset Q_ROOT
 unset QCFLAGS
 unset QLDFLAGS
 unset Q_DATA_DIR
+unset ASAN_FLAGS
 
 export QISPC="false" # TODO P1 Should not be hard coded here
 
@@ -33,12 +34,21 @@ QCFLAGS+=" -Wmissing-declarations -Wredundant-decls -Wnested-externs "
 QCFLAGS+=" -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith "
 QCFLAGS+=" -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings "
 QCFLAGS+=" -Wold-style-definition -Wsuggest-attribute=noreturn "
-# QCFLAGS+="-fsanitize=address -fno-omit-frame-pointer "
-# QCFLAGS+="-fsanitize=undefined"
-# Add -pg for grpof 
 
+# Following should be commented/uncommented depending on 
+# desire to use address sanitizer
+# ASAN_FLAGS=" -fsanitize=address "
+# ASAN_FLAGS+=" -fno-omit-frame-pointer "
+# ASAN_FLAGS+=" -fsanitize=undefined "
+
+
+export ASAN_FLAGS="${ASAN_FLAGS}"
+echo "ASAN_FLAGS: $ASAN_FLAGS"
+
+QCFLAGS+=$ASAN_FLAGS 
 # QLDFLAGS=" -static-libasan" # for address sanitizer
 # QLDFLAGS=" -fsanitize=address -fsanitize=undefined "
+QLDFLAGS=" "
 export QLDFLAGS="${QLDFLAGS}"
 echo "QLDFLAGS: $QLDFLAGS"
 

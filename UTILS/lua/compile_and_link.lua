@@ -57,10 +57,11 @@ local function compile_and_link(
     str_libs = table.concat(libs, " ")
   end
   --===============================
-  local q_cmd = string.format("gcc -shared %s %s %s %s -o %s %s",
+  local q_cmd = string.format("unset LD_PRELOAD; gcc -shared %s %s %s %s -o %s %s",
        qcflags, str_incs, dotc, str_srcs, sofile, str_libs)
   print("q_cmd = ", q_cmd)
   assert(exec(q_cmd), q_cmd)
+  
   assert(cutils.isfile(sofile))
   return true
 end

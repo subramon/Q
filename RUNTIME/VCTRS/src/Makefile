@@ -141,18 +141,17 @@ ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so
 	${TMPL_HMAP_SO} \
 	${UTILS_SO} \
 	${GUTILS_SO} \
-	-o ut1  -lpthread ${QLDFLAGS}
+	-o ut1  -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
 ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST2_OBJS} -o ut2 \
-	${QCFLAGS} ${INCS} \
 	core_libvctr.so \
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
 	${TMPL_HMAP_SO} \
 	${UTILS_SO} \
 	${GUTILS_SO} \
-	-lm -lpthread ${QLDFLAGS}
+	-lm -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
 
 
