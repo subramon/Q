@@ -117,6 +117,9 @@ l_cmem_new(
   qtype_t qtype = get_c_qtype(str_qtype); 
   // This is okay: if ( qtype == Q0 ) { go_BYE(-1); }
   status = cmem_malloc(ptr_cmem, size, qtype, cell_name);
+  if ( ( cell_name != NULL ) && ( *cell_name != '\0' ) ) {
+    printf("CMEM new %s \n", cell_name);
+  }
   cBYE(status);
   return 1;
 BYE:

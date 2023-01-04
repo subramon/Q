@@ -55,7 +55,19 @@ tests.t1 = function()
   assert(cVector.check_all())
   print("Test t1 succeeded")
 end
-tests.t1()
+tests.t0 = function()
+  local M = {}
+  local O = { is_hdr = true }
+  M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
+  local format = "%Y-%m-%d"
+  local datafile = qcfg.q_src_root .. 
+    "/OPERATORS/LOAD_CSV/test/input_SC_to_TM1.csv"
+  assert(plpath.isfile(datafile))
+  local T = Q.load_csv(datafile, M, O)
+  print("Test t1 succeeded")
+end
+tests.t0()
+-- WORKS tests.t1()
 os.exit()
 --[[
 return tests

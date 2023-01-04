@@ -51,7 +51,7 @@ local function compile(
     local q_cmd
     local doto = "/tmp/" .. cutils.basename(srcfile) .. ".o"
     if ( lang == "C" ) then
-      q_cmd = string.format("unset LD_PRELOAD; gcc -c %s %s %s -o %s",
+      q_cmd = string.format("unset LD_PRELOAD && gcc -c %s %s %s -o %s",
          qcflags, str_incs, dotc, doto)
       assert(exec(q_cmd), q_cmd)
     end

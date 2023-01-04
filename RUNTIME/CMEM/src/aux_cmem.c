@@ -15,7 +15,7 @@ cmem_free(
   //  TODO P1 following temporary
   if ( ptr_cmem->is_foreign ) { return status; }
 
-  if ( *ptr_cmem->cell_name == '_' ) {  // TODO P1 FIX 
+  if ( *ptr_cmem->cell_name != '\0' ) {  
     printf("CMEM Freeing %s \n", ptr_cmem->cell_name);
   }
 

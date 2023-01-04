@@ -42,6 +42,7 @@ local n = T1.tcin:num_elements()
 T1.id = Q.seq({len = n, start = 0, by = 1, qtype = "I8"}):eval()
 T2 = {}
 T2.lb = Q.where(T1.id, T1.x):eval()
+T2.lb:eval()
 T2.ub = Q.vshift(T2.lb, 1, Scalar.new(n, T2.lb:qtype())):eval()
 T2.tcin = Q.where(T1.tcin, T1.x):eval() -- delete later 
 T2.dist_loc_i = Q.where(T1.dist_loc_i, T1.x):eval() -- delete later 

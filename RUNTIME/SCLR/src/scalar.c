@@ -599,9 +599,11 @@ static int l_sclr_free( lua_State *L)
   if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
   ptr_sclr = (SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
   if ( ptr_sclr == NULL ) { go_BYE(-1); }
+  /* uncomment for debugging 
   if ( ptr_sclr->name[0] != '\0' ) { 
     printf("Destructor for %s \n", ptr_sclr->name); 
   }
+  */
   lua_pushboolean(L, true);
   return 1;
 BYE:
