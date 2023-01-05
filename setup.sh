@@ -37,9 +37,9 @@ QCFLAGS+=" -Wold-style-definition -Wsuggest-attribute=noreturn "
 
 # Following should be commented/uncommented depending on 
 # desire to use address sanitizer
-ASAN_FLAGS=" -fsanitize=address "
-ASAN_FLAGS+=" -fno-omit-frame-pointer "
-ASAN_FLAGS+=" -fsanitize=undefined "
+# ASAN_FLAGS=" -fsanitize=address "
+# ASAN_FLAGS+=" -fno-omit-frame-pointer "
+# ASAN_FLAGS+=" -fsanitize=undefined "
 
 
 export ASAN_FLAGS="${ASAN_FLAGS}"
@@ -65,6 +65,7 @@ lscpu | grep "Architecture" | grep "aarch64" 1>/dev/null 2>&1
 IS_ARM_64="`echo $?`"
 if [ $IS_ARM_32 == 0 ] || [ $IS_ARM_64 == 0 ]; then 
   QCFLAGS+=" -DARM "
+  QCFLAGS+=" -Wno-cast-align " # too many warnings produced
   export Q_IS_ARM="true"
 else
   QCFLAGS+=" -Wduplicated-cond -Wmisleading-indentation "

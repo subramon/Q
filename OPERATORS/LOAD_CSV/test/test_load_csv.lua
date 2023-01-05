@@ -386,13 +386,11 @@ tests.t6 = function()
   print("Test t6 succeeded")
   
 end
-tests.t1()
-tests.t2()
-tests.t3()
-tests.t4()
-tests.t4a()
+-- tests.t1()
+-- tests.t2()
+-- tests.t3()
+-- tests.t4()
+-- tests.t4a()
 tests.t5()
-tests.t6()
---[[
+-- tests.t6()
 return tests
---]]

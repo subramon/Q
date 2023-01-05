@@ -28,25 +28,6 @@ local function malloc_buffers_for_data(M, max_num_in_chunk)
       end
     end
   end
-  -- print("Created Lua buffers for data ")
-  --=== Make the buffers here accessible to C 
-  local c_data = cmem.new(ffi.sizeof("char *") * #M)
-  c_data = get_ptr(c_data, "char **")
-
-  local nn_c_data = cmem.new(ffi.sizeof("char *") * #M)
-  nn_c_data = get_ptr(nn_c_data, "char **")
-
-  for i, v in ipairs(M) do
-    c_data   [i-1] = ffi.NULL
-    nn_c_data[i-1] = ffi.NULL
-    if ( v.is_load ) then 
-      c_data[i-1]  = get_ptr(l_data[v.name])
-      if ( v.has_nulls ) then
-        nn_c_data[i-1] = get_ptr(nn_l_data[v.name])
-      end
-    end
-  end
-  -- print("Created C buffers for data ")
-  return l_data, nn_l_data, c_data, nn_c_data 
+  return l_data, nn_l_data
 end
 return malloc_buffers_for_data
