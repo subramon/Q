@@ -28,7 +28,7 @@ return function (a, largs)
     assert(chunk_num == l_chunk_num)
     -- allocate new buffer for each chunk because Vector will steal it
     local buf = assert(
-      cmem.new({size = subs.buf_size, qtype = subs.out_qtype}))
+      cmem.new({size = subs.buf_size, qtype = subs.out_qtype, name = "s_to_f_" .. a}))
     assert(buf:stealable(true))
     --=============================
     local lb = subs.max_num_in_chunk * l_chunk_num
@@ -53,6 +53,9 @@ return function (a, largs)
     qc[fn](cbuf, num_elements, cast_cargs, lb)
     record_time(start_time, fn)
     l_chunk_num = l_chunk_num + 1 
+    if ( num_elements < subs.max_num_in_chunk ) then
+      cargs:delete()
+    end
     return num_elements, buf
   end
   -- OLD return lVector{gen = generator, qtype = subs.out_qtype}

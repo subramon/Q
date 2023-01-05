@@ -1,6 +1,7 @@
 require 'Q/UTILS/lua/strict'
 local Q      = require 'Q'
 local Scalar = require 'libsclr'
+local lgutils = require 'liblgutils'
 
 local tests = {}
 tests.t1 = function()
@@ -50,4 +51,6 @@ tests.t1 = function()
   print("Test t1 succeeded")
 end
 tests.t1()
+collectgarbage()
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests

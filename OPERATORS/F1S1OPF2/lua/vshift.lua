@@ -25,7 +25,7 @@ local function vshift(f1, shift_by, newval, optargs )
     -- sync between expected chunk_num and generator's chunk_idx state
     assert(chunk_num == chunk_idx)
     -- print("Requesting chunk " .. chunk_num .. " from " .. f1_name)
-    local f2_buf = assert(cmem.new(subs.bufsz))
+    local f2_buf = assert(cmem.new( { size = subs.bufsz, name = "vshift"}))
     f2_buf:stealable(true)
     f2_buf:zero()
     local num_in_f2 = 0
@@ -40,6 +40,7 @@ local function vshift(f1, shift_by, newval, optargs )
       local num_to_copy = m - shift_by
       if ( num_to_copy == 0 ) then 
         if ( f1_len > 0 ) then f1:unget_chunk(chunk_idx) end 
+        f2_buf:delete() 
         return 0, nil 
       end 
       n_f1_a = num_to_copy

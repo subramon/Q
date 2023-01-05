@@ -9,6 +9,7 @@ local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
+local lgutils  = require 'liblgutils'
 -- TODO P1 Set below to true 
 local test_print  = true -- turn false if you want only load_csv tested
 --=======================================================
@@ -386,11 +387,15 @@ tests.t6 = function()
   print("Test t6 succeeded")
   
 end
--- tests.t1()
--- tests.t2()
--- tests.t3()
--- tests.t4()
--- tests.t4a()
+tests.t1()
+tests.t2()
+tests.t3()
+tests.t4()
+tests.t4a()
 tests.t5()
 -- tests.t6()
-return tests
+-- return tests
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

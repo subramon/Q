@@ -22,6 +22,7 @@ chnk_first(
   int status = 0;
   vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[vctr_where].val);
   vctr_rs_hmap_key_t vctr_uqid = g_vctr_hmap[tbsp].bkts[vctr_where].key;
+  vctr_rs_hmap_val_t vctr_val = g_vctr_hmap[tbsp].bkts[vctr_where].val;
 
   // This function handles case when vector is empty 
   if ( ptr_vctr_val->num_elements != 0 ) { goto BYE; } 
@@ -34,6 +35,7 @@ chnk_first(
   chnk_rs_hmap_key_t chnk_key = 
   { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
   char *l1_mem = NULL;
+  printf("VCTR Malloc of %u for [%s] \n", chnk_size, vctr_val.name);
   status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, chnk_size);
   cBYE(status);
   chnk_rs_hmap_val_t chnk_val;
