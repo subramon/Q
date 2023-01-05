@@ -73,6 +73,7 @@ TEST2_SRCS += ../../../QJIT/GUTILS/src/init_session.c
 TEST2_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
 TEST2_OBJS = $(TEST2_SRCS:.c=.o)
 
+# NOTE: Add -DVERBOSE to following to get messages printed out 
 .c.o : 
 	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 

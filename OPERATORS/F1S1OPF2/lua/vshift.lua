@@ -78,6 +78,7 @@ local function vshift(f1, shift_by, newval, optargs )
         get_ptr(sclr_cmem), subs.width)
         num_in_f2 = num_in_f2 + 1
       end
+      sclr_cmem:delete()
     end
     f1:unget_chunk(chunk_idx)
     --=== STOP : Put in newval in place of missing values

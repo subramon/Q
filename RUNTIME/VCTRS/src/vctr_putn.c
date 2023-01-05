@@ -63,7 +63,9 @@ vctr_putn(
     chnk_rs_hmap_key_t chnk_key = 
     { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
     char *l1_mem = NULL;
-    printf("VCTR Malloc of %u for [%s] \n", chnk_size, vctr_val.name);
+#ifdef VERBOSE
+    printf("VCTR B Malloc of %u for [%s] \n", chnk_size, vctr_val.name);
+#endif
     status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT,
         chnk_size);
     cBYE(status);

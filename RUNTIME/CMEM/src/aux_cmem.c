@@ -14,9 +14,11 @@ cmem_free(
   int status = 0;
   if ( ptr_cmem->is_foreign ) { return status; }
 
+#ifdef VERBOSE
   if ( *ptr_cmem->cell_name != '\0' ) {  
     printf("CMEM Freeing %lld from %s \n", ptr_cmem->size, ptr_cmem->cell_name);
   }
+#endif
 
   memset(ptr_cmem->cell_name, 0, Q_MAX_LEN_CELL_NAME+1); 
   if ( ptr_cmem->data == NULL ) { 
@@ -96,7 +98,9 @@ cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
   memset(ptr_cmem->cell_name, 0, Q_MAX_LEN_CELL_NAME+1); 
   if ( cell_name != NULL ) { 
     strncpy(ptr_cmem->cell_name, cell_name, Q_MAX_LEN_CELL_NAME);
+#ifdef VERBOSE
     printf("CMEM Malloc of %lld  for %s \n", ptr_cmem->size, ptr_cmem->cell_name);
+#endif
   }
   ptr_cmem->is_foreign = false;
 BYE:

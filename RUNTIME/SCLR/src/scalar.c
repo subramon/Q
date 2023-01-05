@@ -54,11 +54,9 @@ static int l_sclr_to_cmem( lua_State *L)
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
 
   size_t size = sizeof(SCLR_REC_TYPE);
-  status = cmem_malloc(ptr_cmem, size, ptr_sclr->qtype, "");
+  status = cmem_malloc(ptr_cmem, size, ptr_sclr->qtype, "Scalar");
   cBYE(status);
   memcpy(ptr_cmem->data, &(ptr_sclr->val), size);
-  ptr_cmem->size = size;
-  ptr_cmem->qtype = ptr_sclr->qtype;
   ptr_cmem->is_foreign = false;
 
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
