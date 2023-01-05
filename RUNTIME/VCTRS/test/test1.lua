@@ -1,12 +1,13 @@
 local Q = require 'Q'
 local pldata = require 'pl.data'
 
-local cmem   = require 'libcmem'
-local cutils = require 'libcutils'
-local cVector = require 'libvctr'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
-local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local qcfg = require 'Q/UTILS/lua/qcfg'
+local cmem     = require 'libcmem'
+local cutils   = require 'libcutils'
+local lgutils  = require 'liblgutils'
+local cVector  = require 'libvctr'
+local lVector  = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local get_ptr  = require 'Q/UTILS/lua/get_ptr'
+local qcfg     = require 'Q/UTILS/lua/qcfg'
 
 local tests = {}
 tests.t1 = function()
@@ -177,7 +178,9 @@ tests.t4 = function()
   assert(x:check()) -- checking on this vector
   assert(cVector.check_all())
   x:nop()
+  print("before save", lgutils.mem_used())
   Q.save()
+  print("aftere save", lgutils.mem_used())
   local ydata = pldata.read("/tmp/_y")
   assert(#ydata == x:num_elements())
   -- Note that we test data for all except last chunk 
@@ -186,6 +189,8 @@ tests.t4 = function()
     assert(ydata[i][1] == counter)
     counter = counter + 10 
   end
+  x:delete()
+  collectgarbage()
   assert(cVector.check_all())
   print("Test t4 succeeded")
 end
@@ -193,5 +198,7 @@ end
 tests.t1()
 tests.t2()
 tests.t3()
+collectgarbage()
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 tests.t4()
 

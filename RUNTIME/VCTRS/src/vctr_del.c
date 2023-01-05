@@ -45,7 +45,10 @@ vctr_del(
     if ( lma_file == NULL ) { go_BYE(-1); }
     // delete file only if in your own tablespace
     if ( ( file_exists(lma_file) ) && ( tbsp == 0 ) ) { 
+      int64_t filesz = get_file_size(lma_file); 
+      if ( filesz < 0 ) { go_BYE(-1); } 
       unlink(lma_file); 
+      status = decr_dsk_used(filesz); 
     }
     char *X = g_vctr_hmap[tbsp].bkts[where_found].val.X;
     size_t nX = g_vctr_hmap[tbsp].bkts[where_found].val.nX;

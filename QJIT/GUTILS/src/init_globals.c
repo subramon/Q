@@ -27,6 +27,8 @@ init_globals(
 {
   int status = 0;
   // Initialize global variables
+  g_mem_lock = 0;
+
   g_halt = 0;
   g_webserver_interested = 0; 
   g_L_status = 0;

@@ -6,6 +6,7 @@ local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
 local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local lgutils = require 'liblgutils'
 
 local qtype = "I4"
 local max_num_in_chunk = 64
@@ -185,3 +186,5 @@ tests.t3()
 tests.t4()
 tests.t5()
 tests.t6()
+collectgarbage()
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

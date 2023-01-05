@@ -28,6 +28,9 @@ my_extern chnk_rs_hmap_t *g_chnk_hmap; // [Q_MAX_NUM_TABLESPACES];
 my_extern bool g_mutex_created;
 my_extern pthread_cond_t  g_mem_cond;
 my_extern pthread_mutex_t g_mem_mutex;
+// for protecting concurrent access to usage counters, both
+my_extern int g_mem_lock; 
+// memrory stuff and disk stuff
 // Memory stuff
 my_extern uint64_t g_mem_allowed; // maximum memory that C can allocate
 my_extern uint64_t g_mem_used;    // amount of memory malloc'd
