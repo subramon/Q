@@ -23,6 +23,7 @@
 #include "chnk_rs_hmap_instantiate.h"
 
 #include "import_tbsp.h"
+#include "lua_state.h" // for halt_threads()
 
 
 #undef MAIN_PGMN
@@ -67,6 +68,15 @@ BYE:
   return 3; 
 }
 //----------------------------------------
+static int l_lgutils_halt_threads( 
+    lua_State *L
+    )
+{
+  halt_threads();
+  lua_pushboolean(L, true); 
+  return 1; 
+}
+//----------------------------------------
 static int l_lgutils_mem_used( 
     lua_State *L
     )
@@ -102,7 +112,6 @@ static int l_lgutils_meta_dir(
     )
 {
   int status = 0;
-  int tbsp;
   if ( lua_gettop(L) != 0 ) { go_BYE(-1); } 
   lua_pushstring(L, g_meta_dir_root); 
   return 1; 
@@ -189,6 +198,7 @@ BYE:
 static const struct luaL_Reg lgutils_methods[] = {
     { "import_tbsp", l_lgutils_import_tbsp },
     { "is_restore_session", l_lgutils_is_restore_session },
+    { "halt_threads", l_lgutils_halt_threads },
     { "mem_used", l_lgutils_mem_used },
     { "dsk_used", l_lgutils_dsk_used },
     { "tbsp_name",           l_lgutils_tbsp_name },
@@ -201,6 +211,7 @@ static const struct luaL_Reg lgutils_methods[] = {
 static const struct luaL_Reg lgutils_functions[] = {
     { "import_tbsp", l_lgutils_import_tbsp },
     { "is_restore_session", l_lgutils_is_restore_session },
+    { "halt_threads", l_lgutils_halt_threads },
     { "mem_used", l_lgutils_mem_used },
     { "dsk_used", l_lgutils_dsk_used },
     { "tbsp_name",           l_lgutils_tbsp_name },

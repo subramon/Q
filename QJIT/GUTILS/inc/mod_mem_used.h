@@ -30,3 +30,11 @@ extern uint64_t
 get_dsk_allowed(
     void
     );
+extern int 
+lock_mem(
+    void
+    );
+extern int 
+unlock_mem(
+    void
+    );

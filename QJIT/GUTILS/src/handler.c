@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <evhttp.h>
+#include "event2/http.h"
 #include "q_incs.h"
 #include "web_struct.h"
 #include "rs_mmap.h"
@@ -16,6 +17,7 @@ handler(
     )
 {
   int status = 0;
+  char *decoded_uri = NULL;
   char  api[MAX_LEN_API+1];
   char args[MAX_LEN_ARGS+1];
   char outbuf[MAX_LEN_OUTPUT+1];
@@ -30,18 +32,20 @@ handler(
   opbuf = evbuffer_new();
   if ( opbuf == NULL) { go_BYE(-1); }
   const char *uri = evhttp_request_uri(req);
+  decoded_uri = evhttp_decode_uri(uri);
+  if ( decoded_uri == NULL ) { go_BYE(-1); }
   img_info_t img_info; memset(&img_info, 0, sizeof(img_info_t));
   // If master calls halt, get out 
   if ( g_halt == 1 ) { event_base_loopbreak(base); }
   //--------------------------------------
-  status = extract_api_args(uri, api, MAX_LEN_API, args, MAX_LEN_ARGS);
+  status = extract_api_args(decoded_uri, api, MAX_LEN_API, args, MAX_LEN_ARGS);
   cBYE(status);
   req_type_t rtype = get_req_type(api);
   if ( rtype  == Undefined ) { go_BYE(-1); }
   char *body = NULL; // Not used just yet 
   // status = get_body(req_type, req, g_body, MAX_LEN_BODY, &g_sz_body);
   // cBYE(status);
-  // printf("uri = %s \n", uri);
+  // printf("decoded_uri = %s \n", decoded_uri);
   status = process_req(rtype, api, args, body, web_info,
       outbuf, MAX_LEN_OUTPUT, errbuf, MAX_LEN_ERROR, &img_info);
   cBYE(status);
@@ -50,6 +54,7 @@ handler(
     // evbuffer_add_printf(opbuf, "%s\n", g_rslt);
     // evhttp_send_reply(req, HTTP_OK, "OK", opbuf);
     // evbuffer_free(opbuf);
+    free_if_non_null(decoded_uri);
     event_base_loopbreak(base);
   }
 BYE:
@@ -63,7 +68,7 @@ BYE:
 
     status = rs_mmap(img_info.file_name, &X, &nX, 0); 
     if ( status < 0 ) { WHEREAMI; evbuffer_free(opbuf); return; }
-    memset(buf, 0, blen); snprintf(buf, blen-1, "%ld", nX);
+    memset(buf, 0, blen); snprintf(buf, blen-1, "%u", nX);
 
     evhttp_add_header(evhttp_request_get_output_headers(req),
       "Content-Length", buf); 
@@ -72,6 +77,7 @@ BYE:
     evhttp_send_reply(req, HTTP_OK, "OK", opbuf);
     evbuffer_free(opbuf);
     remove(img_info.file_name); 
+    free_if_non_null(decoded_uri);
     return;
   }
   //------------------------------
@@ -89,4 +95,5 @@ BYE:
     evhttp_send_reply(req, HTTP_BADREQUEST, "ERROR", opbuf);
   }
   evbuffer_free(opbuf);
+  free_if_non_null(decoded_uri);
 }

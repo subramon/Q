@@ -45,6 +45,8 @@
 #include "vctr_set_memo.h"
 #include "vctr_width.h"
 
+#include "vctr_kill.h"
+
 #ifdef NEEDED
   /*
 cVector.c:52:18: warning: redundant redeclaration of ‘luaL_testudata’ [-Wredundant-decls]
@@ -110,6 +112,35 @@ BYE:
   lua_pushstring(L, __func__);
   lua_pushnumber(L, status);
   return 3;
+}
+static int l_vctr_kill( lua_State *L) {
+  int status = 0;
+  int num_args =  lua_gettop(L);
+  if ( num_args != 1 ) { go_BYE(-1); } 
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  //------------------------------
+  status = vctr_kill(ptr_v->tbsp, ptr_v->uqid ); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------------
+static int l_vctr_killable( lua_State *L) {
+  int status = 0;
+  int num_args =  lua_gettop(L);
+  if ( num_args != 1 ) { go_BYE(-1); } 
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  //------------------------------
+  status = vctr_killable(ptr_v->tbsp, ptr_v->uqid ); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
 }
 //----------------------------------------------
 static int l_vctr_get_name( lua_State *L) {
@@ -276,6 +307,21 @@ static int l_vctr_chk( lua_State *L) {
     status = vctr_chk(ptr_v->tbsp, ptr_v->uqid, is_at_rest);  cBYE(status);
   }
   lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_is_killable( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  bool b_is_killable; 
+  status = vctr_is_killable(ptr_v->tbsp, ptr_v->uqid, &b_is_killable);
+  lua_pushboolean(L, b_is_killable);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -1046,16 +1092,20 @@ static const struct luaL_Reg vector_methods[] = {
     //--------------------------------
     { "eov",    l_vctr_eov },
     { "early_free",    l_vctr_early_free },
+    { "make_lma",         l_make_lma },
+    { "chnks_to_lma", l_vctr_chnks_to_lma },
+    { "lma_to_chnks", l_vctr_lma_to_chnks },
+    { "kill", l_vctr_kill },
+    { "killable", l_vctr_killable },
+    //--------------------------------
     { "is_eov", l_vctr_is_eov },
     { "is_lma", l_vctr_is_lma },
     { "is_early_free", l_vctr_is_early_free },
+    { "is_killable", l_vctr_is_killable },
     { "nop", l_vctr_nop },
     //--------------------------------
-    { "lma_to_chnks", l_vctr_lma_to_chnks },
-    { "chnks_to_lma", l_vctr_chnks_to_lma },
     { "get_lma_read",     l_get_lma_read },
     { "get_lma_write",    l_get_lma_write },
-    { "make_lma",         l_make_lma },
     { "unget_lma_read",   l_unget_lma_read },
     { "unget_lma_write",  l_unget_lma_write },
     //--------------------------------
@@ -1097,20 +1147,24 @@ static const struct luaL_Reg vector_functions[] = {
     { "free", l_vctr_free },
     { "chunk_delete", l_chnk_delete },
     //--------------------------------
-    { "eov",    l_vctr_eov },
     { "early_free",    l_vctr_early_free },
     { "is_eov", l_vctr_is_eov },
     { "is_lma", l_vctr_is_lma },
     { "is_early_free", l_vctr_is_early_free },
-    { "persist", l_vctr_persist },
+    { "is_killable", l_vctr_is_killable },
     { "is_persist", l_vctr_is_persist },
-    { "nop",    l_vctr_nop },
     //--------------------------------
-    { "lma_to_chnks", l_vctr_lma_to_chnks },
+    { "make_lma",         l_make_lma },
     { "chnks_to_lma", l_vctr_chnks_to_lma },
+    { "lma_to_chnks", l_vctr_lma_to_chnks },
+    { "eov",    l_vctr_eov },
+    { "persist", l_vctr_persist },
+    { "nop",    l_vctr_nop },
+    { "kill", l_vctr_kill },
+    { "killable", l_vctr_killable },
+    //--------------------------------
     { "get_lma_read",     l_get_lma_read },
     { "get_lma_write",    l_get_lma_write },
-    { "make_lma",         l_make_lma },
     { "unget_lma_read",   l_unget_lma_read },
     { "unget_lma_write",  l_unget_lma_write },
     //--------------------------------

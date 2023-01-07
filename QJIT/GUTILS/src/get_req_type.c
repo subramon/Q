@@ -18,6 +18,10 @@ get_req_type(
     return Memory;
   }
   //-----------------------------
+  else if (strcasecmp(api, "Disk") == 0) {
+    return Disk;
+  }
+  //-----------------------------
   else if (strcasecmp(api, "Lua") == 0) {
     return Lua;
   }

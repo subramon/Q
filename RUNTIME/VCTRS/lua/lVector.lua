@@ -801,5 +801,11 @@ function lVector:make_lma()
   return file_name, file_sz 
 end
 --==================================================
+-- will delete the vector *ONLY* if marked as is_killable; else, NOP
+function lVector:kill()
+  cVector.kill(self._base_vec)
+  if ( self._nn_vec ) then cVector.kill(self._nn_vec) end 
+  return true 
+end
 
 return lVector

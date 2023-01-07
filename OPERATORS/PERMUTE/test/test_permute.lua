@@ -4,6 +4,7 @@ local Scalar = require 'libsclr'
 local cVector = require 'libvctr'
 local orders = require 'Q/OPERATORS/F_IN_PLACE/lua/orders'
 local qtypes = require 'Q/OPERATORS/F_IN_PLACE/lua/qtypes'
+local lgutils = require 'liblgutils'
 local tests = {}
 tests.t1 = function()
   local max_num_in_chunk = 64
@@ -47,6 +48,10 @@ local prm_qtypes = { "I1", "I2", "I4", "I8", }
       assert(p:check())
       assert(y:check())
       assert(z:check())
+      x:delete()
+      p:delete()
+      y:delete()
+      z:delete()
       assert(cVector.check_all())
       print("Successfully completed test t1 for ", val_qtype, prm_qtype)
     end
@@ -55,4 +60,8 @@ local prm_qtypes = { "I1", "I2", "I4", "I8", }
   print("Successfully completed test t1")
 end
 tests.t1()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests

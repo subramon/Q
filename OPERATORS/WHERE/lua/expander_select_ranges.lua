@@ -85,6 +85,7 @@ local function select_ranges(f1, lb, ub, optargs )
       num_in_f2 = num_in_f2 + num_to_copy
       lboff = lboff + num_to_copy
       space_in_f2 = space_in_f2 - num_to_copy
+      f1:unget_chunk(f1_chunk_idx)
     end
     chunk_idx = chunk_idx + 1
     return num_in_f2, f2_buf, nn_f2_buf

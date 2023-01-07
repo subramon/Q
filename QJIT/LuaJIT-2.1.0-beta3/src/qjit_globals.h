@@ -11,12 +11,18 @@
 #include "chnk_rs_hmap_struct.h"
 // Place globals in this file 
 my_extern int g_halt;
+// g_halt is initialized to 0. It is set to 1 by halt_threads()
+// which is in lgutils. Once set, subsequent calls to webserver thread
+// or out_of_band thread will cause them to terminate
 my_extern int g_webserver_interested; 
+// 0 => webserver is NOT interested in acquiring Lua state 
 // 1 => webserver is interested in acquiring Lua state 
+// Set only in process_req() by webserver thread 
 my_extern int g_L_status; // values as described below 
 // 0 => Lua state is free 
 // 1 => Master owns Lua State 
 // 2 => WebServer owns Lua State 
+// -------------------------------------------
 // hash map for vectors, chunks, vectors x chunks
 my_extern vctr_rs_hmap_t *g_vctr_hmap; // [Q_MAX_NUM_TABLESPACES];
 // Note that we have only one g_vctr_uqid, not one per tablespace

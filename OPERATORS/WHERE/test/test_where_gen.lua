@@ -3,6 +3,7 @@ _G['g_ctr']  = {}
 require 'Q/UTILS/lua/strict'
 local cVector = require 'libvctr'
 local qcfg = require 'Q/UTILS/lua/qcfg'
+local lgutils = require 'liblgutils'
 local max_num_in_chunk = qcfg.max_num_in_chunk 
 local mk_col   = require 'Q/OPERATORS/MK_COL/lua/mk_col'
 local where    = require 'Q/OPERATORS/WHERE/lua/where'
@@ -41,13 +42,24 @@ tests.t1 = function()
       assert(c:qtype() == a:qtype())
       assert(c:num_elements() == #goodC)
       local goodc = mk_col(goodC, a_qtype)
-      local n1, n2 = sum(vveq(c, goodc)):eval()
+      local tmp1 = vveq(c, goodc)
+      local tmp2 = sum(tmp1)
+      local n1, n2 = tmp2:eval()
       assert(n1 == n2)
       print("Test t1 succeeded for a_qtype/b_qtype = ", a_qtype, b_qtype)
+      a:delete()
+      b:delete()
+      c:delete()
+      goodc:delete()
+      tmp1:delete()
+      tmp2:delete()
     end
   end
   print("Test t1 succeeded")
 end
 tests.t1()
-os.exit()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests

@@ -42,6 +42,7 @@ SRCS +=	vctr_num_chunks.c
 SRCS +=	vctr_num_elements.c  
 SRCS +=	vctr_new_uqid.c  
 SRCS +=	vctr_persist.c  
+SRCS +=	vctr_kill.c  
 SRCS +=	vctr_print.c  
 SRCS +=	vctr_putn.c  
 SRCS +=	vctr_put1.c 
@@ -64,6 +65,7 @@ TEST1_SRCS := ../test/ut1.c
 TEST1_SRCS += ../../../QJIT/GUTILS/src/init_globals.c
 TEST1_SRCS += ../../../QJIT/GUTILS/src/init_session.c
 TEST1_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
+TEST1_SRCS += ../../../QJIT/GUTILS/src/lua_state.c
 TEST1_OBJS = $(TEST1_SRCS:.c=.o)
 
 TEST2_SRCS := ../test/ut2.c
@@ -71,6 +73,7 @@ TEST2_SRCS += ../../CMEM/src/aux_cmem.c
 TEST2_SRCS += ../../../QJIT/GUTILS/src/init_globals.c
 TEST2_SRCS += ../../../QJIT/GUTILS/src/init_session.c
 TEST2_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
+TEST2_SRCS += ../../../QJIT/GUTILS/src/lua_state.c
 TEST2_OBJS = $(TEST2_SRCS:.c=.o)
 
 # NOTE: Add -DVERBOSE to following to get messages printed out 

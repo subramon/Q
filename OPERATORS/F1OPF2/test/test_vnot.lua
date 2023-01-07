@@ -1,5 +1,6 @@
 require 'Q/UTILS/lua/strict'
 local Q      = require 'Q'
+local lgutils = require 'liblgutils'
 
 local tests = {}
 tests.t1 = function()
@@ -19,16 +20,26 @@ tests.t1 = function()
   local chk_notx = Q.mk_col(vals2, "BL"):eval()
   local notx = Q.vnot(x)
 
-  local y = Q.sum(Q.vveq(x, notx))
-  local n1, n2 = y:eval()
+  local y1 = Q.vveq(x, notx)
+  local y2 = Q.sum(y1)
+  local n1, n2 = y2:eval()
   assert(n1:to_num() == 0)
 
-  local y = Q.sum(Q.vveq(chk_notx, notx))
-  local n1, n2 = y:eval()
+  local z1 = Q.vveq(chk_notx, notx)
+  local z2 = Q.sum(z1)
+  local n1, n2 = z2:eval()
   assert(n1:to_num() == n2:to_num())
 
+  x:delete()
+  y1:delete()
+  y2:delete()
+  z1:delete()
+  z2:delete()
   print("Test t1 succeeded")
 end
 tests.t1()
-os.exit()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests

@@ -4,6 +4,7 @@ local Scalar = require 'libsclr'
 local orders = require 'Q/OPERATORS/F_IN_PLACE/lua/orders'
 local qtypes = require 'Q/OPERATORS/F_IN_PLACE/lua/qtypes'
 local cVector = require 'libvctr'
+local lgutils = require 'liblgutils'
 local tests = {}
 tests.t1 = function()
   -- Set up some vals that work for all qtypes
@@ -50,6 +51,8 @@ tests.t1 = function()
             assert(y:get1(i) == Scalar.new(xval, qtype))
             i = i + 1
           end
+          x:delete()
+          y:delete()
         end
       end
     end
@@ -75,10 +78,16 @@ local qtypes = { "I1", "I2", "I4", "I8", }
       if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
       local z = Q.is_prev(y, cmp, { default_val = false})
       z:set_name("z" .. qtype)
-      local n1, n2 = Q.sum(z):eval()
+      local v = Q.sum(z)
+      assert(type(v) == "Reducer")
+      local n1, n2 = v:eval()
       assert(type(n1) == "Scalar")
       assert(type(n2) == "Scalar")
       assert(n1:to_num() == 0)
+      x:delete()
+      y:delete()
+      z:delete()
+      v:delete()
       print("Successfully completed test t2 for ", order, qtype)
     end
   end
@@ -111,7 +120,9 @@ local qtypes = { "F4", "F8" }
       local zname = "z_" .. order .. "_" .. qtype
       local z = Q.is_prev(y, cmp, { default_val = false}):set_name(zname)
       assert(z:qtype() == "BL")
-      local n1, n2 = Q.sum(z):eval()
+      local u = Q.sum(z)
+      assert(type(u) == "Reducer")
+      local n1, n2 = u:eval()
       assert(type(n1) == "Scalar")
       assert(type(n2) == "Scalar")
       assert(n1:to_num() == 0)
@@ -119,11 +130,19 @@ local qtypes = { "F4", "F8" }
       if ( order == "asc" ) then cmp = "gt" else cmp = "lt" end 
       local wname = "w_" .. order .. "_" .. qtype
       local w = Q.is_prev(y, cmp, { default_val = true}):set_name(wname)
-      local n1, n2 = Q.sum(w):eval()
+      local v      = Q.sum(w)
+      assert(type(v) == "Reducer")
+      local n1, n2 = v:eval()
       assert(type(n1) == "Scalar")
       assert(type(n2) == "Scalar")
       assert(n1 == n2)
       --==================================
+      x:delete()
+      y:delete()
+      z:delete()
+      w:delete()
+      v:delete()
+      u:delete()
       print("Successfully completed test t2 for ", order, qtype)
     end
   end
@@ -133,4 +152,8 @@ end
 tests.t1()
 tests.t2()
 tests.t3()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests

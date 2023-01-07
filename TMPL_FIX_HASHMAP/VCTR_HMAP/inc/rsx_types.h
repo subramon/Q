@@ -22,6 +22,7 @@ typedef struct _vctr_meta_t {
   int memo_len;
   qtype_t qtype;
   bool is_eov;   // true => no appends allowed
+  bool is_killable;   // useful to delete temporary vectors
   bool is_persist;   // l2 should not be deleted on vector delete
   bool is_writable;   // false => no changes allowed
   bool is_early_free; // true => some chunk has been freed early

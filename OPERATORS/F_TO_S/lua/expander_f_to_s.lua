@@ -5,6 +5,12 @@ local qcfg        = require 'Q/UTILS/lua/qcfg'
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
+local function destructor(x)
+  assert(type(x) == "CMEM")
+  x:delete()
+  return true
+end
+
 return function (a, x, optargs)
   -- Return early if you have cached the result of a previous call
   if ( x:is_eov() ) then 
@@ -51,5 +57,6 @@ return function (a, x, optargs)
     if ( x_len < max_num_in_chunk ) then is_eor = true  end
     return accumulator, is_eor 
   end
-  return Reducer ( { gen = lgen, func = getter, value = accumulator} )
+  return Reducer ( { gen = lgen, func = getter, 
+    value = accumulator, destructor = destructor, name = "f_to_s_" .. a} )
 end

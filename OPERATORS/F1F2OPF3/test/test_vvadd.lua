@@ -5,6 +5,7 @@ local Scalar  = require 'libsclr'
 local plpath  = require 'pl.path'
 local qcfg = require 'Q/UTILS/lua/qcfg'
 local max_num_in_chunk  = qcfg.max_num_in_chunk
+local lgutils = require 'liblgutils'
 
 local tests = {}
 tests.t1 = function()
@@ -31,9 +32,8 @@ tests.t1 = function()
     
       if ( ( op == "vvdiv" ) and 
           ( qtype == "I4" ) or ( qtype == "I8" ) ) then 
-        print("Test t1 skipped for op = " .. op .. " and qtype = " .. qtype)
+        print("Test t1 skipped   for op = " .. op .. " and qtype = " .. qtype)
       else
-        print("Testing op = " .. op .. " and qtype = " .. qtype)
         local c1 = Q.mk_col(x1, qtype, optargs)
         local c2 = Q.mk_col(x2, qtype, optargs)
         local c3 = Q.mk_col(x3, qtype, optargs)
@@ -51,6 +51,10 @@ tests.t1 = function()
           assert(diff < 0.001)
         end
         print("Test t1 succeeded for op = " .. op .. " and qtype = " .. qtype)
+        c1:delete()
+        c2:delete()
+        c3:delete()
+        z:delete()
       end
     end
   end
@@ -60,7 +64,7 @@ end
 tests.t2 = function()
   local optargs = { max_num_in_chunk  = 64 , }
   local qtypes = { "I4", "I8", "F4", "F8", } 
-    for _, qtype in pairs(qtypes) do
+  for _, qtype in pairs(qtypes) do
     local input_table1 = {}
     local input_table2 = {}
     local expected_table = {}
@@ -74,15 +78,28 @@ tests.t2 = function()
     local expected_col = Q.mk_col(expected_table, qtype , optargs)
     
     -- Perform vvadd
-    local res = Q.vvadd(c1, c2)
-    res:eval()
+    local res = Q.vvadd(c1, c2):eval()
     
     -- Verification
-    assert(Q.sum(Q.vvneq(res, expected_col)):eval():to_num() == 0)
+    local x = Q.vvneq(res, expected_col):eval()
+    local y = Q.sum(x)
+    assert(type(y) == "Reducer")
+    local n1, n2 = y:eval()
+    assert(n1:to_num() == 0)
+    c1:delete()
+    c2:delete()
+    expected_col:delete()
+    res:delete()
+    x:delete()
+    assert(y:delete())
+    collectgarbage()
+    print("Test t2 succeeded for qtype", qtype)
   end
   print("Test t2 succeeded")
 end
-tests.t1()
+-- tests.t1()
 tests.t2()
+collectgarbage()
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 
 -- return tests

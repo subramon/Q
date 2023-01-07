@@ -8,6 +8,7 @@ assert(type(select_ranges) == "function")
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lgutils = require 'liblgutils'
 
 local tests = {}
 tests.t1 = function ()
@@ -16,13 +17,14 @@ tests.t1 = function ()
   local tbl = {}
   local n = max_num_in_chunk +  7
   for i = 1, n do tbl[#tbl+1] = i end 
-  for _, qtype in ipairs({"I1", "I2", "I4", "I8", "F4", "F8" }) do 
-    local a = mk_col(tbl, qtype, optargs)
+  local qtypes =  {"I1", "I2", "I4", "I8", "F4", "F8" }
+  for _, qtype in ipairs(qtypes) do 
+    local a = mk_col(tbl, qtype, optargs):set_name("a")
     local tlb = { 0,  8, 16, 32, 40, 64, }
     local tub = { 1, 10, 19, 36, 56, 65, }
     local lb = mk_col(tlb, "I4") 
     local ub = mk_col(tub, "I8")
-    local c  = select_ranges(a, lb, ub)
+    local c  = select_ranges(a, lb, ub):set_name("c")
     c:eval()
     local tbl = { 1, 9, 10, 17, 18, 19, 33, 34, 35, 36, 41, 42, 43, 44, 
 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 65, }
@@ -31,6 +33,11 @@ tests.t1 = function ()
     for i = 1, c:num_elements() do 
       assert(c:get1(i-1) == good_c:get1(i-1))
     end
+    cVector:check_all(true, true)
+    a:delete()
+    c:delete()
+    lb:delete()
+    ub:delete()
   end
   cVector:check_all(true, true)
   print("Test t1 succeeded")
@@ -86,11 +93,18 @@ tests.t2 = function ()
         assert(v:to_num() == good_tbl[i])
       end
     end
-
+    a:delete()
+    c:delete()
+    lb:delete()
+    ub:delete()
   end
   cVector:check_all(true, true)
   print("Test t2 succeeded")
 end
 tests.t1()
 tests.t2()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests

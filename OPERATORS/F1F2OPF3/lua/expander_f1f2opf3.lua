@@ -44,11 +44,8 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
     f1:unget_chunk(l_chunk_num)
     f2:unget_chunk(l_chunk_num)
     if ( f1_len < subs.max_num_in_chunk ) then 
-      -- We have no use for f1, f2. Kill will delete if killable
-      --[[ TODO 
       f1:kill() 
       f2:kill()
-      --]]
     end
     l_chunk_num = l_chunk_num + 1
     return f1_len, buf

@@ -2,6 +2,7 @@
 require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local cVector = require 'libvctr'
+local lgutils = require 'liblgutils'
 
 local tests = {}
 assert(type(Q.seq) == "function")
@@ -127,5 +128,9 @@ local c3 = Q.mk_col( {
 end
 
 tests.t1()
-os.exit()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+-- os.exit()
 -- return tests
