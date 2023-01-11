@@ -140,13 +140,13 @@ lock_mem(
 {
   int status = 0;
 
-  for ( bool lock_obtained = false; lock_obtained == false; ) {
+  for ( ; ; ) { 
     int l_expected = 0;
     int l_desired  = 1;
     bool rslt = __atomic_compare_exchange(
         &g_mem_lock, &l_expected, &l_desired, false, 
         __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
-    if ( !rslt ) { continue; }
+    if ( rslt ) { break; } 
   }
 BYE:
   return status;

@@ -621,13 +621,24 @@ int main(int argc, char **argv)
   report(L, status);
   lua_close(L);
   // START: RAMESH
-  int itmp = 1; __atomic_store(&g_halt, &itmp, 0);
-  pthread_cond_signal(&g_mem_cond);
   printf("QJIT Wrapping up\n"); // RAMESH
   // Wait for other threads to join
-  if ( g_is_webserver   ) { pthread_join(g_webserver,   NULL); }
-  if ( g_is_out_of_band ) { pthread_join(g_out_of_band, NULL); }
-  if ( g_is_mem_mgr     ) { pthread_join(g_mem_mgr,    NULL); }
+  if ( g_is_webserver   ) { 
+    WHEREAMI;
+    pthread_join(g_webserver,   NULL); 
+    printf("webserver joined\n"); 
+  }
+  if ( g_is_out_of_band ) { 
+    WHEREAMI;
+    pthread_join(g_out_of_band, NULL); 
+    printf("out_of_band joined\n"); 
+  }
+  if ( g_is_mem_mgr     ) { 
+    WHEREAMI;
+    pthread_cond_signal(&g_mem_cond);
+    pthread_join(g_mem_mgr,    NULL); 
+    printf("g_mem_mgr joined\n"); 
+  }
 BYE:
   status = free_globals(); if ( status < 0 ) { WHEREAMI; } 
   // STOP : RAMESH

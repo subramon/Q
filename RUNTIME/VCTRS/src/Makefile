@@ -36,6 +36,7 @@ SRCS +=	vctr_lma_to_chnks.c
 SRCS +=	vctr_make_lma.c  
 SRCS +=	vctr_lma_access.c  
 SRCS +=	vctr_set_lma.c  
+SRCS +=	vctr_usage.c  
 
 SRCS +=	vctr_name.c  
 SRCS +=	vctr_num_chunks.c  

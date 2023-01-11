@@ -3,18 +3,13 @@ Bring OpenMP back to life
 Do some code reviews of save() and import() 
 In import, document that order of import is important. Understand why 
 
-Bring webserver back to life
-Bring out-of-band server back to life
-Experiment with alternating control of qjit with webserver
+TODO Experiment with alternating control of qjit with webserver
 Experiment with prefetch
-Make sure that g_dsk_used is intialized on restore session
-g_dsk_used is not changed by import session
 
 
 where do we keep max_num_in_chunk? Lua or C. Be consistent
 What of init_globals() needs to be saved in Q.save() 
   and restored after that
-  g_dsk_used should be checked/restored
 What happens if you restore but do not save. Do files get deleted?
 Or does the persist persist (hah!)
 
@@ -34,3 +29,9 @@ Check whether we have implemented essence of F1F2OPF3/expander_f1f2opf3.txt
 --=================
 Verify that extra bits are zeroed out for vveq and vseq and so on
 Low priority: convert QC_FLAGS to QCFLAGS and QLDFLAGS
+
+DONE Bring webserver back to life
+DONE Bring out-of-band server back to life
+DONE g_dsk_used should be checked/restored upon restore session
+DONE Make sure that g_dsk_used is intialized on restore session
+DONE g_dsk_used is not changed by import session

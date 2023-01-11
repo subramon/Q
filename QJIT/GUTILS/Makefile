@@ -24,7 +24,11 @@ all : ${MYSO} ${EXTMYSO} ${ALTSO} ${EXTALTSO} ${QJIT_AUX_SO} ${EXT_QJIT_AUX_SO}
 ${UTILS_SO} : 
 	make -C ${UTILS_LOC} 
 
-
+VCTRS_LOC = ../../../RUNTIME/VCTRS/src/
+VCTRS_SO  = ${Q_ROOT}/lib/core_libvctr.so
+${VCTRS_SO} : 
+	make -C ${VCTRS_LOC} ${VCTRS_SO}
+#-------------------------------------------
 VCTR_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/VCTR_HMAP
 VCTR_HMAP_SO  = ${Q_ROOT}/lib/libhmap_vctr.so
 
@@ -36,6 +40,7 @@ CHNK_HMAP_SO  = ${Q_ROOT}/lib/libhmap_chnk.so
 
 ${CHNK_HMAP_SO} : 
 	make -C ${CHNK_HMAP_LOC} ${CHNK_HMAP_SO}
+#-------------------------------------------
 RS_LIBS := -lpthread
 RS_LIBS += -levent
 RS_LIBS += -latomic  # This was neeeded on Raspberry Pi 
@@ -81,8 +86,9 @@ ${MYSO} : ${OBJS}
 ${EXTMYSO} : ${MYSO}
 	cp ${MYSO} ${EXTMYSO}
 
-${QJIT_AUX_SO} : ${AUX_OBJS}
+${QJIT_AUX_SO} : ${AUX_OBJS} ${VCTRS_SO} 
 	gcc -shared ${AUX_OBJS} \
+		${VCTRS_SO} \
 		${VCTR_HAMP_SO} \
 		${CHNK_HAMP_SO} \
 		-o ${QJIT_AUX_SO} ${RS_LIBS} ${QLDFLAGS}

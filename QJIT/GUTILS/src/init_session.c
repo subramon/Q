@@ -14,6 +14,7 @@
 #include "web_struct.h"
 #include "mem_mgr_struct.h"
 
+#include "mod_mem_used.h"
 #include "webserver.h"
 #include "mem_mgr.h"
 #undef MAIN_PGM
@@ -71,6 +72,10 @@ init_session(
       vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
       uint32_t vctr_uqid = key;
       if ( vctr_uqid > g_vctr_uqid ) { g_vctr_uqid = vctr_uqid; } 
+      //--- Set usage statistics
+      uint64_t mem, dsk; 
+      status = vctr_usage(tbsp, vctr_uqid, &mem, &dsk); cBYE(status);
+      status = incr_dsk_used(dsk); cBYE(status);
     }
     if ( g_vctr_hmap[tbsp].nitems == 0 ) {
       if ( g_vctr_uqid != 0 ) { go_BYE(-1); }

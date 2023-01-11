@@ -26,6 +26,11 @@ tests.t2 = function()
   local n1, n2 = Q.min(x):eval()
   local m1, m2 = Q.max(x):eval()
   assert(n1 == m1)
+  assert(lgutils.mem_used() == 0)
+  print("dsk used = ", lgutils.dsk_used())
+  -- when you import a tablespace, that should NOT count
+  -- against your disk usage
+  assert(lgutils.dsk_used() == 0) 
 
 
 
