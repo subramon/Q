@@ -1,9 +1,9 @@
 #include "q_incs.h"
 #include "q_macros.h"
-#include "rs_hmap_int_struct.h"
-#include "bkt_chk.h"
+#include "rs_hmap_struct.h"
+#include "rsx_bkt_chk.h"
 int
-bkt_chk(
+rsx_bkt_chk(
     const void *const X,
     uint32_t n
     )

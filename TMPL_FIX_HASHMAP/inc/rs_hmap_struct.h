@@ -67,11 +67,13 @@ typedef int(* key_ordr_fn_t)(
     const void *in2
     );
 typedef int(* pr_key_fn_t)(
-    void *in_key,
+    void *bkts,
+    uint32_t idx,
     FILE *fp
     );
 typedef int(* pr_val_fn_t)(
-    void *in_val,
+    void *bkts,
+    uint32_t idx,
     FILE *fp
     );
 typedef int (*val_update_fn_t )(

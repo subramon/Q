@@ -6,7 +6,7 @@
 int 
 rs_hmap_instantiate(
     rs_hmap_t *H, 
-    rs_hmap_config_t *HC
+    const rs_hmap_config_t * const HC
     )
 {
   int status = 0;
@@ -57,8 +57,7 @@ rs_hmap_instantiate(
   H->hashkey = mk_hmap_key();
 
   if ( ( HC->so_file == NULL ) || ( *HC->so_file == '\0' ) ) { go_BYE(-1); }
-  H->config.so_file = HC->so_file;
-  HC->so_file = NULL;  // control handed over 
+  H->config.so_file = strdup(HC->so_file);
   status = LCL_rs_hmap_set_fn_ptrs(H); cBYE(status);
 BYE:
   return status;

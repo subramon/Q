@@ -3,5 +3,5 @@
 extern int 
 rs_hmap_instantiate(
     rs_hmap_t *H, 
-    rs_hmap_config_t *ptr_HC
+    const rs_hmap_config_t *const ptr_HC
     );

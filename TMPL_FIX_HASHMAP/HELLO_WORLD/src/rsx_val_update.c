@@ -1,7 +1,7 @@
-#include "rs_hmap_int_struct.h"
-#include "val_update.h"
+#include "rs_hmap_struct.h"
+#include "rsx_val_update.h"
 int 
-val_update(
+rsx_val_update(
     void *in_ptr_v1,
     const void *const in_ptr_v2
     )

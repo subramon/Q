@@ -1,7 +1,7 @@
-#include "rs_hmap_int_struct.h"
-#include "key_ordr.h"
+#include "rs_hmap_struct.h"
+#include "rsx_key_ordr.h"
 int
-key_ordr(
+rsx_key_ordr(
     const void *in1, 
     const void *in2
     )

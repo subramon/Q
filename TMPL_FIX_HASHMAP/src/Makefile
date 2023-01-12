@@ -7,7 +7,7 @@ TMPL=CASE1
 
 EXTSO = ${Q_ROOT}/lib/libhmap.so
 
-all: libhmap.so test1 test_merge ${EXTSO}
+all: libhmap.so # TODO TODO TODO test1 test_merge ${EXTSO}
 
 SRCS :=	./aux.c  
 SRCS +=	./calc_new_size.c  
@@ -22,7 +22,6 @@ SRCS +=	../../UTILS/src/rs_mmap.c
 
 OBJS = $(SRCS:.c=.o)
 
-HMAP_SRCS :=	./rs_hmap_instantiate.c  
 HMAP_SRCS +=	./rs_hmap_chk.c  
 HMAP_SRCS +=	./rs_hmap_del.c  
 HMAP_SRCS +=	./rs_hmap_destroy.c  
@@ -36,15 +35,17 @@ HMAP_SRCS +=	./rs_hmap_put.c
 HMAP_SRCS +=	./rs_hmap_resize.c  
 HMAP_SRCS +=	./rs_hmap_row_dmp.c  
 HMAP_SRCS +=	./rs_hmap_unfreeze.c  
+HMAP_SRCS +=	./rs_hmap_instantiate.c  
 
 HMAP_OBJS = $(HMAP_SRCS:.c=.o)
 
-CUSTOM_SRCS :=	./rsx_pr.c  
-CUSTOM_SRCS +=	./rsx_key_cmp.c  
-CUSTOM_SRCS +=	./rsx_val_update.c  
-CUSTOM_SRCS +=	./rsx_key_ordr.c  
-CUSTOM_SRCS +=	./rsx_bkt_chk.c  
-CUSTOM_SRCS +=	./rsx_set_hash.c  
+# HMAP_SRCS :=	./rs_hmap_instantiate.c  
+# CUSTOM_SRCS :=	./rsx_pr.c  
+# CUSTOM_SRCS +=	./rsx_key_cmp.c  
+# CUSTOM_SRCS +=	./rsx_val_update.c  
+# CUSTOM_SRCS +=	./rsx_key_ordr.c  
+# CUSTOM_SRCS +=	./rsx_bkt_chk.c  
+# CUSTOM_SRCS +=	./rsx_set_hash.c  
 
 CUSTOM_OBJS = $(CUSTOM_SRCS:.c=.o)
 
@@ -57,8 +58,8 @@ MERGE_OBJS = $(MERGE_SRCS:.c=.o)
 .c.o : 
 	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
-libhmap.so: ${OBJS} 
-	gcc  ${OBJS} -shared -lm -o libhmap.so  -ldl ${QLDFLAGS}
+libhmap.so: ${OBJS} ${HMAP_OBJS} 
+	gcc  ${OBJS} ${HMAP_OBJS} -shared -lm -o libhmap.so  -ldl ${QLDFLAGS}
 
 
 ${EXTSO} : libhmap.so
@@ -78,7 +79,7 @@ test_merge : libhmap.so libhmap_test.so ${MERGE_OBJS}
 		-ldl ${QLDFLAGS}
 
 test_fastrem : ./test/test_fastrem.c 
-	gcc  ${QCFLAGS} ${INCS} ./test/test_fastrem.c \
+	gcc  ${QLDFLAGS} ./test/test_fastrem.c \
 	  src/get_time_usec.c \
 	-o test_fastrem ${QLDFLAGS} 
 
