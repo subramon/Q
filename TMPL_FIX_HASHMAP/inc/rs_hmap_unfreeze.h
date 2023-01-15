@@ -1,7 +1,7 @@
 #include "rs_hmap_struct.h"
 extern int 
 rs_hmap_unfreeze(
-    rs_hmap_t *H,
+    ${tmpl}_rs_hmap_t *H,
     const char * const dir,
     const char * const meta_file,
     const char * const bkts_file,

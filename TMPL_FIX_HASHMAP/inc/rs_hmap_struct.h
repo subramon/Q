@@ -82,24 +82,24 @@ typedef int (*val_update_fn_t )(
     );
 
 
-typedef struct _rs_hmap_kv_t { 
-  rs_hmap_key_t key;
-  rs_hmap_val_t val;
-} rs_hmap_kv_t;
+typedef struct _${tmpl}_rs_hmap_kv_t { 
+  ${tmpl}_rs_hmap_key_t key;
+  ${tmpl}_rs_hmap_val_t val;
+} ${tmpl}_rs_hmap_kv_t;
 
-typedef struct _rs_hmap_bkt_t { 
-  rs_hmap_key_t key; 
+typedef struct _${tmpl}_rs_hmap_bkt_t { 
+  ${tmpl}_rs_hmap_key_t key; 
   uint16_t psl; // probe sequence length 
-  rs_hmap_val_t val;    // value that is aggregated, NOT input value
-} rs_hmap_bkt_t;
+  ${tmpl}_rs_hmap_val_t val;    // value that is aggregated, NOT input value
+} ${tmpl}_rs_hmap_bkt_t;
 
 
-typedef struct _rs_hmap_t {
+typedef struct _${tmpl}_rs_hmap_t {
   double start_check_val; 
   uint32_t size;
   uint32_t nitems;
   uint64_t divinfo;
-  rs_hmap_bkt_t  *bkts;  
+  ${tmpl}_rs_hmap_bkt_t  *bkts;  
   bool *bkt_full; 
   uint64_t hashkey;
   rs_hmap_config_t config; // extrernal config 
@@ -123,6 +123,6 @@ typedef struct _rs_hmap_t {
   val_update_fn_t val_update; // function to update value 
 
   double stop_check_val; 
-} rs_hmap_t;
+} ${tmpl}_rs_hmap_t;
 
 #endif // __RS_HMAP_STRUCT_H

@@ -3,19 +3,19 @@
 #include "aux.h"
 #include "set_probe_loc.h"
 #include "rsx_set_hash.h"
-#include "rs_hmap_insert.h"
+#include "_rs_hmap_insert.h"
 
 // This is an internal (local) call 
 int
-LCL_rs_hmap_insert(
-    rs_hmap_t *ptr_hmap, 
+rs_hmap_insert(
+    ${tmpl}_rs_hmap_t *ptr_hmap, 
     const void * const *in_ptr_key, 
     const void * const *in_ptr_val
     )
 {
   int status = 0;
-  const rs_hmap_key_t * const ptr_key = (const rs_hmap_key_t * const )in_ptr_key;
-  const rs_hmap_val_t * const ptr_val = (const rs_hmap_val_t * const )in_ptr_val;
+  const ${tmpl}_rs_hmap_key_t * const ptr_key = (const ${tmpl}_rs_hmap_key_t * const )in_ptr_key;
+  const ${tmpl}_rs_hmap_val_t * const ptr_val = (const ${tmpl}_rs_hmap_val_t * const )in_ptr_val;
   register uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
   register uint32_t probe_loc = 
     set_probe_loc(hash, ptr_hmap->size, ptr_hmap->divinfo);
@@ -33,20 +33,20 @@ LCL_rs_hmap_insert(
    * then swap them and continue.
    */
   // set up the bucket entry 
-  rs_hmap_bkt_t entry; 
-  rs_hmap_key_t key = *ptr_key;
-  rs_hmap_val_t val = *ptr_val;
+  ${tmpl}_rs_hmap_bkt_t entry; 
+  ${tmpl}_rs_hmap_key_t key = *ptr_key;
+  ${tmpl}_rs_hmap_val_t val = *ptr_val;
   entry.key  = *ptr_key;
   entry.val  = *ptr_val;
   entry.psl  = 0;
   bool key_copied = false; // means we have not copied the key or val
   register uint32_t num_probes = 0;
   //-----------
-  register rs_hmap_bkt_t *bkts  = ptr_hmap->bkts;
+  register ${tmpl}_rs_hmap_bkt_t *bkts  = ptr_hmap->bkts;
   register bool *bkt_full  = ptr_hmap->bkt_full;
   for ( ; ; ) {
     if ( num_probes >= ptr_hmap->size ) { go_BYE(-1); }
-    rs_hmap_key_t this_key       = bkts[probe_loc].key;
+    ${tmpl}_rs_hmap_key_t this_key       = bkts[probe_loc].key;
     if ( bkt_full[probe_loc] ) { // If there is a key in the bucket.
       // check if key matches incoming one 
       if ( key_cmp(&this_key, &key) ) { 
@@ -60,7 +60,7 @@ LCL_rs_hmap_insert(
       // We found a "rich" bucket.  Capture its location.
       if ( entry.psl > bkts[probe_loc].psl ) {
         // swap 
-        rs_hmap_bkt_t tmp = entry;
+        ${tmpl}_rs_hmap_bkt_t tmp = entry;
         entry = bkts[probe_loc];
         bkts[probe_loc] = tmp;
         //--------------

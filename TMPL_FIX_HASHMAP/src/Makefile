@@ -39,7 +39,6 @@ HMAP_SRCS +=	./rs_hmap_instantiate.c
 
 HMAP_OBJS = $(HMAP_SRCS:.c=.o)
 
-# HMAP_SRCS :=	./rs_hmap_instantiate.c  
 # CUSTOM_SRCS :=	./rsx_pr.c  
 # CUSTOM_SRCS +=	./rsx_key_cmp.c  
 # CUSTOM_SRCS +=	./rsx_val_update.c  
@@ -58,8 +57,8 @@ MERGE_OBJS = $(MERGE_SRCS:.c=.o)
 .c.o : 
 	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
-libhmap.so: ${OBJS} ${HMAP_OBJS} 
-	gcc  ${OBJS} ${HMAP_OBJS} -shared -lm -o libhmap.so  -ldl ${QLDFLAGS}
+libhmap.so: ${OBJS} 
+	gcc  ${OBJS} -shared -lm -o libhmap.so  -ldl ${QLDFLAGS}
 
 
 ${EXTSO} : libhmap.so

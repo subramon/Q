@@ -12,7 +12,7 @@
 #include "set_probe_loc.h"
 #include "aux.h"
 #include "rsx_set_hash.h"
-#include "rs_hmap_chk.h"
+#include "_rs_hmap_chk.h"
 
 typedef struct _chk_t { 
   uint32_t idx;
@@ -40,7 +40,7 @@ sortcompare(
 //-----------------------------------------------------
 int
 rs_hmap_chk(
-    rs_hmap_t *ptr_hmap
+    ${tmpl}_rs_hmap_t *ptr_hmap
     )
 {
   int status = 0;
@@ -48,7 +48,7 @@ rs_hmap_chk(
   // status = hmap_pr(ptr_hmap); cBYE(status);
   // check that number of items is correct
   uint32_t chk_nitems = 0;
-  rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
+  ${tmpl}_rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   bool *bkt_full = ptr_hmap->bkt_full;
   for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
     if ( bkt_full[i] ) {
@@ -66,7 +66,7 @@ rs_hmap_chk(
     if ( bkt_full[i] ) {
      if ( hash_cnt >= chk_nitems ) { go_BYE(-1); }
       hashes[hash_cnt].hash = spooky_hash64(
-          &(bkts[i].key), sizeof(rs_hmap_key_t), seed);
+          &(bkts[i].key), sizeof(${tmpl}_rs_hmap_key_t), seed);
       hashes[hash_cnt].idx = i;
       hash_cnt++;
     }
@@ -94,7 +94,7 @@ rs_hmap_chk(
   //-- make sure no holes between initial probe_loc and current position
   for ( uint32_t i = 0; i < ptr_hmap->size; i++ ) { 
     if ( !bkt_full[i] ) { continue; }
-    rs_hmap_val_t val; bool is_found; uint32_t where_found; 
+    ${tmpl}_rs_hmap_val_t val; bool is_found; uint32_t where_found; 
     void *ptr_key    = &(bkts[i].key);
     status = ptr_hmap->get(ptr_hmap, ptr_key, (void *)&val, &is_found, 
         &where_found);

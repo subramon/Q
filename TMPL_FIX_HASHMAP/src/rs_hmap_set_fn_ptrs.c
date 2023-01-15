@@ -3,12 +3,12 @@
 #include "aux.h"
 #include "set_probe_loc.h"
 #include "rsx_set_hash.h"
-#include "rs_hmap_set_fn_ptrs.h"
+#include "_rs_hmap_set_fn_ptrs.h"
 
 // This is an internal (local) call 
 int
-LCL_rs_hmap_set_fn_ptrs(
-    rs_hmap_t *H
+rs_hmap_set_fn_ptrs(
+    ${tmpl}_rs_hmap_t *H
     )
 {
   int status = 0;

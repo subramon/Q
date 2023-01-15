@@ -1,12 +1,12 @@
-#include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
-#include "rs_hmap_set_fn_ptrs.h"
 #include "rs_mmap.h"
 #include "mk_dir_file_name.h"
-#include "rs_hmap_unfreeze.h"
+#include "rs_hmap_common.h"
+#include "rs_hmap_struct.h"
+#include "_rs_hmap_set_fn_ptrs.h"
+#include "_rs_hmap_unfreeze.h"
 int 
 rs_hmap_unfreeze(
-    rs_hmap_t *H,
+    ${tmpl}_rs_hmap_t *H,
     const char * const dir,
     const char * const meta_file_name,
     const char * const bkts_file_name,
@@ -83,7 +83,7 @@ rs_hmap_unfreeze(
   //--------------------------------------------------
 
   // Now for the function pointers 
-  status = LCL_rs_hmap_set_fn_ptrs(H); cBYE(status);
+  status = rs_hmap_set_fn_ptrs(H); cBYE(status);
 BYE:
   free_if_non_null(fname);
   fclose_if_non_null(fp);

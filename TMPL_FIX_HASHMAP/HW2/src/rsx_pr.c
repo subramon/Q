@@ -11,8 +11,8 @@ rsx_pr_key(
     )
 {
   if ( in_bkts == NULL ) { WHEREAMI; return; }
-  hw_rs_hmap_bkt_t *bkts = (hw_rs_hmap_bkt_t *)in_bkts;
-  fprintf(fp, "%" PRIu64 "", bkts[idx].key);
+  rs_hmap_bkt_t *bkts = (rs_hmap_bkt_t *)in_bkts;
+  fprintf(fp, "%lf", bkts[idx].key.f8);
 }
 
 void 
@@ -23,6 +23,6 @@ rsx_pr_val(
     )
 {
   if ( in_bkts == NULL ) { WHEREAMI; return; }
-  hw_rs_hmap_bkt_t *bkts = (hw_rs_hmap_bkt_t *)in_bkts;
-  fprintf(fp, "%u", bkts[idx].val);
+  rs_hmap_bkt_t *bkts = (rs_hmap_bkt_t *)in_bkts;
+  fprintf(fp, "%s", bkts[idx].val.str);
 }

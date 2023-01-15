@@ -5,11 +5,11 @@
 #include "aux.h"
 #include "set_probe_loc.h"
 #include "rsx_set_hash.h"
-#include "rs_hmap_get.h"
+#include "_rs_hmap_get.h"
 
 int
 rs_hmap_get(
-    rs_hmap_t *ptr_hmap, 
+    ${tmpl}_rs_hmap_t *ptr_hmap, 
     const void * const in_ptr_key, 
     void *in_ptr_val,
     bool *ptr_is_found,
@@ -19,15 +19,15 @@ rs_hmap_get(
   int status = 0;
 
   if ( in_ptr_key == NULL ) { go_BYE(-1); } // not a valid key 
-  const rs_hmap_key_t * const ptr_key = (const rs_hmap_key_t * const)in_ptr_key;
-  rs_hmap_val_t *ptr_val = (rs_hmap_val_t *)in_ptr_val;
+  const ${tmpl}_rs_hmap_key_t * const ptr_key = (const ${tmpl}_rs_hmap_key_t * const)in_ptr_key;
+  ${tmpl}_rs_hmap_val_t *ptr_val = (${tmpl}_rs_hmap_val_t *)in_ptr_val;
   key_cmp_fn_t key_cmp = ptr_hmap->key_cmp;
   if ( key_cmp == NULL ) { go_BYE(-1); }
   
   register uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
   register uint32_t probe_loc = 
     set_probe_loc(hash, ptr_hmap->size,  ptr_hmap->divinfo);
-  register rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
+  register ${tmpl}_rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   register bool *bkt_full = ptr_hmap->bkt_full;
   register uint32_t my_psl = 0;
   register uint32_t num_probes = 0;
@@ -37,7 +37,7 @@ rs_hmap_get(
   // Lookup is a linear probe.
   for ( ; ; ) { 
     if ( num_probes >= ptr_hmap->size ) { go_BYE(-1); }
-    register rs_hmap_bkt_t *this_bkt = bkts + probe_loc;
+    register ${tmpl}_rs_hmap_bkt_t *this_bkt = bkts + probe_loc;
 
     if ( !key_cmp(&(this_bkt->key), ptr_key) ) { // mismatch 
       goto keep_searching;   

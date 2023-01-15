@@ -14,11 +14,11 @@ rsx_set_hash(
     )
 {
   uint32_t hash;
-  const hw_rs_hmap_key_t * const ptr_key = 
-    (const hw_rs_hmap_key_t * const) in_ptr_key;
-  const hw_rs_hmap_t * const ptr_hmap = 
-    (const hw_rs_hmap_t * const) in_ptr_hmap;
-    // hash = murmurhash3(key, len, ptr_hmap->hashkey);
-  hash = fasthash32(ptr_key, sizeof(hw_rs_hmap_key_t), ptr_hmap->hashkey);
+  const rs_hmap_key_t * const ptr_key = 
+    (const rs_hmap_key_t * const) in_ptr_key;
+  const rs_hmap_t * const ptr_hmap = 
+    (const rs_hmap_t * const) in_ptr_hmap;
+  // hash = murmurhash3(&(ptr_key->f4), len, ptr_hmap->hashkey);
+  hash = fasthash32(&(ptr_key->f4), sizeof(float), ptr_hmap->hashkey);
   return hash;
 }

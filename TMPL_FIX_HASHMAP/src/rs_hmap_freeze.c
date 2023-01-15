@@ -5,14 +5,14 @@
  #include "rs_hmap_common.h"
  #include "rs_hmap_struct.h"
  #include "mk_dir_file_name.h"
- #include "rs_hmap_freeze.h"
+ #include "_rs_hmap_freeze.h"
 
 int
 rs_hmap_freeze(
-    rs_hmap_t *ptr_hmap, 
+    ${tmpl}_rs_hmap_t *ptr_hmap, 
     const char * const dir,
     const char * const meta_file_name,
-    const char * const bkts_file_name, // for bkts (rs_hmap_bkt_t *)
+    const char * const bkts_file_name, // for bkts (${tmpl}_rs_hmap_bkt_t *)
     const char * const full_file_name // for bkt_full (bool *)
     )
 {
@@ -52,7 +52,7 @@ rs_hmap_freeze(
   fp = fopen(fname, "wb");
   return_if_fopen_failed(fp, fname, "wb");
 
-  fwrite(ptr_hmap->bkts, sizeof(rs_hmap_bkt_t), ptr_hmap->size, fp);
+  fwrite(ptr_hmap->bkts, sizeof(${tmpl}_rs_hmap_bkt_t), ptr_hmap->size, fp);
   fclose_if_non_null(fp);
   free_if_non_null(fname);
   //------------------------------------------------

@@ -5,10 +5,10 @@
 #include <stdint.h>
 #include "q_macros.h"
 #include "rs_hmap_struct.h"
-#include "rs_hmap_pr.h"
+#include "_rs_hmap_pr.h"
 int
 rs_hmap_pr(
-    rs_hmap_t *ptr_hmap,
+    ${tmpl}_rs_hmap_t *ptr_hmap,
     FILE *fp
     )
 {

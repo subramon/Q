@@ -1,12 +1,12 @@
+#include "aux.h"
 #include "rs_hmap_common.h"
 #include "rs_hmap_struct.h"
-#include "aux.h"
-#include "rs_hmap_insert.h"
-#include "rs_hmap_resize.h"
+#include "_rs_hmap_insert.h"
+#include "_rs_hmap_resize.h"
 
 int
-LCL_rs_hmap_resize(
-    rs_hmap_t *ptr_hmap, 
+rs_hmap_resize(
+    ${tmpl}_rs_hmap_t *ptr_hmap, 
     size_t newsize
     )
 {
@@ -14,7 +14,7 @@ LCL_rs_hmap_resize(
   if ( ptr_hmap == NULL ) { go_BYE(-1); }
   const size_t oldsize = ptr_hmap->size;
   const size_t nitems  = ptr_hmap->nitems;
-  register rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
+  register ${tmpl}_rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
   register bool *bkt_full = ptr_hmap->bkt_full;
 
   // some obvious logical checks
@@ -23,9 +23,9 @@ LCL_rs_hmap_resize(
     go_BYE(-1); 
   }
   status = posix_memalign((void **)&(ptr_hmap->bkts), 16, 
-      sizeof(rs_hmap_bkt_t) * newsize);
+      sizeof(${tmpl}_rs_hmap_bkt_t) * newsize);
   cBYE(status);
-  memset(ptr_hmap->bkts, 0, sizeof(rs_hmap_bkt_t) * newsize);
+  memset(ptr_hmap->bkts, 0, sizeof(${tmpl}_rs_hmap_bkt_t) * newsize);
 
   status = posix_memalign((void **)&(ptr_hmap->bkt_full), 16,
       sizeof(bool) * newsize);
@@ -43,9 +43,9 @@ LCL_rs_hmap_resize(
   for ( uint32_t i = 0; i < oldsize; i++) {
     if ( bkt_full[i] == false ) { continue; } // skip empty slots
     // printf("Re-inserting %s \n", (char *)bkts[i].key);
-    rs_hmap_key_t key  = bkts[i].key;
-    rs_hmap_val_t val  = bkts[i].val;
-    status = LCL_rs_hmap_insert(ptr_hmap, 
+    ${tmpl}_rs_hmap_key_t key  = bkts[i].key;
+    ${tmpl}_rs_hmap_val_t val  = bkts[i].val;
+    status = rs_hmap_insert(ptr_hmap, 
         (const void * const)&key, (const void * const)&val);
     cBYE(status);
   }

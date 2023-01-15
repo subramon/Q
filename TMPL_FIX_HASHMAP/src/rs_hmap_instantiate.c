@@ -1,11 +1,11 @@
 #include "rs_hmap_common.h"
 #include "rs_hmap_struct.h"
 #include "aux.h"
-#include "rs_hmap_set_fn_ptrs.h"
-#include "rs_hmap_instantiate.h"
+#include "_rs_hmap_set_fn_ptrs.h"
+#include "_rs_hmap_instantiate.h"
 int 
-rs_hmap_instantiate(
-    rs_hmap_t *H, 
+${tmpl}_rs_hmap_instantiate(
+    ${tmpl}_rs_hmap_t *H, 
     const rs_hmap_config_t * const HC
     )
 {
@@ -47,8 +47,14 @@ rs_hmap_instantiate(
 
   // get smallest prime bigger than min size
   H->size = prime_geq(H->config.min_size);
-  H->bkts = calloc(H->size, sizeof(rs_hmap_bkt_t)); 
-  return_if_malloc_failed(H->bkts);
+  void *x;
+  size_t w = sizeof(${tmpl}_rs_hmap_bkt_t);
+  size_t sz = w * H->size;
+  status = posix_memalign(&x, 16, sz); cBYE(status);
+  memset(x, 0, sz);
+  H->bkts = x;
+  // H->bkts = calloc(H->size, sizeof(${tmpl}_rs_hmap_bkt_t)); 
+  // return_if_malloc_failed(H->bkts);
 
   H->bkt_full = calloc(H->size, sizeof(bool)); 
   return_if_malloc_failed(H->bkt_full);
@@ -58,7 +64,7 @@ rs_hmap_instantiate(
 
   if ( ( HC->so_file == NULL ) || ( *HC->so_file == '\0' ) ) { go_BYE(-1); }
   H->config.so_file = strdup(HC->so_file);
-  status = LCL_rs_hmap_set_fn_ptrs(H); cBYE(status);
+  status = rs_hmap_set_fn_ptrs(H); cBYE(status);
 BYE:
   return status;
 }
