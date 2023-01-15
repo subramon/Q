@@ -3,10 +3,10 @@
  * hmap_del: remove the given key and return its value.
  * => If key was present, return its associated value
  */
-#include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
 #include "aux.h"
 #include "set_probe_loc.h"
+#include "rs_hmap_common.h"
+#include "${tmpl}_rs_hmap_struct.h"
 #include "rsx_set_hash.h"
 #include "_rs_hmap_resize.h"
 #include "_rs_hmap_del.h"
@@ -25,7 +25,7 @@ rs_hmap_del(
   const ${tmpl}_rs_hmap_key_t * const ptr_key = (const ${tmpl}_rs_hmap_key_t * const )in_ptr_key;
   ${tmpl}_rs_hmap_val_t * ptr_val = (${tmpl}_rs_hmap_val_t * )in_ptr_val;
 
-  register uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
+  register uint32_t hash = ptr_hmap->set_hash(ptr_key, ptr_hmap);
   register uint32_t probe_loc = 
     set_probe_loc(hash, ptr_hmap->size, ptr_hmap->divinfo);
   register ${tmpl}_rs_hmap_bkt_t *bkts = ptr_hmap->bkts;
@@ -110,7 +110,7 @@ rs_hmap_del(
     if ( new_size < ptr_hmap->config.min_size ) { 
       new_size = ptr_hmap->config.min_size;
     }
-    status = rs_hmap_resize(ptr_hmap, new_size); cBYE(status); 
+    status = ptr_hmap->resize(ptr_hmap, new_size); cBYE(status); 
   }
 BYE:
   return status;

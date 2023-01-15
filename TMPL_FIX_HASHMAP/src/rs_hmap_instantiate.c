@@ -1,5 +1,5 @@
 #include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
+#include "${tmpl}_rs_hmap_struct.h"
 #include "aux.h"
 #include "_rs_hmap_set_fn_ptrs.h"
 #include "_rs_hmap_instantiate.h"
@@ -64,7 +64,7 @@ ${tmpl}_rs_hmap_instantiate(
 
   if ( ( HC->so_file == NULL ) || ( *HC->so_file == '\0' ) ) { go_BYE(-1); }
   H->config.so_file = strdup(HC->so_file);
-  status = rs_hmap_set_fn_ptrs(H); cBYE(status);
+  status = ${tmpl}_rs_hmap_set_fn_ptrs(H); cBYE(status);
 BYE:
   return status;
 }

@@ -1,5 +1,5 @@
-#ifndef __RS_HMAP_STRUCT_H
-#define __RS_HMAP_STRUCT_H
+#ifndef __${tmpl}_RS_HMAP_STRUCT_H
+#define __${tmpl}_RS_HMAP_STRUCT_H
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -42,6 +42,15 @@ typedef int (* pr_fn_t)(
     void *ptr_hmap, 
     FILE *fp
     );
+typedef int (* resize_fn_t)(
+    void *ptr_hmap, 
+    size_t newsize
+    );
+typedef int (* insert_fn_t)(
+    void *ptr_hmap, 
+    const void * const key, 
+    const void * const val
+    );
 typedef int (* put_fn_t)(
     void *ptr_hmap, 
     const void * const key, 
@@ -75,6 +84,10 @@ typedef int(* pr_val_fn_t)(
     void *bkts,
     uint32_t idx,
     FILE *fp
+    );
+typedef int (*set_hash_fn_t )(
+    const void * const ptr_key,
+    const void * const ptr_hmap
     );
 typedef int (*val_update_fn_t )(
     void *, 
@@ -112,6 +125,8 @@ typedef struct _${tmpl}_rs_hmap_t {
   merge_fn_t merge;
   pr_fn_t pr;
   put_fn_t put;
+  resize_fn_t resize;
+  insert_fn_t insert;
   row_dmp_fn_t row_dmp;
 
   bkt_chk_fn_t bkt_chk; /* function to perform logical 
@@ -120,9 +135,10 @@ typedef struct _${tmpl}_rs_hmap_t {
   key_ordr_fn_t key_ordr;
   pr_key_fn_t pr_key;
   pr_val_fn_t pr_val;
+  set_hash_fn_t set_hash; 
   val_update_fn_t val_update; // function to update value 
 
   double stop_check_val; 
 } ${tmpl}_rs_hmap_t;
 
-#endif // __RS_HMAP_STRUCT_H
+#endif // __${tmpl}_RS_HMAP_STRUCT_H

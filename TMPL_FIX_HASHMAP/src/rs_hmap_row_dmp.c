@@ -2,9 +2,9 @@
 /*
  * Dumps the contents of the hmap in binary in row order
  */
- #include "rs_hmap_common.h"
- #include "rs_hmap_struct.h"
- #include "_rs_hmap_row_dmp.h"
+#include "rs_hmap_common.h"
+#include "${tmpl}_rs_hmap_struct.h"
+#include "_rs_hmap_row_dmp.h"
 
 int
 rs_hmap_row_dmp(

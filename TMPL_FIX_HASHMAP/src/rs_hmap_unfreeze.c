@@ -1,7 +1,7 @@
 #include "rs_mmap.h"
 #include "mk_dir_file_name.h"
 #include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
+#include "${tmpl}_rs_hmap_struct.h"
 #include "_rs_hmap_set_fn_ptrs.h"
 #include "_rs_hmap_unfreeze.h"
 int 
@@ -83,7 +83,7 @@ rs_hmap_unfreeze(
   //--------------------------------------------------
 
   // Now for the function pointers 
-  status = rs_hmap_set_fn_ptrs(H); cBYE(status);
+  status = ${tmpl}_rs_hmap_set_fn_ptrs(H); cBYE(status);
 BYE:
   free_if_non_null(fname);
   fclose_if_non_null(fp);

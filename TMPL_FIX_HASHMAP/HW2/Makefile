@@ -5,13 +5,12 @@ INCS += -I../HELLO_WORLD/inc/
 
 TMPL=hw2
 
-all: libhmap_${TMPL}.so test_${TMPL} \
-	test_hw1hw2 # TODO TODO P1 test_merge_${TMPL}
+all: libhmap_${TMPL}.so test_${TMPL} # TODO test_merge_${TMPL}  
 
 TMPL_DIR=../src/
+TMPL_INC_DIR=../inc/
 
-SRCS :=	./src/${TMPL}_rs_hmap_instantiate.c  
-SRCS +=	./src/rsx_pr.c  
+SRCS :=	./src/rsx_pr.c  
 SRCS +=	./src/rsx_key_cmp.c  
 SRCS +=	./src/rsx_val_update.c  
 SRCS +=	./src/rsx_key_ordr.c  
@@ -19,36 +18,102 @@ SRCS +=	./src/rsx_bkt_chk.c
 SRCS +=	./src/rsx_set_hash.c  
 #---- START Stuff borrowed from template library 
 
-# THIS IS SOME UGLY HACKERY UNTIL I FIGURE OUT HOW TO HAVE SRC
-# IN ONE DIRECTORY AND OBJ IN ANOTHER 
-_rs_hmap_chk.c : ${TMPL_DIR}/rs_hmap_chk.c  
-	cp $< $@
-_rs_hmap_del.c : ${TMPL_DIR}/rs_hmap_del.c  
-	cp $< $@
-_rs_hmap_destroy.c : ${TMPL_DIR}/rs_hmap_destroy.c  
-	cp $< $@
-_rs_hmap_freeze.c : ${TMPL_DIR}/rs_hmap_freeze.c  
-	cp $< $@
-_rs_hmap_get.c : ${TMPL_DIR}/rs_hmap_get.c  
-	cp $< $@
-_rs_hmap_insert.c : ${TMPL_DIR}/rs_hmap_insert.c  
-	cp $< $@
-_rs_hmap_set_fn_ptrs.c : ${TMPL_DIR}/rs_hmap_set_fn_ptrs.c  
-	cp $< $@
-_rs_hmap_merge.c : ${TMPL_DIR}/rs_hmap_merge.c  
-	cp $< $@
-_rs_hmap_pr.c : ${TMPL_DIR}/rs_hmap_pr.c  
-	cp $< $@
-_rs_hmap_put.c : ${TMPL_DIR}/rs_hmap_put.c  
-	cp $< $@
-_rs_hmap_resize.c : ${TMPL_DIR}/rs_hmap_resize.c  
-	cp $< $@
-_rs_hmap_row_dmp.c : ${TMPL_DIR}/rs_hmap_row_dmp.c  
-	cp $< $@
-_rs_hmap_unfreeze.c : ${TMPL_DIR}/rs_hmap_unfreeze.c  
-	cp $< $@
-_rs_hmap_instantiate.c : ${TMPL_DIR}/rs_hmap_instantiate.c  
-	cp $< $@
+HINCS := ./inc/rs_hmap_struct.h
+HINCS += ./inc/${TMPL}_rs_hmap_struct.h
+HINCS += _rs_hmap_chk.h
+HINCS += _rs_hmap_del.h
+HINCS += _rs_hmap_destroy.h
+HINCS += _rs_hmap_freeze.h
+HINCS += _rs_hmap_get.h
+HINCS += _rs_hmap_insert.h
+HINCS += _rs_hmap_set_fn_ptrs.h
+HINCS += _rs_hmap_merge.h
+HINCS += _rs_hmap_pr.h
+HINCS += _rs_hmap_put.h
+HINCS += _rs_hmap_resize.h
+HINCS += _rs_hmap_row_dmp.h
+HINCS += _rs_hmap_unfreeze.h
+HINCS += _rs_hmap_instantiate.h
+HINCS += ./inc/${TMPL}_rs_hmap_struct.h
+HINCS += ./inc/${TMPL}_rs_hmap_instantiate.h
+
+./src/rsx_pr.o : ./inc/${TMPL}_rs_hmap_struct.h
+
+../inc/xxx :
+	echo "hello world" > ../inc/xxx
+
+./inc/rs_hmap_struct.h : ${TMPL_INC_DIR}/rs_hmap_struct.h
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+
+
+./inc/${TMPL}_rs_hmap_struct.h : ./inc/rs_hmap_struct.h 
+	cp ./inc/rs_hmap_struct.h ./inc/${TMPL}_rs_hmap_struct.h 
+	# Above line needed because that is what external callers need
+
+./inc/${TMPL}_rs_hmap_instantiate.h : _rs_hmap_instantiate.h 
+	cp _rs_hmap_instantiate.h ./inc/${TMPL}_rs_hmap_instantiate.h 
+	# Above line needed because that is what external callers need
+
+# THIS IS SOME UGLY HACKERY UNTIL I FIGURE OUT HOW TO DO
+# BETTER PATTERN MATCHING 
+_rs_hmap_chk.c : ${TMPL_DIR}/rs_hmap_chk.c  ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_del.c : ${TMPL_DIR}/rs_hmap_del.c ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_destroy.c : ${TMPL_DIR}/rs_hmap_destroy.c ${HINCS} 
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_freeze.c : ${TMPL_DIR}/rs_hmap_freeze.c ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_get.c : ${TMPL_DIR}/rs_hmap_get.c ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_insert.c : ${TMPL_DIR}/rs_hmap_insert.c ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_set_fn_ptrs.c : ${TMPL_DIR}/rs_hmap_set_fn_ptrs.c ${HINCS}  
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_merge.c : ${TMPL_DIR}/rs_hmap_merge.c   ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_pr.c : ${TMPL_DIR}/rs_hmap_pr.c   ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_put.c : ${TMPL_DIR}/rs_hmap_put.c   ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_resize.c : ${TMPL_DIR}/rs_hmap_resize.c   ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_row_dmp.c : ${TMPL_DIR}/rs_hmap_row_dmp.c   ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_unfreeze.c : ${TMPL_DIR}/rs_hmap_unfreeze.c   ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_instantiate.c : ${TMPL_DIR}/rs_hmap_instantiate.c   ${HINCS}
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+#-----------------------------------------
+_rs_hmap_chk.h : ${TMPL_INC_DIR}/rs_hmap_chk.h 
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_del.h : ${TMPL_INC_DIR}/rs_hmap_del.h
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_destroy.h : ${TMPL_INC_DIR}/rs_hmap_destroy.h
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_freeze.h : ${TMPL_INC_DIR}/rs_hmap_freeze.h
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_get.h : ${TMPL_INC_DIR}/rs_hmap_get.h
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_insert.h : ${TMPL_INC_DIR}/rs_hmap_insert.h
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_set_fn_ptrs.h : ${TMPL_INC_DIR}/rs_hmap_set_fn_ptrs.h
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_merge.h : ${TMPL_INC_DIR}/rs_hmap_merge.h  
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_pr.h : ${TMPL_INC_DIR}/rs_hmap_pr.h  
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_put.h : ${TMPL_INC_DIR}/rs_hmap_put.h  
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_resize.h : ${TMPL_INC_DIR}/rs_hmap_resize.h  
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_row_dmp.h : ${TMPL_INC_DIR}/rs_hmap_row_dmp.h  
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_unfreeze.h : ${TMPL_INC_DIR}/rs_hmap_unfreeze.h  
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rs_hmap_instantiate.h : ${TMPL_INC_DIR}/rs_hmap_instantiate.h  
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+#-----------------------------------------
 
 SRCS +=	_rs_hmap_chk.c  
 SRCS +=	_rs_hmap_del.c  
@@ -71,12 +136,6 @@ OBJS = $(SRCS:.c=.o)
 TEST_SRCS := ./test/test_${TMPL}.c
 TEST_OBJS = $(TEST_SRCS:.c=.o)
 
-../HELLO_WORLD/libhmap_hw.so :
-	make -C ../HELLO_WORLD/
-
-../src/libhmap.so :
-	make -C ../src/
-
 CC = gcc
 
 .c.o : 
@@ -85,27 +144,20 @@ CC = gcc
 # TODO P1 Why do we have to do ../src/libhap.so?
 # Why is LD_LIBRARY_PATH not working?
 libhmap_${TMPL}.so: ${OBJS}   ./inc/*.h 
-	gcc ${QLDFLAGS} ${OBJS} ../src/libhmap.so \
+	gcc ${QLDFLAGS} ${OBJS} \
 		-shared -o libhmap_${TMPL}.so \
 		-lm -ldl
 
-test_${TMPL} : libhmap_${TMPL}.so ${TEST_OBJS}
-	gcc  ${TEST_OBJS} \
-	libhmap_${TMPL}.so -o test_${TMPL} ${QLDFLAGS} -ldl
-
-test_hw1hw2 : libhmap_${TMPL}.so \
-	../src/libhmap.so \
-	test/test_hw1hw2.o \
-	../HELLO_WORLD/libhmap_hw.so 
-	gcc  test/test_hw1hw2.o \
-	../src/libhmap.so \
-	libhmap_hw2.so \
-	../HELLO_WORLD/libhmap_hw.so \
-	-o test_hw1hw2 ${QLDFLAGS} -ldl
+test_${TMPL} : libhmap_${TMPL}.so ${TEST_OBJS} ${HINCS}
+	gcc  ${TEST_OBJS} -o test_${TMPL} ${QLDFLAGS}  \
+	libhmap.so libhmap_${TMPL}.so -ldl
 
 test_merge_${TMPL} : libhmap_${TMPL}.so ./test/test_merge_${TMPL}.c 
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_merge_${TMPL}.c \
 	libhmap_${TMPL}.so -o test_merge_${TMPL} -ldl
 
 clean:
-	rm -f *.o test_${TMPL} *.so ./src/*.o 
+	rm -f *.o test_${TMPL} *.so ./src/*.o _*.c
+	rm -f inc/hw_rs_hmap_instantiate.h  
+	rm -f inc/hw_rs_hmap_struct.h  
+	rm -f inc/rs_hmap_struct.h  

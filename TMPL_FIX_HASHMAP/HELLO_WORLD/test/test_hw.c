@@ -1,5 +1,5 @@
 #include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
+#include "hw_rs_hmap_struct.h"
 #include "hw_rs_hmap_instantiate.h"
 
 int

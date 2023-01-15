@@ -19,6 +19,7 @@ SRCS +=	./src/rsx_set_hash.c
 #---- START Stuff borrowed from template library 
 
 HINCS := ./inc/rs_hmap_struct.h
+HINCS += ./inc/${TMPL}_rs_hmap_struct.h
 HINCS += _rs_hmap_chk.h
 HINCS += _rs_hmap_del.h
 HINCS += _rs_hmap_destroy.h
@@ -35,6 +36,8 @@ HINCS += _rs_hmap_unfreeze.h
 HINCS += _rs_hmap_instantiate.h
 HINCS += ./inc/${TMPL}_rs_hmap_struct.h
 HINCS += ./inc/${TMPL}_rs_hmap_instantiate.h
+
+./src/rsx_pr.o : ./inc/${TMPL}_rs_hmap_struct.h
 
 ../inc/xxx :
 	echo "hello world" > ../inc/xxx
@@ -141,13 +144,13 @@ CC = gcc
 # TODO P1 Why do we have to do ../src/libhap.so?
 # Why is LD_LIBRARY_PATH not working?
 libhmap_${TMPL}.so: ${OBJS}   ./inc/*.h 
-	gcc ${QLDFLAGS} ${OBJS} ../src/libhmap.so \
+	gcc ${QLDFLAGS} ${OBJS} \
 		-shared -o libhmap_${TMPL}.so \
 		-lm -ldl
 
 test_${TMPL} : libhmap_${TMPL}.so ${TEST_OBJS} ${HINCS}
-	gcc  ${TEST_OBJS} \
-	libhmap_${TMPL}.so -o test_${TMPL} ${QLDFLAGS} -ldl
+	gcc  ${TEST_OBJS} -o test_${TMPL} ${QLDFLAGS} \
+	libhmap.so libhmap_${TMPL}.so -ldl
 
 test_merge_${TMPL} : libhmap_${TMPL}.so ./test/test_merge_${TMPL}.c 
 	gcc  ${CFLAGS} ${DFLAGS} ${INCS} ./test/test_merge_${TMPL}.c \
@@ -155,3 +158,6 @@ test_merge_${TMPL} : libhmap_${TMPL}.so ./test/test_merge_${TMPL}.c
 
 clean:
 	rm -f *.o test_${TMPL} *.so ./src/*.o _*.c
+	rm -f inc/hw_rs_hmap_instantiate.h  
+	rm -f inc/hw_rs_hmap_struct.h  
+	rm -f inc/rs_hmap_struct.h  

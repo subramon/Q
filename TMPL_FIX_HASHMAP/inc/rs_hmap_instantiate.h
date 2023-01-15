@@ -1,5 +1,5 @@
 #include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
+#include "${tmpl}_rs_hmap_struct.h"
 extern int 
 ${tmpl}_rs_hmap_instantiate(
     ${tmpl}_rs_hmap_t *H, 

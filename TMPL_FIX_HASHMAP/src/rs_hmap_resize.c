@@ -1,6 +1,6 @@
 #include "aux.h"
 #include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
+#include "${tmpl}_rs_hmap_struct.h"
 #include "_rs_hmap_insert.h"
 #include "_rs_hmap_resize.h"
 
@@ -45,7 +45,7 @@ rs_hmap_resize(
     // printf("Re-inserting %s \n", (char *)bkts[i].key);
     ${tmpl}_rs_hmap_key_t key  = bkts[i].key;
     ${tmpl}_rs_hmap_val_t val  = bkts[i].val;
-    status = rs_hmap_insert(ptr_hmap, 
+    status = ptr_hmap->insert(ptr_hmap, 
         (const void * const)&key, (const void * const)&val);
     cBYE(status);
   }

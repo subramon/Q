@@ -1,6 +1,6 @@
 // EXTERNAL EXPOSURE
 #include "rs_hmap_common.h"
-#include "rs_hmap_struct.h"
+#include "${tmpl}_rs_hmap_struct.h"
 #include "_rs_hmap_destroy.h"
 void
 rs_hmap_destroy(

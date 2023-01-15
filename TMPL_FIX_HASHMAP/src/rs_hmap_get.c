@@ -1,9 +1,9 @@
 // EXTERNAL EXPOSURE
 // lookup an value given the key.
-#include "rs_hmap_common.h"
-#include "rs_hmap_struct.h" 
 #include "aux.h"
 #include "set_probe_loc.h"
+#include "rs_hmap_common.h"
+#include "${tmpl}_rs_hmap_struct.h"
 #include "rsx_set_hash.h"
 #include "_rs_hmap_get.h"
 
@@ -24,7 +24,7 @@ rs_hmap_get(
   key_cmp_fn_t key_cmp = ptr_hmap->key_cmp;
   if ( key_cmp == NULL ) { go_BYE(-1); }
   
-  register uint32_t hash = rsx_set_hash(ptr_key, ptr_hmap);
+  register uint32_t hash = ptr_hmap->set_hash(ptr_key, ptr_hmap);
   register uint32_t probe_loc = 
     set_probe_loc(hash, ptr_hmap->size,  ptr_hmap->divinfo);
   register ${tmpl}_rs_hmap_bkt_t *bkts = ptr_hmap->bkts;

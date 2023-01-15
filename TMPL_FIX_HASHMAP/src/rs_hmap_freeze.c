@@ -2,10 +2,10 @@
 /*
  * Freezes the hmap into 2 files, one for meta data and one for buckets
  */
- #include "rs_hmap_common.h"
- #include "rs_hmap_struct.h"
- #include "mk_dir_file_name.h"
- #include "_rs_hmap_freeze.h"
+#include "mk_dir_file_name.h"
+#include "rs_hmap_common.h"
+#include "${tmpl}_rs_hmap_struct.h"
+#include "_rs_hmap_freeze.h"
 
 int
 rs_hmap_freeze(

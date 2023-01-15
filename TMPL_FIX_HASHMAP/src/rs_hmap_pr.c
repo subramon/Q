@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "q_macros.h"
-#include "rs_hmap_struct.h"
+#include "${tmpl}_rs_hmap_struct.h"
 #include "_rs_hmap_pr.h"
 int
 rs_hmap_pr(

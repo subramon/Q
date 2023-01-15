@@ -5,12 +5,12 @@
  * => If the key is already present, return its associated value.
  * => Otherwise, on successful insert, return the given value.
  */
- #include "calc_new_size.h"
- #include "rs_hmap_common.h"
- #include "rs_hmap_struct.h"
- #include "_rs_hmap_resize.h"
- #include "_rs_hmap_insert.h"
- #include "_rs_hmap_put.h"
+#include "calc_new_size.h"
+#include "rs_hmap_common.h"
+#include "${tmpl}_rs_hmap_struct.h"
+#include "_rs_hmap_resize.h"
+#include "_rs_hmap_insert.h"
+#include "_rs_hmap_put.h"
 int
 rs_hmap_put(
     ${tmpl}_rs_hmap_t *ptr_hmap, 
@@ -28,9 +28,9 @@ rs_hmap_put(
     cBYE(status);
   }
   if ( resize ) { 
-    status = rs_hmap_resize(ptr_hmap, newsize); cBYE(status);
+    status = ptr_hmap->resize(ptr_hmap, newsize); cBYE(status);
   }
-  status = rs_hmap_insert(ptr_hmap, ptr_key, ptr_val); cBYE(status);
+  status = ptr_hmap->insert(ptr_hmap, ptr_key, ptr_val); cBYE(status);
 BYE:
   return status;
 }

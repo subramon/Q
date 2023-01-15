@@ -1,6 +1,6 @@
 #include "q_incs.h"
 #include "q_macros.h"
-#include "rs_hmap_struct.h"
+#include "hw_rs_hmap_struct.h"
 #include "rsx_pr.h"
 
 void 
