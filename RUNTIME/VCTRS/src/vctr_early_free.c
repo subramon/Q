@@ -3,6 +3,7 @@
 #include "qjit_consts.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
+#include "chnk_free_resources.h"
 #include "vctr_is.h"
 #include "chnk_is.h"
 #include "l2_file_name.h"

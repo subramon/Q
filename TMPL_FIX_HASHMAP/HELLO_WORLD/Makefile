@@ -10,12 +10,6 @@ all: libhmap_${TMPL}.so test_${TMPL} # TODO test_merge_${TMPL}
 TMPL_DIR=../src/
 TMPL_INC_DIR=../inc/
 
-SRCS :=	./src/rsx_pr.c  
-SRCS +=	./src/rsx_key_cmp.c  
-SRCS +=	./src/rsx_val_update.c  
-SRCS +=	./src/rsx_key_ordr.c  
-SRCS +=	./src/rsx_bkt_chk.c  
-SRCS +=	./src/rsx_set_hash.c  
 #---- START Stuff borrowed from template library 
 
 HINCS := ./inc/rs_hmap_struct.h
@@ -34,8 +28,8 @@ HINCS += _rs_hmap_resize.h
 HINCS += _rs_hmap_row_dmp.h
 HINCS += _rs_hmap_unfreeze.h
 HINCS += _rs_hmap_instantiate.h
-HINCS += ./inc/${TMPL}_rs_hmap_struct.h
 HINCS += ./inc/${TMPL}_rs_hmap_instantiate.h
+HINCS += ./inc/${TMPL}_rs_hmap_unfreeze.h
 
 ./src/rsx_pr.o : ./inc/${TMPL}_rs_hmap_struct.h
 
@@ -52,6 +46,10 @@ HINCS += ./inc/${TMPL}_rs_hmap_instantiate.h
 
 ./inc/${TMPL}_rs_hmap_instantiate.h : _rs_hmap_instantiate.h 
 	cp _rs_hmap_instantiate.h ./inc/${TMPL}_rs_hmap_instantiate.h 
+	# Above line needed because that is what external callers need
+
+./inc/${TMPL}_rs_hmap_unfreeze.h : _rs_hmap_unfreeze.h 
+	cp _rs_hmap_unfreeze.h ./inc/${TMPL}_rs_hmap_unfreeze.h 
 	# Above line needed because that is what external callers need
 
 # THIS IS SOME UGLY HACKERY UNTIL I FIGURE OUT HOW TO DO
@@ -120,8 +118,8 @@ SRCS +=	_rs_hmap_del.c
 SRCS +=	_rs_hmap_destroy.c  
 SRCS +=	_rs_hmap_freeze.c  
 SRCS +=	_rs_hmap_get.c  
-SRCS +=	_rs_hmap_insert.c  # local 
-SRCS +=	_rs_hmap_set_fn_ptrs.c  # local 
+SRCS +=	_rs_hmap_insert.c  
+SRCS +=	_rs_hmap_set_fn_ptrs.c  
 SRCS +=	_rs_hmap_merge.c  
 SRCS +=	_rs_hmap_pr.c  
 SRCS +=	_rs_hmap_put.c  
@@ -130,6 +128,26 @@ SRCS +=	_rs_hmap_row_dmp.c
 SRCS +=	_rs_hmap_unfreeze.c  
 SRCS +=	_rs_hmap_instantiate.c  
 #---- STOP  Stuff borrowed from template library 
+
+_rsx_pr.c : ./src/rsx_pr.c   
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rsx_key_cmp.c : ./src/rsx_key_cmp.c   
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rsx_val_update.c : ./src/rsx_val_update.c   
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rsx_key_ordr.c : ./src/rsx_key_ordr.c   
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rsx_bkt_chk.c : ./src/rsx_bkt_chk.c   
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+_rsx_set_hash.c : ./src/rsx_set_hash.c   
+	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+# Customized code 
+SRCS +=	_rsx_pr.c  
+SRCS +=	_rsx_key_cmp.c  
+SRCS +=	_rsx_val_update.c  
+SRCS +=	_rsx_key_ordr.c  
+SRCS +=	_rsx_bkt_chk.c  
+SRCS +=	_rsx_set_hash.c  
 
 OBJS = $(SRCS:.c=.o)
 

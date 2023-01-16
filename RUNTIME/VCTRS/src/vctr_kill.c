@@ -67,7 +67,7 @@ vctr_kill(
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
-  if ( !is_found ) { go_BYE(-1); }
+  if ( !is_found ) { return -1; } // TODO P2 Should we be silent here?
   if ( !val.is_killable ) { goto BYE; } // silent exit
   status = vctr_del(tbsp, vctr_uqid, &is_found); 
   if ( !is_found ) { go_BYE(-1); } 

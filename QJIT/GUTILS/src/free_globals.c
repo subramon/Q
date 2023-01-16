@@ -4,11 +4,9 @@
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
-#include "vctr_rs_hmap_unfreeze.h"
 
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_rs_hmap_instantiate.h"
-#include "chnk_rs_hmap_unfreeze.h"
 
 #include "web_struct.h"
 #include "mem_mgr_struct.h"

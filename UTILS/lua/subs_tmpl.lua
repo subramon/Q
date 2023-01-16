@@ -12,7 +12,6 @@ local outfile = assert(arg[3])
 assert(infile~= outfile)
 
 local subs = {}
-print("Replacing by", replace_by)
 subs[pattern] = replace_by
 do_subs(infile, outfile, subs)
 

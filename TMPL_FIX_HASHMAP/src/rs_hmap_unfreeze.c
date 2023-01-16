@@ -5,7 +5,7 @@
 #include "_rs_hmap_set_fn_ptrs.h"
 #include "_rs_hmap_unfreeze.h"
 int 
-rs_hmap_unfreeze(
+${tmpl}_rs_hmap_unfreeze(
     ${tmpl}_rs_hmap_t *H,
     const char * const dir,
     const char * const meta_file_name,

@@ -7,8 +7,8 @@ rsx_val_update(
     )
 {
   int status = 0;
-  chnk_rs_hmap_val_t *ptr_v1 = (chnk_rs_hmap_val_t * )in_ptr_v1;
-  const chnk_rs_hmap_val_t *const ptr_v2 = (const chnk_rs_hmap_val_t * const)in_ptr_v2;
+  ${tmpl}_rs_hmap_val_t *ptr_v1 = (${tmpl}_rs_hmap_val_t * )in_ptr_v1;
+  const ${tmpl}_rs_hmap_val_t *const ptr_v2 = (const ${tmpl}_rs_hmap_val_t * const)in_ptr_v2;
   *ptr_v1 = *ptr_v2; 
   return status;
 }

@@ -1,4 +1,4 @@
-#include "vctr_rs_hmap_struct.h"
+#include "${tmpl}_rs_hmap_struct.h"
 #include "rsx_key_ordr.h"
 int
 rsx_key_ordr(
@@ -6,8 +6,8 @@ rsx_key_ordr(
     const void *in2
     )
 {
-  const vctr_rs_hmap_kv_t  *u1 = (const vctr_rs_hmap_kv_t *)in1;
-  const vctr_rs_hmap_kv_t  *u2 = (const vctr_rs_hmap_kv_t *)in2;
+  const ${tmpl}_rs_hmap_kv_t  *u1 = (const ${tmpl}_rs_hmap_kv_t *)in1;
+  const ${tmpl}_rs_hmap_kv_t  *u2 = (const ${tmpl}_rs_hmap_kv_t *)in2;
   if ( u1->key < u2->key ) { 
     return -1;
   }

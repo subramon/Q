@@ -1,6 +1,6 @@
 #include "q_incs.h"
 #include "q_macros.h"
-#include "rs_hmap_struct.h"
+#include "${tmpl}_rs_hmap_struct.h"
 #include "rsx_pr.h"
 
 void 
@@ -11,7 +11,7 @@ rsx_pr_key(
     )
 {
   if ( in_bkts == NULL ) { WHEREAMI; return; }
-  hw2_rs_hmap_bkt_t *bkts = (hw2_rs_hmap_bkt_t *)in_bkts;
+  ${tmpl}_rs_hmap_bkt_t *bkts = (${tmpl}_rs_hmap_bkt_t *)in_bkts;
   fprintf(fp, "%lf", bkts[idx].key.f8);
 }
 
@@ -23,6 +23,6 @@ rsx_pr_val(
     )
 {
   if ( in_bkts == NULL ) { WHEREAMI; return; }
-  hw2_rs_hmap_bkt_t *bkts = (hw2_rs_hmap_bkt_t *)in_bkts;
+  ${tmpl}_rs_hmap_bkt_t *bkts = (${tmpl}_rs_hmap_bkt_t *)in_bkts;
   fprintf(fp, "%s", bkts[idx].val.str);
 }

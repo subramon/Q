@@ -5,6 +5,8 @@
 #include "chnk_rs_hmap_struct.h"
 #include "l2_file_name.h"
 #include "file_exists.h"
+#include "get_file_size.h"
+#include "mod_mem_used.h"
 #include "vctr_is.h"
 #include "chnk_del.h"
 #include "vctr_del.h"

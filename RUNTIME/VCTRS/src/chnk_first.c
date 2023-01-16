@@ -22,7 +22,6 @@ chnk_first(
   int status = 0;
   vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[vctr_where].val);
   vctr_rs_hmap_key_t vctr_uqid = g_vctr_hmap[tbsp].bkts[vctr_where].key;
-  vctr_rs_hmap_val_t vctr_val = g_vctr_hmap[tbsp].bkts[vctr_where].val;
 
   // This function handles case when vector is empty 
   if ( ptr_vctr_val->num_elements != 0 ) { goto BYE; } 

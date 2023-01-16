@@ -37,16 +37,16 @@ QCFLAGS+=" -Wold-style-definition -Wsuggest-attribute=noreturn "
 
 # Following should be commented/uncommented depending on 
 # desire to use address sanitizer
-ASAN_FLAGS=" -fsanitize=address "
-ASAN_FLAGS+=" -fno-omit-frame-pointer "
-ASAN_FLAGS+=" -fsanitize=undefined "
+# ASAN_FLAGS=" -fsanitize=address "
+# ASAN_FLAGS+=" -fno-omit-frame-pointer "
+# ASAN_FLAGS+=" -fsanitize=undefined "
 
 
 export ASAN_FLAGS="${ASAN_FLAGS}"
 echo "ASAN_FLAGS: $ASAN_FLAGS"
 
 QCFLAGS+=$ASAN_FLAGS 
-QLDFLAGS=" $ASAN_FLAGS -static-libasan "
+# QLDFLAGS=" $ASAN_FLAGS -static-libasan "
 export QLDFLAGS="${QLDFLAGS}"
 echo "QLDFLAGS: $QLDFLAGS"
 

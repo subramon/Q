@@ -16,30 +16,33 @@ EXTMYSO = ${Q_ROOT}/lib/${MYSO}
 ALTSO = liblgutils.so 
 EXTALTSO = ${Q_ROOT}/lib/${ALTSO}
 
-UTILS_LOC = ../../UTILS/src/
-UTILS_SO = ${Q_ROOT}/lib/libutils.so
 
 all : ${MYSO} ${EXTMYSO} ${ALTSO} ${EXTALTSO} ${QJIT_AUX_SO} ${EXT_QJIT_AUX_SO}
 
+UTILS_LOC = ../../UTILS/src/
+UTILS_SO = ${Q_ROOT}/lib/libutils.so
 ${UTILS_SO} : 
 	make -C ${UTILS_LOC} 
 
-VCTRS_LOC = ../../../RUNTIME/VCTRS/src/
-VCTRS_SO  = ${Q_ROOT}/lib/core_libvctr.so
+VCTRS_LOC = ../../RUNTIME/VCTRS/src/
+INT_VCTRS_SO  = core_libvctr.so
+VCTRS_SO  = ${Q_ROOT}/lib/${INT_VCTRS_SO}
 ${VCTRS_SO} : 
-	make -C ${VCTRS_LOC} ${VCTRS_SO}
+	make -C ${VCTRS_LOC} ${INT_VCTRS_SO}
 #-------------------------------------------
-VCTR_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/VCTR_HMAP
-VCTR_HMAP_SO  = ${Q_ROOT}/lib/libhmap_vctr.so
+VCTR_HMAP_LOC = ../../TMPL_FIX_HASHMAP/VCTR_HMAP
+INT_VCTR_HMAP_SO  = libhmap_vctr.so
+VCTR_HMAP_SO  = ${Q_ROOT}/lib/${INT_VCTR_HMAP_SO}
 
 ${VCTR_HMAP_SO} : 
-	make -C ${VCTR_HMAP_LOC} ${VCTR_HMAP_SO}
+	make -C ${VCTR_HMAP_LOC} ${INT_VCTR_HMAP_SO}
 #-------------------------------------------
-CHNK_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/CHNK_HMAP
-CHNK_HMAP_SO  = ${Q_ROOT}/lib/libhmap_chnk.so
+CHNK_HMAP_LOC = ../../TMPL_FIX_HASHMAP/CHNK_HMAP
+INT_CHNK_HMAP_SO  = libhmap_chnk.so
+CHNK_HMAP_SO  = ${Q_ROOT}/lib/${INT_CHNK_HMAP_SO}
 
 ${CHNK_HMAP_SO} : 
-	make -C ${CHNK_HMAP_LOC} ${CHNK_HMAP_SO}
+	make -C ${CHNK_HMAP_LOC} ${INT_CHNK_HMAP_SO}
 #-------------------------------------------
 RS_LIBS := -lpthread
 RS_LIBS += -levent

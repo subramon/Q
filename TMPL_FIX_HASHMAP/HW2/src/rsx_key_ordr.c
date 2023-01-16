@@ -1,4 +1,4 @@
-#include "rs_hmap_struct.h"
+#include "${tmpl}_rs_hmap_struct.h"
 #include "rsx_key_ordr.h"
 int
 rsx_key_ordr(
@@ -6,7 +6,7 @@ rsx_key_ordr(
     const void *in2
     )
 {
-  const hw2_rs_hmap_kv_t  *u1 = (const hw2_rs_hmap_kv_t *)in1;
-  const hw2_rs_hmap_kv_t  *u2 = (const hw2_rs_hmap_kv_t *)in2;
+  const ${tmpl}_rs_hmap_kv_t  *u1 = (const ${tmpl}_rs_hmap_kv_t *)in1;
+  const ${tmpl}_rs_hmap_kv_t  *u2 = (const ${tmpl}_rs_hmap_kv_t *)in2;
   return 1;  // Some junk retun value. Needs to be done properly
 }
