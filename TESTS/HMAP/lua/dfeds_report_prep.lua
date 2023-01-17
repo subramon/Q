@@ -34,7 +34,6 @@ local function dfeds_report_prep(datafile, metafile)
   local subs = {}
   local O = { is_hdr = false }
   local M = require 'Q/TESTS/HMAP/lua/in_meta'
-  local datafile = qcfg.q_src_root .. "/TESTS/HMAP/data/data1.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   assert(type(T) == "table")
@@ -192,6 +191,7 @@ if ( arg[1] ) then
 else
   datafile = qcfg.q_src_root .. "/TESTS/HMAP/data/data1.csv"
 end 
+print("datafile = ", datafile)
 
 local infile = qcfg.q_src_root .. "/TESTS/HMAP/doc/dfeds_report.tex"
 local outfile = qcfg.q_src_root .. "/TESTS/HMAP/doc/_dfeds_report.tex"
