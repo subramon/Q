@@ -65,6 +65,7 @@ vctr_get_lma_X_nX(
   ptr_val->num_readers++; 
   *ptr_X = X; *ptr_nX = nX;
 BYE:
+  free_if_non_null(lma_file);
   return status;
 }
 

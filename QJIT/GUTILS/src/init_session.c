@@ -11,6 +11,7 @@
 #include "chnk_rs_hmap_instantiate.h"
 #include "chnk_rs_hmap_unfreeze.h"
 
+#include "vctr_usage.h"
 #include "web_struct.h"
 #include "mem_mgr_struct.h"
 
@@ -88,14 +89,17 @@ init_session(
   }
   else { 
     printf("<<<<<<<<<<<< STARTING NEW SESSION ============\n");
-    g_vctr_hmap_config.so_file = strdup("libhmap_vctr.so"); 
+    g_vctr_hmap_config.so_file = strdup("libhmap_vctr.so");
     status = vctr_rs_hmap_instantiate(&g_vctr_hmap[tbsp], 
         &g_vctr_hmap_config); 
     cBYE(status);
+    free_if_non_null(g_vctr_hmap_config.so_file);
 
     g_chnk_hmap_config.so_file = strdup("libhmap_chnk.so"); 
-    status = chnk_rs_hmap_instantiate(&g_chnk_hmap[tbsp], &g_chnk_hmap_config); 
+    status = chnk_rs_hmap_instantiate(&g_chnk_hmap[tbsp], 
+        &g_chnk_hmap_config); 
     cBYE(status);
+    free_if_non_null(g_chnk_hmap_config.so_file);
 
     rmtree(g_data_dir_root[tbsp]);
     rmtree(g_meta_dir_root);

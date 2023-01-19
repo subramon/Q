@@ -27,7 +27,8 @@ free_globals(
     pthread_mutex_destroy(&g_mem_mutex);
   }
   g_vctr_uqid = 0; // nothing to free
-  if ( g_vctr_hmap == NULL ) {
+  //---------------------------------
+  if ( g_vctr_hmap != NULL ) {
     for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
       if ( g_vctr_hmap[i].bkts != NULL ) {
         if ( i > 0 ) { printf("Destroying imported tablespace %d \n", i); }
@@ -36,7 +37,7 @@ free_globals(
     }
   }
   //---------------------------------
-  if ( g_chnk_hmap == NULL ) {
+  if ( g_chnk_hmap != NULL ) {
     for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
       if ( g_chnk_hmap[i].bkts != NULL ) {
         if ( i > 0 ) { printf("Destroying imported tablespace %d \n", i); }
@@ -44,6 +45,10 @@ free_globals(
       }
     }
   }
+  //---------------------------------
+  free_if_non_null(g_vctr_hmap);
+  free_if_non_null(g_chnk_hmap);
+  //---------------------------------
   if ( g_data_dir_root != NULL ) { 
     for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
       free_if_non_null(g_data_dir_root[i]);

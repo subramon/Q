@@ -29,10 +29,10 @@ vctr_make_lma(
   bool is_found; uint32_t where_found = ~0;
   char *dst_lma_file = NULL;
   char *src_lma_file = NULL;
+  char *tmp = NULL;
   char *X = NULL, *bak_X = NULL; size_t nX = 0, bak_nX = 0; 
   uint32_t dst_uqid = 0; // We do not know what it should be just yet
   uint32_t dst_tbsp = 0; // Can only create in your own tablespace
-  char *tmp = NULL;
 
   status = vctr_is(src_tbsp, src_uqid, &is_found, &where_found); 
   cBYE(status);
@@ -86,5 +86,10 @@ vctr_make_lma(
   munmap(bak_X, bak_nX); 
 BYE:
   free_if_non_null(src_lma_file);
-  if ( status == 0 ) { return dst_lma_file; } else { return NULL; } 
+  if ( status == 0 ) { 
+    return dst_lma_file; 
+  } 
+  else { 
+    free_if_non_null(dst_lma_file); return NULL; 
+  }
 }

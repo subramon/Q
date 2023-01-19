@@ -994,6 +994,7 @@ static int l_make_lma( lua_State *L) {
   int64_t file_sz = get_file_size(file_name); 
   lua_pushstring(L, file_name);
   lua_pushnumber(L, file_sz);
+  free_if_non_null(file_name);
   return 2;
 BYE:
   lua_pushnil(L);

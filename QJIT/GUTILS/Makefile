@@ -1,6 +1,7 @@
 #!/bin/ballsh
 INCS := -I./inc/
 INCS += -I../../UTILS/inc/
+INCS += -I../../RUNTIME/VCTRS/inc/
 INCS += -I../LuaJIT-2.1.0-beta3/src/
 INCS += -I../LuaJIT-2.1.0-beta3/src/inc/
 INCS += -I../../TMPL_FIX_HASHMAP/inc/
