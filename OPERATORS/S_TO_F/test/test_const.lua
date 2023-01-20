@@ -128,10 +128,10 @@ tests.t4 = function()
   print("Test t4 succeeded")
 end
 
-tests.t1() -- TODO P1 FAILS 
--- tests.t2()
--- tests.t3()
--- tests.t4()
+tests.t1() 
+tests.t2()
+tests.t3()
+tests.t4()
 collectgarbage()
 print("MEM", lgutils.mem_used())
 print("DSK", lgutils.dsk_used())
