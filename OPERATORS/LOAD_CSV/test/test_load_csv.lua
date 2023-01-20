@@ -349,13 +349,15 @@ end
 tests.t6 = function() 
   local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in6.csv"
   assert(plpath.isfile(datafile))
-  for _, nn_qtype in ipairs( { "B1", "BL", } ) do 
+  -- TODO P2 Implement B1 for _, nn_qtype in ipairs( { "B1", "BL", } ) do 
+  for _, nn_qtype in ipairs( { "BL", } ) do 
     print("Testing with nn_qtype = ", nn_qtype)
     local O = { is_hdr = true, memo_len = -1, nn_qtype = nn_qtype, }
     local M = {}
     M[#M+1] = { name = "i4", qtype = "I4", has_nulls = true, }
     M[#M+1] = { name = "f4", qtype = "F4", has_nulls = true, }
     local T = Q.load_csv(datafile, M, O)
+
     assert(T.i4:has_nulls() == true)
     assert(T.f4:has_nulls() == true)
   
@@ -366,14 +368,21 @@ tests.t6 = function()
     local nn_f4 = T.f4:get_nulls()
     assert(type(nn_f4) == "lVector")
     assert(nn_f4:qtype() == nn_qtype)
-  
+
     T.i4:eval()
     T.i4:check()
-    print("-------------")
-    T.i4:pr()
-    T.f4:pr()
+    T.i4:pr("/tmp/_i4")
+    T.f4:pr("/tmp/_f4")
     T.i4:check()
-    print("============-")
+
+    local n1, n2 = Q.sum(nn_i4):eval()
+    assert(n1:to_num() == 6 )
+    assert(n2:to_num() == 11 )
+
+    local n1, n2 = Q.sum(nn_f4):eval()
+    assert(n1:to_num() == 6 )
+    assert(n2:to_num() == 11 )
+
     local U = {}
     U[1] = T.i4
     U[2] = T.f4
@@ -387,13 +396,13 @@ tests.t6 = function()
   print("Test t6 succeeded")
   
 end
-tests.t1()
-tests.t2()
-tests.t3()
-tests.t4()
-tests.t4a()
+-- WORKS tests.t1()
+-- WORKS tests.t2()
+-- WORKS tests.t3()
+-- WORKS tests.t4()
+-- WORKS tests.t4a()
 tests.t5()
--- tests.t6()
+-- WORKS tests.t6()
 -- return tests
 collectgarbage()
 print("MEM", lgutils.mem_used())

@@ -1,3 +1,5 @@
+#define VERBOSE
+
 #include "luaconf.h"
 #include "lua.h"
 #include "lauxlib.h"
@@ -766,15 +768,16 @@ static int l_vctr_free( lua_State *L) {
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool is_found;
-  /*
+#ifdef VERBOSE
   char *name = vctr_get_name(ptr_v->tbsp, ptr_v->uqid); 
   if ( name == NULL ) { 
-    printf("\n"); 
+    printf("Freeing anonymous\n"); 
   }
   else {
-    printf("%s\n", name); 
+    printf("Freeing [%s]\n", name); 
   }
-  */
+#endif
+
   if (  ptr_v->uqid == 0 ) { 
     // This is because of vctr_null() Not dangerous 
     goto BYE;

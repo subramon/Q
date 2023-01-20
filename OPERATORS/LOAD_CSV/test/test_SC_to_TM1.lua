@@ -3,6 +3,7 @@ local plutils= require 'pl.utils'
 require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local cVector = require 'libvctr'
+local lgutils = require 'liblgutils'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local cVector = require 'libvctr'
 -- Set below to true if you want printing 
@@ -64,11 +65,12 @@ tests.t0 = function()
     "/OPERATORS/LOAD_CSV/test/input_SC_to_TM1.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
-  print("Test t1 succeeded")
+  print("Test t0 succeeded")
 end
 tests.t0()
--- WORKS tests.t1()
-os.exit()
---[[
-return tests
---]]
+tests.t1()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+-- return tests

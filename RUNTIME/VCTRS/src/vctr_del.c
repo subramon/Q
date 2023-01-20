@@ -14,6 +14,7 @@
 extern vctr_rs_hmap_t *g_vctr_hmap;
 extern chnk_rs_hmap_t *g_chnk_hmap;
 
+#undef VERBOSE
 int
 vctr_del(
     uint32_t tbsp, // table space 
@@ -38,7 +39,9 @@ vctr_del(
     goto BYE;
   }
   val = g_vctr_hmap[tbsp].bkts[where_found].val;
-  //if ( val.name[0] != '\0' ) { printf("Deleting Vctr: %s \n", val.name); }
+#ifdef VERBOSE
+  if ( val.name[0] != '\0' ) { printf("Deleting Vctr: %s \n", val.name); }
+#endif
   // delete lma file if it exists
   if ( ( is_lma ) && ( !is_persist ) ) {
     if ( val.num_readers != 0 ) { go_BYE(-1); }
