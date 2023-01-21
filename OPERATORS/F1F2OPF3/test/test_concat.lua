@@ -124,6 +124,9 @@ local c3 = Q.mk_col( {
     assert(c3:get1(i-1) == c2:get1(i-1))
   end
   assert(cVector.check_all())
+  c1:delete()
+  c2:delete()
+  c3:delete()
   print("Test t1 succeeded")
 end
 

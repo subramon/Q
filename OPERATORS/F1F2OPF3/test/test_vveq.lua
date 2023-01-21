@@ -86,6 +86,9 @@ tests.t3 = function()
   assert(n1 == n2)
 
   assert(cVector.check_all())
+  c1:delete()
+  c2:delete()
+  c3:delete()
   print("Test t3 succeeded")
 end
 -- return tests

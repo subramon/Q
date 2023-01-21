@@ -2,7 +2,7 @@
 set -e 
 make -C ../../../UTILS/src/
 make -C ../lua/ clean
-make -C ../lua/
+make -C ../lua/ 
 gcc -g -std=gnu99 \
   test_where.c \
   -I../gen_inc  \

@@ -14,6 +14,7 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
   local sp_fn_name = "Q/OPERATORS/F1F2OPF3/lua/" .. op .. "_specialize"
   local spfn = assert(require(sp_fn_name))
   local subs = assert(spfn(op, f1, f2, optargs))
+  assert(type(subs.cargs) == "CMEM")
   -- subs should return 
   -- (1) f3_qtype (2) f1_cst_as (2) f2_cst_as (3) f3_cst_as
   local func_name = assert(subs.fn)
@@ -44,6 +45,7 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
     f1:unget_chunk(l_chunk_num)
     f2:unget_chunk(l_chunk_num)
     if ( f1_len < subs.max_num_in_chunk ) then 
+      subs.cargs:delete()
       f1:kill() 
       f2:kill()
     end

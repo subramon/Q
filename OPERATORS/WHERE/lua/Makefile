@@ -28,7 +28,7 @@ AUX_FILES = \
 
 libwhere.so : ${GEN_FILES} where_B1.tmpl where_BL.tmpl
 	qjit generator.lua
-	gcc ${GEN_FILES} ${AUX_FILES} ${CFLAGS} ${INCS} -shared -o libwhere.so
+	gcc ${GEN_FILES} ${AUX_FILES} ${QCFLAGS} ${INCS} -shared -o libwhere.so
 
 test_q : libwhere.so
 	echo "TODO"
