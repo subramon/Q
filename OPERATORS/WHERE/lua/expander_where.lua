@@ -80,6 +80,8 @@ local function expander_where(a, b, optargs)
       if ( ab_len == 0 ) then 
         -- no more input, flush whatever is in output buffer
         local num_in_out = tonumber(c_n_out[0])
+        aidx:delete()
+        n_out:delete()
         return num_in_out, out_buf
       end
       local cast_a_buf   = get_ptr(a_chunk, subs.cast_a_as)
@@ -102,6 +104,8 @@ local function expander_where(a, b, optargs)
       if ( ab_len < a:max_num_in_chunk() ) then 
         -- no more input, flush whatever is in output buffer
         local num_in_out = tonumber(c_n_out[0])
+        aidx:delete()
+        n_out:delete()
         return num_in_out, out_buf
       end
     until ( num_in_out == subs.max_num_in_chunk )

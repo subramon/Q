@@ -4,6 +4,7 @@ local Scalar  = require 'libsclr'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local cVector = require 'libvctr'
 local cutils  = require 'libcutils'
+local lgutils = require 'liblgutils'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 -- configs 
 local datafile = qcfg.q_src_root .. "/TESTS/SELECT/data/100K_1"
@@ -44,8 +45,13 @@ assert(T1.id:check())
 print("===== get_chunk error before this is okay =====")
 assert(T2.lb:num_elements() == T2.ck:num_elements())
 -- throw away stuff you don't need any more
-T1.id = nil; T1.x = nil; collectgarbage()
-assert(T1.ck:check())
+T1.id:delete() ;T1.id = nil
+T1.x:delete() ; T1.x= nil
+T1.tcin:delete(); T1.tcin = nil
+T1.str_week:delete(); T1.str_week = nil
+T1.dist_loc_i:delete(); T1.dist_loc_i = nil
+collectgarbage()
+cVector.check_all()
 local is_pr = true
 if ( is_pr ) then
   local U = {} 
@@ -58,5 +64,9 @@ if ( is_pr ) then
   Q.print_csv(U, { impl = "C", opfile = "_T2", header = header })
 end
 Q.save()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert(lgutils.mem_used() == 0)
+assert(lgutils.dsk_used() > 0)
 print("Quitting after PLP")
-os.exit()

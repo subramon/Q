@@ -47,6 +47,9 @@ tests.t1 = function()
     assert(n1:to_num() == 127)
     assert(n2:to_num() == len)
     --===============================================
+    c1:delete()
+    c2:delete()
+    collectgarbage()
   end
   print("Test t1 succeeded")
 end

@@ -37,6 +37,10 @@ local function load_csv(
     else
       v.memo_len = global_memo_len
     end
+    -- same nn_qtype for all vectors 
+    if ( v.has_nulls ) then 
+      v.nn_qtype = nn_qtype
+    end 
   end
   --=======================================
 
@@ -113,6 +117,14 @@ local function load_csv(
               vectors[v.name]:eov()
             end
           end
+          -- you can delete your local buffers
+          l_file_offset:delete()
+          l_num_rows_read:delete()
+          l_is_load:delete()
+          l_has_nulls:delete()
+          l_is_trim:delete()
+          l_width:delete()
+          l_c_qtypes:delete()
         end
         -- print("returning " ..  this_num_rows_read)
         return this_num_rows_read, l_data[v.name], nn_l_data[v.name]
@@ -127,10 +139,13 @@ local function load_csv(
   for _, v in ipairs(M) do 
     if ( v.is_load ) then 
       local tinfo = {}
+      tinfo.name      = v.name
       tinfo.gen       = lgens[v.name]
       tinfo.has_nulls = v.has_nulls
+      if ( tinfo.has_nulls ) then 
+        tinfo.nn_qtype  = nn_qtype
+      end 
       tinfo.qtype     = v.qtype
-      tinfo.nn_qtype  = nn_qtype
       tinfo.max_num_in_chunk  = max_num_in_chunk
       if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
       local V = lVector(tinfo)

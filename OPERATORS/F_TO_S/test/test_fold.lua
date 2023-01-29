@@ -3,6 +3,7 @@ require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
+local lgutils = require 'liblgutils'
 
 local tests = {}
 tests.t1 = function( to_memo)
@@ -29,9 +30,12 @@ tests.t1 = function( to_memo)
   end
   -- for comparison
   local d1 = Q.seq({start = 1, by = 1, len = len, qtype = qtype})
-  local sumval, sumnum = Q.sum(d1):eval()
-  local minval, minnum, minidx  = Q.min(d1):eval()
-  local maxval, maxnum, maxidx  = Q.max(d1):eval()
+  local sum_rdcr = Q.sum(d1)
+  local min_rdcr = Q.min(d1)
+  local max_rdcr = Q.max(d1)
+  local sumval, sumnum          = sum_rdcr:eval()
+  local minval, minnum, minidx  = min_rdcr:eval()
+  local maxval, maxnum, maxidx  = max_rdcr:eval()
 
   assert(T["sum"][1] == sumval)
   assert(T["sum"][2] == sumnum)
@@ -43,6 +47,11 @@ tests.t1 = function( to_memo)
   assert(T["max"][2] == maxnum)
 
   assert(cVector.check_all())
+  c1:delete()
+  d1:delete()
+  sum_rdcr:delete()
+  min_rdcr:delete()
+  max_rdcr:delete()
   print("Test t1 succeeded")
   return true
 end
@@ -55,5 +64,8 @@ tests.t2 = function()
 end
 tests.t1()
 tests.t2()
-os.exit()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests

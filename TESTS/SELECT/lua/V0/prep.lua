@@ -4,6 +4,7 @@ local Scalar  = require 'libsclr'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local cVector = require 'libvctr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
+local lgutils = require 'liblgutils'
 -- configs 
 local datafile = qcfg.q_src_root .. "/TESTS/SELECT/data/100K_1"
 -- load big data set 
@@ -21,6 +22,7 @@ T1.tcin:eval()
 --=================
 T1.week_start_date = Q.SC_to_TM(T1.str_week, "%Y-%m-%d", 
   { out_qtype = "TM1" , name = "week_start_date", }):eval()
+T1.week_start_date:eval()
 T1.ck = Q.concat(T1.tcin, T1.dist_loc_i, { name = "ck" }):eval()
 lVector.conjoin({T1.ck, T1.week_start_date})
 --==================================================o
@@ -42,7 +44,6 @@ local n = T1.tcin:num_elements()
 T1.id = Q.seq({len = n, start = 0, by = 1, qtype = "I8"}):eval()
 T2 = {}
 T2.lb = Q.where(T1.id, T1.x):eval()
-T2.lb:eval()
 T2.ub = Q.vshift(T2.lb, 1, Scalar.new(n, T2.lb:qtype())):eval()
 T2.tcin = Q.where(T1.tcin, T1.x):eval() -- delete later 
 T2.dist_loc_i = Q.where(T1.dist_loc_i, T1.x):eval() -- delete later 
@@ -60,5 +61,9 @@ if ( is_pr ) then
   Q.print_csv(U, { impl = "C", opfile = "_T2", header = header })
 end
 Q.save()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert(lgutils.mem_used() == 0)
+assert(lgutils.dsk_used() > 0)
 print("Quitting after PLP")
-os.exit()

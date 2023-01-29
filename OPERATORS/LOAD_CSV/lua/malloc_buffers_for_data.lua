@@ -13,17 +13,22 @@ local function malloc_buffers_for_data(M, max_num_in_chunk)
     -- special case need below 
     if ( v.is_load ) then 
       local bufsz = v.width * max_num_in_chunk
-      assert(v.nn_qtype ~= "B1" ) -- TODO to be implemente
+      assert(v.nn_qtype ~= "B1" ) -- TODO P2 to be implemented
       l_data[v.name] = cmem.new(
-        { size = bufsz, qtype = v.qtype, name = "_" .. v.name})
+        { size = bufsz, qtype = v.qtype, name = "_" .. v.name .. "_CSV"})
       l_data[v.name]:stealable(true)
       if ( v.has_nulls ) then
-        if ( v.nn_qtype == "B1" ) then bufsz = max_num_in_chunk / 8 end 
-        if ( v.nn_qtype == "BL" ) then bufsz = max_num_in_chunk     end 
+        if ( v.nn_qtype == "B1" ) then 
+          bufsz = max_num_in_chunk / 8 
+        elseif ( v.nn_qtype == "BL" ) then 
+          bufsz = max_num_in_chunk
+        else
+          error("ERROR" .. v.nn_qtype)
+        end
         local nn_name = "_" .. "nn_" .. v.name
         cVector.check_all(true, true)
         nn_l_data[v.name] = cmem.new(
-          {size = bufsz, qtype = "B1", name = nn_name})
+          {size = bufsz, qtype = v.nn_qtype, name = nn_name .. "_CSV"})
         nn_l_data[v.name]:stealable(true)
       end
     end

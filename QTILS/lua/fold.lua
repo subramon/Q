@@ -18,6 +18,7 @@ local function fold( fns, vec)
   local  gens = {}
   for i, v in ipairs(fns) do
     gens[i] = f_to_s[v](vec)
+    assert(type(gens[i]) == "Reducer")
   end
   repeat
     for i, v in ipairs(fns) do
@@ -35,6 +36,9 @@ local function fold( fns, vec)
     T[3] = z 
     --======================
     rvals[key] = T
+  end
+  for i, v in ipairs(fns) do
+    gens[i]:delete()
   end
   return rvals
   -- return a table of tables

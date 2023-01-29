@@ -3,7 +3,6 @@ local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
 local Scalar  = require 'libsclr'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
-local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
 local max_num_in_chunk = qcfg.max_num_in_chunk
 local q_src_root       = qcfg.q_src_root
