@@ -14,10 +14,10 @@ export QISPC="false" # TODO P1 Should not be hard coded here
 # Wont work with simlinks
 Q_SRC_ROOT="$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
 export Q_SRC_ROOT="${Q_SRC_ROOT}"
-echo "Q_SRC_ROOT: ${Q_SRC_ROOT}"
+echo "Q_SRC_ROOT= ${Q_SRC_ROOT}"
 #-----------------------------------
 export Q_ROOT="${Q_ROOT:=${HOME}/local/Q}"
-echo "Q_ROOT: $Q_ROOT"
+echo "Q_ROOT= $Q_ROOT"
 mkdir -p $HOME/local/
 mkdir -p $HOME/local/Q/
 mkdir -p $HOME/local/Q/lib/
@@ -43,12 +43,12 @@ QCFLAGS+=" -Wold-style-definition -Wsuggest-attribute=noreturn "
 
 
 export ASAN_FLAGS="${ASAN_FLAGS}"
-echo "ASAN_FLAGS: $ASAN_FLAGS"
+echo "ASAN_FLAGS= $ASAN_FLAGS"
 
 QCFLAGS+=$ASAN_FLAGS 
 # QLDFLAGS=" $ASAN_FLAGS -static-libasan "
 export QLDFLAGS="${QLDFLAGS}"
-echo "QLDFLAGS: $QLDFLAGS"
+echo "QLDFLAGS= $QLDFLAGS"
 
 # TODO Consider whether to add the following
 # Under Linux, when using GNU GCC, I have found it necessary to use the gold linker to get good results (-fuse-ld=gold): the default link frequently gives me errors when I try to use sanitizers.
@@ -71,21 +71,21 @@ else
   QCFLAGS+=" -Wduplicated-branches -Wrestrict "
 fi
 export QCFLAGS="${QCFLAGS}"
-echo "QCFLAGS: $QCFLAGS"
+echo "QCFLAGS= $QCFLAGS"
 
-echo "Q_IS_ARM: $Q_IS_ARM"
+echo "Q_IS_ARM= $Q_IS_ARM"
 #-----------------------------------
 QISPC_FLAGS=' --pic  ' #- TODO to be set  P2
-echo "QISPC_FLAGS: $QISPC_FLAGS"
-echo "QISPC: $QISPC"
+echo "QISPC_FLAGS= $QISPC_FLAGS"
+echo "QISPC= $QISPC"
 #-----------------------------------
 # Default data directory
 mkdir -p $Q_ROOT/data
 export Q_DATA_DIR="${Q_DATA_DIR:=${Q_ROOT}/data}"
-echo "Q_DATA_DIR: $Q_DATA_DIR"
+echo "Q_DATA_DIR= $Q_DATA_DIR"
 #-----------------------------------
 export LD_LIBRARY_PATH="${Q_ROOT}/lib:/usr/local/lib64:${LD_LIBRARY_PATH}"
-echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+echo "LD_LIBRARY_PATH= $LD_LIBRARY_PATH"
 #-----------------------------------
 
 CURR_PATH=`pwd`
@@ -95,8 +95,8 @@ cd ../
 export LUA_PATH="${Q_ROOT}/meta/?.lua;${Q_ROOT}/config/?.lua;`pwd`/?.lua;`pwd`/?/init.lua;;"
 export LUA_CPATH="${Q_ROOT}/lib/?.so;;"
 cd $CURR_PATH
-echo "LUA_PATH: $LUA_PATH"
-echo "LUA_CPATH: $LUA_CPATH"
+echo "LUA_PATH= $LUA_PATH"
+echo "LUA_CPATH= $LUA_CPATH"
 cd $PREV_DIR
 cd $CUR_DIR 
 export PATH=$PATH:$Q_ROOT/bin/

@@ -148,6 +148,7 @@ end
 T.vvrem = vvrem
 require('Q/q_export').export('vvrem', vvrem)
     
+--]===]
 local function vvgeq(x, y, optargs)
   local doc_string = [[ Signature: Q.vvgeq(x, y, opt_optargs)
   -- This operator performs vvgeq of x and y
@@ -231,7 +232,6 @@ local function vvlt(x, y, optargs)
 end
 T.vvlt = vvlt
 require('Q/q_export').export('vvlt', vvlt)
---]===]
     
 local function vvand(x, y, optargs)
   local doc_string = [[ Signature: Q.vvand(x, y, opt_optargs)
