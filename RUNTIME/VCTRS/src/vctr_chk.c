@@ -1,5 +1,6 @@
 #include "q_incs.h"
 #include "q_macros.h"
+#include "qjit_consts.h"
 #include "rmtree.h"
 
 #include "vctr_rs_hmap_struct.h"
@@ -12,41 +13,44 @@
 #include "qtypes.h"
 #include "vctr_chk.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap;
-extern chnk_rs_hmap_t g_chnk_hmap;
 
+extern vctr_rs_hmap_t *g_vctr_hmap;
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
 int
 vctrs_chk(
+    uint32_t tbsp,
     bool is_at_rest
     )
 {
   int status = 0;
+  // relax above restriction TODO P4 
   // Above check needed because (unfortunately) I have used
   // uint32_t everywhere instead of vctr_rs_hmap_key_t 
   if ( sizeof(uint32_t) != sizeof(vctr_rs_hmap_key_t)) { go_BYE(-1); }
   uint32_t total_num_chunks = 0;
-  for ( uint32_t i = 0; i < g_vctr_hmap.size; i++ ) { 
+  for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) { 
     vctr_rs_hmap_val_t vctr_val;
     memset(&vctr_val, 0, sizeof(vctr_rs_hmap_val_t));
     vctr_rs_hmap_key_t vctr_key;
     memset(&vctr_key, 0, sizeof(vctr_rs_hmap_key_t));
-    if ( g_vctr_hmap.bkt_full[i] == false ) {
+    if ( g_vctr_hmap[tbsp].bkt_full[i] == false ) {
       // key and value must be empty 
-      if ( memcmp(&g_vctr_hmap.bkts[i].val, &vctr_val, 
+      if ( memcmp(&g_vctr_hmap[tbsp].bkts[i].val, &vctr_val, 
             sizeof(vctr_rs_hmap_val_t)) != 0 ) {
         go_BYE(-1); 
       }
-      if ( memcmp(&g_vctr_hmap.bkts[i].key, &vctr_key, 
+      if ( memcmp(&g_vctr_hmap[tbsp].bkts[i].key, &vctr_key, 
             sizeof(vctr_rs_hmap_key_t)) != 0 ) {
         go_BYE(-1); 
       }
       continue; 
     }
-    status = vctr_chk(g_vctr_hmap.bkts[i].key, is_at_rest); cBYE(status); 
-    total_num_chunks += g_vctr_hmap.bkts[i].val.num_chnks;
+    status = vctr_chk(tbsp, g_vctr_hmap[tbsp].bkts[i].key, is_at_rest); 
+    cBYE(status); 
+    total_num_chunks += g_vctr_hmap[tbsp].bkts[i].val.num_chnks;
   }
-  if ( total_num_chunks != g_chnk_hmap.nitems ) { 
+  if ( total_num_chunks != g_chnk_hmap[tbsp].nitems ) { 
     go_BYE(-1); 
   }
 BYE:
@@ -54,6 +58,7 @@ BYE:
 }
 int
 vctr_chk(
+    uint32_t tbsp,
     uint32_t vctr_uqid,
     bool is_at_rest
     )
@@ -64,11 +69,11 @@ vctr_chk(
   if ( vctr_uqid == 0 ) { goto BYE; }
 
   bool vctr_is_found; uint32_t vctr_where_found;
-  status = vctr_is(vctr_uqid, &vctr_is_found, &vctr_where_found);
+  status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
   if ( !vctr_is_found ) { go_BYE(-1); }
 
-  vctr_rs_hmap_val_t vctr_val = g_vctr_hmap.bkts[vctr_where_found].val;
+  vctr_rs_hmap_val_t vctr_val = g_vctr_hmap[tbsp].bkts[vctr_where_found].val;
   uint32_t qtype           = vctr_val.qtype;
   if ( qtype >= NUM_QTYPES ) { go_BYE(-1); } 
   if ( qtype <= Q0 ) { go_BYE(-1); } 
@@ -94,9 +99,14 @@ vctr_chk(
   if ( vctr_val.is_lma == false ) { 
     if ( vctr_val.X != NULL ) { go_BYE(-1); }
     if ( vctr_val.nX != 0 ) { go_BYE(-1); }
-    if ( ( vctr_val.num_readers != 0 ) || ( vctr_val.num_writers != 0 ) ) { 
-      go_BYE(-1);
-    }
+    if ( vctr_val.num_readers != 0 ) { go_BYE(-1); }
+    if ( vctr_val.num_writers != 0 ) { go_BYE(-1); }
+  }
+  else {
+    // NOTE that we do not maintain 2 representations of the data
+    // If it is in lma, then it cannot be in chunks
+    if ( vctr_val.num_chnks != 0 ) { go_BYE(-1); } 
+    if ( vctr_val.max_chnk_idx != 0 ) { go_BYE(-1); } 
   }
   //----------------------------------------------
   if ( ( vctr_val.num_readers == 0 ) && ( vctr_val.num_writers == 0 ) ) { 
@@ -113,15 +123,15 @@ vctr_chk(
   if ( vctr_val.num_writers > 0 ) {
     if ( vctr_val.num_readers != 0 ) { go_BYE(-1); }
     if ( vctr_val.num_writers != 1 ) { go_BYE(-1); }
-    if ( vctr_val.X != NULL ) { go_BYE(-1); }
-    if ( vctr_val.nX != 0 ) { go_BYE(-1); }
+    if ( vctr_val.X == NULL ) { go_BYE(-1); }
+    if ( vctr_val.nX == 0 ) { go_BYE(-1); }
   }
   //----------------------------------------------
 
   if ( vctr_val.is_lma ) { 
     if ( !vctr_val.is_eov ) { go_BYE(-1); }
     uint32_t good_filesz = num_elements * width;
-    char *l2_file = l2_file_name(vctr_uqid, ((uint32_t)~0)); 
+    char *l2_file = l2_file_name(tbsp, vctr_uqid, ((uint32_t)~0)); 
     if ( !isfile(l2_file) ) { go_BYE(-1); }
     int64_t filesz = get_file_size(l2_file);
     if ( filesz != good_filesz ) { go_BYE(-1); }
@@ -149,7 +159,7 @@ vctr_chk(
   for ( uint32_t chnk_idx = 0; chnk_idx <= max_chnk_idx; chnk_idx++ ) {
     if ( num_elements == 0 ) { break; } // NOTE: Special case for empty vec
     bool chnk_is_found; uint32_t chnk_where_found;
-    status = chnk_is(vctr_uqid, chnk_idx,&chnk_is_found,&chnk_where_found);
+    status = chnk_is(tbsp, vctr_uqid, chnk_idx,&chnk_is_found,&chnk_where_found);
     cBYE(status);
     // TODO P3 Tighten following test 
     if ( vctr_val.memo_len < 0 ) { 
@@ -161,9 +171,9 @@ vctr_chk(
     memset(&chnk_val, 0, sizeof(chnk_rs_hmap_val_t));
     chnk_rs_hmap_key_t chnk_key;
     memset(&chnk_key, 0, sizeof(chnk_rs_hmap_key_t));
-    chnk_val = g_chnk_hmap.bkts[chnk_where_found].val;
-    chnk_key = g_chnk_hmap.bkts[chnk_where_found].key;
-    if ( chnk_val.is_early_free ) { chk_is_early_free = true; } 
+    chnk_val = g_chnk_hmap[tbsp].bkts[chnk_where_found].val;
+    chnk_key = g_chnk_hmap[tbsp].bkts[chnk_where_found].key;
+    if ( chnk_val.is_early_free == true ) { chk_is_early_free = true; } 
     if ( is_at_rest ) { 
       if ( chnk_val.num_readers != 0 ) { go_BYE(-1); } 
       if ( chnk_val.num_writers != 0 ) { go_BYE(-1); } 
@@ -187,7 +197,7 @@ vctr_chk(
     if ( chnk_val.is_early_free ) { 
       if ( chnk_val.l2_exists ) { go_BYE(-1); } 
       if ( chnk_val.l1_mem != NULL  ) { go_BYE(-1); } 
-      char *l2_file = l2_file_name(vctr_uqid, chnk_idx);
+      char *l2_file = l2_file_name(tbsp, vctr_uqid, chnk_idx);
       if ( isfile(l2_file) ) { go_BYE(-1); }
       free_if_non_null(l2_file);
     }
@@ -197,7 +207,7 @@ vctr_chk(
         if ( chnk_val.l1_mem == NULL ) { go_BYE(-1); }
       }
       else { // check that file exists 
-        char *l2_file = l2_file_name(vctr_uqid, chnk_idx);
+        char *l2_file = l2_file_name(tbsp, vctr_uqid, chnk_idx);
         if ( !isfile(l2_file) ) { go_BYE(-1); }
         int64_t filesz = get_file_size(l2_file);
         if ( filesz != good_filesz ) { go_BYE(-1); }

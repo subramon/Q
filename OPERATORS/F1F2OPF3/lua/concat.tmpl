@@ -1,0 +1,52 @@
+return require 'Q/UTILS/lua/code_gen' {
+   declaration = [[
+#include <omp.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <math.h>
+#include "f1f2opf3_concat.h"
+//START_FOR_CDEF
+extern int
+${fn}(  
+      ${f1_ctype} * const restrict in1,  
+      ${f2_ctype} * const restrict in2,  
+      uint32_t nR,  
+      f1f2opf3_concat_t *ptr_args,
+      ${f3_ctype} * restrict out 
+      ) 
+;
+//STOP_FOR_CDEF
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+${ispc_comment} #include "${fn_ispc}.h"
+
+int
+${fn}(  
+      ${f1_ctype} * const restrict in1,  
+      ${f2_ctype} * const restrict in2,  
+      uint32_t nR,  
+      f1f2opf3_concat_t *ptr_args,
+      ${f3_ctype} * restrict out 
+      )
+
+{ 
+  int status = 0;
+  uint32_t shift_by = ptr_args->shift_by;
+#pragma omp parallel for schedule(static, ${chunk_size})
+  for ( uint32_t i = 0; i < nR; i++ ) {
+    uint64_t    v1 = in1[i]; 
+    uint64_t    v2 = in2[i]; 
+    uint64_t    outv;
+    outv = ( v1 << shift_by ) | v2;
+    out[i] = outv;
+  } 
+
+  return status;
+}
+
+   ]]
+}

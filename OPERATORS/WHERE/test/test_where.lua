@@ -6,6 +6,7 @@ local cVector  = require 'libvctr'
 local lVector  = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local qcfg     = require 'Q/UTILS/lua/qcfg'
 local max_num_in_chunk = qcfg.max_num_in_chunk 
+local lgutils = require 'liblgutils'
 
 local tests = {}
 tests.t1 = function ()
@@ -17,8 +18,11 @@ tests.t1 = function ()
     assert(c:num_elements() == goodc:num_elements())
     -- TODO local n1, n2 = Q.sum(Q.vveq(c, goodc)):eval()
     -- TODO assert(n1 == n2)
+    a:delete()
+    b:delete()
+    c:delete()
   end
-  cVector:check_all(true, true)
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 --======================================
@@ -30,7 +34,10 @@ tests.t2 = function ()
   assert(type(c) == "lVector")
   c:eval()
   assert(c:num_elements() == 0)
-  cVector:check_all(true, true)
+  assert(cVector.check_all())
+  a:delete()
+  b:delete()
+  c:delete()
   print("Test t2 succeeded")
 end
 --======================================
@@ -43,7 +50,11 @@ tests.t3 = function ()
     assert(c:num_elements() == b:num_elements())
     -- TODO local n1, n2 = Q.sum(Q.vveq(a, c)):eval()
     -- TODO assert(n1 == n2)
+    a:delete()
+    b:delete()
+    c:delete()
   end
+  assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 --======================================
@@ -53,8 +64,10 @@ tests.t4 = function ()
   b:set_meta("min", Scalar.new(0, "I4"))
   b:set_meta("max", Scalar.new(0, "I4"))
   local c = Q.where(a, b)
-  print(type(c))
   assert(c == nil)
+  assert(cVector.check_all())
+  a:delete()
+  b:delete()
   print("Test t4 succeeded")
 end
 --======================================
@@ -65,6 +78,10 @@ tests.t5 = function ()
   b:set_meta("max", Scalar.new(1, "I4"))
   local c = Q.where(a, b)
   assert(c == a)
+  assert(cVector.check_all())
+  a:delete()
+  b:delete()
+  c:delete()
   print("Test t5 succeeded")
 end
 --======================================
@@ -93,7 +110,11 @@ tests.t6 = function ()
     assert(c:num_elements() == num_in_c)
     -- TODO local n1, n2 = Q.sum(c):eval()
     -- TODO assert(n1 == Scalar.new(len))
+    a:delete()
+    c:delete()
   end
+  b:delete()
+  assert(cVector.check_all())
   print("Test t6 succeeded")
 end
 --=========================================
@@ -133,6 +154,10 @@ tests.t7 = function ()
   -- TODO assert(n1 == n2)
   c:eval()
   assert(c:num_elements() == 67)
+  assert(cVector.check_all())
+  a:delete()
+  b:delete()
+  c:delete()
   print("Test t7 succeeded")
 end
 
@@ -143,5 +168,9 @@ tests.t4()
 tests.t5()
 tests.t6()
 tests.t7()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 os.exit()
 -- return tests

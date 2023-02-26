@@ -1,5 +1,6 @@
 #include "q_incs.h"
 #include "qtypes.h"
+#include "qjit_consts.h"
 #include "vctr_consts.h"
 #include "vctr_new_uqid.h"
 #include "vctr_is.h"
@@ -8,7 +9,7 @@
 
 #include "vctr_rs_hmap_struct.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap;
+extern vctr_rs_hmap_t *g_vctr_hmap;
 
 int
 vctr_add1(
@@ -20,8 +21,9 @@ vctr_add1(
     )
 {
   int status = 0;
+  uint32_t tbsp =  0; // cannot add to a different tablespace => tbsp = 0
   uint32_t old_vctr_cnt, new_vctr_cnt;
-  old_vctr_cnt = vctr_cnt();
+  old_vctr_cnt = vctr_cnt(tbsp);
   if ( ( qtype == Q0 ) || ( qtype >= NUM_QTYPES ) ) { go_BYE(-1); }
   *ptr_uqid = vctr_new_uqid();
   vctr_rs_hmap_key_t key = *ptr_uqid; 
@@ -30,11 +32,11 @@ vctr_add1(
   }
 #ifdef DEBUG
   {
-  bool is_found; uint32_t where_found;
-  status = vctr_is(*ptr_uqid, &is_found, &where_found); cBYE(status);
+  bool is_found; uint32_t where_found = ~0;
+  status = vctr_is(tbsp, *ptr_uqid, &is_found, &where_found); cBYE(status);
   if ( is_found ) { go_BYE(-1); }
-#endif
   }
+#endif
 
   uint32_t max_num_in_chnk = in_max_num_in_chnk;
   if  ( max_num_in_chnk == 0 ) { 
@@ -49,13 +51,13 @@ vctr_add1(
     { .qtype = qtype, .max_num_in_chnk = max_num_in_chnk, 
       .memo_len = memo_len, .width = width, .num_chnks = 0,
       .ref_count = 1 } ;
-  status = g_vctr_hmap.put(&g_vctr_hmap, &key, &val); cBYE(status);
+  status = g_vctr_hmap[tbsp].put(&g_vctr_hmap[tbsp], &key, &val); cBYE(status);
 #ifdef DEBUG
-  new_vctr_cnt = vctr_cnt();
+  new_vctr_cnt = vctr_cnt(tbsp);
   if ( new_vctr_cnt != old_vctr_cnt + 1 ) { go_BYE(-1); }
   // initializations below for debugging. Not needed
-  bool is_found = true; uint32_t where_found = 123456789;
-  status = vctr_is(*ptr_uqid, &is_found, &where_found); 
+  bool is_found = true; uint32_t where_found = ~0;
+  status = vctr_is(tbsp, *ptr_uqid, &is_found, &where_found); 
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
 #endif

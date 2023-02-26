@@ -19,7 +19,10 @@ rmtree(
   char *full_path = NULL;
   DIR *dir = NULL;
   struct stat stat_path, stat_entry;
-  struct dirent *entry;
+  struct dirent *entry = NULL;
+
+  memset(&stat_path, 0, sizeof(struct stat));
+  memset(&stat_entry, 0, sizeof(struct stat));
 
   // stat for the path
   stat(path, &stat_path);

@@ -8,6 +8,8 @@ end
 local function register_qop(expander, qname, ...)
   assert(expander and (type(expander) == "string") and (#expander > 0))
   assert(qname    and (type(qname)    == "string") and (#qname    > 0))
+  print("expander = ", expander)
+  print("qname = ", qname)
   
   local qfn = function(...)
     --[[ CRAZY BUG: difference between Lua and LuaJIT

@@ -19,7 +19,49 @@ local function vvsub(x, y, optargs)
 end
 T.vvsub = vvsub
 require('Q/q_export').export('vvsub', vvsub)
---[===[ TODO P1 Need to add all the rest of these back after testing 
+
+local function vveq(x, y, optargs)
+  local doc_string = [[ Signature: Q.vveq(x, y, opt_optargs)
+  -- This operator performs vveq of x and y
+  ]]
+  -- this call has been just done for docstring
+  if x and x == "help" then
+    return doc_string
+  end
+
+  local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
+  if type(x) == "lVector" and type(y) == "lVector" then
+    local status, col = pcall(expander, "vveq", x, y, optargs)
+    if ( not status ) then print(col) end
+    assert(status, "Could not execute vveq")
+    return col
+  end
+  assert(nil, "Bad arguments to f1f2opf3")
+end
+T.vveq = vveq
+require('Q/q_export').export('vveq', vveq)
+    
+local function vvneq(x, y, optargs)
+  local doc_string = [[ Signature: Q.vvneq(x, y, opt_optargs)
+  -- This operator performs vvneq of x and y
+  ]]
+  -- this call has been just done for docstring
+  if x and x == "help" then
+    return doc_string
+  end
+
+  local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
+  if type(x) == "lVector" and type(y) == "lVector" then
+    local status, col = pcall(expander, "vvneq", x, y, optargs)
+    if ( not status ) then print(col) end
+    assert(status, "Could not execute vvneq")
+    return col
+  end
+  assert(nil, "Bad arguments to f1f2opf3")
+end
+T.vvneq = vvneq
+require('Q/q_export').export('vvneq', vvneq)
+    
 local function vvadd(x, y, optargs)
   local doc_string = [[ Signature: Q.vvadd(x, y, opt_optargs)
   -- This operator performs vvadd of x and y
@@ -84,6 +126,7 @@ end
 T.vvdiv = vvdiv
 require('Q/q_export').export('vvdiv', vvdiv)
     
+--[===[ TODO P1 Need to add all the rest of these back after testing 
 local function vvrem(x, y, optargs)
   local doc_string = [[ Signature: Q.vvrem(x, y, opt_optargs)
   -- This operator performs vvrem of x and y
@@ -105,6 +148,7 @@ end
 T.vvrem = vvrem
 require('Q/q_export').export('vvrem', vvrem)
     
+--]===]
 local function vvgeq(x, y, optargs)
   local doc_string = [[ Signature: Q.vvgeq(x, y, opt_optargs)
   -- This operator performs vvgeq of x and y
@@ -188,48 +232,6 @@ local function vvlt(x, y, optargs)
 end
 T.vvlt = vvlt
 require('Q/q_export').export('vvlt', vvlt)
-    
-local function vveq(x, y, optargs)
-  local doc_string = [[ Signature: Q.vveq(x, y, opt_optargs)
-  -- This operator performs vveq of x and y
-  ]]
-  -- this call has been just done for docstring
-  if x and x == "help" then
-    return doc_string
-  end
-
-  local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
-  if type(x) == "lVector" and type(y) == "lVector" then
-    local status, col = pcall(expander, "vveq", x, y, optargs)
-    if ( not status ) then print(col) end
-    assert(status, "Could not execute vveq")
-    return col
-  end
-  assert(nil, "Bad arguments to f1f2opf3")
-end
-T.vveq = vveq
-require('Q/q_export').export('vveq', vveq)
-    
-local function vvneq(x, y, optargs)
-  local doc_string = [[ Signature: Q.vvneq(x, y, opt_optargs)
-  -- This operator performs vvneq of x and y
-  ]]
-  -- this call has been just done for docstring
-  if x and x == "help" then
-    return doc_string
-  end
-
-  local expander = require 'Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3'
-  if type(x) == "lVector" and type(y) == "lVector" then
-    local status, col = pcall(expander, "vvneq", x, y, optargs)
-    if ( not status ) then print(col) end
-    assert(status, "Could not execute vvneq")
-    return col
-  end
-  assert(nil, "Bad arguments to f1f2opf3")
-end
-T.vvneq = vvneq
-require('Q/q_export').export('vvneq', vvneq)
     
 local function vvand(x, y, optargs)
   local doc_string = [[ Signature: Q.vvand(x, y, opt_optargs)
@@ -315,7 +317,6 @@ end
 T.vvandnot = vvandnot
 require('Q/q_export').export('vvandnot', vvandnot)
     
---]===]
 local function concat(x, y, optargs)
   local doc_string = [[ Signature: Q.concat(x, y, opt_optargs)
   -- This operator performs concat of x and y

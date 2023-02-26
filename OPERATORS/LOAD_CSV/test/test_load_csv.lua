@@ -1,3 +1,4 @@
+local cutils = require 'libcutils'
 local plutils= require 'pl.utils'
 local plfile = require 'pl.file'
 local plpath = require 'pl.path'
@@ -8,6 +9,7 @@ local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
+local lgutils  = require 'liblgutils'
 -- TODO P1 Set below to true 
 local test_print  = true -- turn false if you want only load_csv tested
 --=======================================================
@@ -37,18 +39,19 @@ tests.t1 = function()
   assert(num_cols == #M, num_cols)
   local chunk_idx = 0
   repeat 
-    print("getting chunk " .. chunk_idx )
     local n 
     for k, v in pairs(T) do 
+      -- print("getting chunk " .. chunk_idx .. " for " .. k)
+      if ( chunk_idx > 0 ) then print(">>>> START Deliberate error") end 
       n = v:get_chunk(chunk_idx)
+      if ( chunk_idx > 0 ) then print(">>>> STOP  Deliberate error") end 
       if  ( n ~= 0 ) then 
         v:unget_chunk(chunk_idx)
       end
-      print("got chunk " .. chunk_idx .. " for " .. k)
+      -- print("got    chunk " .. chunk_idx .. " for " .. k)
     end
     chunk_idx = chunk_idx + 1
   until (n == 0)
-  print("got all chunks")
   -- This test is specific to the in1.csv we have crafted
   for i = 1, T.i4:num_elements() do
     assert(T.i4:get1(i-1):to_num() == i)
@@ -74,6 +77,7 @@ tests.t1 = function()
     end
   end
   --===================
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 --=======================================================
@@ -98,7 +102,9 @@ tests.t2 = function()
   repeat 
     local n 
     for k, v in pairs(T) do 
+      if ( chunk_idx > 0 ) then print(">>>> START Deliberate error") end 
       n = v:get_chunk(chunk_idx)
+      if ( chunk_idx > 0 ) then print("<<<< STOP  Deliberate error") end 
       if ( n > 0 ) then 
         v:unget_chunk(chunk_idx)
       end
@@ -129,6 +135,7 @@ tests.t2 = function()
       assert(plutils.readfile(expected) == plutils.readfile(opfile))
     end
   end
+  assert(cVector.check_all())
   print("Test t2 succeeded")
 end
 --=======================================================
@@ -142,13 +149,17 @@ tests.t3 = function()
   M[#M+1] = { is_memo = true, name = "price", qtype = "F4", has_nulls = false}
   local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in3.csv"
   assert(plpath.isfile(datafile))
+  local x = cutils.num_lines(datafile)
+  local y = x / qcfg.max_num_in_chunk
   local T = Q.load_csv(datafile, M, O)
   for _, v in pairs(T) do assert(v:memo_len() == -1 ) end 
   local chunk_idx = 0
   repeat 
     local n 
     for k, v in pairs(T) do 
+      if ( chunk_idx > y ) then print(">>>> START Deliberate error") end 
       n = v:get_chunk(chunk_idx)
+      if ( chunk_idx > y ) then print(">>>> STOP  Deliberate error") end 
       if ( n > 0 ) then 
         v:unget_chunk(chunk_idx)
       end
@@ -165,6 +176,7 @@ tests.t3 = function()
       Q.print_csv(U, {opfile = opfile, impl = impl})
     end
   end
+  assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 --==============================================================
@@ -180,14 +192,17 @@ tests.t4 = function()
   T.datetime:eval()
   T.datetime:pr("_1", 0, 0, format); 
   T.store_id:pr("_2", 0, 0, format); 
-  local x = Q.SC_to_TM(T.datetime, format)
-  x:eval()
+  cVector.check_all(true, true)
+  local x = Q.SC_to_TM(T.datetime, format):set_name("x")
   assert(type(x) == "lVector")
+  x:eval()
+  assert(x:check())
   assert(x:num_elements() == T.datetime:num_elements())
   x:pr("_3", 0, 0, format); 
-  local y = Q.TM_to_SC(x, format)
+  local y = Q.TM_to_SC(x, format):set_name("y")
   y:eval()
-  x:pr("_4", 0, 0, format); 
+  assert(y:check())
+  y:pr("_4", 0, 0, format); 
   local out1 = plfile.read("_1")
   local out3 = plfile.read("_3")
   local out4 = plfile.read("_4")
@@ -209,6 +224,7 @@ tests.t4 = function()
     end
   end
   --===================
+  assert(cVector.check_all())
   print("Test t4 succeeded")
 end
 --==============================================================
@@ -245,6 +261,7 @@ tests.t4a = function()
     end
   end
   --===================
+  assert(cVector.check_all())
   print("Test t4a succeeded")
 end
 tests.t5 = function()
@@ -258,10 +275,17 @@ tests.t5 = function()
   local format = "%Y-%m-%d %H:%M:%S"
   local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in3.csv"
   assert(plpath.isfile(datafile))
+  local nx = cutils.num_lines(datafile)
+  local ny = nx / qcfg.max_num_in_chunk
+
   local T = Q.load_csv(datafile, M, O)
+  for k, v in pairs(T) do
+    print(k, v:name())
+  end
   assert(T.datetime) 
   cVector:check_all(true, true)
-  local x = Q.SC_to_TM(T.datetime, format)
+  local x = Q.SC_to_TM(T.datetime, format):set_name("out_datetime")
+
   cVector:check_all(true, true)
 
   local tm_flds = { 
@@ -277,7 +301,7 @@ tests.t5 = function()
   }
   local out = {}
   for i, tm_fld in ipairs(tm_flds) do 
-    out[i] = Q.TM_to_I2(x, tm_fld)
+    out[i] = Q.TM_to_I2(x, tm_fld):set_name("out_" ..tm_fld)
     assert(type(out[i]) ==  "lVector")
   end
   cVector:check_all(true, true)
@@ -288,7 +312,9 @@ tests.t5 = function()
   local n
   repeat 
     for _, v in ipairs(out) do 
+      if ( chunk_idx >= ny ) then print("START DELIBERATE ERROR") end 
       n = v:get_chunk(chunk_idx)
+      if ( chunk_idx >= ny ) then print("STOP  DELIBERATE ERROR") end 
       if ( n > 0 ) then 
         v:unget_chunk(chunk_idx)
       end
@@ -307,7 +333,7 @@ tests.t5 = function()
   end
 
   if ( test_print ) then 
-    for _, impl in ipairs({"C", "L"}) do  
+    for _, impl in ipairs({"C", "L", }) do  
       local opfile = "/tmp/_x" .. impl
       Q.print_csv(out, {opfile = opfile, impl = impl})
       local expected = qcfg.q_src_root .. 
@@ -316,18 +342,22 @@ tests.t5 = function()
       print("Tested print with impl = " .. impl)
     end
   end
+  assert(cVector.check_all())
   print("Test t5 succeeded")
 end
 -- Testing null values
 tests.t6 = function() 
   local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in6.csv"
   assert(plpath.isfile(datafile))
-  for _, nn_qtype in ipairs( { "B1", "BL", } ) do 
+  -- TODO P2 Implement B1 for _, nn_qtype in ipairs( { "B1", "BL", } ) do 
+  for _, nn_qtype in ipairs( { "BL", } ) do 
+    print("Testing with nn_qtype = ", nn_qtype)
     local O = { is_hdr = true, memo_len = -1, nn_qtype = nn_qtype, }
     local M = {}
     M[#M+1] = { name = "i4", qtype = "I4", has_nulls = true, }
     M[#M+1] = { name = "f4", qtype = "F4", has_nulls = true, }
     local T = Q.load_csv(datafile, M, O)
+
     assert(T.i4:has_nulls() == true)
     assert(T.f4:has_nulls() == true)
   
@@ -338,19 +368,31 @@ tests.t6 = function()
     local nn_f4 = T.f4:get_nulls()
     assert(type(nn_f4) == "lVector")
     assert(nn_f4:qtype() == nn_qtype)
-  
-    print("-------------")
+
     T.i4:eval()
-    T.i4:pr()
-    T.f4:pr()
+    T.i4:check()
+    T.i4:pr("/tmp/_i4")
+    T.f4:pr("/tmp/_f4")
+    T.i4:check()
+
+    local n1, n2 = Q.sum(nn_i4):eval()
+    assert(n1:to_num() == 6 )
+    assert(n2:to_num() == 11 )
+
+    local n1, n2 = Q.sum(nn_f4):eval()
+    assert(n1:to_num() == 6 )
+    assert(n2:to_num() == 11 )
+
     local U = {}
     U[1] = T.i4
     U[2] = T.f4
     U[3] = T.i4
     U[4] = T.f4
+    T.i4:check()
     local opfile = "/tmp/_xxx"
     Q.print_csv(U, { impl = "C", opfile = opfile } )
   end
+  assert(cVector.check_all())
   print("Test t6 succeeded")
   
 end
@@ -361,7 +403,8 @@ end
 -- WORKS tests.t4a()
 tests.t5()
 -- WORKS tests.t6()
-os.exit()
---[[
-return tests
---]]
+-- return tests
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

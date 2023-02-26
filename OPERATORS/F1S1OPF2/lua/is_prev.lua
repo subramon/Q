@@ -57,9 +57,10 @@ local function is_prev(f1, cmp, optargs )
       cst_f2_buf, cst_last_val)
       record_time(start_time, func_name)
     end
+    f1:unget_chunk(chunk_idx)
     first_call = false
     chunk_idx = chunk_idx + 1
-    if ( f1_len == 0 ) then last_val:delete() end -- no more calls 
+    if ( f1_len < max_num_in_chunk ) then last_val:delete() end -- no more calls 
     return f1_len, f2_buf
   end
   local vargs = {}

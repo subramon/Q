@@ -2,13 +2,14 @@
 require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local cVector = require 'libvctr'
+local lgutils = require 'liblgutils'
 
 local tests = {}
 assert(type(Q.seq) == "function")
 assert(type(Q.concat) == "function")
 tests.t1 = function()
-  local max_num_in_chunk = 16  -- must be multiple of 64 for B1
-  local len = ( max_num_in_chunk * 2 ) -1 
+  local max_num_in_chunk = 64 
+  local len = max_num_in_chunk + 13
   local optargs = { max_num_in_chunk = max_num_in_chunk }
 
   local xin = Q.seq( {len = len, start = 1, by = 1, qtype = "I4", 
@@ -32,10 +33,14 @@ tests.t1 = function()
   for i = 1, xout:num_elements() do 
     assert(xout:get1(i-1) == good_xout:get1(i-1))
   end
-  xout:pr()
+  -- xout:pr()
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 
 tests.t1()
-os.exit()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests

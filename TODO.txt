@@ -1,13 +1,22 @@
+Bring ISPC back to life
+Bring OpenMP back to life
+Do some code reviews of save() and import() 
+In import, document that order of import is important. Understand why 
+
+TODO Experiment with alternating control of qjit with webserver
+Experiment with prefetch
+
+
 where do we keep max_num_in_chunk? Lua or C. Be consistent
 What of init_globals() needs to be saved in Q.save() 
   and restored after that
-  g_dsk_used should be checked/restored
-Make sure that if you restore but do not save, files get deleted
+What happens if you restore but do not save. Do files get deleted?
+Or does the persist persist (hah!)
+
 #=======================
+Document how we use TMPL_FIX_HASHMAP 
 
-
-Use qcfg.ISPC 
-Move q_core   to qcore
+Collaborate with Utpal on user interface. See RBC/gam/
 
 
 F1S1OPF2
@@ -19,5 +28,10 @@ Check whether we have implemented essence of F1F2OPF3/expander_f1f2opf3.txt
 Check whether we have implemented essence of F1F2OPF3/expander_f1f2opf3.txt
 --=================
 Verify that extra bits are zeroed out for vveq and vseq and so on
---=================
-Delete get_hdr.lua -- used in MDB
+Low priority: convert QC_FLAGS to QCFLAGS and QLDFLAGS
+
+DONE Bring webserver back to life
+DONE Bring out-of-band server back to life
+DONE g_dsk_used should be checked/restored upon restore session
+DONE Make sure that g_dsk_used is intialized on restore session
+DONE g_dsk_used is not changed by import session

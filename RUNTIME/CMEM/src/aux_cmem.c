@@ -2,22 +2,24 @@
 #include "cmem_consts.h"
 #include "cmem_struct.h"
 #include "aux_cmem.h"
-#define USE_GLOBALS // TODO THINK ABOUT THIS ONE 
+#define USE_GLOBALS // TODO P2 THINK ABOUT THIS ONE 
 #ifdef USE_GLOBALS
 #include "mod_mem_used.h"
 #endif
+#undef VERBOSE
 int 
 cmem_free( 
     CMEM_REC_TYPE *ptr_cmem
     )
 {
   int status = 0;
-  //  TODO P1 following temporary
   if ( ptr_cmem->is_foreign ) { return status; }
 
-  if ( *ptr_cmem->cell_name == '_' ) {  // TODO P1 FIX 
-    printf("CMEM Freeing %s \n", ptr_cmem->cell_name);
+#ifdef VERBOSE
+  if ( *ptr_cmem->cell_name != '\0' ) {  
+    printf("CMEM Freeing %lld from %s \n", ptr_cmem->size, ptr_cmem->cell_name);
   }
+#endif
 
   memset(ptr_cmem->cell_name, 0, Q_MAX_LEN_CELL_NAME+1); 
   if ( ptr_cmem->data == NULL ) { 
@@ -97,6 +99,9 @@ cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
   memset(ptr_cmem->cell_name, 0, Q_MAX_LEN_CELL_NAME+1); 
   if ( cell_name != NULL ) { 
     strncpy(ptr_cmem->cell_name, cell_name, Q_MAX_LEN_CELL_NAME);
+#ifdef VERBOSE
+    printf("CMEM Malloc of %lld  for %s \n", ptr_cmem->size, ptr_cmem->cell_name);
+#endif
   }
   ptr_cmem->is_foreign = false;
 BYE:

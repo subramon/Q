@@ -1,12 +1,13 @@
 local Q = require 'Q'
 local pldata = require 'pl.data'
 
-local cmem   = require 'libcmem'
-local cutils = require 'libcutils'
-local cVector = require 'libvctr'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
-local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local qcfg = require 'Q/UTILS/lua/qcfg'
+local cmem     = require 'libcmem'
+local cutils   = require 'libcutils'
+local lgutils  = require 'liblgutils'
+local cVector  = require 'libvctr'
+local lVector  = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local get_ptr  = require 'Q/UTILS/lua/get_ptr'
+local qcfg     = require 'Q/UTILS/lua/qcfg'
 
 local tests = {}
 tests.t1 = function()
@@ -20,7 +21,7 @@ tests.t1 = function()
 end
 tests.t2 = function()
   local qtype = "I4"
-  local max_num_in_chnk = 16
+  local max_num_in_chnk = 64
   local x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chnk })
   local width = cutils.get_width_qtype(qtype)
   assert(x:width() == width)
@@ -44,7 +45,7 @@ tests.t2 = function()
 end
 tests.t3 = function()
   local qtype = "I4"
-  local max_num_in_chnk = 16
+  local max_num_in_chnk = 64
   -- NOTE: x is a global below 
   x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chnk })
   local width = cutils.get_width_qtype(qtype)
@@ -73,6 +74,8 @@ tests.t3 = function()
     for  j = 1, max_num_in_chnk do 
       assert(iptr[j-1] == (i+1)*100 + (j+1))
     end
+    x:unget_chunk(i-1)
+    x:check(false)
   end
   assert(x:is_eov() == false)
   x:put_chunk(buf, max_num_in_chnk-1)
@@ -82,6 +85,7 @@ tests.t3 = function()
     (num_chunks*max_num_in_chnk) + (max_num_in_chnk-1))
   -- get what you put 
   local n, c = x:get_chunk(num_chunks)
+  x:unget_chunk(num_chunks)
   assert(type(c) == "CMEM")
   assert(type(n) == "number")
   assert(n == max_num_in_chnk-1)
@@ -90,7 +94,7 @@ tests.t3 = function()
   local status = pcall(lVector.put_chunk, x, buf, max_num_in_chnk-1)
   assert(status == false)
   print(">>> STOP  Deliberate error")
-  assert(cVector.check_all())
+  assert(x:check())
   -- test printing
   assert(x:pr("_x", 0, 10))
   x:nop()
@@ -105,14 +109,14 @@ tests.t4 = function()
   -- in the way it rehydrates a Vector
   -- But good as a test
   local qtype = "I4"
-  local max_num_in_chnk = 16
+  local max_num_in_chnk = 64
   local width = cutils.get_width_qtype(qtype)
 
   -- NOTE: x is a global below 
   x = lVector({ name = "xvec", qtype = qtype, max_num_in_chunk = max_num_in_chnk })
   assert(cVector.check_all())
   assert(x:name() == "xvec")
-  print("Created vector " .. x:name() .. " with uqid = " .. x:uqid())
+  -- print("Created vector " .. x:name() .. " with uqid = " .. x:uqid())
   -- create a buffer for data to put into vector 
   local size = max_num_in_chnk * width
   local buf = cmem.new( {size = size, qtype = qtype, name = "inbuf"})
@@ -143,6 +147,7 @@ tests.t4 = function()
     for k, v in pairs(z1) do 
       assert(z1[k] == z2[k])
     end
+    x:unget_chunk(i-1)
   end
   assert(x:is_eov() == false)
   x:put_chunk(buf, max_num_in_chnk-1)
@@ -157,9 +162,10 @@ tests.t4 = function()
   assert(uqid > 0)
   local args = { uqid = uqid }
   assert(cVector.check_all())
+  x:nop()
   y = lVector(args)
   assert(type(y) == "lVector")
-  print("Created vector " .. y:name() .. " with uqid = " .. y:uqid())
+  -- print("Created vector " .. y:name() .. " with uqid = " .. y:uqid())
   y:pr("/tmp/_y")
   y:set_name("yvec")
   -- Check that x and y are in globals
@@ -172,7 +178,9 @@ tests.t4 = function()
   assert(x:check()) -- checking on this vector
   assert(cVector.check_all())
   x:nop()
+  print("before save", lgutils.mem_used())
   Q.save()
+  print("aftere save", lgutils.mem_used())
   local ydata = pldata.read("/tmp/_y")
   assert(#ydata == x:num_elements())
   -- Note that we test data for all except last chunk 
@@ -181,6 +189,8 @@ tests.t4 = function()
     assert(ydata[i][1] == counter)
     counter = counter + 10 
   end
+  x:delete()
+  collectgarbage()
   assert(cVector.check_all())
   print("Test t4 succeeded")
 end
@@ -188,5 +198,7 @@ end
 tests.t1()
 tests.t2()
 tests.t3()
+collectgarbage()
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 tests.t4()
 

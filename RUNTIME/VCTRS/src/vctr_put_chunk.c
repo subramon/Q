@@ -1,5 +1,6 @@
 #include "q_incs.h"
 #include "qtypes.h"
+#include "qjit_consts.h"
 #include "vctr_consts.h"
 #include "cmem_struct.h"
 #include "vctr_rs_hmap_struct.h"
@@ -9,8 +10,8 @@
 #include "vctr_put_chunk.h"
 #include "mod_mem_used.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap;
-extern chnk_rs_hmap_t g_chnk_hmap;
+extern vctr_rs_hmap_t *g_vctr_hmap;
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
 // is_stealable is for the most common way in which we will put 
 // data into vectors. In this case, we put a chunk at a time
@@ -24,6 +25,7 @@ extern chnk_rs_hmap_t g_chnk_hmap;
 // In other words, is_eov will be set 
 int
 vctr_put_chunk(
+    uint32_t tbsp,
     uint32_t vctr_uqid,
     CMEM_REC_TYPE *ptr_cmem,
     uint32_t n // number of elements 1 <= n <= vctr.max_num_in_chnk
@@ -38,8 +40,8 @@ vctr_put_chunk(
 
   vctr_rs_hmap_key_t vctr_key = vctr_uqid;
   vctr_rs_hmap_val_t vctr_val; 
-  status = g_vctr_hmap.get(&g_vctr_hmap, &vctr_key, &vctr_val, &is_found, 
-      &vctr_where);
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &vctr_key, 
+      &vctr_val, &is_found, &vctr_where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); } // vector exists 
   if ( vctr_val.is_trash  ) { go_BYE(-1); }
@@ -64,14 +66,14 @@ vctr_put_chunk(
   }
   // vector is implicitly at an end if insufficient elements sent
   if ( n < vctr_val.max_num_in_chnk ) { 
-    g_vctr_hmap.bkts[vctr_where].val.is_eov = true; 
+    g_vctr_hmap[tbsp].bkts[vctr_where].val.is_eov = true; 
   }
   // handle special case for empty vector 
   if ( vctr_val.num_elements == 0 ) { 
     chnk_idx = 0;
   }
   else {
-    chnk_idx = g_vctr_hmap.bkts[vctr_where].val.max_chnk_idx + 1;
+    chnk_idx = g_vctr_hmap[tbsp].bkts[vctr_where].val.max_chnk_idx + 1;
   }
   //-------------------------------
   char *l1_mem = NULL;
@@ -84,6 +86,9 @@ vctr_put_chunk(
     ptr_cmem->is_stealable = false;
   }
   else {
+#ifdef VERBOSE
+    printf("VCTR A Malloc of %u for [%s] \n", chnk_size, vctr_val.name);
+#endif
     status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, chnk_size); 
     cBYE(status);
     status = incr_mem_used(chnk_size); cBYE(status);
@@ -94,15 +99,15 @@ vctr_put_chunk(
   chnk_rs_hmap_val_t chnk_val = { 
     .qtype = qtype, .l1_mem = l1_mem, .num_elements = n, .size = chnk_size };
   //-------------------------------
-  status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
+  status = g_chnk_hmap[tbsp].put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
   cBYE(status);
   bool chnk_is_found; uint32_t chnk_where_found;
-  status = chnk_is(vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);
+  status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);
   if ( !chnk_is_found ) { go_BYE(-1); } 
   // update meta data in vector
-  g_vctr_hmap.bkts[vctr_where].val.num_elements += n;
-  g_vctr_hmap.bkts[vctr_where].val.num_chnks++; 
-  g_vctr_hmap.bkts[vctr_where].val.max_chnk_idx = chnk_idx; 
+  g_vctr_hmap[tbsp].bkts[vctr_where].val.num_elements += n;
+  g_vctr_hmap[tbsp].bkts[vctr_where].val.num_chnks++; 
+  g_vctr_hmap[tbsp].bkts[vctr_where].val.max_chnk_idx = chnk_idx; 
 BYE:
   return status;
 }

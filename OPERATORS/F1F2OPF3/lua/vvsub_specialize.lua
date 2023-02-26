@@ -4,13 +4,16 @@ local cVector = require 'libvctr'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
 local is_in   = require 'Q/UTILS/lua/is_in'
+local qcfg    = require 'Q/UTILS/lua/qcfg'
 
 return function (
+  operator, 
   f1, 
   f2,
   optargs
   )
   local subs = {}; 
+  assert(type(operator) == "string")
   assert(type(f1) == "lVector"); assert(f1:has_nulls() == false)
   assert(type(f2) == "lVector"); assert(f2:has_nulls() == false)
 
@@ -30,7 +33,7 @@ return function (
   end
   assert(is_in(f3_qtype, { "I1", "I2", "I4", "I8", "F4", "F8", }))
 
-  subs.fn = "vvsub_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
+  subs.fn = operator .. "_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
 
   subs.f1_ctype = cutils.str_qtype_to_str_ctype(f1_qtype)
@@ -45,6 +48,10 @@ return function (
 
   subs.f3_width = cutils.get_width_qtype(f3_qtype)
 
+  -- following is to stop gcc warning about passing bool to int8
+  subs.f3_for_ispctype = subs.f3_ctype
+  if ( subs.f3_ctype == "bool" ) then subs.f3_for_ispctype = "int8_t" end
+  --===============
   subs.cargs = nil
   subs.cst_cargs = ffi.NULL
 
@@ -54,10 +61,15 @@ return function (
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
   subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}
   subs.libs = { "-lgomp", "-lm", } 
-  -- for ISPC
-  subs.f1_ctype_ispc = cutils.str_qtype_to_str_ispctype(f1_qtype)
-  subs.f2_ctype_ispc = cutils.str_qtype_to_str_ispctype(f2_qtype)
-  subs.f3_ctype_ispc = cutils.str_qtype_to_str_ispctype(f3_qtype)
-  subs.tmpl_ispc   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_ispc.tmpl"
+  subs.chunk_size = 4096 -- TODO P4 experiment
+  if ( qcfg.use_ispc ) then 
+    subs.comment_ispc = "" 
+    subs.f1_ctype_ispc = cutils.str_qtype_to_str_ispctype(f1_qtype)
+    subs.f2_ctype_ispc = cutils.str_qtype_to_str_ispctype(f2_qtype)
+    subs.f3_ctype_ispc = cutils.str_qtype_to_str_ispctype(f3_qtype)
+    subs.tmpl_ispc   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_ispc.tmpl"
+  else
+    subs.comment_ispc = "//" 
+  end
   return subs
 end

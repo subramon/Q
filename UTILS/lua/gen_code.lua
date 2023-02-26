@@ -76,9 +76,11 @@ fns.ispc = function (subs, srcdir, incdir)
   local h_full = incdir .. "/" .. func_name .. ".h" 
   -- now we use ispc to create the .h file 
   local cmd = "ispc " .. ispc_full .. " -h " .. h_full .. " 1>/dev/null 2>&1"
-  print("ispc making .h file", cmd)
-  local status = os.execute(cmd)
-  assert(status == 0)
+  if ( qcfg.use_ispc ) then 
+    print("ispc making .h file", cmd)
+    local status = os.execute(cmd)
+    assert(status == 0)
+  end
   return ispc_basic, h_basic
 
 end

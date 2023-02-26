@@ -45,7 +45,7 @@ ${fn}(
     out[0] = default_val; 
   }
   else {
-    out[0] = (*ptr_last_val_prev_chunk ${cmp_op} in[0]);
+    out[0] = ( in[0] ${cmp_op} *ptr_last_val_prev_chunk);
   }
   for ( uint64_t i = 1; i < nR; i++ ) { 
     out[i] = (in[i] ${cmp_op} in[i-1]);

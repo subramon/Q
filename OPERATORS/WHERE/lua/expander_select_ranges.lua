@@ -24,7 +24,7 @@ local function select_ranges(f1, lb, ub, optargs )
   local lboff = 0 -- how many elements of range lbidx have been consumed
   --=================================
   local f2_gen = function(chunk_num)
-    -- sync between expected chunk_num and generator's chunk_idx state
+    -- check expected chunk_num and generator's chunk_idx state
     assert(chunk_num == chunk_idx)
     local f2_buf = assert(cmem.new(subs.bufsz))
     f2_buf:stealable(true)
@@ -85,6 +85,7 @@ local function select_ranges(f1, lb, ub, optargs )
       num_in_f2 = num_in_f2 + num_to_copy
       lboff = lboff + num_to_copy
       space_in_f2 = space_in_f2 - num_to_copy
+      f1:unget_chunk(f1_chunk_idx)
     end
     chunk_idx = chunk_idx + 1
     return num_in_f2, f2_buf, nn_f2_buf

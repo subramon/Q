@@ -12,8 +12,7 @@ extern int ${fn}(
     ${in_ctype} *X, /* [nX] */
     uint32_t nX,
     ${out_ctype}  *Z, /* [nZ] */
-    uint32_t nZ,
-    bool is_safe
+    uint32_t nZ
     );
 //STOP_FOR_CDEF
 ]],
@@ -23,18 +22,16 @@ int ${fn}(
     ${in_ctype} *X, /* [nX] */
     uint32_t nX,
     ${out_ctype}  *Z, /* [nZ] */
-    uint32_t nZ,
-    bool is_safe
+    uint32_t nZ
     )
 {
   int status = 0;
 
+  if ( nX == 0 ) { WHEREAMI; return -1; }
   if ( nZ == 0 ) { WHEREAMI; return -1; }
   for ( uint64_t i = 0; i < nX; i++ ) {
     ${in_ctype} x = X[i];
-    if ( is_safe ) {
-      ${checking_code}
-    }
+    ${checking_code}
     Z[x]++;
   }
 ${bye}

@@ -2,15 +2,11 @@ local T = {}
 
 T.restore_session = false
 
-T.is_webserver      = false
-T.webserver = { 
-  port = 8004,
-}
+T.is_webserver      = true
+T.web_port = 8004
 
-T.is_out_of_band = false
-T.out_of_band = { 
-  port = 8008,
-}
+T.is_out_of_band = true
+T.out_of_band_port = 8008
 
 T.is_mem_mgr = false
 

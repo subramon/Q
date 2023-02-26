@@ -128,17 +128,17 @@ XCFLAGS=
 # realloc usually doesn't return addresses in the right address range.
 # OTOH this option is mandatory for Valgrind's memcheck tool on x64 and
 # the only way to get useful results from it for all other architectures.
-#XCFLAGS+= -DLUAJIT_USE_SYSMALLOC
+# XCFLAGS+= -DLUAJIT_USE_SYSMALLOC
 #
 # This define is required to run LuaJIT under Valgrind. The Valgrind
 # header files must be installed. You should enable debug information, too.
 # Use --suppressions=lj.supp to avoid some false positives.
-#XCFLAGS+= -DLUAJIT_USE_VALGRIND
+XCFLAGS+= -DLUAJIT_USE_VALGRIND
 #
 # This is the client for the GDB JIT API. GDB 7.0 or higher is required
 # to make use of it. See lj_gdbjit.c for details. Enabling this causes
 # a non-negligible overhead, even when not running under GDB.
-#XCFLAGS+= -DLUAJIT_USE_GDBJIT
+# XCFLAGS+= -DLUAJIT_USE_GDBJIT
 #
 # Turn on assertions for the Lua/C API to debug problems with lua_* calls.
 # This is rather slow -- use only while developing C libraries/embeddings.
@@ -706,6 +706,12 @@ include Makefile.dep
 # Target file rules.
 ##############################################################################
 
+# TODO TODO P1 WARNING!! Take out asan for performance 
+# These are in Q/setup.sh now, no longer directly in here
+# ASAN_FLAGS := -fsanitize=address 
+# ASAN_FLAGS += -fno-omit-frame-pointer 
+# ASAN_FLAGS += -fsanitize=undefined
+
 RS_LIBS := -lpthread
 RS_LIBS += -levent
 RS_LIBS += ${Q_ROOT}/lib/libqjitaux.so 
@@ -725,11 +731,15 @@ $(LUAJIT_SO): $(LJVMCORE_O)
 
 $(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP) 
 	$(E) "LINK      $@"
+	echo "ASAN_FLAGS  = [${ASAN_FLAGS}]\n"
 	$(Q)$(TARGET_LD) $(TARGET_ALDFLAGS) \
+		${ASAN_FLAGS} \
 		-o $@ $(LUAJIT_O) \
-		$(TARGET_O) $(TARGET_ALIBS) \
-		${RS_LIBS}
+		$(TARGET_O) \
+		$(TARGET_ALIBS) \
+		${RS_LIBS} 
 	$(Q)$(TARGET_STRIP) $@
+	mkdir -p ${Q_ROOT}/bin/
 	cp luajit ${Q_ROOT}/bin/qjit # TODO Improve this 
 	$(E) "OK        Successfully built LuaJIT"
 

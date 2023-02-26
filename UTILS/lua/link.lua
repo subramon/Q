@@ -1,4 +1,5 @@
 local cutils        = require 'libcutils'
+local qcfg = require 'Q/UTILS/lua/qcfg'
 --================================================
 local function link(
   dotos,  -- INPUT
@@ -16,6 +17,10 @@ local function link(
     str_libs_ispc = table.concat(libs_ispc, " ")
   end
   local str_libs = str_libs_c .. str_libs_ispc
+  -- handle case when ISPC is not being used 
+  if ( qcfg.use_ispc ) then 
+    str_libs = str_libs .. str_libs_ispc
+  end 
   --===============================
   local str_dotos = table.concat(dotos, " ")
   --===============================

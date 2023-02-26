@@ -10,29 +10,17 @@ qcfg.q_root	= add_trailing_slash(os.getenv("Q_ROOT"))
 assert(cutils.isdir(qcfg.q_src_root))
 assert(cutils.isdir(qcfg.q_root))
 
-if ( not os.getenv("QC_FLAGS") ) then
-  qcfg.qc_flags = [[
--g -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align
--Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings
--Wunused-variable -Wunused-parameter -Wno-pedantic
--fopenmp -mavx2 -mfma -Wno-unused-label
--fsanitize=address -fno-omit-frame-pointer
--fsanitize=undefined
--Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith
--Wmissing-declarations -Wredundant-decls -Wnested-externs
--Wshadow -Wcast-qual -Wcast-align -Wwrite-strings
--Wold-style-definition
--Wsuggest-attribute=noreturn
--Wduplicated-cond -Wmisleading-indentation -Wnull-dereference
--Wduplicated-branches -Wrestrict
-  ]]
-else
-  qcfg.qc_flags	= assert(os.getenv("QC_FLAGS"))
-end
+local qcflags = os.getenv("QCFLAGS") 
+assert(type(qcflags) == "string")
+assert(#qcflags > 32) -- some simple check 
+qcfg.qcflags = qcflags
 --==================================
 qcfg.use_ispc = false
-if ( os.getenv("QISPC") ) then
+local x = os.getenv("QISPC") 
+if ( x and x == "true" ) then 
   qcfg.use_ispc = true
+else
+  qcfg.use_ispc = false
 end
 if ( not os.getenv("QISPC_FLAGS") ) then
   qcfg.qispc_flags = " --pic "
@@ -45,7 +33,7 @@ qcfg.ld_library_path = os.getenv("LD_LIBRARY_PATH")
 --=================================
 -- Note that no cell in an input CSV file can have length greater
 -- than max_width_SC
-qcfg.max_width_SC = 32 -- => max length of constant length string = 32-1
+qcfg.max_width_SC = 64 -- => max length of constant length string = 32-1
 qcfg.max_num_in_chunk = 16384 -- this is default value
 local x = math.ceil(qcfg.max_num_in_chunk/64.0)
 local y = math.floor(qcfg.max_num_in_chunk/64.0)

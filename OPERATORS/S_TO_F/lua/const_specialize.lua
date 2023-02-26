@@ -49,7 +49,7 @@ local function const_specialize(
   -- allocate cargs 
   subs.cargs_ctype = "CONST_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(subs.cargs_ctype)
-  subs.cargs = cmem.new(sz)
+  subs.cargs = cmem.new({ size = sz, name = "const_rec"})
   subs.cargs:zero()
   subs.cast_cargs_as = subs.cargs_ctype .. " *"
 

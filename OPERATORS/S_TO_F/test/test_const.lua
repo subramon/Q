@@ -1,10 +1,11 @@
 -- FUNCTIONAL 
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
-local qcfg       = require 'Q/UTILS/lua/qcfg'
-local Scalar     = require 'libsclr'
-local cVector    = require 'libvctr'
-local lgutils    = require 'liblgutils'
+local qcfg     = require 'Q/UTILS/lua/qcfg'
+local Scalar   = require 'libsclr'
+local cVector  = require 'libvctr'
+local lgutils  = require 'liblgutils'
+local lgutils  = require 'liblgutils'
 
 local blksz = qcfg.max_num_in_chunk 
 local tests = {}
@@ -17,8 +18,7 @@ tests.t1 = function()
     qtype = qtype, 
     len = len 
   }
-  print("Calling const")
-  local c1 = Q.const(args)
+  local c1 = Q.const(args):set_name("c1")
   assert(c1:memo_len() == qcfg.memo_len)
 
   local memo_len = 2
@@ -41,7 +41,9 @@ tests.t1 = function()
      end
   end
   print(">>> START Deliberate error")
+  assert(c1 == c2)
   local ival = c1:get1(len)
+  assert(c2:check())
   assert(ival == nil)
   local ival = c1:get1(-1)
   assert(ival == nil)
@@ -54,13 +56,17 @@ tests.t1 = function()
   assert(not status)
   local status = pcall(c1.get1, -1) -- deliberate error
   assert(not status)
+  c1:delete()
 
   -- make a few more vectors just for fun
-  local c3 = Q.const(args):eval()
-  local c4 = Q.const(args):eval()
+  -- local c3 = Q.const(args):set_name("c3"):eval()
+  -- local c4 = Q.const(args):set_name("c4"):eval()
+  -- c3:delete()
+  -- c4:delete()
+
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   assert(cVector.check_all(true, true)) -- checking on all vectors
   print("Test t1 succeeded")
-  -- os.exit() -- WHY IS THIS NEEDED? 
 end
 tests.t2 = function() 
   local len = blksz + 19;
@@ -118,13 +124,18 @@ tests.t4 = function()
     print("Test t4 succeeded for B1 = " .. tostring(val))
   end
   
+  assert(cVector.check_all(true, true)) -- checking on all vectors
   print("Test t4 succeeded")
 end
 
-tests.t1()
+tests.t1() 
 tests.t2()
 tests.t3()
 tests.t4()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 --[[
 return tests
 --]]

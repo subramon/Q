@@ -26,6 +26,7 @@ return function (x, optargs)
   subs.fn         = subs.operator .. "_" .. qtype -- e.g., sum_F4
   subs.ctype      = cutils.str_qtype_to_str_ctype(qtype) -- e.g., float
   subs.cast_in_as = subs.ctype .. " *" -- e.g., "float *"
+  subs.max_num_in_chunk = assert(x:max_num_in_chunk())
   --=====================================
   -- set up args for C code
   --==========
@@ -36,12 +37,12 @@ return function (x, optargs)
   -- sum has type F8  or I8
   if ( is_in(qtype, i_qtypes) ) then 
     subs.accumulator_ctype = "SUM_I_ARGS"
-    subs.outval_qtype ="I8"
-    subs.outval_ctype ="int64_t"
+    subs.reduce_qtype ="I8"
+    subs.reduce_ctype ="int64_t"
   elseif ( is_in(qtype, f_qtypes) ) then 
     subs.accumulator_ctype = "SUM_F_ARGS"
-    subs.outval_qtype = "F8" 
-    subs.outval_ctype ="double"
+    subs.reduce_qtype = "F8" 
+    subs.reduce_ctype ="double"
   else
     error(qtype)
   end
@@ -61,9 +62,9 @@ return function (x, optargs)
     assert(x:is_data())
     x = get_ptr(x, subs.cast_accumulator_as)
 
-    local outval = Scalar.new(0, subs.outval_qtype) --out_qtype from closure
+    local outval = Scalar.new(0, subs.reduce_qtype) --out_qtype from closure
     local tmps = ffi.cast("SCLR_REC_TYPE *", outval)
-    local key = string.lower(subs.outval_qtype)
+    local key = string.lower(subs.reduce_qtype)
     tmps[0].val[key] = x[0].val
     -------------------
     local num_seen = Scalar.new(0, "I8")

@@ -2,6 +2,7 @@ local Q = require 'Q'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
+local lgutils = require 'liblgutils'
 
 local tests = {}
 tests.t1 = function()
@@ -21,8 +22,8 @@ tests.t1 = function()
   assert(cVector.check_all(true, true))
   Q.save()
   x = nil; y1 = nil; y2 = nil; collectgarbage()
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 -- return tests
 tests.t1()
--- os.exit()

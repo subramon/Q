@@ -69,32 +69,32 @@ vector.o : vector.c \
 	../inc/vctr_struct.h \
 	../../../UTILS/inc/txt_to_I4.h \
 	${UTILS_INC_FILES}
-	gcc -c $(INCS) ${QC_FLAGS} -Wno-discarded-qualifiers vector.c -o vector.o
+	gcc -c $(INCS) ${QCFLAGS} -Wno-discarded-qualifiers vector.c -o vector.o
 
 core_vec.o : core_vec.c \
   	../inc/vctr_struct.h \
 	../inc/core_vec.h \
 	${UTILS_INC_FILES}
-	gcc -c $(INCS) ${QC_FLAGS} -Wno-discarded-qualifiers core_vec.c -o core_vec.o
+	gcc -c $(INCS) ${QCFLAGS} -Wno-discarded-qualifiers core_vec.c -o core_vec.o
 
 aux_qmem.o : aux_qmem.c \
 	../inc/vctr_struct.h \
 	../inc/aux_qmem.h \
 	${UTILS_INC_FILES} 
-	gcc -c $(INCS) ${QC_FLAGS} -Wno-discarded-qualifiers aux_qmem.c -o aux_qmem.o
+	gcc -c $(INCS) ${QCFLAGS} -Wno-discarded-qualifiers aux_qmem.c -o aux_qmem.o
 
 aux_core_vec.o : aux_core_vec.c \
 	../inc/vctr_struct.h \
 	../inc/aux_core_vec.h \
 	${UTILS_INC_FILES} 
-	gcc -c $(INCS) ${QC_FLAGS} aux_core_vec.c -o aux_core_vec.o
+	gcc -c $(INCS) ${QCFLAGS} aux_core_vec.c -o aux_core_vec.o
 
 libvctr.so: vector.o core_vec.o aux_qmem.o aux_core_vec.o \
 	${GEN_INC_FILES} \
 	${GEN_SRC_FILES} \
 	${UTILS_SRC_FILES} \
 	${UTILS_INC_FILES} 
-	gcc ${QC_FLAGS} $(INCS) \
+	gcc ${QCFLAGS} $(INCS) \
 	  	${GEN_SRC_FILES} \
 	  	${UTILS_SRC_FILES} \
 		vector.o \
@@ -103,7 +103,7 @@ libvctr.so: vector.o core_vec.o aux_qmem.o aux_core_vec.o \
 		core_vec.o \
 		aux_core_vec.o \
 		aux_qmem.o \
-		-shared -o libvctr.so
+		-shared -o libvctr.so ${QLDFLAGS}
 
 #------------------------------------------------------
 _eval_arith.c: gen_arith.lua

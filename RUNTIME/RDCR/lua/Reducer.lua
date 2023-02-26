@@ -37,12 +37,35 @@ function Reducer.new(arg)
     reducer._value = arg.value
     reducer._is_eor = true -- we have the final answer
   end
- if ( arg.gen ) then 
+  -- Note that when you provide both a value and a generator
+  -- is_eor is set to false
+  if ( arg.gen ) then 
+    assert(type(arg.gen) == "function")
     reducer._gen = arg.gen
     reducer._is_eor = false -- we still need to figure out final answer
   end
+  if ( arg.destructor ) then 
+    -- print("Reducer: setting destructor")
+    assert(type(arg.destructor) == "function")
+    reducer._destructor = arg.destructor
+  end
+  if ( arg.name ) then -- for debugging 
+    reducer._name = arg.name
+  else
+    reducer._name = "anonymous"
+  end
+  assert(type(reducer._name) == "string")
+
   reducer._index = 0
   return reducer
+end
+
+function Reducer:delete()
+  -- print("Destructor called on " .. self._name)
+  if ( self._is_eor == false ) then return false end 
+  if ( not self._destructor ) then return false end 
+  assert(self._destructor(self._value))
+  return true
 end
 
 function Reducer:next()

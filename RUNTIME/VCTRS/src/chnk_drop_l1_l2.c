@@ -10,6 +10,7 @@
 
 int  
 chnk_drop_l1_l2(
+    uint32_t tbsp,
     chnk_rs_hmap_key_t *ptr_chnk_key,
     chnk_rs_hmap_val_t *ptr_chnk_val,
     int level
@@ -23,7 +24,7 @@ chnk_drop_l1_l2(
     case 1 : 
       if ( ptr_chnk_val->l1_mem == NULL ) { goto BYE; } // nothing to do 
       // Verify that backup exists in l2 before dropping l1 
-      l2_file = l2_file_name(ptr_chnk_key->vctr_uqid, 
+      l2_file = l2_file_name(tbsp, ptr_chnk_key->vctr_uqid, 
           ptr_chnk_key->chnk_idx);
       if ( l2_file == NULL )  { go_BYE(-1); }
       if ( !isfile(l2_file) ) { goto BYE; } // cannot delete 
@@ -33,10 +34,12 @@ chnk_drop_l1_l2(
       break;
       //-----------------
     case 2 : 
+      // Do not delete files from other table spaces
+      if ( tbsp != 0 ) { break; }  // NOTE Not an error 
       // cannot delete l2 if l1 does not exist 
       if ( ptr_chnk_val->l1_mem == NULL ) { goto BYE; } // nothing to do 
       //--------------------
-      l2_file = l2_file_name(ptr_chnk_key->vctr_uqid, 
+      l2_file = l2_file_name(tbsp, ptr_chnk_key->vctr_uqid, 
           ptr_chnk_key->chnk_idx);
       if ( l2_file == NULL )  { go_BYE(-1); }
       if ( !isfile(l2_file) ) { goto BYE; } // nothing to do 

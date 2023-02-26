@@ -1,4 +1,5 @@
 #ifndef __QJIT_CONSTS_H
 #define __QJIT_CONSTS_H
 #define Q_MAX_LEN_DIR_NAME 255
+#define Q_MAX_NUM_TABLESPACES 16 
 #endif // __QJIT_CONSTS_H

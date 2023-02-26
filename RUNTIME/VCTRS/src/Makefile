@@ -1,24 +1,5 @@
 CC=gcc
 
-CFLAGS := -std=gnu99 -Wall -fPIC -W -Waggregate-return -Wcast-align 
-CFLAGS += -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings 
-CFLAGS += -Wunused-variable -Wunused-parameter -Wno-pedantic 
-CFLAGS += -Wno-unused-label 
-CFLAGS += -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith 
-CFLAGS += -Wmissing-declarations -Wredundant-decls -Wnested-externs 
-CFLAGS += -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings 
-CFLAGS += -Wold-style-definition -Wsuggest-attribute=noreturn 
-CFLAGS += -Wduplicated-cond -Wmisleading-indentation -Wnull-dereference 
-CFLAGS += -Wduplicated-branches -Wrestrict
-
-# CFLAGS += -fsanitize=address -fno-omit-frame-pointer 
-# CFLAGS += -fsanitize=undefined 
-# CFLAGS +=  -static-libasan # for address sanitizer
-
-DFLAGS = -g -DDEBUG 
-# DFLAGS = -O4
-# Add -pg for grpof 
-
 INCS := -I../inc/ 
 INCS += -I../../../UTILS/inc/
 INCS += -I../../CMEM/inc/
@@ -27,7 +8,7 @@ INCS += -I../../../TMPL_FIX_HASHMAP/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
 INCS += -I../../../QJIT/GUTILS/inc
-INCS += -I../../../QJIT/LuaJIT-2.1.0-beta3/src/inc
+INCS += -I../../../QJIT/LuaJIT-2.1.0-beta3/src/
 
 TMPL=CASE1
 
@@ -51,15 +32,18 @@ SRCS +=	vctr_is_persist.c
 SRCS +=	vctr_l1_to_l2.c  
 
 SRCS +=	vctr_chnks_to_lma.c  
-SRCS +=	vctr_del_lma.c  
+SRCS +=	vctr_lma_to_chnks.c  
+SRCS +=	vctr_make_lma.c  
 SRCS +=	vctr_lma_access.c  
 SRCS +=	vctr_set_lma.c  
+SRCS +=	vctr_usage.c  
 
 SRCS +=	vctr_name.c  
 SRCS +=	vctr_num_chunks.c  
 SRCS +=	vctr_num_elements.c  
 SRCS +=	vctr_new_uqid.c  
 SRCS +=	vctr_persist.c  
+SRCS +=	vctr_kill.c  
 SRCS +=	vctr_print.c  
 SRCS +=	vctr_putn.c  
 SRCS +=	vctr_put1.c 
@@ -79,14 +63,23 @@ SRCS +=	chnk_drop_l1_l2.c
 OBJS = $(SRCS:.c=.o)
 
 TEST1_SRCS := ../test/ut1.c
+TEST1_SRCS += ../../../QJIT/GUTILS/src/init_globals.c
+TEST1_SRCS += ../../../QJIT/GUTILS/src/init_session.c
+TEST1_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
+TEST1_SRCS += ../../../QJIT/GUTILS/src/lua_state.c
 TEST1_OBJS = $(TEST1_SRCS:.c=.o)
 
 TEST2_SRCS := ../test/ut2.c
 TEST2_SRCS += ../../CMEM/src/aux_cmem.c 
+TEST2_SRCS += ../../../QJIT/GUTILS/src/init_globals.c
+TEST2_SRCS += ../../../QJIT/GUTILS/src/init_session.c
+TEST2_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
+TEST2_SRCS += ../../../QJIT/GUTILS/src/lua_state.c
 TEST2_OBJS = $(TEST2_SRCS:.c=.o)
 
+# NOTE: Add -DVERBOSE to following to get messages printed out 
 .c.o : 
-	$(CC) -c -o $@ $< ${CFLAGS} ${DFLAGS} $(INCS) 
+	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
 #-------------------------------------------
 TMPL_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/src/
@@ -126,7 +119,7 @@ core_libvctr.so :  ${OBJS} \
 	${GUTILS_SO}  \
 	${UTILS_SO} 
 	gcc ${OBJS}  \
-	-shared -o core_libvctr.so \
+	-shared -o core_libvctr.so ${LDFLAGS} \
 	${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${GUTILS_SO} ${UTILS_SO} 
 	cp core_libvctr.so ${Q_ROOT}/lib/
 #-------------------------------------------
@@ -146,23 +139,25 @@ libvctr.so: ${EXT_OBJS} core_libvctr.so cVector.o
 #-------------------------------------------
 ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST1_OBJS} \
+	${QCFLAGS} ${INCS} \
 	core_libvctr.so \
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
 	${TMPL_HMAP_SO} \
 	${UTILS_SO} \
 	${GUTILS_SO} \
-	-o ut1  
+	-o ut1  -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
 ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
-	gcc ${TEST2_OBJS} -o ut2 \
+	gcc ${TEST2_OBJS} \
+	${QCFLAGS} ${INCS} \
 	core_libvctr.so \
 	${VCTR_HMAP_SO} \
 	${CHNK_HMAP_SO} \
 	${TMPL_HMAP_SO} \
 	${UTILS_SO} \
 	${GUTILS_SO} \
-	-lm
+	-o ut2 -lm -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
 
 

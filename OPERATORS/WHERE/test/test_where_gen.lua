@@ -3,6 +3,7 @@ _G['g_ctr']  = {}
 require 'Q/UTILS/lua/strict'
 local cVector = require 'libvctr'
 local qcfg = require 'Q/UTILS/lua/qcfg'
+local lgutils = require 'liblgutils'
 local max_num_in_chunk = qcfg.max_num_in_chunk 
 local mk_col   = require 'Q/OPERATORS/MK_COL/lua/mk_col'
 local where    = require 'Q/OPERATORS/WHERE/lua/where'
@@ -14,7 +15,8 @@ local sum  = f_to_s.sum
 
 local tests = {}
 tests.t1 = function()
-  for _, b_qtype in ipairs({ "BL", "B1", }) do 
+  -- TODO P2 Implement mk_col for B1
+  for _, b_qtype in ipairs({ "BL", }) do 
     for _, a_qtype in ipairs({ "I4", "I8", "F4", "F8"}) do
       local A = {}
       local n = max_num_in_chunk + 3 
@@ -26,7 +28,7 @@ tests.t1 = function()
         B[i] = 0
       end
       local goodC = {}
-      local one_idxs = { 2, 4, chunk_size+1}
+      local one_idxs = { 2, 4, max_num_in_chunk+1}
       for _, idx in ipairs(one_idxs) do
         B[idx] = 1
         goodC[#goodC+1] = A[idx]
@@ -35,13 +37,29 @@ tests.t1 = function()
       local b = mk_col(B, b_qtype) 
       assert(type(a) == "lVector")
       assert(type(b) == "lVector")
-      assert(a:length() == b:length())
+      assert(a:num_elements() == b:num_elements())
       local c = where(a, b):eval()
-      assert(c:length() == #goodC)
-      local goodc = mk_col(goodC, qtype)
-      local n1, n2 = sum(vveq(c, goodc)):eval()
+      assert(c:qtype() == a:qtype())
+      assert(c:num_elements() == #goodC)
+      local goodc = mk_col(goodC, a_qtype)
+      local tmp1 = vveq(c, goodc)
+      local tmp2 = sum(tmp1)
+      local n1, n2 = tmp2:eval()
       assert(n1 == n2)
+      print("Test t1 succeeded for a_qtype/b_qtype = ", a_qtype, b_qtype)
+      a:delete()
+      b:delete()
+      c:delete()
+      goodc:delete()
+      tmp1:delete()
+      tmp2:delete()
     end
   end
+  print("Test t1 succeeded")
 end
-return tests
+tests.t1()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+-- return tests

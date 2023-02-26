@@ -2,9 +2,10 @@
 require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local Scalar  = require 'libsclr'
-local cVector = require 'libvctr'
+local lgutils = require 'liblgutils'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local max_num_in_chunk = qcfg.max_num_in_chunk
+local cVector = require 'libvctr'
 
 local tests = {}
 local qtype = "I4"
@@ -28,7 +29,8 @@ tests.t_sum = function ()
   assert(val == exp_val)
   assert(type(num) == "Scalar")
   assert(num == Scalar.new(len, "I8"))
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
+  z:delete()
   print("t_sum succeeded")
 end
 
@@ -43,7 +45,8 @@ tests.t_min = function ()
   assert(val == Scalar.new(1, qtype))
   assert(num == Scalar.new(len, "I8"))
   assert(idx == Scalar.new(1-1, "I8"))
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
+  z:delete()
   print("t_min succeeded")
 end
 
@@ -58,7 +61,8 @@ tests.t_max = function ()
   assert(val == Scalar.new(len, qtype))
   assert(num == Scalar.new(len, "I8"))
   assert(idx == Scalar.new(len-1, "I8"))
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
+  z:delete()
   print("t_max succeeded")
 end
 
@@ -66,5 +70,10 @@ end
 tests.t_sum()
 tests.t_min()
 tests.t_max()
-os.exit()
+c1:delete()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+
 

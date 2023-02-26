@@ -1,0 +1,37 @@
+https://github.com/google/sanitizers/issues/1086
+
+My understanding is, that -fsanitize=address during compilation instrumentalizes the code and -fsanitize=address during linking loads the ASAN-runtime (libclang_rt.asan-x86_64).
+
+However, when linking shared libraries (DSO) under Linux, additional -shared-libsan is necessary.
+Not exactly. You can link DSO agains ASan without -shared-libasan, but you need to make sure that your EXE binary will be linked against ASan runtime as well.
+
+What does -fsanitize=address do during linking, when no -shared-libsan is provided?
+All _asan* symbols are left undefined in instrumented DSO.
+
+What does -fsanitize=address do during linking, when -shared-libsan is provided during linking?
+The libclang_rt.asan-x86_64.so record is inserted into DT_NEEDED entry of instrumented DSO by linker. All _asan* symbols are left undefined in instrumented DSO.
+
+What does -shared-libsan do during linking, when no -fsanitize=address is provided?
+Nothing happens, the linkage proceeds as if -shared-libsan was not provided.
+
+For a binary linked with -fsanitize=address, that loads DSOs compiled with -fsanitize=address, do the DSOs have to be linked with -fsanitize=address?
+Yes, if DSO was compiled with -fsanitize=address, it should be also linked with -fsanitize=address.
+
+For a binary linked with -fsanitize=address, that loads DSOs compiled with -fsanitize=address, do the DSOs have to be linked with -shared-libsan?
+Same as above. -shared-libasan is not required.
+
+For a binary linked without -fsanitize=address, that is started with LD_PRELOAD, and DSOs compiled with -fsanitize=address, do the DSOs have to be linked with -fsanitize=address?
+Yes.
+
+What happens, if a binary linked with -fsanitize=address, loads a DSO linked with -fsanitize-address -shared-libsan? Is the ASAN runtime loaded then twice?
+Error will occur during libclang_rt.asan-x86_64.so load time because it will conflict with ASan runtime statically linked into binary.
+
+What happens, if a binary linked with -fsanitize=address, loads ASAN once more time with LD_PRELOAD?
+Nothing happens, the binary will be executed as if LD_PRELOAD is not provided.
+
+If the same ASAN runtime is loaded twice, does it emit Your application is linked against incompatible ASan runtimes.?
+Yes.
+
+For a binary linked without -fsanitize=address, that loads DSOs compiled with -fsanitize=address, do the DSOs have to be linked with -shared-libsan?
+If you use LD_PRELOAD hack, then you need to use -shared-libasan. Otherwise (w/o LD_PRELOAD), this won't work regardless of -shared-libasan present or not.
+ 

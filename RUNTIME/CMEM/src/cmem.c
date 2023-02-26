@@ -100,8 +100,10 @@ l_cmem_new(
       fprintf(stderr, "CMEM size not specified\n"); 
       go_BYE(-1); 
     }
+    // okay for qtype to be unspecified
     status = get_str_from_tbl(L, 1, "qtype", &is_key, &str_qtype); 
     cBYE(status);
+    // okay for name to be unspecified
     status = get_str_from_tbl(L, 1, "name", &is_key, &cell_name); 
     cBYE(status);
   }
@@ -116,8 +118,12 @@ l_cmem_new(
 
   qtype_t qtype = get_c_qtype(str_qtype); 
   // This is okay: if ( qtype == Q0 ) { go_BYE(-1); }
-  status = cmem_malloc(ptr_cmem, size, qtype, cell_name);
-  cBYE(status);
+  status = cmem_malloc(ptr_cmem, size, qtype, cell_name); cBYE(status);
+  /*
+  if ( ( cell_name != NULL ) && ( *cell_name != '\0' ) ) {
+    printf("CMEM new %s \n", cell_name);
+  }
+  */
   return 1;
 BYE:
   lua_pushnil(L);
@@ -437,6 +443,16 @@ l_cmem_is_foreign(
   return 1;
 }
 
+static int 
+l_cmem_is_stealable( 
+    lua_State *L
+    ) 
+{
+  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
+  lua_pushboolean(L, ptr_cmem->is_stealable);
+  return 1;
+}
+
 static int l_cmem_me( lua_State *L) {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   // Now return meta-data as table 
@@ -737,8 +753,9 @@ static const struct luaL_Reg cmem_methods[] = {
     { "data",       l_cmem_data },
     { "delete",     l_cmem_free               },
     { "dupe",       l_cmem_dupe }, // only for testing
-    { "is_foreign", l_cmem_is_foreign },
     { "is_data",    l_cmem_is_data },
+    { "is_foreign", l_cmem_is_foreign },
+    { "is_stealable", l_cmem_is_stealable },
     { "me",         l_cmem_me },
     { "name",       l_cmem_name },
     { "new",        l_cmem_new },
@@ -761,8 +778,9 @@ static const struct luaL_Reg cmem_functions[] = {
     { "data",       l_cmem_data },
     { "delete",     l_cmem_free               },
     { "dupe",       l_cmem_dupe }, // only for testing
-    { "is_foreign", l_cmem_is_foreign },
     { "is_data",    l_cmem_is_data },
+    { "is_foreign", l_cmem_is_foreign },
+    { "is_stealable", l_cmem_is_stealable },
     { "me",         l_cmem_me },
     { "name",       l_cmem_name },
     { "new",        l_cmem_new },

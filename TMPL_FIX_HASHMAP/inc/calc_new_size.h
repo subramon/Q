@@ -1,3 +1,5 @@
+#include <stdint.h>
+#include <stdbool.h>
 extern int
 calc_new_size(
     uint32_t nitems, 

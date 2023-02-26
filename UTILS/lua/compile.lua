@@ -3,7 +3,7 @@ local qcfg        = require 'Q/UTILS/lua/qcfg'
 local exec         = require 'Q/UTILS/lua/exec_and_capture_stdout'
 
 local qispc_flags  = assert(qcfg.qispc_flags)
-local qc_flags     = assert(qcfg.qc_flags)
+local qcflags     = assert(qcfg.qcflags)
 local q_src_root   = qcfg.q_src_root
 
 -- some basic checks
@@ -51,8 +51,8 @@ local function compile(
     local q_cmd
     local doto = "/tmp/" .. cutils.basename(srcfile) .. ".o"
     if ( lang == "C" ) then
-      q_cmd = string.format("gcc -c %s %s %s -o %s",
-         qc_flags, str_incs, dotc, doto)
+      q_cmd = string.format("unset LD_PRELOAD && gcc -c %s %s %s -o %s",
+         qcflags, str_incs, dotc, doto)
       assert(exec(q_cmd), q_cmd)
     end
     if ( lang == "ISPC" ) then
@@ -61,10 +61,14 @@ local function compile(
          qispc_flags, str_incs, dotc, doto)
     end
     -- print("compiling ", q_cmd)
-    local status = os.execute(q_cmd)
-    assert(status == 0)
-    assert(cutils.isfile(doto))
-    dotos[#dotos+1] = doto
+    if ( ( lang == "ISPC" ) and ( qcfg.use_ispc == false ) ) then 
+      -- do nothing 
+    else
+      local status = os.execute(q_cmd)
+      assert(status == 0)
+      assert(cutils.isfile(doto))
+      dotos[#dotos+1] = doto
+    end
   end
   return dotos
 end

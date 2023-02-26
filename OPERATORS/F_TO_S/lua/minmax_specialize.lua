@@ -33,6 +33,7 @@ return function (operator, x, optargs)
     error(operator)
   end
   subs.operator = operator -- used by check_subs()
+  subs.max_num_in_chunk = assert(x:max_num_in_chunk())
   --=====================================
   -- set up args for C code
   subs.accumulator_ctype = "MINMAX_" .. qtype .. "_ARGS";

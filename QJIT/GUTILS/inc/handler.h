@@ -13,7 +13,9 @@ typedef enum _req_type_t {
   Halt, 
   Ignore, 
   Lua, 
+  //-- for out of band server 
   Memory,
+  Disk,
 
 } req_type_t;
 

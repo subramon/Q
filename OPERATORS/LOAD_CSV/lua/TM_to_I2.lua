@@ -6,7 +6,6 @@ local qcfg        = require 'Q/UTILS/lua/qcfg'
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 local lVector     = require 'Q/RUNTIME/VCTRS/lua/lVector'
-local max_num_in_chunk  = qcfg.max_num_in_chunk
 
 local function TM_to_I2(
   invec, 
@@ -25,6 +24,7 @@ local function TM_to_I2(
     "UTILS/inc/" }
   qc.q_add(subs)
 
+ local max_num_in_chunk  = invec:max_num_in_chunk()
   local in_ctype = cutils.str_qtype_to_str_ctype(in_qtype)
   local cst_in_as = in_ctype .. " *"
 
@@ -41,12 +41,14 @@ local function TM_to_I2(
     buf:stealable(true)
     local cst_buf = get_ptr(buf, cst_out_as)
     local len, base_data = invec:get_chunk(l_chunk_num)
-    if ( len > 0 ) then 
-      local in_ptr = get_ptr(base_data, cst_in_as)
-      local status = qc[func_name](in_ptr, len, cst_buf)
-      assert(status == 0)
-      l_chunk_num = l_chunk_num + 1
-    end
+    if ( len == 0 ) then return 0, nil end 
+
+    local in_ptr = get_ptr(base_data, cst_in_as)
+    local status = qc[func_name](in_ptr, len, cst_buf)
+    assert(status == 0)
+    invec:unget_chunk(l_chunk_num)
+    if ( len < max_num_in_chunk ) then return len, buf end 
+    l_chunk_num = l_chunk_num + 1
     return len, buf
   end
   --===============================================

@@ -5,7 +5,7 @@
 #include "q_macros.h"
 #include "rdtsc.h"
 #include "rs_hmap_common.h"
-#include "vctr_rs_hmap_struct.h"
+#include "${tmpl}_rs_hmap_struct.h"
 #include "rsx_set_hash.h"
 #include "fasthash.h"
 
@@ -16,11 +16,11 @@ rsx_set_hash(
     )
 {
   uint32_t hash;
-  const vctr_rs_hmap_key_t * const ptr_key = 
-    (const vctr_rs_hmap_key_t * const) in_ptr_key;
-  const vctr_rs_hmap_t * const ptr_hmap = 
-    (const vctr_rs_hmap_t * const) in_ptr_hmap;
+  const ${tmpl}_rs_hmap_key_t * const ptr_key = 
+    (const ${tmpl}_rs_hmap_key_t * const) in_ptr_key;
+  const ${tmpl}_rs_hmap_t * const ptr_hmap = 
+    (const ${tmpl}_rs_hmap_t * const) in_ptr_hmap;
     // hash = murmurhash3(key, len, ptr_hmap->hashkey);
-  hash = fasthash32(ptr_key, sizeof(vctr_rs_hmap_key_t), ptr_hmap->hashkey);
+  hash = fasthash32(ptr_key, sizeof(${tmpl}_rs_hmap_key_t), ptr_hmap->hashkey);
   return hash;
 }

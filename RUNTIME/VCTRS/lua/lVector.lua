@@ -29,7 +29,7 @@ register_type(lVector, "lVector")
 
 function lVector:check(is_at_rest, is_for_all)
   if ( type(is_at_rest) == "nil" ) then
-    is_at_rest = false
+    is_at_rest = true
   end
   assert(type(is_at_rest) == "boolean")
 
@@ -38,6 +38,7 @@ function lVector:check(is_at_rest, is_for_all)
   end
   assert(type(is_for_all) == "boolean")
 
+  local status = true; local nn_status = true
   local status = cVector.chk(self._base_vec, is_at_rest, is_for_all)
   local nn_status = true
   if ( not is_for_all ) then 
@@ -45,10 +46,25 @@ function lVector:check(is_at_rest, is_for_all)
       local nn_vector = assert(self._nn_vec)
       assert(type(nn_vector) == "lVector")
       assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-      local nn_vec = nn_vector._base_vec
-      nn_status = cVector.chk(nn_vec, is_at_rest, is_for_all)
+      nn_status = cVector.chk(nn_vector._base_vec, is_at_rest, is_for_all)
+      -- check congruence between base vector and nn vector
+      assert(nn_vector:num_elements()  == self:num_elements())
+      assert(nn_vector:is_eov()        == self:is_eov())
+      assert(nn_vector:is_persist()    == self:is_persist())
+      assert(nn_vector:num_readers()   == self:num_readers())
+      assert(nn_vector:num_writers()   == self:num_writers())
+      assert(nn_vector:is_early_free() == self:is_early_free())
     end
   end 
+  -- check congruence between base vector and siblings
+  if ( self._siblings ) then 
+    assert(type(self._siblings) == "table")
+    for _, v in ipairs(self._siblings) do
+      assert(v:num_elements() == self:num_elements())
+      assert(v:is_eov()       == self:is_eov())
+    end
+  end
+  --================================================
   return (status and nn_status)
 end
 
@@ -70,6 +86,21 @@ end
 function lVector:max_num_in_chunk()
   local max_num_in_chunk = cVector.max_num_in_chunk(self._base_vec)
   return max_num_in_chunk
+end
+
+function lVector:incr_num_readers(chnk_idx)
+  local num_readers = cVector.incr_num_readers(self._base_vec, chnk_idx)
+  return num_readers
+end
+
+function lVector:num_writers(chnk_idx)
+  local num_writers = cVector.num_writers(self._base_vec, chnk_idx)
+  return num_writers
+end
+
+function lVector:num_readers(chnk_idx)
+  local num_readers = cVector.num_readers(self._base_vec, chnk_idx)
+  return num_readers
 end
 
 function lVector:num_elements()
@@ -128,38 +159,59 @@ function lVector:drop_nulls()
   self._nn_vec = nil
   return self
 end
+
 function lVector:has_nulls()
   if ( self._nn_vec ) then return true else return false end 
 end
-function lVector:is_eov()
-  local is_eov = cVector.is_eov(self._base_vec)
-  assert(type(is_eov) == "boolean")
-  return is_eov
+
+function lVector:is_lma()
+  local b_is_lma = cVector.is_lma(self._base_vec)
+  assert(type(b_is_lma) == "boolean")
+  return b_is_lma
 end
+
+function lVector:is_early_free()
+  local b_is_early_free = cVector.is_early_free(self._base_vec)
+  assert(type(b_is_early_free) == "boolean")
+  return b_is_early_free
+end
+
+function lVector:is_eov()
+  local b_is_eov = cVector.is_eov(self._base_vec)
+  assert(type(b_is_eov) == "boolean")
+  return b_is_eov
+end
+
 function lVector:nop()
   local status = cVector.nop(self._base_vec)
   assert(type(status) == "boolean")
   return status
 end
+
 function lVector:is_persist()
-  local is_persist = cVector.is_persist(self._base_vec)
-  assert(type(is_persist) == "boolean")
-  return is_persist
+  local b_is_persist = cVector.is_persist(self._base_vec)
+  assert(type(b_is_persist) == "boolean")
+  return b_is_persist
 end
+
 function lVector:has_gen()
   if ( self._generator ) then return true  else return false end 
 end
+
 function lVector:uqid()
   local uqid = cVector.uqid(self._base_vec)
   assert(type(uqid) == "number")
   return uqid
 end
+
 function lVector:memo_len()
   return self._memo_len
 end
+
 function lVector:qtype()
   return self._qtype
 end
+
 function lVector.new(args)
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector
@@ -168,9 +220,14 @@ function lVector.new(args)
   if ( args.uqid )  then 
     assert(type(args.uqid) == "number")
     assert(args.uqid > 0)
+    -- TODO TODO P0   THINK  ABOUT FOLLOWING 
+    if ( not args.tbsp ) then  args.tbsp = 0 end 
+    print("tbsp = ", args.tbsp) -- TODO P0 Delete
+    assert(type(args.uqid) == "number")
+    assert(args.uqid >= 0)
     vector._base_vec = assert(cVector.rehydrate(args))
     if ( qcfg.debug ) then 
-      assert(cVector.chk(vector._base_vec, true, false))
+      assert(cVector.chk(vector._base_vec, false, false))
     end
     -- get following from cVector
     -- max_num_in_chunk
@@ -228,7 +285,6 @@ function lVector.new(args)
       nn_qtype = args.nn_qtype
       assert((nn_qtype == "B1") or (nn_qtype == "BL"))
     end
-    nn_args.qtype = nn_qtype
     nn_args.qtype = nn_qtype
     if ( args.name ) then 
       nn_args.name = "nn_" .. args.name 
@@ -352,7 +408,7 @@ function lVector:get1(elem_idx)
   local sclr = cVector.get1(self._base_vec, elem_idx)
   if ( type(sclr) ~= "nil" ) then assert(type(sclr) == "Scalar") end
   local nn_vector = self._nn_vec
-  if ( nn_vector ) then
+  if ( nn_vector and sclr ) then
     assert(type(nn_vector) == "lVector")
     nn_sclr = cVector.get1(nn_vector._base_vec, elem_idx)
     assert(type(nn_sclr) == "Scalar") 
@@ -362,12 +418,12 @@ function lVector:get1(elem_idx)
 end
 
 function lVector:unget_chunk(chnk_idx)
-  cVector.unget_chunk(self._base_vec, chnk_idx)
+  assert(cVector.unget_chunk(self._base_vec, chnk_idx))
   if ( self._nn_vec ) then 
     local nn_vector = self._nn_vec
     assert(type(nn_vector) == "lVector")
     assert((nn_vector:qtype() == "B1") or (nn_vector:qtype() == "BL"))
-    cVector.unget_chunk(nn_vector._base_vec, chnk_idx)
+    assert(cVector.unget_chunk(nn_vector._base_vec, chnk_idx))
   end
 end
 
@@ -389,6 +445,7 @@ function lVector:get_chunk(chnk_idx)
   if ( to_generate ) then 
     -- print(" invoke the generator  for " .. self:name(), self._chunk_num)
     if ( type(self._generator) == "nil" ) then return 0, nil end 
+    -- print("Gen Getting chunk " .. self._chunk_num .. " for " .. self:name())
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
     --==============================
@@ -398,6 +455,7 @@ function lVector:get_chunk(chnk_idx)
     end
     --==============================, NUmber of elements
     if ( num_elements < self._max_num_in_chunk ) then 
+      -- print("EOV for " .. self:name() .. ". num_elements = ", num_elements)
       -- nothing more to generate
       self:eov()  -- vector is at an end 
     end
@@ -426,25 +484,24 @@ function lVector:get_chunk(chnk_idx)
       assert(type(self._siblings) == "table")
       for _, v in ipairs(self._siblings) do
         assert(type(v) == "lVector") assert(type(v) == "lVector")
+        --[[
         print("Vector " .. self:name(), " requesting chunk " .. chnk_idx .. 
           " for sibling", v:name())
+          --]]
         local x, y, z = v:get_chunk(chnk_idx)
         assert(x == num_elements)
         if ( x < self._max_num_in_chunk ) then 
-          print("Sibling EOV for " .. v:name())
+          -- print("Sibling EOV for " .. v:name())
           v:eov()  -- vector is at an end 
         end
-        -- -- TODO P1 Document whether above assert is okay
-        -- This was motivated by the use of Q.seq({len = n, ...}) as 
-        -- the first argument to Q.where() where n was not known a priori
-        -- Note the immediate unget which is done to decrement
-        -- the number of readers. Note that we throw away x, y, z 
-        cVector.unget_chunk(v:self(), chnk_idx)
+        -- following because we aren't really consuming the chunk
+        -- we are just getting it 
+        v:unget_chunk(chnk_idx)
         -- Also, depending on memo_len, we may need to delete some chunks
         if ( ( v:memo_len() >= 0 ) and ( v:num_elements() > 0 ) ) then
           local chunk_to_release = chunk_idx - self._memo_len
           if ( chunk_to_release >= 0 ) then 
-            print("Sibling: Deleting chunk " .. chunk_to_release)
+            -- print("Sibling: Deleting chunk " .. chunk_to_release)
             local is_found = 
               cVector.chunk_delete(self._base_vec, chunk_to_release)
             -- assert(is_found == true)
@@ -455,10 +512,18 @@ function lVector:get_chunk(chnk_idx)
         end
       end
     end
+    assert(self:incr_num_readers(chnk_idx))
+    if ( self._nn_vec ) then 
+      local nn_vector = self._nn_vec
+      assert(nn_vector:incr_num_readers(chnk_idx))
+    end
+    -- print("Returning " .. num_elements .. " for " .. self:name())
+    -- TODO print("XXX", chnk_idx, self:num_readers(chnk_idx), self:name())
+    -- TODO assert(self:num_readers(chnk_idx) == 1)
     return num_elements, buf, nn_buf
   else 
     -- print(" Archival chunk for " .. self:name(), self._chunk_num)
-    self:check()
+    if ( qcfg.debug ) then self:check(false) end 
     local nn_x, nn_n
     local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
     if ( x == nil ) then return 0, nil, nil end 
@@ -490,13 +555,17 @@ function lVector:eval()
     -- called put_chunk which would have incremented chunk_num
     -- TODO THINK. I added ( self._chunk_num > 0 ) 
     -- to handle the zero element array case. Consider this caefully
-    if ( ( num_elements == 0 ) and ( self._chunk_num > 0 ) )  then
-      print("Ungetting " .. self._chunk_num .. " for " .. self:uqid())
-      cVector.unget_chunk(self._base_vec, self._chunk_num-1)
+    local chunk_to_unget = self._chunk_num - 1
+    if ( num_elements == 0 ) then
+      -- nothing to unget
+    else
+      -- print("Ungetting " .. self._chunk_num .. " for " .. self:name())
+      assert(cVector.unget_chunk(self._base_vec, chunk_to_unget))
       if ( self._nn_vec ) then 
-        cVector.unget_chunk(self._nn_vec, self._chunk_num-1) 
+        local nn_vector = self._nn_vec
+        assert(cVector.unget_chunk(nn_vector._base_vec, chunk_to_unget))
       end
-    end 
+    end
   until ( num_elements ~= self._max_num_in_chunk ) 
   assert(self:is_eov())
   --[[ TODO THINK P1 
@@ -641,7 +710,7 @@ function lVector.conjoin(T)
 end
 --==================================================
 function lVector:early_free()
-  return  cVector.delete(self._base_vec)
+  return  cVector.early_free(self._base_vec)
 end
 --==================================================
 function lVector:self()
@@ -670,18 +739,6 @@ function lVector:lma_to_chunks()
     local nn_vec = nn_vector._base_vec
     local nn_status = cVector.lma_to_chunks(self.nn_vec)
     assert(nn_status == 0)
-  end
-  return self
-end
---==================================================
-function lVector:del_lma()
-  assert(cVector.del_lma(self._base_vec))
-  if ( self._nn_vec ) then 
-    local nn_vector = assert(self._nn_vec)
-    assert(type(nn_vector) == "lVector")
-    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-    local nn_vec = nn_vector._base_vec
-    assert(cVector.del_lma(nn_vec))
   end
   return self
 end
@@ -738,11 +795,17 @@ function lVector:unget_lma_write()
   return self
 end
 --==================================================
-function lVector:steal_lma()
+function lVector:make_lma()
   -- TODO P3 What about nn vector?
-  local file_name, file_sz = cVector.steal_lma(self._base_vec)
+  local file_name, file_sz = cVector.make_lma(self._base_vec)
   return file_name, file_sz 
 end
 --==================================================
+-- will delete the vector *ONLY* if marked as is_killable; else, NOP
+function lVector:kill()
+  cVector.kill(self._base_vec)
+  if ( self._nn_vec ) then cVector.kill(self._nn_vec) end 
+  return true 
+end
 
 return lVector

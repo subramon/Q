@@ -3,6 +3,8 @@ require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local qcfg = require 'Q/UTILS/lua/qcfg'
 local max_num_in_chunk = qcfg.max_num_in_chunk
+local cVector = require 'libvctr'
+local lgutils = require 'liblgutils'
 local tests = {}
 --=========================================
 tests.t1 = function()
@@ -16,7 +18,10 @@ tests.t1 = function()
     assert(type(n) == "Scalar")
     assert(n:qtype() == "F8")
     assert(m:qtype() == "I8")
+    x:delete()
+    y:delete()
   end
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 --=========================================
@@ -24,8 +29,12 @@ tests.t2 = function()
   local n = 1048576+17
   local y = Q.seq({start = 1, by = 1, qtype = "I4", len = n })
   assert(type(y) == "lVector")
-  local z = Q.sum(y):eval():to_num()
+  local r = Q.sum(y)
+  local z = r:eval():to_num()
   assert( z == (n * (n+1) / 2 ) )
+  assert(cVector.check_all())
+  y:delete()
+  r:delete()
   print("Test t2 succeeded")
 end
 --=========================================
@@ -35,7 +44,8 @@ tests.t3 = function()
   local qtypes = { "BL", "B1", }
   for k, qtype in pairs(qtypes) do 
     local y = Q.const({val = true, qtype = qtype, len = n })
-    local outval, outcnt = Q.sum(y):eval()
+    local r = Q.sum(y)
+    local outval, outcnt = r:eval()
     print(outval, outcnt)
     assert(type(outval) == "Scalar")
     assert(outval:to_num() == n)
@@ -43,8 +53,11 @@ tests.t3 = function()
     assert(type(outcnt) == "Scalar")
     assert(outcnt:to_num() == n)
     
+    y:delete()
+    r:delete()
     print("Test t3 " .. qtype .. " succeeded")
   end
+  assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 --=========================================
@@ -54,15 +67,19 @@ tests.t4 = function()
   local qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" } 
   for k, qtype in pairs(qtypes) do 
     local y = Q.const({val = 2, qtype = qtype, len = n })
-    local outval, outcnt = Q.sum(y):eval()
+    local r = Q.sum(y)
+    local outval, outcnt = r:eval()
     assert(type(outval) == "Scalar")
     assert(outval:to_num() == 2*n)
 
     assert(type(outcnt) == "Scalar")
     assert(outcnt:to_num() == n)
     
+    y:delete()
+    r:delete()
     print("Test t4, qtype =  " .. qtype .. " succeeded")
   end
+  assert(cVector.check_all())
   print("Test t4 succeeded")
 end
 --=========================================
@@ -74,4 +91,7 @@ os.exit()
 tests.t2()
 tests.t3() 
 tests.t4()
-os.exit()
+collectgarbage()
+print("MEM", lgutils.mem_used())
+print("DSK", lgutils.dsk_used())
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

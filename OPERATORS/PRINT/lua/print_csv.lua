@@ -42,6 +42,7 @@ local print_csv = function (
   if ( opt_args and opt_args.impl == "C" ) then 
     -- print("Using C print implementation")
     assert(cprint(opfile, where, formats, lb, ub, V, max_num_in_chunk))
+    -- print("Done  C print implementation")
     return true 
   end
     -- print("Using Lua print implementation")

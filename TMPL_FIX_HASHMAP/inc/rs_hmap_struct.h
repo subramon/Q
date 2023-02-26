@@ -1,5 +1,5 @@
-#ifndef __RS_HMAP_STRUCT_H
-#define __RS_HMAP_STRUCT_H
+#ifndef __${tmpl}_RS_HMAP_STRUCT_H
+#define __${tmpl}_RS_HMAP_STRUCT_H
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -42,6 +42,15 @@ typedef int (* pr_fn_t)(
     void *ptr_hmap, 
     FILE *fp
     );
+typedef int (* resize_fn_t)(
+    void *ptr_hmap, 
+    size_t newsize
+    );
+typedef int (* insert_fn_t)(
+    void *ptr_hmap, 
+    const void * const key, 
+    const void * const val
+    );
 typedef int (* put_fn_t)(
     void *ptr_hmap, 
     const void * const key, 
@@ -67,12 +76,18 @@ typedef int(* key_ordr_fn_t)(
     const void *in2
     );
 typedef int(* pr_key_fn_t)(
-    void *in_key,
+    void *bkts,
+    uint32_t idx,
     FILE *fp
     );
 typedef int(* pr_val_fn_t)(
-    void *in_val,
+    void *bkts,
+    uint32_t idx,
     FILE *fp
+    );
+typedef int (*set_hash_fn_t )(
+    const void * const ptr_key,
+    const void * const ptr_hmap
     );
 typedef int (*val_update_fn_t )(
     void *, 
@@ -80,24 +95,24 @@ typedef int (*val_update_fn_t )(
     );
 
 
-typedef struct _rs_hmap_kv_t { 
-  rs_hmap_key_t key;
-  rs_hmap_val_t val;
-} rs_hmap_kv_t;
+typedef struct _${tmpl}_rs_hmap_kv_t { 
+  ${tmpl}_rs_hmap_key_t key;
+  ${tmpl}_rs_hmap_val_t val;
+} ${tmpl}_rs_hmap_kv_t;
 
-typedef struct _rs_hmap_bkt_t { 
-  rs_hmap_key_t key; 
+typedef struct _${tmpl}_rs_hmap_bkt_t { 
+  ${tmpl}_rs_hmap_key_t key; 
   uint16_t psl; // probe sequence length 
-  rs_hmap_val_t val;    // value that is aggregated, NOT input value
-} rs_hmap_bkt_t;
+  ${tmpl}_rs_hmap_val_t val;    // value that is aggregated, NOT input value
+} ${tmpl}_rs_hmap_bkt_t;
 
 
-typedef struct _rs_hmap_t {
+typedef struct _${tmpl}_rs_hmap_t {
   double start_check_val; 
   uint32_t size;
   uint32_t nitems;
   uint64_t divinfo;
-  rs_hmap_bkt_t  *bkts;  
+  ${tmpl}_rs_hmap_bkt_t  *bkts;  
   bool *bkt_full; 
   uint64_t hashkey;
   rs_hmap_config_t config; // extrernal config 
@@ -110,6 +125,8 @@ typedef struct _rs_hmap_t {
   merge_fn_t merge;
   pr_fn_t pr;
   put_fn_t put;
+  resize_fn_t resize;
+  insert_fn_t insert;
   row_dmp_fn_t row_dmp;
 
   bkt_chk_fn_t bkt_chk; /* function to perform logical 
@@ -118,9 +135,10 @@ typedef struct _rs_hmap_t {
   key_ordr_fn_t key_ordr;
   pr_key_fn_t pr_key;
   pr_val_fn_t pr_val;
+  set_hash_fn_t set_hash; 
   val_update_fn_t val_update; // function to update value 
 
   double stop_check_val; 
-} rs_hmap_t;
+} ${tmpl}_rs_hmap_t;
 
-#endif // __RS_HMAP_STRUCT_H
+#endif // __${tmpl}_RS_HMAP_STRUCT_H

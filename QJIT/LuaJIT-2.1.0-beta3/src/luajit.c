@@ -7,14 +7,10 @@
 #define MAIN_PGM
 #include "qjit_globals.h"
 #include "init_globals.h"
-/*
-#include "qtypes.h"// TODO DELETE JUST FOR TESTING 
-#include "vctr_new_uqid.h" // TODO DELETE JUST FOR TESTING 
-#include "vctr_add.h" // TODO DELETE JUST FOR TESTING 
-#include "vctr_is.h" // TODO DELETE JUST FOR TESTING 
-#include "vctr_del.h" // TODO DELETE JUST FOR TESTING 
-#include "vctr_cnt.h" // TODO DELETE JUST FOR TESTING 
-*/
+#include "read_configs.h"
+#include "init_session.h"
+#include "free_globals.h"
+#include "lua_state.h"
 // STOP: RAMESH
 /*
 ** LuaJIT frontend. Runs commands, scripts, read-eval-print (REPL) etc.
@@ -267,35 +263,16 @@ static void dotty(lua_State *L)
   int status;
   const char *oldprogname = progname;
   progname = NULL;
-  for ( int iter = 0; ; iter++ ) { 
+  for ( int iter = 0; ; iter++ ) {
     // START RAMESH
-    int expected, desired; 
-    int l_L_status; __atomic_load(&g_L_status, &l_L_status, 0);
     int l_web; __atomic_load(&g_webserver_interested, &l_web, 0);
-    printf("iter = %d, %d, %d \n", iter, l_L_status, l_web);
-    if ( ( l_web == 1 ) && 
-        ( ( l_L_status == 1 ) || ( l_L_status == 0 ) ) ) { 
-      // relinquish lua state 
-      printf("Master: Relinqushing Lua state \n"); 
-      expected = 1; desired = 0;
-      bool rslt = __atomic_compare_exchange(
-          &g_L_status, &expected, &desired, false, 0, 0);
-      if ( rslt ) { WHEREAMI; exit(-1); } 
-      // take a short nap for 100 ms
+    if ( l_web == 1 ) { // webserver is interested
+      // take a short nap for 100 ms to give webserver a chance 
       struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 100 * 1000000 };
       nanosleep(&tmspec, NULL);
     }
     // acquire Lua state
-    for ( ; ; ) { 
-      expected = 0; desired = 1;
-      bool rslt = __atomic_compare_exchange(
-          &g_L_status, &expected, &desired, false, 0, 0);
-      if ( rslt ) { printf("Master: Acquired Lua state \n"); break; }
-      // take a short nap for 10 ms
-      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 10 * 1000000 };
-      nanosleep(&tmspec, NULL);
-    }
-    fprintf(stdout, "Master>> ");
+    status = acquire_lua_state(1); // 1=> master 
     // STOP RAMESH
     status = loadline(L); if ( status == -1) { break; }
 
@@ -310,17 +287,8 @@ static void dotty(lua_State *L)
 			      lua_tostring(L, -1)));
     }
     // START RAMESH
-    { // release lock 
-      int expected = 1; int desired = 0;
-      bool rslt = __atomic_compare_exchange(
-          &g_L_status, &expected, &desired, false, 0, 0);
-      if ( !rslt ) { 
-        printf("Master: g_L_status = %d  \n", g_L_status);
-        printf("Master: expected = %d  \n", expected);
-        printf("Master: desired  = %d  \n", desired);
-        printf("Master: %d Catastrophic error\n", __LINE__); exit(1);
-      }
-    }
+    // relinquish lua state 
+    status = release_lua_state(1); // 1=> master 
     // STOP RAMESH
   }
   lua_settop(L, 0);  /* clear stack */
@@ -637,6 +605,8 @@ int main(int argc, char **argv)
   int status;
   // START: RAMESH 
   status = init_globals(); cBYE(status);
+  status = read_configs(); cBYE(status);
+  status = init_session(); cBYE(status);
   // STOP: RAMESH 
   L = lua_open();
   if (L == NULL) {
@@ -651,24 +621,26 @@ int main(int argc, char **argv)
   report(L, status);
   lua_close(L);
   // START: RAMESH
-  int itmp = 1; __atomic_store(&g_halt, &itmp, 0);
-  pthread_cond_signal(&g_mem_cond);
   printf("QJIT Wrapping up\n"); // RAMESH
   // Wait for other threads to join
-  if ( g_is_webserver   ) { pthread_join(g_webserver,   NULL); }
-  if ( g_is_out_of_band ) { pthread_join(g_out_of_band, NULL); }
-  if ( g_is_mem_mgr     ) { pthread_join(g_mem_mgr,    NULL); }
+  if ( g_is_webserver   ) { 
+    WHEREAMI;
+    pthread_join(g_webserver,   NULL); 
+    printf("webserver joined\n"); 
+  }
+  if ( g_is_out_of_band ) { 
+    WHEREAMI;
+    pthread_join(g_out_of_band, NULL); 
+    printf("out_of_band joined\n"); 
+  }
+  if ( g_is_mem_mgr     ) { 
+    WHEREAMI;
+    pthread_cond_signal(&g_mem_cond);
+    pthread_join(g_mem_mgr,    NULL); 
+    printf("g_mem_mgr joined\n"); 
+  }
 BYE:
-  if ( g_mutex_created ) { 
-    pthread_cond_destroy(&g_mem_cond);
-    pthread_mutex_destroy(&g_mem_mutex);
-  }
-  if ( g_vctr_hmap.bkts != NULL ) {
-    g_vctr_hmap.destroy(&g_vctr_hmap);
-  }
-  if ( g_chnk_hmap.bkts != NULL ) {
-    g_chnk_hmap.destroy(&g_chnk_hmap);
-  }
+  status = free_globals(); if ( status < 0 ) { WHEREAMI; } 
   // STOP : RAMESH
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

@@ -1,10 +1,10 @@
+local plpath     = require 'pl.path'
 require 'Q/UTILS/lua/strict'
 local ffi        = require 'ffi'
-local plpath     = require 'pl.path'
 local gen_code   = require "Q/UTILS/lua/gen_code"
 local for_cdef   = require "Q/UTILS/lua/for_cdef"
-local qconsts    =  require 'Q/UTILS/lua/qconsts'
 local check_subs = require 'Q/OPERATORS/F_TO_S/lua/check_subs'
+local lVector    = require 'Q/RUNTIME/VCTRS/lua/lVector'
 
 local function nop() end 
 print = nop -- Comment this out if you want print statements
@@ -38,8 +38,9 @@ for _, operator in ipairs(operators) do
          ( ( operator == "min" ) or ( operator == "max" ) ) ) then
          -- nothing to do 
     else
+      local x = lVector({qtype = qtype, })
       local status, subs
-      status, subs = pcall(sp_fn, qtype)
+      status, subs = pcall(sp_fn, x)
       assert(status, subs)
       assert(check_subs(subs))
       if ( not subs.tmpl ) then 

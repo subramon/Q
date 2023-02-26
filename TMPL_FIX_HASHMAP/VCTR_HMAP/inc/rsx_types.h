@@ -7,7 +7,7 @@
 #include "qtypes.h"
 typedef uint32_t vctr_rs_hmap_key_t; // a vector is identified by a number
 
-#define MAX_LEN_VCTR_NAME 15 // for debugging 
+#define MAX_LEN_VCTR_NAME 31 // for debugging 
 
 typedef struct _vctr_meta_t {
   char name[MAX_LEN_VCTR_NAME+1];
@@ -22,6 +22,7 @@ typedef struct _vctr_meta_t {
   int memo_len;
   qtype_t qtype;
   bool is_eov;   // true => no appends allowed
+  bool is_killable;   // useful to delete temporary vectors
   bool is_persist;   // l2 should not be deleted on vector delete
   bool is_writable;   // false => no changes allowed
   bool is_early_free; // true => some chunk has been freed early

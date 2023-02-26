@@ -1,5 +1,6 @@
 #include "q_incs.h"
 #include "qtypes.h"
+#include "qjit_consts.h"
 #include "vctr_consts.h"
 #include "sclr_struct.h"
 #include "vctr_rs_hmap_struct.h"
@@ -8,17 +9,19 @@
 #include "mod_mem_used.h"
 #include "chnk_first.h"
 
-extern vctr_rs_hmap_t g_vctr_hmap;
-extern chnk_rs_hmap_t g_chnk_hmap;
+
+extern vctr_rs_hmap_t *g_vctr_hmap;
+extern chnk_rs_hmap_t *g_chnk_hmap;
 
 int
 chnk_first(
+    uint32_t tbsp,
     uint32_t vctr_where
     )
 {
   int status = 0;
-  vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap.bkts[vctr_where].val);
-  vctr_rs_hmap_key_t vctr_uqid = g_vctr_hmap.bkts[vctr_where].key;
+  vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[vctr_where].val);
+  vctr_rs_hmap_key_t vctr_uqid = g_vctr_hmap[tbsp].bkts[vctr_where].key;
 
   // This function handles case when vector is empty 
   if ( ptr_vctr_val->num_elements != 0 ) { goto BYE; } 
@@ -31,6 +34,9 @@ chnk_first(
   chnk_rs_hmap_key_t chnk_key = 
   { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
   char *l1_mem = NULL;
+#ifdef VERBOSE
+  printf("VCTR 0 Malloc of %u for [%s] \n", chnk_size, vctr_val.name);
+#endif
   status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, chnk_size);
   cBYE(status);
   chnk_rs_hmap_val_t chnk_val;
@@ -40,12 +46,12 @@ chnk_first(
   chnk_val.size  = chnk_size;
   status = incr_mem_used(chnk_size);  cBYE(status);
   //-------------------------------
-  status = g_chnk_hmap.put(&g_chnk_hmap, &chnk_key, &chnk_val); 
+  status = g_chnk_hmap[tbsp].put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
   cBYE(status);
-  g_vctr_hmap.bkts[vctr_where].val.num_chnks++;
+  g_vctr_hmap[tbsp].bkts[vctr_where].val.num_chnks++;
 #ifdef DEBUG
   bool is_found; uint32_t chnk_where;
-  status = chnk_is(vctr_uqid, chnk_idx, &is_found, &chnk_where); 
+  status = chnk_is(tbsp, vctr_uqid, chnk_idx, &is_found, &chnk_where); 
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); } 
 #endif

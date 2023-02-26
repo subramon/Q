@@ -6,6 +6,7 @@ local promote = require 'Q/UTILS/lua/promote'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local qc      = require 'Q/UTILS/lua/qcore'
 local is_in   = require 'Q/UTILS/lua/is_in'
+local qcfg    = require 'Q/UTILS/lua/qcfg'
 
 qc.q_cdef("OPERATORS/F1F2OPF3/inc/f1f2opf3_concat.h") 
 
@@ -57,6 +58,7 @@ end
 
 
 return function (
+  op,
   f1, 
   f2,
   optargs
@@ -86,7 +88,7 @@ return function (
   assert(is_in(f3_qtype, { "I2", "I4", "I8", }))
   assert( (shift_by >= 0 )  and ( shift_by < 63 ))
   
-  subs.fn = "vvconcat_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
+  subs.fn = op .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
   subs.f1_ctype = "u" .. cutils.str_qtype_to_str_ctype(f1_qtype)
   subs.f2_ctype = "u" .. cutils.str_qtype_to_str_ctype(f2_qtype)
@@ -103,22 +105,27 @@ return function (
   cst_cargs[0]["shift_by"] = shift_by
   subs.cst_cargs = cst_cargs
 
+  subs.chunk_size = 4096 -- TODO P4 experiment 
 
   subs.f1_cast_as = subs.f1_ctype .. "*"
   subs.f2_cast_as = subs.f2_ctype .. "*"
   subs.f3_cast_as = subs.f3_ctype .. "*"
 
-  subs.tmpl   = "OPERATORS/F1F2OPF3/lua/concat_sclr.tmpl"
+  subs.tmpl   = "OPERATORS/F1F2OPF3/lua/concat.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
   subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/", 
     "OPERATORS/F1F2OPF3/inc/" }
 
   subs.libs = { "-lgomp", "-lm" } 
-  -- for ISPC
-  subs.f1_ctype_ispc = "u" .. cutils.str_qtype_to_str_ispctype(f1_qtype)
-  subs.f2_ctype_ispc = "u" .. cutils.str_qtype_to_str_ispctype(f2_qtype)
-  subs.f3_ctype_ispc = "u" .. cutils.str_qtype_to_str_ispctype(f3_qtype)
-  subs.tmpl_ispc   = "OPERATORS/F1F2OPF3/lua/concat_ispc.tmpl"
+  if ( qcfg.use_ispc ) then 
+    subs.f1_ctype_ispc = "u" .. cutils.str_qtype_to_str_ispctype(f1_qtype)
+    subs.f2_ctype_ispc = "u" .. cutils.str_qtype_to_str_ispctype(f2_qtype)
+    subs.f3_ctype_ispc = "u" .. cutils.str_qtype_to_str_ispctype(f3_qtype)
+    subs.tmpl_ispc   = "OPERATORS/F1F2OPF3/lua/concat_ispc.tmpl"
+    subs.ispc_comment = ""
+  else
+    subs.ispc_comment = "//"
+  end
   return subs
 end

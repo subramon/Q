@@ -7,7 +7,6 @@ local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 local lVector     = require 'Q/RUNTIME/VCTRS/lua/lVector'
 
-local max_num_in_chunk = qcfg.max_num_in_chunk
 
 local function TM_to_SC(
   inv, 
@@ -31,6 +30,7 @@ local function TM_to_SC(
   -- subs.srcs = {}
   qc.q_add(subs)
 
+  local max_num_in_chunk = inv:max_num_in_chunk()
   local in_ctype = cutils.str_qtype_to_str_ctype(in_qtype)
   local cst_in_as = in_ctype .. " *"
   local out_width = 32 -- TODO P3 Undo hard code
@@ -42,16 +42,17 @@ local function TM_to_SC(
     out_buf:stealable(true)
     local cst_out_buf = get_ptr(out_buf, "char  * ")
     local len, base_data = inv:get_chunk(chunk_idx)
-    if ( len > 0 ) then 
-      local in_ptr = get_ptr(base_data, cst_in_as)
-      assert(in_ptr ~= ffi.NULL)
-      local start_time = cutils.rdtsc()
-      local status = qc["TM_to_SC"](in_ptr, len, format,
-        cst_out_buf, out_width)
-      record_time(start_time, "load_csv_fast")
-      assert(status == 0)
-      chunk_idx = chunk_idx + 1
-    end
+    if ( len == 0 ) then return 0, nil end 
+    local in_ptr = get_ptr(base_data, cst_in_as)
+    assert(in_ptr ~= ffi.NULL)
+    local start_time = cutils.rdtsc()
+    local status = qc["TM_to_SC"](in_ptr, len, format,
+      cst_out_buf, out_width)
+    record_time(start_time, "load_csv_fast")
+    assert(status == 0)
+    inv:unget_chunk(chunk_idx)
+    if ( len < max_num_in_chunk ) then return len, out_buf end 
+    chunk_idx = chunk_idx + 1
     return len, out_buf
   end
   --===============================================

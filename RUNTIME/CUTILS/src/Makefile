@@ -1,4 +1,4 @@
-CFLAGS=${QC_FLAGS}
+
 INCS=-I. \
      	-I../inc/ \
 	-I../../../UTILS/inc/ \
@@ -28,11 +28,11 @@ SRCS += ../../../UTILS/src/rs_mmap.c
 OBJS = $(SRCS:.c=.o)
 
 .c.o : 
-	$(CC) -c -o $@ $< ${QC_FLAGS} ${DFLAGS} $(INCS) 
+	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
 clean:
 	rm -f *.so *.o _* ${OBJS} ${EXTSO}
 		
 libcutils.so:   ${OBJS} 
-	gcc ${OBJS} -shared -o libcutils.so
+	gcc ${OBJS} -shared -o libcutils.so -lgomp ${QLDFLAGS}
 

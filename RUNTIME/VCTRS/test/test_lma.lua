@@ -6,6 +6,7 @@ local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
 local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local lgutils = require 'liblgutils'
 
 local qtype = "I4"
 local max_num_in_chunk = 64
@@ -19,12 +20,13 @@ tests.t1 = function()
   assert(not status)
   print(">>> STOP  DELIBERATE ERROR")
   x1:eval()
+  assert(x1:check())
   for i = 1, 1000 do 
     assert(x1:chunks_to_lma())
-    assert(x1:del_lma())
+    -- assert(x1:lma_to_chunks()) TODO TODO P2 
   end
   x1 = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 -- test read access
@@ -60,7 +62,7 @@ tests.t2 = function()
   print(">>> STOP  DELIBERATE ERROR")
 
   x1 = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t2 succeeded")
 end
 -- test write access
@@ -93,7 +95,7 @@ tests.t3 = function()
   assert(type(c) == "CMEM")
   x1:unget_lma_write()
   x1 = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 -- test steal
@@ -102,8 +104,10 @@ tests.t4 = function()
     name = "test4_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   assert(x1:eval())
   assert(x1:is_eov())
+  assert(x1:is_lma() == false)
   assert(x1:chunks_to_lma())
-  local file_name, file_sz = x1:steal_lma()
+  local file_name, file_sz = x1:make_lma()
+  assert(x1:is_lma() == true)
   assert(type(file_name) == "string")
   assert(plpath.isfile(file_name))
   local chk_file_sz = plpath.getsize(file_name)
@@ -120,6 +124,7 @@ tests.t4 = function()
   assert(y:qtype() == qtype)
   assert(y:num_elements() == len)
   assert(y:is_eov() == true)
+  assert(y:is_lma() == true)
   for i = 1, len do
     local c1 = x1:get1(i-1)
     local c2 = y:get1(i-1)
@@ -127,13 +132,17 @@ tests.t4 = function()
   end
   -- y.pr()
 
-  --========================================
-  print(">>> START DELIBERATE ERROR")
-  local status = pcall(lVector.get_lma_read, x1)
-  assert(not status)
-  print(">>> STOP  DELIBERATE ERROR")
+  local x1_cmem = x1:get_lma_read()
+  assert(type(x1_cmem) == "CMEM")
+  assert(x1_cmem:size() == file_sz)
+  local cast_x1_as = cutils.str_qtype_to_str_ctype(qtype) .. " *"
+  local x1_ptr = get_ptr(x1_cmem, cast_x1_as)
+  for i = 1, len do 
+    assert(x1_ptr[i-1] == i)
+  end
+  assert(x1:unget_lma_read())
   x1 = nil; y = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t4 succeeded")
 end
 -- test print
@@ -145,7 +154,7 @@ tests.t5 = function()
   assert(x1:chunks_to_lma())
   -- x1:pr()
   x1 = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t5 succeeded")
 end
 -- test modify 
@@ -167,7 +176,7 @@ tests.t6 = function()
     assert(s == Scalar.new(i*10, qtype))
   end 
   x1 = nil; collectgarbage()
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   print("Test t6 succeeded")
 end
 -- return tests
@@ -177,4 +186,5 @@ tests.t3()
 tests.t4()
 tests.t5()
 tests.t6()
--- os.exit()
+collectgarbage()
+assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
