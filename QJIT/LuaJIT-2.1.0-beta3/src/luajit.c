@@ -272,7 +272,7 @@ static void dotty(lua_State *L)
       nanosleep(&tmspec, NULL);
     }
     else if ( l_master == 1 ) {
-      // pahale aap, pahale aap
+      // pahale aap, pahale aap, lucknow ke nabab
       // You are interested but be polite and check if webserver wants in
       int l_web; __atomic_load(&g_webserver_interested, &l_web, 0);
       if ( l_web == 1 ) { // webserver is interested

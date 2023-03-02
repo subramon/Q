@@ -123,11 +123,13 @@ process_req(
         // Delete temporary files 
         unlink(err_file);
         unlink(out_file);
-        // TODO P1 Does the order of these 2 operations matter?
-        // indicate lack of interest 
+        // Does the order of these 2 operations matter? No.
+        // The "interested" variable is just a guidance to the master
+        // to sleep for a bit and give the webserver a chance to "ghiss" in
+        // webserver indicates lack of interest 
         itmp = 0; __atomic_store(&g_webserver_interested, &itmp, 0);
         // release state 
-        status = release_lua_state(2); // 2 => slave
+        status = release_lua_state(2); // 2 => webserver
         break;
       }
       //--------------------------------------------------------
