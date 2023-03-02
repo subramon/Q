@@ -29,8 +29,8 @@ init_globals(
   // Initialize global variables
   g_mem_lock = 0;
 
-  g_halt = 0;
   g_webserver_interested = 0; 
+  g_master_interested = 1; 
   g_L_status = 0;
 
   g_vctr_hmap     = NULL;

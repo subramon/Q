@@ -9,7 +9,6 @@
 #include "process_req.h"
 #include "rs_mmap.h"
 #include "handler.h"
-extern int g_halt;
 void
 handler(
     struct evhttp_request *req,
@@ -35,8 +34,6 @@ handler(
   decoded_uri = evhttp_decode_uri(uri);
   if ( decoded_uri == NULL ) { go_BYE(-1); }
   img_info_t img_info; memset(&img_info, 0, sizeof(img_info_t));
-  // If master calls halt, get out 
-  if ( g_halt == 1 ) { event_base_loopbreak(base); }
   //--------------------------------------
   status = extract_api_args(decoded_uri, api, MAX_LEN_API, args, MAX_LEN_ARGS);
   cBYE(status);

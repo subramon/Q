@@ -10,12 +10,15 @@
 typedef enum _req_type_t {
   Undefined,  // start with this guy 
 
+  Disk,
   Halt, 
   Ignore, 
   Lua, 
-  //-- for out of band server 
   Memory,
-  Disk,
+  //-- only for out of band server 
+  SetDisk,
+  SetMaster,
+  SetMemory,
 
 } req_type_t;
 

@@ -6,11 +6,12 @@
 #include "rs_mmap.h" 
 #include "process_req.h" 
 #include "mod_mem_used.h" 
+#include "extract_name_value.h" 
 #include "lua_state.h" 
 
+extern int g_master_interested;
 extern int g_webserver_interested;
 extern int g_L_status;
-extern int g_halt;
 extern lua_State *L;  // IMPORTANT: This comes from luajit.c 
 
 int
@@ -37,17 +38,43 @@ process_req(
     case Undefined :
       go_BYE(-1);
       break;
-      //----------fd_out
+      //--------------------------------------------------------
     case Ignore :  
       sprintf(outbuf, "{ \"%s\" : \"OK\" }", api);
       break;
       //--------------------------------------------------------
-    case Lua :  
+    case SetDisk :  
+      go_BYE(-1); // TODO P2 
+      break;
+      //--------------------------------------------------------
+    case SetMemory :  
+      go_BYE(-1); // TODO P2 
+      break;
+      //--------------------------------------------------------
+    case SetMaster :  
       if ( W->is_out_of_band == false ) { go_BYE(-1); }
+      {
+        char buf[128]; memset(buf, 0, 128);
+        status = extract_name_value(args, "Status=", '&', buf, 127); 
+        cBYE(status);
+        if ( ( strcasecmp(buf, "true") == 0 ) ||  ( strcasecmp(buf, "on") == 0 ) ) {
+           int itmp = 1; __atomic_store(&g_master_interested, &itmp, 0);
+        }
+        else if ( ( strcasecmp(buf, "false") == 0 ) ||  ( strcasecmp(buf, "off") == 0 ) ) {
+           int itmp = 0; __atomic_store(&g_master_interested, &itmp, 0);
+        }
+        else {
+          go_BYE(-1);
+        }
+        sprintf(outbuf, "{ \"%s\" : \"OK\" }", api);
+      } 
+      break;
+      //--------------------------------------------------------
+    case Lua :  
       {
         // indicate interest 
         int itmp = 1; __atomic_store(&g_webserver_interested, &itmp, 0);
-        status = acquire_lua_state(2); // 2 => slave
+        status = acquire_lua_state(2); // 2 => webserver
         // Redirect stdout and stderr
         int len; 
         char out_file[128]; len = sizeof(out_file);memset(out_file, 0, len);
@@ -96,10 +123,11 @@ process_req(
         // Delete temporary files 
         unlink(err_file);
         unlink(out_file);
-        // release state 
-        status = release_lua_state(2); // 2 => slave
+        // TODO P1 Does the order of these 2 operations matter?
         // indicate lack of interest 
         itmp = 0; __atomic_store(&g_webserver_interested, &itmp, 0);
+        // release state 
+        status = release_lua_state(2); // 2 => slave
         break;
       }
       //--------------------------------------------------------

@@ -5,7 +5,6 @@
 #include "mem_mgr.h"
 
 // START globals
-extern int g_halt;
 extern pthread_cond_t  g_mem_cond;
 extern pthread_mutex_t g_mem_mutex;
 // STOP  globals
@@ -24,11 +23,6 @@ mem_mgr(
 
   for ( ; ; ) { 
     pthread_mutex_lock(&g_mem_mutex);
-    int itmp; __atomic_load(&g_halt, &itmp, 1); 
-    if ( itmp == 1 ) { 
-      pthread_mutex_unlock(&g_mem_mutex);
-      goto BYE; 
-    }
     printf("Memory Manager waiting\n");
     pthread_cond_wait(&g_mem_cond, &g_mem_mutex);
     printf("Memory Manager working\n");

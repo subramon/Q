@@ -23,7 +23,6 @@
 #include "chnk_rs_hmap_instantiate.h"
 
 #include "import_tbsp.h"
-#include "lua_state.h" // for halt_threads()
 
 
 #undef MAIN_PGMN
@@ -66,15 +65,6 @@ BYE:
   lua_pushstring(L, __func__);
   lua_pushnumber(L, status);
   return 3; 
-}
-//----------------------------------------
-static int l_lgutils_halt_threads( 
-    lua_State *L
-    )
-{
-  halt_threads();
-  lua_pushboolean(L, true); 
-  return 1; 
 }
 //----------------------------------------
 static int l_lgutils_mem_used( 
@@ -198,7 +188,6 @@ BYE:
 static const struct luaL_Reg lgutils_methods[] = {
     { "import_tbsp", l_lgutils_import_tbsp },
     { "is_restore_session", l_lgutils_is_restore_session },
-    { "halt_threads", l_lgutils_halt_threads },
     { "mem_used", l_lgutils_mem_used },
     { "dsk_used", l_lgutils_dsk_used },
     { "tbsp_name",           l_lgutils_tbsp_name },
@@ -211,7 +200,6 @@ static const struct luaL_Reg lgutils_methods[] = {
 static const struct luaL_Reg lgutils_functions[] = {
     { "import_tbsp", l_lgutils_import_tbsp },
     { "is_restore_session", l_lgutils_is_restore_session },
-    { "halt_threads", l_lgutils_halt_threads },
     { "mem_used", l_lgutils_mem_used },
     { "dsk_used", l_lgutils_dsk_used },
     { "tbsp_name",           l_lgutils_tbsp_name },

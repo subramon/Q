@@ -29,8 +29,13 @@ webserver(
    *  Services will only receive packets from interfaces they listen to. You can commonly specify 0.0.0.0 as listen address in the service, to make it listen on all interfaces.
    *  https://askubuntu.com/questions/1136377/why-is-port-not-open-not-ufw-service-is-running
    *  */
-  status = evhttp_bind_socket(httpd, "0.0.0.0", port);
-//  status = evhttp_bind_socket(httpd, "127.0.0.1", port);
+  // Can talk to out of band server only from server where qjit is running
+  if ( web_info->is_out_of_band ) { 
+    status = evhttp_bind_socket(httpd, "127.0.0.1", port);
+  }
+  else {
+    status = evhttp_bind_socket(httpd, "0.0.0.0", port);
+  }
   if ( status < 0 ) {
     fprintf(stderr, "Port %d busy \n", port); go_BYE(-1);
   }

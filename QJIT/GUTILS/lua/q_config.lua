@@ -23,4 +23,6 @@ T.chnk_hmap = {
   min_size = 32,
   max_size = 0
 }
+
+T.initial_master_interested = true 
 return T

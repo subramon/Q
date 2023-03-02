@@ -51,6 +51,7 @@ RS_LIBS += -latomic  # This was neeeded on Raspberry Pi
 # Otherwise, some of the atomics were not found 
 
 AUX_SRCS := ./src/extract_api_args.c 
+AUX_SRCS := ./src/extract_name_value.c 
 AUX_SRCS += ./src/free_globals.c 
 AUX_SRCS += ./src/get_req_type.c 
 AUX_SRCS += ./src/lua_state.c 
@@ -83,6 +84,8 @@ ALTOBJS = $(ALTSRCS:.c=.o)
 
 .c.o : 
 	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
+
+src/process_req.o : QC_FLAGS += -Wunused-parameter
 
 ${MYSO} : ${OBJS}
 	gcc -shared ${OBJS} -o ${MYSO} ${RS_LIBS} ${QLDFLAGS}

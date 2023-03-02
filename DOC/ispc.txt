@@ -1,0 +1,15 @@
+Some useful links
+
+https://walkingrandomly.com/?p=3988
+
+https://ingowald.blog/2018/06/13/ispc-bag-of-tricks-part-1-addressing/
+
+https://www.experoinc.com/post/little-performance-explorations-ispc
+
+=== vectroization
+
+https://walkingrandomly.com/?p=3378
+
+https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html
+
+

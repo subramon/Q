@@ -21,5 +21,7 @@ typedef struct  _q_config_t {
 
   uint32_t chnk_hmap_min_size;
   uint32_t chnk_hmap_max_size;
+
+  bool initial_master_interested;
 } q_config_t;
 #endif // __Q_CONFIH

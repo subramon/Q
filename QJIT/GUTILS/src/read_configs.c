@@ -101,6 +101,8 @@ read_configs(
 
   g_chnk_hmap_config.min_size = C.chnk_hmap_min_size;
   g_chnk_hmap_config.max_size = C.chnk_hmap_max_size;
+
+  g_master_interested = C.initial_master_interested;
   // STOP : This is ugly to have to copy out of struct TODO P4
 
 BYE:

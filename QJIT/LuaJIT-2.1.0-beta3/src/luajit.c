@@ -263,32 +263,46 @@ static void dotty(lua_State *L)
   int status;
   const char *oldprogname = progname;
   progname = NULL;
-  for ( int iter = 0; ; iter++ ) {
+  for ( uint64_t iter = 0; ; iter++ ) {
     // START RAMESH
-    int l_web; __atomic_load(&g_webserver_interested, &l_web, 0);
-    if ( l_web == 1 ) { // webserver is interested
-      // take a short nap for 100 ms to give webserver a chance 
-      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 100 * 1000000 };
+    int l_master; __atomic_load(&g_master_interested, &l_master, 0);
+    if ( l_master == 0 ) {
+      // take a long nap for 1000 ms 
+      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 1000*1000000 };
       nanosleep(&tmspec, NULL);
     }
-    // acquire Lua state
-    status = acquire_lua_state(1); // 1=> master 
-    // STOP RAMESH
-    status = loadline(L); if ( status == -1) { break; }
+    else if ( l_master == 1 ) {
+      // pahale aap, pahale aap
+      // You are interested but be polite and check if webserver wants in
+      int l_web; __atomic_load(&g_webserver_interested, &l_web, 0);
+      if ( l_web == 1 ) { // webserver is interested
+        // take a short nap for 50 ms to give webserver a chance 
+        // see lua_state.c to determine how long to wait
+        struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 50 * 1000000 };
+        nanosleep(&tmspec, NULL);
+      }
+      // acquire Lua state:  1=> master. NOTE: this function blocks
+      status = acquire_lua_state(1); cBYE(status); 
+      // STOP RAMESH
+      status = loadline(L); if ( status == -1) { break; }
 
-    if (status == LUA_OK) status = docall(L, 0, 0);
-    report(L, status);
-    if (status == LUA_OK && lua_gettop(L) > 0) {  /* any result to print? */
-      lua_getglobal(L, "print");
-      lua_insert(L, 1);
-      if (lua_pcall(L, lua_gettop(L)-1, 0, 0) != 0)
-	l_message(progname,
-	  lua_pushfstring(L, "error calling " LUA_QL("print") " (%s)",
-			      lua_tostring(L, -1)));
+      if (status == LUA_OK) status = docall(L, 0, 0);
+      report(L, status);
+      if (status == LUA_OK && lua_gettop(L) > 0) {  /* any result to print? */
+        lua_getglobal(L, "print");
+        lua_insert(L, 1);
+        if (lua_pcall(L, lua_gettop(L)-1, 0, 0) != 0)
+          l_message(progname,
+              lua_pushfstring(L, "error calling " LUA_QL("print") " (%s)",
+                lua_tostring(L, -1)));
+      }
+      // START RAMESH
+      // relinquish lua state. 1=> master 
+      status = release_lua_state(1); cBYE(status); 
     }
-    // START RAMESH
-    // relinquish lua state 
-    status = release_lua_state(1); // 1=> master 
+    else {
+      go_BYE(-1);
+    }
     // STOP RAMESH
   }
   lua_settop(L, 0);  /* clear stack */
