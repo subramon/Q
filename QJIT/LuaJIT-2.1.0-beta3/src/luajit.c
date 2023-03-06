@@ -282,7 +282,8 @@ static void dotty(lua_State *L)
         nanosleep(&tmspec, NULL);
       }
       // acquire Lua state:  1=> master. NOTE: this function blocks
-      status = acquire_lua_state(1); cBYE(status); 
+      status = acquire_lua_state(1); 
+      if ( status != 0 ) { WHEREAMI; break; }
       // STOP RAMESH
       status = loadline(L); if ( status == -1) { break; }
 
@@ -298,10 +299,11 @@ static void dotty(lua_State *L)
       }
       // START RAMESH
       // relinquish lua state. 1=> master 
-      status = release_lua_state(1); cBYE(status); 
+      status = release_lua_state(1); 
+      if ( status != 0 ) { WHEREAMI; break; }
     }
     else {
-      go_BYE(-1);
+      WHEREAMI; break;
     }
     // STOP RAMESH
   }

@@ -31,6 +31,10 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
     f1_len, f1_chunk, nn_f1_chunk = f1:get_chunk(l_chunk_num)
     f2_len, f2_chunk, nn_f2_chunk = f2:get_chunk(l_chunk_num)
     assert(f1_len == f2_len)
+    -- following is experimental as of Feb 2023
+    f1:prefetch(l_chunk_num+1)
+    f2:prefetch(l_chunk_num+1)
+    --==================
     if f1_len > 0 then
       local chunk1 = get_ptr(f1_chunk, subs.f1_cast_as)
       local chunk2 = get_ptr(f2_chunk, subs.f2_cast_as)

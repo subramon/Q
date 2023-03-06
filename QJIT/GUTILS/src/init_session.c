@@ -85,6 +85,10 @@ init_session(
       if ( g_vctr_uqid == 0 ) { go_BYE(-1); }
     }
     //-----------------------------------
+    // reset touch time 
+    for ( uint32_t i = 0; i < g_chnk_hmap[tbsp].size; i++ ) { 
+      g_chnk_hmap[tbsp].bkts[i].val.touch_time = 0;
+    }
     printf("<<<<<<<<<<<< RESTORING SESSION ============\n");
   }
   else { 

@@ -31,6 +31,7 @@
 #include "vctr_early_free.h"
 #include "vctr_incr_ref_count.h"
 #include "vctr_is.h"
+#include "chnk_is.h"
 #include "vctr_is_eov.h"
 #include "vctr_is_early_free.h"
 #include "vctr_l1_to_l2.h"
@@ -1084,7 +1085,36 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_prefetch( lua_State *L) {
+  // TODO P3 prefetch is not of much use for the case where 
+  // vector is set up as single file for lma (linear memory access) 
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 2 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint32_t chnk_idx = luaL_checknumber(L, 2); 
+  bool is_found; uint32_t where_found, num_in_chunk;
+  CMEM_REC_TYPE cmem; 
 
+  status = chnk_is(ptr_v->tbsp, ptr_v->uqid, chnk_idx, &is_found,
+      &where_found); 
+  if ( !is_found ) { lua_pushboolean(L, false); return 1; }
+  //--------------------------------
+  status = vctr_get_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx, &cmem,
+      &num_in_chunk); 
+  cBYE(status);
+  // Note that the unget immediately following the get is to 
+  // reduce the number of readers 
+  status = vctr_unget_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx);
+  cBYE(status);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushnumber(L, status);
+  return 2;
+}
+//----------------------------------------
 //-----------------------
 static const struct luaL_Reg vector_methods[] = {
     { "__gc",    l_vctr_free   },
@@ -1139,6 +1169,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "put_chunk", l_vctr_put_chunk },
     { "get1", l_vctr_get1 },
     { "get_chunk", l_vctr_get_chunk },
+    { "prefetch", l_vctr_prefetch },
     { "unget_chunk", l_vctr_unget_chunk },
     //--------------------------------
     { NULL,          NULL               },
@@ -1203,6 +1234,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "put_chunk", l_vctr_put_chunk },
     { "get1", l_vctr_get1 },
     { "get_chunk", l_vctr_get_chunk },
+    { "prefetch", l_vctr_prefetch },
     { "unget_chunk", l_vctr_unget_chunk },
     //--------------------------------
 
@@ -1252,4 +1284,3 @@ int luaopen_libvctr (lua_State *L) {
   luaL_register(L, NULL, vector_functions);
   return 1; // we are returning 1 thing to Lua -- a table of functions
 }
-

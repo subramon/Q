@@ -3,8 +3,11 @@ Bring OpenMP back to life
 Do some code reviews of save() and import() 
 In import, document that order of import is important. Understand why 
 
-TODO Experiment with alternating control of qjit with webserver
+Experiment with alternating control of qjit with webserver
 Experiment with prefetch
+
+Write some tests on memory usage with different memo len
+Write some tests on memory usage with kill
 
 
 where do we keep max_num_in_chunk? Lua or C. Be consistent

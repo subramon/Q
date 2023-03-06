@@ -51,7 +51,7 @@ RS_LIBS += -latomic  # This was neeeded on Raspberry Pi
 # Otherwise, some of the atomics were not found 
 
 AUX_SRCS := ./src/extract_api_args.c 
-AUX_SRCS := ./src/extract_name_value.c 
+AUX_SRCS += ./src/extract_name_value.c 
 AUX_SRCS += ./src/free_globals.c 
 AUX_SRCS += ./src/get_req_type.c 
 AUX_SRCS += ./src/lua_state.c 
@@ -76,6 +76,8 @@ SRCS += ./src/mod_mem_used.c
 SRCS += ./../../UTILS/src/rs_mmap.c 
 OBJS = $(SRCS:.c=.o)
 #----------------------------------
+
+./src/process_req.o : QCFLAGS += -Wno-unused-parameter
 
 ALTSRCS := ./src/lgutils.c 
 

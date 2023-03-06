@@ -803,9 +803,32 @@ end
 --==================================================
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
 function lVector:kill()
-  cVector.kill(self._base_vec)
-  if ( self._nn_vec ) then cVector.kill(self._nn_vec) end 
-  return true 
+  local nn_success
+  local success = cVector.kill(self._base_vec)
+  if ( self._nn_vec ) then 
+    nn_success = cVector.kill(self._nn_vec)
+  end
+  return success, nn_success
 end
-
+--==================================================
+function lVector:prefetch(chnk_idx)
+  assert(type(chnk_idx) == "number")
+  local nn_x, nn_n
+  local exists, status = cVector.prefetch(self._base_vec, chnk_idx)
+  assert(status == 0)
+  if ( exists and self._nn_vec ) then 
+    local nn_vector = self._nn_vec
+    local nn_exists, status=cVector.prefetch(nn_vector._base_vec, chnk_idx)
+    assert(status == 0)
+    assert(nn_exists) -- if chunk exists for base, must exist for nn 
+  end
+  return exists
+  -- exists tells us whether such a chunk existed 
+  -- Ideally, we want prefetch to be just an advisory i.e.,
+  -- if there is not enough memory, then it should fail silently
+  -- TODO P3: We have not implemented those smarts. 
+  -- So, if the chunk exists, it will be loaded into memory 
+end
+--==================================================
 return lVector
+
