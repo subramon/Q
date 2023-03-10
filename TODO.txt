@@ -3,10 +3,8 @@ Bring OpenMP back to life
 Do some code reviews of save() and import() 
 In import, document that order of import is important. Understand why 
 
-Experiment with alternating control of qjit with webserver
 Experiment with prefetch
 
-Write some tests on memory usage with different memo len
 Write some tests on memory usage with kill
 
 
@@ -33,6 +31,9 @@ Check whether we have implemented essence of F1F2OPF3/expander_f1f2opf3.txt
 Verify that extra bits are zeroed out for vveq and vseq and so on
 Low priority: convert QC_FLAGS to QCFLAGS and QLDFLAGS
 
+DONE Experiment with alternating control of qjit with webserver
+DONE Write some tests on memory usage with different memo len
+DONE Basic test of webserver and out-of-band-server
 DONE Bring webserver back to life
 DONE Bring out-of-band server back to life
 DONE g_dsk_used should be checked/restored upon restore session

@@ -1099,16 +1099,19 @@ static int l_vctr_prefetch( lua_State *L) {
 
   status = chnk_is(ptr_v->tbsp, ptr_v->uqid, chnk_idx, &is_found,
       &where_found); 
-  if ( !is_found ) { lua_pushboolean(L, false); return 1; }
   //--------------------------------
-  status = vctr_get_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx, &cmem,
-      &num_in_chunk); 
-  cBYE(status);
-  // Note that the unget immediately following the get is to 
-  // reduce the number of readers 
-  status = vctr_unget_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx);
-  cBYE(status);
-  return 1; 
+  if ( is_found ) { 
+    status = vctr_get_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx, &cmem,
+        &num_in_chunk); 
+    cBYE(status);
+    // Note that the unget immediately following the get is to 
+    // reduce the number of readers 
+    status = vctr_unget_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx);
+    cBYE(status);
+  }
+  lua_pushboolean(L, is_found);
+  lua_pushnumber(L, status);
+  return 2; 
 BYE:
   lua_pushnil(L);
   lua_pushnumber(L, status);

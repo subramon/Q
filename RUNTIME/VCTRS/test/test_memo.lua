@@ -17,6 +17,7 @@ tests.t1 = function()
   y2 = Q.concat(x1, x1, { name = "y2", f3_qtype = "I8", shift_by = 16})
   lVector.conjoin({y1, y2})
   y1:eval()
+  assert(x1:num_elements() == len)
   assert(y1:num_elements() == x1:num_elements())
   assert(y1:num_elements() == y2:num_elements())
   assert(cVector.check_all(true, true))
@@ -25,5 +26,34 @@ tests.t1 = function()
   assert(cVector.check_all())
   print("Test t1 succeeded")
 end
+-- test memory usage when memo len is set 
+tests.t2 = function()
+  local max_num_in_chunk = 64 
+  local nC = 10 
+  local len = nC * max_num_in_chunk + 7
+  x1 = Q.seq({ len = len, start = 1, by = 1, qtype = "I4",
+   name = "x1", max_num_in_chunk = max_num_in_chunk, memo_len = 1 })
+  local chunk_idx = 0
+  local m1, m2
+  repeat 
+    if (chunk_idx == nC+1 ) then print(">>>>> START DELIBERATE ERROR") end 
+    local n, c = x1:get_chunk(chunk_idx)
+    if (chunk_idx == nC+1 ) then print(">>>>> STOP DELIBERATE ERROR") end 
+    -- make sure memory usage plateaus, even as more chunks are generated
+    if ( chunk_idx == 1 ) then 
+      m1 = lgutils.mem_used() 
+    elseif ( chunk_idx > 1 ) then 
+      assert(lgutils.mem_used() <= m1)
+    end
+    --=========================================
+    if ( n > 0 ) then 
+      -- print("Chunk " .. chunk_idx ..  ", Mem =  ", lgutils.mem_used())
+      -- do some work with the chunk you got 
+      x1:unget_chunk(chunk_idx)
+      chunk_idx = chunk_idx + 1 
+    end
+  until n == 0
+end
 -- return tests
 tests.t1()
+tests.t2()

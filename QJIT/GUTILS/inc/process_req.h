@@ -11,5 +11,5 @@ process_req(
     size_t sz_outbuf,
     char *errbuf, // [sz_errbuf] 
     size_t sz_errbuf,
-    img_info_t *ptr_img_info
+    web_response_t *ptr_web_response
     );
