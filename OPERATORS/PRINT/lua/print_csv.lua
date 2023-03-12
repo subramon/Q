@@ -23,7 +23,7 @@ local print_csv = function (
   local hdr --- optional header line for output
   local formats -- how a particular column should be printed
   local max_num_in_chunk -- must be same for all vectors
-  V, opfile, filter, lenV, max_num_in_chunk, hdr, formats = 
+  V, opfile, is_html, filter, lenV, max_num_in_chunk, hdr, formats = 
     process_opt_args(inV, opt_args)
   if ( opfile ) then 
     cutils.delete(opfile)
@@ -41,7 +41,7 @@ local print_csv = function (
   local nV = #V
   if ( opt_args and opt_args.impl == "C" ) then 
     -- print("Using C print implementation")
-    assert(cprint(opfile, where, formats, lb, ub, V, max_num_in_chunk))
+    assert(cprint(opfile, is_html, where, formats, lb, ub, V, max_num_in_chunk))
     -- print("Done  C print implementation")
     return true 
   end
@@ -60,7 +60,12 @@ local print_csv = function (
   --==========================================
   
   local bfalse = Scalar.new(false, "BL")
+  if ( is_html ) then 
+    io.write("<HTML>\n")
+    io.write("  <table>\n")
+  end
   for rowidx = lb, ub-1 do -- NOTE the -1 it is important
+   if ( is_html ) then io.write("    <tr> ") end
     local to_print = true
     if ( where ) then 
       local  w = assert(where:get1(rowidx))
@@ -70,6 +75,7 @@ local print_csv = function (
     end
     if ( to_print ) then 
       for colidx, v in ipairs(V) do
+        if ( is_html ) then io.write("<td> ") end
         local  s, s_nn = assert(v:get1(rowidx))
         assert(not s_nn, "To be implemented") -- TODO P2
         if ( type(s) == "Scalar" ) then 
@@ -89,12 +95,24 @@ local print_csv = function (
           error("")
         end
         if ( colidx == nV ) then 
-          assert(io.write("\n"), "Write failed")
+          if ( is_html ) then 
+            assert(io.write("</tr>\n"), "Write failed")
+          else
+            assert(io.write("\n"), "Write failed")
+          end
         else
-          assert(io.write(","), "Write failed")
+          if ( is_html ) then 
+            assert(io.write(" </td> "), "Write failed")
+          else
+            assert(io.write(","), "Write failed")
+          end
         end
       end
     end
+  end
+  if ( is_html ) then 
+    io.write("  </table>\n")
+    io.write("</HTML>\n")
   end
   if ( fp ) then io.close(fp)  end 
   return true

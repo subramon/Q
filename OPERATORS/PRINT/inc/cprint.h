@@ -2,6 +2,7 @@
 extern int
 cprint(
     const char * opfile,
+    bool is_html, 
     const void * const cfld, // TODO 
     const void ** data, // [nC][nR] 
     const bool ** nn_data, // [nC][nR] 

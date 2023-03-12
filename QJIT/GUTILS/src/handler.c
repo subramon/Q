@@ -85,7 +85,9 @@ handler(
   evhttp_add_header(evhttp_request_get_output_headers(req),
       "Access-Control-Allow-Origin", "*"); 
   if ( status == 0 ) { 
+    evbuffer_add_printf(opbuf, "%s", "<HTML><text>");
     evbuffer_add_printf(opbuf, "%s", outbuf); 
+    evbuffer_add_printf(opbuf, "%s", "</text></HTML>");
     evhttp_send_reply(req, HTTP_OK, "OK", opbuf);
   }
   else {

@@ -138,7 +138,7 @@ process_req(
           // TODO P2 This needs to improve
           ptr_web_response->header_key[1] = strdup("Content-Type");
           ptr_web_response->header_val[1] = 
-            strdup("application/text; charset=UTF-8");
+            strdup("text/html; charset=UTF-8");
         }
 
         // Does the order of these 2 operations matter? No.

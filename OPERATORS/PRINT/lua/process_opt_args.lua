@@ -9,6 +9,7 @@ local function process_opt_args(
   local lenV
   local hdr
   local formats
+  local is_html = false
   
   local outV = inV
   if opt_args then
@@ -17,6 +18,10 @@ local function process_opt_args(
       hdr = opt_args.header
       assert(type(hdr) == "string")
       assert(#hdr > 0)
+    end 
+    if ( type(opt_args.is_html) ~= nil ) then 
+      assert(type(opt_args.is_html) == "boolean")
+      is_html = opt_args.is_html
     end 
     if opt_args.opfile ~= nil then
       opfile = opt_args.opfile
@@ -51,6 +56,6 @@ local function process_opt_args(
   assert(max_num_in_chunk > 0)
   assert(type(lenV) == "number")
   assert(lenV > 0)
-  return outV, opfile, filter, lenV, max_num_in_chunk, hdr, formats
+  return outV, opfile, is_html, filter, lenV, max_num_in_chunk, hdr, formats
 end
 return  process_opt_args
