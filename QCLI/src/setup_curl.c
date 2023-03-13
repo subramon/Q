@@ -1,4 +1,5 @@
 #include "q_incs.h"
+#include "curl/curl.h"
 #include "setup_curl.h"
 
 static size_t write_data(
@@ -21,12 +22,14 @@ WriteMemoryCallback(
     )
 {
   int realsize = size * nmemb;
+  /* TODO P0 
   if ( realsize > g_sz_ss_response ) { 
     for ( ; g_sz_ss_response < realsize; ) { 
       g_sz_ss_response *= 2 ;
     }
     g_ss_response = realloc(g_ss_response, g_sz_ss_response);
   }
+  */
   memcpy(userp, contents, realsize);
   return realsize;
 }
@@ -99,3 +102,23 @@ BYE:
   free_if_non_null(full_url);
   return status;
 }
+
+int
+post_Q(
+    CURL *ch,
+    const char * const curl_payload
+    )
+{
+  int status = 0;
+  CURLcode curl_res; 
+  long http_code;
+
+  curl_easy_setopt(ch, CURLOPT_POSTFIELDS, curl_payload);
+  curl_res = curl_easy_perform(ch);
+  if ( curl_res != CURLE_OK ) { go_BYE(-1); }
+  curl_easy_getinfo(ch, CURLINFO_RESPONSE_CODE, &http_code);
+  if ( http_code != 200 )  { /* silent */ return -1; } 
+BYE:
+  return status;
+}
+

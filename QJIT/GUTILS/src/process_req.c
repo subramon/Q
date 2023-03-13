@@ -95,9 +95,19 @@ process_req(
         dup2(fd_err, STDERR_FILENO);
 
         // Do what you need to do 
-        lua_status = luaL_dostring(L, args);
+        if ( body == NULL ) { 
+          lua_status = luaL_dostring(L, args);
+        }
+        else {
+          lua_status = luaL_dostring(L, body);
+        }
         if ( lua_status != 0 ) { 
+          if ( body == NULL ) { 
           fprintf(stderr, "Error executing [%s]\n", args);
+          }
+          else {
+          fprintf(stderr, "Error executing [%s]\n", body);
+          }
         }
         // Close opened files 
         dup2(saved_stdout, STDOUT_FILENO);
@@ -110,12 +120,14 @@ process_req(
 
         ptr_web_response->is_set = true;
         if ( lua_status == 0 ) { 
+          ptr_web_response->is_err = false;
           // return out file and delete err file 
           ptr_web_response->file_name = out_file; 
           unlink(err_file);
           free_if_non_null(err_file);
         }
         else { 
+          ptr_web_response->is_err = true;
           // return err  and delete out file 
           ptr_web_response->file_name = err_file; 
           unlink(out_file);

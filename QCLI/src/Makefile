@@ -42,6 +42,7 @@ LIBS := -lm
 LIBS += -lpthread 
 LIBS += -levent 
 LIBS += -lcurl 
+LIBS += -lreadline
 LIBS += /usr/local/lib/libluajit-5.1.so
 
 all : qcli

@@ -14,6 +14,7 @@ typedef struct _web_response_t {
   char **header_val; // [num_headers][...]
   int num_headers; 
   bool is_set; // default false
+  bool is_err; // default false
 } web_response_t;
 
 typedef struct _web_info_t { 

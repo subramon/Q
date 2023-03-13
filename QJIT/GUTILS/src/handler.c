@@ -6,6 +6,7 @@
 #include "get_req_type.h"
 #include "extract_api_args.h"
 #include "process_req.h"
+#include "get_body.h"
 #include "handler.h"
 void
 handler(
@@ -14,12 +15,12 @@ handler(
     )
 {
   int status = 0;
-  char *body = NULL; // Not used just yet 
   char *decoded_uri = NULL;
   char  api[MAX_LEN_API+1];
-  char args[MAX_LEN_ARGS+1];
+  char args[MAX_LEN_ARGS+1]; memset(args, 0, MAX_LEN_ARGS+1);
   char outbuf[MAX_LEN_OUTPUT+1];
   char errbuf[MAX_LEN_ERROR+1];
+  char *body = NULL; 
   memset(outbuf, '\0', MAX_LEN_OUTPUT+1); // TOOD P4 not needed
   memset(errbuf, '\0', MAX_LEN_ERROR+1); // TOOD P4 not needed
   struct evbuffer *opbuf = NULL;
@@ -48,8 +49,8 @@ handler(
     // evbuffer_free(opbuf);
     event_base_loopbreak(base);
   }
-  // status = get_body(req_type, req, g_body, MAX_LEN_BODY, &g_sz_body);
-  // cBYE(status);
+  status = get_body(req, &body); cBYE(status);
+
   status = process_req(rtype, api, args, body, web_info,
       outbuf, MAX_LEN_OUTPUT, errbuf, MAX_LEN_ERROR, &web_response);
   cBYE(status);
@@ -67,13 +68,11 @@ handler(
     // send data in file 
     status = evbuffer_add_file(opbuf, wfd, 0, -1); cBYE(status); 
 
-    if ( status == 0 ) {
-      evhttp_send_reply(req, HTTP_OK, "OK", opbuf);
-      evbuffer_free(opbuf);
+    if ( web_response.is_err ) { 
+      evhttp_send_reply(req, HTTP_BADREQUEST, "ERROR", opbuf);
     }
     else {
-      evbuffer_add_printf(opbuf, "%s", errbuf); 
-      evhttp_send_reply(req, HTTP_BADREQUEST, "ERROR", opbuf);
+      evhttp_send_reply(req, HTTP_OK, "OK", opbuf);
     }
     close(wfd); 
     goto BYE; 
@@ -85,17 +84,15 @@ handler(
   evhttp_add_header(evhttp_request_get_output_headers(req),
       "Access-Control-Allow-Origin", "*"); 
   if ( status == 0 ) { 
-    evbuffer_add_printf(opbuf, "%s", "<HTML><text>");
     evbuffer_add_printf(opbuf, "%s", outbuf); 
-    evbuffer_add_printf(opbuf, "%s", "</text></HTML>");
     evhttp_send_reply(req, HTTP_OK, "OK", opbuf);
   }
   else {
     evbuffer_add_printf(opbuf, "%s", errbuf); 
     evhttp_send_reply(req, HTTP_BADREQUEST, "ERROR", opbuf);
   }
-  evbuffer_free(opbuf);
 BYE:
+  if ( opbuf != NULL ) { evbuffer_free(opbuf); opbuf = NULL; }
   free_if_non_null(decoded_uri);
   // free resources in web response
   if ( web_response.file_name != NULL ) { 
@@ -106,6 +103,7 @@ BYE:
     free_if_non_null(web_response.header_key[i]);
     free_if_non_null(web_response.header_val[i]);
   }
+  free_if_non_null(body); 
   free_if_non_null(web_response.header_key); 
   free_if_non_null(web_response.header_val); 
 }

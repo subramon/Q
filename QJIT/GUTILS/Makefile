@@ -54,6 +54,7 @@ AUX_SRCS := ./src/extract_api_args.c
 AUX_SRCS += ./src/extract_name_value.c 
 AUX_SRCS += ./src/free_globals.c 
 AUX_SRCS += ./src/get_req_type.c 
+AUX_SRCS += ./src/get_body.c 
 AUX_SRCS += ./src/lua_state.c 
 AUX_SRCS += ./src/mod_mem_used.c 
 AUX_SRCS += ./src/handler.c 

@@ -10,3 +10,8 @@ setup_curl(
     CURL **ptr_ch, // OUTPUT 
     struct curl_slist **ptr_curl_hdrs // OUTPUT 
 );
+extern int
+post_Q(
+    CURL *ch,
+    const char * const curl_payload
+    );
