@@ -12,9 +12,11 @@ typedef enum _req_type_t {
 
   Disk,
   Halt, 
+  HaltMaster, 
   Ignore, 
   Lua, 
   Memory,
+  Favicon,
   //-- only for out of band server 
   SetDisk,
   SetMaster,

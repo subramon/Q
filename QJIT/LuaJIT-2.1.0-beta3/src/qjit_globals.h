@@ -17,6 +17,7 @@ my_extern int g_master_interested;
 // 0 => webserver is NOT interested in acquiring Lua state 
 // 1 => webserver is interested in acquiring Lua state 
 // Set only in process_req() by webserver thread 
+my_extern int g_master_halt;  // set to 1 => master will quit 
 my_extern int g_L_status; // values as described below 
 // 0 => Lua state is free 
 // 1 => Master owns Lua State 

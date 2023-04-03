@@ -9,6 +9,7 @@
 #include "extract_name_value.h" 
 #include "lua_state.h" 
 
+extern int g_master_halt;
 extern int g_master_interested;
 extern int g_webserver_interested;
 extern int g_L_status;
@@ -75,25 +76,22 @@ process_req(
         // indicate interest 
         int itmp = 1; __atomic_store(&g_webserver_interested, &itmp, 0);
         status = acquire_lua_state(2); // 2 => webserver
-        // Redirect stdout and stderr
-        const char * const template = "/tmp/_qjit_stdout_XXXXXX";
-
-        out_file = strdup(template); 
+        // Redirect stdout 
+        const char * const out_tmpl = "/tmp/_qjit_stdout_XXXXXX";
+        out_file = strdup(out_tmpl); 
         int fd_out =  mkstemp(out_file); if ( fd_out < 0 ) { go_BYE(-1);}
         close(fd_out); 
-
-        err_file = strdup(template); 
-        int fd_err =  mkstemp(err_file); if ( fd_err < 0 ) { go_BYE(-1);}
-        close(fd_err); 
-
         int saved_stdout = dup(STDOUT_FILENO);
         fd_out = open(out_file, O_WRONLY, 0666);
         dup2(fd_out, STDOUT_FILENO); 
-
+        // Redirect stderr
+        const char * const err_tmpl = "/tmp/_qjit_stderr_XXXXXX";
+        err_file = strdup(err_tmpl); 
+        int fd_err =  mkstemp(err_file); if ( fd_err < 0 ) { go_BYE(-1);}
+        close(fd_err); 
         int saved_stderr = dup(STDERR_FILENO);
         fd_err = open(err_file, O_WRONLY, 0666);
         dup2(fd_err, STDERR_FILENO);
-
         // Do what you need to do 
         if ( body == NULL ) { 
           lua_status = luaL_dostring(L, args);
@@ -187,6 +185,13 @@ process_req(
       //--------------------------------------------------------
     case Halt :  
       sprintf(outbuf, "{ \"%s\" : \"OK\" }", api);
+      break;
+      //--------------------------------------------------------
+    case HaltMaster :  
+      {
+      int itmp = 1; __atomic_store(&g_master_halt, &itmp, 0);
+      sprintf(outbuf, "{ \"%s\" : \"OK\" }", api);
+      }
       break;
       //--------------------------------------------------------
     default :

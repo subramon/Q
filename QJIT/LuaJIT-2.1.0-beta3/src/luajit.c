@@ -265,10 +265,12 @@ static void dotty(lua_State *L)
   progname = NULL;
   for ( uint64_t iter = 0; ; iter++ ) {
     // START RAMESH
+    int l_halt; __atomic_load(&g_master_halt, &l_halt, 0);
+    if ( l_halt == 1 ) { break; } 
     int l_master; __atomic_load(&g_master_interested, &l_master, 0);
     if ( l_master == 0 ) {
       // take a long nap for 1000 ms 
-      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 1000*1000000 };
+      struct timespec  tmspec = { .tv_sec = 1, .tv_nsec = 0 };
       nanosleep(&tmspec, NULL);
     }
     else if ( l_master == 1 ) {

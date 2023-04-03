@@ -51,11 +51,13 @@ all : qcli
 	$(CC) -c -o $@ $< $(CFLAGS)  $(INCS)
 
 clean:
-	rm *.o qcli
+	rm -f *.o qcli
 
 QCLI_SRC   := qcli.c
 QCLI_SRC   += rconnect.c
 QCLI_SRC   += setup_curl.c
+QCLI_SRC   += ../../UTILS/src/file_exists.c
+QCLI_SRC   += ../../UTILS/src/rs_mmap.c
 QCLI_OBJ = $(QCLI_SRC:.c=.o)
 
 

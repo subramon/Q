@@ -6,7 +6,20 @@
 #include <curl/curl.h>
 #include "q_incs.h"
 #include "rconnect.h"
+#include "file_exists.h"
+#include "rs_mmap.h"
 #include "setup_curl.h"
+
+static bool
+is_empty(
+    char *cptr
+    )
+{
+  for ( char *xptr = cptr; *xptr != '\0'; xptr++ ) { 
+    if ( !isspace(*xptr) ) { return false; }
+  }
+  return true;
+}
 
 int
 main(
@@ -17,19 +30,20 @@ main(
   int status = 0;
   char *write_buffer = NULL; 
   uint32_t sz_write_buffer = 65536; //  moev to configs TODO P3 
-  if ( argc != 3 ) { go_BYE(-1); } 
-  const char * const server = argv[1];
-  int port = atoi(argv[2]);
-  int snd_timeout_sec = 10; // move to configs TODO P3
-  int rcv_timeout_sec = 10; // move to configs TODO P3
-  int timeout_ms = 1000 * 1000;   // move to configs TODO P3
-  // TODO P1 fix timeout after debugging is complete 
   int sock = -1;
   const char ** const in_hdrs = NULL;
   int num_in_hdrs = 0;
   const char * const url = "Lua"; 
+  int snd_timeout_sec = 10; // move to configs TODO P3
+  int rcv_timeout_sec = 10; // move to configs TODO P3
+  int timeout_ms = 1000 * 1000;   // move to configs TODO P3
+  // TODO P1 fix timeout after debugging is complete 
   CURL *ch = NULL;
   struct curl_slist *curl_hdrs = NULL;
+
+  if ( argc != 3 ) { go_BYE(-1); } 
+  const char * const server = argv[1];
+  int port = atoi(argv[2]);
 
   // Check that server is listening on the port 
   /*
@@ -43,9 +57,27 @@ main(
   return_if_malloc_failed(write_buffer); 
 
   for ( ; ; ) {
-    char *cptr = readline("Q ");
+    bool from_file = false;
+    char *cptr = readline("Q> ");
     if ( cptr == NULL ) { break; } 
-    fprintf(stdout, "%s\n", cptr);
+    if ( is_empty(cptr) ) { 
+      free_if_non_null(cptr); continue;
+    }
+    add_history(cptr); 
+    // fprintf(stdout, "%s\n", cptr);
+    // Check if user wants to uplod a file to execute
+    if ( strncmp(cptr, "@file=", 6) == 0 ) { 
+      char *file_name = cptr + 6;
+      if ( file_exists(file_name) ) { 
+        from_file = true;
+        char *X = NULL; size_t nX = 0; 
+        status = rs_mmap(file_name, &X, &nX, 0);  cBYE(status);
+        free_if_non_null(cptr);
+        cptr = malloc(nX+1); cptr[nX] = '\0';
+        memcpy(cptr, X, nX);
+        mcr_rs_munmap(X, nX); 
+      }
+    }
     // open connection to server 
     memset(write_buffer, 0, sz_write_buffer);
     status = setup_curl(write_buffer, in_hdrs, 0, 
@@ -60,7 +92,7 @@ main(
     if ( curl_hdrs != NULL ) {
       curl_slist_free_all(curl_hdrs); curl_hdrs = NULL;
     }
-    free(cptr); 
+    free_if_non_null(cptr); 
   }
 BYE:
   rl_clear_history(); // to avoid Valgrind reachable complaints

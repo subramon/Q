@@ -14,6 +14,10 @@ get_req_type(
     return Halt;
   }
   //-----------------------------
+  else if (strcasecmp(api, "HaltMaster") == 0) {
+    return HaltMaster;
+  }
+  //-----------------------------
   else if (strcasecmp(api, "Disk") == 0) {
     return Disk;
   }
@@ -24,6 +28,10 @@ get_req_type(
   //-----------------------------
   else if (strcasecmp(api, "Lua") == 0) {
     return Lua;
+  }
+  //--------------------------------------------------
+  else if (strcasecmp(api, "favicon.ico") == 0) {
+    return Favicon;
   }
   //--------------------------------------------------
   // for out of band 

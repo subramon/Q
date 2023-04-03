@@ -31,6 +31,7 @@ init_globals(
 
   g_webserver_interested = 0; 
   g_master_interested = 1; 
+  g_master_halt = 0; 
   g_L_status = 0;
 
   g_vctr_hmap     = NULL;
