@@ -18,6 +18,7 @@ read_configs(
   const char * const lua_fn = "rdfn";
   char cmd[128]; int sz = sizeof(cmd); memset(cmd, 0, sz);
   int tbsp = 0; // we read configs only for default table space
+  char *real_data_dir_root = NULL;
 
   L = luaL_newstate();
   if ( L == NULL ) { go_BYE(-1); }
@@ -84,11 +85,11 @@ read_configs(
 
   printf("g_restore_session = %s \n", g_restore_session ? "true" : "false");
   
-  if ( strlen(C.data_dir_root) >= Q_MAX_LEN_DIR_NAME ) { go_BYE(-1); } 
+  real_data_dir_root = realpath(C.data_dir_root, NULL);
+  g_data_dir_root[tbsp] = strdup(real_data_dir_root);
+
   if ( strlen(C.meta_dir_root) >= Q_MAX_LEN_DIR_NAME ) { go_BYE(-1); } 
-  // TODO P0 Use realpath
-  strcpy(g_data_dir_root[tbsp], C.data_dir_root);
-  strcpy(g_meta_dir_root, C.meta_dir_root);
+  strcpy(g_meta_dir_root, C.meta_dir_root); // allocated in init_globals
 
   g_mem_allowed = C.mem_allowed * 1024 * 1048576; // convert GBytes to bytes
   g_dsk_allowed = C.dsk_allowed * 1024 * 1048576; // convert GBytes to bytes
@@ -108,6 +109,7 @@ read_configs(
 BYE:
   free_if_non_null(C.data_dir_root);
   free_if_non_null(C.meta_dir_root);
+  free_if_non_null(real_data_dir_root);
   if ( L != NULL ) { lua_close(L);  }
   return status;
 }

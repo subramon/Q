@@ -771,7 +771,7 @@ static int l_vctr_free( lua_State *L) {
   bool is_found;
 #ifdef VERBOSE
   char *name = vctr_get_name(ptr_v->tbsp, ptr_v->uqid); 
-  if ( name == NULL ) { 
+  if ( ( name == NULL ) || ( *name == '\0' ) ) { 
     printf("Freeing anonymous\n"); 
   }
   else {

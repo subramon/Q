@@ -1,3 +1,11 @@
+Should we initialize memory to 0?
+subramon@pi4:~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/data $ od -v -i _100000_200000
+0000000         123         123         123       23761
+0000020 -1227737080 -1227737080           0           0
+0000040           0           0           0           0
+0000060           0           0           0           0
+--=====================================
+
 Bring ISPC back to life
 Bring OpenMP back to life
 Do some code reviews of save() and import() 

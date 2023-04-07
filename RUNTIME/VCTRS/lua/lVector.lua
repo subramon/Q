@@ -220,15 +220,20 @@ function lVector.new(args)
   if ( args.uqid )  then 
     assert(type(args.uqid) == "number")
     assert(args.uqid > 0)
-    -- TODO TODO P0   THINK  ABOUT FOLLOWING 
+    -- START: I believe (99%) that the following is correct
+    -- The reason is that tbsp = 0 is the default tablespace
     if ( not args.tbsp ) then  args.tbsp = 0 end 
-    print("tbsp = ", args.tbsp) -- TODO P0 Delete
+    -- STOP --------------
     assert(type(args.uqid) == "number")
     assert(args.uqid >= 0)
-    vector._base_vec = assert(cVector.rehydrate(args))
+    print("rehydrate start")
+    vector._base_vec = cVector.rehydrate(args)
+    assert(vector._base_vec)
+    print("rehydrate stop")
     if ( qcfg.debug ) then 
       assert(cVector.chk(vector._base_vec, false, false))
     end
+    print("rehydrate chk stop")
     -- get following from cVector
     -- max_num_in_chunk
     -- memo_len

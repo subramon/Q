@@ -118,12 +118,14 @@ static int l_lgutils_import_tbsp(
 {
   int status = 0;
   int tbsp = -1;
-  if ( lua_gettop(L) != 2 ) {  go_BYE(-1); } 
+  if ( lua_gettop(L) != 3 ) {  go_BYE(-1); } 
   if ( !lua_isstring(L, 1) ) { go_BYE(-1); } 
   if ( !lua_isstring(L, 2) ) { go_BYE(-1); } 
-  const char * const meta_dir = luaL_checkstring(L, 1); 
-  const char * const data_dir = luaL_checkstring(L, 2); 
-  status = import_tbsp( meta_dir, data_dir, &tbsp);  cBYE(status);
+  if ( !lua_isstring(L, 3) ) { go_BYE(-1); } 
+  const char * const tbsp_name = luaL_checkstring(L, 1); 
+  const char * const meta_dir  = luaL_checkstring(L, 2); 
+  const char * const data_dir  = luaL_checkstring(L, 3); 
+  status = import_tbsp(tbsp_name, meta_dir, data_dir, &tbsp);  cBYE(status);
   if ( tbsp <= 0 ) { go_BYE(-1); } 
   lua_pushnumber(L, tbsp);
   return 1; 

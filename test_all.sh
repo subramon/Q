@@ -16,6 +16,9 @@ qjit test1.lua
 qjit test_lma.lua  
 qjit test_memo.lua  
 qjit test_ref_count.lua
+cd ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/
+bash make_data.sh
+cd ~/Q/RUNTIME/VCTRS/test/
 qjit test_import.lua
 
 cd ~/Q/OPERATORS/LOAD_CSV/test/

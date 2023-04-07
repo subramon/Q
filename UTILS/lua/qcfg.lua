@@ -34,7 +34,7 @@ qcfg.ld_library_path = os.getenv("LD_LIBRARY_PATH")
 -- Note that no cell in an input CSV file can have length greater
 -- than max_width_SC
 qcfg.max_width_SC = 64 -- => max length of constant length string = 32-1
-qcfg.max_num_in_chunk = 16384 -- this is default value
+qcfg.max_num_in_chunk = 64 -- this is default value
 local x = math.ceil(qcfg.max_num_in_chunk/64.0)
 local y = math.floor(qcfg.max_num_in_chunk/64.0)
 assert(x == y) -- MUST Be a multiple o 64
