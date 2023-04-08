@@ -1,3 +1,4 @@
+#undef VERBOSE
 #include <pthread.h>
 #include "q_incs.h"
 #include "q_macros.h"
@@ -31,7 +32,9 @@ free_globals(
   if ( g_vctr_hmap != NULL ) {
     for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
       if ( g_vctr_hmap[i].bkts != NULL ) {
-        if ( i > 0 ) { printf("Destroying imported tablespace %d \n", i); }
+#ifdef VERBOSE
+        if ( i > 0 ) { printf("V: Destroying imported tablespace %d \n", i); }
+#endif
         g_vctr_hmap[i].destroy(&g_vctr_hmap[i]);
       }
     }
@@ -40,7 +43,9 @@ free_globals(
   if ( g_chnk_hmap != NULL ) {
     for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
       if ( g_chnk_hmap[i].bkts != NULL ) {
-        if ( i > 0 ) { printf("Destroying imported tablespace %d \n", i); }
+#ifdef VERBOSE
+        if ( i > 0 ) { printf("C: Destroying imported tablespace %d \n", i); }
+#endif
         g_chnk_hmap[i].destroy(&g_chnk_hmap[i]);
       }
     }

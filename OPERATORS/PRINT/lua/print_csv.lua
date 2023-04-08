@@ -23,6 +23,7 @@ local print_csv = function (
   local hdr --- optional header line for output
   local formats -- how a particular column should be printed
   local max_num_in_chunk -- must be same for all vectors
+  local is_html -- format for output, default is false => CSV
   V, opfile, is_html, filter, lenV, max_num_in_chunk, hdr, formats = 
     process_opt_args(inV, opt_args)
   if ( opfile ) then 

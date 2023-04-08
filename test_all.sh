@@ -20,7 +20,9 @@ cd ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/
 bash make_data.sh
 cd ~/Q/RUNTIME/VCTRS/test/
 qjit test_import.lua
-
+rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/data/
+rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/meta/
+#--------------------------------------------------------
 cd ~/Q/OPERATORS/LOAD_CSV/test/
 qjit test_load_csv.lua
 qjit test_SC_to_XX.lua

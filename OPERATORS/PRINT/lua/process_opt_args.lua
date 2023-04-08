@@ -19,7 +19,7 @@ local function process_opt_args(
       assert(type(hdr) == "string")
       assert(#hdr > 0)
     end 
-    if ( type(opt_args.is_html) ~= nil ) then 
+    if ( opt_args.is_html ~= nil ) then 
       assert(type(opt_args.is_html) == "boolean")
       is_html = opt_args.is_html
     end 

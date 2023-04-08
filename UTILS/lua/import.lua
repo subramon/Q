@@ -16,7 +16,6 @@ local function import(tbsp_name, new_meta_dir, new_data_dir)
 
   local tbsp = lgutils.import_tbsp(tbsp_name, new_meta_dir, new_data_dir)
   assert(type(tbsp) == "number")
-  assert(tbsp == 1)
 
   -- Before we  execute the meta file, we make a copy of it 
   -- and modify it to include the tbsp 

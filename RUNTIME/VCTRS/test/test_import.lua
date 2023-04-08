@@ -12,7 +12,8 @@ end
 tests.t2 = function()
   -- create a vector x which will get over-written by import
   
-  x = Q.const({ val = 2, qtype = "F4", len = 3 })
+  local orig_n = 3
+  x = Q.const({ val = 2, qtype = "F4", len = orig_n })
   x:set_name("original_x")
   x:eval()
   assert(x:num_elements() == 3)
@@ -23,8 +24,12 @@ tests.t2 = function()
   local new_data_dir = "./TEST_IMPORT/data/"
   Q.import("some tbsp name", new_meta_dir, new_data_dir)
   x:set_name("imported_x")
+  assert(bak_x:num_elements() == orig_n)
   bak_x:delete()
   assert(lgutils.mem_used() == 0)
+  assert(lgutils.tbsp_name(1) == "some tbsp name")
+
+
 
   assert(type(x) == "lVector")
   local max_num_in_chunk = get_max_num_in_chunk()
@@ -55,9 +60,11 @@ tests.t2 = function()
 end
 -- re-import several times 
 tests.t3 = function()
-  local niters = 3
+  local niters = 4 -- do not exceed Q_MAX_NUM_TABLESPACES-1
   local new_meta_dir = "./TEST_IMPORT/meta/"
   local new_data_dir = "./TEST_IMPORT/data/"
+  local initial_tbsp  = 0
+  local tbsp_name = "some tbsp name" .. tostring(i)
   for i = 1, niters do 
     -- create a vector x which will get over-written by import
     x = Q.const({ val = 2, qtype = "F4", len = 3 }):eval()
@@ -65,9 +72,17 @@ tests.t3 = function()
     assert(x:num_elements() == 3)
     assert(x:qtype() == "F4")
     bak_x = x
+    assert(x:tbsp() == 0)
    
-    Q.import("some tbsp name", new_meta_dir, new_data_dir)
+    local tbsp_name = "some tbsp name" .. tostring(i)
+    Q.import(tbsp_name, new_meta_dir, new_data_dir)
     x:set_name("imported_x")
+    if ( i == 1 ) then 
+      initial_tbsp = x:tbsp()
+    else
+      initial_tbsp = initial_tbsp + 1
+      assert(initial_tbsp == x:tbsp())
+    end
     bak_x:delete()
   
     assert(type(x) == "lVector")
@@ -81,6 +96,6 @@ tests.t3 = function()
   assert(lgutils.dsk_used() == 0) 
 end
 
--- tests.t1() 
--- tests.t2()
+tests.t1() 
+tests.t2()
 tests.t3()

@@ -204,6 +204,12 @@ function lVector:uqid()
   return uqid
 end
 
+function lVector:tbsp()
+  local tbsp = cVector.tbsp(self._base_vec)
+  assert(type(tbsp) == "number")
+  return tbsp
+end
+
 function lVector:memo_len()
   return self._memo_len
 end
@@ -226,14 +232,11 @@ function lVector.new(args)
     -- STOP --------------
     assert(type(args.uqid) == "number")
     assert(args.uqid >= 0)
-    print("rehydrate start")
     vector._base_vec = cVector.rehydrate(args)
     assert(vector._base_vec)
-    print("rehydrate stop")
     if ( qcfg.debug ) then 
       assert(cVector.chk(vector._base_vec, false, false))
     end
-    print("rehydrate chk stop")
     -- get following from cVector
     -- max_num_in_chunk
     -- memo_len

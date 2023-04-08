@@ -73,7 +73,7 @@ local function for_cdef(
   fp:write(table.concat(X, "\n"))
   fp:close()
   --===================
-  cmd = string.format(" unset LD_PRELOAD && cpp %s %s |grep -v '^#'",
+  cmd = string.format(" cpp %s %s |grep -v '^#'",
       tmpfile, incs)
   local  rslt = assert(exec(cmd))
   os.remove(tmpfile)

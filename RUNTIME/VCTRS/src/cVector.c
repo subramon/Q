@@ -1,4 +1,4 @@
-#define VERBOSE
+#undef VERBOSE
 
 #include "luaconf.h"
 #include "lua.h"
@@ -562,6 +562,22 @@ static int l_vctr_uqid( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
 
   lua_pushnumber(L, ptr_v->uqid);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_tbsp( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+
+  lua_pushnumber(L, ptr_v->tbsp);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -1159,6 +1175,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },
     { "memo_len", l_vctr_memo_len },
     { "ref_count", l_vctr_ref_count },
+    { "tbsp", l_vctr_tbsp },
     { "uqid", l_vctr_uqid },
     { "width", l_vctr_width },
     { "pr", l_vctr_print },
@@ -1219,6 +1236,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "incr_num_readers", l_vctr_incr_num_readers },
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },
+    { "tbsp", l_vctr_tbsp },
     { "uqid", l_vctr_uqid },
     { "memo_len", l_vctr_memo_len },
     { "ref_count", l_vctr_ref_count },
