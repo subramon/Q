@@ -69,7 +69,7 @@ main(
   sprintf(buf, "%s/meta", q_root); 
   strcpy(g_meta_dir_root, buf); 
   sprintf(buf, "%s/data", q_root); 
-  strcpy(g_data_dir_root[0], buf); 
+  g_data_dir_root[0] = strdup(buf); 
   // STOP: Fake configs 
 
   status = init_session(); cBYE(status); 

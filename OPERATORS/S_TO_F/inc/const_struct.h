@@ -1,6 +1,10 @@
 #ifndef _CONST_STRUCT_H
 #define _CONST_STRUCT_H
 //START_FOR_CDEF
+typedef struct _CONST_B1_rec_type {
+   bool val; // Note that this is bool not B1
+} CONST_B1_REC_TYPE;
+
 typedef struct _CONST_BL_rec_type {
    bool val;
 } CONST_BL_REC_TYPE;

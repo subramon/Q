@@ -50,13 +50,11 @@ vctr_put_chunk(
   if ( n > vctr_val.max_num_in_chnk ) { go_BYE(-1); } 
 
   qtype_t qtype = vctr_val.qtype;
-  uint32_t chnk_size;
-  if ( qtype == B1 ) {
-    chnk_size = vctr_val.max_num_in_chnk / 8;
-    if ( ( chnk_size * 8 ) != vctr_val.max_num_in_chnk ) { go_BYE(-1); }
-  }
-  else {
-    chnk_size = vctr_val.width * vctr_val.max_num_in_chnk;
+  uint32_t chnk_size = ptr_cmem->size; // whatever comes from cmem 
+  if ( qtype != B1 ) {
+    if ( chnk_size != (vctr_val.width * vctr_val.max_num_in_chnk) ) {
+      go_BYE(-1);
+    }
   }
   uint32_t chnk_idx;
   // number of elements in vector must be multiple of chunk size 

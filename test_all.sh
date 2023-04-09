@@ -23,10 +23,6 @@ qjit test_import.lua
 rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/data/
 rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/meta/
 #--------------------------------------------------------
-cd ~/Q/OPERATORS/LOAD_CSV/test/
-qjit test_load_csv.lua
-qjit test_SC_to_XX.lua
-qjit test_SC_to_TM1.lua
 
 cd ~/Q/OPERATORS/S_TO_F/test/
 qjit  test_const.lua
@@ -82,4 +78,9 @@ qjit prep.lua
 cd ~/Q/TESTS/SELECT/lua/V1/
 qjit prep.lua 
 
+# Moving these to the bottom since they are expensive tests
+cd ~/Q/OPERATORS/LOAD_CSV/test/
+qjit test_load_csv.lua
+qjit test_SC_to_XX.lua
+qjit test_SC_to_TM1.lua
 echo "Successfully completed $0 in $PWD"

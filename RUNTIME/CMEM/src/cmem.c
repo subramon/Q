@@ -361,6 +361,34 @@ l_cmem_set_min(
   return 1;
 }
 
+static int 
+cmem_ones( 
+    CMEM_REC_TYPE *ptr_cmem
+    )
+{
+  if ( ptr_cmem == NULL ) { WHEREAMI; return -1; }
+  if ( ptr_cmem->size <= 0 ) { WHEREAMI; return -1; }
+  if ( ptr_cmem->data == NULL ) { WHEREAMI; return -1; }
+  for ( int i = 0; i < ptr_cmem->size; i++ ) { 
+    ((char *)ptr_cmem->data)[i] = ~0;
+  }
+  return 0;
+}
+
+static int 
+l_cmem_ones( 
+    lua_State *L
+    ) {
+  CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
+  int status = cmem_ones(ptr_cmem);
+  if ( status < 0 ) { 
+    lua_pushboolean(L, true);
+  }
+  else {
+    lua_pushboolean(L, false);
+  }
+  return 1;
+}
 
 static int 
 cmem_zero( 
@@ -771,6 +799,7 @@ static const struct luaL_Reg cmem_methods[] = {
     { "stealable",  l_cmem_stealable },
     { "to_str",     l_cmem_to_str },
     { "zero",       l_cmem_zero },
+    { "ones",       l_cmem_ones },
     { NULL,  NULL         }
 };
  
@@ -796,6 +825,7 @@ static const struct luaL_Reg cmem_functions[] = {
     { "stealable",  l_cmem_stealable },
     { "to_str",     l_cmem_to_str },
     { "zero",       l_cmem_zero },
+    { "ones",       l_cmem_ones },
     { NULL,  NULL         }
 };
  
