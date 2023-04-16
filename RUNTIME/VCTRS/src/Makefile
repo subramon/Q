@@ -48,7 +48,7 @@ SRCS +=	vctr_print.c
 SRCS +=	vctr_putn.c  
 SRCS +=	vctr_put1.c 
 SRCS +=	vctr_put_chunk.c  
-SRCS +=	vctr_set_memo.c  
+SRCS +=	vctr_memo.c  
 SRCS +=	vctr_width.c  
 
 SRCS +=	chnk_cnt.c  

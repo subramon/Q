@@ -453,7 +453,7 @@ function lVector:get_chunk(chnk_idx)
   if ( to_generate ) then 
     -- print(" invoke the generator  for " .. self:name(), self._chunk_num)
     if ( type(self._generator) == "nil" ) then return 0, nil end 
-    -- print("Gen Getting chunk " .. self._chunk_num .. " for " .. self:name())
+    print("Gen Getting chunk " .. self._chunk_num .. " for " .. self:name())
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
     --==============================
@@ -492,10 +492,8 @@ function lVector:get_chunk(chnk_idx)
       assert(type(self._siblings) == "table")
       for _, v in ipairs(self._siblings) do
         assert(type(v) == "lVector") assert(type(v) == "lVector")
-        --[[
         print("Vector " .. self:name(), " requesting chunk " .. chnk_idx .. 
           " for sibling", v:name())
-          --]]
         local x, y, z = v:get_chunk(chnk_idx)
         assert(x == num_elements)
         if ( x < self._max_num_in_chunk ) then 

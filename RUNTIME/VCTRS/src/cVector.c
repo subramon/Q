@@ -45,7 +45,7 @@
 #include "vctr_putn.h"
 #include "vctr_put1.h"
 #include "vctr_put_chunk.h"
-#include "vctr_set_memo.h"
+#include "vctr_memo.h"
 #include "vctr_width.h"
 
 #include "vctr_kill.h"

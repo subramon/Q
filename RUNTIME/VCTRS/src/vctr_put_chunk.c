@@ -9,6 +9,7 @@
 #include "chnk_is.h"
 #include "vctr_put_chunk.h"
 #include "mod_mem_used.h"
+#include "chnk_free_resources.h"
 
 extern vctr_rs_hmap_t *g_vctr_hmap;
 extern chnk_rs_hmap_t *g_chnk_hmap;
@@ -106,6 +107,33 @@ vctr_put_chunk(
   g_vctr_hmap[tbsp].bkts[vctr_where].val.num_elements += n;
   g_vctr_hmap[tbsp].bkts[vctr_where].val.num_chnks++; 
   g_vctr_hmap[tbsp].bkts[vctr_where].val.max_chnk_idx = chnk_idx; 
+  // If memo_len >= 0 and not the first chunk to be produced 
+  if ( ( vctr_val.memo_len >= 0 ) && ( chnk_idx >= 1 ) ) { 
+    // Release resources for all previous chunks, keeping only "memo_len"
+    int del_chnk_marker = -1; 
+    for ( int del_chnk = chnk_idx-1; del_chnk >= 0; del_chnk-- ) { 
+      if ( ( (int)chnk_idx - del_chnk - 1 ) >= vctr_val.memo_len ) {
+        status = chnk_free_resources(tbsp, &chnk_key, &chnk_val, false);
+        cBYE(status);
+        del_chnk_marker = del_chnk; 
+        break; // See DEBUG logic below 
+      }
+    }
+#ifdef DEBUG
+    // All previous chunks to one just delete should be deleted
+    for ( int i = 0; i <= del_chnk_marker; i++ ) { 
+      status = chnk_is(tbsp, vctr_uqid, i, 
+          &chnk_is_found, &chnk_where_found);
+      if ( !chnk_is_found ) { go_BYE(-1); } 
+      chnk_rs_hmap_val_t l_chnk_val =
+        g_chnk_hmap[tbsp].bkts[chnk_where_found].val;
+      if ( l_chnk_val.num_readers != 0 ) { go_BYE(-1); } 
+      if ( l_chnk_val.num_writers != 0 ) { go_BYE(-1); } 
+      if ( l_chnk_val.l1_mem != 0 ) { go_BYE(-1); } 
+      if ( l_chnk_val.l2_exists  ) { go_BYE(-1); } 
+    }
+#endif
+  }
 BYE:
   return status;
 }
