@@ -1,3 +1,5 @@
+Memory manager (prefetch calls) should run in separate thread
+
 Should we initialize memory to 0?
 subramon@pi4:~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/data $ od -v -i _100000_200000
 0000000         123         123         123       23761
@@ -14,7 +16,6 @@ In import, document that order of import is important. Understand why
 Experiment with prefetch
 
 Write some tests on memory usage with kill
-
 
 where do we keep max_num_in_chunk? Lua or C. Be consistent
 What of init_globals() needs to be saved in Q.save() 

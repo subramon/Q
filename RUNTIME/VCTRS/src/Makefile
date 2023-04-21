@@ -13,7 +13,7 @@ INCS += -I../../../QJIT/LuaJIT-2.1.0-beta3/src/
 TMPL=CASE1
 
 
-all: core_libvctr.so  ut1 ut2 libvctr.so 
+all: core_libvctr.so  ut1 ut2 ut_memo libvctr.so 
 
 SRCS :=	vctr_add.c  
 SRCS +=	vctr_cnt.c  
@@ -32,7 +32,6 @@ SRCS +=	vctr_is_persist.c
 SRCS +=	vctr_l1_to_l2.c  
 
 SRCS +=	vctr_chnks_to_lma.c  
-SRCS +=	vctr_lma_to_chnks.c  
 SRCS +=	vctr_make_lma.c  
 SRCS +=	vctr_lma_access.c  
 SRCS +=	vctr_set_lma.c  
@@ -50,6 +49,7 @@ SRCS +=	vctr_put1.c
 SRCS +=	vctr_put_chunk.c  
 SRCS +=	vctr_memo.c  
 SRCS +=	vctr_width.c  
+SRCS +=	num_read_write.c  
 
 SRCS +=	chnk_cnt.c  
 SRCS +=	chnk_del.c  
@@ -76,6 +76,14 @@ TEST2_SRCS += ../../../QJIT/GUTILS/src/init_session.c
 TEST2_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
 TEST2_SRCS += ../../../QJIT/GUTILS/src/lua_state.c
 TEST2_OBJS = $(TEST2_SRCS:.c=.o)
+
+TEST3_SRCS := ../test/ut_memo.c
+TEST3_SRCS += ../../CMEM/src/aux_cmem.c 
+TEST3_SRCS += ../../../QJIT/GUTILS/src/init_globals.c
+TEST3_SRCS += ../../../QJIT/GUTILS/src/init_session.c
+TEST3_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
+TEST3_SRCS += ../../../QJIT/GUTILS/src/lua_state.c
+TEST3_OBJS = $(TEST3_SRCS:.c=.o)
 
 # NOTE: Add -DVERBOSE to following to get messages printed out 
 .c.o : 
@@ -158,6 +166,17 @@ ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so
 	${UTILS_SO} \
 	${GUTILS_SO} \
 	-o ut2 -lm -lpthread ${QLDFLAGS} # -static-libasan
+#-------------------------------------------
+ut_memo : ${TEST3_OBJS} ${Q_ROOT}/lib/libutils.so 
+	gcc ${TEST3_OBJS} \
+	${QCFLAGS} ${INCS} \
+	core_libvctr.so \
+	${VCTR_HMAP_SO} \
+	${CHNK_HMAP_SO} \
+	${TMPL_HMAP_SO} \
+	${UTILS_SO} \
+	${GUTILS_SO} \
+	-o ut_memo -lm -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
 
 

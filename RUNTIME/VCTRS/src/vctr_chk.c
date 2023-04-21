@@ -127,6 +127,19 @@ vctr_chk(
     if ( vctr_val.nX == 0 ) { go_BYE(-1); }
   }
   //----------------------------------------------
+  if ( vctr_val.X == NULL ) { 
+    if ( vctr_val.nX != 0 ) { go_BYE(-1); }
+    if ( vctr_val.num_readers != 0 ) { go_BYE(-1); }
+    if ( vctr_val.num_writers != 0 ) { go_BYE(-1); }
+  }
+  if ( vctr_val.X != NULL ) { 
+    if ( vctr_val.nX == 0 ) { go_BYE(-1); }
+  }
+  // lma access only for vectors that are fully created i.e., is_eov==true
+  if ( vctr_val.X != NULL ) { 
+    if ( !vctr_val.is_eov  ) { go_BYE(-1); } 
+  }
+  //----------------------------------------------
 
   if ( vctr_val.is_lma ) { 
     if ( !vctr_val.is_eov ) { go_BYE(-1); }
@@ -143,13 +156,15 @@ vctr_chk(
       }
     }
   }
-  uint64_t chk_num_elements    = 0;
+  // chk_num_elements computes num_elements from chunk info
+  uint64_t chk_num_elements    = 0; 
   // we can have an empty Vector (while it is being created)
   if ( vctr_val.is_eov ) {  
     if ( vctr_val.ref_count == 0 ) {  go_BYE(-1); }
   }
   // if ( num_elements == 0 ) { go_BYE(-1); } 
-  if (((max_num_in_chnk/8)*8) != max_num_in_chnk ) { go_BYE(-1); }
+  // max_num_in_chnk must be multipke of 64 
+  if (((max_num_in_chnk/64)*64) != max_num_in_chnk ) { go_BYE(-1); }
   // name must be null terminated 
   if ( vctr_val.name[MAX_LEN_VCTR_NAME] != '\0' ) { go_BYE(-1); }
   int good_filesz  = width * max_num_in_chnk;
@@ -159,13 +174,26 @@ vctr_chk(
   for ( uint32_t chnk_idx = 0; chnk_idx <= max_chnk_idx; chnk_idx++ ) {
     if ( num_elements == 0 ) { break; } // NOTE: Special case for empty vec
     bool chnk_is_found; uint32_t chnk_where_found;
-    status = chnk_is(tbsp, vctr_uqid, chnk_idx,&chnk_is_found,&chnk_where_found);
+    status = chnk_is(tbsp, vctr_uqid, chnk_idx,
+        &chnk_is_found, &chnk_where_found);
     cBYE(status);
-    // TODO P3 Tighten following test 
+    // If no memo-ization, all chunks must exist
     if ( vctr_val.memo_len < 0 ) { 
       if ( !chnk_is_found ) { go_BYE(-1); }
     }
-    if ( !chnk_is_found ) { continue; }
+    // If memo-ization, chunks deemed "too old" must NOT exist
+    if ( vctr_val.memo_len >= 0 ) { 
+      if ( ( (int)max_chnk_idx - (int)chnk_idx ) > vctr_val.memo_len ) {
+        // too old => chunk must not exist
+        if ( chnk_is_found ) { 
+          go_BYE(-1); 
+        }
+        else {
+          continue; // nothing more to do for this dead chunk
+        }
+      }
+    }
+    
     //------------
     chnk_rs_hmap_val_t chnk_val;
     memset(&chnk_val, 0, sizeof(chnk_rs_hmap_val_t));

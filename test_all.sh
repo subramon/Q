@@ -11,11 +11,14 @@ if [ "$LUA_CPATH" == "" ]; then echo "ERROR: source setup.sh"; exit 1; fi
 cd ~/Q/RUNTIME/VCTRS/src/
 ./ut1
 ./ut2
+./ut_memo
 cd ~/Q/RUNTIME/VCTRS/test/
 qjit test1.lua  
 qjit test_lma.lua  
 qjit test_memo.lua  
 qjit test_ref_count.lua
+qjit test_save.lua-- TODO P2 some automation needed for q_config 
+# qjit test_restore.lua -- TODO P2 some automation needed for q_config 
 cd ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/
 bash make_data.sh
 cd ~/Q/RUNTIME/VCTRS/test/

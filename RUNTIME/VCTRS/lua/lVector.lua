@@ -88,19 +88,31 @@ function lVector:max_num_in_chunk()
   return max_num_in_chunk
 end
 
-function lVector:incr_num_readers(chnk_idx)
-  local num_readers = cVector.incr_num_readers(self._base_vec, chnk_idx)
+function lVector:chnk_incr_num_readers(chnk_idx)
+  local num_readers = cVector.chnk_incr_num_readers(self._base_vec, chnk_idx)
+  return num_readers
+end
+
+function lVector:num_readers(chnk_idx)
+  local num_readers
+  if ( not chnk_idx ) then 
+    num_readers = cVector.vctr_num_readers(self._base_vec)
+  else
+    assert(type(chnk_idx) == "number")
+    num_readers = cVector.chnk_num_readers(self._base_vec, chnk_idx)
+  end
   return num_readers
 end
 
 function lVector:num_writers(chnk_idx)
-  local num_writers = cVector.num_writers(self._base_vec, chnk_idx)
+  local num_writers
+  if ( not chnk_idx ) then 
+    num_writers = cVector.vctr_num_writers(self._base_vec)
+  else
+    assert(type(chnk_idx) == "number")
+    num_writers = cVector.chnk_num_writers(self._base_vec, chnk_idx)
+  end
   return num_writers
-end
-
-function lVector:num_readers(chnk_idx)
-  local num_readers = cVector.num_readers(self._base_vec, chnk_idx)
-  return num_readers
 end
 
 function lVector:num_elements()
@@ -453,7 +465,7 @@ function lVector:get_chunk(chnk_idx)
   if ( to_generate ) then 
     -- print(" invoke the generator  for " .. self:name(), self._chunk_num)
     if ( type(self._generator) == "nil" ) then return 0, nil end 
-    print("Gen Getting chunk " .. self._chunk_num .. " for " .. self:name())
+    -- print("Gen Getting chunk " .. self._chunk_num .. " for " .. self:name())
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
     --==============================
@@ -474,16 +486,15 @@ function lVector:get_chunk(chnk_idx)
     -- release old chunks
     -- NOTE that memo_len == 0 is meanignless 
     -- because we always keep the last chunk generated
-    if ( ( self._memo_len >= 0 ) and ( num_elements > 0 ) ) then
-      -- Note the extra -1 below. This is to account for
-      -- the put_chunk above which would have incremented self._chunk_num
-      local chunk_to_release = self._chunk_num - 1 - self._memo_len - 1 
-      if ( chunk_to_release >= 0 ) then 
-        local is_found = 
-          cVector.chunk_delete(self._base_vec, chunk_to_release)
-        -- assert(is_found == true)
-        if ( is_found == false ) then 
-          print("Chunk was not found " .. chunk_to_release)
+    if ( qcfg.debug ) then 
+      if ( ( self._memo_len >= 0 ) and ( num_elements > 0 ) ) then
+        -- Note the extra -1 below. This is to account for
+        -- the put_chunk above which would have incremented self._chunk_num
+        local chunk_to_release = self._chunk_num - 1 - self._memo_len - 1 
+        if ( chunk_to_release >= 0 ) then 
+          local is_found = 
+            cVector.chunk_delete(self._base_vec, chunk_to_release)
+          assert(is_found == false)
         end
       end
     end
@@ -492,8 +503,10 @@ function lVector:get_chunk(chnk_idx)
       assert(type(self._siblings) == "table")
       for _, v in ipairs(self._siblings) do
         assert(type(v) == "lVector") assert(type(v) == "lVector")
+        --[[
         print("Vector " .. self:name(), " requesting chunk " .. chnk_idx .. 
           " for sibling", v:name())
+          --]]
         local x, y, z = v:get_chunk(chnk_idx)
         assert(x == num_elements)
         if ( x < self._max_num_in_chunk ) then 
@@ -503,25 +516,26 @@ function lVector:get_chunk(chnk_idx)
         -- following because we aren't really consuming the chunk
         -- we are just getting it 
         v:unget_chunk(chnk_idx)
-        -- Also, depending on memo_len, we may need to delete some chunks
-        if ( ( v:memo_len() >= 0 ) and ( v:num_elements() > 0 ) ) then
-          local chunk_to_release = chunk_idx - self._memo_len
-          if ( chunk_to_release >= 0 ) then 
-            -- print("Sibling: Deleting chunk " .. chunk_to_release)
-            local is_found = 
-              cVector.chunk_delete(self._base_vec, chunk_to_release)
-            -- assert(is_found == true)
-            if ( is_found == false ) then 
-              print("Chunk was not found " .. chunk_to_release)
+        if ( qcfg.debug ) then 
+          -- Checks if chunks that should have been deleted because of
+          -- memo_len, have in fact been deleted 
+          if ( ( v:memo_len() >= 0 ) and ( v:num_elements() > 0 ) ) then
+            local chunk_to_release = chunk_idx - self._memo_len
+            if ( chunk_to_release >= 0 ) then 
+              -- print("Sibling: Deleting chunk " .. chunk_to_release)
+              local is_found = 
+                cVector.chunk_delete(self._base_vec, chunk_to_release)
+              assert(is_found == false)
             end
           end
-        end
+       end
       end
     end
-    assert(self:incr_num_readers(chnk_idx))
+    -- TODO P2 Why is incr_num_readers is being done in Lua and not in C???
+    assert(self:chnk_incr_num_readers(chnk_idx))
     if ( self._nn_vec ) then 
       local nn_vector = self._nn_vec
-      assert(nn_vector:incr_num_readers(chnk_idx))
+      assert(nn_vector:chnk_incr_num_readers(chnk_idx))
     end
     -- print("Returning " .. num_elements .. " for " .. self:name())
     -- TODO print("XXX", chnk_idx, self:num_readers(chnk_idx), self:name())

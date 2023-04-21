@@ -19,13 +19,13 @@ typedef struct _vctr_meta_t {
   uint32_t width;
   uint32_t ref_count; // reference count 
   // Note that chunk size = max_num_in_chnk * width 
-  int memo_len;
+  int memo_len; // -1 => memo all 
   qtype_t qtype;
   bool is_eov;   // true => no appends allowed
   bool is_killable;   // useful to delete temporary vectors
   bool is_persist;   // l2 should not be deleted on vector delete
   bool is_writable;   // false => no changes allowed
-  bool is_early_free; // true => some chunk has been freed early
+  bool is_early_free; // true => >=0 chunks has been freed early
   bool is_trash; // true => marked for garbage collection 
   bool is_lma; // true => there exists a file that allows Linear Memory Access (lma) 
   int num_readers; // for lma 

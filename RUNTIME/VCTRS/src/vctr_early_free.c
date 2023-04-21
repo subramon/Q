@@ -15,7 +15,10 @@ extern chnk_rs_hmap_t *g_chnk_hmap;
 
 // Deletes all but the most recent chunk
 // Does not do anything to lma memory, assuming it exists
-// Can be called multiple times
+// Above is important difference between this call and 
+// what happens when chunks age out (as determined by memo_len)
+// In that case, we completely delete all resources of the chunk
+// vctr_early_free()Can be called multiple times
 int
 vctr_early_free(
     uint32_t tbsp,

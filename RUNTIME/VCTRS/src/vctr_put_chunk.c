@@ -9,7 +9,7 @@
 #include "chnk_is.h"
 #include "vctr_put_chunk.h"
 #include "mod_mem_used.h"
-#include "chnk_free_resources.h"
+#include "chnk_del.h"
 
 extern vctr_rs_hmap_t *g_vctr_hmap;
 extern chnk_rs_hmap_t *g_chnk_hmap;
@@ -113,9 +113,12 @@ vctr_put_chunk(
     int del_chnk_marker = -1; 
     for ( int del_chnk = chnk_idx-1; del_chnk >= 0; del_chnk-- ) { 
       if ( ( (int)chnk_idx - del_chnk - 1 ) >= vctr_val.memo_len ) {
-        status = chnk_free_resources(tbsp, &chnk_key, &chnk_val, false);
-        cBYE(status);
+        status = chnk_is(tbsp, vctr_uqid, del_chnk, 
+            &chnk_is_found, &chnk_where_found);
+        if ( !chnk_is_found ) { go_BYE(-1); } 
         del_chnk_marker = del_chnk; 
+        status = chnk_del(tbsp, vctr_uqid, del_chnk, false); 
+        cBYE(status); 
         break; // See DEBUG logic below 
       }
     }
@@ -124,13 +127,7 @@ vctr_put_chunk(
     for ( int i = 0; i <= del_chnk_marker; i++ ) { 
       status = chnk_is(tbsp, vctr_uqid, i, 
           &chnk_is_found, &chnk_where_found);
-      if ( !chnk_is_found ) { go_BYE(-1); } 
-      chnk_rs_hmap_val_t l_chnk_val =
-        g_chnk_hmap[tbsp].bkts[chnk_where_found].val;
-      if ( l_chnk_val.num_readers != 0 ) { go_BYE(-1); } 
-      if ( l_chnk_val.num_writers != 0 ) { go_BYE(-1); } 
-      if ( l_chnk_val.l1_mem != 0 ) { go_BYE(-1); } 
-      if ( l_chnk_val.l2_exists  ) { go_BYE(-1); } 
+      if ( chnk_is_found ) { go_BYE(-1); } 
     }
 #endif
   }
