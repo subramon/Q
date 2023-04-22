@@ -11,28 +11,63 @@ local lgutils = require 'liblgutils'
 local qtype = "I4"
 local max_num_in_chunk = 64
 local len = 3 * max_num_in_chunk + 7
+local num_chunks = math.ceil(len/max_num_in_chunk)
+
 local tests = {}
 tests.t1 = function()
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "test1_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   x1:eval()
+  local chunk_size = x1:max_num_in_chunk() * x1:width()
   local init_mem_used = lgutils.mem_used()
   local init_dsk_used = lgutils.dsk_used()
+  assert(init_dsk_used == 0)
 
   local niters  = 10
   for i  = 1, niters do 
     for j = 1, 10 do 
       x1:drop_mem(1)
-      print(i, j, lgutils.mem_used())
       assert(lgutils.mem_used() == 0)
-      assert(lgutils.dsk_used() == init_dsk_used)
+      assert(lgutils.dsk_used() == init_mem_used)
     end
   end
   x1 = nil; collectgarbage()
   assert(cVector.check_all())
   print("Test t1 succeeded")
 end
+tests.t2 = function()
+  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
+    name = "test1_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+  x1:eval()
+  local chunk_size = x1:max_num_in_chunk() * x1:width()
+  local init_mem_used = lgutils.mem_used()
+  local chk_mem_used = init_mem_used
+  local init_dsk_used = lgutils.dsk_used()
+  local chk_dsk_used = init_dsk_used
+  assert(init_dsk_used == 0)
+
+  local niters  = 10
+  for j = 1, num_chunks do 
+    x1:drop_mem(1, j-1)
+    chk_mem_used = chk_mem_used - chunk_size
+    chk_dsk_used = chk_dsk_used + chunk_size
+    assert(lgutils.mem_used() == chk_mem_used)
+    assert(lgutils.dsk_used() == chk_dsk_used)
+  end
+  for j = 1, num_chunks do 
+    x1:make_mem(1, j-1)
+    chk_mem_used = chk_mem_used + chunk_size
+    -- NO CHANGE TO  chk_dsk_used = chk_dsk_used - chunk_size
+    assert(lgutils.mem_used() == chk_mem_used)
+    assert(lgutils.dsk_used() == chk_dsk_used)
+  end
+
+  x1 = nil; collectgarbage()
+  assert(cVector.check_all())
+  print("Test t2 succeeded")
+end
 collectgarbage()
 assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests
 tests.t1()
+tests.t2()
