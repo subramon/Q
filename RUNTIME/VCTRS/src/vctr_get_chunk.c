@@ -53,7 +53,6 @@ vctr_get_chunk(
   cBYE(status);
   if ( chnk_is_found == false ) { go_BYE(-1);  }
   //-----------------------------------------------------
-  // TODO Handle case when data has been flushed to l2/l4 mem
   char *data = chnk_get_data(tbsp, chnk_where_found, is_write); 
   if ( data == NULL ) { go_BYE(-1); }
 

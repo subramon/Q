@@ -1,3 +1,11 @@
+KEY DECISION: chunk data must *always* be available *EVEN* if lma file 
+exists. This means that if we import a file (not available as of March 2023),
+then we need to break it up into chunks. We can get rid of the lma_file
+but we cannot get rid of the chunks until we are ready to get rid of the Vector
+itself
+
+
+
 In chunk, we have uint64_t touch_time as a field 
 This is updated every time we call 
 a) vctr_get_chunk()

@@ -1,6 +1,7 @@
-extern int
-vctr_drop_l1_l2(
+extern int  
+chnk_make_mem(
     uint32_t tbsp,
     uint32_t vctr_uqid,
+    uint32_t chnk_idx,
     int level
     );

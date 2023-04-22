@@ -142,10 +142,6 @@ function lVector:drop(level)
   end
   return self
 end
-function lVector:l1_to_l2()
-  local status = cVector.l1_to_l2(self._base_vec)
-  return self
-end
 function lVector:persist()
   local status = cVector.persist(self._base_vec)
   return self
@@ -835,7 +831,7 @@ function lVector:prefetch(chnk_idx)
   assert(type(chnk_idx) == "number")
   local nn_x, nn_n
   local exists, status = cVector.prefetch(self._base_vec, chnk_idx)
-  assert(status == 0)
+  
   if ( exists and self._nn_vec ) then 
     local nn_vector = self._nn_vec
     local nn_exists, status=cVector.prefetch(nn_vector._base_vec, chnk_idx)
@@ -848,6 +844,42 @@ function lVector:prefetch(chnk_idx)
   -- if there is not enough memory, then it should fail silently
   -- TODO P3: We have not implemented those smarts. 
   -- So, if the chunk exists, it will be loaded into memory 
+end
+--==================================================
+function lVector:unprefetch(chnk_idx)
+  assert(type(chnk_idx) == "number")
+  local nn_x, nn_n
+  cVector.unprefetch(self._base_vec, chnk_idx)
+  if ( self._nn_vec ) then 
+    local nn_vector = self._nn_vec
+    cVector.prefetch(nn_vector._base_vec, chnk_idx)
+  end
+end
+--==================================================
+function lVector:drop_mem(level, chnk_idx)
+  assert(type(level) == "number")
+  if ( not chnk_idx ) then chnk_idx = -1 end
+  assert(type(chnk_idx) == "number")
+  local rslt = cVector.drop_mem(self._base_vec, level, chnk_idx)
+  local nn_rslt
+  if ( self._nn_vec ) then 
+    local nn_vector = self._nn_vec
+    local nn_rslt = cVector.drop_mem(nn_vector._base_vec, level, chnk_idx)
+  end
+  return rslt, nn_rslt
+end
+--==================================================
+function lVector:make_mem(level, chnk_idx)
+  assert(type(level) == "number")
+  if ( not chnk_idx ) then chnk_idx = -1 end
+  assert(type(chnk_idx) == "number")
+  local rslt = cVector.make_mem(self._base_vec, level, chnk_idx)
+  local nn_rslt
+  if ( self._nn_vec ) then 
+    local nn_vector = self._nn_vec
+    local nn_rslt = cVector.make_mem(nn_vector._base_vec, level, chnk_idx)
+  end
+  return rslt, nn_rslt
 end
 --==================================================
 return lVector

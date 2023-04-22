@@ -1,6 +1,6 @@
 extern int
-vctr_l1_to_l2(
+vctr_make_mem(
     uint32_t tbsp,
     uint32_t vctr_uqid,
-    uint32_t nn_vctr_uqid
+    int level
     );
