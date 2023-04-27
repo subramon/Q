@@ -11,6 +11,7 @@ local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
 -- cdef the necessary struct within pcall to prevent error on second call
 local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
 qc.q_cdef("OPERATORS/S_TO_F/inc/const_struct.h", incs)
+qc.q_cdef("OPERATORS/S_TO_F/inc/const_B1.h", incs)
 qc.q_cdef("RUNTIME/SCLR/inc/sclr_struct.h", incs)
 
 local function const_specialize(
@@ -25,27 +26,31 @@ local function const_specialize(
   local len   = assert(largs.len)
   assert(len > 0, "vector length must be positive")
   --=======================
-  local orig_qtype = qtype
   local subs = {};
   subs.fn = "const_" .. qtype
   subs.len = len
   subs.out_qtype = qtype
-  subs.out_ctype = cutils.str_qtype_to_str_ctype(qtype)
-  subs.max_num_in_chunk = get_max_num_in_chunk (largs)
-  subs.buf_size = subs.max_num_in_chunk * cutils.get_width_qtype(qtype)
-  if ( orig_qtype == "B1" ) then 
-    subs.buf_size = subs.max_num_in_chunk / 8 
-    qtype = "BL"
-  end
-  assert(subs.buf_size > 0)
-    
+  subs.out_ctype = cutils.str_qtype_to_str_ctype(subs.out_qtype)
   subs.cast_buf_as = subs.out_ctype .. " * "
+
+  subs.max_num_in_chunk = get_max_num_in_chunk (largs)
+  subs.buf_size = subs.max_num_in_chunk * 
+    cutils.get_width_qtype(subs.out_qtype)
 
   -- set up args for C code
   local val  = largs.val
   assert(type(val) ~= nil)
-  local sclr_val = Scalar.new(val, qtype)
+  local sclr_val 
 
+  -- handle special case of B1 
+  if ( qtype == "B1" ) then 
+    subs.out_qtype = "B1"
+    subs.out_ctype = "uint64_t"
+    subs.buf_size = subs.max_num_in_chunk / 8 
+    -- sclr_val not used 
+  else
+    sclr_val = Scalar.new(val, qtype)
+  end
   -- allocate cargs 
   subs.cargs_ctype = "CONST_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(subs.cargs_ctype)
@@ -56,16 +61,29 @@ local function const_specialize(
   -- initialize cargs from scalar sclr_val
   local cargs = assert(get_ptr(subs.cargs, subs.cast_cargs_as))
   local sclr_val = ffi.cast("SCLR_REC_TYPE *", sclr_val)
-  cargs[0]["val"] = sclr_val[0].val[string.lower(qtype)]
-  -- cargs[0]["val"] = sclr_val[0].val.i4 -- TODO P0 
+  -- handle special case of B1 
+  if ( qtype == "B1" ) then 
+    if ( val == false ) then 
+      cargs[0]["val"] = 0;
+    elseif ( val == true ) then 
+      cargs[0]["val"] = 1;
+    else
+      error("bad value for B1")
+    end
+  else
+    cargs[0]["val"] = sclr_val[0].val[string.lower(qtype)]
+  end
 
   subs.tmpl   = "OPERATORS/S_TO_F/lua/const.tmpl"
   subs.incdir = "OPERATORS/S_TO_F/gen_inc/"
   subs.srcdir = "OPERATORS/S_TO_F/gen_src/"
-  subs.incs   = { "UTILS/inc", "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
+  subs.incs   = { 
+      "UTILS/inc", 
+      "OPERATORS/S_TO_F/inc/", 
+      "OPERATORS/S_TO_F/gen_inc/", }
   subs.structs = { "OPERATORS/S_TO_F/inc/const_struct.h" }
   --=== handle B1 as special case
-  if ( orig_qtype == "B1" ) then
+  if ( qtype == "B1" ) then
     subs.tmpl = nil -- this is not generated code 
     subs.dotc   = "OPERATORS/S_TO_F/src/const_B1.c"
     subs.doth   = "OPERATORS/S_TO_F/inc/const_B1.h"

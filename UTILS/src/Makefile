@@ -179,6 +179,8 @@ GEN_INC_FILES = \
 .c.o :
 	$(CC) -c -o $@ $< $(QCFLAGS)  $(INCS)
 
+spooky_hash.o : QCFLAGS += -Wno-implicit-fallthrough -Wno-cast-qual
+
 SRCS := cat_to_buf.c 
 SRCS += copy_file.c 
 SRCS += BL_to_txt.c 

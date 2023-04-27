@@ -1,0 +1,77 @@
+\documentclass[letterpaper,12pt]{article}
+\usepackage{helvet}
+\usepackage{hyperref}
+\usepackage{fancyheadings}
+\pagestyle{fancy}
+\usepackage{graphicx}
+\setlength\textwidth{6.5in}
+\setlength\textheight{8.5in}
+\newtheorem{problem_statement}{Problem Statement}
+\newcommand{\TBC}{\framebox{\textbf{TO BE COMPLETED}}}
+\newtheorem{assumption}{Assumption}
+\newcommand{\be}{\begin{enumerate}}
+\newcommand{\ee}{\end{enumerate}}
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\bd}{\begin{description}}
+\newcommand{\ed}{\end{description}}
+\newtheorem{notation}{Notation}
+\begin{document}
+\title{Multi-threading in qjit}
+\author{Ramesh Subramonian}
+\maketitle
+\thispagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{}
+% \lfoot{{\small Decision Sciences Team}}
+\cfoot{}
+\rfoot{{\small \thepage}}
+
+ \begin{abstract}
+\ Q can be run in a collaborative mode, where it listens for commands over
+ HTTP. This document describes the design and usage of this capability.
+\end{abstract}
+
+\section{Configurations}
+
+\be
+\item To enable the web server
+  \be 
+\item Set \verb+is_webserver = true+  Default is false
+\item Set \verb+web_port+
+  \ee
+\item To enable the out of band server, which allows one to 
+  make changes to configurations after {\tt Q} has started.
+  \be
+\item 
+  Set \verb+is_out_of_band = true+ Default is false
+\item Set \verb+out_of_band_port+ 
+  \ee
+  Note that the out of band server can be accessed {\bf only} over the  internal loopback
+  interface.
+  It cannot be accessed from a machine other than the one where {\tt Q} is
+  running.
+\item Set \verb+initial_master_interested+ to false if you want to run in a
+  headless manner (Section~\ref{headless}. 
+  
+
+\section{Headless Server}
+
+To run in headless mode, do something like: (explained in
+\url{https://www.lua.org/pil/1.1.html})
+\begin{verbatim}
+qjit -i -lfoo -lbar
+\end{verbatim}
+
+After \tt{Q} executes {\tt foo.lua} and {\tt bar.lua}, the master thread 
+enters an endless loop. In each iteration, all it does is sleep for one  second.
+
+If you want to wake the master from its beauty sleep, you need to use the out
+of band server and execute \url{/SetMaster?Status=On}. To put it back to sleep,  
+execute \url{/SetMaster?Status=Off}. 
+
+\ee
+\end{document}
+
+

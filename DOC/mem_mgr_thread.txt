@@ -1,0 +1,34 @@
+KEY DECISION: chunk data must *always* be available *EVEN* if lma file 
+exists. This means that if we import a file (not available as of March 2023),
+then we need to break it up into chunks. We can get rid of the lma_file
+but we cannot get rid of the chunks until we are ready to get rid of the Vector
+itself
+
+
+
+In chunk, we have uint64_t touch_time as a field 
+This is updated every time we call 
+a) vctr_get_chunk()
+b) vctr_unget_chunk()
+The choice of (b) for update above is controversial. Rethink this.
+
+1) Check what happens with getting and releasing lma
+>> Currently, mem_mgr has nothing to do with lma
+
+2) Make sure that failure if you try and malloc more memory than you can
+3) Add "locked" to chunk hash table to indicate that entry is locked
+4) Wait on lock only in chnk_get_data()
+5) Create a queue for main thread to pass work to prefetcher/unloader
+6) Implement unload
+7) Take prefetch out of master thread
+8) Create a heap with key = chnk_idx and value = time
+Create a heap with key = chnk_idx and value = t_access (which is in val)
+Heap property is that root is node with smallest t_access
+9) When chunk's access time gets updated, treat it like a delete
+and insert into the heap 
+
+Check if Q.save() causes everything to be flushed to disk. I think it does
+
+
+
+

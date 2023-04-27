@@ -9,6 +9,7 @@
 #include "chnk_is.h"
 #include "vctr_put_chunk.h"
 #include "mod_mem_used.h"
+#include "chnk_del.h"
 
 extern vctr_rs_hmap_t *g_vctr_hmap;
 extern chnk_rs_hmap_t *g_chnk_hmap;
@@ -50,13 +51,11 @@ vctr_put_chunk(
   if ( n > vctr_val.max_num_in_chnk ) { go_BYE(-1); } 
 
   qtype_t qtype = vctr_val.qtype;
-  uint32_t chnk_size;
-  if ( qtype == B1 ) {
-    chnk_size = vctr_val.max_num_in_chnk / 8;
-    if ( ( chnk_size * 8 ) != vctr_val.max_num_in_chnk ) { go_BYE(-1); }
-  }
-  else {
-    chnk_size = vctr_val.width * vctr_val.max_num_in_chnk;
+  uint32_t chnk_size = ptr_cmem->size; // whatever comes from cmem 
+  if ( qtype != B1 ) {
+    if ( chnk_size != (vctr_val.width * vctr_val.max_num_in_chnk) ) {
+      go_BYE(-1);
+    }
   }
   uint32_t chnk_idx;
   // number of elements in vector must be multiple of chunk size 
@@ -108,6 +107,30 @@ vctr_put_chunk(
   g_vctr_hmap[tbsp].bkts[vctr_where].val.num_elements += n;
   g_vctr_hmap[tbsp].bkts[vctr_where].val.num_chnks++; 
   g_vctr_hmap[tbsp].bkts[vctr_where].val.max_chnk_idx = chnk_idx; 
+  // If memo_len >= 0 and not the first chunk to be produced 
+  if ( ( vctr_val.memo_len >= 0 ) && ( chnk_idx >= 1 ) ) { 
+    // Release resources for all previous chunks, keeping only "memo_len"
+    int del_chnk_marker = -1; 
+    for ( int del_chnk = chnk_idx-1; del_chnk >= 0; del_chnk-- ) { 
+      if ( ( (int)chnk_idx - del_chnk - 1 ) >= vctr_val.memo_len ) {
+        status = chnk_is(tbsp, vctr_uqid, del_chnk, 
+            &chnk_is_found, &chnk_where_found);
+        if ( !chnk_is_found ) { go_BYE(-1); } 
+        del_chnk_marker = del_chnk; 
+        status = chnk_del(tbsp, vctr_uqid, del_chnk, false); 
+        cBYE(status); 
+        break; // See DEBUG logic below 
+      }
+    }
+#ifdef DEBUG
+    // All previous chunks to one just delete should be deleted
+    for ( int i = 0; i <= del_chnk_marker; i++ ) { 
+      status = chnk_is(tbsp, vctr_uqid, i, 
+          &chnk_is_found, &chnk_where_found);
+      if ( chnk_is_found ) { go_BYE(-1); } 
+    }
+#endif
+  }
 BYE:
   return status;
 }

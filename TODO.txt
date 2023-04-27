@@ -1,11 +1,21 @@
+Memory manager (prefetch calls) should run in separate thread
+
+Should we initialize memory to 0?
+subramon@pi4:~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/data $ od -v -i _100000_200000
+0000000         123         123         123       23761
+0000020 -1227737080 -1227737080           0           0
+0000040           0           0           0           0
+0000060           0           0           0           0
+--=====================================
+
 Bring ISPC back to life
 Bring OpenMP back to life
 Do some code reviews of save() and import() 
 In import, document that order of import is important. Understand why 
 
-TODO Experiment with alternating control of qjit with webserver
 Experiment with prefetch
 
+Write some tests on memory usage with kill
 
 where do we keep max_num_in_chunk? Lua or C. Be consistent
 What of init_globals() needs to be saved in Q.save() 
@@ -30,6 +40,9 @@ Check whether we have implemented essence of F1F2OPF3/expander_f1f2opf3.txt
 Verify that extra bits are zeroed out for vveq and vseq and so on
 Low priority: convert QC_FLAGS to QCFLAGS and QLDFLAGS
 
+DONE Experiment with alternating control of qjit with webserver
+DONE Write some tests on memory usage with different memo len
+DONE Basic test of webserver and out-of-band-server
 DONE Bring webserver back to life
 DONE Bring out-of-band server back to life
 DONE g_dsk_used should be checked/restored upon restore session

@@ -59,10 +59,10 @@ tests.t1 = function()
   c1:delete()
 
   -- make a few more vectors just for fun
-  -- local c3 = Q.const(args):set_name("c3"):eval()
-  -- local c4 = Q.const(args):set_name("c4"):eval()
-  -- c3:delete()
-  -- c4:delete()
+  local c3 = Q.const(args):set_name("c3"):eval()
+  local c4 = Q.const(args):set_name("c4"):eval()
+  c3:delete()
+  c4:delete()
 
   assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   assert(cVector.check_all(true, true)) -- checking on all vectors
@@ -70,13 +70,12 @@ tests.t1 = function()
 end
 tests.t2 = function() 
   local len = blksz + 19;
-  -- local vals = { true, false }
-  local vals = { false }
+  local vals = { true, false }
   local qtype = "B1"
-  for _, val in pairs(vals) do 
+  for k, val in pairs(vals) do 
     local c1 = Q.const( {val = val, qtype = qtype, len = len })
+    assert(c1:qtype() == "B1")
     c1:eval()
-    collectgarbage()
     c1:set_name("vec_" .. tostring(val))
     -- c1:pr()
     local chk_sclr = Scalar.new(val, "BL")
@@ -92,9 +91,9 @@ tests.t2 = function()
     local status = pcall(c1.get1, len) -- deliberate error
     assert(not status)
     print("<<< STOP  Deliberate error")
-    c1 = nil
-    collectgarbage()
+    c1:delete()
   end
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   assert(cVector.check_all(true, true)) -- checking on all vectors
   print("Test t2 succeeded")
 
@@ -108,6 +107,7 @@ tests.t3 = function() -- this is a stress test
   c1:memo(2)
   c1:eval()
   assert(c1:is_eov())
+  c1:delete()
   print("Test t3 succeeded")
   assert(cVector.check_all(true, true)) -- checking on all vectors
 end
@@ -121,6 +121,7 @@ tests.t4 = function()
       local chk_val = c1:get1(i-1)
       assert(chk_val == Scalar.new(val, "BL"))
     end
+    c1:delete()
     print("Test t4 succeeded for B1 = " .. tostring(val))
   end
   

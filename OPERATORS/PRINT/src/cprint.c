@@ -7,6 +7,7 @@
 int
 cprint(
     const char * opfile,
+    bool is_html, 
     const void * const cfld, // TODO 
     const void ** data, // [nC][nR] 
     const bool ** nn_data, // [nC][nR] 
@@ -45,16 +46,22 @@ cprint(
   else {
     fp = stdout;
   }
+  if ( is_html ) {
+    fprintf(fp, "<HTML>\n"); 
+    fprintf(fp, " <table>\n"); 
+  }
   for ( uint64_t i = lb; i < ub; i++ ) { // for each row 
+    if ( is_html ) { fprintf(fp, "   <tr> ");  }
     for ( int j = 0; j < nC; j++ ) { // for each column
       const char * X = data[j];
-      if ( j > 0 ) { fprintf(fp, ","); }
+      if ( !is_html ) { if ( j > 0 ) { fprintf(fp, ","); } }
       if ( nn_data[j] != NULL ) {
         if ( nn_data[j][i] == false ) {
           fprintf(fp, "\"\"");
           continue;
         }
       }
+      if ( is_html ) { fprintf(fp, "<td> "); }
       switch ( qtypes[j] ) {
         case B1 : 
           {
@@ -68,23 +75,25 @@ cprint(
         case I1 : fprintf(fp, "%d", ((const int8_t *)X)[i]); break;
         case I2 : fprintf(fp, "%d", ((const int16_t *)X)[i]); break;
         case I4 : fprintf(fp, "%d", ((const int32_t *)X)[i]); break;
-        case I8 : fprintf(fp, "%ld", ((const int64_t *)X)[i]); break;
+        case I8 : fprintf(fp, "%" PRIi64 "", ((const int64_t *)X)[i]); break;
         case F4 : fprintf(fp, "%f", ((const float *)X)[i]); break;
         case F8 : fprintf(fp, "%lf", ((const double *)X)[i]); break;
         case SC :  
                   {
                     if ( widths[j] <= 1 ) { go_BYE(-1); }
                     X += (i * widths[j]);
-                    fprintf(fp, "\"");
+                    if ( !is_html ) { fprintf(fp, "\""); }
                     for ( int k = 0; k < widths[j]; k++ ) { 
                       if ( *X == '\0' ) { break; } 
-                      if ( ( *X == '\\' ) || ( *X == '"' ) ) {
-                        fprintf(fp, "\\");
+                      if ( !is_html ) { // escape these characters
+                        if ( ( *X == '\\' ) || ( *X == '"' ) ) {
+                          fprintf(fp, "\\");
+                        }
                       }
                       fprintf(fp, "%c", *X);
                       X++;
                     }
-                    fprintf(fp, "\"");
+                    if ( !is_html ) { fprintf(fp, "\""); }
                   }
                   break;
         case TM1 : 
@@ -119,8 +128,14 @@ cprint(
                   go_BYE(-1); 
                   break;
       }
+      if ( is_html ) { fprintf(fp, "</td> "); }
     }
+    if ( is_html ) { fprintf(fp, "</tr>"); }
     fprintf(fp, "\n");
+  }
+  if ( is_html ) {
+    fprintf(fp, " </table>\n"); 
+    fprintf(fp, "</HTML>\n"); 
   }
 BYE:
   if ( ( opfile != NULL ) && ( *opfile != '\0' ) ) {

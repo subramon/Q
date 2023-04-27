@@ -10,14 +10,14 @@
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
 // Place globals in this file 
-my_extern int g_halt;
-// g_halt is initialized to 0. It is set to 1 by halt_threads()
 // which is in lgutils. Once set, subsequent calls to webserver thread
 // or out_of_band thread will cause them to terminate
 my_extern int g_webserver_interested; 
+my_extern int g_master_interested; 
 // 0 => webserver is NOT interested in acquiring Lua state 
 // 1 => webserver is interested in acquiring Lua state 
 // Set only in process_req() by webserver thread 
+my_extern int g_master_halt;  // set to 1 => master will quit 
 my_extern int g_L_status; // values as described below 
 // 0 => Lua state is free 
 // 1 => Master owns Lua State 

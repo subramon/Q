@@ -16,6 +16,7 @@ tests.t1 = function()
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "test1_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   print(">>> START DELIBERATE ERROR")
+  -- chunks_to_lma can be called only if is_eov == true
   local status = pcall(lVector.chunks_to_lma, x1)
   assert(not status)
   print(">>> STOP  DELIBERATE ERROR")
@@ -23,7 +24,6 @@ tests.t1 = function()
   assert(x1:check())
   for i = 1, 1000 do 
     assert(x1:chunks_to_lma())
-    -- assert(x1:lma_to_chunks()) TODO TODO P2 
   end
   x1 = nil; collectgarbage()
   assert(cVector.check_all())
@@ -52,9 +52,11 @@ tests.t2 = function()
   local C = {}
   for i = 1, 1000 do 
     C[i] = assert(x1:get_lma_read())
+    assert(x1:num_readers() == i)
   end
   for i = 1, 1000 do 
     assert(x1:unget_lma_read())
+    assert(x1:num_readers() == 1000-i)
   end
   print(">>> START DELIBERATE ERROR")
   local status = pcall(lVector.unget_lma_read, x1)
@@ -179,6 +181,33 @@ tests.t6 = function()
   assert(cVector.check_all())
   print("Test t6 succeeded")
 end
+-- test num_readers for chunks 
+tests.t7 = function()
+  local max_num_in_chunk = 64 
+  local len = 2 * max_num_in_chunk + 17 
+  local num_chunks = math.ceil(len/max_num_in_chunk)
+  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
+    name = "x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+  x1:eval()
+
+  local C = {}
+  local niters = 4000
+  for i = 1, niters do 
+    local n, cmem  = x1:get_chunk(0)
+    assert(n == max_num_in_chunk)
+    assert(type(cmem) == "CMEM")
+    assert(x1:num_readers(0) == i)
+    C[i] = cmem 
+  end
+  for i = 1, niters do 
+    x1:unget_chunk(0)
+    assert(x1:num_readers(0) == niters-i)
+    C[i] = nil
+  end
+  x1 = nil; collectgarbage()
+  assert(cVector.check_all())
+  print("Test t7 succeeded")
+end
 -- return tests
 tests.t1()
 tests.t2()
@@ -186,5 +215,6 @@ tests.t3()
 tests.t4()
 tests.t5()
 tests.t6()
+tests.t7()
 collectgarbage()
 assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

@@ -8,6 +8,7 @@ local stringify = require 'Q/UTILS/lua/stringify'
 
 local function cprint( 
   opfile, -- file for destination fo print
+  is_html, -- whether to format for HTML 
   where, -- nil or lVector of type B1
   formats, -- how to print a column
   lb, -- number
@@ -131,7 +132,7 @@ local function cprint(
       end
     end
     --=======================
-    local status = qc[func_name](c_opfile, cfld, c_data, nn_c_data,
+    local status = qc[func_name](c_opfile, is_html, cfld, c_data, nn_c_data,
       ffi.new("int", nC),
       ffi.new("uint64_t", chnk_lb),
       ffi.new("uint64_t", chnk_ub), 

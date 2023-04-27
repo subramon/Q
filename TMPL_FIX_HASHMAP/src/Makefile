@@ -57,6 +57,9 @@ MERGE_OBJS = $(MERGE_SRCS:.c=.o)
 .c.o : 
 	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
+fasthash.o : QC_FLAGS += -Wno-implicit-fallthrough
+spookyhash.o : QC_FLAGS += -Wno-implicit-fallthrough
+
 libhmap.so: ${OBJS} 
 	gcc  ${OBJS} -shared -lm -o libhmap.so  -ldl ${QLDFLAGS}
 

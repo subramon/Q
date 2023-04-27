@@ -2,21 +2,31 @@
 #include "lua_state.h"
 
 extern int g_L_status;
-extern int g_halt;
 
+static int
+chk_owner(
+    int owner
+    )
+{
+  int status = 0;
+  if ( ( owner == 1 ) // main Lua thread 
+      || ( owner == 2 ) ) {  // webserver thread
+    // all is well
+  }
+  else {
+    go_BYE(-1);
+  }
+BYE:
+  return status;
+}
+//-------------------------------------------------
 int
 acquire_lua_state(
     int new_owner
     )
 {
   int status = 0;
-  if ( ( new_owner == 1 ) // main Lua thread 
-      || ( new_owner == 2 ) ) {  // webserver thread
-    // all is well
-  }
-  else {
-    go_BYE(-1);
-  }
+  status = chk_owner(new_owner); cBYE(status);
   // acquire Lua state
   for ( ; ; ) { 
     int l_expected = 0; int l_desired = new_owner;
@@ -36,6 +46,7 @@ release_lua_state(
     )
 {
   int status = 0;
+  status = chk_owner(old_owner); cBYE(status);
   // release state 
   int l_expected = old_owner; int l_desired = 0;
   bool rslt = __atomic_compare_exchange(
@@ -44,12 +55,3 @@ release_lua_state(
 BYE:
   return status;
 }
-
-void
-halt_threads(
-    void
-    )
-{
-  int itmp = 1; __atomic_store(&g_halt, &itmp, 0);
-}
-

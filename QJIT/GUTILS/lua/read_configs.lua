@@ -32,6 +32,8 @@ typedef struct  _q_config_t {
 
   uint32_t chnk_hmap_min_size;
   uint32_t chnk_hmap_max_size;
+
+  bool initial_master_interested;
 } q_config_t;
 ]])
 local function read_configs(C)
@@ -39,9 +41,22 @@ local function read_configs(C)
   -- T is a global table containing config info 
   assert(type(T.restore_session) == "boolean")
 
+  --===============================================
+  if (type(T.is_webserver)   == "nil") then 
+    T.is_webserver = false
+  end 
   assert(type(T.is_webserver)   == "boolean")
+  --===============================================
+  if (type(T.is_out_of_band) == "nil") then
+    T.is_out_of_band = false
+  end
   assert(type(T.is_out_of_band) == "boolean")
-  assert(type(T.is_mem_mgr)     == "boolean")
+  --===============================================
+  if (type(T.is_mem_mgr) == "nil") then
+    T.is_mem_mgr = false
+  end
+  assert(type(T.is_mem_mgr) == "boolean")
+  --===============================================
 
   assert(type(T.data_dir_root) == "string")
   assert(type(T.meta_dir_root) == "string")
@@ -86,6 +101,15 @@ local function read_configs(C)
   else
     chnk.max_size = 0
   end
+
+  if ( type(T.initial_master_interested) == "nil" ) then 
+    T.initial_master_interested = true
+  end
+  assert(type(T.initial_master_interested) == "boolean" )
+
+  assert(type(T.mem_allowed) == "number")
+  assert(T.mem_allowed > 0)
+
   --=== Put it into C struct 
   C = ffi.cast("q_config_t *", C)
   C[0].restore_session = T.restore_session
@@ -109,6 +133,7 @@ local function read_configs(C)
   C[0].chnk_hmap_min_size = chnk.min_size
   C[0].chnk_hmap_max_size = chnk.max_size
 
+  C[0].initial_master_interested = T.initial_master_interested
   return true
 end
 return read_configs

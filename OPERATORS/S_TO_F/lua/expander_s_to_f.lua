@@ -6,6 +6,7 @@ local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 local qcfg    =  require 'Q/UTILS/lua/qcfg'
+local lgutils  = require 'liblgutils'
 
 return function (a, largs)
   -- Get name of specializer function. By convention

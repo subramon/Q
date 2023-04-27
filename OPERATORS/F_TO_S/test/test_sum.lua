@@ -43,10 +43,11 @@ tests.t3 = function()
   
   local qtypes = { "BL", "B1", }
   for k, qtype in pairs(qtypes) do 
+    print("PRE MEM", k, qtype, lgutils.mem_used())
     local y = Q.const({val = true, qtype = qtype, len = n })
     local r = Q.sum(y)
     local outval, outcnt = r:eval()
-    print(outval, outcnt)
+    -- print(outval, outcnt)
     assert(type(outval) == "Scalar")
     assert(outval:to_num() == n)
 
@@ -56,6 +57,7 @@ tests.t3 = function()
     y:delete()
     r:delete()
     print("Test t3 " .. qtype .. " succeeded")
+    print("POS MEM", k, qtype, lgutils.mem_used())
   end
   assert(cVector.check_all())
   print("Test t3 succeeded")
@@ -89,7 +91,7 @@ os.exit()
 --]]
 -- TODO TODO tests.t1() -- Need Q.rand() to work 
 tests.t2()
-tests.t3() 
+-- tests.t3() 
 tests.t4()
 collectgarbage()
 print("MEM", lgutils.mem_used())

@@ -6,7 +6,3 @@ extern int
 release_lua_state(
     int new_owner
     );
-extern void 
-halt_threads(
-    void
-    );

@@ -11,17 +11,21 @@ if [ "$LUA_CPATH" == "" ]; then echo "ERROR: source setup.sh"; exit 1; fi
 cd ~/Q/RUNTIME/VCTRS/src/
 ./ut1
 ./ut2
+./ut_memo
 cd ~/Q/RUNTIME/VCTRS/test/
 qjit test1.lua  
 qjit test_lma.lua  
 qjit test_memo.lua  
 qjit test_ref_count.lua
+qjit test_save.lua-- TODO P2 some automation needed for q_config 
+# qjit test_restore.lua -- TODO P2 some automation needed for q_config 
+cd ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/
+bash make_data.sh
+cd ~/Q/RUNTIME/VCTRS/test/
 qjit test_import.lua
-
-cd ~/Q/OPERATORS/LOAD_CSV/test/
-qjit test_load_csv.lua
-qjit test_SC_to_XX.lua
-qjit test_SC_to_TM1.lua
+rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/data/
+rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/meta/
+#--------------------------------------------------------
 
 cd ~/Q/OPERATORS/S_TO_F/test/
 qjit  test_const.lua
@@ -77,4 +81,9 @@ qjit prep.lua
 cd ~/Q/TESTS/SELECT/lua/V1/
 qjit prep.lua 
 
+# Moving these to the bottom since they are expensive tests
+cd ~/Q/OPERATORS/LOAD_CSV/test/
+qjit test_load_csv.lua
+qjit test_SC_to_XX.lua
+qjit test_SC_to_TM1.lua
 echo "Successfully completed $0 in $PWD"

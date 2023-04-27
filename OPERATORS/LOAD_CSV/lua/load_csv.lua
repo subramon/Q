@@ -101,7 +101,7 @@ local function load_csv(
         if ( this_num_rows_read > 0 ) then 
           for _, v in ipairs(M) do 
             if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
-              -- print("putting chunk for " .. v.name)
+              print("putting chunk for " .. v.name)
               vectors[v.name]:put_chunk(
                 l_data[v.name], this_num_rows_read, nn_l_data[v.name])
               -- print("put chunk for " .. v.name)

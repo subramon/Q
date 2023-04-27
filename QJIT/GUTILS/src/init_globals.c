@@ -29,8 +29,9 @@ init_globals(
   // Initialize global variables
   g_mem_lock = 0;
 
-  g_halt = 0;
   g_webserver_interested = 0; 
+  g_master_interested = 1; 
+  g_master_halt = 0; 
   g_L_status = 0;
 
   g_vctr_hmap     = NULL;
@@ -56,15 +57,9 @@ init_globals(
 
   g_meta_dir_root = malloc(sizeof(char) * (Q_MAX_LEN_DIR_NAME+1));
   memset(g_meta_dir_root, 0, (sizeof(char) * (Q_MAX_LEN_DIR_NAME+1)));
-  for ( int i = 0; i < n; i++ ) { 
-    g_data_dir_root[i] = malloc(sizeof(char) * (Q_MAX_LEN_DIR_NAME+1));
-    g_tbsp_name[i]     = malloc(sizeof(char) * (Q_MAX_LEN_DIR_NAME+1));
-
-    memset(g_data_dir_root[i], 0, (sizeof(char) * (Q_MAX_LEN_DIR_NAME+1)));
-    memset(g_tbsp_name[i]    , 0, (sizeof(char) * (Q_MAX_LEN_DIR_NAME+1)));
-  }
-
-  strcpy(g_tbsp_name[0], "original writable tablespace");
+  // IMPORTANT: We need only one meta_dir_root but we need 
+  // multiple tbsp_name data_dir_root, one for each tablespace
+  g_tbsp_name[0] = strdup("original writable tablespace");
   //------------------------
   g_mutex_created = false;
 

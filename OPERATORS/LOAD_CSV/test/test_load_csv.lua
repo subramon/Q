@@ -279,9 +279,6 @@ tests.t5 = function()
   local ny = nx / qcfg.max_num_in_chunk
 
   local T = Q.load_csv(datafile, M, O)
-  for k, v in pairs(T) do
-    print(k, v:name())
-  end
   assert(T.datetime) 
   cVector:check_all(true, true)
   local x = Q.SC_to_TM(T.datetime, format):set_name("out_datetime")
@@ -396,13 +393,13 @@ tests.t6 = function()
   print("Test t6 succeeded")
   
 end
--- WORKS tests.t1()
--- WORKS tests.t2()
--- WORKS tests.t3()
--- WORKS tests.t4()
--- WORKS tests.t4a()
+tests.t1()
+tests.t2()
+tests.t3()
+tests.t4()
+tests.t4a()
 tests.t5()
--- WORKS tests.t6()
+tests.t6()
 -- return tests
 collectgarbage()
 print("MEM", lgutils.mem_used())

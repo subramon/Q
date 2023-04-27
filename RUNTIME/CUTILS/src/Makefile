@@ -30,6 +30,7 @@ OBJS = $(SRCS:.c=.o)
 .c.o : 
 	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
+cutils.o : QCFLAGS += -Wno-cast-qual
 clean:
 	rm -f *.so *.o _* ${OBJS} ${EXTSO}
 		

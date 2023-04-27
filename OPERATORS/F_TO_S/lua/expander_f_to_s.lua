@@ -6,12 +6,14 @@ local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
 local function destructor(x)
+  local lgutils = require 'liblgutils'
   assert(type(x) == "CMEM")
   x:delete()
   return true
 end
 
 return function (a, x, optargs)
+  local lgutils = require 'liblgutils'
   -- Return early if you have cached the result of a previous call
   if ( x:is_eov() ) then 
     local rslt = x:get_meta(a)

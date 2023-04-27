@@ -29,8 +29,8 @@
 #include "vctr_num_chunks.h"
 #include "vctr_width.h"
 #include "vctr_is_eov.h"
-#include "vctr_l1_to_l2.h"
-#include "vctr_drop_l1_l2.h"
+#include "vctr_make_mem.h"
+#include "vctr_drop_mem.h"
 #include "vctr_print.h"
 
 #include "aux_cmem.h" 
@@ -69,7 +69,7 @@ main(
   sprintf(buf, "%s/meta", q_root); 
   strcpy(g_meta_dir_root, buf); 
   sprintf(buf, "%s/data", q_root); 
-  strcpy(g_data_dir_root[0], buf); 
+  g_data_dir_root[0] = strdup(buf); 
   // STOP: Fake configs 
 
   status = init_session(); cBYE(status); 
@@ -165,7 +165,7 @@ main(
   printf(">>> STOP  Acceptable error\n");
   status = mkdir(g_data_dir_root[tbsp], 0744);
   if ( g_dsk_used != 0 ) { go_BYE(-1); } 
-  status = vctr_l1_to_l2(tbsp, uqid, 0); cBYE(status);
+  status = vctr_make_mem(tbsp, uqid, 2); cBYE(status);
   if ( g_dsk_used == 0 ) { go_BYE(-1); } 
   uint64_t bak_mem_used = g_mem_used;
   uint64_t bak_dsk_used = g_dsk_used;
@@ -179,7 +179,7 @@ main(
     free_if_non_null(l2_file);
   }
   // now delete l2 backup 
-  status = vctr_drop_l1_l2(tbsp, uqid, 2); cBYE(status);
+  status = vctr_drop_mem(tbsp, uqid, 2); cBYE(status);
   // Now check that there are no files 
   if ( g_dsk_used != 0 ) { go_BYE(-1); } 
   for ( uint32_t chnk_idx = 0; chnk_idx < l_num_chunks; chnk_idx++ ) { 
@@ -188,10 +188,10 @@ main(
     free_if_non_null(l2_file);
   }
   // make the backups again
-  status = vctr_l1_to_l2(tbsp, uqid, 0); cBYE(status);
+  status = vctr_make_mem(tbsp, uqid, 2); cBYE(status);
   if ( g_dsk_used != bak_dsk_used ) { go_BYE(-1); } 
   // now delete the l1 portion
-  status = vctr_drop_l1_l2(tbsp, uqid, 1); cBYE(status);
+  status = vctr_drop_mem(tbsp, uqid, 1); cBYE(status);
   // Now check that no RAM is in use 
   if ( g_mem_used != 0 ) { go_BYE(-1); } 
   // Now print the vector (this should cause stuff to be retsored to l1 

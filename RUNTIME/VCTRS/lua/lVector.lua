@@ -88,19 +88,31 @@ function lVector:max_num_in_chunk()
   return max_num_in_chunk
 end
 
-function lVector:incr_num_readers(chnk_idx)
-  local num_readers = cVector.incr_num_readers(self._base_vec, chnk_idx)
+function lVector:chnk_incr_num_readers(chnk_idx)
+  local num_readers = cVector.chnk_incr_num_readers(self._base_vec, chnk_idx)
+  return num_readers
+end
+
+function lVector:num_readers(chnk_idx)
+  local num_readers
+  if ( not chnk_idx ) then 
+    num_readers = cVector.vctr_num_readers(self._base_vec)
+  else
+    assert(type(chnk_idx) == "number")
+    num_readers = cVector.chnk_num_readers(self._base_vec, chnk_idx)
+  end
   return num_readers
 end
 
 function lVector:num_writers(chnk_idx)
-  local num_writers = cVector.num_writers(self._base_vec, chnk_idx)
+  local num_writers
+  if ( not chnk_idx ) then 
+    num_writers = cVector.vctr_num_writers(self._base_vec)
+  else
+    assert(type(chnk_idx) == "number")
+    num_writers = cVector.chnk_num_writers(self._base_vec, chnk_idx)
+  end
   return num_writers
-end
-
-function lVector:num_readers(chnk_idx)
-  local num_readers = cVector.num_readers(self._base_vec, chnk_idx)
-  return num_readers
 end
 
 function lVector:num_elements()
@@ -128,10 +140,6 @@ function lVector:drop(level)
     assert((nn_vector:qtype() == "BL") or (nn_vector:qtype() == "B1"))
     assert(cVector.drop_l1_l2(nn_vector._base_vec, level))
   end
-  return self
-end
-function lVector:l1_to_l2()
-  local status = cVector.l1_to_l2(self._base_vec)
   return self
 end
 function lVector:persist()
@@ -204,6 +212,12 @@ function lVector:uqid()
   return uqid
 end
 
+function lVector:tbsp()
+  local tbsp = cVector.tbsp(self._base_vec)
+  assert(type(tbsp) == "number")
+  return tbsp
+end
+
 function lVector:memo_len()
   return self._memo_len
 end
@@ -220,12 +234,14 @@ function lVector.new(args)
   if ( args.uqid )  then 
     assert(type(args.uqid) == "number")
     assert(args.uqid > 0)
-    -- TODO TODO P0   THINK  ABOUT FOLLOWING 
+    -- START: I believe (99%) that the following is correct
+    -- The reason is that tbsp = 0 is the default tablespace
     if ( not args.tbsp ) then  args.tbsp = 0 end 
-    print("tbsp = ", args.tbsp) -- TODO P0 Delete
+    -- STOP --------------
     assert(type(args.uqid) == "number")
     assert(args.uqid >= 0)
-    vector._base_vec = assert(cVector.rehydrate(args))
+    vector._base_vec = cVector.rehydrate(args)
+    assert(vector._base_vec)
     if ( qcfg.debug ) then 
       assert(cVector.chk(vector._base_vec, false, false))
     end
@@ -466,16 +482,15 @@ function lVector:get_chunk(chnk_idx)
     -- release old chunks
     -- NOTE that memo_len == 0 is meanignless 
     -- because we always keep the last chunk generated
-    if ( ( self._memo_len >= 0 ) and ( num_elements > 0 ) ) then
-      -- Note the extra -1 below. This is to account for
-      -- the put_chunk above which would have incremented self._chunk_num
-      local chunk_to_release = self._chunk_num - 1 - self._memo_len - 1 
-      if ( chunk_to_release >= 0 ) then 
-        local is_found = 
-          cVector.chunk_delete(self._base_vec, chunk_to_release)
-        -- assert(is_found == true)
-        if ( is_found == false ) then 
-          print("Chunk was not found " .. chunk_to_release)
+    if ( qcfg.debug ) then 
+      if ( ( self._memo_len >= 0 ) and ( num_elements > 0 ) ) then
+        -- Note the extra -1 below. This is to account for
+        -- the put_chunk above which would have incremented self._chunk_num
+        local chunk_to_release = self._chunk_num - 1 - self._memo_len - 1 
+        if ( chunk_to_release >= 0 ) then 
+          local is_found = 
+            cVector.chunk_delete(self._base_vec, chunk_to_release)
+          assert(is_found == false)
         end
       end
     end
@@ -497,25 +512,26 @@ function lVector:get_chunk(chnk_idx)
         -- following because we aren't really consuming the chunk
         -- we are just getting it 
         v:unget_chunk(chnk_idx)
-        -- Also, depending on memo_len, we may need to delete some chunks
-        if ( ( v:memo_len() >= 0 ) and ( v:num_elements() > 0 ) ) then
-          local chunk_to_release = chunk_idx - self._memo_len
-          if ( chunk_to_release >= 0 ) then 
-            -- print("Sibling: Deleting chunk " .. chunk_to_release)
-            local is_found = 
-              cVector.chunk_delete(self._base_vec, chunk_to_release)
-            -- assert(is_found == true)
-            if ( is_found == false ) then 
-              print("Chunk was not found " .. chunk_to_release)
+        if ( qcfg.debug ) then 
+          -- Checks if chunks that should have been deleted because of
+          -- memo_len, have in fact been deleted 
+          if ( ( v:memo_len() >= 0 ) and ( v:num_elements() > 0 ) ) then
+            local chunk_to_release = chunk_idx - self._memo_len
+            if ( chunk_to_release >= 0 ) then 
+              -- print("Sibling: Deleting chunk " .. chunk_to_release)
+              local is_found = 
+                cVector.chunk_delete(self._base_vec, chunk_to_release)
+              assert(is_found == false)
             end
           end
-        end
+       end
       end
     end
-    assert(self:incr_num_readers(chnk_idx))
+    -- TODO P2 Why is incr_num_readers is being done in Lua and not in C???
+    assert(self:chnk_incr_num_readers(chnk_idx))
     if ( self._nn_vec ) then 
       local nn_vector = self._nn_vec
-      assert(nn_vector:incr_num_readers(chnk_idx))
+      assert(nn_vector:chnk_incr_num_readers(chnk_idx))
     end
     -- print("Returning " .. num_elements .. " for " .. self:name())
     -- TODO print("XXX", chnk_idx, self:num_readers(chnk_idx), self:name())
@@ -803,9 +819,68 @@ end
 --==================================================
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
 function lVector:kill()
-  cVector.kill(self._base_vec)
-  if ( self._nn_vec ) then cVector.kill(self._nn_vec) end 
-  return true 
+  local nn_success
+  local success = cVector.kill(self._base_vec)
+  if ( self._nn_vec ) then 
+    nn_success = cVector.kill(self._nn_vec)
+  end
+  return success, nn_success
 end
-
+--==================================================
+function lVector:prefetch(chnk_idx)
+  assert(type(chnk_idx) == "number")
+  local nn_x, nn_n
+  local exists, status = cVector.prefetch(self._base_vec, chnk_idx)
+  
+  if ( exists and self._nn_vec ) then 
+    local nn_vector = self._nn_vec
+    local nn_exists, status=cVector.prefetch(nn_vector._base_vec, chnk_idx)
+    assert(status == 0)
+    assert(nn_exists) -- if chunk exists for base, must exist for nn 
+  end
+  return exists
+  -- exists tells us whether such a chunk existed 
+  -- Ideally, we want prefetch to be just an advisory i.e.,
+  -- if there is not enough memory, then it should fail silently
+  -- TODO P3: We have not implemented those smarts. 
+  -- So, if the chunk exists, it will be loaded into memory 
+end
+--==================================================
+function lVector:unprefetch(chnk_idx)
+  assert(type(chnk_idx) == "number")
+  local nn_x, nn_n
+  cVector.unprefetch(self._base_vec, chnk_idx)
+  if ( self._nn_vec ) then 
+    local nn_vector = self._nn_vec
+    cVector.prefetch(nn_vector._base_vec, chnk_idx)
+  end
+end
+--==================================================
+function lVector:drop_mem(level, chnk_idx)
+  assert(type(level) == "number")
+  if ( not chnk_idx ) then chnk_idx = -1 end
+  assert(type(chnk_idx) == "number")
+  local rslt = cVector.drop_mem(self._base_vec, level, chnk_idx)
+  local nn_rslt
+  if ( self._nn_vec ) then 
+    local nn_vector = self._nn_vec
+    local nn_rslt = cVector.drop_mem(nn_vector._base_vec, level, chnk_idx)
+  end
+  return rslt, nn_rslt
+end
+--==================================================
+function lVector:make_mem(level, chnk_idx)
+  assert(type(level) == "number")
+  if ( not chnk_idx ) then chnk_idx = -1 end
+  assert(type(chnk_idx) == "number")
+  local rslt = cVector.make_mem(self._base_vec, level, chnk_idx)
+  local nn_rslt
+  if ( self._nn_vec ) then 
+    local nn_vector = self._nn_vec
+    local nn_rslt = cVector.make_mem(nn_vector._base_vec, level, chnk_idx)
+  end
+  return rslt, nn_rslt
+end
+--==================================================
 return lVector
+

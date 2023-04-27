@@ -28,7 +28,6 @@ vctr_killable(
   if ( val.is_trash ) { go_BYE(-1); }
   if ( val.is_eov ) { go_BYE(-1); }
   if ( val.is_early_free ) { go_BYE(-1); }
-  if ( val.is_early_free ) { go_BYE(-1); }
   g_vctr_hmap[tbsp].bkts[where_found].val.is_killable = true; 
 BYE:
   return status;
