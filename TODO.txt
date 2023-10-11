@@ -1,3 +1,10 @@
+The build system has a special target for an amalgamated build, i.e. make amalg. This compiles the LuaJIT core as one huge C file and allows GCC to generate faster and shorter code. Alas, this requires lots of memory during the build. This may be a problem for some users, that's why it's not enabled by default. But it shouldn't be a problem for most build farms. It's recommended that binary distributions use this target for their LuaJIT builds.
+
+The tl;dr version of the above:
+
+make amalg PREFIX=/usr && \
+make install PREFIX=/usr DESTDIR=/tmp/buildroot
+===================================================
 Memory manager (prefetch calls) should run in separate thread
 
 Should we initialize memory to 0?

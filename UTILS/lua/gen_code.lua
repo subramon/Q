@@ -35,7 +35,7 @@ local _dotfile = function(subs, opdir, lang, ext)
     opdir = qcfg.q_src_root .. opdir
   end
   if ( not cutils.isdir(opdir) ) then
-    assert(cutils.makepath(opdir))
+    assert(cutils.makepath(opdir), "Unable to create dir " .. opdir)
   end
   assert(cutils.isdir(opdir))
   local T = do_replacements(subs, lang)

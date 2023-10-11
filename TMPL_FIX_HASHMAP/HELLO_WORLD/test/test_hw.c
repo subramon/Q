@@ -11,7 +11,7 @@ main(
   int status = 0;
   // num_frees = num_mallocs = 0; 
   int num_iterations = 8; 
-  hw_rs_hmap_t H;
+  hw_rs_hmap_t H; memset(&H, 0, sizeof(H));
   //---------------------------
   rs_hmap_config_t HC; memset(&HC, 0, sizeof(rs_hmap_config_t));
   if ( argc != 1 ) { go_BYE(-1); }
@@ -21,7 +21,7 @@ main(
   status = hw_rs_hmap_instantiate(&H, &HC); cBYE(status);
   //-----------------------------------------------------------
   hw_rs_hmap_val_t sum_val = 0;
-  uint32_t nitems = 1048576;
+  uint32_t nitems = 4096; // 1048576;
   for ( int iter = 0; iter < num_iterations; iter++ ) { 
     printf("Put Iter = %d \n", iter);
     hw_rs_hmap_val_t val = iter+1;

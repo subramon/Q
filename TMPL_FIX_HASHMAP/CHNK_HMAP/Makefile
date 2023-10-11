@@ -42,7 +42,7 @@ HINCS += ./inc/${TMPL}_rs_hmap_unfreeze.h
 	echo "hello world" > ../inc/xxx
 
 ./inc/rs_hmap_struct.h : ${TMPL_INC_DIR}/rs_hmap_struct.h
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 
 
 ./inc/${TMPL}_rs_hmap_struct.h : ./inc/rs_hmap_struct.h 
@@ -60,62 +60,62 @@ HINCS += ./inc/${TMPL}_rs_hmap_unfreeze.h
 # THIS IS SOME UGLY HACKERY UNTIL I FIGURE OUT HOW TO DO
 # BETTER PATTERN MATCHING 
 _rs_hmap_chk.c : ${TMPL_DIR}/rs_hmap_chk.c  ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_del.c : ${TMPL_DIR}/rs_hmap_del.c ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_destroy.c : ${TMPL_DIR}/rs_hmap_destroy.c ${HINCS} 
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_freeze.c : ${TMPL_DIR}/rs_hmap_freeze.c ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_get.c : ${TMPL_DIR}/rs_hmap_get.c ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_insert.c : ${TMPL_DIR}/rs_hmap_insert.c ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_set_fn_ptrs.c : ${TMPL_DIR}/rs_hmap_set_fn_ptrs.c ${HINCS}  
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_merge.c : ${TMPL_DIR}/rs_hmap_merge.c   ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_pr.c : ${TMPL_DIR}/rs_hmap_pr.c   ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_put.c : ${TMPL_DIR}/rs_hmap_put.c   ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_resize.c : ${TMPL_DIR}/rs_hmap_resize.c   ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_row_dmp.c : ${TMPL_DIR}/rs_hmap_row_dmp.c   ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_unfreeze.c : ${TMPL_DIR}/rs_hmap_unfreeze.c   ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_instantiate.c : ${TMPL_DIR}/rs_hmap_instantiate.c   ${HINCS}
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 #-----------------------------------------
 _rs_hmap_chk.h : ${TMPL_INC_DIR}/rs_hmap_chk.h 
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_del.h : ${TMPL_INC_DIR}/rs_hmap_del.h
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_destroy.h : ${TMPL_INC_DIR}/rs_hmap_destroy.h
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_freeze.h : ${TMPL_INC_DIR}/rs_hmap_freeze.h
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_get.h : ${TMPL_INC_DIR}/rs_hmap_get.h
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_insert.h : ${TMPL_INC_DIR}/rs_hmap_insert.h
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_set_fn_ptrs.h : ${TMPL_INC_DIR}/rs_hmap_set_fn_ptrs.h
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_merge.h : ${TMPL_INC_DIR}/rs_hmap_merge.h  
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_pr.h : ${TMPL_INC_DIR}/rs_hmap_pr.h  
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_put.h : ${TMPL_INC_DIR}/rs_hmap_put.h  
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_resize.h : ${TMPL_INC_DIR}/rs_hmap_resize.h  
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_row_dmp.h : ${TMPL_INC_DIR}/rs_hmap_row_dmp.h  
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_unfreeze.h : ${TMPL_INC_DIR}/rs_hmap_unfreeze.h  
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rs_hmap_instantiate.h : ${TMPL_INC_DIR}/rs_hmap_instantiate.h  
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 #-----------------------------------------
 
 SRCS +=	_rs_hmap_chk.c  
@@ -135,17 +135,17 @@ SRCS +=	_rs_hmap_instantiate.c
 #---- STOP  Stuff borrowed from template library 
 
 _rsx_pr.c : ./src/rsx_pr.c   
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rsx_key_cmp.c : ./src/rsx_key_cmp.c   
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rsx_val_update.c : ./src/rsx_val_update.c   
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rsx_key_ordr.c : ./src/rsx_key_ordr.c   
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rsx_bkt_chk.c : ./src/rsx_bkt_chk.c   
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 _rsx_set_hash.c : ./src/rsx_set_hash.c   
-	bash ${TMPL_DIR}/do_subs.sh  ${TMPL} $< $@
+	bash ../do_subs.sh  ${TMPL} $< $@
 # Customized code 
 SRCS +=	_rsx_pr.c  
 SRCS +=	_rsx_key_cmp.c  

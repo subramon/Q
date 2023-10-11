@@ -47,6 +47,7 @@ echo "ASAN_FLAGS= $ASAN_FLAGS"
 
 QCFLAGS+=$ASAN_FLAGS 
 # QLDFLAGS=" $ASAN_FLAGS -static-libasan "
+# TODO P1 QLDFLAGS not being set correctly
 export QLDFLAGS="${QLDFLAGS}"
 echo "QLDFLAGS= $QLDFLAGS"
 
