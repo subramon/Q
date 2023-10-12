@@ -1,3 +1,4 @@
+#include <string.h>
 #include "${tmpl}_rs_hmap_struct.h"
 #include "rsx_key_cmp.h"
 //START_FUNC_DECL

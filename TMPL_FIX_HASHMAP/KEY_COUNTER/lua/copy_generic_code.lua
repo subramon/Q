@@ -1,7 +1,7 @@
-local just_do_subs = require 'just_do_subs'
+local do_subs = require 'do_subs'
 local plfile = require 'pl.file'
 local plpath = require 'pl.path'
-local function just_copy_generic_code(
+local function copy_generic_code(
   label,
   root_indir,
   root_outdir,
@@ -41,9 +41,9 @@ local function just_copy_generic_code(
       assert(plpath.exists(infile))
 
       local outfile = outdir .. "/_rs_hmap_" .. f .. suffix
-      just_do_subs(label, infile, outfile)
-      print(infile .. "  -> " .. outfile)
+      do_subs(label, infile, outfile)
+      -- print(infile .. "  -> " .. outfile)
     end
   end
 end
-return just_copy_generic_code
+return copy_generic_code

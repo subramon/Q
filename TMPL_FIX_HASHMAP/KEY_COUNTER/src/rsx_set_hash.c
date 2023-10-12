@@ -7,11 +7,13 @@
 #include "${tmpl}_rs_hmap_struct.h"
 #include "rsx_set_hash.h"
 
+//START_FUNC_DECL
 uint32_t
 rsx_set_hash(
     const void * const in_ptr_key,
     const void * const in_ptr_hmap
     )
+//STOP_FUNC_DECL
 {
   uint32_t hash;
   const ${tmpl}_rs_hmap_key_t * const ptr_key = 
