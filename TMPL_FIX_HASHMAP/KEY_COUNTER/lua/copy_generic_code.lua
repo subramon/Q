@@ -1,4 +1,5 @@
-local do_subs = require 'do_subs'
+local simple_do_subs = 
+  require '/Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/simple_do_subs'
 local plfile = require 'pl.file'
 local plpath = require 'pl.path'
 local function copy_generic_code(
@@ -41,7 +42,7 @@ local function copy_generic_code(
       assert(plpath.exists(infile))
 
       local outfile = outdir .. "/_rs_hmap_" .. f .. suffix
-      do_subs(label, infile, outfile)
+      simple_do_subs(label, infile, outfile)
       -- print(infile .. "  -> " .. outfile)
     end
   end

@@ -9,6 +9,9 @@ main(
     )
 {
   int status = 0;
+  uint32_t n_cols = 2; // HARD CODED from foo/inc/rsx_types.h
+  uint32_t *widths = NULL; 
+  void **data = NULL; 
   // num_frees = num_mallocs = 0; 
   foo_rs_hmap_t H; memset(&H, 0, sizeof(H));
   //---------------------------
@@ -48,11 +51,43 @@ main(
       if ( chk_val.guid  != (i+1) ) { go_BYE(-1); }
     }
   }
-  if ( H.nitems != nitems ) { go_BYE(-1); }
+  // We now do a series of inserts but using pointers 
+  // Malloc space for data 
+  widths = malloc(n_cols * sizeof(uint32_t));
+  widths[0] = sizeof(foo_rs_hmap_val_t.key1);
+  widths[1] = sizeof(foo_rs_hmap_val_t.key2);
+
+  data = malloc(n_cols * sizeof(void *));
+  data[0] = malloc(widths[0] * nitems);
+  data[1] = malloc(widths[1] * nitems);
+
+  memset(data[0], 0, (widths[0] * nitems));
+  memset(data[1], 0, (widths[1] * nitems));
+
+  // Create some synthetic data 
+  for ( uint32_t i = 0; i < nitems; i++ ) { 
+    ((uint32_t *)data[0])[i] = nitems+i+1; 
+    char *cptr = data[1] + (i*widths[1]); 
+    sprintf(cptr, "string_%d", nitems+i+1);
+  }
+
+  for ( uint32_t j = 0; j < niters; j++ ) {
+    status = foo_put(&H, data, widths, nitems); cBYE(status); 
+    // TODO Need to check that all items that were put are okay
+  }
+  if ( H.nitems != 2*nitems ) { go_BYE(-1); }
   //-----------------------------------------------------------
   H.destroy(&H); 
   fprintf(stderr, "Unit test succeeded\n");
 BYE:
+  if ( data != NULL ) { 
+    for ( uint32_t i = 0; i < n_cols;; i++ ) {
+      free_if_non_null(data[i]);
+    }
+    free_if_non_null(data);
+  }
+  free_if_non_null(widths);
+
   if ( status == 0 ) { printf("Success on %s \n", argv[0]); }
   free_if_non_null(HC.so_file);
   return status;

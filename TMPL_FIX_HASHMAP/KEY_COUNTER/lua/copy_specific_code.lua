@@ -1,7 +1,8 @@
-local do_subs = require 'do_subs'
+local simple_do_subs = 
+  require '/Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/simple_do_subs'
 local plfile = require 'pl.file'
 local plpath = require 'pl.path'
-local extract_func_decl = require 'extract_func_decl'
+local extract_func_decl = require 'Q/UTILS/lua/extract_func_decl'
 local function copy_specific_code(
   label,
   prefix,
@@ -27,7 +28,7 @@ local function copy_specific_code(
     assert(plpath.exists(infile), "File not found " .. infile)
 
     local outfile = outdir .. "/src/_" .. prefix .. f .. ".c"
-    do_subs(label, infile, outfile)
+    simple_do_subs(label, infile, outfile)
     -- print(infile .. "  -> " .. outfile)
     --==== create the .h file 
     assert(extract_func_decl(infile, outdir .. "/inc/"))

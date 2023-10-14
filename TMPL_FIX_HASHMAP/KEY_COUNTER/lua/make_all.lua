@@ -1,10 +1,18 @@
 local plfile        = require 'pl.file'
 local plpath        = require 'pl.path'
-local do_subs       = require 'do_subs'
-local gen_rsx_types = require 'gen_rsx_types'
-local copy_generic_code  = require 'copy_generic_code'
-local copy_specific_code = require 'copy_specific_code'
-local exec_and_capture_stdout = require 'exec_and_capture_stdout'
+local do_subs       = require 'Q/UTILS/lua/do_subs' 
+local gen_code      = require 'Q/UTILS/lua/gen_code' 
+local simple_do_subs       = 
+  require 'Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/simple_do_subs'
+local gen_rsx_types = 
+  require 'Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/gen_rsx_types'
+local copy_generic_code  = 
+  require 'Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/copy_generic_code'
+local copy_specific_code = 
+  require 'Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/copy_specific_code'
+local exec_and_capture_stdout = 
+  require 'Q/UTILS/lua/exec_and_capture_stdout'
+
 
 assert(type(arg) == "table")
 local config_file = assert(arg[1], "config file not provided")
@@ -52,7 +60,7 @@ plfile.write(f, x)
 --=== make rs_hmap_struct.h
 local outfile = inc_dir .. "/rs_hmap_struct.h"
 local infile  = q_src_root .. "/TMPL_FIX_HASHMAP/inc/rs_hmap_struct.h"
-do_subs(configs.label, infile, outfile)
+simple_do_subs(configs.label, infile, outfile)
 -- Ideally, we should not need altfile, relic of old convention
 -- But until we change it systematically, it stays
 local altfile  = inc_dir .. "/" .. label .. "_rs_hmap_struct.h"
@@ -86,6 +94,23 @@ local F2 = {
 local specific_dir = q_src_root .. "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/"
 local prefix = "rsx_"
 copy_specific_code(configs.label, prefix, specific_dir, root_dir, F2)
+-- START: create rsx_put 
+local subs = {}
+subs.label = label
+-- NOTE: Assumptiion that no more that 4 keys in compound key 
+local n = #configs.key_types 
+if ( n >= 1 ) then subs.comment1 = "  " else subs.comment1 = "//" end
+if ( n >= 2 ) then subs.comment2 = "  " else subs.comment2 = "//" end
+if ( n >= 3 ) then subs.comment3 = "  " else subs.comment3 = "//" end
+if ( n >= 4 ) then subs.comment4 = "  " else subs.comment4 = "//" end
+if ( n >= 5 ) then error(" no more that 4 keys in compound key ") end 
+subs.fn = label  .. "_rsx_kc_put"
+subs.tmpl = q_src_root .. 
+   "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rx_kc_put.tmpl.lua"
+local src_file = gen_code.dotc(subs, src_dir)
+local inc_file = gen_code.doth(subs, inc_dir)
+-- STOP : create rsx_put 
+
 -- create INCS to specify directories for include 
 local X = {}
 X[#X+1] = "-I" .. inc_dir
@@ -101,8 +126,9 @@ for _, f in ipairs(F) do
 end
 for _, f in ipairs(F2) do
   X[#X+1] = src_dir .. "/_rsx_" .. f .. ".c" 
-  assert(plpath.isfile(X[#X]))
+  assert(plpath.isfile(X[#X]), "File not found " .. X[#X])
 end
+X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_put.c" 
 local SRCS = table.concat(X, " ")
 -- print(SRCS); print("=====")
 --=================================

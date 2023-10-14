@@ -1,7 +1,7 @@
 local plfile = require 'pl.file'
 local plpath = require 'pl.path'
 
-local function do_subs(
+local function simple_do_subs(
   label,
   infile,
   outfile
@@ -25,4 +25,4 @@ local function do_subs(
   plfile.write(outfile, y)
 
 end
-return do_subs
+return simple_do_subs

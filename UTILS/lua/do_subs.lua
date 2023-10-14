@@ -1,7 +1,7 @@
 local plfile = require 'pl.file'
 local plpath = require 'pl.path'
 local function do_subs(tmpl_file, out_file, replacements)
-  assert(plpath.isfile(tmpl_file))
+  assert(plpath.isfile(tmpl_file), "File not found " .. tmpl_file)
   assert(type(replacements) == "table")
   local tmpl = plfile.read(tmpl_file)
   assert(#tmpl > 0)
