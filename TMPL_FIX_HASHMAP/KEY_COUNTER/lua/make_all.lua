@@ -36,7 +36,7 @@ for i = 1, #label do
   assert(n1 >= 1)
 end 
 --= Make sure output directories are okay
-local q_src_root = assert(os.getenv("Q_SRC_ROOT"))
+local q_src_root = assert(os.getenv("Q_SRC_ROOT"), "Q_SRC_ROOT not set")
 local tmpl_dir = q_src_root .. "/TMPL_FIX_HASHMAP/"
 assert(plpath.isdir(tmpl_dir))
 local root_dir = q_src_root .. "/TMPL_FIX_HASHMAP/KEY_COUNTER/" .. label
@@ -81,6 +81,7 @@ copy_generic_code(configs.label, tmpl_dir, root_dir, F)
 local F2 = { 
   "key_cmp",
   "set_hash",
+  "val_update",
 }
 local specific_dir = q_src_root .. "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/"
 local prefix = "rsx_"
@@ -105,7 +106,7 @@ end
 local SRCS = table.concat(X, " ")
 -- print(SRCS); print("=====")
 --=================================
-local QCFLAGS = assert(os.getenv("QCFLAGS"))
+local QCFLAGS = assert(os.getenv("QCFLAGS"), "QCFLAGS not set")
 local cmd = {}
 cmd[#cmd+1] = "gcc -shared"
 cmd[#cmd+1] = QCFLAGS
