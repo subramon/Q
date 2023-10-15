@@ -43,34 +43,6 @@ main(
   uint32_t niters = 8;
   uint32_t nitems = 4096;
   uint32_t n_puts = 0;
-  for ( uint32_t j = 0; j < niters; j++ ) {
-    for ( uint32_t i = 0; i < nitems; i++ ) { 
-      foo_rs_hmap_val_t val, chk_val; 
-      memset(&val, 0, sizeof(val));
-      foo_rs_hmap_key_t key;
-      memset(&key, 0, sizeof(key));
-      key.key1 = i+1;
-      sprintf(key.key2, "string_%d", i+1);
-      bool is_found; uint32_t where_found;
-      status = H.get(&H, &key, &chk_val, &is_found, &where_found);
-      cBYE(status);
-      if ( j > 0 ) { 
-        if ( !is_found ) { go_BYE(-1); }
-      }
-      else {
-        if ( is_found ) { go_BYE(-1); }
-      }
-      val.guid  = H.nitems + 1; 
-      val.count = 1;
-      status = H.put(&H, &key, &val); cBYE(status);
-      n_puts++;
-      status = H.get(&H, &key, &chk_val, &is_found, &where_found);
-      cBYE(status);
-      if ( !is_found ) { go_BYE(-1); }
-      if ( chk_val.count != (j+1) ) { go_BYE(-1); }
-      if ( chk_val.guid  != (i+1) ) { go_BYE(-1); }
-    }
-  }
   // We now do a series of inserts but using pointers 
   // Malloc space for data 
   foo_rs_hmap_key_t key;
@@ -93,13 +65,13 @@ main(
   }
 
   for ( uint32_t j = 0; j < niters; j++ ) {
+    printf("Putting %u items for %u th time \n", nitems, j);
     status = foo_rsx_kc_put(&H, data, widths, nitems); cBYE(status); 
     n_puts += nitems;
   }
-  // number of items should have doubled because of second batch
-  if ( H.nitems != 2*nitems ) { go_BYE(-1); }
-  // check that all items that were put in second batch are okay
-  for ( uint32_t i = 0; i < nitems; i++ ) { 
+  if ( H.nitems != nitems ) { go_BYE(-1); }
+  // check that all items that were put in are okay
+  for ( uint32_t i = 0; i < nitems; i++ ) {
     foo_rs_hmap_val_t val, chk_val; 
     memset(&val, 0, sizeof(val));
     foo_rs_hmap_key_t key;
@@ -117,6 +89,42 @@ main(
   if ( sum != H.nitems * niters ) { go_BYE(-1); }
   if ( sum != n_puts ) { go_BYE(-1); } 
   //-----------------------------------------------------------
+  // Create permutation for items 
+  permutation = malloc(n_puts * sizeof(uint64_t));
+  for ( uint32_t k = 0; k < n_puts; k++ ) { 
+    permutation[k] = UINT_MAX;
+  }
+  uint32_t save_n_puts = n_puts;
+  for ( int k = 0; n_puts > 0; k++ ) { 
+    uint32_t chunk_size;
+    if ( n_puts > nitems ) {
+      chunk_size = nitems;
+    }
+    else {
+      chunk_size = n_puts;
+    }
+    status = foo_rsx_kc_make_permutation(&H, data, widths, chunk_size,
+        permutation + k*chunk_size);
+    cBYE(status);
+    n_puts -= chunk_size;
+  }
+  n_puts = save_n_puts;
+  uint32_t tmp = 0;
+  for ( uint32_t k = 0; k < n_puts; k++ ) { 
+    // if ( permutation[k] == UINT_MAX ) { go_BYE(-1); }
+    if ( permutation[k] == UINT_MAX ) { tmp++; }
+  }
+  printf("tmp = %u \n", tmp);
+  // Some checks after permutations created
+  qsort(permutation, n_puts, sizeof(uint64_t), fn_sortUI8_asc);
+  for ( uint32_t i = 0; i < n_puts; i++ ) { 
+    if ( permutation[i] != i ) { go_BYE(-1); }
+  }
+  for ( uint32_t i = 0; i < H.size; i++ ) { 
+    if ( H.bkt_full[i] == false ) { continue; }
+    if ( H.bkts[i].val.count != H.bkts[i].val.run_count ) { 
+      go_BYE(-1); }
+  }
   //------------- cleanup
   H.destroy(&H); 
   fprintf(stderr, "Unit test succeeded\n");

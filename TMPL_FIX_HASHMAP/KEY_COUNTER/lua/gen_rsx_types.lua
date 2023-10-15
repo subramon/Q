@@ -15,7 +15,8 @@ local function gen_rsx_types(
   X[#X+1] = "#include <stdint.h>"
   X[#X+1] = "typedef struct _" .. valtype .. "{" 
   X[#X+1] = [[
-  uint32_t count;
+  uint32_t count; // 0 <= run_count <= count
+  uint32_t run_count; // used when creating permutation 
   uint32_t guid; 
   uint64_t cum_count;
 ]]

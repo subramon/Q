@@ -106,10 +106,35 @@ if ( n >= 4 ) then subs.comment4 = "  " else subs.comment4 = "//" end
 if ( n >= 5 ) then error(" no more that 4 keys in compound key ") end 
 subs.fn = label  .. "_rsx_kc_put"
 subs.tmpl = q_src_root .. 
-   "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rx_kc_put.tmpl.lua"
+   "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_put.tmpl.lua"
 local src_file = gen_code.dotc(subs, src_dir)
 local inc_file = gen_code.doth(subs, inc_dir)
 -- STOP : create rsx_put 
+-- START: create rsx_make_permutation 
+local subs = {}
+subs.label = label
+-- NOTE: Assumptiion that no more that 4 keys in compound key 
+local n = #configs.key_types 
+if ( n >= 1 ) then subs.comment1 = "  " else subs.comment1 = "//" end
+if ( n >= 2 ) then subs.comment2 = "  " else subs.comment2 = "//" end
+if ( n >= 3 ) then subs.comment3 = "  " else subs.comment3 = "//" end
+if ( n >= 4 ) then subs.comment4 = "  " else subs.comment4 = "//" end
+if ( n >= 5 ) then error(" no more that 4 keys in compound key ") end 
+subs.fn = label  .. "_rsx_kc_make_permutation"
+subs.tmpl = q_src_root .. 
+   "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_make_permutation.tmpl.lua"
+local src_file = gen_code.dotc(subs, src_dir)
+local inc_file = gen_code.doth(subs, inc_dir)
+-- STOP : create rsx_make_permutation 
+-- START: create rsx_cum_count 
+local subs = {}
+subs.label = label
+subs.fn = label  .. "_rsx_kc_cum_count"
+subs.tmpl = q_src_root .. 
+   "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_cum_count.tmpl.lua"
+local src_file = gen_code.dotc(subs, src_dir)
+local inc_file = gen_code.doth(subs, inc_dir)
+-- STOP : create rsx_cum_count 
 
 -- create INCS to specify directories for include 
 local X = {}
@@ -129,6 +154,8 @@ for _, f in ipairs(F2) do
   assert(plpath.isfile(X[#X]), "File not found " .. X[#X])
 end
 X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_put.c" 
+X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_cum_count.c" 
+X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_make_permutation.c" 
 local SRCS = table.concat(X, " ")
 -- print(SRCS); print("=====")
 --=================================
