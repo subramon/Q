@@ -13,24 +13,17 @@ local copy_specific_code =
 local exec_and_capture_stdout = 
   require 'Q/UTILS/lua/exec_and_capture_stdout'
 
-local function make_all(arg)
-  
-  assert(type(arg) == "table")
-  local config_file = assert(arg[1], "config file not provided")
-  assert(plpath.exists(config_file))
-  local x = loadfile(config_file)
-  assert(type(x) == "function")
-  local configs = x()
-  assert(type(configs) == "table")
-  --=================================
-  local function mk_dir(x)
-    assert(type(x) == "string")
-    assert(not plpath.isdir(x), "directory exists " .. x)
-    assert(plpath.mkdir(x))
-    assert(plpath.isdir(x))
-    return true
-  end
+--=================================
+local function mk_dir(x)
+  assert(type(x) == "string")
+  assert(not plpath.isdir(x), "directory exists " .. x)
+  assert(plpath.mkdir(x))
+  assert(plpath.isdir(x))
+  return true
+end
   --=========================
+local function make_all(configs)
+  assert(type(configs) == "table")
   -- Check label is okay 
   local ok_chars = 
    "abcdefghijklmnopqrstuvwxyz" ..
@@ -174,4 +167,4 @@ local function make_all(arg)
   assert(plpath.isfile(sofile))
   print("Code gen complete")
 end
-
+return make_all

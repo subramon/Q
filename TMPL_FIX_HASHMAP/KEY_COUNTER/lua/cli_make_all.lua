@@ -1,3 +1,4 @@
+local plpath = require 'pl.path'
 local make_all = require 'Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/make_all'
 
 assert(type(arg) == "table")
