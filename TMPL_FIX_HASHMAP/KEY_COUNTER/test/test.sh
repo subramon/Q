@@ -7,7 +7,7 @@ INCS=" -I../foo/inc/  -I../../inc/ -I../../../UTILS/inc/ " # order is important
 LIBS="../libkcfoo.so ../../src/libhmap.so "
 cd ..
 rm -r -f foo/ # directory created for this specialization
-lua lua/make_all.lua sample_configs.lua 
+lua lua/cli_make_all.lua sample_configs.lua 
 cd -
 gcc -g test_kc.c ${INCS} -o test_kc ${LIBS} -ldl 
 valgrind ./test_kc
