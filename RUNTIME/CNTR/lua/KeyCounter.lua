@@ -1,8 +1,10 @@
 -- Coding convention. Local variables start with underscore
-local ffi           = require 'ffi'
-local cutils        = require 'libcutils'
-local record_time   = require 'Q/UTILS/lua/record_time'
-local make_all      = require 'Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/make_all'
+local ffi          = require 'ffi'
+local cutils       = require 'libcutils'
+local record_time  = require 'Q/UTILS/lua/record_time'
+local make_HC      = require 'Q/RUNTIME/CNTR/lua/make_HC'
+local make_configs = require 'Q/RUNTIME/CNTR/lua/make_configs'
+local make_kc_so   = require 'Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/make_kc_so'
 local register_type = require 'Q/UTILS/lua/register_type'
 local KeyCounter = {}
 KeyCounter.__index = KeyCounter
@@ -15,74 +17,7 @@ setmetatable(KeyCounter, {
     return cls.new(...)
   end,
 })
-
 register_type(KeyCounter, "KeyCounter")
-
---==================================================
-local function make_HC(optargs) 
-  if ( optargs ) then assert(type(optargs) == "table") end 
-  local HC = ffi.new("rs_hmap_config_t[?]", 1)
-  ffi.fill(HC, ffi.sizeof("rs_hmap_config_t"))
-  if ( optargs ) then 
-    if ( optargs.min_size ) then 
-      assert(optargs.min_size == "number")
-      assert(optargs.min_size > 16)
-      HC[0].min_size = optargs.min_size
-    end
-    if ( optargs.max_size ) then 
-      assert(optargs.max_size == "number")
-      assert(optargs.max_size > 16)
-      HC[0].max_size = optargs.max_size
-    end
-    if ( optargs.low_water_mark ) then 
-      assert(optargs.low_water_mark == "number")
-      assert(optargs.low_water_mark > 0.05)
-      assert(optargs.low_water_mark < 0.50)
-      HC[0].low_water_mark = optargs.low_water_mark
-    end
-    if ( optargs.high_water_mark ) then 
-      assert(optargs.high_water_mark == "number")
-      assert(optargs.high_water_mark > 0.50)
-      assert(optargs.high_water_mark < 0.95)
-      HC[0].high_water_mark = optargs.high_water_mark
-    end
-  end
-  HC[0].so_file = so_file -- TODO  P1
-  HC[0].so_file = so_handle -- TODO  P1
-  return HC
-end
---==================================================
-local function make_configs(label, vecs)
-  local configs = {}
-  configs.label = label
-  local n = 0
-  local qtypes = {}
-  for k, v in ipairs(vecs) do 
-    assert(type(v) == "lVector")
-    local qtype = v:qtype()
-    if ( qtype == "I1" ) then 
-      qtypes[#qtypes+1] = "int8_t" 
-    elseif ( qtype == "I2" ) then 
-      qtypes[#qtypes+1] = "int16_t" 
-    elseif ( qtype == "I4" ) then 
-      qtypes[#qtypes+1] = "int32_t" 
-    elseif ( qtype == "I8" ) then 
-      qtypes[#qtypes+1] = "int64_t" 
-    elseif ( qtype == "F4" ) then 
-      qtypes[#qtypes+1] = "float" 
-    elseif ( qtype == "F8" ) then 
-      qtypes[#qtypes+1] = "double" 
-    elseif ( qtype == "SC" ) then 
-      qtypes[#qtypes+1] = "char:" .. tostring(v:width())
-    else
-      error("qtype of vector not supported -> " .. qtype)
-    end
-    n = n + 1
-  end
-  assert(( n >= 1 ) and ( n <= 4 )) -- cannot group count > 4 keys at a time
-  configs.qtypes = qtypes
-  return configs
-end
 --==================================================
 function KeyCounter.new(label, vecs, optargs)
   assert(type(label) == "string")
@@ -94,11 +29,11 @@ function KeyCounter.new(label, vecs, optargs)
   -- create configs for .so file/cdef creation
   local configs = make_configs(label, vecs)
   -- call function to create .so file and functions to be cdef'd
-  local sofile, cdef_str = make_all(configs)
+  local sofile, cdef_str = make_kc_so(configs)
   ffi.cdef(cdef_str)
   local kc = ffi.load(sofile); keycounter._kc = kc 
   -- create the configs for the  hashmap 
-  local HC = make_HC(optargs) 
+  local HC = assert(make_HC(optargs))
   local htype = label .. "_rs_hmap_t"
   local H = ffi.new(htype .. "[?]", 1)
   local H  = make_H(optargs) 
@@ -106,34 +41,50 @@ function KeyCounter.new(label, vecs, optargs)
   kc.init(H, HC)
   keycounter._H = H
   keycounter._HC = HC
+  keycounter._vecs = vecs
+  local widths = {}
+  for k, v in ipairs(vecs) do widths[k] = v:width() end 
+  keycounter._widths = widths
+
   -- cdef functions in .so file and load .so file 
   return keycounter
-end
-
-function KeyCounter:delete()
-  print("Destructor called on " .. self._name)
-  self._kc["rs_hmap_destroy"](self._H)
-  -- TODO P1 How do we make sure that this is called by __gc?
-  return true
 end
 
 function KeyCounter:next()
   local start_time = cutils.rdtsc()
   if ( self._is_eor ) then return false end
-end
-
-function KeyCounter:get_name()
-  return self._name
-end
-
-function KeyCounter:set_name(value)
-  assert( (value == nil) or ( type(value) == "string") )
-  self._name = value
-  return self
-end
-
-function KeyCounter:nitems()
-  return self._H[0].nitems 
+  local lens = {}
+  for k, v in ipairs(vecs) do 
+    local len, chunk, nn_chunk = f1:get_chunk(self:_chunk_num)
+    lens[k] = len
+    chunks[k] = chunk
+    assert(nn_chunk == nil) -- null values not supported 
+  end
+  -- chunks of all vectors should be of same length
+  for k, v in ipairs(vecs) do 
+    assert(lens[k] == lens[1])
+  end
+  -- either you get all chunks or none 
+  if ( chunks[1] ) then 
+    for k, v in ipairs(vecs) do assert(chunks[k]) end
+  else
+    for k, v in ipairs(vecs) do assert(not chunks[k]) end
+  end
+  --========
+  self._chunk_num = self._chunk_num + 1
+  if ( not chunks[1] ) then 
+    self._is_eor = true
+    return false
+    error("TODO")
+  end
+  local data = ffi.new("char *[?]", 1)
+  for k, v in ipairs(vecs) do 
+    data[k] = get_ptr(chunks[k], "char *")
+  end
+  local mput_fn = label .. "_rx_kc_put"
+  local status = self._kc[mput_fn](self._H, data, self._widths, lens[1])
+  assert(status == 0)
+  return true -- => more to come 
 end
 
 function KeyCounter:eval()
@@ -145,4 +96,36 @@ function KeyCounter:eval()
   return self:value()
 end
 
+function KeyCounter:name()
+  return self._name
+end
+
+function KeyCounter:nitems()
+  return self._H[0].nitems 
+end
+
+function KeyCounter:delete()
+  print("Destructor called on " .. self._name)
+  self._kc["rs_hmap_destroy"](self._H)
+  -- TODO P1 How do we make sure that this is called by __gc?
+  return true
+end
+
 return KeyCounter
+
+--[[ Sample program to test usage of new*() to create 
+--  array of pointers sent to mput 
+
+local ffi = require 'ffi'
+ffi.cdef("void *malloc(size_t size);")
+local stringify = require 'Q/UTILS/lua/stringify'
+
+local x = ffi.new("char *[?]", 3)
+x[0] = stringify("000")
+x[1] = stringify("111")
+x[2] = stringify("222")
+
+for i = 0, 2 do
+  print(i, ffi.string(x[i]))
+end
+--]]

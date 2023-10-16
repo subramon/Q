@@ -22,7 +22,8 @@ local function mk_dir(x)
   return true
 end
   --=========================
-local function make_all(configs)
+  -- make key counter .so file and function declarations needed for cdef
+local function make_kc_so(configs)
   assert(type(configs) == "table")
   -- Check label is okay 
   local ok_chars = 
@@ -167,4 +168,4 @@ local function make_all(configs)
   assert(plpath.isfile(sofile))
   print("Code gen complete")
 end
-return make_all
+return make_kc_so
