@@ -11,6 +11,7 @@ KeyCounter.__index = KeyCounter
 
 -- Following hack of __gc is needed because of inability to set
 -- __gc on anything other than userdata in 5.1.* 
+-- TODO Make sure you are using __gc properly
 local setmetatable = require 'Q/UTILS/lua/rs_gc'
 setmetatable(KeyCounter, {
   __call = function (cls, ...)
@@ -20,6 +21,10 @@ setmetatable(KeyCounter, {
 register_type(KeyCounter, "KeyCounter")
 --==================================================
 function KeyCounter.new(label, vecs, optargs)
+  -- label must be unique across all KeyCounters
+  if ( not label ) then 
+    label = tostring(cutils.RDTSC())
+  end
   assert(type(label) == "string")
   assert(type(vecs) == "table")
   local keycounter = setmetatable({}, KeyCounter)
@@ -30,11 +35,14 @@ function KeyCounter.new(label, vecs, optargs)
   local configs = make_configs(label, vecs)
   -- call function to create .so file and functions to be cdef'd
   local sofile, cdef_str = make_kc_so(configs)
+  -- Note that sofile is -- $Q{ROOT}/lib/libkc${label}.so 
+  -- But we ffi.load(label)
   ffi.cdef(cdef_str)
-  local kc = ffi.load(sofile); keycounter._kc = kc 
+  local kc = assert(ffi.load(label)); keycounter._kc = kc 
   -- create the configs for the  hashmap 
   local HC = assert(make_HC(optargs))
   local htype = label .. "_rs_hmap_t"
+  -- create empty hashmap
   local H = ffi.new(htype .. "[?]", 1)
   local H  = make_H(optargs) 
   local init = label .. "_rs_hmap_instantiate"
