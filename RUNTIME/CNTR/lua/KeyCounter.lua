@@ -27,12 +27,14 @@ function KeyCounter.new(label, vecs, optargs)
   end
   assert(type(label) == "string")
   assert(type(vecs) == "table")
+
   local keycounter = setmetatable({}, KeyCounter)
   keycounter._name  = label
   keycounter._chunk_idx  = 0
   keycounter._is_eor = false -- becomes true when counting done
   -- create configs for .so file/cdef creation
   local configs = make_configs(label, vecs)
+  assert(type(configs) == "table")
   -- call function to create .so file and functions to be cdef'd
   local sofile, cdef_str = make_kc_so(configs)
   -- Note that sofile is -- $Q{ROOT}/lib/libkc${label}.so 
@@ -44,7 +46,7 @@ function KeyCounter.new(label, vecs, optargs)
   local htype = label .. "_rs_hmap_t"
   -- create empty hashmap
   local H = ffi.new(htype .. "[?]", 1)
-  local H  = make_H(optargs) 
+  local H  = make_H(HC_args) 
   local init = label .. "_rs_hmap_instantiate"
   kc.init(H, HC)
   keycounter._H = H
@@ -63,7 +65,7 @@ function KeyCounter:next()
   if ( self._is_eor ) then return false end
   local lens = {}
   for k, v in ipairs(vecs) do 
-    local len, chunk, nn_chunk = f1:get_chunk(self:_chunk_num)
+    local len, chunk, nn_chunk = f1:get_chunk(self._chunk_num)
     lens[k] = len
     chunks[k] = chunk
     assert(nn_chunk == nil) -- null values not supported 
@@ -83,7 +85,6 @@ function KeyCounter:next()
   if ( not chunks[1] ) then 
     self._is_eor = true
     return false
-    error("TODO")
   end
   local data = ffi.new("char *[?]", 1)
   for k, v in ipairs(vecs) do 

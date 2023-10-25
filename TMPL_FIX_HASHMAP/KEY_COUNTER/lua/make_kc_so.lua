@@ -45,9 +45,9 @@ local function make_kc_so(configs)
   local root_dir = q_src_root .. "/TMPL_FIX_HASHMAP/KEY_COUNTER/" .. label
   local src_dir = root_dir .. "/src/"
   local inc_dir = root_dir .. "/inc/"
+  print("XXX", root_dir)
   assert(mk_dir(root_dir))
   assert(mk_dir(src_dir))
-  assert(mk_dir(inc_dir))
   --=== make rsx_types.h
   local f = inc_dir .. "/rsx_types.h"
   local x = gen_rsx_types(configs)
@@ -92,6 +92,7 @@ local function make_kc_so(configs)
   -- START: create rsx_put 
   local subs = {}
   subs.label = label
+  local cdef_str = {} -- to be returned 
   -- NOTE: Assumptiion that no more that 4 keys in compound key 
   local n = #configs.key_types 
   if ( n >= 1 ) then subs.comment1 = "  " else subs.comment1 = "//" end
@@ -104,6 +105,7 @@ local function make_kc_so(configs)
      "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_put.tmpl.lua"
   local src_file = gen_code.dotc(subs, src_dir)
   local inc_file = gen_code.doth(subs, inc_dir)
+  cdef_str[#cdef_str+1] = plfile.read(inc_file)
   -- STOP : create rsx_put 
   -- START: create rsx_make_permutation 
   local subs = {}
@@ -120,6 +122,7 @@ local function make_kc_so(configs)
      "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_make_permutation.tmpl.lua"
   local src_file = gen_code.dotc(subs, src_dir)
   local inc_file = gen_code.doth(subs, inc_dir)
+  cdef_str[#cdef_str+1] = plfile.read(inc_file)
   -- STOP : create rsx_make_permutation 
   -- START: create rsx_cum_count 
   local subs = {}
@@ -129,6 +132,7 @@ local function make_kc_so(configs)
      "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_cum_count.tmpl.lua"
   local src_file = gen_code.dotc(subs, src_dir)
   local inc_file = gen_code.doth(subs, inc_dir)
+  cdef_str[#cdef_str+1] = plfile.read(inc_file)
   -- STOP : create rsx_cum_count 
   
   -- create INCS to specify directories for include 
@@ -160,12 +164,17 @@ local function make_kc_so(configs)
   cmd[#cmd+1] = QCFLAGS
   cmd[#cmd+1] = INCS
   cmd[#cmd+1] = SRCS
-  local sofile = "libkc" .. label .. ".so"
+  local  sodir = assert(os.getenv("Q_ROOT")) .. "/lib/"
+  assert(plpath.isdir(sodir), "Directory not found " .. sodir)
+  local sofile = sodir .. "libkc" .. label .. ".so"
   cmd[#cmd+1] = " -o " .. sofile 
   cmd = table.concat(cmd, " ")
   print(cmd)
   local rslt = exec_and_capture_stdout(cmd)
   assert(plpath.isfile(sofile))
+  -- ready to return stuff
+  cdef_str = table.concat(cdef_str, "\n")
   print("Code gen complete")
+  return sofile, cdef_str
 end
 return make_kc_so
