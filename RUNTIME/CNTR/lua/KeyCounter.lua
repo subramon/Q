@@ -6,6 +6,7 @@ local make_HC      = require 'Q/RUNTIME/CNTR/lua/make_HC'
 local make_configs = require 'Q/RUNTIME/CNTR/lua/make_configs'
 local make_kc_so   = require 'Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/make_kc_so'
 local register_type = require 'Q/UTILS/lua/register_type'
+local get_ptr      = require 'Q/UTILS/lua/get_ptr'
 local KeyCounter = {}
 KeyCounter.__index = KeyCounter
 
@@ -44,7 +45,7 @@ function KeyCounter.new(label, vecs, optargs)
 
   local keycounter = setmetatable({}, KeyCounter)
   keycounter._name  = label
-  keycounter._chunk_idx  = 0
+  keycounter._chunk_num  = 0
   keycounter._is_eor = false 
   -- becomes true when vecs consumed and counting done
   -- create configs for .so file/cdef creation
@@ -57,20 +58,19 @@ function KeyCounter.new(label, vecs, optargs)
   ffi.cdef(cdef_str)
   local kc = assert(ffi.load("kc" .. label)); keycounter._kc = kc 
   -- create the configs for the  hashmap 
-  local HC = assert(make_HC(optargs))
+  local HC = assert(make_HC(optargs, sofile))
   local htype = label .. "_rs_hmap_t"
   -- create empty hashmap
   local H = ffi.new(htype .. "[?]", 1)
-  local H  = make_H(HC_args) 
   local init = label .. "_rs_hmap_instantiate"
-  kc.init(H, HC)
+  kc[init](H, HC)
   keycounter._H = H
   keycounter._HC = HC
   keycounter._vecs = vecs
   local widths = {}
   for k, v in ipairs(vecs) do 
-    assert(v:type() == "lVector")
-    widths[k] = v:width() 
+    widths[k] = assert(v:width())
+    assert(widths[k] > 0)
   end 
   keycounter._widths = widths
 
@@ -79,38 +79,42 @@ function KeyCounter.new(label, vecs, optargs)
 end
 
 function KeyCounter:next()
+  print("next(): chunk = ", self._chunk_num)
   local start_time = cutils.rdtsc()
   if ( self._is_eor ) then return false end
   local lens = {}
-  for k, v in ipairs(vecs) do 
-    local len, chunk, nn_chunk = f1:get_chunk(self._chunk_num)
+  local chunks = {}
+  for k, v in ipairs(self._vecs) do 
+    local len, chunk, nn_chunk = v:get_chunk(self._chunk_num)
     lens[k] = len
     chunks[k] = chunk
     assert(nn_chunk == nil) -- null values not supported 
   end
   -- chunks of all vectors should be of same length
-  for k, v in ipairs(vecs) do 
+  for k, v in ipairs(self._vecs) do 
     assert(lens[k] == lens[1])
   end
   -- either you get all chunks or none 
   if ( chunks[1] ) then 
-    for k, v in ipairs(vecs) do assert(chunks[k]) end
+    for k, v in ipairs(self._vecs) do assert(chunks[k]) end
   else
-    for k, v in ipairs(vecs) do assert(not chunks[k]) end
+    for k, v in ipairs(self._vecs) do assert(not chunks[k]) end
   end
   --========
   self._chunk_num = self._chunk_num + 1
   if ( not chunks[1] ) then 
+    print("No more chunks")
     self._is_eor = true
     return false
   end
   local data = ffi.new("char *[?]", 1)
-  for k, v in ipairs(vecs) do 
+  for k, v in ipairs(self._vecs) do 
     data[k] = get_ptr(chunks[k], "char *")
   end
-  local mput_fn = label .. "_rx_kc_put"
-  local status = self._kc[mput_fn](self._H, data, self._widths, lens[1])
-  assert(status == 0)
+  local mput_fn = self._name .. "_rx_kc_put"
+  print("MAJOR HACK  !!!! mput_fn = ", mput_fn)
+  -- local status = self._kc[mput_fn](self._H, data, self._widths, lens[1])
+  -- assert(status == 0)
   return true -- => more to come 
 end
 
@@ -120,7 +124,7 @@ function KeyCounter:eval()
     status = self:next()
   end
   record_time(start_time, "KeyCounter.eval")
-  return self:value()
+  return true
 end
 
 function KeyCounter:name()

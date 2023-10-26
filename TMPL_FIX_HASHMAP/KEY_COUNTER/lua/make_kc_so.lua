@@ -85,6 +85,9 @@ local function make_kc_so(configs)
   }
   
   copy_generic_code(configs.label, tmpl_dir, root_dir, F)
+  -- need to call instantiate from Lua code 
+  local outfile  = inc_dir .. "/_rs_hmap_instantiate.h"
+  cdef_str[#cdef_str+1] = cutils.read(outfile)
   --=========== make copies of all specific code
   local F2 = { 
     "key_cmp",

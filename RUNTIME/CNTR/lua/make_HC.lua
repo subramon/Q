@@ -1,7 +1,9 @@
 local ffi = require 'ffi'
+local stringify = require 'Q/UTILS/lua/stringify'
 
 -- make the configs for the hashmap using optional arguments
-local function make_HC(optargs) 
+local function make_HC(optargs, sofile)
+  assert(type(sofile) == "string")
   if ( optargs ) then assert(type(optargs) == "table") end 
   local HC = ffi.new("rs_hmap_config_t[?]", 1)
   ffi.fill(HC, ffi.sizeof("rs_hmap_config_t")) -- set all to 0 
@@ -31,8 +33,8 @@ local function make_HC(optargs)
     end
     assert(HC[0].low_water_mark <= HC[0].high_water_mark)
   end
-  HC[0].so_file = so_file -- TODO  P1
-  HC[0].so_file = so_handle -- TODO  P1
+  HC[0].so_file = stringify(sofile)
+  HC[0].so_handle = ffi.NULL -- this is correct
   return HC
 end
 return make_HC
