@@ -1,5 +1,4 @@
-local plfile        = require 'pl.file'
-local plpath        = require 'pl.path'
+local cutils = require 'libcutils'
 local do_subs       = require 'Q/UTILS/lua/do_subs' 
 local gen_code      = require 'Q/UTILS/lua/gen_code' 
 local simple_do_subs       = 
@@ -16,9 +15,9 @@ local exec_and_capture_stdout =
 --=================================
 local function mk_dir(x)
   assert(type(x) == "string")
-  assert(not plpath.isdir(x), "directory exists " .. x)
-  assert(plpath.mkdir(x))
-  assert(plpath.isdir(x))
+  assert(not cutils.isdir(x), "directory exists " .. x)
+  assert(cutils.makepath(x))
+  assert(cutils.isdir(x))
   return true
 end
   --=========================
@@ -38,20 +37,26 @@ local function make_kc_so(configs)
     assert(type(n1) == "number")
     assert(n1 >= 1)
   end 
+  local cdef_str = {} -- string containing declarations to be cdef'd
   --= Make sure output directories are okay
   local q_src_root = assert(os.getenv("Q_SRC_ROOT"), "Q_SRC_ROOT not set")
   local tmpl_dir = q_src_root .. "/TMPL_FIX_HASHMAP/"
-  assert(plpath.isdir(tmpl_dir))
+  assert(cutils.isdir(tmpl_dir))
   local root_dir = q_src_root .. "/TMPL_FIX_HASHMAP/KEY_COUNTER/" .. label
   local src_dir = root_dir .. "/src/"
   local inc_dir = root_dir .. "/inc/"
-  print("XXX", root_dir)
   assert(mk_dir(root_dir))
   assert(mk_dir(src_dir))
+  assert(mk_dir(inc_dir))
+  -- add structs from rs_hmap_config to stuff to be cdef'd
+  local f = tmpl_dir .. "/inc/rs_hmap_config.h"
+  cdef_str[#cdef_str+1] = cutils.read(f)
   --=== make rsx_types.h
   local f = inc_dir .. "/rsx_types.h"
   local x = gen_rsx_types(configs)
-  plfile.write(f, x)
+  assert(cutils.write(f, x))
+  assert(cutils.isfile(f))
+  cdef_str[#cdef_str+1] = cutils.read(f)
   --=== make rs_hmap_struct.h
   local outfile = inc_dir .. "/rs_hmap_struct.h"
   local infile  = q_src_root .. "/TMPL_FIX_HASHMAP/inc/rs_hmap_struct.h"
@@ -59,8 +64,8 @@ local function make_kc_so(configs)
   -- Ideally, we should not need altfile, relic of old convention
   -- But until we change it systematically, it stays
   local altfile  = inc_dir .. "/" .. label .. "_rs_hmap_struct.h"
-  plfile.copy(outfile, altfile) 
-  print("Made " .. altfile)
+  cutils.copyfile(outfile, altfile) 
+  cdef_str[#cdef_str+1] = cutils.read(outfile)
   -- ==== make copies of all common code 
   local F = {
   "chk", 
@@ -92,7 +97,6 @@ local function make_kc_so(configs)
   -- START: create rsx_put 
   local subs = {}
   subs.label = label
-  local cdef_str = {} -- to be returned 
   -- NOTE: Assumptiion that no more that 4 keys in compound key 
   local n = #configs.key_types 
   if ( n >= 1 ) then subs.comment1 = "  " else subs.comment1 = "//" end
@@ -105,7 +109,7 @@ local function make_kc_so(configs)
      "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_put.tmpl.lua"
   local src_file = gen_code.dotc(subs, src_dir)
   local inc_file = gen_code.doth(subs, inc_dir)
-  cdef_str[#cdef_str+1] = plfile.read(inc_file)
+  cdef_str[#cdef_str+1] = cutils.read(inc_file)
   -- STOP : create rsx_put 
   -- START: create rsx_make_permutation 
   local subs = {}
@@ -122,7 +126,7 @@ local function make_kc_so(configs)
      "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_make_permutation.tmpl.lua"
   local src_file = gen_code.dotc(subs, src_dir)
   local inc_file = gen_code.doth(subs, inc_dir)
-  cdef_str[#cdef_str+1] = plfile.read(inc_file)
+  cdef_str[#cdef_str+1] = cutils.read(inc_file)
   -- STOP : create rsx_make_permutation 
   -- START: create rsx_cum_count 
   local subs = {}
@@ -132,7 +136,7 @@ local function make_kc_so(configs)
      "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_cum_count.tmpl.lua"
   local src_file = gen_code.dotc(subs, src_dir)
   local inc_file = gen_code.doth(subs, inc_dir)
-  cdef_str[#cdef_str+1] = plfile.read(inc_file)
+  cdef_str[#cdef_str+1] = cutils.read(inc_file)
   -- STOP : create rsx_cum_count 
   
   -- create INCS to specify directories for include 
@@ -141,16 +145,16 @@ local function make_kc_so(configs)
   X[#X+1] = "-I" .. tmpl_dir .. "/inc/"
   X[#X+1] = "-I" .. q_src_root .. "/UTILS/inc/" 
   local INCS = table.concat(X, " ")
-  -- print(INCS); print("=====")
+  -- print("====="); print(INCS); print("=====")
   -- create list of files to be compiled
   local X = {}
   for _, f in ipairs(F) do
     X[#X+1] = src_dir .. "/_rs_hmap_" .. f .. ".c" 
-    assert(plpath.isfile(X[#X]))
+    assert(cutils.isfile(X[#X]))
   end
   for _, f in ipairs(F2) do
     X[#X+1] = src_dir .. "/_rsx_" .. f .. ".c" 
-    assert(plpath.isfile(X[#X]), "File not found " .. X[#X])
+    assert(cutils.isfile(X[#X]), "File not found " .. X[#X])
   end
   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_put.c" 
   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_cum_count.c" 
@@ -165,15 +169,28 @@ local function make_kc_so(configs)
   cmd[#cmd+1] = INCS
   cmd[#cmd+1] = SRCS
   local  sodir = assert(os.getenv("Q_ROOT")) .. "/lib/"
-  assert(plpath.isdir(sodir), "Directory not found " .. sodir)
+  assert(cutils.isdir(sodir), "Directory not found " .. sodir)
   local sofile = sodir .. "libkc" .. label .. ".so"
   cmd[#cmd+1] = " -o " .. sofile 
   cmd = table.concat(cmd, " ")
-  print(cmd)
+  -- print(cmd)
   local rslt = exec_and_capture_stdout(cmd)
-  assert(plpath.isfile(sofile))
+  assert(cutils.isfile(sofile))
   -- ready to return stuff
   cdef_str = table.concat(cdef_str, "\n")
+  -- START Ugly: following is a bit ugly but can be improved later TODO P3
+  local tmpf1 = cutils.mkstemp("/tmp/_Q_XXXXXX")
+  local tmpf2 = cutils.mkstemp("/tmp/_Q_XXXXXX")
+  cutils.write(tmpf1, cdef_str)
+  local cmd = 'grep -v "^#include " ' .. tmpf1  .. " | " ..
+    ' grep -v "^#define " | grep -v "^#ifndef " | grep -v "^#endif" > ' 
+    .. tmpf2
+  local rslt = exec_and_capture_stdout(cmd)
+  local cdef_str = cutils.read(tmpf2)
+  cutils.delete(tmpf1)
+  cutils.delete(tmpf2)
+  assert(#cdef_str > 0)
+  -- STOP  Ugly
   print("Code gen complete")
   return sofile, cdef_str
 end

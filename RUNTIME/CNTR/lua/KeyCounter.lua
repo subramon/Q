@@ -9,6 +9,20 @@ local register_type = require 'Q/UTILS/lua/register_type'
 local KeyCounter = {}
 KeyCounter.__index = KeyCounter
 
+local file_struct = [[
+typedef struct {
+char *fpos; /* Current position of file pointer (absolute address) */
+void *base; /* Pointer to the base of the file */
+unsigned short handle; /* File handle */
+short flags; /* Flags (see FileFlags) */
+short unget; /* 1-byte buffer for ungetc (b15=1 if non-empty) */
+unsigned long alloc; /* Number of currently allocated bytes for the file */
+unsigned short buffincrement; /* Number of bytes allocated at once */
+} FILE;
+]]
+status = pcall(ffi.cdef, file_struct)
+-- pcall above to ignore error on repeated cdefs of FILE
+
 -- Following hack of __gc is needed because of inability to set
 -- __gc on anything other than userdata in 5.1.* 
 -- TODO Make sure you are using __gc properly
@@ -26,21 +40,22 @@ function KeyCounter.new(label, vecs, optargs)
     label = tostring(cutils.RDTSC())
   end
   assert(type(label) == "string")
-  assert(type(vecs) == "table")
+  -- vecs validated in make_configs()
 
   local keycounter = setmetatable({}, KeyCounter)
   keycounter._name  = label
   keycounter._chunk_idx  = 0
-  keycounter._is_eor = false -- becomes true when counting done
+  keycounter._is_eor = false 
+  -- becomes true when vecs consumed and counting done
   -- create configs for .so file/cdef creation
   local configs = make_configs(label, vecs)
   assert(type(configs) == "table")
   -- call function to create .so file and functions to be cdef'd
   local sofile, cdef_str = make_kc_so(configs)
   -- Note that sofile is -- $Q{ROOT}/lib/libkc${label}.so 
-  -- But we ffi.load(label)
+  -- But we ffi.load("kc${label})
   ffi.cdef(cdef_str)
-  local kc = assert(ffi.load(label)); keycounter._kc = kc 
+  local kc = assert(ffi.load("kc" .. label)); keycounter._kc = kc 
   -- create the configs for the  hashmap 
   local HC = assert(make_HC(optargs))
   local htype = label .. "_rs_hmap_t"
@@ -53,7 +68,10 @@ function KeyCounter.new(label, vecs, optargs)
   keycounter._HC = HC
   keycounter._vecs = vecs
   local widths = {}
-  for k, v in ipairs(vecs) do widths[k] = v:width() end 
+  for k, v in ipairs(vecs) do 
+    assert(v:type() == "lVector")
+    widths[k] = v:width() 
+  end 
   keycounter._widths = widths
 
   -- cdef functions in .so file and load .so file 

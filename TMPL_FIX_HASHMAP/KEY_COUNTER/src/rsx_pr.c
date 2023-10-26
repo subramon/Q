@@ -8,23 +8,23 @@
 void 
 rsx_pr_key(
     void *in_bkts,
-    uint32_t idx,
-    FILE *fp
+    uint32_t idx, 
+    FILE *fp 
     )
 {
   if ( in_bkts == NULL ) { WHEREAMI; return; }
   ${tmpl}_rs_hmap_bkt_t *bkts = (${tmpl}_rs_hmap_bkt_t *)in_bkts;
-  fprintf(fp, "%" PRIu64 "", bkts[idx].key);
+  fprintf(stdout, "%" PRIu64 "", bkts[idx].key);
 }
 
 void 
 rsx_pr_val(
     void *in_bkts,
     uint32_t idx,
-    FILE *fp
+    FILE *fp 
     )
 {
   if ( in_bkts == NULL ) { WHEREAMI; return; }
   ${tmpl}_rs_hmap_bkt_t *bkts = (${tmpl}_rs_hmap_bkt_t *)in_bkts;
-  fprintf(fp, "%u", bkts[idx].val);
+  fprintf(stdout, "%u", bkts[idx].val);
 }
