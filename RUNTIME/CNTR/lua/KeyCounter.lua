@@ -10,6 +10,7 @@ local get_ptr      = require 'Q/UTILS/lua/get_ptr'
 local KeyCounter = {}
 KeyCounter.__index = KeyCounter
 
+-- FILE struct from http://tigcc.ticalc.org/doc/stdio.html#FILE
 local file_struct = [[
 typedef struct {
 char *fpos; /* Current position of file pointer (absolute address) */
@@ -67,10 +68,11 @@ function KeyCounter.new(label, vecs, optargs)
   keycounter._H = H
   keycounter._HC = HC
   keycounter._vecs = vecs
-  local widths = {}
+  local widths = ffi.new("uint32_t[?]", #vecs)
+  widths = ffi.cast("uint32_t *", widths)
   for k, v in ipairs(vecs) do 
-    widths[k] = assert(v:width())
-    assert(widths[k] > 0)
+    widths[k-1] = assert(v:width())
+    assert(widths[k-1] > 0)
   end 
   keycounter._widths = widths
 
@@ -101,20 +103,33 @@ function KeyCounter:next()
     for k, v in ipairs(self._vecs) do assert(not chunks[k]) end
   end
   --========
-  self._chunk_num = self._chunk_num + 1
   if ( not chunks[1] ) then 
     print("No more chunks")
     self._is_eor = true
     return false
   end
-  local data = ffi.new("char *[?]", 1)
+  local data = ffi.new("char *[?]", #self._vecs)
+  data = ffi.cast("char **", data)
   for k, v in ipairs(self._vecs) do 
-    data[k] = get_ptr(chunks[k], "char *")
+    data[k-1] = get_ptr(chunks[k], "char *")
   end
-  local mput_fn = self._name .. "_rx_kc_put"
-  print("MAJOR HACK  !!!! mput_fn = ", mput_fn)
-  -- local status = self._kc[mput_fn](self._H, data, self._widths, lens[1])
+  local mput_fn = self._name .. "_rsx_kc_put"
+  local fn = assert(self._kc[mput_fn])
+  print("mput_fn = ", mput_fn)
+  --[[
+  print(self._H)
+  print(self._widths)
+  print(data)
+  --]]
+
+  local status = fn(self._H, data, self._widths, lens[1])
   -- assert(status == 0)
+  -- release chunks 
+  for k, v in ipairs(self._vecs) do 
+    v:unget_chunk(self._chunk_num)
+    assert(nn_chunk == nil) -- null values not supported 
+  end
+  self._chunk_num = self._chunk_num + 1
   return true -- => more to come 
 end
 
