@@ -20,7 +20,7 @@ local function copy_generic_code(
   assert(type(F) == "table")
 
   for _, suffix in ipairs({ ".c", ".h", }) do
-    local dir 
+    local indir, outdir
     if ( suffix == ".c" ) then 
       indir = root_indir .. "/src/"
       outdir = root_outdir .. "/src/"

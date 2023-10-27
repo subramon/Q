@@ -1,4 +1,5 @@
 -- Coding convention. Local variables start with underscore
+require 'Q/UTILS/lua/strict'
 local ffi          = require 'ffi'
 local cutils       = require 'libcutils'
 local record_time  = require 'Q/UTILS/lua/record_time'
@@ -7,10 +8,12 @@ local make_configs = require 'Q/RUNTIME/CNTR/lua/make_configs'
 local make_kc_so   = require 'Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/make_kc_so'
 local register_type = require 'Q/UTILS/lua/register_type'
 local get_ptr      = require 'Q/UTILS/lua/get_ptr'
+local strip_pound  = require 'Q/UTILS/lua/strip_pound'
 local KeyCounter = {}
 KeyCounter.__index = KeyCounter
 
 -- FILE struct from http://tigcc.ticalc.org/doc/stdio.html#FILE
+-- pcall to ignore error on repeated cdefs of FILE
 local file_struct = [[
 typedef struct {
 char *fpos; /* Current position of file pointer (absolute address) */
@@ -23,8 +26,18 @@ unsigned short buffincrement; /* Number of bytes allocated at once */
 } FILE;
 ]]
 status = pcall(ffi.cdef, file_struct)
--- pcall above to ignore error on repeated cdefs of FILE
+-- add structs from rs_hmap_config to stuff to be cdef'd
+local root_dir = os.getenv("Q_SRC_ROOT")
+assert(cutils.isdir(root_dir))
+local inc_dir = root_dir .. "/TMPL_FIX_HASHMAP/inc/" 
+assert(cutils.isdir(inc_dir))
+local inc_file = inc_dir .. "/rs_hmap_config.h"
+assert(cutils.isfile(inc_file), inc_file)
+local cdef_str = strip_pound(inc_file)
+status = pcall(ffi.cdef, cdef_str)
+  --=================================================
 
+--
 -- Following hack of __gc is needed because of inability to set
 -- __gc on anything other than userdata in 5.1.* 
 -- TODO Make sure you are using __gc properly
@@ -36,16 +49,32 @@ setmetatable(KeyCounter, {
 })
 register_type(KeyCounter, "KeyCounter")
 --==================================================
-function KeyCounter.new(label, vecs, optargs)
-  -- label must be unique across all KeyCounters
-  if ( not label ) then 
+function KeyCounter.new(vecs, optargs)
+  -- different *kinds* of KeyCounters must have different labels
+  -- but 2 KeyCounters can have same label if the keys that they are
+  -- counting have the same types
+  if ( optargs ) then
+    assert(type(optargs) == "table")
+  end
+  --===================================
+  local label
+  if ( optargs and optargs.label ) then 
+    assert(type(optargs.label) == "string")
+    label = optargs.label
+  else
     label = tostring(cutils.RDTSC())
   end
-  assert(type(label) == "string")
+  --===================================
+  local name
+  if ( optargs and optargs.name ) then 
+    assert(type(optargs.name) == "string")
+    name = optargs.name
+  end
   -- vecs validated in make_configs()
-
+  --===================================
   local keycounter = setmetatable({}, KeyCounter)
-  keycounter._name  = label
+  keycounter._name   = name
+  keycounter._label  = label
   keycounter._chunk_num  = 0
   keycounter._is_eor = false 
   -- becomes true when vecs consumed and counting done
@@ -56,10 +85,53 @@ function KeyCounter.new(label, vecs, optargs)
   local sofile, cdef_str = make_kc_so(configs)
   -- Note that sofile is -- $Q{ROOT}/lib/libkc${label}.so 
   -- But we ffi.load("kc${label})
-  ffi.cdef(cdef_str)
+  status = pcall(ffi.cdef, cdef_str)
   local kc = assert(ffi.load("kc" .. label)); keycounter._kc = kc 
   -- create the configs for the  hashmap 
   local HC = assert(make_HC(optargs, sofile))
+  local htype = label .. "_rs_hmap_t"
+  -- create empty hashmap
+  local H = ffi.new(htype .. "[?]", 1)
+  local init = label .. "_rs_hmap_instantiate"
+  kc[init](H, HC)
+  keycounter._H = H
+  keycounter._HC = HC
+  keycounter._vecs = vecs
+  keycounter._sofile = sofile
+  local widths = ffi.new("uint32_t[?]", #vecs)
+  widths = ffi.cast("uint32_t *", widths)
+  for k, v in ipairs(vecs) do 
+    widths[k-1] = assert(v:width())
+    assert(widths[k-1] > 0)
+  end 
+  keycounter._widths = widths
+
+  -- cdef functions in .so file and load .so file 
+  return keycounter
+end
+
+function KeyCounter:clone(vecs, optargs)
+  if ( optargs ) then
+    assert(type(optargs) == "table")
+  end
+  --===================================
+  local name
+  if ( optargs and optargs.name ) then 
+    assert(type(optargs.name) == "string")
+    name = optargs.name
+  end
+  --===================================
+  local keycounter = setmetatable({}, KeyCounter)
+  keycounter._label  = assert(self._label)
+  local label = keycounter._label
+  keycounter._sofile  = assert(self._sofile)
+  keycounter._name   = name
+  keycounter._chunk_num  = 0
+  keycounter._is_eor = false 
+  local kc = assert(ffi.load("kc" .. label)); 
+  keycounter._kc = kc 
+  -- create the configs for the  hashmap 
+  local HC = assert(make_HC(optargs, keycounter._sofile))
   local htype = label .. "_rs_hmap_t"
   -- create empty hashmap
   local H = ffi.new(htype .. "[?]", 1)
@@ -75,11 +147,9 @@ function KeyCounter.new(label, vecs, optargs)
     assert(widths[k-1] > 0)
   end 
   keycounter._widths = widths
-
-  -- cdef functions in .so file and load .so file 
   return keycounter
 end
-
+--================================================================
 function KeyCounter:next()
   print("next(): chunk = ", self._chunk_num)
   local start_time = cutils.rdtsc()
@@ -113,9 +183,8 @@ function KeyCounter:next()
   for k, v in ipairs(self._vecs) do 
     data[k-1] = get_ptr(chunks[k], "char *")
   end
-  local mput_fn = self._name .. "_rsx_kc_put"
+  local mput_fn = self._label .. "_rsx_kc_put"
   local fn = assert(self._kc[mput_fn])
-  print("mput_fn = ", mput_fn)
   --[[
   print(self._H)
   print(self._widths)
@@ -127,13 +196,13 @@ function KeyCounter:next()
   -- release chunks 
   for k, v in ipairs(self._vecs) do 
     v:unget_chunk(self._chunk_num)
-    assert(nn_chunk == nil) -- null values not supported 
   end
   self._chunk_num = self._chunk_num + 1
   return true -- => more to come 
 end
 
 function KeyCounter:eval()
+  local status = true
   local start_time = cutils.rdtsc()
   while status == true do
     status = self:next()
@@ -142,12 +211,26 @@ function KeyCounter:eval()
   return true
 end
 
+function KeyCounter:label()
+  return self._label
+end
+
 function KeyCounter:name()
   return self._name
 end
 
+function KeyCounter:set_name(name)
+  assert((type(name) == "string") or (type(name) == "nil"))
+  self._name = name
+  return self
+end
+
 function KeyCounter:nitems()
   return self._H[0].nitems 
+end
+
+function KeyCounter:is_eor()
+  return self._is_eor
 end
 
 function KeyCounter:delete()

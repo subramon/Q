@@ -49,8 +49,9 @@ local function make_kc_so(configs)
   assert(mk_dir(src_dir))
   assert(mk_dir(inc_dir))
   -- add structs from rs_hmap_config to stuff to be cdef'd
-  local f = tmpl_dir .. "/inc/rs_hmap_config.h"
-  cdef_str[#cdef_str+1] = cutils.read(f)
+  -- NOT Done here. Done in KeyCounter.lua
+  -- local f = tmpl_dir .. "/inc/rs_hmap_config.h"
+  -- cdef_str[#cdef_str+1] = cutils.read(f)
   --=== make rsx_types.h
   local f = inc_dir .. "/rsx_types.h"
   local x = gen_rsx_types(configs)
