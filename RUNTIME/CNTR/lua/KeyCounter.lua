@@ -3,6 +3,7 @@ require 'Q/UTILS/lua/strict'
 local ffi          = require 'ffi'
 local cutils       = require 'libcutils'
 local record_time  = require 'Q/UTILS/lua/record_time'
+local qcfg         = require 'Q/UTILS/lua/qcfg'
 local make_HC      = require 'Q/RUNTIME/CNTR/lua/make_HC'
 local make_configs = require 'Q/RUNTIME/CNTR/lua/make_configs'
 local make_kc_so   = require 'Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/make_kc_so'
@@ -35,12 +36,19 @@ local inc_file = inc_dir .. "/rs_hmap_config.h"
 assert(cutils.isfile(inc_file), inc_file)
 local cdef_str = strip_pound(inc_file)
 status = pcall(ffi.cdef, cdef_str)
+--[[
+if ( status ) then 
+  print("cdef of config.h succeeded")
+else
+  print("cdef of config.h failed")
+end
+--]]
   --=================================================
 
 --
 -- Following hack of __gc is needed because of inability to set
 -- __gc on anything other than userdata in 5.1.* 
--- TODO Make sure you are using __gc properly
+-- Note that the delete method is called __gc (see below)
 local setmetatable = require 'Q/UTILS/lua/rs_gc'
 setmetatable(KeyCounter, {
   __call = function (cls, ...)
@@ -86,14 +94,31 @@ function KeyCounter.new(vecs, optargs)
   -- Note that sofile is -- $Q{ROOT}/lib/libkc${label}.so 
   -- But we ffi.load("kc${label})
   status = pcall(ffi.cdef, cdef_str)
-  local kc = assert(ffi.load("kc" .. label)); keycounter._kc = kc 
+  -- repeat cdef for custom destroy function
+  local inc_dir = root_dir .. "/TMPL_FIX_HASHMAP/KEY_COUNTER/" .. label .. "/inc/" 
+  assert(cutils.isdir(inc_dir), "Directory not found " .. inc_dir)
+  local inc_file = inc_dir .. "/_rs_hmap_destroy.h"
+  assert(cutils.isfile(inc_file), "File not found " .. inc_file)
+  local cdef_str = assert(strip_pound(inc_file), "strip failed")
+  status = pcall(ffi.cdef, cdef_str)
+  --[[
+  if ( status ) then 
+    print("cdef for destroy worked")
+  else
+    print("cdef for destroy failed")
+  end
+  --]]
+  --==========================================================
+  local kc = ffi.load("kc" .. label)
+  keycounter._kc = kc 
   -- create the configs for the  hashmap 
   local HC = assert(make_HC(optargs, sofile))
   local htype = label .. "_rs_hmap_t"
   -- create empty hashmap
   local H = ffi.new(htype .. "[?]", 1)
-  local init = label .. "_rs_hmap_instantiate"
-  kc[init](H, HC)
+  local init_name = label .. "_rs_hmap_instantiate"
+  local init_fn = assert(kc[init_name])
+  init_fn(H, HC)
   keycounter._H = H
   keycounter._HC = HC
   keycounter._vecs = vecs
@@ -106,7 +131,10 @@ function KeyCounter.new(vecs, optargs)
   end 
   keycounter._widths = widths
 
-  -- cdef functions in .so file and load .so file 
+  -- just to check that this function exists 
+  local destroy_name = label .. "_rs_hmap_destroy"
+  local destroy_fn = assert(kc[destroy_name])
+
   return keycounter
 end
 
@@ -121,15 +149,18 @@ function KeyCounter:clone(vecs, optargs)
     name = optargs.name
   end
   --===================================
-  local keycounter = setmetatable({}, KeyCounter)
-  keycounter._label  = assert(self._label)
-  local label = keycounter._label
-  keycounter._sofile  = assert(self._sofile)
-  keycounter._name   = name
+  local keycounter     = setmetatable({}, KeyCounter)
+  local label          = assert(self._label)
+  keycounter._label    = label
+  keycounter._sofile   = assert(self._sofile)
+  keycounter._name     = name
   keycounter._chunk_num  = 0
-  keycounter._is_eor = false 
+  keycounter._is_eor   = false 
   local kc = assert(ffi.load("kc" .. label)); 
   keycounter._kc = kc 
+  -- just to check that this function exists 
+  local destroy_name = label .. "_rs_hmap_destroy"
+  local destroy_fn = assert(kc[destroy_name])
   -- create the configs for the  hashmap 
   local HC = assert(make_HC(optargs, keycounter._sofile))
   local htype = label .. "_rs_hmap_t"
@@ -151,9 +182,17 @@ function KeyCounter:clone(vecs, optargs)
 end
 --================================================================
 function KeyCounter:next()
-  print("next(): chunk = ", self._chunk_num)
+  -- print("next(): chunk = ", self._chunk_num)
   local start_time = cutils.rdtsc()
   if ( self._is_eor ) then return false end
+  --================================================
+  if ( self._chunk_num == 0 ) then 
+    -- max_num_in_chunk of all vectors should be of same length
+    for k, v in ipairs(self._vecs) do 
+      assert(self._vecs[1]:max_num_in_chunk() == v:max_num_in_chunk())
+    end
+  end
+  --================================================
   local lens = {}
   local chunks = {}
   for k, v in ipairs(self._vecs) do 
@@ -162,6 +201,7 @@ function KeyCounter:next()
     chunks[k] = chunk
     assert(nn_chunk == nil) -- null values not supported 
   end
+  --================================================
   -- chunks of all vectors should be of same length
   for k, v in ipairs(self._vecs) do 
     assert(lens[k] == lens[1])
@@ -174,7 +214,7 @@ function KeyCounter:next()
   end
   --========
   if ( not chunks[1] ) then 
-    print("No more chunks")
+    -- print("No more chunks")
     self._is_eor = true
     return false
   end
@@ -185,11 +225,6 @@ function KeyCounter:next()
   end
   local mput_fn = self._label .. "_rsx_kc_put"
   local fn = assert(self._kc[mput_fn])
-  --[[
-  print(self._H)
-  print(self._widths)
-  print(data)
-  --]]
 
   local status = fn(self._H, data, self._widths, lens[1])
   -- assert(status == 0)
@@ -198,6 +233,12 @@ function KeyCounter:next()
     v:unget_chunk(self._chunk_num)
   end
   self._chunk_num = self._chunk_num + 1
+  --=====================================================
+  if ( lens[1] < self._vecs[1]:max_num_in_chunk() ) then 
+    self._is_eor = true
+    return false
+  end
+  --=====================================================
   return true -- => more to come 
 end
 
@@ -233,10 +274,13 @@ function KeyCounter:is_eor()
   return self._is_eor
 end
 
-function KeyCounter:delete()
-  print("Destructor called on " .. self._name)
-  self._kc["rs_hmap_destroy"](self._H)
-  -- TODO P1 How do we make sure that this is called by __gc?
+function KeyCounter:__gc()
+  local destroy_name = self._label .. "_rs_hmap_destroy"
+  local kc = assert(self._kc)
+  assert(type(kc) == "userdata")
+  local destroy_fn = assert(kc[destroy_name])
+  destroy_fn(self._H)
+  self._name = "DELETED" -- just for testing
   return true
 end
 

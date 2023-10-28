@@ -89,6 +89,25 @@ local function make_kc_so(configs)
   -- need to call instantiate from Lua code 
   local outfile  = inc_dir .. "/_rs_hmap_instantiate.h"
   cdef_str[#cdef_str+1] = cutils.read(outfile)
+  -- need to call destroy from Lua code 
+  local outfile  = inc_dir .. "/_rs_hmap_destroy.h"
+  cdef_str[#cdef_str+1] = cutils.read(outfile)
+  -- IDeally, following should have been handled in template code
+  -- i.e., we need custom names for rs_hmap_destroy otherwise
+  -- we get conflicts when we cdef 
+  local incfile  = inc_dir .. "/_rs_hmap_destroy.h"
+  local instr = cutils.read(outfile)
+  local generic_name = "rs_hmap_destroy%("
+  local custom_name = label .. "_rs_hmap_destroy%("
+  local outstr = string.gsub(instr, generic_name, custom_name)
+  assert(cutils.write(incfile, outstr))
+  
+  local srcfile  = src_dir .. "/_rs_hmap_destroy.c"
+  local instr = cutils.read(srcfile)
+  local generic_name = "rs_hmap_destroy%("
+  local custom_name = label .. "_rs_hmap_destroy%("
+  local outstr = string.gsub(instr, generic_name, custom_name)
+  assert(cutils.write(srcfile, outstr))
   --=========== make copies of all specific code
   local F2 = { 
     "key_cmp",
@@ -185,7 +204,7 @@ local function make_kc_so(configs)
   -- START Ugly: following is a bit ugly but can be improved later TODO P3
   local tmpf1 = cutils.mkstemp("/tmp/_Q_XXXXXX")
   local tmpf2 = cutils.mkstemp("/tmp/_Q_XXXXXX")
-  cutils.write(tmpf1, cdef_str)
+  assert(cutils.write(tmpf1, cdef_str))
   local cmd = 'grep -v "^#include " ' .. tmpf1  .. " | " ..
     ' grep -v "^#define " | grep -v "^#ifndef " | grep -v "^#endif" > ' 
     .. tmpf2
@@ -195,7 +214,7 @@ local function make_kc_so(configs)
   cutils.delete(tmpf2)
   assert(#cdef_str > 0)
   -- STOP  Ugly
-  print("Code gen complete")
+  -- print("Code gen complete")
   return sofile, cdef_str
 end
 return make_kc_so

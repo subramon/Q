@@ -44,7 +44,8 @@ tests.t1 = function(test_num)
   print("Test t1 successfully completed. Iteration ", test_num)
   return C
 end
-tests.t2 = function ()
+--=====================================================
+tests.t_clone = function ()
   local C1 = tests.t1(1)
   local len = 2 * blksz + 3 
   local vecs = {}
@@ -69,11 +70,23 @@ tests.t2 = function ()
   C1:eval()
   assert(C1:is_eor() == true)
   assert(C1:nitems() == 1)
-  print("Test t2 successfully completed.")
+  print("Test t_clone successfully completed.")
 
+end
+--=====================================================
+tests.t_delete = function()
+  local C1 = tests.t1(1)
+  collectgarbage()
+  C1 = nil
+  collectgarbage()
+  print("Test t_delete successfully completed.")
 end
 tests.t1(1)
 tests.t1(2)
-tests.t2()
+tests.t_delete()
+tests.t_clone()
+collectgarbage()
+--[[
+--]]
 os.exit() -- needed to avoid seg fault complaint
 -- return tests
