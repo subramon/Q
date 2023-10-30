@@ -2,7 +2,7 @@
 #include "rs_hmap_struct.h" // custom code 
 #include "_rs_hmap_instantiate.h" // custom code 
 #include "foo_rsx_kc_put.h"
-#include "foo_rsx_kc_cum_count.h"
+#include "foo_rsx_kc_sum_count.h"
 #include "foo_rsx_kc_make_permutation.h"
 
 int
@@ -85,7 +85,7 @@ main(
   }
   //-----------------------------------------------------------
   uint64_t sum;
-  status = foo_rsx_kc_cum_count(&H, &sum); cBYE(status); 
+  status = foo_rsx_kc_sum_count(&H, &sum); cBYE(status); 
   if ( sum != H.nitems * niters ) { go_BYE(-1); }
   if ( sum != n_puts ) { go_BYE(-1); } 
   //-----------------------------------------------------------

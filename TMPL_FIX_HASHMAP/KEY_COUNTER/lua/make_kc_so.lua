@@ -92,22 +92,45 @@ local function make_kc_so(configs)
   -- need to call destroy from Lua code 
   local outfile  = inc_dir .. "/_rs_hmap_destroy.h"
   cdef_str[#cdef_str+1] = cutils.read(outfile)
+  -- TODO START HACK 
   -- IDeally, following should have been handled in template code
   -- i.e., we need custom names for rs_hmap_destroy otherwise
   -- we get conflicts when we cdef 
   local incfile  = inc_dir .. "/_rs_hmap_destroy.h"
-  local instr = cutils.read(outfile)
+  local instr = cutils.read(incfile)
   local generic_name = "rs_hmap_destroy%("
   local custom_name = label .. "_rs_hmap_destroy%("
   local outstr = string.gsub(instr, generic_name, custom_name)
-  assert(cutils.write(incfile, outstr))
+  local alt_incfile  = inc_dir .. "/rs_hmap_destroy.h"
+  assert(cutils.write(alt_incfile, outstr))
   
   local srcfile  = src_dir .. "/_rs_hmap_destroy.c"
   local instr = cutils.read(srcfile)
   local generic_name = "rs_hmap_destroy%("
   local custom_name = label .. "_rs_hmap_destroy%("
   local outstr = string.gsub(instr, generic_name, custom_name)
-  assert(cutils.write(srcfile, outstr))
+  local outstr = string.gsub(outstr, '"_rs_hmap_destroy.h"', '"rs_hmap_destroy.h"')
+  local alt_srcfile  = src_dir .. "/rs_hmap_destroy.c"
+  assert(cutils.write(alt_srcfile, outstr))
+
+  --========================================
+  local incfile  = inc_dir .. "/_rs_hmap_get.h"
+  local instr = cutils.read(incfile)
+  local generic_name = "rs_hmap_get%("
+  local custom_name = label .. "_rs_hmap_get%("
+  local outstr = string.gsub(instr, generic_name, custom_name)
+  local alt_incfile  = inc_dir .. "/rs_hmap_get.h"
+  assert(cutils.write(alt_incfile, outstr))
+  
+  local srcfile  = src_dir .. "/_rs_hmap_get.c"
+  local instr = cutils.read(srcfile)
+  local generic_name = "rs_hmap_get%("
+  local custom_name = label .. "_rs_hmap_get%("
+  local outstr = string.gsub(instr, generic_name, custom_name)
+  local outstr = string.gsub(outstr, '"_rs_hmap_get.h"', '"rs_hmap_get.h"')
+  local alt_srcfile  = src_dir .. "/rs_hmap_get.c"
+  assert(cutils.write(alt_srcfile, outstr))
+  -- TODO STOP  HACK 
   --=========== make copies of all specific code
   local F2 = { 
     "key_cmp",
@@ -135,6 +158,7 @@ local function make_kc_so(configs)
   cdef_str[#cdef_str+1] = cutils.read(inc_file)
   -- STOP : create rsx_put 
   -- START: create rsx_make_permutation 
+  --[[
   local subs = {}
   subs.label = label
   -- NOTE: Assumptiion that no more that 4 keys in compound key 
@@ -144,6 +168,7 @@ local function make_kc_so(configs)
   if ( n >= 3 ) then subs.comment3 = "  " else subs.comment3 = "//" end
   if ( n >= 4 ) then subs.comment4 = "  " else subs.comment4 = "//" end
   if ( n >= 5 ) then error(" no more that 4 keys in compound key ") end 
+  --==============================================
   subs.fn = label  .. "_rsx_kc_make_permutation"
   subs.tmpl = q_src_root .. 
      "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_make_permutation.tmpl.lua"
@@ -151,16 +176,17 @@ local function make_kc_so(configs)
   local inc_file = gen_code.doth(subs, inc_dir)
   cdef_str[#cdef_str+1] = cutils.read(inc_file)
   -- STOP : create rsx_make_permutation 
-  -- START: create rsx_cum_count 
+  --]]
+  -- START: create rsx_sum_count 
   local subs = {}
   subs.label = label
-  subs.fn = label  .. "_rsx_kc_cum_count"
+  subs.fn = label  .. "_rsx_kc_sum_count"
   subs.tmpl = q_src_root .. 
-     "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_cum_count.tmpl.lua"
+     "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_sum_count.tmpl.lua"
   local src_file = gen_code.dotc(subs, src_dir)
   local inc_file = gen_code.doth(subs, inc_dir)
   cdef_str[#cdef_str+1] = cutils.read(inc_file)
-  -- STOP : create rsx_cum_count 
+  -- STOP : create rsx_sum_count 
   
   -- create INCS to specify directories for include 
   local X = {}
@@ -180,8 +206,12 @@ local function make_kc_so(configs)
     assert(cutils.isfile(X[#X]), "File not found " .. X[#X])
   end
   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_put.c" 
-  X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_cum_count.c" 
-  X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_make_permutation.c" 
+  X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_sum_count.c" 
+-- TODO   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_make_permutation.c" 
+  -- TODO START HACK 
+  X[#X+1] = src_dir .. "/rs_hmap_get.c" 
+  X[#X+1] = src_dir .. "/rs_hmap_destroy.c" 
+  -- TODO STOP  HACK 
   local SRCS = table.concat(X, " ")
   -- print(SRCS); print("=====")
   --=================================
