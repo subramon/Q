@@ -2,8 +2,10 @@
 require 'Q/UTILS/lua/strict'
 local ffi          = require 'ffi'
 local cutils       = require 'libcutils'
+local cmem         = require 'libcmem'
 local lgutils      = require 'liblgutils'
 local Scalar       = require 'libsclr'
+local lVector      = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local record_time  = require 'Q/UTILS/lua/record_time'
 local qcfg         = require 'Q/UTILS/lua/qcfg'
 local make_HC      = require 'Q/RUNTIME/CNTR/lua/make_HC'
@@ -347,6 +349,8 @@ function KeyCounter:sum_count()
 end
 
 function KeyCounter:__gc()
+  print("Destructor on ", self._name)
+  print("mem before destruct = ", lgutils.mem_used())
   local kc = assert(self._kc)
   assert(type(kc) == "userdata")
   local destroy_name = self._label .. "_rs_hmap_destroy"
@@ -360,6 +364,7 @@ function KeyCounter:__gc()
   lgutils.decr_mem_used(n)
   --============================================
   destroy_fn(self._H)
+  print("mem after destruct = ", lgutils.mem_used())
   return true
 end
 
@@ -410,44 +415,46 @@ end
 
 function KeyCounter:condense()
   assert(self._is_eor) -- counter must be stable
-  local count_chunk_num = 0; local count_offset = 0
-  local guid_chunk_num = 0; local guid_offset = 0
+  local offsets = {}; offsets.guid = 0; offsets.count = 0
   local bufsz = qcfg.max_num_in_chunk 
-  local function gen(mode)
-    assert((mode == "guid") or ( mode == "count"))
-    -- NOTE: Both guid and count are uint32_t
-    local buf = cmem.new(bufsz * ffi.sizeof("uint32_t"))
-    buf:stealable(true)
-    local buf_idx = 0
-    if ( mode == "guid"  ) then start = guid_offset end 
-    if ( mode == "count" ) then start = count_offset end 
-    for i = start, self._H[0].size do 
-      if ( buf_idx == bufsz ) then 
-        start = i
-        break
-      else
-        if ( _H[0].bkt_full[i] ) then
-          buf[buf_idx] = _H[0].bkts[i].val.count
+  local function mk_gen(fld) 
+    local fld = fld
+    local function gen()
+      -- NOTE: Both guid and count are uint32_t
+      print("mem before condensor = ", lgutils.mem_used())
+      local buf = cmem.new(bufsz * ffi.sizeof("uint32_t"))
+      buf:stealable(true)
+      print("mem after condensor = ", lgutils.mem_used())
+      local bufptr = get_ptr(buf, "UI4")
+      local buf_idx = 0
+      local start = assert(offsets[fld])
+      for i = start, self._H[0].size do 
+        if ( buf_idx == bufsz ) then 
+          -- next time, we must start from position i
+          start = i
+          break
+        end
+        if ( self._H[0].bkt_full[i] ) then
+          bufptr[buf_idx] = self._H[0].bkts[i].val[fld]
           buf_idx = buf_idx + 1 
         end
       end
+      offsets[fld] = start
+      if ( buf_idx == 0 ) then buf:delete(); buf = nil end 
+      return buf_idx, buf
     end
-    if ( mode == "guid"  ) then guid_offset  = start  end 
-    if ( mode == "count" ) then count_offset = start end 
-    if ( buf_idx == 0 ) then buf:delete(); buf = nil end 
-    return buf_idx, buf
+    return gen
   end
-  local gen_count = gen_count("count") 
-  local gen_guid = gen_guid("guid") 
+  local gen_count = mk_gen("count"); assert(type(gen_count) == "function")
+  local gen_guid  = mk_gen("guid");  assert(type(gen_guid)  == "function")
   local vargs = {}
+  -- TODO P3 Ideally, this should be UI4
   vargs.count = {gen = gen_count, qtype = "I4", has_nulls=false}
   vargs.guid  = {gen = gen_guid,  qtype = "I4", has_nulls=false}
   return lVector(vargs.count), lVector(vargs.guid)
 end
 
 function KeyCounter:make_permutation(vecs)
-  error("TODO")
-  --[[
   assert(self._is_eor) -- counter must be stable
   assert(type(vecs) == "table")
   assert(#vecs == #self._vecs)
@@ -467,19 +474,47 @@ function KeyCounter:make_permutation(vecs)
   -- allocate space for outgoing vector 
   local outbuf = cmem.new({size = nitems, qtype = "I8"})
   local permutation = assert(get_ptr(outbuf, "I8"))
-  -- set up pointers to incoming data 
-  local data = ffi.new("char *[?]", #vecs)
-  data = ffi.cast("char **", data)
-  for k, v in ipairs(vecs) do 
-    data[k-1] = get_ptr(chunks[k], "char *")
+  -- get hold of function 
+  local permute_name = self._label .. "_rsx_make_permutation"
+  local permute_fn = assert(kc[permute_name])
+  -- pull chunk at a time for vecs and update permutation
+  while true do 
+    local lens = {}
+    local chunks = {}
+    for k, v in ipairs(self._vecs) do 
+      local len, chunk, nn_chunk = v:get_chunk(self._chunk_num)
+      lens[k] = len
+      chunks[k] = chunk
+      assert(nn_chunk == nil) -- null values not supported 
+    end
+    --================================================
+    -- chunks of all vectors should be of same length
+    for k, v in ipairs(self._vecs) do 
+      assert(lens[k] == lens[1])
+    end
+    -- either you get all chunks or none 
+    if ( chunks[1] ) then 
+      for k, v in ipairs(self._vecs) do assert(chunks[k]) end
+    else
+      for k, v in ipairs(self._vecs) do assert(not chunks[k]) end
+    end
+    --========
+    if ( not chunks[1] ) then 
+      print("A: No more chunks", self._chunk_num)
+      break
+    end
+    -- vectors used to construct counter must be stable 
+    for k, v in ipairs(self._vecs) do assert(v:is_eov()) end
+    local data = ffi.new("char *[?]", #self._vecs)
+    data = ffi.cast("char **", data)
+    for k, v in ipairs(self._vecs) do 
+      data[k-1] = get_ptr(chunks[k], "char *")
+    end
+    local status = 
+      permute_fn(self._H, data, self._widths, lens[1], permutation)
+    assert(status == 0)
   end
-  -- 
-  local perm_name = self._label .. "_rsx_kc_make_permutation"
-  local perm_fn = assert(kc[perm_name])
---   local status = perm_fn(self._H, data, self._widths, nitems, permutation)
---  assert(status == 0)
-  -- convert permutation into a vector 
-  --]]
+  -- TODO convert permutation into a vector 
 end
 
 return KeyCounter

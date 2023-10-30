@@ -1,3 +1,4 @@
+local Scalar     = require 'libsclr'
 local plpath     = require 'pl.path'
 local ffi        = require 'ffi'
 local Q          = require 'Q'
@@ -155,30 +156,52 @@ tests.t_condense = function()
   local p = 16
   local vecs = {}
   vecs[1] = Q.period({start = 1, by=1, period=p, qtype = "I4", len = len })
-  vecs[2] = Q.period({start = 2, by=2, period=p, qtype = "F4", len = len })
+  vecs[2] = Q.period({start = 2, by=2, period=p, qtype = "I8", len = len })
   local optargs = {}
   optargs.label = label
+  optargs.name = "condensor"
   local C = KeyCounter(vecs, optargs)
   C:eval()
+  print("mem after counter = ", lgutils.mem_used())
   -- Look for something that *IS there 
   local count, guid = C:condense()
   assert(type(count) == "lVector")
   assert(type(guid) == "lVector")
+  assert(count:qtype() == "I4")
+  assert(guid:qtype()  == "I4")
 
   assert(type(count:num_elements() == 0))
+  print("mem before condensor = ", lgutils.mem_used())
   count:eval()
   assert(type(count:num_elements() == p))
+  local r = Q.min(count); local n1, n2 = r:eval()
+  assert(n1 == Scalar.new(4096, "I4")); 
+  assert(n2 == Scalar.new(p, "I8")); 
+  local r = Q.max(count); local n1, n2 = r:eval()
+  assert(n1 == Scalar.new(4097, "I4")); 
+  assert(n2 == Scalar.new(p, "I8")); 
   
   assert(type(guid:num_elements() == 0))
   guid:eval()
+  print("mem after condensor = ", lgutils.mem_used())
   assert(type(guid:num_elements() == p)) 
+  local r = Q.min(guid); local n1, n2 = r:eval()
+  assert(n1 == Scalar.new(1, "I4")); 
+  assert(n2 == Scalar.new(p, "I8")); 
+  local r = Q.max(guid); local n1, n2 = r:eval()
+  assert(n1 == Scalar.new(16, "I4")); 
+  assert(n2 == Scalar.new(p, "I8")); 
+  r = nil; n1 = nil; n2 = nil
   --===============================================
-  os.execute("rm -r -f " .. opdir) -- cleanup
+  -- cleanup
+  os.execute("rm -r -f " .. opdir) 
   C = nil
   for k, v in ipairs(vecs) do v = nil end; vecs = nil
+  guid = nil
+  count = nil
   collectgarbage()
   local mem_used_post = lgutils.mem_used()
-  -- print(mem_used_pre, mem_used_post)
+  print(mem_used_pre, mem_used_post)
   assert(mem_used_pre == mem_used_post)
   print("Test t_condense successfully completed. ")
 end
