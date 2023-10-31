@@ -158,7 +158,6 @@ local function make_kc_so(configs)
   cdef_str[#cdef_str+1] = cutils.read(inc_file)
   -- STOP : create rsx_put 
   -- START: create rsx_make_permutation 
-  --[[
   local subs = {}
   subs.label = label
   -- NOTE: Assumptiion that no more that 4 keys in compound key 
@@ -176,7 +175,6 @@ local function make_kc_so(configs)
   local inc_file = gen_code.doth(subs, inc_dir)
   cdef_str[#cdef_str+1] = cutils.read(inc_file)
   -- STOP : create rsx_make_permutation 
-  --]]
   -- START: create rsx_sum_count 
   local subs = {}
   subs.label = label
@@ -187,6 +185,16 @@ local function make_kc_so(configs)
   local inc_file = gen_code.doth(subs, inc_dir)
   cdef_str[#cdef_str+1] = cutils.read(inc_file)
   -- STOP : create rsx_sum_count 
+  -- START: create rsx_cum_count 
+  local subs = {}
+  subs.label = label
+  subs.fn = label  .. "_rsx_kc_cum_count"
+  subs.tmpl = q_src_root .. 
+     "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_cum_count.tmpl.lua"
+  local src_file = gen_code.dotc(subs, src_dir)
+  local inc_file = gen_code.doth(subs, inc_dir)
+  cdef_str[#cdef_str+1] = cutils.read(inc_file)
+  -- STOP : create rsx_cum_count 
   
   -- create INCS to specify directories for include 
   local X = {}
@@ -206,8 +214,9 @@ local function make_kc_so(configs)
     assert(cutils.isfile(X[#X]), "File not found " .. X[#X])
   end
   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_put.c" 
+  X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_cum_count.c" 
   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_sum_count.c" 
--- TODO   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_make_permutation.c" 
+  X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_make_permutation.c" 
   -- TODO START HACK 
   X[#X+1] = src_dir .. "/rs_hmap_get.c" 
   X[#X+1] = src_dir .. "/rs_hmap_destroy.c" 

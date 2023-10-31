@@ -364,6 +364,7 @@ function KeyCounter:__gc()
   lgutils.decr_mem_used(n)
   --============================================
   destroy_fn(self._H)
+  if ( self._cum_count  ) then self._cum_count:delete() end 
   print("mem after destruct = ", lgutils.mem_used())
   return true
 end
@@ -454,67 +455,133 @@ function KeyCounter:condense()
   return lVector(vargs.count), lVector(vargs.guid)
 end
 
+function KeyCounter:make_cum_count()
+  if ( self._cum_count ) then 
+    assert(type(self._cum_count) == "CMEM")
+    return true
+  end
+  local size = self._H[0].size
+  local cmem = cmem.new(size * ffi.sizeof("uint64_t", "UI8"))
+  cmem:zero()
+  local cum_count = get_ptr(cmem, "UI8")
+  local lua_impl = false -- set to true for testing 
+  local x_sum_count -- independent of Lua or C implementation
+  if ( lua_impl ) then 
+    local sum_count = 0 -- Lua implementation
+    local bkts = self._H[0].bkts
+    local bkt_full = self._H[0].bkt_full
+    for i = 0, size do 
+      if ( bkt_full[i] ) then
+        local l_count = bkts[i].val.count
+        cum_count[i] = sum_count
+        sum_count  = sum_count + l_count
+      end
+    end
+    x_sum_count = sum_count
+  else
+    local cum_count_name = self._label .. "_rsx_kc_cum_count"
+    local cum_count_fn = assert(self._kc[cum_count_name])
+    local sum_count = ffi.new("uint64_t[?]", 1) -- for C implementation
+    local status = cum_count_fn(self._H, cum_count, sum_count)
+    assert(status == 0)
+    x_sum_count = sum_count[0]
+  end
+  if ( self._sum_count ) then assert(self._sum_count == x_sum_count)  end
+  self._sum_count = x_sum_count  -- note memoization
+  self._cum_count = cmem
+  return true 
+end
+
 function KeyCounter:make_permutation(vecs)
   assert(self._is_eor) -- counter must be stable
   assert(type(vecs) == "table")
   assert(#vecs == #self._vecs)
   for k, v in ipairs(vecs) do 
-    assert(v:qtype() == self._vecs[k].qtype())
-    assert(v:width() == self._vecs[k].width())
+    assert(v:qtype() == self._vecs[k]:qtype())
+    assert(v:width() == self._vecs[k]:width())
   end
   -- all incoming vectors should have same chunk size 
   for k, v in ipairs(vecs) do 
     assert(v:max_num_in_chunk() == vecs[k]:max_num_in_chunk())
   end
-  -- incoming vetors should be stable 
-  for k, v in ipairs(vecs) do assert(v:is_eov()) end
-  -- incomin vectors should be same length as number of items in Counte
+  -- NOT NECESSARY incoming vetors should be stable 
+  -- for k, v in ipairs(vecs) do assert(v:is_eov()) end
+  -- incoming vectors should be same length as number of items in Counte
+  -- Not to be checked earlier because vecs may not be fully materialied
   local nitems = self._H[0].nitems
-  for k, v in ipairs(vecs) do assert(v:length() == nitems) end 
-  -- allocate space for outgoing vector 
-  local outbuf = cmem.new({size = nitems, qtype = "I8"})
-  local permutation = assert(get_ptr(outbuf, "I8"))
+  -- for k, v in ipairs(vecs) do assert(v:length() == nitems) end 
   -- get hold of function 
-  local permute_name = self._label .. "_rsx_make_permutation"
-  local permute_fn = assert(kc[permute_name])
-  -- pull chunk at a time for vecs and update permutation
-  while true do 
+  local permute_name = self._label .. "_rsx_kc_make_permutation"
+  local permute_fn = assert(self._kc[permute_name])
+  --===========================
+  -- set up some stuff shared across function invocations
+  local bufsz = qcfg.max_num_in_chunk
+  local l_chunk_num = 0
+  local run_count = cmem.new(nitems * ffi.sizeof("uint32_t", "UI4"))
+  local run_ptr = get_ptr(run_count, "UI4")
+  if ( not self._cum_count ) then
+    self:make_cum_count()
+  end
+  assert(self._cum_count)
+  local cum_ptr = get_ptr(self._cum_count, "UI8")
+  local function gen(chunk_num)
+    print("Permutation ", chunk_num)
+    assert(chunk_num == l_chunk_num)
     local lens = {}
     local chunks = {}
-    for k, v in ipairs(self._vecs) do 
-      local len, chunk, nn_chunk = v:get_chunk(self._chunk_num)
+    for k, v in ipairs(vecs) do 
+      local len, chunk, nn_chunk = v:get_chunk(chunk_num)
       lens[k] = len
       chunks[k] = chunk
       assert(nn_chunk == nil) -- null values not supported 
+      print(k, lens[k])
     end
     --================================================
+    -- chunks and lens should match up
+    for k, v in ipairs(vecs) do 
+      if ( lens[k] >  0 ) then assert(chunks[k]) end 
+      if ( lens[k] == 0 ) then assert(not chunks[k]) end 
+    end
     -- chunks of all vectors should be of same length
-    for k, v in ipairs(self._vecs) do 
+    for k, v in ipairs(vecs) do 
       assert(lens[k] == lens[1])
     end
     -- either you get all chunks or none 
     if ( chunks[1] ) then 
-      for k, v in ipairs(self._vecs) do assert(chunks[k]) end
+      for k, v in ipairs(vecs) do assert(chunks[k]) end
     else
-      for k, v in ipairs(self._vecs) do assert(not chunks[k]) end
+      for k, v in ipairs(vecs) do assert(not chunks[k]) end
     end
     --========
     if ( not chunks[1] ) then 
-      print("A: No more chunks", self._chunk_num)
-      break
+      print("C: No more chunks", self._chunk_num)
+      run_count:delete()
+      return 0
     end
-    -- vectors used to construct counter must be stable 
-    for k, v in ipairs(self._vecs) do assert(v:is_eov()) end
-    local data = ffi.new("char *[?]", #self._vecs)
+    local data = ffi.new("char *[?]", #vecs)
     data = ffi.cast("char **", data)
-    for k, v in ipairs(self._vecs) do 
+    for k, v in ipairs(vecs) do 
       data[k-1] = get_ptr(chunks[k], "char *")
     end
+    local perm_buf = cmem.new(bufsz*ffi.sizeof("uint64_t", "UI8"))
+    perm_buf:stealable(true)
+    local perm_ptr = get_ptr(perm_buf, "UI8")
+    local sum_count = assert(self._sum_count)
     local status = 
-      permute_fn(self._H, data, self._widths, lens[1], permutation)
+      permute_fn(self._H, data, self._widths, lens[1], 
+      sum_count, run_ptr, cum_ptr, perm_ptr)
     assert(status == 0)
+    print(">>>>>>return ", lens[1])
+    l_chunk_num = l_chunk_num + 1 
+    for k, v in ipairs(vecs) do 
+      v:unget_chunk(chunk_num)
+    end
+    return lens[1], perm_buf
   end
-  -- TODO convert permutation into a vector 
+  local vargs = {}
+  -- TODO P3 Ideally, this should be UI8
+  local vargs = {gen = gen, qtype = "I8", has_nulls=false}
+  return lVector(vargs)
 end
 
 return KeyCounter

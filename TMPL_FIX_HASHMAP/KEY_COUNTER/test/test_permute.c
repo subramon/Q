@@ -3,6 +3,7 @@
 #include "_rs_hmap_instantiate.h" // custom code 
 #include "foo_rsx_kc_put.h"
 #include "foo_rsx_kc_sum_count.h"
+#include "foo_rsx_kc_cum_count.h"
 #include "foo_rsx_kc_make_permutation.h"
 
 int
@@ -28,8 +29,10 @@ main(
   int status = 0;
   uint32_t n_cols = 2; // HARD CODED from foo/inc/rsx_types.h
   uint32_t *widths = NULL; 
-  void **data = NULL; 
+  char **data = NULL; 
   uint64_t *permutation = NULL;
+  uint64_t *cum_count = NULL;
+  uint32_t *run_count = NULL;
   // num_frees = num_mallocs = 0; 
   foo_rs_hmap_t H; memset(&H, 0, sizeof(H));
   //---------------------------
@@ -50,7 +53,7 @@ main(
   widths[0] = sizeof(key.key1);
   widths[1] = sizeof(key.key2);
 
-  data = malloc(n_cols * sizeof(void *));
+  data = malloc(n_cols * sizeof(char *));
   data[0] = malloc(widths[0] * nitems);
   data[1] = malloc(widths[1] * nitems);
 
@@ -84,17 +87,42 @@ main(
     if ( !is_found ) { go_BYE(-1); }
   }
   //-----------------------------------------------------------
-  uint64_t sum;
-  status = foo_rsx_kc_sum_count(&H, &sum); cBYE(status); 
-  if ( sum != H.nitems * niters ) { go_BYE(-1); }
-  if ( sum != n_puts ) { go_BYE(-1); } 
+  uint64_t sum_count;
+  status = foo_rsx_kc_sum_count(&H, &sum_count); cBYE(status); 
+  if ( sum_count != H.nitems * niters ) { go_BYE(-1); }
+  if ( sum_count != n_puts ) { go_BYE(-1); } 
   //-----------------------------------------------------------
   // Create permutation for items 
   permutation = malloc(n_puts * sizeof(uint64_t));
   for ( uint32_t k = 0; k < n_puts; k++ ) { 
     permutation[k] = UINT_MAX;
   }
+  // Create auxiliary data used to create permutation
+  run_count = malloc(n_puts * sizeof(uint32_t));
+  for ( uint32_t k = 0; k < n_puts; k++ ) { 
+    run_count[k] = 0;
+  }
+  cum_count = malloc(n_puts * sizeof(uint64_t));
+  for ( uint32_t k = 0; k < n_puts; k++ ) { 
+    cum_count[k] = 0;
+  }
+  // test cum_count function
+  status = foo_rsx_kc_cum_count(&H, cum_count, &sum_count); cBYE(status); 
+  if ( sum_count != n_puts ) { go_BYE(-1); } 
+  uint32_t num_zeros = 0;
+  for ( uint32_t i = 0; i < H.size; i++ ) { 
+    if ( H.bkt_full[i] ) { 
+      if ( cum_count[i] == 0 ) { num_zeros++; }
+    }
+    else {
+      if ( cum_count[i] != 0 ) { go_BYE(-1); }
+    }
+  }
+  if ( num_zeros != 1 ) { go_BYE(-1); }
+  //-------------------------------------------------
   uint32_t save_n_puts = n_puts;
+  // This loop is needed because we put the same  data several times
+  // to simulate a larger input without actually creating it
   for ( int k = 0; n_puts > 0; k++ ) { 
     uint32_t chunk_size;
     if ( n_puts > nitems ) {
@@ -104,10 +132,23 @@ main(
       chunk_size = n_puts;
     }
     status = foo_rsx_kc_make_permutation(&H, data, widths, chunk_size,
-        permutation + k*chunk_size);
+        run_count, cum_count, permutation + k*chunk_size);
     cBYE(status);
     n_puts -= chunk_size;
   }
+  // Check run_count 
+  uint64_t sum_run_count = 0;
+  for ( uint32_t i = 0; i < H.size; i++ ) { 
+    if ( H.bkt_full[i] ) { 
+      if ( run_count[i] != H.bkts[i].val.count ) { go_BYE(-1); }
+      sum_run_count += run_count[i];
+    }
+    else {
+      if ( run_count[i] != 0 ) { go_BYE(-1); }
+    }
+  }
+  if ( sum_run_count != sum_count ) { go_BYE(-1); }
+  //----------------------------
   n_puts = save_n_puts;
   uint32_t tmp = 0;
   for ( uint32_t k = 0; k < n_puts; k++ ) { 
@@ -119,11 +160,6 @@ main(
   qsort(permutation, n_puts, sizeof(uint64_t), fn_sortUI8_asc);
   for ( uint32_t i = 0; i < n_puts; i++ ) { 
     if ( permutation[i] != i ) { go_BYE(-1); }
-  }
-  for ( uint32_t i = 0; i < H.size; i++ ) { 
-    if ( H.bkt_full[i] == false ) { continue; }
-    if ( H.bkts[i].val.count != H.bkts[i].val.run_count ) { 
-      go_BYE(-1); }
   }
   //------------- cleanup
   H.destroy(&H); 
@@ -137,6 +173,7 @@ BYE:
   }
   free_if_non_null(widths);
   free_if_non_null(permutation);
+  free_if_non_null(run_count);
   if ( status == 0 ) { printf("Success on %s \n", argv[0]); }
   free_if_non_null(HC.so_file);
   return status;
