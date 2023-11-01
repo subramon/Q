@@ -10,6 +10,9 @@ local record_time  = require 'Q/UTILS/lua/record_time'
 local qcfg         = require 'Q/UTILS/lua/qcfg'
 local make_HC      = require 'Q/RUNTIME/CNTR/lua/make_HC'
 local make_configs = require 'Q/RUNTIME/CNTR/lua/make_configs'
+local mod_hmap_storage = require 'Q/RUNTIME/CNTR/lua/mod_hmap_storage'
+local chk_vecs_old_new = require 'Q/RUNTIME/CNTR/lua/chk_vecs_old_new'
+local chk_chnks_lens_across_vecs = require 'Q/RUNTIME/CNTR/lua/chk_chnks_lens_across_vecs'
 local make_kc_so   = require 'Q/TMPL_FIX_HASHMAP/KEY_COUNTER/lua/make_kc_so'
 local register_type = require 'Q/UTILS/lua/register_type'
 local get_ptr      = require 'Q/UTILS/lua/get_ptr'
@@ -61,6 +64,7 @@ setmetatable(KeyCounter, {
   end,
 })
 register_type(KeyCounter, "KeyCounter")
+-- some local functions
 --==================================================
 function KeyCounter.new(vecs, optargs)
   -- different *kinds* of KeyCounters must have different labels
@@ -106,7 +110,6 @@ function KeyCounter.new(vecs, optargs)
   assert(cutils.isfile(inc_file), "File not found " .. inc_file)
   local cdef_str = assert(strip_pound(inc_file), "strip failed")
   status = pcall(ffi.cdef, cdef_str)
-  -- print(cdef_str)
   --
   -- repeat cdef for custom get function
   local inc_dir = root_dir .. "/TMPL_FIX_HASHMAP/KEY_COUNTER/" .. label .. "/inc/" 
@@ -123,6 +126,7 @@ function KeyCounter.new(vecs, optargs)
   -- print(cdef_str)
   --==========================================================
   local kc = ffi.load("kc" .. label)
+  print("Loaded " .. "kc" .. label)
   keycounter._kc = kc 
   -- create the configs for the  hashmap 
   local HC = assert(make_HC(optargs, sofile))
@@ -131,6 +135,7 @@ function KeyCounter.new(vecs, optargs)
   local H = ffi.new(htype .. "[?]", 1)
   local init_name = label .. "_rs_hmap_instantiate"
   local init_fn = assert(kc[init_name])
+  -- print("Checked that function exists -> ", init_name)
   init_fn(H, HC)
   keycounter._H = H
   keycounter._HC = HC
@@ -143,22 +148,15 @@ function KeyCounter.new(vecs, optargs)
     assert(widths[k-1] > 0)
   end 
   keycounter._widths = widths
-  -- record memory usage 
-  local bkttype = keycounter._label .. "_rs_hmap_bkt_t";
-  local bktsize = ffi.sizeof(bkttype)
-  local n = bktsize * keycounter._H[0].size -- for bkts
-  lgutils.incr_mem_used(n)
-  local n = ffi.sizeof("bool") * keycounter._H[0].size -- for bkt_full
-  lgutils.incr_mem_used(n)
-  --================================================
-
+  -- record increase in memory usage 
+  mod_hmap_storage(keycounter._label, keycounter._H[0].size, "incr")
   -- just to check that this function exists 
   local destroy_name = label .. "_rs_hmap_destroy"
   local destroy_fn = assert(kc[destroy_name])
+  -- print("Checked that function exists -> ", destroy_name)
   local get_name = label .. "_rs_hmap_get"
-  print(get_name)
   local get_fn = assert(kc[get_name])
-
+  -- print("Checked that function exists -> ", get_name)
   print("Created KeyCouter")
   return keycounter
 end
@@ -203,14 +201,8 @@ function KeyCounter:clone(vecs, optargs)
     assert(widths[k-1] > 0)
   end 
   keycounter._widths = widths
-  -- record memory usage 
-  local bkttype = keycounter._label .. "_rs_hmap_bkt_t";
-  local bktsize = ffi.sizeof(bkttype)
-  local n = bktsize * keycounter._H[0].size -- for bkts
-  lgutils.incr_mem_used(n)
-  local n = ffi.sizeof("bool") * self._H[0].size -- for bkt_full
-  lgutils.incr_mem_used(n)
-  --================================================
+  -- record increase in memory usage 
+  mod_hmap_storage(keycounter._label, keycounter._H[0].size, "incr")
   -- print("Cloned KeyCouter")
   return keycounter
 end
@@ -235,25 +227,15 @@ function KeyCounter:next()
     chunks[k] = chunk
     assert(nn_chunk == nil) -- null values not supported 
   end
-  --================================================
-  -- chunks of all vectors should be of same length
-  for k, v in ipairs(self._vecs) do 
-    assert(lens[k] == lens[1])
-  end
-  -- either you get all chunks or none 
-  if ( chunks[1] ) then 
-    for k, v in ipairs(self._vecs) do assert(chunks[k]) end
-  else
-    for k, v in ipairs(self._vecs) do assert(not chunks[k]) end
-  end
-  --========
-  if ( not chunks[1] ) then 
+  local len = chk_chnks_lens_across_vecs(lens, chunks, #self._vecs)
+  if ( len == 0 ) then 
     print("A: No more chunks", self._chunk_num)
     self._is_eor = true
     -- vectors used to construct counter must be stable 
     for k, v in ipairs(self._vecs) do assert(v:is_eov()) end
     return false
   end
+  --==================================================
   local data = ffi.new("char *[?]", #self._vecs)
   data = ffi.cast("char **", data)
   for k, v in ipairs(self._vecs) do 
@@ -263,7 +245,7 @@ function KeyCounter:next()
   local fn = assert(self._kc[mput_fn])
 
   local old_size = self._H[0].size -- record size before insert
-  local status = fn(self._H, data, self._widths, lens[1])
+  local status = fn(self._H, data, self._widths, len)
   assert(status == 0)
   local new_size = self._H[0].size -- record size after insert
   -- release chunks 
@@ -273,15 +255,10 @@ function KeyCounter:next()
   --=====================================================
   -- record increase in memory usage 
   if ( new_size > old_size ) then 
-    local bkttype = self._label .. "_rs_hmap_bkt_t";
-    local bktsize = ffi.sizeof(bkttype)
-    local n = bktsize * (new_size - old_size) -- for bkts
-    lgutils.incr_mem_used(n)
-    local n = ffi.sizeof("bool") * (new_size - old_size) -- for bkt_full
-    lgutils.incr_mem_used(n)
+    mod_hmap_storage(self._label, new_size - old_size, "incr")
   end
   --=====================================================
-  if ( lens[1] < self._vecs[1]:max_num_in_chunk() ) then 
+  if ( len < self._vecs[1]:max_num_in_chunk() ) then 
     print("B: No more chunks", self._chunk_num)
     self._is_eor = true
     -- vectors used to construct counter must be stable 
@@ -356,20 +333,19 @@ function KeyCounter:__gc()
   local destroy_name = self._label .. "_rs_hmap_destroy"
   local destroy_fn = assert(kc[destroy_name])
   -- record decrease in memory usage after destroy
-  local bkttype = self._label .. "_rs_hmap_bkt_t";
-  local bktsize = ffi.sizeof(bkttype)
-  local n = bktsize * self._H[0].size -- for bkts
-  lgutils.decr_mem_used(n)
-  local n = ffi.sizeof("bool") * self._H[0].size -- for bkt_full
-  lgutils.decr_mem_used(n)
+  mod_hmap_storage(self._label, self._H[0].size, "decr")
   --============================================
   destroy_fn(self._H)
-  if ( self._cum_count  ) then self._cum_count:delete() end 
+  if ( self._auxvals ) then 
+    for k, v in pairs(self._auxvals) do 
+      v:delete()
+    end
+  end
   print("mem after destruct = ", lgutils.mem_used())
   return true
 end
 
-function KeyCounter:get_count(sclrs)
+function KeyCounter:get_val(sclrs)
   assert(type(sclrs) == "table")
   assert(#sclrs == #self._vecs)
   for k, s in ipairs(sclrs) do 
@@ -414,54 +390,73 @@ function KeyCounter:get_count(sclrs)
   return key, keytype, val, valtype, is_found, where_found
 end
 
-function KeyCounter:condense()
+function KeyCounter:condense(fld)
+  assert(type(fld) == "string")
   assert(self._is_eor) -- counter must be stable
-  local offsets = {}; offsets.guid = 0; offsets.count = 0
+  local offset = 0 -- where to start from for next chunk
   local bufsz = qcfg.max_num_in_chunk 
-  local function mk_gen(fld) 
-    local fld = fld
-    local function gen()
-      -- NOTE: Both guid and count are uint32_t
-      print("mem before condensor = ", lgutils.mem_used())
-      local buf = cmem.new(bufsz * ffi.sizeof("uint32_t"))
-      buf:stealable(true)
-      print("mem after condensor = ", lgutils.mem_used())
-      local bufptr = get_ptr(buf, "UI4")
-      local buf_idx = 0
-      local start = assert(offsets[fld])
-      for i = start, self._H[0].size do 
-        if ( buf_idx == bufsz ) then 
-          -- next time, we must start from position i
-          start = i
-          break
-        end
-        if ( self._H[0].bkt_full[i] ) then
-          bufptr[buf_idx] = self._H[0].bkts[i].val[fld]
-          buf_idx = buf_idx + 1 
-        end
-      end
-      offsets[fld] = start
-      if ( buf_idx == 0 ) then buf:delete(); buf = nil end 
-      return buf_idx, buf
-    end
-    return gen
+  local val_from_aux = true -- value to be condensed in self._auxvals
+  if ( ( fld == "count" ) or ( fld == "guid" ) ) then
+    val_from_aux = false
   end
-  local gen_count = mk_gen("count"); assert(type(gen_count) == "function")
-  local gen_guid  = mk_gen("guid");  assert(type(gen_guid)  == "function")
+  local bufwidth  = 0
+  local bufqtype
+  local inbuf 
+  if ( val_from_aux ) then
+    inbuf = assert(self._auxvals[fld])
+    assert(type(inbuf == "CMEM"))
+    bufqtype = assert(inbuf:qtype())
+    inbuf = get_ptr(inbuf, bufqtype)
+  else
+    bufqtype = "UI4" -- NOTE: Both guid and count are uint32_t
+  end
+  bufwidth = cutils.get_width_qtype(bufqtype)
+  assert(bufwidth > 0)
+  local is_eov = false -- for debugging 
+  --=========================================
+  local function gen()
+    assert(is_eov == false)
+    print("mem before condensor = ", lgutils.mem_used())
+    local buf = cmem.new(bufsz * bufwidth)
+    buf:stealable(true)
+    print("mem after condensor = ", lgutils.mem_used())
+    local bufptr = get_ptr(buf, bufqtype)
+    local buf_idx = 0
+    local start = offset
+    for i = start, self._H[0].size do 
+      if ( buf_idx == bufsz ) then 
+        -- next time, we must start from position i
+        offset = i
+        break
+      end
+      if ( self._H[0].bkt_full[i] ) then
+        if( val_from_aux ) then 
+          bufptr[buf_idx] = inbuf[i]
+        else
+          bufptr[buf_idx] = self._H[0].bkts[i].val[fld]
+        end
+        buf_idx = buf_idx + 1 
+      end
+    end
+    if ( buf_idx < bufsz ) then is_eov = true end
+    if ( buf_idx == 0 ) then buf:delete(); buf = nil end 
+    return buf_idx, buf
+  end
   local vargs = {}
-  -- TODO P3 Ideally, this should be UI4
-  vargs.count = {gen = gen_count, qtype = "I4", has_nulls=false}
-  vargs.guid  = {gen = gen_guid,  qtype = "I4", has_nulls=false}
-  return lVector(vargs.count), lVector(vargs.guid)
+  if ( bufqtype == "UI4" ) then bufqtype = "I4" end  --TODO P3
+  if ( bufqtype == "UI8" ) then bufqtype = "I8" end  --TODO P3
+  vargs = {gen = gen, qtype = bufqtype, has_nulls=false}
+  return lVector(vargs)
 end
 
 function KeyCounter:make_cum_count()
-  if ( self._cum_count ) then 
-    assert(type(self._cum_count) == "CMEM")
+  if ( ( self._auxvals ) and ( self._auxvals.cum_count ) ) then 
+    assert(type(self._auxvals.cum_count) == "CMEM")
     return true
   end
   local size = self._H[0].size
-  local cmem = cmem.new(size * ffi.sizeof("uint64_t", "UI8"))
+  local cmem = cmem.new({
+    size = size * ffi.sizeof("uint64_t"), qtype = "UI8"})
   cmem:zero()
   local cum_count = get_ptr(cmem, "UI8")
   local lua_impl = false -- set to true for testing 
@@ -487,14 +482,22 @@ function KeyCounter:make_cum_count()
     x_sum_count = sum_count[0]
   end
   if ( self._sum_count ) then assert(self._sum_count == x_sum_count)  end
-  self._sum_count = x_sum_count  -- note memoization
-  self._cum_count = cmem
+  -- START memoization 
+  self._sum_count = x_sum_count  
+  if ( self._auxvals ) then 
+    assert(type(self._auxvals) == "table")
+  else
+    self._auxvals = {}
+    self._auxvals.cum_count = cmem
+  end
+  -- STOP  memoization 
   return true 
 end
 
 function KeyCounter:make_permutation(vecs)
   assert(self._is_eor) -- counter must be stable
   assert(type(vecs) == "table")
+  -- START: vecs must match with vecs used to create KeyCounter
   assert(#vecs == #self._vecs)
   for k, v in ipairs(vecs) do 
     assert(v:qtype() == self._vecs[k]:qtype())
@@ -504,26 +507,28 @@ function KeyCounter:make_permutation(vecs)
   for k, v in ipairs(vecs) do 
     assert(v:max_num_in_chunk() == vecs[k]:max_num_in_chunk())
   end
+  -- STOP : vecs must match with vecs used to create KeyCounter
   -- NOT NECESSARY incoming vetors should be stable 
   -- for k, v in ipairs(vecs) do assert(v:is_eov()) end
   -- incoming vectors should be same length as number of items in Counte
-  -- Not to be checked earlier because vecs may not be fully materialied
-  local nitems = self._H[0].nitems
-  -- for k, v in ipairs(vecs) do assert(v:length() == nitems) end 
-  -- get hold of function 
   local permute_name = self._label .. "_rsx_kc_make_permutation"
   local permute_fn = assert(self._kc[permute_name])
   --===========================
   -- set up some stuff shared across function invocations
   local bufsz = qcfg.max_num_in_chunk
+  local nitems = self._H[0].nitems
+  local run_count_sz = nitems * ffi.sizeof("uint32_t")
+  local run_count = assert(cmem.new(run_count_sz))
+  run_count:zero()
   local l_chunk_num = 0
-  local run_count = cmem.new(nitems * ffi.sizeof("uint32_t", "UI4"))
   local run_ptr = get_ptr(run_count, "UI4")
-  if ( not self._cum_count ) then
+  if ( ( self._auxvals ) and ( self._auxvals.cum_count ) ) then 
+    -- nothing to do 
+  else
     self:make_cum_count()
   end
-  assert(self._cum_count)
-  local cum_ptr = get_ptr(self._cum_count, "UI8")
+  assert(self._auxvals.cum_count)
+  local cum_ptr = get_ptr(self._auxvals.cum_count, "UI8")
   local function gen(chunk_num)
     print("Permutation ", chunk_num)
     assert(chunk_num == l_chunk_num)
@@ -534,49 +539,39 @@ function KeyCounter:make_permutation(vecs)
       lens[k] = len
       chunks[k] = chunk
       assert(nn_chunk == nil) -- null values not supported 
-      print(k, lens[k])
     end
     --================================================
-    -- chunks and lens should match up
-    for k, v in ipairs(vecs) do 
-      if ( lens[k] >  0 ) then assert(chunks[k]) end 
-      if ( lens[k] == 0 ) then assert(not chunks[k]) end 
-    end
-    -- chunks of all vectors should be of same length
-    for k, v in ipairs(vecs) do 
-      assert(lens[k] == lens[1])
-    end
-    -- either you get all chunks or none 
-    if ( chunks[1] ) then 
-      for k, v in ipairs(vecs) do assert(chunks[k]) end
-    else
-      for k, v in ipairs(vecs) do assert(not chunks[k]) end
-    end
-    --========
-    if ( not chunks[1] ) then 
+    local len = chk_chnks_lens_across_vecs(lens, chunks, #vecs)
+    if ( len == 0 ) then 
       print("C: No more chunks", self._chunk_num)
       run_count:delete()
+      -- vectors used to construct permutation must be stable 
+      for k, v in ipairs(vecs) do assert(v:is_eov()) end
+      -- We can now check that lengths match up
+      for k, v in ipairs(vecs) do 
+        assert(v:num_elements() == self._vecs[k]:num_elments())
+      end
       return 0
     end
+    --================================================
     local data = ffi.new("char *[?]", #vecs)
     data = ffi.cast("char **", data)
     for k, v in ipairs(vecs) do 
       data[k-1] = get_ptr(chunks[k], "char *")
     end
-    local perm_buf = cmem.new(bufsz*ffi.sizeof("uint64_t", "UI8"))
+    local perm_buf = cmem.new(bufsz*ffi.sizeof("uint64_t"))
     perm_buf:stealable(true)
     local perm_ptr = get_ptr(perm_buf, "UI8")
     local sum_count = assert(self._sum_count)
     local status = 
-      permute_fn(self._H, data, self._widths, lens[1], 
+      permute_fn(self._H, data, self._widths, len, 
       sum_count, run_ptr, cum_ptr, perm_ptr)
     assert(status == 0)
-    print(">>>>>>return ", lens[1])
     l_chunk_num = l_chunk_num + 1 
     for k, v in ipairs(vecs) do 
       v:unget_chunk(chunk_num)
     end
-    return lens[1], perm_buf
+    return len, perm_buf
   end
   local vargs = {}
   -- TODO P3 Ideally, this should be UI8
