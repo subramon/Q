@@ -345,7 +345,7 @@ tests.t_get_hidx = function()
   --===============================================
   local hidx = C:get_hidx(vecs)
   assert(type(hidx) == "lVector")
-  assert(hidx:qtype()  == "I8")
+  assert(hidx:qtype()  == "I4")
   assert(type(hidx:num_elements() == 0))
   hidx:eval()
   Q.print_csv({hidx}, { opfile = "_x.csv", })

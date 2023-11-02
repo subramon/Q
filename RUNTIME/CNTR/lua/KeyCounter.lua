@@ -580,7 +580,11 @@ function KeyCounter:make_permutation(vecs)
   local vargs = {gen = gen, qtype = "I8", has_nulls=false}
   return lVector(vargs)
 end
-
+-- given a vector of keys (technically a table of vectors)
+-- we find the position in the hash table where each key is stored
+-- obviously, this makes sense only when no more updates are
+-- going to be performed on the hash table. Note that inserts
+-- may move things around but puts and updates do not 
 function KeyCounter:get_hidx(vecs)
   assert(self._is_eor) -- counter must be stable
   assert(type(vecs) == "table")
@@ -592,13 +596,13 @@ function KeyCounter:get_hidx(vecs)
   -- incoming vectors should be same length as number of items in Counte
   -- set up some stuff shared across function invocations
   local l_chunk_num = 0
-  local out_qtype = "I8"
+  local out_qtype = "UI4"  
+  -- since we are creating an index into the hash table and the 
+  -- hash table cannot have size >= 2^32, UI4 suffices
   local out_width = cutils.get_width_qtype(out_qtype)
   assert(out_width > 0)
   local bufsz = qcfg.max_num_in_chunk
-  -- STOP  TODO 
   local function gen(chunk_num)
-    print("get_hidx ", chunk_num)
     assert(chunk_num == l_chunk_num)
     --================================================
     local lens = {}
@@ -635,7 +639,7 @@ function KeyCounter:get_hidx(vecs)
     return len, out_buf
   end
   local vargs = {}
-  if ( out_qtype == "UI8" ) then out_qtype = "I8" end  --TODO P3
+  if ( out_qtype == "UI4" ) then out_qtype = "I4" end  --TODO P3
   local vargs = {gen = gen, qtype = out_qtype, has_nulls=false}
   return lVector(vargs)
 end

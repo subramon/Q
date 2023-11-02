@@ -1,3 +1,6 @@
+Confirm that updates and gets do not cause movements in hashmap
+
+
 Why does dlclose() not work some times? I have commented it out 
 in TMPL_FIX_HASHMAP
 
