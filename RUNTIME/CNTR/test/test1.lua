@@ -208,6 +208,20 @@ tests.t_condense = function()
   assert(n1 == Scalar.new(16, "I4")); 
   assert(n2 == Scalar.new(p, "I8")); 
   --===============================================
+  -- Create condensed idx
+  local hidx = C:condense("idx")
+  assert(type(hidx) == "lVector")
+  assert(hidx:qtype()  == "I4")
+  assert(type(hidx:num_elements() == 0))
+  hidx:eval()
+  print("mem after condensor = ", lgutils.mem_used())
+  assert(type(hidx:num_elements() == p)) 
+  local r = Q.min(hidx); local min_idx = r:eval()
+  assert(min_idx:to_num() >= 0)
+  local r = Q.max(hidx); local max_idx  = r:eval()
+  assert(max_idx:to_num() < C:size())
+  assert(min_idx:to_num() < max_idx:to_num())
+  --===============================================
   -- Now condense something that is an auiliary field 
   local cc = C:condense("cum_count")
   assert(type(cc) == "lVector")
@@ -230,8 +244,9 @@ tests.t_condense = function()
   os.execute("rm -r -f " .. opdir) 
   C = nil
   for k, v in ipairs(vecs) do v = nil end; vecs = nil
-  guid = nil
   count = nil
+  guid = nil
+  hidx = nil
   cc = nil
   collectgarbage()
   local mem_used_post = lgutils.mem_used()
