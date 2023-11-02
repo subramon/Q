@@ -412,7 +412,11 @@ function KeyCounter:condense(fld)
     bufqtype = assert(inbuf:qtype())
     inbuf = get_ptr(inbuf, bufqtype)
   else
-    bufqtype = "UI4" -- NOTE: Both guid and count are uint32_t
+    if ( fld == "idx" ) then
+      bufqtype = "UI8" -- idx can exceed 2^32
+    else
+      bufqtype = "UI4" -- NOTE: Both guid and count are uint32_t
+    end
   end
   bufwidth = cutils.get_width_qtype(bufqtype)
   assert(bufwidth > 0)
@@ -439,7 +443,7 @@ function KeyCounter:condense(fld)
           bufptr[buf_idx] = inbuf[i]
         else
           if ( hidx ) then 
-            bufptr[buf_idx] = bkts = i
+            bufptr[buf_idx] = i
           else
             bufptr[buf_idx] = bkts[i].val[fld]
           end
@@ -577,6 +581,64 @@ function KeyCounter:make_permutation(vecs)
   return lVector(vargs)
 end
 
+function KeyCounter:get_hidx(vecs)
+  assert(self._is_eor) -- counter must be stable
+  assert(type(vecs) == "table")
+  assert(chk_vecs_old_new(vecs, self._vecs))
+  local get_idx_name = self._label .. "_rsx_kc_get_idx"
+  local get_idx_fn = assert(self._kc[get_idx_name])
+  -- NOT NECESSARY incoming vetors should be stable 
+  -- for k, v in ipairs(vecs) do assert(v:is_eov()) end
+  -- incoming vectors should be same length as number of items in Counte
+  -- set up some stuff shared across function invocations
+  local l_chunk_num = 0
+  local out_qtype = "I8"
+  local out_width = cutils.get_width_qtype(out_qtype)
+  assert(out_width > 0)
+  local bufsz = qcfg.max_num_in_chunk
+  -- STOP  TODO 
+  local function gen(chunk_num)
+    print("get_hidx ", chunk_num)
+    assert(chunk_num == l_chunk_num)
+    --================================================
+    local lens = {}
+    local chunks = {}
+    for k, v in ipairs(vecs) do 
+      local len, chunk, nn_chunk = v:get_chunk(chunk_num)
+      lens[k] = len
+      chunks[k] = chunk
+      assert(nn_chunk == nil) -- null values not supported 
+    end
+    local len = chk_chnks_lens_across_vecs(lens, chunks, #vecs)
+    --================================================
+    if ( len == 0 ) then 
+      print("C: No more chunks", self._chunk_num)
+      -- vectors used to construct hash-join must be stable 
+      for k, v in ipairs(vecs) do assert(v:is_eov()) end
+      return 0
+    end
+    --================================================
+    local data = ffi.new("char *[?]", #vecs)
+    data = ffi.cast("char **", data)
+    for k, v in ipairs(vecs) do 
+      data[k-1] = get_ptr(chunks[k], "char *")
+    end
+    local out_buf = cmem.new(bufsz * out_width)
+    out_buf:stealable(true)
+    local out_ptr = get_ptr(out_buf, out_qtype)
+    local status = get_idx_fn(self._H, data, self._widths, len, out_ptr)
+    assert(status == 0)
+    l_chunk_num = l_chunk_num + 1 
+    for k, v in ipairs(vecs) do 
+      v:unget_chunk(chunk_num)
+    end
+    return len, out_buf
+  end
+  local vargs = {}
+  if ( out_qtype == "UI8" ) then out_qtype = "I8" end  --TODO P3
+  local vargs = {gen = gen, qtype = out_qtype, has_nulls=false}
+  return lVector(vargs)
+end
 return KeyCounter
 
 --[[ Sample program to test usage of new*() to create 

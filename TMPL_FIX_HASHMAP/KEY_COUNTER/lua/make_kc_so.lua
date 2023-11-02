@@ -157,6 +157,24 @@ local function make_kc_so(configs)
   local inc_file = gen_code.doth(subs, inc_dir)
   cdef_str[#cdef_str+1] = cutils.read(inc_file)
   -- STOP : create rsx_put 
+  -- START: create rsx_get_idx 
+  local subs = {}
+  subs.label = label
+  -- NOTE: Assumptiion that no more that 4 keys in compound key 
+  local n = #configs.key_types 
+  if ( n >= 1 ) then subs.comment1 = "  " else subs.comment1 = "//" end
+  if ( n >= 2 ) then subs.comment2 = "  " else subs.comment2 = "//" end
+  if ( n >= 3 ) then subs.comment3 = "  " else subs.comment3 = "//" end
+  if ( n >= 4 ) then subs.comment4 = "  " else subs.comment4 = "//" end
+  if ( n >= 5 ) then error(" no more that 4 keys in compound key ") end 
+  --==============================================
+  subs.fn = label  .. "_rsx_kc_get_idx"
+  subs.tmpl = q_src_root .. 
+     "/TMPL_FIX_HASHMAP/KEY_COUNTER/src/rsx_kc_get_idx.tmpl.lua"
+  local src_file = gen_code.dotc(subs, src_dir)
+  local inc_file = gen_code.doth(subs, inc_dir)
+  cdef_str[#cdef_str+1] = cutils.read(inc_file)
+  -- STOP : create rsx_get_idx 
   -- START: create rsx_make_permutation 
   local subs = {}
   subs.label = label
@@ -217,6 +235,7 @@ local function make_kc_so(configs)
   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_cum_count.c" 
   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_sum_count.c" 
   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_make_permutation.c" 
+  X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_get_idx.c" 
   -- TODO START HACK 
   X[#X+1] = src_dir .. "/rs_hmap_get.c" 
   X[#X+1] = src_dir .. "/rs_hmap_destroy.c" 

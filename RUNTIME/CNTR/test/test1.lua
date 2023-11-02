@@ -7,6 +7,8 @@ local Q          = require 'Q'
 local qcfg       = require 'Q/UTILS/lua/qcfg'
 local lgutils    = require 'liblgutils'
 local KeyCounter = require 'Q/RUNTIME/CNTR/lua/KeyCounter'
+local exec_and_capture_stdout = 
+  require 'Q/UTILS/lua/exec_and_capture_stdout'
 
 local blksz = qcfg.max_num_in_chunk 
 local tests = {}
@@ -211,7 +213,7 @@ tests.t_condense = function()
   -- Create condensed idx
   local hidx = C:condense("idx")
   assert(type(hidx) == "lVector")
-  assert(hidx:qtype()  == "I4")
+  assert(hidx:qtype()  == "I8")
   assert(type(hidx:num_elements() == 0))
   hidx:eval()
   print("mem after condensor = ", lgutils.mem_used())
@@ -324,8 +326,60 @@ tests.t_permute = function()
   assert(cVector.check_all())
   print("Test t_permute successfully completed. ")
 end
-tests.t_condense() 
+tests.t_get_hidx = function()
+  local mem_used_pre = lgutils.mem_used()
+  local label = "test_period"
+  local rootdir = assert(os.getenv("Q_SRC_ROOT")) 
+  local opdir = rootdir .. "/TMPL_FIX_HASHMAP/KEY_COUNTER/" .. label 
+  os.execute("rm -r -f " .. opdir)
+  local len = 2 * blksz + 3 
+  local p = 16
+  local vecs = {}
+  vecs[1] = Q.period({start = 1, by=1, period=p, qtype = "I4", len = len })
+  vecs[2] = Q.period({start = 2, by=2, period=p, qtype = "I8", len = len })
+  local optargs = {}
+  optargs.label = label
+  optargs.name = "condensor"
+  local C = KeyCounter(vecs, optargs)
+  C:eval()
+  --===============================================
+  local hidx = C:get_hidx(vecs)
+  assert(type(hidx) == "lVector")
+  assert(hidx:qtype()  == "I8")
+  assert(type(hidx:num_elements() == 0))
+  hidx:eval()
+  Q.print_csv({hidx}, { opfile = "_x.csv", })
+  assert(type(hidx:num_elements() == len)) 
+  local r = Q.min(hidx); local min_hidx = r:eval()
+  assert(min_hidx:to_num() >= 0)
+  local r = Q.max(hidx); local max_hidx  = r:eval()
+  assert(max_hidx:to_num() < C:size())
+  assert(min_hidx:to_num() < max_hidx:to_num())
+  -- test on hidx values TODO P4 Do this in Q not shell
+  local cmd = 
+    "sort -n _x.csv | uniq | wc | sed s'/^[ ]*//'g | sed s'/ .*$//'g"
+  local rslt = exec_and_capture_stdout(cmd)
+  local chk_rslt = string.format("%d\n", p)
+  assert(rslt == chk_rslt)
+  --===============================================
+  -- cleanup
+  cutils.delete("_x.csv")
+  r = nil; 
+  assert(cVector.check_all())
+  os.execute("rm -r -f " .. opdir) 
+  C = nil
+  for k, v in ipairs(vecs) do v = nil end; vecs = nil
+  hidx = nil
+  collectgarbage()
+  local mem_used_post = lgutils.mem_used()
+  print(mem_used_pre, mem_used_post)
+  -- TODO P0 assert(mem_used_pre == mem_used_post)
+  assert(cVector.check_all())
+  print("Test t_get_hidx successfully completed. ")
+end
+tests.t_get_hidx()
 --[[
+tests.t_condense() 
 tests.t_permute()
 tests.t_get_val()
 tests.t1(1)
