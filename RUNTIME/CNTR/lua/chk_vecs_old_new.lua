@@ -1,4 +1,5 @@
 local function chk_vecs_old_new(vnew, vold)
+  assert(type(vnew) == "table")
   -- START: vecs must match with vecs used to create KeyCounter
   assert(#vnew == #vold)
   for k, v in ipairs(vnew) do 

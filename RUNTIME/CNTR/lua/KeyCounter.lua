@@ -396,8 +396,12 @@ function KeyCounter:condense(fld)
   local offset = 0 -- where to start from for next chunk
   local bufsz = qcfg.max_num_in_chunk 
   local val_from_aux = true -- value to be condensed in self._auxvals
-  if ( ( fld == "count" ) or ( fld == "guid" ) ) then
+  local hidx = false
+  if ( ( fld == "count" ) or ( fld == "guid" ) or ( fld == "idx" ) ) then
     val_from_aux = false
+    if ( fld == "idx" ) then
+      hidx = true
+    end
   end
   local bufwidth  = 0
   local bufqtype
@@ -423,6 +427,7 @@ function KeyCounter:condense(fld)
     local bufptr = get_ptr(buf, bufqtype)
     local buf_idx = 0
     local start = offset
+    local bkts = self._H[0].bkts
     for i = start, self._H[0].size do 
       if ( buf_idx == bufsz ) then 
         -- next time, we must start from position i
@@ -433,7 +438,11 @@ function KeyCounter:condense(fld)
         if( val_from_aux ) then 
           bufptr[buf_idx] = inbuf[i]
         else
-          bufptr[buf_idx] = self._H[0].bkts[i].val[fld]
+          if ( hidx ) then 
+            bufptr[buf_idx] = bkts = i
+          else
+            bufptr[buf_idx] = bkts[i].val[fld]
+          end
         end
         buf_idx = buf_idx + 1 
       end
@@ -496,18 +505,7 @@ end
 
 function KeyCounter:make_permutation(vecs)
   assert(self._is_eor) -- counter must be stable
-  assert(type(vecs) == "table")
-  -- START: vecs must match with vecs used to create KeyCounter
-  assert(#vecs == #self._vecs)
-  for k, v in ipairs(vecs) do 
-    assert(v:qtype() == self._vecs[k]:qtype())
-    assert(v:width() == self._vecs[k]:width())
-  end
-  -- all incoming vectors should have same chunk size 
-  for k, v in ipairs(vecs) do 
-    assert(v:max_num_in_chunk() == vecs[k]:max_num_in_chunk())
-  end
-  -- STOP : vecs must match with vecs used to create KeyCounter
+  assert(chk_vecs_old_new(vecs, self._vecs))
   -- NOT NECESSARY incoming vetors should be stable 
   -- for k, v in ipairs(vecs) do assert(v:is_eov()) end
   -- incoming vectors should be same length as number of items in Counte
