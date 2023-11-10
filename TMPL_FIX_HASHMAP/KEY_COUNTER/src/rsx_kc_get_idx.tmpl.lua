@@ -9,7 +9,7 @@ ${fn}(
   char **data, // [num_keys][n_data]
   uint32_t *widths, // [num_keys] 
   uint32_t n_data,
-  uint64_t *idx // [n_data]
+  uint32_t *idx // [n_data]
   );
   ]],
 definition = [[
@@ -20,7 +20,7 @@ ${fn}(
   char **data, // [num_keys][n_data]
   uint32_t *widths, // [num_keys] 
   uint32_t n_data,
-  uint64_t *idx // [n_data]
+  uint32_t *idx // [n_data]
   )
 {
   int status = 0;

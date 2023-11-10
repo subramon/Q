@@ -42,7 +42,10 @@ local function process_opt_args(
   end
 
   local max_num_in_chunk = 0 
+  local num_vecs = 0
   for i, v in ipairs(outV) do 
+    num_vecs = num_vecs + 1
+    print(i, v:name())
     assert(type(v) == "lVector")
     assert(v:is_eov())
     if ( i == 1 ) then
@@ -53,6 +56,7 @@ local function process_opt_args(
       assert(max_num_in_chunk == v:max_num_in_chunk())
     end
   end
+  assert(num_vecs > 0, "Check that you have provided an indexed table")
   assert(max_num_in_chunk > 0)
   assert(type(lenV) == "number")
   assert(lenV > 0)

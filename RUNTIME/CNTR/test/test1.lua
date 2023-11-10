@@ -362,11 +362,24 @@ tests.t_get_hidx = function()
   local chk_rslt = string.format("%d\n", p)
   assert(rslt == chk_rslt)
   --===============================================
+  -- Now use hidx to map out a few things 
+  local chk_count = C:map_out(hidx, "count")
+  assert(type(chk_count) == "lVector")
+  assert(chk_count:qtype() == "UI4")
+  chk_count:eval()
+  print("XXXXXXX")
+  local r = Q.min(chk_count); local min_count = r:eval()
+  assert(min_count:to_num() > 0) -- TODO DIX 
+  local r = Q.max(chk_count); local max_count = r:eval()
+  assert(max_count:to_num() > 0) -- TODO DIX 
+
+  --===============================================
   -- cleanup
   cutils.delete("_x.csv")
   r = nil; 
   assert(cVector.check_all())
   os.execute("rm -r -f " .. opdir) 
+  chk_count = nil
   C = nil
   for k, v in ipairs(vecs) do v = nil end; vecs = nil
   hidx = nil
