@@ -151,7 +151,8 @@ BYE:
 static int l_qtype(lua_State *L) {
   if ( lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
   SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
-  lua_pushstring(L, get_str_qtype(ptr_sclr->qtype));
+  char *cptr = get_str_qtype(ptr_sclr->qtype);
+  lua_pushstring(L, cptr);
   return 1;
 BYE:
   lua_pushnil(L);

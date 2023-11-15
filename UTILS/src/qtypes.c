@@ -149,6 +149,8 @@ get_str_qtype(
 
   if ( qtype == TM1 ) { return "TM1"; }
   if ( qtype == TM ) { return "TM"; }
+
+  if ( qtype == SC ) { return "SC"; }
   return NULL; 
 }
 

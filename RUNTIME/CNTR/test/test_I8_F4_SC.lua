@@ -25,13 +25,12 @@ tests.t1 = function()
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   assert(type(T) == "table")
-  for k, v in pairs(T) do print(k, v) end 
   assert(type(T.i8) == "lVector")
   -- convert to indexed table 
   local Tpr = {}
-  for k, v in pairs(T) do 
-    Tpr[#Tpr+1] = v
-  end
+  Tpr[1] = T.i8
+  Tpr[2] = T.f4
+  Tpr[3] = T.sc
   -- clean out old stuff
   local label = "t1_i8_f4_sc"
   local opdir=rootdir .. "/TMPL_FIX_HASHMAP/KEY_COUNTER/" .. label 
@@ -49,18 +48,19 @@ tests.t1 = function()
   assert(C:is_eor() == false)
   -- evaluate the KeyCounter
   assert(C:eval())
-  print(C:nitems())
   -- get some items to make sure C is working well 
   -- Look for something that *IS there 
   local key, keytype, val, valtype, is_found, where_found = 
     C:get_val({123,456,"hello world 1"})
-    print(keytype)
-    print(valtype)
-    error("PREMATURE")
   key = ffi.cast(keytype .. " *", key)
-  assert(key.key1 == 1)
-  assert(key.key2 == 2)
+  assert(key.key1 == 123)
+  assert(key.key2 == 456)
+  assert(ffi.string(key.key3) == "hello world 1")
   assert(C:nitems() == 3)
+  -- TODO asserts on val  as well 
+  val = ffi.cast(valtype .. " *", val)
+  assert(val[0].count == 5)
+  assert(val[0].guid == 1)
   --[[
   T.i8:eval()
   assert(T.i8:num_elements() == T.f4:num_elements())

@@ -307,6 +307,17 @@ tests.t14 = function()
   --]]
 end
 --================
+tests.t16 = function() -- rest return type of SC
+  local str  = "hello world 1"
+  local s = Scalar.new(str, "SC")
+  assert(type(s) == "Scalar")
+  local y = s:__tostring()
+  assert(y == str)
+  local qtype = s:qtype()
+  assert(qtype == "SC")
+  print("test t16 passed")
+end
+
 tests.t15 = function()
   -- TODO local valI8 = assert(Scalar.new("0x1", "I8"))
   -- TODO print("test t15 passed")

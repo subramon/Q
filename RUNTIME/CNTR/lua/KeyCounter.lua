@@ -18,6 +18,10 @@ local register_type = require 'Q/UTILS/lua/register_type'
 local get_ptr      = require 'Q/UTILS/lua/get_ptr'
 local strip_pound  = require 'Q/UTILS/lua/strip_pound'
 local is_base_qtype  = require 'Q/UTILS/lua/is_base_qtype'
+-- for SCLR_REC_TYPE, cdef sclr_struct.h
+local qc        = require 'Q/UTILS/lua/qcore'
+qc.q_cdef("RUNTIME/SCLR/inc/sclr_struct.h", { "UTILS/inc/" })
+
 local KeyCounter = {}
 KeyCounter.__index = KeyCounter
 
@@ -98,11 +102,10 @@ function KeyCounter.new(vecs, optargs)
   -- create configs for .so file/cdef creation
   local configs = make_configs(label, vecs)
   assert(type(configs) == "table")
-  for k, v in pairs(configs) do print(k, v) end 
+  -- for k, v in pairs(configs) do print(k, v) end 
   -- call function to create .so file and functions to be cdef'd
-  print("in KeyCounter")
+  -- print("in KeyCounter")
   local sofile, cdef_str = make_kc_so(configs)
-  print("YYYY")
   -- Note that sofile is -- $Q{ROOT}/lib/libkc${label}.so 
   -- But we ffi.load("kc${label})
   status = pcall(ffi.cdef, cdef_str)
@@ -160,7 +163,7 @@ function KeyCounter.new(vecs, optargs)
   local get_name = label .. "_rs_hmap_get"
   local get_fn = assert(kc[get_name])
   -- print("Checked that function exists -> ", get_name)
-  print("Created KeyCouter")
+  print("Created KeyCounter")
   return keycounter
 end
 
@@ -352,15 +355,10 @@ function KeyCounter:get_val(sclrs)
   assert(type(sclrs) == "table")
   assert(#sclrs == #self._vecs)
   for k, s in ipairs(sclrs) do 
-    print(k, s)
-    if ( type(s) == "number") then 
-      sclrs[k] = Scalar.new(s, self._vecs[k]:qtype())
-    end
-    s = sclrs[k]
-    assert(type(s) == "Scalar")
-    assert(s:qtype() == self._vecs[k]:qtype())
+    sclrs[k] = assert(Scalar.new(s, self._vecs[k]:qtype()))
+    assert(type(sclrs[k]) == "Scalar")
+    assert(sclrs[k]:qtype() == self._vecs[k]:qtype())
   end
-  print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
   -- make a key and value 
   local keytype = self._label .. "_rs_hmap_key_t";
   local key = ffi.new(keytype .. "[?]", 1)
@@ -374,13 +372,15 @@ function KeyCounter:get_val(sclrs)
   local where_found = ffi.new("uint32_t[?]", 1)
     --==================================================
   for k, s in ipairs(sclrs) do 
+    assert(type(s) == "Scalar")
     local sclr_val = ffi.cast("SCLR_REC_TYPE *", s)
     local key_id = "key" .. tostring(k)
     local sqtype = s:qtype()
     if ( is_base_qtype(sqtype) ) then 
       key[0][key_id] = sclr_val[0].val[string.lower(sqtype)]
     elseif ( sqtype == "SC" ) then 
-      error("TODO")
+      local x = ffi.string(sclr_val[0].val.str)
+      ffi.copy(key[0][key_id], x)
     else
       error("Bad scalar qtype = " .. sqtype)
     end
