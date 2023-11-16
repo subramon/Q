@@ -15,7 +15,8 @@ local exec_and_capture_stdout =
 --=================================
 local function mk_dir(x)
   assert(type(x) == "string")
-  assert(not cutils.isdir(x), "directory exists " .. x)
+  local isdir = cutils.isdir(x)
+  assert(not isdir, "Directory exists >>> " .. x)
   assert(cutils.makepath(x))
   assert(cutils.isdir(x))
   return true
@@ -48,7 +49,6 @@ local function make_kc_so(configs)
   assert(mk_dir(root_dir))
   assert(mk_dir(src_dir))
   assert(mk_dir(inc_dir))
-  print("In make_kc_so")
   -- add structs from rs_hmap_config to stuff to be cdef'd
   -- NOT Done here. Done in KeyCounter.lua
   -- local f = tmpl_dir .. "/inc/rs_hmap_config.h"

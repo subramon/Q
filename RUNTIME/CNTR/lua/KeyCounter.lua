@@ -124,15 +124,17 @@ function KeyCounter.new(vecs, optargs)
   assert(cutils.isfile(inc_file), "File not found " .. inc_file)
   local cdef_str = assert(strip_pound(inc_file), "strip failed")
   status = pcall(ffi.cdef, cdef_str)
+  --
   if ( status ) then 
     print("cdef for get worked")
   else
     print("cdef for get failed")
   end
+  --]]
   -- print(cdef_str)
   --==========================================================
   local kc = ffi.load("kc" .. label)
-  print("Loaded " .. "kc" .. label)
+  -- print("Loaded " .. "kc" .. label)
   keycounter._kc = kc 
   -- create the configs for the  hashmap 
   local HC = assert(make_HC(optargs, sofile))
@@ -218,7 +220,7 @@ function KeyCounter:clone(vecs, optargs)
   keycounter._widths = widths
   -- record increase in memory usage 
   mod_hmap_storage(keycounter._label, keycounter._H[0].size, "incr")
-  -- print("Cloned KeyCouter")
+  print("Cloned KeyCouter")
   return keycounter
 end
 --================================================================
@@ -448,10 +450,10 @@ function KeyCounter:condense(fld)
   --=========================================
   local function gen()
     assert(is_eov == false)
-    print("mem before condensor = ", lgutils.mem_used())
+    -- print("mem before condensor = ", lgutils.mem_used())
     local buf = cmem.new(bufsz * bufwidth)
     buf:stealable(true)
-    print("mem after condensor = ", lgutils.mem_used())
+    -- print("mem after condensor = ", lgutils.mem_used())
     local bufptr = get_ptr(buf, bufqtype)
     local buf_idx = 0
     local start = offset
@@ -529,7 +531,7 @@ function KeyCounter:make_cum_count()
   end
   -- STOP  memoization 
   return true 
-enKeyd
+end
 
 function KeyCounter:make_permutation(vecs)
   assert(self._is_eor) -- counter must be stable
@@ -556,7 +558,7 @@ function KeyCounter:make_permutation(vecs)
   assert(self._auxvals.cum_count)
   local cum_ptr = get_ptr(self._auxvals.cum_count, "UI8")
   local function gen(chunk_num)
-    print("Permutation ", chunk_num)
+    -- print("Permutation ", chunk_num)
     assert(chunk_num == l_chunk_num)
     local lens = {}
     local chunks = {}
@@ -640,7 +642,7 @@ function KeyCounter:get_hidx(vecs)
     local len = chk_chnks_lens_across_vecs(lens, chunks, #vecs)
     --================================================
     if ( len == 0 ) then 
-      print("C: No more chunks", self._chunk_num)
+      print("D: No more chunks", self._chunk_num)
       -- vectors used to construct hash-join must be stable 
       for k, v in ipairs(vecs) do assert(v:is_eov()) end
       return 0
@@ -703,7 +705,7 @@ function KeyCounter:map_out(hidx, fld)
     assert(len <= bufsz)
     --================================================
     if ( len == 0 ) then 
-      print("D: No more chunks", self._chunk_num)
+      print("E: No more chunks", self._chunk_num)
       return 0
     end
     --================================================

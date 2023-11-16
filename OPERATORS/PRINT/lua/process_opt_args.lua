@@ -45,7 +45,6 @@ local function process_opt_args(
   local num_vecs = 0
   for i, v in ipairs(outV) do 
     num_vecs = num_vecs + 1
-    print(i, v:name())
     assert(type(v) == "lVector")
     assert(v:is_eov())
     if ( i == 1 ) then
