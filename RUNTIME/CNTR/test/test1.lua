@@ -184,16 +184,16 @@ tests.t_condense = function()
   -- Create condensed count
   local count = C:condense("count")
   assert(type(count) == "lVector")
-  assert(count:qtype() == "I4")
+  assert(count:qtype() == "I8")
   assert(type(count:num_elements() == 0))
   print("mem before condensor = ", lgutils.mem_used())
   count:eval()
   assert(type(count:num_elements() == p))
   local r = Q.min(count); local n1, n2 = r:eval()
-  assert(n1 == Scalar.new(4096, "I4")); 
+  assert(n1 == Scalar.new(4096, "I8")); 
   assert(n2 == Scalar.new(p, "I8")); 
   local r = Q.max(count); local n1, n2 = r:eval()
-  assert(n1 == Scalar.new(4097, "I4")); 
+  assert(n1 == Scalar.new(4097, "I8")); 
   assert(n2 == Scalar.new(p, "I8")); 
   -- Create condensed guid
   local guid = C:condense("guid")
@@ -213,7 +213,7 @@ tests.t_condense = function()
   -- Create condensed idx
   local hidx = C:condense("idx")
   assert(type(hidx) == "lVector")
-  assert(hidx:qtype()  == "I8")
+  assert(hidx:qtype()  == "I4")
   assert(type(hidx:num_elements() == 0))
   hidx:eval()
   print("mem after condensor = ", lgutils.mem_used())

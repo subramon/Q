@@ -61,12 +61,39 @@ tests.t1 = function()
   val = ffi.cast(valtype .. " *", val)
   assert(val[0].count == 5)
   assert(val[0].guid == 1)
-  --[[
-  T.i8:eval()
-  assert(T.i8:num_elements() == T.f4:num_elements())
-  print("XX", T.sc:num_elements())
-  Q.print_csv(Tpr, {opfile = "_x.csv"})
-  --]]
+  --=================================================
+  -- test map out functionality
+  local len = T.sc:num_elements()
+  local hidx = C:get_hidx(Tpr)
+  assert(type(hidx) == "lVector")
+  assert(hidx:qtype()  == "I4")
+  assert(type(hidx:num_elements() == 0))
+  hidx:eval()
+  Q.print_csv({hidx}, { opfile = "_x.csv", })
+  assert(type(hidx:num_elements() == len)) 
+  local r = Q.min(hidx); local min_hidx = r:eval()
+  assert(min_hidx:to_num() >= 0)
+  local r = Q.max(hidx); local max_hidx  = r:eval()
+  assert(max_hidx:to_num() < C:size())
+  assert(min_hidx:to_num() < max_hidx:to_num())
+  -- test on hidx values TODO P4 Do this in Q not shell
+  local cmd = 
+    "sort -n _x.csv | uniq | wc | sed s'/^[ ]*//'g | sed s'/ .*$//'g"
+  local rslt = exec_and_capture_stdout(cmd)
+  local chk_rslt = string.format("%d\n", p)
+  assert(rslt == chk_rslt)
+  --===============================================
+  -- Now use hidx to map out a few things 
+  local chk_count = C:map_out(hidx, "count")
+  assert(type(chk_count) == "lVector")
+  assert(chk_count:qtype() == "UI4")
+  chk_count:eval()
+  print("XXXXXXX")
+  local r = Q.min(chk_count); local min_count = r:eval()
+  assert(min_count:to_num() > 0) -- TODO DIX 
+  local r = Q.max(chk_count); local max_count = r:eval()
+  assert(max_count:to_num() > 0) -- TODO DIX 
+  --=================================================
   for k, v in pairs(T) do v:delete() end; T = nil ; Tpr = nil
   print("Test t1 succeeded")
 end

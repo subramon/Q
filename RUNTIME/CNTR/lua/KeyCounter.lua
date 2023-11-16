@@ -170,12 +170,21 @@ end
 function KeyCounter:clone(vecs, optargs)
   if ( optargs ) then
     assert(type(optargs) == "table")
+    assert(not optargs.label) -- cannot set in clone
   end
   --===================================
   local name
   if ( optargs and optargs.name ) then 
     assert(type(optargs.name) == "string")
     name = optargs.name
+  end
+  --===================================
+  -- vecs must match that used to create KeyCounter being cloned
+  assert(#vecs == #self._vecs)
+  for k, v in ipairs(vecs) do 
+    assert(type(v) == "lVector")
+    assert(v:qtype() == self._vecs[k]:qtype())
+    assert(v:width() == self._vecs[k]:width())
   end
   --===================================
   local keycounter     = setmetatable({}, KeyCounter)
@@ -295,7 +304,9 @@ function KeyCounter:name()
 end
 
 function KeyCounter:set_name(name)
-  assert((type(name) == "string") or (type(name) == "nil"))
+  if ( name ) then 
+    assert(type(name) == "string")
+  end
   self._name = name
   return self
 end
@@ -355,6 +366,12 @@ function KeyCounter:get_val(sclrs)
   assert(type(sclrs) == "table")
   assert(#sclrs == #self._vecs)
   for k, s in ipairs(sclrs) do 
+    -- special case for SC, need to make sure string is not too large 
+    if ( type(s) == "string" ) then 
+      assert(self._vecs[k]:qtype() == "SC")
+      assert(#s < self._vecs[k]:width()) 
+    end 
+    --=====
     sclrs[k] = assert(Scalar.new(s, self._vecs[k]:qtype()))
     assert(type(sclrs[k]) == "Scalar")
     assert(sclrs[k]:qtype() == self._vecs[k]:qtype())
@@ -417,11 +434,13 @@ function KeyCounter:condense(fld)
     bufqtype = assert(inbuf:qtype())
     inbuf = get_ptr(inbuf, bufqtype)
   else
-    if ( fld == "idx" ) then
-      bufqtype = "UI8" -- idx can exceed 2^32
-    else
-      bufqtype = "UI4" -- NOTE: Both guid and count are uint32_t
-    end
+    bufqtype = "UI4" 
+    if ( fld == "count" ) then 
+      bufqtype = "UI8"  -- this is potentially over-kill
+    end 
+    -- NOTE: guid, count, idx are uint32_t
+    -- This is limitation of current implementation
+    -- Can be changed but serious surgery required
   end
   bufwidth = cutils.get_width_qtype(bufqtype)
   assert(bufwidth > 0)
@@ -682,7 +701,6 @@ function KeyCounter:map_out(hidx, fld)
     assert(chunk_num == l_chunk_num)
     local len, hidx_chunk = hidx:get_chunk(chunk_num)
     assert(len <= bufsz)
-    print("MAP_OUT", chunk_num, len)
     --================================================
     if ( len == 0 ) then 
       print("D: No more chunks", self._chunk_num)
@@ -690,13 +708,10 @@ function KeyCounter:map_out(hidx, fld)
     end
     --================================================
     local hidx_ptr = get_ptr(hidx_chunk, "UI4")
-    print("XXXXX")
     local to_buf = cmem.new(bufsz * to_width)
     to_buf:stealable(true)
     local to_ptr = get_ptr(to_buf, to_qtype)
-    print("started map out ")
     local status = map_out_fn(self._H, from_ptr, len, hidx_ptr, to_ptr)
-    print("complered map out ")
     assert(status == 0)
     hidx:unget_chunk(chunk_num)
     l_chunk_num = l_chunk_num + 1 

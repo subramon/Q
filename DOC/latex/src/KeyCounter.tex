@@ -1,0 +1,236 @@
+\startreport{KeyCounter}
+\reportauthor{Ramesh Subramonian}
+
+\section{Introduction}
+The KeyCounter is a hash table that is used to count the number of distinct
+occurrences of a set of composite keys. We intend to extend it to handle other use cases
+as well. 
+
+\bd
+\item [Key] Type is a struct of between 1 and 4 atomic values e..g,
+\begin{verbatim}
+typedef struct _keytype { 
+  uint32_t key1;
+  double key2;
+  char key3[16];
+  } keytype;
+\end{verbatim}
+\item [Value]
+Consists of following. 
+\be
+\item \verb+ uint32_t count+ number of times a key can occur is \(\leq 2^{31}\) 
+\item \verb+ uint32_t guid+ number of unique keys \(\leq 2^{31}\) 
+\ee
+\ed
+
+\section{new}
+\label{new}
+To create a KeyCounter, we pass in 
+\be
+\item {\tt vecs} --- an indexed table of vectors, all of which should have the same length and the same chunk size
+\item {\tt optargs} --- a table which allows us to over-ride default values for
+\be
+\item name of KeyCounter. Has no value other than for debugging
+\item label of KeyCounter. If label is {\tt foo}, then we creare
+\be
+\item a directory {\tt foo} in \verb+~/Q/TMPL_FIXHASHMAP/KEY_COUNTER/+
+\item a library {\tt libkcfoo.so} used by LuaJIT's {\tt ffi.load()}
+\ee
+\ee
+\ee
+
+Internal members of KeyCounter class are 
+\be
+\item vecs, vectors used to create it
+\item is\_eor, whether all vectors have been fully consumed
+\item sum\_count, number of items inserted
+\item \ldots
+\ee
+\section{clone}
+\label{clone}
+
+When applied on a KeyCounter, returns a brand new empty KeyCounter.
+Takes same arguments as Section~\ref{new} with the following differences
+\be
+\item The number and type of the table of {\tt vecs} must match the ones used to
+create the original KeyCounter
+\item can set name in optargs but not label
+\ee
+
+\section{next}
+\label{next}
+Consumes one chunk from each of the vectors passed in.
+{\tt is\_eor} is set to true when nothing more to consume.
+
+\section{eval}
+\label{eval}
+Calls Section~\ref{next} repeatedly until all vectors have reached {\tt eov}.
+Note that all vectors must have same length.
+
+\section{label}
+\label{label}
+Returns label of KeyCounter. This cannot be modified. 
+Set in Section~\ref{new}
+
+\section{name}
+\label{name}
+Returns name of KeyCounter. 
+
+\section{set\_name}
+\label{set_name}
+If no argument, then name set to nil.
+Else, must pass string which is used as new name
+
+\section{size}
+\label{size}
+Returns size of hash table
+
+\section{nitems}
+\label{nitems}
+Returns number of items in hash table. Always less than size.
+
+\section{is\_eor}
+\label{is_eor}
+Returns {\tt is\_eor} --- {\tt true} when vectors have been fully consumed; {\tt
+false} otherwise.
+
+\section{sum\_count}
+\label{sum_count}
+Returns the number of insertions into the hashmap.
+
+\section{get\_val}
+\label{get_val}
+
+Given an indexed table of scalars that represents a key, 
+returns the key and value and position in the hash table where that key
+occurred. 
+
+\be
+\item Number of scalars same as number of vectors used in Section~\ref{new}
+\item Types of scalars must match types of vectors used in Section~\ref{new}
+\item Special case when type is {\tt SC}. The length of the string must be
+lesser than the width of the corresponding vector.
+\ee
+
+Returns are 
+\be
+\item {\tt key}, pointer to the key struct inside the hash table. 
+\item {\tt keytype}, string that can be used to cast returned key to proper tyope
+for access from Lua 
+\item {\tt val}, pointer to the value struct inside the hash table. 
+\item {\tt valtype}, string that can be used to cast returned val to proper tyope
+for access from Lua 
+\item {\tt bool is\_found}, indicating whether the key was found
+\item {\tt uint32\_t where\_found}, which is where the key was  found
+in the hash table. 
+\ee
+
+\section{condense}
+\label{condense}
+Input is a field which can be either 
+\be
+\item {\bf native} field. Return type is I4, ideally UI4. Options are 
+\be
+\item count (non-zero)
+\item guid (non-zero)
+\item idx
+\ee
+\item {\bf auxiliary} field . Options are 
+\be
+\item cum\_count. Type is I8, ideally UI8.
+\item \ldots
+\ee
+\ee
+Output is a vector. Creation of this vector is 
+best explained with an example. Let us say that the hash table looks like
+Table~\ref{hash_tbl_1}. Depending on the input, we get back one of the columns
+of Table~\ref{condensed_hash_tbl_1}.
+\begin{table}
+\centering
+\begin{tabular}{|l|l||l|l|l||l|} \hline \hline 
+{\bf Key1 } & {\bf Key 2} & {\bf count} & 
+{\bf guid} & {\bf idx} & {\bf cum\_count} \\ \hline \hline
+--- & --- & --- & --- &  0 & 0  \\ \hline
+  1 &  6  &  3  &  1  &  1 & 0  \\ \hline
+  2 &  5  &  2  &  2  &  2 & 3  \\ \hline
+--- & --- & --- & --- &  3 & 5  \\ \hline
+  3 &  4  &  1  &  3  &  4 & 5  \\ \hline
+  4 &  3  &  6  &  6  &  5 & 6  \\ \hline
+  5 &  2  &  5  &  5  &  6 & 12  \\ \hline
+--- & --- & --- & --- &  8 & 17  \\ \hline
+  6 &  1  &  4  &  4  &  8 & 17  \\ \hline
+\hline
+\end{tabular}
+\caption{Sample Hash Table}
+\label{hash_tbl_1}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l|l||l|} \hline \hline 
+count & guid & idx & cum\_count \\ \hline \hline
+  3  &  1  &  1 & 0 \\ \hline
+  2  &  2  &  2 & 3 \\ \hline
+  1  &  3  &  4 & 5 \\ \hline
+  6  &  6  &  5 & 6 \\ \hline
+  5  &  5  &  6 & 12 \\ \hline
+  4  &  4  &  8 & 17 \\ \hline
+\hline
+\end{tabular}
+\caption{Condensation of Table~\ref{hash_tbl_1}}
+\label{condensed_hash_tbl_1}
+\end{table}
+
+\section{make\_cum\_count}
+\label{make_cum_count}
+
+Makes an auxiliary field alongside the native fields {\tt count}
+and {\tt guid}. This is creates from {\tt count}, example in 
+Table~\ref{condensed_hash_tbl_1}.
+
+\section{make\_permutation}
+\label{make_permutation}
+Input is an indexed table of vectors which must match the vectors used to create
+the KeyCounter. Output is a vector of type I4, ideally UI4.
+
+Best explained with an example. 
+Consider hash table in Table~\ref{hash_tbl_2} with 4 items and a 
+cumulative count of 10. Assume the input to Section~\ref{make_permutation} is in
+Table~\ref{data_1}. 
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l||l|l|l||l|} \hline \hline 
+{\bf Key1 } & {\bf Key 2} & {\bf count} & {\bf guid} \\ \hline \hline
+--- & --- & --- & ---  \\ \hline
+  C &  3  &  2  &  1   \\ \hline
+  B &  2  &  3  &  2   \\ \hline
+--- & --- & --- & ---  \\ \hline
+  A &  1  &  4  &  3   \\ \hline
+  D &  4  &  1  &  4   \\ \hline
+--- & --- & --- & ---  \\ \hline
+\hline
+\end{tabular}
+\caption{Sample Hash Table --- 2}
+\label{hash_tbl_2}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l||l|} \hline \hline 
+{\bf Key1 } & {\bf Key 2} & {\bf Permutation} \\ \hline \hline
+A & 1 & 5 \\ \hline
+B & 2 & 2 \\ \hline
+C & 3 & 0 \\ \hline
+D & 4 & 9 \\ \hline
+A & 1 & 6 \\ \hline
+B & 2 & 3 \\ \hline
+C & 3 & 1 \\ \hline
+A & 1 & 7 \\ \hline
+B & 2 & 4 \\ \hline
+A & 1 & 8 \\ \hline
+\hline
+\end{tabular}
+\caption{Data For Permutation}
+\label{data_1}
+\end{table}
