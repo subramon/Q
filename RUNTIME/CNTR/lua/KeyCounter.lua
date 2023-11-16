@@ -529,14 +529,14 @@ function KeyCounter:make_cum_count()
   end
   -- STOP  memoization 
   return true 
-end
+enKeyd
 
 function KeyCounter:make_permutation(vecs)
   assert(self._is_eor) -- counter must be stable
   assert(chk_vecs_old_new(vecs, self._vecs))
   -- NOT NECESSARY incoming vetors should be stable 
   -- for k, v in ipairs(vecs) do assert(v:is_eov()) end
-  -- incoming vectors should be same length as number of items in Counte
+  -- incoming vectors should be same length as number of items in KeyCounter
   local permute_name = self._label .. "_rsx_kc_make_permutation"
   local permute_fn = assert(self._kc[permute_name])
   --===========================
