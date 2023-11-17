@@ -61,5 +61,4 @@ $(DOCROOT)/pdf/% : %
 
 %.pdf : %.tex
 	@if test -z $(DOCROOT); then echo no DOCROOT set; exit 1; fi
-	echo ${DOCROOT}
 	$(DOCROOT)/tools/latex2pdf $<

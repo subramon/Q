@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 
+print("STARTED latex2pdf");
 use strict;
 use File::Basename;
 
@@ -29,7 +30,7 @@ if ($docenv) {
   # RAMESH: added extra back slashes because of complaints on Ubuntu 18.04
   System('echo "\\\\\\end{document}" >> TEMP.tex');
   System('pdflatex', './TEMP.tex');
-  System('bibtex', './TEMP');
+  # COMMENTED RAMESH  System('bibtex', './TEMP');
   System('pdflatex', './TEMP.tex');
   System('pdflatex', './TEMP.tex');
 # Uncomment both following lines if you need to make indexes

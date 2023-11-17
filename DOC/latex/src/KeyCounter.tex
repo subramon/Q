@@ -229,16 +229,16 @@ Note that the guarantee about the output vector is
 \begin{tabular}{|l|l||l|l|l|} \hline \hline 
 {\bf Key1 } & {\bf Key 2} & {\bf Permutation} & {\bf hidx} 
 & {\bf count} \\ \hline \hline
-A & 1 & 3 & 69 \\ \hline
-B & 2 & 7 & 538 \\ \hline
-C & 3 & 1 & 133 \\ \hline
-D & 4 & 0 & 142 \\ \hline
-A & 1 & 4 & 69 \\ \hline
-B & 2 & 8 & 538 \\ \hline
-C & 3 & 2 & 133 \\ \hline
-A & 1 & 5 & 69 \\ \hline
-B & 2 & 9 & 538 \\ \hline
-A & 1 & 6 & 69 \\ \hline
+A & 1 & 3 & 69  & 4 \\ \hline
+B & 2 & 7 & 538 & 3 \\ \hline
+C & 3 & 1 & 133 & 2 \\ \hline
+D & 4 & 0 & 142 & 1 \\ \hline
+A & 1 & 4 & 69  & 4 \\ \hline
+B & 2 & 8 & 538  & 3 \\ \hline
+C & 3 & 2 & 133 & 2 \\ \hline
+A & 1 & 5 & 69 & 4 \\ \hline
+B & 2 & 9 & 538 & 3 \\ \hline
+A & 1 & 6 & 69  & 4 \\ \hline
 \hline
 \end{tabular}
 \caption{Data For Permutation}
@@ -267,18 +267,24 @@ entries.
 \label{map_out}
 Input is 2 vectors
 \be
-\item hidx, created by Section~\ref{get_hidx}
-\item name of a field to be mapped out. This can be 
+\item {\tt hidx}, created by Section~\ref{get_hidx}
+\item {\tt name}, a string containing name of field to be mapped out. 
+This can be 
 \be
 \item a native field . Options are 
 \be
-\item count
-\item guid
+\item {\tt count}
+\item {\tt guid}
 \ee
-\item an auxiliary field created as in Section~\ref{XXX}
+\item an auxiliary field created as in Section~\ref{make_cum_count}
 \ee
-Output is a vector whose type is thatof the field to be mapped out.
-As an example, column with header {\bc count} in Table~\ref{data_1} 
+\ee
+Output is a vector such that 
+\be
+\item type is that of the field to be mapped out.
+\item length is the same as that of input vector {\tt hidx} 
+\ee
+As an example, column with header {\bf count} in Table~\ref{data_1} 
 shows what the output vector look like if the field was ``count'' for the state
 of the hash table as described in Table~\ref{data_1}.
 
