@@ -17,6 +17,10 @@ gen_inc_files : \
 	../inc/txt_to_I2.h \
 	../inc/txt_to_I4.h \
 	../inc/txt_to_I8.h \
+	../inc/txt_to_UI1.h \
+	../inc/txt_to_UI2.h \
+	../inc/txt_to_UI4.h \
+	../inc/txt_to_UI8.h \
 	../inc/txt_to_F4.h \
 	../inc/txt_to_F8.h \
 	../inc/BL_to_txt.h \
@@ -217,6 +221,10 @@ GEN_SRCS += ../src/txt_to_I1.c
 GEN_SRCS += ../src/txt_to_I2.c
 GEN_SRCS += ../src/txt_to_I4.c
 GEN_SRCS += ../src/txt_to_I8.c
+GEN_SRCS += ../src/txt_to_UI1.c # TODO need to be auto-generated
+GEN_SRCS += ../src/txt_to_UI2.c # TODO need to be auto-generated
+GEN_SRCS += ../src/txt_to_UI4.c # TODO need to be auto-generated
+GEN_SRCS += ../src/txt_to_UI8.c # TODO need to be auto-generated
 GEN_SRCS += ../src/txt_to_F4.c
 GEN_SRCS += ../src/txt_to_F8.c
 

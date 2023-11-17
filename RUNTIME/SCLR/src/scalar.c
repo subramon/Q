@@ -8,10 +8,17 @@
 #include "lualib.h"
 
 #include "txt_to_BL.h"
+
 #include "txt_to_I1.h"
 #include "txt_to_I2.h"
 #include "txt_to_I4.h"
 #include "txt_to_I8.h"
+
+#include "txt_to_UI1.h"
+#include "txt_to_UI2.h"
+#include "txt_to_UI4.h"
+#include "txt_to_UI8.h"
+
 #include "txt_to_F4.h"
 #include "txt_to_F8.h"
 
@@ -132,12 +139,20 @@ static int l_sclr_to_num( lua_State *L) {
   qtype_t qtype = ptr_sclr->qtype;
   switch ( qtype ) { 
     case BL : lua_pushnumber(L, ptr_sclr->val.bl); break;
+
     case I1 : lua_pushnumber(L, ptr_sclr->val.i1); break;
     case I2 : lua_pushnumber(L, ptr_sclr->val.i2); break;
     case I4 : lua_pushnumber(L, ptr_sclr->val.i4); break;
     case I8 : lua_pushnumber(L, ptr_sclr->val.i8); break;
+
+    case UI1 : lua_pushnumber(L, ptr_sclr->val.ui1); break;
+    case UI2 : lua_pushnumber(L, ptr_sclr->val.ui2); break;
+    case UI4 : lua_pushnumber(L, ptr_sclr->val.ui4); break;
+    case UI8 : lua_pushnumber(L, ptr_sclr->val.ui8); break;
+
     case F4 : lua_pushnumber(L, ptr_sclr->val.f4); break;
     case F8 : lua_pushnumber(L, ptr_sclr->val.f8); break;
+
     default : go_BYE(-1); break;
   }
   return 1;
@@ -151,7 +166,7 @@ BYE:
 static int l_qtype(lua_State *L) {
   if ( lua_gettop(L) != 1 ) { WHEREAMI; goto BYE; }
   SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
-  char *cptr = get_str_qtype(ptr_sclr->qtype);
+  const char *cptr = get_str_qtype(ptr_sclr->qtype);
   lua_pushstring(L, cptr);
   return 1;
 BYE:
@@ -179,8 +194,15 @@ static int l_sclr_to_str( lua_State *L) {
     case I2 : nw = snprintf(buf, BUFLEN, "%d", ptr_sclr->val.i2); break;
     case I4 : nw = snprintf(buf, BUFLEN, "%d", ptr_sclr->val.i4); break;
     case I8 : nw = snprintf(buf, BUFLEN, "%" PRId64, ptr_sclr->val.i8); break;
+    //------------------------------------------
+    case UI1 : nw = snprintf(buf, BUFLEN, "%u", ptr_sclr->val.i1); break;
+    case UI2 : nw = snprintf(buf, BUFLEN, "%u", ptr_sclr->val.i2); break;
+    case UI4 : nw = snprintf(buf, BUFLEN, "%u", ptr_sclr->val.i4); break;
+    case UI8 : nw = snprintf(buf, BUFLEN, "%" PRIu64, ptr_sclr->val.i8); break;
+    //------------------------------------------
     case F4 : nw = snprintf(buf, BUFLEN, "%f", ptr_sclr->val.f4); break;
     case F8 : nw = snprintf(buf, BUFLEN, "%lf", ptr_sclr->val.f8); break;
+    //------------------------------------------
     case SC : {
                 if ( ptr_sclr->val.str == NULL ) { go_BYE(-1); }
                 lua_pushstring(L, ptr_sclr->val.str);
@@ -546,6 +568,7 @@ static int l_sclr_new( lua_State *L) {
         case BL :  
           status = txt_to_BL(str_val, &(ptr_sclr->val.bl)); 
           break;
+          //------------------------------------------------------
         case I1 : 
           status = txt_to_I1(str_val, &(ptr_sclr->val.i1)); 
           break;
@@ -558,12 +581,27 @@ static int l_sclr_new( lua_State *L) {
         case I8 : 
           status = txt_to_I8(str_val, &(ptr_sclr->val.i8)); 
           break;
+          //------------------------------------------------------
+        case UI1 : 
+          status = txt_to_UI1(str_val, &(ptr_sclr->val.ui1)); 
+          break;
+        case UI2 : 
+          status = txt_to_UI2(str_val, &(ptr_sclr->val.ui2)); 
+          break;
+        case UI4 : 
+          status = txt_to_UI4(str_val, &(ptr_sclr->val.ui4)); 
+          break;
+        case UI8 : 
+          status = txt_to_UI8(str_val, &(ptr_sclr->val.ui8)); 
+          break;
+          //------------------------------------------------------
         case F4 : 
           status = txt_to_F4(str_val, &(ptr_sclr->val.f4)); 
           break;
         case F8 : 
           status = txt_to_F8(str_val, &(ptr_sclr->val.f8)); 
           break;
+          //------------------------------------------------------
         case SC : 
           {
             int len = strlen(str_val)+1;

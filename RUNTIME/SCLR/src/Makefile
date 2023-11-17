@@ -29,10 +29,17 @@ EXT_SRC := ../../../UTILS/src/is_valid_chars_for_num.c
 EXT_SRC += ../../../UTILS/src/qtypes.c 
 
 EXT_SRC += ../../../UTILS/src/txt_to_BL.c 
+
 EXT_SRC += ../../../UTILS/src/txt_to_I1.c 
 EXT_SRC += ../../../UTILS/src/txt_to_I2.c 
 EXT_SRC += ../../../UTILS/src/txt_to_I4.c 
 EXT_SRC += ../../../UTILS/src/txt_to_I8.c 
+
+EXT_SRC += ../../../UTILS/src/txt_to_UI1.c 
+EXT_SRC += ../../../UTILS/src/txt_to_UI2.c 
+EXT_SRC += ../../../UTILS/src/txt_to_UI4.c 
+EXT_SRC += ../../../UTILS/src/txt_to_UI8.c 
+
 EXT_SRC += ../../../UTILS/src/txt_to_F4.c 
 EXT_SRC += ../../../UTILS/src/txt_to_F8.c 
 EXT_SRC += ../../../UTILS/src/txt_to_SC.c 

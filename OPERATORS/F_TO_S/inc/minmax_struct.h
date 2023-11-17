@@ -42,5 +42,29 @@ typedef struct _min_I8_args {
   int64_t idx; // where min (or max) was found 
   uint64_t num; // number of values consumed to produce val
 } MINMAX_I8_ARGS;
+
+typedef struct _min_UI1_args {
+  uint8_t val;
+  int64_t idx; // where min (or max) was found 
+  uint64_t num; // number of values consumed to produce val
+} MINMAX_UI1_ARGS;
+  
+typedef struct _min_UI2_args {
+  uint16_t  val;
+  int64_t idx; // where min (or max) was found 
+  uint64_t num; // number of values consumed to produce val
+} MINMAX_UI2_ARGS;
+  
+typedef struct _min_UI4_args {
+  uint32_t  val;
+  int64_t idx; // where min (or max) was found 
+  uint64_t num; // number of values consumed to produce val
+} MINMAX_UI4_ARGS;
+  
+typedef struct _min_UI8_args {
+  uint64_t  val;
+  int64_t idx; // where min (or max) was found 
+  uint64_t num; // number of values consumed to produce val
+} MINMAX_UI8_ARGS;
 //STOP_FOR_CDEF
 #endif

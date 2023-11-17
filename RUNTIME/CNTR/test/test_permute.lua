@@ -51,7 +51,61 @@ tests.t_permute = function()
   local guid = C:condense("guid"):eval()
   Q.print_csv({count, guid}, { opfile = "_count_guid.csv", })
   -- STOP : Make permutation 
+  -- START: Make hidx 
+  local hidx = C:get_hidx(Tpr):eval()
+  Q.print_csv(hidx, { opfile = "_hidx.csv", })
+  local n1, n2 = Q.min(hidx):eval()
+  assert(n1:to_num() >= 0)
+  local n1, n2 = Q.max(hidx):eval()
+  assert(n1:to_num() < C:size())
+  -- START map out
+  local len = hidx:num_elements()
+  local chk_count = C:map_out(hidx, "count"):eval()
+  assert(type(chk_count) == "lVector")
+  assert(chk_count:qtype() == "UI4")
 
+  local chk_guid  = C:map_out(hidx, "guid"):eval()
+  assert(type(chk_guid) == "lVector")
+  assert(chk_guid:qtype() == "UI4")
+
+  local r = Q.min(chk_count)
+  local n1, n2 = r:eval()
+  assert(n1:to_num() == 1)
+
+  local r = Q.max(chk_count)
+  local n1, n2 = r:eval()
+  assert(n1:to_num() == 4)
+
+  local r = Q.min(chk_guid)
+  local n1, n2 = r:eval()
+  assert(n1:to_num() == 1)
+
+  local r = Q.max(chk_guid)
+  local n1, n2 = r:eval()
+  assert(n1:to_num() == C:nitems())
+
+  Q.print_csv({chk_count, chk_guid}, { opfile = "_chk_count_guid.csv", })
+  --==================================================================
+  local bogus_hidx = Q.const({qtype = "I4", len = len, val = 0})
+  local bogus_count = C:map_out(bogus_hidx, "count"):eval()
+  local bogus_guid = C:map_out(bogus_hidx, "guid"):eval()
+  Q.print_csv({bogus_count, bogus_guid}, { opfile = "_bogus_count_guid.csv", })
+  local r = Q.min(bogus_count)
+  local n1, n2 = r:eval()
+  assert(n1:to_num() == 0)
+
+  local r = Q.max(bogus_count)
+  local n1, n2 = r:eval()
+  assert(n1:to_num() == 0)
+
+  local r = Q.min(bogus_guid)
+  local n1, n2 = r:eval()
+  assert(n1:to_num() == 0)
+
+  local r = Q.max(bogus_guid)
+  local n1, n2 = r:eval()
+  assert(n1:to_num() == 0)
+  -- STOP  map out
 
   -- cleanup
   C = nil; for k, v in pairs(T) do v = nil end; T = nil

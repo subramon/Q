@@ -681,14 +681,17 @@ function KeyCounter:map_out(hidx, fld)
   --=====================================
   -- Figure out where you are going to get data from 
   local val_from_aux = true -- value to be mapped out in self._auxvals
+  local native
   if ( fld == "count" ) or ( fld == "guid" ) then
     val_from_aux = false
     from_qtype = "UI4" -- NOTE: Both guid and count are uint32_t
+    native = true 
   else
     from_buf = assert(self._auxvals[fld])
     assert(type(from_buf == "CMEM"))
     from_qtype = assert(from_buf:qtype())
     from_ptr = get_ptr(from_buf, from_qtype)
+    native = false
   end
   local from_width = cutils.get_width_qtype(from_qtype)
   assert(from_width > 0)
@@ -697,6 +700,9 @@ function KeyCounter:map_out(hidx, fld)
   --=====================================
 
   local map_out_name = self._label .. "_rsx_kc_map_out"
+  if ( native ) then 
+    map_out_name = map_out_name .. "_native"
+  end
   local map_out_fn = assert(self._kc[map_out_name])
   local l_chunk_num = 0
   local function gen(chunk_num)
@@ -713,7 +719,12 @@ function KeyCounter:map_out(hidx, fld)
     local to_buf = cmem.new(bufsz * to_width)
     to_buf:stealable(true)
     local to_ptr = get_ptr(to_buf, to_qtype)
-    local status = map_out_fn(self._H, from_ptr, len, hidx_ptr, to_ptr)
+    local status
+    if ( native ) then 
+      status = map_out_fn(self._H, fld, len, hidx_ptr, to_ptr)
+    else
+      error("TBC TODO")
+    end
     assert(status == 0)
     hidx:unget_chunk(chunk_num)
     l_chunk_num = l_chunk_num + 1 

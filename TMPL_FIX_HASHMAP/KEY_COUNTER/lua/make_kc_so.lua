@@ -258,6 +258,7 @@ local function make_kc_so(configs)
   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_make_permutation.c" 
   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_get_idx.c" 
   X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_map_out.c" 
+  X[#X+1] = src_dir .. "/" .. label .. "_rsx_kc_map_out_native.c" 
   -- TODO START HACK 
   X[#X+1] = src_dir .. "/rs_hmap_get.c" 
   X[#X+1] = src_dir .. "/rs_hmap_destroy.c" 
