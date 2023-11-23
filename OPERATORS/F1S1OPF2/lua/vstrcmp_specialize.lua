@@ -15,7 +15,6 @@ return function (
   local subs = {}
   --=====================
   assert(type(f1) == "lVector")
-  assert(f1:has_nulls() == false)
   assert(f1:qtype() == "SC")
   local max_num_in_chunk = f1:max_num_in_chunk()
   if ( type(s1) == "string" ) then 
@@ -25,17 +24,27 @@ return function (
   subs.sclr = s1
   --=====================
   subs.fn = "vstrcmp"
+  subs.in_width = f1:width()
   subs.out_qtype = "BL"
   subs.out_width = 1 -- TODO P4 improve 
   subs.max_num_in_chunk = f1:max_num_in_chunk()
   subs.bufsz  = subs.out_width * subs.max_num_in_chunk 
+  subs.nn_bufsz  = 1 * subs.max_num_in_chunk 
   subs.cast_f1_as = "char *"
   subs.cast_f2_as = "bool *"
 
-  subs.tmpl        = "OPERATORS/F1S1OPF2/lua/is_prev_" .. out_qtype.. ".tmpl"
-  subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"
-  subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"
-  subs.incs        = { "OPERATORS/F1S1OPF2/gen_inc/", "UTILS/inc/" }
+  if ( f1:has_nulls() ) then 
+    subs.fn = "nn_vstrcmp"
+    subs.dotc = "OPERATORS/LOAD_CSV/src/nn_vstrcmp.c"
+    subs.doth = "OPERATORS/LOAD_CSV/inc/nn_vstrcmp.h"
+    subs.has_nulls = true 
+  else
+    subs.fn = "vstrcmp"
+    subs.dotc = "OPERATORS/LOAD_CSV/src/vstrcmp.c"
+    subs.doth = "OPERATORS/LOAD_CSV/inc/vstrcmp.h"
+    subs.has_nulls = false 
+  end
+  subs.incs = { "OPERATORS/F1S1OPF2/inc/", "UTILS/inc/" }
   --==============================
-  return subs, tmpl
+  return subs
 end
