@@ -36,8 +36,9 @@ SC_to_TM1(
     tptr[i].tm_mon  = l_tm.tm_mon;
     tptr[i].tm_mday = l_tm.tm_mday;
     tptr[i].tm_hour = l_tm.tm_hour;
-    tptr[i].tm_min  = l_tm.tm_min;
-    tptr[i].tm_sec  = l_tm.tm_sec;
+    // tptr[i].tm_min  = l_tm.tm_min;
+    // tptr[i].tm_sec  = l_tm.tm_sec;
+    tptr[i].tm_wday = l_tm.tm_wday;
     tptr[i].tm_yday = l_tm.tm_yday;
   }
   cBYE(status);

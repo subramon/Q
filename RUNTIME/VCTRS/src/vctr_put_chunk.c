@@ -52,6 +52,7 @@ vctr_put_chunk(
 
   qtype_t qtype = vctr_val.qtype;
   uint32_t chnk_size = ptr_cmem->size; // whatever comes from cmem 
+  if ( chnk_size == 0 ) { go_BYE(-1); }
   if ( qtype != B1 ) {
     if ( chnk_size != (vctr_val.width * vctr_val.max_num_in_chnk) ) {
       go_BYE(-1);

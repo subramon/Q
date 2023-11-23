@@ -243,6 +243,10 @@ vctr_print(
         case I2 : fprintf(fp, "%d\n", ((int16_t *)data)[i]); break; 
         case I4 : fprintf(fp, "%d\n", ((int32_t *)data)[i]); break; 
         case I8 : fprintf(fp, "%" PRIi64 "\n", ((int64_t *)data)[i]); break; 
+        case UI1 : fprintf(fp, "%d\n", ((uint8_t *)data)[i]); break; 
+        case UI2 : fprintf(fp, "%d\n", ((uint16_t *)data)[i]); break; 
+        case UI4 : fprintf(fp, "%d\n", ((uint32_t *)data)[i]); break; 
+        case UI8 : fprintf(fp, "%" PRIu64 "\n", ((uint64_t *)data)[i]); break; 
         case F4 : fprintf(fp, "%f\n", ((float *)data)[i]); break; 
         case F8 : fprintf(fp, "%lf\n", ((double *)data)[i]); break; 
         case SC : { 
@@ -266,13 +270,14 @@ vctr_print(
                      int len = sizeof(buf); 
                      memset(buf, 0, len);
                      tm_t * tptr = ((tm_t *)data);
-                     snprintf(buf, len-1, "\"%d-%02d-%02d %d:%d %d\"", 
+                     snprintf(buf, len-1, "\"%d-%02d-%02d %d:%d:%d\"", 
                          tptr[i].tm_year + 1900,
                          tptr[i].tm_mon + 1,
                          tptr[i].tm_mday,
                          tptr[i].tm_hour,
                          // tptr[i].tm_min,
                          // tptr[i].tm_sec,
+                         tptr[i].tm_wday,
                          tptr[i].tm_yday);
 
                      fprintf(fp, "%s\n", buf);

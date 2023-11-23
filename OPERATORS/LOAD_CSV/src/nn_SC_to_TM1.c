@@ -8,12 +8,13 @@
 //START_FUNC_DECL
 int
 nn_SC_to_TM1(
-      char * const inv,
-      int8_t * const nn_inv,
+      char * inv,
+      bool * nn_inv,
       uint32_t offset,
       uint64_t n_in,
       const char *format,
-      tm_t *outv
+      tm_t *outv,
+      bool *nn_outv
       )
 //STOP_FUNC_DECL
 {
@@ -28,6 +29,7 @@ nn_SC_to_TM1(
   for ( uint64_t i = 0; i < n_in; i++ ) { 
     memset(outv+i, '\0', sizeof(tm_t));
     if ( ( nn_inv == NULL ) || ( nn_inv[i] == 0 ) ) {
+      if ( nn_outv != NULL ) { nn_outv[i] = 0; }
       continue;
     }
     char *cptr = inv + (i*offset);
@@ -40,9 +42,12 @@ nn_SC_to_TM1(
     tptr[i].tm_mon  = l_tm.tm_mon;
     tptr[i].tm_mday = l_tm.tm_mday;
     tptr[i].tm_hour = l_tm.tm_hour;
-    tptr[i].tm_min  = l_tm.tm_min;
-    tptr[i].tm_sec  = l_tm.tm_sec;
+    // tptr[i].tm_min  = l_tm.tm_min;
+    // tptr[i].tm_sec  = l_tm.tm_sec;
+    tptr[i].tm_wday = l_tm.tm_wday;
     tptr[i].tm_yday = l_tm.tm_yday;
+
+    if ( nn_outv != NULL ) { nn_outv[i] = 1; }
   }
   cBYE(status);
 BYE:

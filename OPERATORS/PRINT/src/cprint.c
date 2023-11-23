@@ -111,13 +111,14 @@ cprint(
                          );
                      }
                      else {
-                     snprintf(buf, len-1, "\"%d:%02d:%02d:%d:%d:%d:%d\"", 
+                     snprintf(buf, len-1, "\"%d-%02d-%02d %d:%d:%d\"", 
                          tptr[i].tm_year + 1900,
                          tptr[i].tm_mon + 1,
                          tptr[i].tm_mday,
                          tptr[i].tm_hour,
-                         tptr[i].tm_min,
-                         tptr[i].tm_sec,
+                         // tptr[i].tm_min,
+                         // tptr[i].tm_sec,
+                         tptr[i].tm_wday,
                          tptr[i].tm_yday);
                      }
                      fprintf(fp, "%s", buf);
