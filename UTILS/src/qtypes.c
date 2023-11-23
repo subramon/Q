@@ -28,12 +28,13 @@ t_assign(
   if ( dst == NULL ) { go_BYE(-1); }
   if ( src == NULL ) {  go_BYE(-1); }
   memset(dst, 0, sizeof(struct tm));
-  dst->tm_sec  = src->tm_sec;
-  dst->tm_min  = src->tm_min;
+  // dst->tm_sec  = src->tm_sec;
+  // dst->tm_min  = src->tm_min;
   dst->tm_hour = src->tm_hour;
   dst->tm_mday = src->tm_mday;
   dst->tm_mon  = src->tm_mon;
   dst->tm_year = src->tm_year;
+  dst->tm_wday = src->tm_wday;
   dst->tm_yday = src->tm_yday;
 BYE:
   return status;

@@ -30,13 +30,13 @@ typedef enum {
 } qtype_t;
 // STOP extract_for_qtypes.tex
 typedef struct _tm_t {
-  int8_t tm_year;	/* Year	- 1900. TODO P4 Watch out for 2027!  */
+  int16_t tm_year;	/* Year	- 1900. */
   int8_t tm_mon;	/* Month.	[0-11] */
   int8_t tm_mday;	/* Day.		[1-31] */
   int8_t tm_hour;	/* Hours.	[0-23] */
-  int8_t tm_min;	/* Minutes.	[0-59] */
-  int8_t tm_sec;	/* Seconds.	[0-60] (1 leap second) */
-  // UNUSED int8_t tm_wday;	/* Day of week.	[0-6] */
+  // int8_t tm_min;	/* Minutes.	[0-59] */
+  // int8_t tm_sec;	/* Seconds.	[0-60] (1 leap second) */
+  int8_t tm_wday;	/* Day of week.	[0-6] */
   int16_t tm_yday;	/* Days in year.[0-365]	*/
 
   /* Not being used 

@@ -21,6 +21,7 @@ require 'Q/OPERATORS/WHERE/lua/where'
 require "Q/OPERATORS/WHERE/lua/select_ranges"
 require "Q/OPERATORS/F1S1OPF2/lua/is_prev"
 require "Q/OPERATORS/F1S1OPF2/lua/vshift"
+require "Q/OPERATORS/F1S1OPF2/lua/vstrcmp"
 require "Q/OPERATORS/F1S1OPF2/lua/f1s1opf2"
 require "Q/OPERATORS/F1F2OPF3/lua/f1f2opf3"
 require "Q/OPERATORS/F1F2OPF3/lua/repeater"

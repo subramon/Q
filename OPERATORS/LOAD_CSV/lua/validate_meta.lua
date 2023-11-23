@@ -40,15 +40,18 @@ local function validate_meta(
     end
     --===========================================
     -- Default assumption is that fields do NOT have null values
-    if fld_M.has_nulls ~= nil then 
-      assert(type(fld_M.has_nulls) == "boolean")
-    else
+    if type(fld_M.has_nulls) == "nil" then 
       fld_M.has_nulls = false
+    else
+      assert(type(fld_M.has_nulls) == "boolean")
     end
+    --[[ At one time, I had insisted that SC cannot have nulls
+    -- In theprocess of relaxing that assumption
     -- Note special case for SC
     if ( qtype == "SC" ) then
       fld_M.has_nulls = false
     end
+    --]]
     --===========================================
     if fld_M.is_load ~= nil then 
       assert(type(fld_M.is_load) == "boolean")
