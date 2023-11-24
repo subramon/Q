@@ -38,16 +38,17 @@ vctr_chnks_to_lma(
   status = vctr_is(tbsp, old_uqid, &vctr_is_found, &vctr_where_found); 
   cBYE(status);
   if ( !vctr_is_found ) { goto BYE; }
-  vctr_rs_hmap_val_t *v = &(g_vctr_hmap[tbsp].bkts[vctr_where_found].val);
+  vctr_rs_hmap_val_t v = g_vctr_hmap[tbsp].bkts[vctr_where_found].val;
   //-----------------------------------------------
 #ifdef DEBUG
-  if ( !v->is_eov ) { go_BYE(-1); }
-  if ( v->num_elements == 0 ) { go_BYE(-1); }
-  if ( v->is_lma ) { go_BYE(-1); }
-  if ( v->num_readers != 0 ) { go_BYE(-1); }
-  if ( v->num_writers != 0 ) { go_BYE(-1); }
-  if ( v->X != NULL ) { go_BYE(-1); }
-  if ( v->nX != 0 ) { go_BYE(-1); }
+  if ( v.is_eov == false ) { go_BYE(-1); }
+  if ( v.num_elements == 0 ) { go_BYE(-1); }
+  if ( v.width == 0 ) { go_BYE(-1); }
+  if ( v.is_lma ) { go_BYE(-1); }
+  if ( v.num_readers != 0 ) { go_BYE(-1); }
+  if ( v.num_writers != 0 ) { go_BYE(-1); }
+  if ( v.X != NULL ) { go_BYE(-1); }
+  if ( v.nX != 0 ) { go_BYE(-1); }
 
   lma_file = l2_file_name(tbsp, old_uqid, ((uint32_t)~0));
   if ( lma_file == NULL ) { go_BYE(-1); }
@@ -59,17 +60,18 @@ vctr_chnks_to_lma(
 
   // Create output vector 
   uint32_t new_uqid = 0; 
-  status = vctr_add1(v->qtype, v->width, v->max_num_in_chnk, -1, &new_uqid);
+  status = vctr_add1(v.qtype, v.width, v.max_num_in_chnk, -1, &new_uqid);
   cBYE(status);
+  qtype_t xx = v.qtype;
   // START check that output vector got created
   uint32_t new_where;
   status = vctr_is(0, new_uqid, &vctr_is_found, &new_where); 
   cBYE(status);
   if ( !vctr_is_found ) { go_BYE(-1); }
 #ifdef DEBUG
-  if ( g_vctr_hmap[0].bkts[new_where].val.qtype != v->qtype ) { go_BYE(-1); } 
-  if ( g_vctr_hmap[0].bkts[new_where].val.width != v->width ) { go_BYE(-1); } 
-  if ( g_vctr_hmap[0].bkts[new_where].val.max_num_in_chnk != v->max_num_in_chnk ) { go_BYE(-1); } 
+  if ( g_vctr_hmap[0].bkts[new_where].val.qtype != v.qtype ) { go_BYE(-1); } 
+  if ( g_vctr_hmap[0].bkts[new_where].val.width != v.width ) { go_BYE(-1); } 
+  if ( g_vctr_hmap[0].bkts[new_where].val.max_num_in_chnk != v.max_num_in_chnk ) { go_BYE(-1); } 
 #endif
   // STOP  check that output vector got created
 
@@ -78,8 +80,8 @@ vctr_chnks_to_lma(
   if ( lma_file == NULL ) { go_BYE(-1); }
   if ( file_exists(lma_file) ) { go_BYE(-1); } 
 
-  uint32_t width  = v->width;
-  uint64_t filesz = v->num_elements * width;
+  uint64_t filesz = v.num_elements * v.width;
+  if ( filesz == 0 ) { go_BYE(-1); }
   uint64_t dsk_used = get_dsk_used(); 
   uint64_t dsk_allowed = get_dsk_allowed(); 
   if ( dsk_allowed < dsk_used ) { go_BYE(-1); }
@@ -90,7 +92,7 @@ vctr_chnks_to_lma(
   if ( ( X == NULL ) || ( nX == 0 ) ) { go_BYE(-1); }
   bak_X = X; bak_nX = nX;
   // STOP : Create empty backup file 
-  uint32_t max_chnk_idx = v->max_chnk_idx; 
+  uint32_t max_chnk_idx = v.max_chnk_idx; 
   for ( uint32_t chnk_idx = 0; chnk_idx <= max_chnk_idx; chnk_idx++ ) { 
     bool chnk_is_found; uint32_t chnk_where_found;
     status = chnk_is(tbsp, old_uqid, chnk_idx, &chnk_is_found,
@@ -107,7 +109,7 @@ vctr_chnks_to_lma(
     if ( num_writers != 0 ) { go_BYE(-1); } 
     char *data  = chnk_get_data(tbsp, chnk_where_found, false);
     if ( data == NULL ) { go_BYE(-1); } 
-    size_t bytes_to_copy = num_in_chnk * width;
+    size_t bytes_to_copy = num_in_chnk * v.width;
     if ( bytes_to_copy > nX ) { go_BYE(-1); } 
     memcpy(X, data, bytes_to_copy); 
     X  += bytes_to_copy;
@@ -121,7 +123,7 @@ vctr_chnks_to_lma(
   // update meta data for new vector
   g_vctr_hmap[0].bkts[new_where].val.is_eov = true;
   g_vctr_hmap[0].bkts[new_where].val.is_lma = true;
-  g_vctr_hmap[0].bkts[new_where].val.num_elements = v->num_elements;
+  g_vctr_hmap[0].bkts[new_where].val.num_elements = v.num_elements;
   g_vctr_hmap[0].bkts[new_where].val.memo_len = -1;
   *ptr_new_uqid = new_uqid;
 BYE:
