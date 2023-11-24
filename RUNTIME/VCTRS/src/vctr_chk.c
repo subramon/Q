@@ -144,11 +144,13 @@ vctr_chk(
   if ( vctr_val.is_lma ) { 
     if ( !vctr_val.is_eov ) { go_BYE(-1); }
     uint32_t good_filesz = num_elements * width;
-    char *l2_file = l2_file_name(tbsp, vctr_uqid, ((uint32_t)~0)); 
-    if ( !isfile(l2_file) ) { go_BYE(-1); }
-    int64_t filesz = get_file_size(l2_file);
+    char *lma_file = l2_file_name(tbsp, vctr_uqid, ((uint32_t)~0)); 
+    if ( !isfile(lma_file) ) { 
+      fprintf(stderr, "File not found %s \n", lma_file); go_BYE(-1); 
+    }
+    int64_t filesz = get_file_size(lma_file);
     if ( filesz != good_filesz ) { go_BYE(-1); }
-    free_if_non_null(l2_file);
+    free_if_non_null(lma_file);
   }
   else {
     if ( num_elements > 0 ) {

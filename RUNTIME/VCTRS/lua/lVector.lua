@@ -733,6 +733,20 @@ function lVector:self()
   return self._base_vec
 end
 --==================================================
+function lVector:chunks_to_lma()
+  local new_vec = setmetatable({}, lVector)
+  new_vec._qtype  = self:qtype()
+  new_vec._base_vec = cVector.chnks_to_lma(self._base_vec)
+  if ( self._nn_vec ) then 
+    local nn_vec = assert(self._nn_vec)
+    assert(type(nn_vec) == "lVector")
+    assert(( nn_vec:qtype() == "B1" ) or ( nn_vec:qtype() == "BL" ))
+    new_nn_vec._base_vec = cVector.chnks_to_lma(self._nn_vec)
+    new_vec._nn_vec = new_nn_vec
+  end
+  return new_vec
+end
+--==================================================
 function lVector:lma_to_chunks()
   local new_vec = setmetatable({}, lVector)
   new_vec._qtype  = self:qtype()
@@ -745,18 +759,6 @@ function lVector:lma_to_chunks()
     new_vec._nn_vec = new_nn_vec
   end
   return new_vec
-end
---==================================================
-function lVector:chunks_to_lma()
-  assert(cVector.chnks_to_lma(self._base_vec))
-  if ( self._nn_vec ) then 
-    local nn_vector = assert(self._nn_vec)
-    assert(type(nn_vector) == "lVector")
-    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-    local nn_vec = nn_vector._base_vec
-    assert(cVector.chnks_to_lma(self.nn_vec))
-  end
-  return self
 end
 --==================================================
 function lVector:get_lma_read()

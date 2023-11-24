@@ -61,11 +61,13 @@ vctr_del(
     g_vctr_hmap[tbsp].bkts[where_found].val.is_lma = false;
   }
   //-------------------------------------------
-  // Delete chunks in vector before deleting vector 
-  if ( val.num_elements > 0 )  {
-    if ( val.is_lma == false ) { if ( val.num_chnks == 0 ) { go_BYE(-1); } }
+  if ( ( val.is_lma ) || ( val.num_elements == 0 ) ) {
+    // no chunks to delete
+  }
+  else { 
+    // Delete chunks in vector before deleting vector 
+    if ( val.num_chnks == 0 ) { go_BYE(-1); }
     for ( uint32_t chnk_idx = 0; chnk_idx <= val.max_chnk_idx; chnk_idx++ ){
-    if ( val.num_chnks == 0 ) { break; } 
       uint32_t old_nitems = g_chnk_hmap[tbsp].nitems;
       if ( old_nitems == 0 ) { go_BYE(-1); }
       bool is_found = true;

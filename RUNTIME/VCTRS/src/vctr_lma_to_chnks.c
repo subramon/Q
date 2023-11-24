@@ -40,7 +40,7 @@ vctr_lma_to_chnks(
   if ( v->num_readers != 0 ) { go_BYE(-1); }
   if ( v->num_writers != 0 ) { go_BYE(-1); }
   //--------------------------
-  //locate backup file 
+  // locate backup file 
   lma_file = l2_file_name(tbsp, old_uqid, ((uint32_t)~0));
   if ( lma_file == NULL ) { go_BYE(-1); }
   if ( !file_exists(lma_file) ) { go_BYE(-1); } 
@@ -72,9 +72,11 @@ vctr_lma_to_chnks(
   status = vctr_is(0, new_uqid, &vctr_is_found, &new_where); 
   cBYE(status);
   if ( !vctr_is_found ) { go_BYE(-1); }
+#ifdef DEBUG
   if ( g_vctr_hmap[0].bkts[new_where].val.qtype != v->qtype ) { go_BYE(-1); } 
   if ( g_vctr_hmap[0].bkts[new_where].val.width != v->width ) { go_BYE(-1); } 
   if ( g_vctr_hmap[0].bkts[new_where].val.max_num_in_chnk != v->max_num_in_chnk ) { go_BYE(-1); } 
+#endif
   // STOP  check that output vector got created
 
   for ( uint32_t i = 0; i < v->num_chnks; i++ ) {
@@ -96,18 +98,19 @@ vctr_lma_to_chnks(
     X += v->width * v->max_num_in_chnk;
     ub += v->max_num_in_chnk;
     lb += v->max_num_in_chnk;
-    printf("Added %u \n", num_this_chnk);
 
   }
+#ifdef DEBUG
   if ( g_vctr_hmap[0].bkts[new_where].val.qtype != v->qtype ) { go_BYE(-1); } 
   if ( g_vctr_hmap[0].bkts[new_where].val.num_elements != v->num_elements ) { go_BYE(-1); } 
+  if ( g_vctr_hmap[0].bkts[new_where].val.is_lma ) { go_BYE(-1); } 
+#endif
   // release access to lma 
   if ( v->X != NULL ) { 
     munmap(v->X, v->nX); v->X = NULL; v->nX = 0;
   }
   g_vctr_hmap[0].bkts[new_where].val.is_eov = true; 
-  g_vctr_hmap[0].bkts[new_where].val.is_lma = true; 
-  printf("From %u -> %u\n", vctr_where_found, new_where);
+  g_vctr_hmap[0].bkts[new_where].val.memo_len = -1;
 
 BYE:
   free_if_non_null(lma_file);
