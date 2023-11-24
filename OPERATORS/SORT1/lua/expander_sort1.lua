@@ -18,7 +18,7 @@ local function expander_sort1(x, sort_order, optargs)
   if ( subs.sort_order == curr_sort_order ) then return x end 
   --=============================
   local t_start = cutils.rdtsc()
-  assert(x:chunks_to_lma())
+  assert(x:is_lma())
   local file_name, file_sz = x:make_lma()
   assert(type(file_name) == "string"); assert(#file_name > 0)
   assert(type(file_sz) == "number");   assert(file_sz    > 0)

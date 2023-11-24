@@ -813,11 +813,13 @@ function lVector:unget_lma_write()
   return self
 end
 --==================================================
+--[[ DEPRECATED
 function lVector:make_lma()
   -- TODO P3 What about nn vector?
   local file_name, file_sz = cVector.make_lma(self._base_vec)
   return file_name, file_sz 
 end
+--]]
 --==================================================
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
 function lVector:kill()

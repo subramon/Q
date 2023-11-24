@@ -1057,6 +1057,7 @@ BYE:
   return 3;
 }
 //----------------------------------------------------
+/* DEPRECATED
 static int l_make_lma( lua_State *L) {
   int status = 0;
   // get args from Lua 
@@ -1076,6 +1077,7 @@ BYE:
   lua_pushnumber(L, status);
   return 3;
 }
+*/
 //----------------------------------------------------
 static int l_get_lma_write( lua_State *L) {
   int status = 0;
@@ -1226,7 +1228,7 @@ static const struct luaL_Reg vector_methods[] = {
     //--------------------------------
     { "eov",    l_vctr_eov },
     { "early_free",    l_vctr_early_free },
-    { "make_lma",         l_make_lma },
+    // DEPRECATED { "make_lma",         l_make_lma },
     { "chnks_to_lma", l_vctr_chnks_to_lma },
     { "lma_to_chnks", l_vctr_lma_to_chnks },
     { "kill", l_vctr_kill },
@@ -1298,7 +1300,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "is_killable", l_vctr_is_killable },
     { "is_persist", l_vctr_is_persist },
     //--------------------------------
-    { "make_lma",         l_make_lma },
+    // DEPRECATED { "make_lma",         l_make_lma },
     { "chnks_to_lma", l_vctr_chnks_to_lma },
     { "lma_to_chnks", l_vctr_lma_to_chnks },
     { "eov",    l_vctr_eov },
