@@ -8,7 +8,7 @@ local max_num_in_chunk = qcfg.max_num_in_chunk
 local q_src_root       = qcfg.q_src_root
 
 return function (
-  f1
+  f1,
   s1, 
   optargs
   )
@@ -35,13 +35,13 @@ return function (
 
   if ( f1:has_nulls() ) then 
     subs.fn = "nn_vstrcmp"
-    subs.dotc = "OPERATORS/LOAD_CSV/src/nn_vstrcmp.c"
-    subs.doth = "OPERATORS/LOAD_CSV/inc/nn_vstrcmp.h"
+    subs.dotc = "OPERATORS/F1S1OPF2/src/nn_vstrcmp.c"
+    subs.doth = "OPERATORS/F1S1OPF2/inc/nn_vstrcmp.h"
     subs.has_nulls = true 
   else
     subs.fn = "vstrcmp"
-    subs.dotc = "OPERATORS/LOAD_CSV/src/vstrcmp.c"
-    subs.doth = "OPERATORS/LOAD_CSV/inc/vstrcmp.h"
+    subs.dotc = "OPERATORS/F1S1OPF2/src/vstrcmp.c"
+    subs.doth = "OPERATORS/F1S1OPF2/inc/vstrcmp.h"
     subs.has_nulls = false 
   end
   subs.incs = { "OPERATORS/F1S1OPF2/inc/", "UTILS/inc/" }

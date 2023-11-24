@@ -1,3 +1,4 @@
+//START_FOR_CDEF
 extern int
 vstrcmp(
     char *inv, // [n]
@@ -8,3 +9,4 @@ vstrcmp(
     bool *outv, 
     bool *nn_outv
     );
+//STOP_FOR_CDEF

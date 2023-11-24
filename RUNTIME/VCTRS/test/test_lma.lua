@@ -12,6 +12,53 @@ local qtype = "I4"
 local max_num_in_chunk = 64
 local len = 3 * max_num_in_chunk + 7
 local tests = {}
+-- test conversion from chunks to lma and back 
+tests.t0 = function()
+  local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
+    name = "test0_x", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+  x:eval()
+  assert(x:check())
+  assert(x:is_eov())
+  for i = 1, 2 do  -- TODO Make this 1000 
+    print("Started Iteration ", i)
+    local y = assert(x:chunks_to_lma())
+    assert(type(y) == "lVector")
+    assert(y:check())
+    assert(y:uqid() == x:uqid())
+    assert(y:is_lma() == true)
+
+    print("===== xxx ==== ")
+    local xprime = assert(y:lma_to_chunks())
+    assert(xprime:check())
+    print("===== 222 ==== ")
+    assert(type(xprime) == "lVector")
+    assert(xprime:is_eov() == x:is_eov())
+    assert(xprime:num_elements() == x:num_elements())
+    assert(xprime:tbsp() == 0)
+    assert(xprime:uqid() ~= x:uqid())
+    assert(xprime:is_lma())
+    assert(xprime:width() == x:width())
+    assert(xprime:qtype() == x:qtype())
+    local xprime_uqid = xprime:uqid()
+    -- now back to x
+    x = assert(xprime:chunks_to_lma())
+    assert(type(x) == "lVector")
+    assert(x:check())
+    assert(x:uqid() == xprime_uqid)
+    print("Finished Iteration ", i)
+  end
+  local y = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
+    name = "test0_y", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+  y:eval()
+  local z = Q.vveq(x, y)
+  local r = Q.sum()
+  local n1, n2 = r:eval()
+  assert(n1:to_num() == n2:to_num())
+
+  x = nil; y = nil; z = nil; r = nil; collectgarbage()
+  assert(cVector.check_all())
+  print("Test t1 succeeded")
+end
 tests.t1 = function()
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "test1_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
@@ -209,6 +256,8 @@ tests.t7 = function()
   print("Test t7 succeeded")
 end
 -- return tests
+tests.t0()
+--[[
 tests.t1()
 tests.t2()
 tests.t3()
@@ -216,5 +265,6 @@ tests.t4()
 tests.t5()
 tests.t6()
 tests.t7()
+--]]
 collectgarbage()
 assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

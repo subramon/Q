@@ -21,7 +21,7 @@ local function compile_and_link(
     -- we do not have fully qualified path
     dotc = q_src_root .. "/" .. dotc
   end
-  assert(cutils.isfile(dotc), dotc)
+  assert(cutils.isfile(dotc), "ERROR: File not found " .. dotc)
   local is_so, sofile = is_so_file(fn)
   if ( is_so ) then
     print("File exists: No need to create " .. sofile)

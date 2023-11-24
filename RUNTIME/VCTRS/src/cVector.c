@@ -23,7 +23,7 @@
 #include "vctr_set_lma.h"
 #include "vctr_lma_access.h"
 #include "vctr_make_lma.h"
-// lATER IF AT ALL #include "vctr_lma_to_chnks.h"
+#include "vctr_lma_to_chnks.h"
 #include "vctr_chnks_to_lma.h"
 
 #include "vctr_drop_mem.h"
@@ -388,8 +388,9 @@ BYE:
 static int l_vctr_chnks_to_lma( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
-  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vctr_chnks_to_lma(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
+  VCTR_REC_TYPE *ptr_oldv = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_chnks_to_lma(ptr_oldv->tbsp, ptr_oldv->uqid);
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -399,13 +400,23 @@ BYE:
   return 3;
 }
 //----------------------------------------
-/* LATER IF AT ALL 
+
 static int l_vctr_lma_to_chnks( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vctr_lma_to_chnks(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
-  lua_pushboolean(L, true);
+  uint32_t new_uqid = 0;
+  status = vctr_lma_to_chnks(ptr_v->tbsp, ptr_v->uqid, &new_uqid); 
+  cBYE(status);
+  //-- create output vector 
+  VCTR_REC_TYPE *ptr_newv = (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
+  return_if_malloc_failed(ptr_newv);
+  memset(ptr_newv, '\0', sizeof(VCTR_REC_TYPE));
+  ptr_newv->tbsp = 0; // created in your own table space 
+  ptr_newv->uqid = new_uqid; 
+  luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
+  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+
   return 1;
 BYE:
   lua_pushnil(L);
@@ -413,7 +424,7 @@ BYE:
   lua_pushnumber(L, status);
   return 3;
 }
-*/
+
 //----------------------------------------
 static int l_vctr_is_early_free( lua_State *L) {
   int status = 0;
@@ -1209,7 +1220,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "early_free",    l_vctr_early_free },
     { "make_lma",         l_make_lma },
     { "chnks_to_lma", l_vctr_chnks_to_lma },
-    // LATER IF AT ALL { "lma_to_chnks", l_vctr_lma_to_chnks },
+    { "lma_to_chnks", l_vctr_lma_to_chnks },
     { "kill", l_vctr_kill },
     { "killable", l_vctr_killable },
     //--------------------------------
@@ -1281,7 +1292,7 @@ static const struct luaL_Reg vector_functions[] = {
     //--------------------------------
     { "make_lma",         l_make_lma },
     { "chnks_to_lma", l_vctr_chnks_to_lma },
-    // LATER IF AT ALL { "lma_to_chnks", l_vctr_lma_to_chnks },
+    { "lma_to_chnks", l_vctr_lma_to_chnks },
     { "eov",    l_vctr_eov },
     { "persist", l_vctr_persist },
     { "nop",    l_vctr_nop },

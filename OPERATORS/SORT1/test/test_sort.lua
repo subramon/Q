@@ -1,9 +1,10 @@
 require 'Q/UTILS/lua/strict'
-local Q      = require 'Q'
-local Scalar = require 'libsclr'
-local orders = require 'Q/OPERATORS/F_IN_PLACE/lua/orders'
-local qtypes = require 'Q/OPERATORS/F_IN_PLACE/lua/qtypes'
+local Q       = require 'Q'
+local Scalar  = require 'libsclr'
+local orders  = require 'Q/OPERATORS/F_IN_PLACE/lua/orders'
+local qtypes  = require 'Q/OPERATORS/F_IN_PLACE/lua/qtypes'
 local cVector = require 'libvctr'
+local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local lgutils = require 'liblgutils'
 local tests = {}
 tests.t1 = function()
@@ -74,6 +75,8 @@ local qtypes = { "I1", "I2", "I4", "I8", }
       args.qtype = qtype 
       local x = Q.period(args):set_name("x" .. qtype):eval()
       local y = Q.sort(x, order):set_name("y" .. qtype)
+      assert(type(y) == "lVector")
+      y = y:lma_to_chunks() -- sort needs lma, but is_prev needs chunks
       local cmp
       if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
       local z = Q.is_prev(y, cmp, { default_val = false})
@@ -114,6 +117,7 @@ local qtypes = { "F4", "F8" }
       local yname = "y_" .. order .. "_" .. qtype
       local y = Q.sort(x, order):set_name(yname)
       assert(y:check())
+      y = y:lma_to_chunks() -- sort needs lma, but is_prev needs chunks
       local cmp
       --==================================
       if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
