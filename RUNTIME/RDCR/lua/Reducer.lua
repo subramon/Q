@@ -83,6 +83,7 @@ function Reducer:next()
     end
     return true
   else
+    print("REDUCER got back nil, ending....")
     self._is_eor = true
     self._gen = nil -- destroy the generator once generation done
     return false

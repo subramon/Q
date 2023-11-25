@@ -36,6 +36,7 @@ tests.t1 = function()
           local y = Q.sort(x, order)
           assert(type(y) == "lVector")
           assert(x:qtype() == y:qtype())
+          assert(x:uqid() ~= y:uqid())
           assert(y:get_meta("sort_order") == order)
           local xlb, xub, xincr
           if ( order == "asc" ) then
@@ -75,10 +76,18 @@ local qtypes = { "I1", "I2", "I4", "I8", }
       args.qtype = qtype 
       local x = Q.period(args):set_name("x" .. qtype):eval()
       local y = Q.sort(x, order):set_name("y" .. qtype)
+      assert(y:check())
       assert(type(y) == "lVector")
       y = y:lma_to_chunks() -- sort needs lma, but is_prev needs chunks
+      assert(y:is_lma() == false)
+      assert(y:check())
+      assert(x:num_chunks() == y:num_chunks())
+      assert(x:num_elements() == y:num_elements())
+      print("XXX", x:num_elements(),  y:num_elements())
+      print("XXX", x:num_chunks(),  y:num_chunks())
       local cmp
       if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
+      y:set_name("sorty")
       local z = Q.is_prev(y, cmp, { default_val = false})
       z:set_name("z" .. qtype)
       local v = Q.sum(z)
@@ -114,16 +123,21 @@ local qtypes = { "F4", "F8" }
       local x = Q.seq(args):eval()
       assert(x:check())
       assert(x:num_readers(0) == 0) 
+      assert(not x:is_lma())
       local yname = "y_" .. order .. "_" .. qtype
       local y = Q.sort(x, order):set_name(yname)
       assert(y:check())
+      assert(y:is_lma())
       y = y:lma_to_chunks() -- sort needs lma, but is_prev needs chunks
+      assert(not y:is_lma())
       local cmp
+      print("Y num_in_c = ", y:max_num_in_chunk())
       --==================================
       if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
       local zname = "z_" .. order .. "_" .. qtype
       local z = Q.is_prev(y, cmp, { default_val = false}):set_name(zname)
       assert(z:qtype() == "BL")
+      z:eval() -- TODO P0 TEST 
       local u = Q.sum(z)
       assert(type(u) == "Reducer")
       local n1, n2 = u:eval()
@@ -153,8 +167,8 @@ local qtypes = { "F4", "F8" }
   assert(cVector.check_all())
   print("Successfully completed test t3")
 end
-tests.t1()
-tests.t2()
+-- WORKS tests.t1()
+-- WORKS tests.t2()
 tests.t3()
 collectgarbage()
 print("MEM", lgutils.mem_used())

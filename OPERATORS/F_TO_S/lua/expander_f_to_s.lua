@@ -48,8 +48,13 @@ return function (a, x, optargs)
   local lgen = function(chunk_num)
     assert(chunk_num == l_chunk_num)
     local offset = l_chunk_num * max_num_in_chunk
+    print("Calling get_chunk ", l_chunk_num)
     local x_len, x_chunk, nn_x_chunk = x:get_chunk(l_chunk_num)
-    if ( ( not x_len ) or ( x_len == 0 ) ) then return nil end 
+    print("CALED   get_chunk ", l_chunk_num)
+    if ( x_len == 0 ) then 
+      print("VECtOR OVER")
+      return nil
+    end 
     local c_in = get_ptr(x_chunk, subs.cast_in_as)
     local start_time = cutils.rdtsc()
     qc[func_name](c_in, x_len, c_accumulator, offset)

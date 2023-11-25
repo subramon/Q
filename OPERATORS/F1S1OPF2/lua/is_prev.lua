@@ -50,13 +50,13 @@ local function is_prev(f1, cmp, optargs )
     f2_buf:stealable(true)
     local cst_f2_buf = ffi.cast(f2_cast_as, get_ptr(f2_buf))
     local f1_len, f1_buf, _ = f1:get_chunk(chunk_idx)
-    if f1_len > 0 then  
-      local cst_f1_buf = ffi.cast(f1_cast_as, get_ptr(f1_buf))
-      local start_time = cutils.rdtsc()
-      qc[func_name](cst_f1_buf, f1_len, default_val, first_call,
+    if ( f1_len == 0 ) then return 0 end 
+    --===========================================
+    local cst_f1_buf = ffi.cast(f1_cast_as, get_ptr(f1_buf))
+    local start_time = cutils.rdtsc()
+    qc[func_name](cst_f1_buf, f1_len, default_val, first_call,
       cst_f2_buf, cst_last_val)
-      record_time(start_time, func_name)
-    end
+    record_time(start_time, func_name)
     f1:unget_chunk(chunk_idx)
     first_call = false
     chunk_idx = chunk_idx + 1
@@ -71,6 +71,7 @@ local function is_prev(f1, cmp, optargs )
   vargs.gen = f2_gen
   vargs.has_nulls = false
   vargs.qtype = subs.out_qtype
+  vargs.max_num_in_chunk = max_num_in_chunk
   return lVector(vargs)
 end
 return require('Q/q_export').export('is_prev', is_prev)

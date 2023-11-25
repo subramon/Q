@@ -71,7 +71,7 @@ vctr_get_chunk(
 BYE:
   if ( status < 0 ) { 
     if ( vctr_is_found ) { 
-      printf("Error get_chunk %d of %s \n", chnk_idx, 
+      printf("Chunk %d of %s unavailable \n", chnk_idx, 
           g_vctr_hmap[tbsp].bkts[vctr_where_found].val.name);
     }
   }

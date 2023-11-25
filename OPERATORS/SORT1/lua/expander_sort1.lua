@@ -16,48 +16,42 @@ local function expander_sort1(x, sort_order, optargs)
   -- Check is already sorted correct way and don't repeat
   local curr_sort_order = x:get_meta("sort_order")
   if ( subs.sort_order == curr_sort_order ) then return x end 
-  --=============================
-  local t_start = cutils.rdtsc()
-  assert(x:is_lma())
-  local file_name, file_sz = x:make_lma()
-  assert(type(file_name) == "string"); assert(#file_name > 0)
-  assert(type(file_sz) == "number");   assert(file_sz    > 0)
-
-  local qtype = x:qtype()
-  local width = x:width()
-  local nx = math.floor(file_sz / width)
-  assert(nx == math.ceil(file_sz / width))
-  assert(nx == x:num_elements())
-
-  -- Create output vector y 
-  local vargs = {}
-  if ( optargs ) then 
+  -- determine whether to sort in place
+  local in_situ = false
+  if ( optargs ) then
     assert(type(optargs) == "table")
-    for k, v in pairs(optargs) do 
-      vargs[k] = v
+    if ( optargs.in_situ ) then
+      assert(type(optargs.in_situ) == "boolean")
+      in_situ = optargs.in_situ
     end
   end
-  vargs.file_name = file_name
-  vargs.num_elements = nx
-  vargs.qtype = qtype
-  vargs.width = width
-  vargs.memo_len = -1
-  local y = lVector(vargs)
-  y:set_meta("sort_order", subs.sort_order)
+  if ( in_situ ) then 
+    assert(x:is_lma()) 
+    x = x:clone_lma()
+  else
+    x = x:chunks_to_lma()
+  end 
+  --=============================
+  local t_start = cutils.rdtsc()
+  -- We need input vector to be fully materialized and prepped for lma
+  assert(x:is_lma())
+
   --======================================
   -- Now, get access to y's data and perform the operation
-  local ycmem = y:get_lma_write()
+  local ycmem, nn_ycmem, num_elements = x:get_lma_write()
   assert(type(ycmem) == "CMEM")
+  assert(type(nn_ycmem) == "nil")
   assert(ycmem:is_foreign() == true)
   local yptr = get_ptr(ycmem, subs.cast_y_as)
 
-  qc[func_name](yptr, nx)
+  qc[func_name](yptr, num_elements)
   -- Above is an unusual function: returns void instead of int status 
 
   -- Indicate write is over 
-  y:unget_lma_write()
+  x:unget_lma_write()
+  x:set_meta("sort_order",  subs.sort_order)
   -- assert(y:num_readers() == 0)
   record_time(t_start, "sort1")
-  return y
+  return x
 end
 return expander_sort1

@@ -115,6 +115,11 @@ function lVector:num_writers(chnk_idx)
   return num_writers
 end
 
+function lVector:num_chunks()
+  local num_chunks = cVector.num_chunks(self._base_vec)
+  return num_chunks
+end
+
 function lVector:num_elements()
   local num_elements = cVector.num_elements(self._base_vec)
   return num_elements
@@ -405,6 +410,7 @@ end
 
 function lVector:put_chunk(c, n, nn_c)
   assert(type(c) == "CMEM")
+  print("Putting chunk with elements = ", n)
   assert(cVector.put_chunk(self._base_vec, c, n))
   if ( self._nn_vec ) then 
     assert(type(nn_c) == "CMEM")
@@ -461,9 +467,10 @@ function lVector:get_chunk(chnk_idx)
   if ( to_generate ) then 
     -- print(" invoke the generator  for " .. self:name(), self._chunk_num)
     if ( type(self._generator) == "nil" ) then return 0, nil end 
-    -- print("Gen Getting chunk " .. self._chunk_num .. " for " .. self:name())
+    print("Getting chunk " .. self._chunk_num .. " for " .. self:name())
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
+    print("Got " .. num_elements .. " for chunk " .. self._chunk_num)
     --==============================
     if ( num_elements > 0 ) then  
       assert(type(buf) == "CMEM")
@@ -771,7 +778,7 @@ function lVector:get_lma_read()
     local nn_vec = nn_vector._base_vec
     local nn_x = assert(cVector.get_lma_read(nn_vec._base_vec))
   end
-  return x, nn_x
+  return x, nn_x, self:num_elements()
 end
 --==================================================
 function lVector:get_lma_write()
@@ -784,7 +791,7 @@ function lVector:get_lma_write()
     local nn_vec = nn_vector._base_vec
     local nn_x = assert(cVector.get_lma_write(nn_vec._base_vec))
   end
-  return x, nn_x
+  return x, nn_x, self:num_elements()
 end
 --==================================================
 function lVector:unget_lma_read()

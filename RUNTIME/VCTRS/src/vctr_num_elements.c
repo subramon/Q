@@ -24,3 +24,4 @@ vctr_num_elements(
 BYE:
   return status;
 }
+

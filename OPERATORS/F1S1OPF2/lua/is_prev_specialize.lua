@@ -4,7 +4,6 @@ local Scalar  = require 'libsclr'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local cutils  = require 'libcutils'
-local max_num_in_chunk = qcfg.max_num_in_chunk
 local q_src_root       = qcfg.q_src_root
 
 return function (

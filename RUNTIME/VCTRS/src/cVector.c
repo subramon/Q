@@ -22,7 +22,7 @@
 
 #include "vctr_set_lma.h"
 #include "vctr_lma_access.h"
-#include "vctr_make_lma.h"
+// DEPRECATED #include "vctr_make_lma.h"
 #include "vctr_lma_to_chnks.h"
 #include "vctr_chnks_to_lma.h"
 
@@ -45,6 +45,7 @@
 #include "vctr_get1.h"
 #include "vctr_name.h"
 #include "vctr_num_elements.h"
+#include "vctr_num_chunks.h"
 #include "vctr_persist.h"
 #include "vctr_print.h"
 #include "vctr_putn.h"
@@ -281,6 +282,21 @@ static int l_vctr_width( lua_State *L) {
   uint32_t width;
   status = vctr_width(ptr_v->tbsp, ptr_v->uqid, &width); cBYE(status);
   lua_pushnumber(L, width);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_num_chunks( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint32_t num_chunks;
+  status = vctr_num_chunks(ptr_v->tbsp, ptr_v->uqid, &num_chunks); cBYE(status);
+  lua_pushnumber(L, num_chunks);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -1250,6 +1266,7 @@ static const struct luaL_Reg vector_methods[] = {
     //--------------------------------
     { "name", l_vctr_get_name },
     { "qtype", l_vctr_get_qtype },
+    { "num_chunks", l_vctr_num_chunks },
     { "num_elements", l_vctr_num_elements },
     //--------------------------------
     { "vctr_num_readers", l_vctr_get_num_readers },
@@ -1320,6 +1337,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "count", l_vctr_count },
     { "name", l_vctr_get_name },
     { "qtype", l_vctr_get_qtype },
+    { "num_chunks", l_vctr_num_chunks },
     { "num_elements", l_vctr_num_elements },
     //--------------------------------
     { "vctr_num_readers", l_vctr_get_num_readers },
