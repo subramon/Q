@@ -39,7 +39,6 @@ tests.t1 = function()
 end
 tests.t1()
 collectgarbage()
-print("MEM", lgutils.mem_used())
-print("DSK", lgutils.dsk_used())
+-- print("MEM", lgutils.mem_used()); print("DSK", lgutils.dsk_used())
 assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests

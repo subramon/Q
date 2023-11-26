@@ -229,6 +229,21 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_cast( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  const char * const str_qtype = luaL_checkstring(L, 2); 
+  status = vctr_cast(ptr_v->tbsp, ptr_v->uqid, str_qtype); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_vctr_set_memo( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
@@ -1265,6 +1280,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "unget_lma_read",   l_unget_lma_read },
     { "unget_lma_write",  l_unget_lma_write },
     //--------------------------------
+    { "cast", l_vctr_cast },
     { "set_memo", l_vctr_set_memo },
     { "set_name", l_vctr_set_name },
     //--------------------------------
@@ -1335,6 +1351,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "unget_lma_read",   l_unget_lma_read },
     { "unget_lma_write",  l_unget_lma_write },
     //--------------------------------
+    { "cast", l_vctr_cast },
     { "set_memo", l_vctr_set_memo},
     { "set_name", l_vctr_set_name },
     //--------------------------------

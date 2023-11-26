@@ -890,5 +890,11 @@ function lVector:make_mem(level, chnk_idx)
   return rslt, nn_rslt
 end
 --==================================================
+function lVector:cast(qtype) -- DANGEROUS, USE WITH CAUTION
+  assert(type(qtype) == "string")
+  assert(cVector.cast(self._base_vec, qtype))
+  self._qtype = qtype
+  return self
+end
+--==================================================
 return lVector
-

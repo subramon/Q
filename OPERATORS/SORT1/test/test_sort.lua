@@ -165,9 +165,9 @@ local qtypes = { "F4", "F8" }
   assert(cVector.check_all())
   print("Successfully completed test t3")
 end
--- tests.t1()
+tests.t1()
 tests.t2()
--- tests.t3()
+tests.t3()
 collectgarbage()
 print("MEM", lgutils.mem_used())
 print("DSK", lgutils.dsk_used())

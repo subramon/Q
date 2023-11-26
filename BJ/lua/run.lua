@@ -18,9 +18,13 @@ local load2 = require 'load2'
 local T1 = load1() -- Load price_cds_dump.csv"
 local T2 = load2() -- Load ils_cds_dump.csv"
 -- mark rows for deletion in T2
-local x1 = Q.vstrcmp(T2.item_location_status_c, "STORE")
-local nT2 = T2:num_elements()
-local mask = Q.const({val = 0, qtype = "I4", len = nT2})
+local x21 = Q.vstrcmp(T2.item_location_status_c, "STORE")
+local nT2 = T2.tcin:num_elements()
+local n1, n2 = Q.max(T2.tcin):eval()
+print(n1)
+local n1, n2 = Q.max(T2.location_id):eval()
+print(n1)
+
 
 --[[
 local x1 = Q.vstrcmp(T.channel, "STORE")
