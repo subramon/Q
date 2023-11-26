@@ -3,7 +3,9 @@ local cutils = require 'libcutils'
 return function(invec, sort_order)
 
   assert(type(invec) == "lVector")
-  assert(invec:is_eov())
+  if ( not invec:is_eov() ) then
+    invec:eval()
+  end
   assert(not invec:has_nulls())
 
   assert(type(sort_order) == "string", "Sort order should be a string")

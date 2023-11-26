@@ -112,7 +112,9 @@ main(
 
     // some tests on the chunk just created
     CMEM_REC_TYPE chk_cmem; uint32_t chk_n; 
-    status = vctr_get_chunk(tbsp, uqid, i, &chk_cmem, &chk_n); 
+    bool yes_vec_no_chunk;
+    status = vctr_get_chunk(tbsp, uqid, i, &chk_cmem, &chk_n, 
+     &yes_vec_no_chunk);
     cBYE(status);
     if ( chk_cmem.qtype != qtype ) { go_BYE(-1); }
     if ( chk_cmem.size  != vctr_chnk_size ) { go_BYE(-1); }

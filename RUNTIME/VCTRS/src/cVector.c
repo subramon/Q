@@ -789,6 +789,7 @@ static int l_vctr_get_chunk( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t chnk_idx = luaL_checknumber(L, 2); 
   uint32_t num_in_chunk = 0;
+  bool yes_vec_no_chunk;
   //-- allocate CMEM to go back 
   CMEM_REC_TYPE *ptr_c = (CMEM_REC_TYPE *)lua_newuserdata(L, sizeof(CMEM_REC_TYPE));
   return_if_malloc_failed(ptr_c);
@@ -797,9 +798,11 @@ static int l_vctr_get_chunk( lua_State *L) {
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
   status = vctr_get_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx, ptr_c, 
-      &num_in_chunk);
-  cBYE(status);
-
+      &num_in_chunk, &yes_vec_no_chunk);
+  if ( status < 0 ) {
+    if ( yes_vec_no_chunk ) { /* silent failure */ } else { WHEREAMI; }
+    goto BYE;
+  }
   lua_pushnumber(L, num_in_chunk);
   return 2;
 BYE:
@@ -1191,8 +1194,9 @@ static int l_vctr_prefetch( lua_State *L) {
       &where_found); 
   //--------------------------------
   if ( is_found ) { 
+    bool yes_vec_no_chunk;
     status = vctr_get_chunk(ptr_v->tbsp, ptr_v->uqid, chnk_idx, &cmem,
-        &num_in_chunk); 
+        &num_in_chunk, &yes_vec_no_chunk);
     cBYE(status);
     // Note that the unget immediately following the get is to 
     // reduce the number of readers 

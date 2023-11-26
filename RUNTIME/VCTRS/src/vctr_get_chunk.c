@@ -18,7 +18,8 @@ vctr_get_chunk(
     uint32_t vctr_uqid,
     uint32_t chnk_idx,
     CMEM_REC_TYPE *ptr_cmem,
-    uint32_t *ptr_num_in_chunk // number in chunk
+    uint32_t *ptr_num_in_chunk, // number in chunk
+    bool *ptr_yes_vec_no_chunk
     )
 {
   int status = 0;
@@ -27,6 +28,7 @@ vctr_get_chunk(
   uint32_t chnk_size, width, max_num_in_chnk;
   bool is_write = false; // TODO P3 Handle case when this is true 
 
+  *ptr_yes_vec_no_chunk = false;
   if ( ptr_cmem == NULL ) { go_BYE(-1); } 
   *ptr_num_in_chunk = 0;
   status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where_found);
@@ -51,7 +53,9 @@ vctr_get_chunk(
   //-------------------------------
   status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);
   cBYE(status);
-  if ( chnk_is_found == false ) { go_BYE(-1);  }
+  if ( chnk_is_found == false ) { 
+    *ptr_yes_vec_no_chunk = true; status = -1; goto BYE;
+  }
   //-----------------------------------------------------
   char *data = chnk_get_data(tbsp, chnk_where_found, is_write); 
   if ( data == NULL ) { go_BYE(-1); }
@@ -70,9 +74,14 @@ vctr_get_chunk(
       &touch_time, 0);
 BYE:
   if ( status < 0 ) { 
-    if ( vctr_is_found ) { 
+    if ( *ptr_yes_vec_no_chunk ) { 
+      /* quiet failure
       printf("Chunk %d of %s unavailable \n", chnk_idx, 
           g_vctr_hmap[tbsp].bkts[vctr_where_found].val.name);
+          */
+    }
+    else {
+      WHEREAMI;
     }
   }
   return status;

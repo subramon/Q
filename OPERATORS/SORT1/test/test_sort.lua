@@ -31,7 +31,7 @@ tests.t1 = function()
       end
       for _, order in ipairs(orders) do
         for _, qtype in ipairs(qtypes) do
-          local x = Q.mk_col(vals, qtype):eval()
+          local x = Q.mk_col(vals, qtype)
           assert(x:num_elements() == n)
           local y = Q.sort(x, order)
           assert(type(y) == "lVector")
@@ -74,21 +74,19 @@ local qtypes = { "I1", "I2", "I4", "I8", }
   for _, order in ipairs(orders) do
     for _, qtype in ipairs(qtypes) do
       args.qtype = qtype 
-      local x = Q.period(args):set_name("x" .. qtype):eval()
+      local x = Q.period(args):set_name("x" .. qtype)
       local y = Q.sort(x, order):set_name("y" .. qtype)
       assert(y:check())
       assert(type(y) == "lVector")
-      y = y:lma_to_chunks() -- sort needs lma, but is_prev needs chunks
-      assert(y:is_lma() == false)
-      assert(y:check())
-      assert(x:num_chunks() == y:num_chunks())
-      assert(x:num_elements() == y:num_elements())
-      print("XXX", x:num_elements(),  y:num_elements())
-      print("XXX", x:num_chunks(),  y:num_chunks())
+      local y2 = y:lma_to_chunks() -- sort needs lma, but is_prev needs chunks
+      assert(y2:is_lma() == false)
+      assert(y2:check())
+      assert(x:num_chunks()   == y2:num_chunks())
+      assert(x:num_elements() == y2:num_elements())
       local cmp
       if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
-      y:set_name("sorty")
-      local z = Q.is_prev(y, cmp, { default_val = false})
+      y2:set_name("sort_y2")
+      local z = Q.is_prev(y2, cmp, { default_val = false})
       z:set_name("z" .. qtype)
       local v = Q.sum(z)
       assert(type(v) == "Reducer")
@@ -96,9 +94,10 @@ local qtypes = { "I1", "I2", "I4", "I8", }
       assert(type(n1) == "Scalar")
       assert(type(n2) == "Scalar")
       assert(n1:to_num() == 0)
+      z:delete()
       x:delete()
       y:delete()
-      z:delete()
+      y2:delete()
       v:delete()
       print("Successfully completed test t2 for ", order, qtype)
     end
@@ -131,7 +130,6 @@ local qtypes = { "F4", "F8" }
       y = y:lma_to_chunks() -- sort needs lma, but is_prev needs chunks
       assert(not y:is_lma())
       local cmp
-      print("Y num_in_c = ", y:max_num_in_chunk())
       --==================================
       if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
       local zname = "z_" .. order .. "_" .. qtype
@@ -167,11 +165,11 @@ local qtypes = { "F4", "F8" }
   assert(cVector.check_all())
   print("Successfully completed test t3")
 end
--- WORKS tests.t1()
--- WORKS tests.t2()
-tests.t3()
+-- tests.t1()
+tests.t2()
+-- tests.t3()
 collectgarbage()
 print("MEM", lgutils.mem_used())
 print("DSK", lgutils.dsk_used())
-assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+-- TODO assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests

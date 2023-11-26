@@ -410,7 +410,6 @@ end
 
 function lVector:put_chunk(c, n, nn_c)
   assert(type(c) == "CMEM")
-  print("Putting chunk with elements = ", n)
   assert(cVector.put_chunk(self._base_vec, c, n))
   if ( self._nn_vec ) then 
     assert(type(nn_c) == "CMEM")
@@ -467,10 +466,8 @@ function lVector:get_chunk(chnk_idx)
   if ( to_generate ) then 
     -- print(" invoke the generator  for " .. self:name(), self._chunk_num)
     if ( type(self._generator) == "nil" ) then return 0, nil end 
-    print("Getting chunk " .. self._chunk_num .. " for " .. self:name())
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
-    print("Got " .. num_elements .. " for chunk " .. self._chunk_num)
     --==============================
     if ( num_elements > 0 ) then  
       assert(type(buf) == "CMEM")

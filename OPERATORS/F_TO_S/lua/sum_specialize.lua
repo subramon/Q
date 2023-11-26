@@ -47,7 +47,8 @@ return function (x, optargs)
     error(qtype)
   end
   --==========
-  subs.accumulator = cmem.new(ffi.sizeof(subs.accumulator_ctype))
+  local sz = ffi.sizeof(subs.accumulator_ctype)
+  subs.accumulator = cmem.new(sz)
   subs.accumulator:zero()
   subs.cast_accumulator_as = subs.accumulator_ctype .. " *"
   --==========

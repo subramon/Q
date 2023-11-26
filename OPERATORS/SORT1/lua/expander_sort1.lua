@@ -27,7 +27,7 @@ local function expander_sort1(x, sort_order, optargs)
   end
   if ( in_situ ) then 
     assert(x:is_lma()) 
-    x = x:clone_lma()
+    x = x:clone_lma() -- TODO TO BE IMPLEMENTED
   else
     x = x:chunks_to_lma()
   end 
