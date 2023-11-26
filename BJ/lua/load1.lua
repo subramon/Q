@@ -17,7 +17,7 @@ local function load1()
   M[#M+1] = { name = "expiry_d", qtype = "SC", width = 12, has_nulls = true, memo_len = -1  }
   M[#M+1] = { name = "regular_retail_a", qtype = "F4", has_nulls = false, memo_len = -1  }
   M[#M+1] = { name = "current_retail_a", qtype = "F4", has_nulls = false, memo_len = -1  }
-  M[#M+1] = { name = "channel", qtype = "SC", width = 8, has_nulls = false, memo_len = -1  }
+  M[#M+1] = { name = "channel_n", qtype = "SC", width = 8, has_nulls = false, memo_len = -1  }
   local datafile = qcfg.q_src_root .. "/BJ/data/price_cds_dump.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)

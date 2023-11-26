@@ -1,7 +1,7 @@
 local do_subs = require 'Q/UTILS/lua/do_subs'
 local tmpl = 'unary_specialize.tmpl'
 --==============================
--- handle ++, --, log, exp, sqr, sqrt, logit, logit2, ...
+-- handle ++, --, log, exp, sqr, sqrt, convert, logit, logit2, ...
 do_subs(tmpl, "vincr.lua", 
 { __operator__ = "'vincr'", 
   __code__ = "'c = a++;'", 

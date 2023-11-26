@@ -139,7 +139,7 @@ end
 T.decr = decr
 require('Q/q_export').export('decr', decr)
     
-    
+--[[ HWHERE SHOULD THIS BE? I have it in F1OPF2    
 local function convert(x, y, optargs)
   local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
   local status, col = pcall(expander, "convert", x, y, optargs)
@@ -149,5 +149,26 @@ local function convert(x, y, optargs)
 end
 T.convert = convert
 require('Q/q_export').export('convert', convert)
+--]]
+    
+local function vsor(x, y, optargs)
+  local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
+  local status, col = pcall(expander, "vsor", x, y, optargs)
+  if ( not status ) then print(col) end
+  assert(status, "Could not execute vsor")
+  return col
+end
+T.vsor = vsor
+require('Q/q_export').export('vsor', vsor)
+    
+local function vsand(x, y, optargs)
+  local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
+  local status, col = pcall(expander, "vsand", x, y, optargs)
+  if ( not status ) then print(col) end
+  assert(status, "Could not execute vsand")
+  return col
+end
+T.vsand = vsand
+require('Q/q_export').export('vsand', vsand)
     
 return T

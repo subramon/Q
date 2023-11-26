@@ -43,6 +43,8 @@ cd ~/Q/OPERATORS/F1S1OPF2/test/
 qjit test_cmp.lua
 qjit test_shift_lr.lua
 qjit test_vshift.lua
+qjit test_vsand.lua
+qjit test_vsor.lua
 
 cd ~/Q/OPERATORS/F1F2OPF3/test/
 qjit test_concat.lua
@@ -68,6 +70,7 @@ bash run_tests.sh
 cd ~/Q/OPERATORS/F1OPF2/test/
 qjit test_vnot.lua
 qjit test_popcount.lua
+qjit test_vconvert.lua
 
 cd ~/Q/OPERATORS/GROUPBY/test/
 qjit test_numby.lua
