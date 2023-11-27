@@ -10,16 +10,28 @@ tests.t1 = function()
   local max_num_in_chunk = 64
   local len = max_num_in_chunk + 17
 
-  local vargs = {
+  local xargs = {
   len = len,
   start = 1, 
   by = 1,
+  max_num_in_chunk = max_num_in_chunk
+}
+  local x2args = {
+  len = len,
+  start = len, 
+  by = -1,
   max_num_in_chunk = max_num_in_chunk
 }
   local pargs = {
   len = len,
   start = 0, 
   by = 1,
+  max_num_in_chunk = max_num_in_chunk
+}
+  local p2args = {
+  len = len,
+  start = len-1, 
+  by = -1,
   max_num_in_chunk = max_num_in_chunk
 }
 
@@ -29,15 +41,29 @@ local val_qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
 local prm_qtypes = { "I1", "I2", "I4", "I8", }
   for _, val_qtype in ipairs(val_qtypes) do
     for _, prm_qtype in ipairs(prm_qtypes) do
-      vargs.qtype = val_qtype 
+      xargs.qtype = val_qtype 
+      local x = Q.seq(xargs):set_name("x")
+
       pargs.qtype = prm_qtype 
-      local x = Q.seq(vargs):set_name("x")
       local p = Q.seq(pargs):set_name("p")
+
+      x2args.qtype = val_qtype 
+      local x2 = Q.seq(x2args):set_name("x")
+
+      p2args.qtype = prm_qtype 
+      local p2 = Q.seq(p2args):set_name("p2")
+
       local y = Q.permute(x, p, "to", yargs):set_name("y")
       assert(type(y) == "lVector")
       assert(y:is_eov())
       y = y:lma_to_chunks()
       -- y:pr()
+
+      local y2 = Q.permute(x, p2, "to", yargs):set_name("y")
+      assert(type(y2) == "lVector")
+      assert(y2:is_eov())
+      y2 = y2:lma_to_chunks()
+
       local z = Q.permute(y, p, "to", zargs):set_name("z")
       assert(z:is_eov())
       z = z:lma_to_chunks()
@@ -45,14 +71,21 @@ local prm_qtypes = { "I1", "I2", "I4", "I8", }
       assert(n1 == n2)
       local n1, n2 = Q.sum(Q.vveq(x, y)):eval()
       assert(n1 == n2)
+      -- check other permutataion p2 
+      local n1, n2 = Q.sum(Q.vveq(x2, y2)):eval()
+      assert(n1 == n2)
 
       assert(x:check())
       assert(p:check())
+      assert(p2:check())
       assert(y:check())
+      assert(y2:check())
       assert(z:check())
       x:delete()
       p:delete()
+      p2:delete()
       y:delete()
+      y2:delete()
       z:delete()
       assert(cVector.check_all())
       print("Successfully completed test t1 for ", val_qtype, prm_qtype)
