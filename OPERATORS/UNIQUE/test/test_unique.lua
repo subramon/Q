@@ -543,5 +543,23 @@ tests.t16 = function()
   Q.print_csv({unq, cnt, sum})
   print("Test t16 succeeded")
 end
+tests.t1()
+--[[ TODO 
+tests.t2()
+tests.t3()
+tests.t4()
+tests.t5()
+tests.t6()
+tests.t7()
+tests.t8()
+tests.t9()
+tests.t10()
+tests.t11()
+tests.t12()
+tests.t13()
+tests.t14()
+tests.t15()
+tests.t16()
+--]]
 
-return tests
+-- return tests

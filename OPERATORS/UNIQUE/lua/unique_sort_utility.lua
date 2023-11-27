@@ -26,5 +26,4 @@ local sort_vector = function(a)
       "input vector not sorted")
   return a_clone
 end
-
 return sort_vector

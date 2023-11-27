@@ -1,21 +1,14 @@
 local ffi     = require 'ffi'
-local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local qc      = require 'Q/UTILS/lua/q_core'
+local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local qc      = require 'Q/UTILS/lua/qcore'
 local cmem    = require 'libcmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local sort_utility = require 'Q/OPERATORS/UNIQUE/lua/unique_sort_utility'
+-- TODO local sort_utility = require 'Q/OPERATORS/UNIQUE/lua/unique_sort_utility'
 
-local function expander_unique(op, a, b)
+local function expander_unique(op, a)
   -- Verification
   assert(op == "unique")
   assert(type(a) == "lVector", "a must be a lVector ")
-  if b then
-    assert(type(b) == "lVector", "b must be a lVector ")
-    assert(b:qtype() == "B1", "b must be of type B1")
-    assert(a:length() == b:length(), "a and b must be of same length")
-  end
-  
   local sp_fn_name = "Q/OPERATORS/UNIQUE/lua/unique_specialize"
   local spfn = assert(require(sp_fn_name))
 
@@ -23,141 +16,93 @@ local function expander_unique(op, a, b)
   if not status then print(subs) end
   assert(status, "Specializer failed " .. sp_fn_name)
   local func_name = assert(subs.fn)
-  
-  -- START: Dynamic compilation
-  if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, func_name)
-  end
-  -- STOP: Dynamic compilation
+  qc.q_add(subs)
   assert(qc[func_name], "Symbol not defined " .. func_name)
 
-  local sz_out          = qconsts.chunk_size 
-  local sz_out_in_bytes = sz_out * qconsts.qtypes[a:qtype()].width
-  local out_buf = nil
-  local cnt_buf = nil
-  local sum_buf = nil
-  local first_call = true
-  local unq_idx = nil
-  local in_idx  = nil
-  local in_chunk_idx = 0
-  local last_unq_element = 0
-  local brk_n_write
+  -- TODO P1 Check that a is sorted. a = sort_utility(a)
   
-  a = sort_utility(a)
+  -- track how much of input you have consumed 
+  local num_consumed = cmem.new("uint64_t[?]", 1)
+  num_consumed[0] = 0
+  -- how much of input buffer has been filled up
+  local num_val_buf = cmem.new("uint64_t[?]", 1)
+  num_val_buf[0] = 0
+  -- whether val_buf will overflow if we consume more input
+  local overflow = cmem.new("bool[?]", 1)
+  overflow[0] = false
+
+  local l_chunk_num = 0
+  -- this is tricky part where we create 2 generators
+  local lgens = {}
+  for _, my_name in ipairs({"val", "cnt"}) do 
+
+    local function gen(chunk_num)
+      assert(chunk_num == l_chunk_num)
+      local val_buf = cmem.new(subs.val_bufsz)
+      val_buf:zero()
+      val_buf:stealable(true)
   
-  local unique_vec = lVector( { gen = true, has_nulls = false, qtype = a:qtype() } )
-  local cnt_vec    = lVector( { gen = true, has_nulls = false, qtype = "I8" } )
-  local sum_vec    = nil
-  if b then
-    sum_vec = lVector( { gen = true, has_nulls = false, qtype = "I8" } )
-  end
-
-  local function unique_gen(chunk_num)
-    -- Adding assert on chunk_idx to have sync between expected chunk_num and generator's chunk_idx state
-    --assert(chunk_num == a_chunk_idx)
-    if ( first_call ) then 
-      -- allocate buffer for output
-      out_buf = assert(cmem.new(sz_out_in_bytes))
-      cnt_buf = assert(cmem.new(sz_out * ffi.sizeof("int64_t")))
-      if b then
-        sum_buf = assert(cmem.new(sz_out * ffi.sizeof("int64_t")))
-        sum_buf:zero()
-      end
-
-      unq_idx = assert(get_ptr(cmem.new(ffi.sizeof("uint64_t"))))
-      unq_idx = ffi.cast("uint64_t *", unq_idx)
-
-      in_idx = assert(get_ptr(cmem.new(ffi.sizeof("uint64_t"))))
-      in_idx = ffi.cast("uint64_t *", in_idx)
-      in_idx[0] = 0
-      
-      last_unq_element = assert(get_ptr(cmem.new(ffi.sizeof(subs.in_ctype))))
-      last_unq_element = ffi.cast(subs.in_ctype .. " *", last_unq_element)
-
-      brk_n_write = assert(get_ptr(cmem.new(ffi.sizeof("bool"))))
-      brk_n_write = ffi.cast("bool *", brk_n_write)
-
-      first_call = false
-    end
-    
-    -- Initialize num in out_buf to zero
-    unq_idx[0] = 0
-    brk_n_write[0] = false
-    cnt_buf:zero()
-
-    repeat 
-      local in_len, in_chunk, in_nn_chunk = a:chunk(in_chunk_idx)
-      local in_B1_len, in_B1_chunk, in_B1_nn_chunk
-      if b then
-        in_B1_len, in_B1_chunk, in_B1_nn_chunk = b:chunk(in_chunk_idx)
-      end
-      
-      if in_len == 0 then
-        if tonumber(unq_idx[0]) > 0 then
-          unique_vec:put_chunk(out_buf, nil, tonumber(unq_idx[0]))
-          cnt_vec:put_chunk(cnt_buf, nil, tonumber(unq_idx[0]))
-          if b then
-            sum_vec:put_chunk(sum_buf, nil, tonumber(unq_idx[0]))
+      local cnt_buf = cmem.new(subs.cnt_bufsz)
+      cnt_buf:zero()
+      cnt_buf:stealable(true)
+  
+      while ( true ) do 
+        local in_len, in_chunk = a:chunk(in_chunk_idx)
+        if in_len == 0 then
+          if ( num_val_buf[0] > 0 ) then 
+            if ( my_name == "val" ) then 
+              cnt_vec:put_chunk(cnt_buf, nil, num_val_buf[0])
+              return num_val_buf[0], val_buf
+            elseif ( my_name == "cnt" ) then 
+              val_vec:put_chunk(val_buf, nil, num_val_buf[0])
+              return num_val_buf[0], cnt_buf
+            else
+              error("XXX")
+            end
+          else
+            val_buf:delete()
+            cnt_buf:delete()
           end
         end
-        if tonumber(unq_idx[0]) < qconsts.chunk_size then
-          unique_vec:eov()
-          cnt_vec:eov()
-          if b then
-            sum_vec:eov()
+        --======================================================
+        
+        local in_ptr  = ffi.cast(subs.val_ctype .. "*",  get_ptr(in_chunk))
+        local val_ptr = ffi.cast(subs.val_ctype .. "*",  get_ptr(val_buf))
+        local cnt_ptr = ffi.cast(subs.cnt_ctype .. "*",  get_ptr(cnt_buf))
+  
+        local status = qc[func_name](in_ptr, in_len, val_ptr, cnt_ptr, 
+        num_consumed, num_val_buf, subs.max_num_in_chunk, overflow)
+        assert(status == 0, "C error in UNIQUE")
+        -- If output buffer is (truly) full then return it 
+        if ( overflow[0] == true ) then 
+          if ( my_name == "val" ) then 
+            cnt_vec:put_chunk(cnt_buf, nil, num_val_buf[0])
+            return num_val_buf[0], val_buf
+          elseif ( my_name == "cnt" ) then 
+            val_vec:put_chunk(val_buf, nil, num_val_buf[0])
+            return num_val_buf[0], cnt_buf
+          else
+            error("XXX")
           end
-        end
-        return tonumber(unq_idx[0])
-        -- return tonumber(cidx[0]), out_buf, nil 
-      end
-      assert(in_nn_chunk == nil, "Unique vector cannot have nulls")
-      
-      local casted_in_chunk = ffi.cast( subs.in_ctype .. "*",  get_ptr(in_chunk))
-      local casted_unq_buf = ffi.cast( subs.in_ctype .. "*",  get_ptr(out_buf))
-      local casted_cnt_buf = ffi.cast( "int64_t *",  get_ptr(cnt_buf))
-      local casted_in_B1_chunk = ffi.cast( "uint64_t *", get_ptr(in_B1_chunk))
-      local casted_sum_buf = nil
-      if b then
-        casted_sum_buf = ffi.cast( "int64_t *",  get_ptr(sum_buf))
-      end
-      local status = qc[func_name](casted_in_chunk, in_len, in_idx, casted_unq_buf, sz_out,
-        unq_idx,casted_cnt_buf, last_unq_element, in_chunk_idx, brk_n_write, casted_in_B1_chunk, casted_sum_buf )
-      assert(status == 0, "C error in UNIQUE")
-
-      if ( tonumber(in_idx[0]) == in_len ) then
-        in_chunk_idx = in_chunk_idx + 1
-        in_idx[0] = 0
-      end
-    until ( tonumber(unq_idx[0]) == sz_out and brk_n_write[0] == true)
-
-    -- Write values to vector
-    unique_vec:put_chunk(out_buf, nil, tonumber(unq_idx[0]))
-    cnt_vec:put_chunk(cnt_buf, nil, tonumber(unq_idx[0]))
-    if b then
-      sum_vec:put_chunk(sum_buf, nil, tonumber(unq_idx[0]))
+        end 
+        --===================================================
+        l_chunk_num = l_chunk_num + 1 
+      end -- wnd of while 
     end
-    if tonumber(unq_idx[0]) < qconsts.chunk_size then
-      unique_vec:eov()
-      cnt_vec:eov()
-      if b then
-        sum_vec:eov()
-      end
-    end
-    return tonumber(unq_idx[0])
-    --return tonumber(cidx[0]), out_buf, nil
+    lgens[my_name] = gen
   end
-  unique_vec:set_generator(unique_gen)
-  cnt_vec:set_generator(unique_gen)
-  if b then
-    sum_vec:set_generator(unique_gen)
-  end
-  if b then
-    return unique_vec, cnt_vec, sum_vec
-  else
-    return unique_vec, cnt_vec
-  end
-  --return lVector( { gen = unique_gen, has_nulls = false, qtype = a:qtype() } )
+  local val_args = {}
+  val_args.qtype = subs.val_qtype
+  val_args.max_num_in_chunk = subs.max_num_in_chunk
+  val_args.has_nulls = false
+  val_args.gen = lgens["val"]
+
+  local cnt_args = {}
+  cnt_args.qtype = subs.cnt_qtype
+  cnt_args.max_num_in_chunk = subs.max_num_in_chunk
+  cnt_args.has_nulls = false
+  cnt_args.gen = lgens["cnt"]
+
+  return lVector(val_args), lVector(cnt_args)
 end
-
 return expander_unique

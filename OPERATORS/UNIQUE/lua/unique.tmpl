@@ -7,18 +7,13 @@ return require 'Q/UTILS/lua/code_gen' {
 
 extern int
 ${fn}(
-      const ${in_ctype} * restrict in,
+      const ${val_ctype} * const in,
       uint64_t in_len,
-      uint64_t *ptr_in_idx,
-      ${in_ctype} *unq,
-      uint64_t unq_len,
-      uint64_t *ptr_unq_idx,
-      int64_t *ptr_cnt,
-      ${in_ctype} * ptr_last_unq_element,
-      uint64_t idx,
-      bool *brk_n_write,
-      const uint64_t * restrict in_B1,
-      int64_t *ptr_sum
+      ${val_ctype} * restrict val,
+      ${cnt_ctype} * restrict cnt,
+      uint64_t *ptr_num_consumed,
+      uint32_t *ptr_num_val_buf,
+      uint32_t sz_val_buf
       );
    ]],
    definition = [[
@@ -27,91 +22,60 @@ ${fn}(
 
 int
 ${fn}(
-      const ${in_ctype} * restrict in,    // input buffer [in_len]
-      uint64_t in_len,
-      uint64_t *ptr_in_idx,   // where in in to start reading from
-      ${in_ctype} *unq,    // output buffer [unq_len]
-      uint64_t unq_len,    // size of unq
-      uint64_t *ptr_unq_idx,   // number of elements written to unq
-      int64_t *ptr_cnt,    // count buffer [unq_len]
-      ${in_ctype} * ptr_last_unq_element,    // storing last visited unique value
-      uint64_t idx,   // chunk number
-      bool *brk_n_write,   // flag which indicates when to flush output buffer
-      const uint64_t * restrict in_B1,   // input B1 buffer [in_len]
-      int64_t *ptr_sum   // sum buffer [unq_len]
+      const ${val_ctype} * const in,
+      uint32_t in_len,
+      ${val_ctype} * restrict val,
+      ${cnt_ctype} * restrict cnt,
+      uint64_t *ptr_num_consumed,
+      uint32_t *ptr_num_val_buf,
+      uint32_t sz_val_buf,
+      bool *ptr_overflow 
       )
 {
   int status = 0;
   
-  if ( in == NULL ) { go_BYE(-1); }
+  if ( in  == NULL ) { go_BYE(-1); }
+  if ( val == NULL ) { go_BYE(-1); }
+  if ( cnt == NULL ) { go_BYE(-1); }
   if ( in_len == 0 ) { go_BYE(-1); }
-  if ( ptr_unq_idx == NULL ) { go_BYE(-1); }
-  if ( ptr_in_idx == NULL ) { go_BYE(-1); }
+  if ( ptr_num_consumed == NULL ) { go_BYE(-1); }
+  if ( ptr_num_val_buf == NULL ) { go_BYE(-1); }
+  if ( ptr_num_val_buf >= sz_val_buf ) { go_BYE(-1); }
+  //-----------------------------------
 
-  uint64_t num_in_unq = *ptr_unq_idx;
-  uint64_t in_idx = *ptr_in_idx;
-  ${in_ctype} last_unique_element = *ptr_last_unq_element;
-  //if ( num_in_unq > unq_len ) { go_BYE(-1); }
-  
-  if ( idx != 0 ) {
-    // this loop just traverses( also counts )
-    // the input vector till you get the next unique value
-    for ( ; in_idx < in_len; in_idx++) {
-      if ( in[in_idx] != last_unique_element ) {
-        // setting 'brk_n_write'flag (chunk needs to be flushed)
-        // when next unique value is found i.e. counting of values is done
-        if ( num_in_unq == unq_len ) {
-          *brk_n_write = true;
-          *ptr_in_idx = in_idx;
-          goto BYE; 
-        } 
-        break;
+  uint64_t num_consumed = *ptr_num_consumed;
+  uint64_t num_val_buf  = *ptr_val_buf;
+
+  for ( uint32_t i = 0; i < in_len; i++ ) {
+    ${val_ctype} curr_val;
+    ${val_ctype} in_val = in[i];
+    if ( num_val_buf == 0 ) {
+      val[num_val_buf] = in_val;
+      cnt[num_val_buf] = 1;
+      num_val_buf++; 
+    }
+    else {
+      curr_val = val[num_val_buf-1];
+      if ( in_val == curr_val ) { 
+        cnt[num_val_buf-1]++;
       }
       else {
-        ptr_cnt[num_in_unq-1] = ptr_cnt[num_in_unq-1] + 1;
-        if ( in_B1 != NULL ) {
-          ptr_sum[num_in_unq-1] = ptr_sum[num_in_unq-1] + get_bit_u64(in_B1, in_idx);
+        if ( num_val_buf < sz_val_buf  ) {  // space in input buffer
+          val[num_val_buf] = in_val;
+          cnt[num_val_buf] = 1;
+          num_val_buf++; 
+        }
+        else {
+          *ptr_overflow = true; 
+          if ( i == 0 ) { go_BYE(-1); } // TODO P2 THINK Can this happen?
+          *ptr_num_consumed = i-1;
+          *ptr_num_val_buf = num_val_buf;
         }
       }
     }
-    // if no unique value found then 
-    // store the length till it has read the input vector
-    if( in_idx == in_len ) {
-      *ptr_in_idx = in_idx;
-      goto BYE;
-    }
   }
-  
-  for ( ; in_idx < in_len-1; in_idx++ ) { 
-    if ( num_in_unq == unq_len ) { break; }
-    if ( in[in_idx] != in[in_idx+1] ) {
-      ptr_cnt[num_in_unq] = ptr_cnt[num_in_unq] + 1;
-      if ( in_B1 != NULL ) {
-        ptr_sum[num_in_unq] = ptr_sum[num_in_unq] + get_bit_u64(in_B1, in_idx);
-      }
-      unq[num_in_unq++] = in[in_idx];
-    }
-    else {
-      ptr_cnt[num_in_unq] = ptr_cnt[num_in_unq] + 1;
-      if ( in_B1 != NULL ) {
-        ptr_sum[num_in_unq] = ptr_sum[num_in_unq] + get_bit_u64(in_B1, in_idx);
-      }
-    }
-  }
-  
-  // Include last element in out_buf, as comparing values adjacently
-  ptr_cnt[num_in_unq] = ptr_cnt[num_in_unq] + 1;
-  if ( in_B1 != NULL ) {
-    ptr_sum[num_in_unq] = ptr_sum[num_in_unq] + get_bit_u64(in_B1, in_len-1);
-  }
-  unq[num_in_unq++] = in[in_len-1];
-  
-  *ptr_unq_idx = num_in_unq;
-  // added 1 to in_idx due to for loop condition( in_idx < in_len-1 ) 
-  *ptr_in_idx     = in_idx+1;
-  *ptr_last_unq_element = in[in_len-1];
 BYE:
   return status;
 }
-   ]]
+]],
 }
