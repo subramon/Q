@@ -19,14 +19,13 @@ local function permute_specialize(invec, p, direction, optargs)
     error("TO BE IMPLEMENTED")
   elseif ( direction == "to" ) then
     -- we need to know size of output vector 
-    assert( ( invec:is_eov() ) or ( p:is_eov() ) or 
-            ( ( type(optargs) == "table") and 
-              ( type(optargs.num_elements) == "number") ) )
     if ( invec:is_eov() ) then 
       n = invec:num_elements()
     elseif ( p:is_eov() ) then 
       n = p:num_elements()
     else
+      assert(type(optargs) == "table")
+      assert(type(optargs.num_elements) == "number")
       n = optargs.num_elements 
     end
   else
@@ -34,17 +33,15 @@ local function permute_specialize(invec, p, direction, optargs)
   end
   assert((type(n) == "number") and (n > 0))
   subs.num_elements = n
-  subs.val_width = invec:width()
-
+  subs.val_width  = invec:width()
   subs.val_qtype  = invec:qtype()
   subs.perm_qtype = p:qtype()
 
   subs.val_ctype  = cutils.str_qtype_to_str_ctype(subs.val_qtype)
-  subs.perm_ctype  = cutils.str_qtype_to_str_ctype(subs.perm_qtype)
+  subs.perm_ctype = cutils.str_qtype_to_str_ctype(subs.perm_qtype)
 
   subs.cast_x_as = subs.val_ctype .. " *"
   subs.cast_p_as = subs.perm_ctype .. " *"
-  subs.cast_y_as = subs.cast_x_as 
 
   if ( subs.num_elements <= 127 ) then 
     assert(is_in(subs.perm_qtype, { "I1", "I2", "I4", "I8" }))

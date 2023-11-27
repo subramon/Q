@@ -30,12 +30,13 @@ local function expander_permute(x, p, direction, optargs)
   vargs.width = subs.val_width
   vargs.memo_len = -1
   local y = lVector(vargs)
+  local ny = subs.num_elements
   --======================================
   -- Now, get access to y's data and perform the operation
   local ycmem = y:get_lma_write()
   assert(type(ycmem) == "CMEM")
   assert(ycmem:is_foreign() == true)
-  local yptr = get_ptr(ycmem, subs.cast_x_as)
+  local yptr = get_ptr(ycmem, subs.cast_x_as) -- y's type is same as x's
 
   local x_max_num_in_chunk = x:max_num_in_chunk()
   local chunk_num = 0
@@ -46,7 +47,7 @@ local function expander_permute(x, p, direction, optargs)
     if ( xlen == 0 ) then break end 
     local xptr = get_ptr(x_chunk, subs.cast_x_as)
     local pptr = get_ptr(p_chunk, subs.cast_p_as)
-    qc[func_name](xptr, pptr, xlen, yptr)
+    qc[func_name](xptr, pptr, xlen, ny, yptr)
     x:unget_chunk(chunk_num)
     p:unget_chunk(chunk_num)
     -- assert(x:num_readers(chunk_num) == 0) -- JUST FOR TESTING 

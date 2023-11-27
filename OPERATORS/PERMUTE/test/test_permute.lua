@@ -18,11 +18,13 @@ tests.t1 = function()
 }
   local pargs = {
   len = len,
-  start = 1, 
+  start = 0, 
   by = 1,
   max_num_in_chunk = max_num_in_chunk
 }
 
+local yargs = { num_elements = len, max_num_in_chunk = max_num_in_chunk}
+local zargs = yargs
 local val_qtypes = { "I1", "I2", "I4", "I8", "F4", "F8" }
 local prm_qtypes = { "I1", "I2", "I4", "I8", }
   for _, val_qtype in ipairs(val_qtypes) do
@@ -31,19 +33,19 @@ local prm_qtypes = { "I1", "I2", "I4", "I8", }
       pargs.qtype = prm_qtype 
       local x = Q.seq(vargs):set_name("x")
       local p = Q.seq(pargs):set_name("p")
-      local y = Q.permute(x, p, "to", { num_elements = len, max_num_in_chunk = max_num_in_chunk}):set_name("y")
+      local y = Q.permute(x, p, "to", yargs):set_name("y")
       assert(type(y) == "lVector")
       assert(y:is_eov())
+      y = y:lma_to_chunks()
       -- y:pr()
-      local z = Q.permute(y, p, "to", { max_num_in_chunk = max_num_in_chunk}):set_name("z")
+      local z = Q.permute(y, p, "to", zargs):set_name("z")
       assert(z:is_eov())
-      -- z:pr()
-      --[[
-      local n1, n2 = Q.vveq(x, z):sum():eval()
+      z = z:lma_to_chunks()
+      local n1, n2 = Q.sum(Q.vveq(x, z)):eval()
       assert(n1 == n2)
-      local n1, n2 = Q.vveq(x, y):sum():eval()
-      assert(n1:to_num() == 0)
-      --]]
+      local n1, n2 = Q.sum(Q.vveq(x, y)):eval()
+      assert(n1 == n2)
+
       assert(x:check())
       assert(p:check())
       assert(y:check())
