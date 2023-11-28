@@ -24,7 +24,7 @@ local function is_prev(f1, cmp, optargs )
   local func_name = assert(subs.fn)
   -- START: Dynamic compilation
   if ( not qc[func_name] ) then
-    qc.q_add(subs, func_name) print("Dynamic compilation ... ")
+    qc.q_add(subs, func_name) 
   end
   -- STOP: Dynamic compilation
   assert(qc[func_name], "Missing symbol " .. func_name)

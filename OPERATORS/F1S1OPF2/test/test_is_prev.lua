@@ -1,6 +1,7 @@
 -- FUNCTIONAL
 local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
+local qcfg = require 'Q/UTILS/lua/qcfg'
 
 local tests = {}
 tests.t1 = function()
@@ -39,7 +40,7 @@ tests.t2 = function()
   local c2 = Q.is_prev(c1, "leq", { default_val = true } )
   local n1, n2 = Q.sum(c2):eval()
   Q.print_csv({c1, c2})
-  assert(n1:to_num() == c1:length() )
+  assert(n1:to_num() == c1:num_elements() )
 
   print("Test t2 succeeded")
 end
@@ -49,9 +50,11 @@ tests.t3 = function()
   local c1 = Q.seq( {start = 0, by = 1, qtype = "I4", len = len})
 
   local c2 = Q.is_prev(c1, "leq", { default_val = true } )
-  -- Q.print_csv({c1, c2})
+  c2:eval()
+  Q.print_csv({c1, c2}, { opfile = "_x" })
   local n1, n2 = Q.sum(c2):eval()
-  assert(n1:to_num() == c1:length())
+  print(n1, n2)
+  assert(n1:to_num() == c1:num_elements())
 
   local c2 = Q.is_prev(c1, "geq", { default_val = false } )
   local n1, n2 = Q.sum(c2):eval()
@@ -62,3 +65,5 @@ tests.t3 = function()
 end
 --return tests
 tests.t1()
+tests.t2()
+tests.t3()
