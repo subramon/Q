@@ -410,6 +410,8 @@ end
 
 function lVector:put_chunk(c, n, nn_c)
   assert(type(c) == "CMEM")
+  assert(type(n) == "number")
+  assert(n > 0) -- cannot put empty chunk 
   assert(cVector.put_chunk(self._base_vec, c, n))
   if ( self._nn_vec ) then 
     assert(type(nn_c) == "CMEM")

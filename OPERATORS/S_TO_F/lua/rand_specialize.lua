@@ -1,6 +1,7 @@
 local cutils    = require 'libcutils'
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
+local cutils    = require 'libcutils'
 local cVector   = require 'libvctr'
 local Scalar    = require 'libsclr'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
@@ -28,17 +29,18 @@ return function (
   subs.fn = "rand_" .. qtype
   subs.len = len
   subs.out_qtype = qtype
-  subs.out_ctype = qconsts.qtypes[qtype].ctype
+  subs.out_ctype = cutils.str_qtype_to_str_ctype(qtype)
   subs.max_num_in_chunk = get_max_num_in_chunk (largs)
-  subs.out_buf_size = subs.max_num_in_chunk * qconsts.qtypes[qtype].width
-  subs.cst_out_as = subs.out_ctype .. " * "
+  subs.out_width = cutils.get_width_qtype(qtype)
+  subs.buf_size = subs.max_num_in_chunk * subs.out_width
+  subs.cast_buf_as = subs.out_ctype .. " * "
   --=======================
   -- set up args for C code
   subs.cargs_ctype = "RAND_" .. qtype .. "_REC_TYPE";
   local sz = ffi.sizeof(subs.cargs_ctype)
   subs.cargs = cmem.new(sz); 
   subs.cargs:zero()
-  subs.cst_cargs_as = subs.cargs_ctype .. " *"
+  subs.cast_cargs_as = subs.cargs_ctype .. " *"
 
   -- set seed
   local seed
@@ -54,9 +56,10 @@ return function (
   assert(seed > 0)
   --=============
   local sseed = assert(to_scalar(seed, "I8"))
+  assert(type(sseed) == "Scalar")
   local sseed = ffi.cast("SCLR_REC_TYPE *", sseed)
-  local cargs = assert(get_ptr(subs.cargs, subs.cst_cargs_as))
-  cargs[0]["seed"] = sseed[0].cdata["valI8"]
+  local cargs = assert(get_ptr(subs.cargs, subs.cast_cargs_as))
+  cargs[0]["seed"] = sseed[0].val.i8
   --=========================
   --=== handle B1 as special case
   subs.tmpl   = "OPERATORS/S_TO_F/lua/rand.tmpl"
@@ -69,12 +72,12 @@ return function (
     local lb  = assert(largs.lb)
     local slb = assert(to_scalar(lb, qtype))
     local slb = ffi.cast("SCLR_REC_TYPE *", slb)
-    cargs[0]["lb"] = slb[0].cdata["val" .. qtype]
+    cargs[0]["lb"] = slb[0].val[string.lower(qtype)]
     -- set ub
     local ub   = assert(largs.ub)
     local sub = assert(to_scalar(ub, qtype))
     local sub = ffi.cast("SCLR_REC_TYPE *", sub)
-    cargs[0]["ub"] = sub[0].cdata["val" .. qtype]
+    cargs[0]["ub"] = sub[0].val[string.lower(qtype)]
   
     assert(ub > lb)
     -- Check  lb, ub in range for type dony b to_scalar()
@@ -83,7 +86,7 @@ return function (
     local probability  = assert(largs.probability)
     local sprobability = assert(to_scalar(probability, "F8"))
     local sprobability = ffi.cast("SCLR_REC_TYPE *", sprobability)
-    cargs[0]["probability"] = sprobability[0].cdata["valF8"]
+    cargs[0]["probability"] = sprobability[0].val.f8
 
     subs.tmpl = nil -- this is not generated code 
     subs.dotc = "OPERATORS/S_TO_F/src/rand_B1.c"

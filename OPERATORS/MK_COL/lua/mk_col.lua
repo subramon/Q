@@ -5,7 +5,9 @@ local cutils    = require 'libcutils'
 local qcfg      = require 'Q/UTILS/lua/qcfg'
 local rev_lkp   =  require 'Q/UTILS/lua/rev_lkp'
 
-local good_qtypes = rev_lkp({ "I1",  "I2",  "I4", "I8",  "F4", "F8", "BL", "SC"})
+local good_qtypes = rev_lkp({ 
+  "I1",  "I2",  "I4", "I8",  "UI1",  "UI2",  "UI4", "UI8",  
+  "F4", "F8", "BL", "SC"})
 
 local mk_col = function (
   input, 

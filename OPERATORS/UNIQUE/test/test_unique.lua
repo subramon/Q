@@ -1,112 +1,107 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
-local c_to_txt = require 'Q/UTILS/lua/C_to_txt'
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local utils = require 'Q/UTILS/lua/utils'
+local cutils  = require 'libcutils'
+local cVector = require 'libvctr'
 local plpath  = require 'pl.path'
 local plfile  = require 'pl.file'
-local path_to_here = os.getenv("Q_SRC_ROOT") .. "/OPERATORS/UNIQUE/test/"
-assert(plpath.isdir(path_to_here))
+local qcfg    = require 'Q/UTILS/lua/qcfg'
 
-local chunk_size = qconsts.chunk_size
+local max_num_in_chunk = qcfg.max_num_in_chunk
 
 -- validating unique operator to return unique values from input vector
 -- FUNCTIONAL
--- where num_elements are less than chunk_size
+-- where num_elements are less than max_num_in_chunk
 local tests = {}
+local qtypes = { 
+  "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8", }
 tests.t1 = function ()
-  local out_table = {1, 2, 3, 4, 5}
-  local cnt_table = {1, 2, 4, 1, 1}
-  local a = Q.mk_col({1, 2, 2, 3, 3, 3, 3, 4, 5}, "I4")
-  local c, d = Q.unique(a)
-  c:eval()
-  assert(d:is_eov() == true)
-  assert(c:length() == #out_table)
-  assert(d:length() == #cnt_table)
-
-  for i = 1, c:length() do
-    local value = c_to_txt(c, i)
-    assert(value == out_table[i])
-
-    value = c_to_txt(d, i)
-    assert(value == cnt_table[i])
+  for _, qtype in ipairs(qtypes) do 
+    local val_table = {1, 2, 3, 4, 5}
+    local cnt_table = {1, 2, 4, 2, 1}
+    local chk_val = Q.mk_col(val_table, qtype)
+    local chk_cnt = Q.mk_col(cnt_table, qtype)
+  
+    local a = Q.mk_col({1, 2, 2, 3, 3, 3, 3, 4, 4, 5}, qtype)
+    assert(a:check())
+  
+    local val, cnt = Q.unique(a)
+    assert(type(val) == "lVector")
+    assert(type(cnt) == "lVector")
+    val:eval()
+    assert(cnt:is_eov())
+    assert(val:check())
+    assert(cnt:check())
+    assert(val:num_elements() == chk_val:num_elements()) 
+    assert(cnt:qtype() == "I8")
+    assert(val:qtype() == qtype)
+  
+    local n1, n2 = Q.sum(Q.vveq(val, chk_val)):eval()
+    assert(n1 == n2)
+    local n1, n2 = Q.sum(Q.vveq(cnt, chk_cnt)):eval()
+    assert(n1 == n2)
+  
+    assert(val:check())
+    assert(cnt:check())
+    assert(chk_val:check())
+    assert(chk_cnt:check())
+    assert(a:check())
+    val:delete()
+    cnt:delete()
+    chk_val:delete()
+    chk_cnt:delete()
+    a:delete()
+    collectgarbage()
+    print("Test t1 succeeded for qtype ", qtype)
   end
-  -- local opt_args = { opfile = "" }
-  -- Q.print_csv(c, opt_args)
   print("Test t1 succeeded")
 end
 
 -- validating unique to return unique values from input vector
 -- where num_elements are greater than chunk_size 
 tests.t2 = function ()
-  local out_table = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+  local len = qcfg.max_num_in_chunk * 2 + 17 
+  local val_table = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+  local cnt_table = { 6556, 6556, 6556, 6555, 6555, 6555,
+6555, 6555, 6555, 6555,}
   local period = 10
-  local cnt_1 = math.ceil((chunk_size*4+2)/period)
-  local cnt_2 = math.floor((chunk_size*4+2)/period)
-  local cnt_1_occurance = ((chunk_size*4+2) % period)
-  local cnt_table = {}
-  for i = 1, cnt_1_occurance do
-    cnt_table[#cnt_table+1] = cnt_1
-  end
-  for i = 1, (period-cnt_1_occurance) do
-    cnt_table[#cnt_table+1] = cnt_2
-  end
-  local input = Q.period({ len = chunk_size*4+2, start = 1, by = 1, period = period, qtype = "I4"}):persist(true):eval()
-   
-  local input_col = Q.sort(input, "asc")
-  -- Q.print_csv(input_col, {opfile = path_to_here .. "input_file_t2.csv"})
-  local c, d = Q.unique(input_col)
-  c:eval()
-  for i = 1, c:length() do
-    local value = c_to_txt(c, i)
-    -- print(value, out_table[i])
-    assert(value == out_table[i])
-    value = c_to_txt(d, i)
-    assert(value == cnt_table[i])
-  end
+  local qtype = "I4"
+  local inval = Q.period({start = 1, by = 1, period = 10, len = len, qtype = qtype })
+  inval = Q.sort(inval, "asc")
+  inval = inval:lma_to_chunks()
+  local chk_val = Q.mk_col(val_table, qtype)
+  local chk_cnt = Q.mk_col(cnt_table, qtype)
+  local val, cnt = Q.unique(inval)
+
+  local n1, n2 = Q.sum(Q.vveq(val, chk_val)):eval()
+  assert(n1 == n2)
+  local n1, n2 = Q.sum(Q.vveq(cnt, chk_cnt)):eval()
+  assert(n1 == n2)
   print("Test t2 succeeded")
 end
 
 -- validating unique to return unique values from input vector
 -- where num_elements are greater than chunk_size
--- [ 1 ... chunk_size ] [ chunk_size+1 ... chunk_size*2 ]
--- [ 1, 1, .. 2, 2, 3 ] [ 3, 3, 3, 3, 3, 3, 3, 3, ... 3 ]
 tests.t3 = function ()
-  local expected_values = {1, 2, 3}
-  local cnt_1 = (qconsts.chunk_size/2)-1
-  local cnt_2 = qconsts.chunk_size/2
-  local cnt_table = {cnt_1, cnt_2, qconsts.chunk_size+1}
-  local chunk_size = qconsts.chunk_size
-  
-  local input_tbl = {}
-  for i = 1, chunk_size-1 do
-    if i % 2 == 0 then
-      input_tbl[i] = 1
-    else
-      input_tbl[i] = 2
-    end
-  end
+  local len = 2*qcfg.max_num_in_chunk+ 17
+  local qtype = "I8"
+  local inval = Q.seq({start = 1, by = 1, len = len, qtype = qtype })
+  local chk_cnt =  Q.const({val = 1, len = len, qtype = qtype })
+  local val, cnt = Q.unique(inval)
 
-  for i = chunk_size+1, chunk_size*2 do
-    input_tbl[i] = 3
-  end
-  input_tbl[chunk_size] = 3
-  local input_col = Q.mk_col(input_tbl, "I1")
-  input_col = Q.sort(input_col, "asc"):eval()
-  Q.print_csv(input_col, {opfile = path_to_here .. "input_file_t3.csv"})
-  local c, d = Q.unique(input_col)
-  c:eval()
-  assert(c:length() == #expected_values)
-  for i = 1, c:length() do
-    local value = c_to_txt(c, i)
-    -- print(value, expected_values[i])
-    assert(value == expected_values[i])
-    value = c_to_txt(d, i)
-    assert(value == cnt_table[i])
-  end
-  Q.print_csv(c)
-  plfile.delete(path_to_here .. "/input_file_t3.csv") 
+  local n1, n2 = Q.sum(Q.vveq(val, inval)):eval()
+  assert(n1 == n2)
+  local n1, n2 = Q.sum(Q.vveq(cnt, chk_cnt)):eval()
+  assert(n1 == n2)
+
+  assert(inval:check())
+  assert(val:check())
+  assert(cnt:check())
+  assert(cVector.check_all())
+  inval:delete()
+  val:delete()
+  cnt:delete()
+
   print("Test t3 succeeded")
 end
 
@@ -544,9 +539,9 @@ tests.t16 = function()
   print("Test t16 succeeded")
 end
 tests.t1()
---[[ TODO 
 tests.t2()
 tests.t3()
+--[[ TODO 
 tests.t4()
 tests.t5()
 tests.t6()

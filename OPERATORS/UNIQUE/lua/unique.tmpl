@@ -1,32 +1,31 @@
 return require 'Q/UTILS/lua/code_gen' {
 
    declaration = [[
-
 #include "q_incs.h"
-#include "_get_bit_u64.h"
-
+//START_FOR_CDEF
 extern int
 ${fn}(
       const ${val_ctype} * const in,
-      uint64_t in_len,
+      uint32_t in_len,
       ${val_ctype} * restrict val,
       ${cnt_ctype} * restrict cnt,
-      uint64_t *ptr_num_consumed,
+      uint32_t *ptr_in_idx,
       uint32_t *ptr_num_val_buf,
-      uint32_t sz_val_buf
+      uint32_t sz_val_buf,
+      bool *ptr_overflow 
       );
+//STOP_FOR_CDEF
    ]],
    definition = [[
 
-#include "_${fn}.h"
-
+#include "${fn}.h"
 int
 ${fn}(
       const ${val_ctype} * const in,
       uint32_t in_len,
       ${val_ctype} * restrict val,
       ${cnt_ctype} * restrict cnt,
-      uint64_t *ptr_num_consumed,
+      uint32_t *ptr_in_idx,
       uint32_t *ptr_num_val_buf,
       uint32_t sz_val_buf,
       bool *ptr_overflow 
@@ -38,15 +37,16 @@ ${fn}(
   if ( val == NULL ) { go_BYE(-1); }
   if ( cnt == NULL ) { go_BYE(-1); }
   if ( in_len == 0 ) { go_BYE(-1); }
-  if ( ptr_num_consumed == NULL ) { go_BYE(-1); }
+  if ( ptr_in_idx == NULL ) { go_BYE(-1); }
   if ( ptr_num_val_buf == NULL ) { go_BYE(-1); }
-  if ( ptr_num_val_buf >= sz_val_buf ) { go_BYE(-1); }
+  if ( *ptr_num_val_buf > sz_val_buf ) { go_BYE(-1); }
   //-----------------------------------
 
-  uint64_t num_consumed = *ptr_num_consumed;
-  uint64_t num_val_buf  = *ptr_val_buf;
+  uint32_t in_idx = *ptr_in_idx;
+  uint32_t num_val_buf  = *ptr_num_val_buf;
 
-  for ( uint32_t i = 0; i < in_len; i++ ) {
+  uint32_t i = 0;
+  for ( i = in_idx; i < in_len; i++ ) {
     ${val_ctype} curr_val;
     ${val_ctype} in_val = in[i];
     if ( num_val_buf == 0 ) {
@@ -67,13 +67,21 @@ ${fn}(
         }
         else {
           *ptr_overflow = true; 
-          if ( i == 0 ) { go_BYE(-1); } // TODO P2 THINK Can this happen?
-          *ptr_num_consumed = i-1;
+          // THIS IS LEGIT CASE if ( i == 0 ) { go_BYE(-1); } 
+          if ( i == 0 ) { 
+            *ptr_in_idx = 0;
+          }
+          else { 
+            *ptr_in_idx = i-1;
+          }
           *ptr_num_val_buf = num_val_buf;
+          return status; // IMPORTANT 
         }
       }
     }
   }
+  *ptr_in_idx = i;
+  *ptr_num_val_buf = num_val_buf;
 BYE:
   return status;
 }

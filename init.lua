@@ -32,9 +32,12 @@ require "Q/OPERATORS/F1OPF2/lua/f1opf2"
 
 require "Q/OPERATORS/SORT1/lua/sort1"
 require "Q/OPERATORS/PERMUTE/lua/permute"
+require 'Q/OPERATORS/UNIQUE/lua/unique'
+require "Q/OPERATORS/IDX_SORT/lua/idx_sort"
 
 require "Q/UTILS/lua/import"
 require "Q/UTILS/lua/register_qop" 
+
 --== These are from QTILS 
 require 'Q/QTILS/lua/fold'
 --[[
@@ -70,7 +73,6 @@ require 'Q/OPERATORS/GROUPBY/lua/groupby'
 
 require 'Q/OPERATORS/HASH/lua/hash'
 
-require "Q/OPERATORS/IDX_SORT/lua/idx_sort"
 require "Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez"
 require 'Q/OPERATORS/INDEX/lua/indexing'
 
@@ -82,7 +84,6 @@ require "Q/OPERATORS/MDB/lua/mk_comp_key_val"
 require "Q/OPERATORS/PCA/lua/corr_mat"
 
 
-require 'Q/OPERATORS/UNIQUE/lua/unique'
 
 -- alias wrappers
 require 'Q/ALIAS/lua/add'

@@ -6,6 +6,8 @@ local qcfg    = require 'Q/UTILS/lua/qcfg'
 local get_max_num_in_chunk   = require 'Q/UTILS/lua/get_max_num_in_chunk'
 local is_in   = require 'Q/UTILS/lua/is_in'
 
+local ok_qtypes = { "BL", "I1", "I2", "I4", "I8", 
+  "UI1", "UI2", "UI4", "UI8", "F4", "F8", }
 return function (
   op,
   f1, 
@@ -17,8 +19,8 @@ return function (
   assert(type(f2) == "lVector"); assert(not f2:has_nulls())
   local f1_qtype = f1:qtype();   
   local f2_qtype = f2:qtype();   
-  assert(is_in(f1_qtype, { "BL", "I1", "I2", "I4", "I8", "F4", "F8", }))
-  assert(is_in(f2_qtype, { "BL", "I1", "I2", "I4", "I8", "F4", "F8", }))
+  assert(is_in(f1_qtype, ok_qtypes))
+  assert(is_in(f2_qtype, ok_qtypes))
   local f1_max_num_in_chunk = assert(f1:max_num_in_chunk())
   local f2_max_num_in_chunk = assert(f2:max_num_in_chunk())
   assert( f1_max_num_in_chunk == f2_max_num_in_chunk)

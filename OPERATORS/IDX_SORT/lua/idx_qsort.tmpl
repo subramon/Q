@@ -26,16 +26,22 @@ return require 'Q/UTILS/lua/code_gen' {
    Engineering a sort function; Jon Bentley and M. Douglas McIlroy;
    Software - Practice and Experience; Vol. 23 (11), 1249-1265, 1993.  */
 
-#include "q_incs.h"
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <limits.h>
+#include "q_macros.h"
+//START_FOR_CDEF
 extern int
 qsort_${srt_ordr}_val_${val_qtype}_idx_${idx_qtype} (
 		${idx_ctype} *srt_ordr,
 		void *const pbase, 
 		size_t total_elems
     );
+//STOP_FOR_CDEF
     ]],
 definition = [[
-#include "_qsort_${srt_ordr}_val_${val_qtype}_idx_${idx_qtype}.h"
+#include "qsort_${srt_ordr}_val_${val_qtype}_idx_${idx_qtype}.h"
 
 #define WHEREAMI { fprintf(stderr, "Line %3d of File %s \n", __LINE__, __FILE__); }
 

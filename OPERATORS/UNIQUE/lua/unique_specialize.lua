@@ -1,4 +1,5 @@
-local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
+local cutils        = require 'libcutils'
+local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 return function (
   x
   )
@@ -21,9 +22,10 @@ return function (
   subs.cnt_width = cutils.get_width_qtype(subs.cnt_qtype)
   subs.cnt_bufsz = subs.cnt_width * subs.max_num_in_chunk
 
-  subs.tmpl = "/OPERATORS/UNIQUE/lua/unique.tmpl"
-  subs.incdir = "/OPERATORS/UNIQUE/gen)_inc/"
-  subs.srcdir = "/OPERATORS/UNIQUE/gen)_src/"
+  subs.tmpl   = "OPERATORS/UNIQUE/lua/unique.tmpl"
+  subs.incdir = "OPERATORS/UNIQUE/gen_inc/"
+  subs.srcdir = "OPERATORS/UNIQUE/gen_src/"
+  subs.incs   = { "UTILS/inc", "OPERATORS/UNIQUE/gen_inc/" }
 
   return subs
 end

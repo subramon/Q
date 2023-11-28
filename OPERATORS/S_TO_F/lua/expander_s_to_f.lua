@@ -19,6 +19,7 @@ return function (a, largs)
   local fn         = assert(subs.fn)
   local cargs      = assert(subs.cargs)
   local cast_cargs = assert(get_ptr(cargs, subs.cast_cargs_as))
+  local cast_cargs = assert(get_ptr(cargs, subs.cast_cargs_as))
 
   assert(qc.q_add(subs))
 
