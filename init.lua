@@ -33,6 +33,7 @@ require "Q/OPERATORS/F1OPF2/lua/f1opf2"
 require "Q/OPERATORS/SORT1/lua/sort1"
 require "Q/OPERATORS/PERMUTE/lua/permute"
 require 'Q/OPERATORS/UNIQUE/lua/unique'
+require 'Q/OPERATORS/JOIN/lua/join'
 require "Q/OPERATORS/IDX_SORT/lua/idx_sort"
 
 require "Q/UTILS/lua/import"
