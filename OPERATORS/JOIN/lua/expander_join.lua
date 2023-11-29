@@ -46,6 +46,7 @@ local function expander_unique(
   for _, my_join_type in ipairs(join_types) do 
     local function gen(chunk_num)
       assert(chunk_num == l_chunk_num)
+      -- allocate buffers for output 
       local dv_buf = cmem.new(subs.src_val_bufsz)
       dv_buf:zero()
       dv_buf:stealable(true)
