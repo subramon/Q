@@ -35,18 +35,31 @@ ${fn}(
 {
   int status = 0;
   
-  if ( src_val == NULL ) { go_BYE(-1); }
-  if ( src_lnk == NULL ) { go_BYE(-1); }
-  if ( *ptr_src_start >= sn ) { go_BYE(-1); } // TODO CHECK > or >=
 
   if ( nn_dst_val == NULL ) { go_BYE(-1); }
   if ( dst_val == NULL ) { go_BYE(-1); }
   if ( dst_lnk == NULL ) { go_BYE(-1); }
   if ( *ptr_dst_start >= dn ) { go_BYE(-1); } // TODO CHECK > or >=
 
-  uint32_t sidx = *ptr_src_start; if ( sidx >= sn ) { go_BYE(-1); } 
-  uint32_t didx = *ptr_dst_start; if ( didx >= dn ) { go_BYE(-1); } 
+  uint32_t sidx = *ptr_src_start; 
+  uint32_t didx = *ptr_dst_start; 
 
+  if ( src_val == NULL ) { if ( src_lnk != NULL ) { go_BYE(-1); } }
+  if ( src_val != NULL ) { if ( src_lnk == NULL ) { go_BYE(-1); } }
+
+  // If no source values available, all dst_values are set to null
+  if ( ( src_val == NULL ) || ( *ptr_src_start >= sn ) ) {
+    for ( ; ; didx++ ) { 
+      if ( didx >= dn ) { break; }
+      dst_val[didx] = 0;
+      nn_dst_val[didx] = false;
+    }
+    goto BYE;
+  }
+  if ( *ptr_src_start >= sn ) { go_BYE(-1); } 
+  if ( sidx >= sn ) { go_BYE(-1); } 
+  if ( didx >= dn ) { go_BYE(-1); } 
+  //---------------------
   for ( int i = 0; ; i++ ) { 
     // for debugging printf("Iteration  %d \n", i);
     if ( sidx >= sn ) { 
@@ -72,7 +85,7 @@ ${fn}(
     }
   }
 BYE:
-  *ptr_src_start = sn; 
+  *ptr_src_start = sidx; 
   *ptr_dst_start = didx;
   return status;
 }
