@@ -4,7 +4,7 @@ local qc      = require 'Q/UTILS/lua/qcore'
 local cmem    = require 'libcmem'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
-local function expander_unique(
+local function expander_join(
   op, src_val, src_lnk, dst_lnk, join_types, optargs)
   -- Verification
   assert(op == "join")
@@ -16,121 +16,113 @@ local function expander_unique(
   local sp_fn_name = "Q/OPERATORS/JOIN/lua/join_specialize"
   local spfn = assert(require(sp_fn_name))
 
-  local status, subs = pcall(spfn, 
-  src_val, src_lnk, dst_lnk, join_types, optargs)
-  if not status then print(subs) end
-  assert(status, "Specializer failed " .. sp_fn_name)
-  local func_name = assert(subs.fn)
-  qc.q_add(subs)
-  assert(qc[func_name], "Symbol not defined " .. func_name)
-
+  local status, multi_subs = pcall(spfn, 
+    src_val, src_lnk, dst_lnk, join_types, optargs)
+  if not status then 
+    print(multi_subs); error("Specializer failed " .. sp_fn_name)
+  end
+  for _, subs in pairs(multi_subs) do 
+    local func_name = subs.fn 
+    qc.q_add(subs)
+    assert(qc[func_name], "Symbol not defined " .. func_name)
+  end
   -- TODO P1 Check that src_lnk and dst_lnk are sorted ascending 
   
   -- track how much of input you have consumed 
+  local in_chunk_num = 0
   local in_idx = ffi.new("uint32_t[?]", 1)
-  -- how much of input buffer has been filled up
-  local num_val_buf = ffi.new("uint32_t[?]", 1)
-  num_val_buf[0] = 0
-  -- whether val_buf will overflow if we consume more input
-  local overflow = ffi.new("bool[?]", 1)
-  overflow[0] = false
+  in_idx[0] = 0 
+  -- Above means that we have consumed 0 elements out of 0 chunks 
+
+  -- sv = source value
+  -- sl = source link
+  -- dv = destination value
+  -- dl = destination link
 
   local l_chunk_num = 0
-  local in_chunk_num = 0 -- needed because consumption of input and 
-   -- production of output do not go chunk by chunk 
-
-  local in_len = 0; local in_buf = nil -- declare outside generator
-  -- this is tricky part where we create 2 generators
+  -- this is tricky part where we create multiple generators,
+  -- one for each join_type requested
   local vectors = {}
   local lgens = {}
   for _, my_join_type in ipairs(join_types) do 
     local function gen(chunk_num)
       assert(chunk_num == l_chunk_num)
       -- allocate buffers for output 
-      local dv_buf = cmem.new(subs.src_val_bufsz)
-      dv_buf:zero()
-      dv_buf:stealable(true)
+      local dv_bufs = {}; local nn_dv_bufs = {}
+      for _, join_type in ipairs(join_types) do
+        local dv_buf = cmem.new(subs.src_val_bufsz)
+        dv_buf:zero()
+        dv_buf:stealable(true)
   
-      local nn_dv_buf = cmem.new(subs.nn_src_val_bufsz)
-      nn_dv_buf:zero()
-      nn_dv_buf:stealable(true)
-  
-      num_val_buf[0] = 0
-  
+        local nn_dv_buf = cmem.new(subs.nn_src_val_bufsz)
+        nn_dv_buf:zero()
+        nn_dv_buf:stealable(true)
+
+        dv_bufs[join_type]    = dv_buf
+        nn_dv_bufs[join_type] = nn_dv_buf
+      end
+      --==========================================================
+      dl_len, dl_buf = dst_lnk:get_chunk(l_chunk_num)
+      if ( dl_len == 0 ) then
+        if ( YYY ) then 
+          sv_buf:unget_chunk(in_chunk_num)
+          sl_buf:unget_chunk(in_chunk_num)
+        end
+        dv_buf:delete()
+        nn_dv_buf:delete()
+        for _, join_type in ipairs(join_types) do 
+          if ( join_type ~= my_join_type ) then
+            vectors[join_type]:eov() -- tell other vectors they are over 
+          end
+        end
+        return 0  -- tell my vector that it is over 
+      end
+      -- Use sl, sv, dl to populate dv
+      -- need a while loop becuase may need to consume > 1 chunk of sl/sv
+      -- to produce one chunk of dv 
       while ( true ) do 
         -- If first time OR you have consumed entire input chnk, get more
-        if ( not in_buf ) then
-          in_idx[0] = 0
+        if ( XXXX ) then 
+          sv_buf:unget_chunk(in_chunk_num)
+          sl_buf:unget_chunk(in_chunk_num)
+          in_chunk_num = in_chunk_num + 1 
           sv_len, sv_buf = src_val:get_chunk(in_chunk_num)
           sl_len, sl_buf = src_lnk:get_chunk(in_chunk_num)
+          assert(sl_len = sv_len)
+          if ( sv_buf ) then assert(sl_buf) end 
+          if ( not sv_buf ) then assert(not sl_buf) end 
+          in_idx[0] = 0
           -- print("Getting chunk " .. in_chunk_num)
-        else
-          if ( in_len == in_idx[0] ) then 
-            sv_buf:unget_chunk(in_chunk_num)
-            sv_buf:unget_chunk(in_chunk_num)
-            -- print("Ungetting input chunk " .. in_chunk_num)
-            if ( in_len < sv_buf:max_num_in_chunk() ) then
-              in_len = 0 -- indicating end of input
-            else
-              in_chunk_num = in_chunk_num + 1 
-              sv_len, sv_buf = src_val:get_chunk(in_chunk_num)
-              sl_len, sl_buf = src_lnk:get_chunk(in_chunk_num)
-              in_idx[0] = 0
-              -- print("Getting chunk " .. in_chunk_num)
-            end
-          else 
-            print("Need to finish consuming input in chunk", in_chunk_num)
-          end
-        end
-        --=== START handle case where no more input 
-        if in_len == 0 then
-          if ( num_val_buf[0] == 0 ) then 
-            dv_buf:delete()
-            nn_dv_buf:delete()
-          end
-          for _, join_type in ipairs(join_types) do 
-            if ( join_type ~= my_join_type ) then
-              -- TODO vectors.cnt:put_chunk(cnt_buf, num_val_buf[0])
-              -- TODO vectors.cnt:eov()
-            end
-            -- TODO return num_val_buf[0], val_buf
-          end
-        end
-        --=== STOP handle case where no more input 
+        end 
+      end
+      -- get pointers to sl, sv, dl
+      local sv_ptr  = ffi.cast(subs.cast_sv_as, get_ptr(sv_buf))
+      local sl_ptr  = ffi.cast(subs.cast_sl_as, get_ptr(sl_buf))
+      local dl_ptr  = ffi.cast(subs.cast_dl_as, get_ptr(dl_buf))
         --======================================================
-        local sv_ptr  = ffi.cast(subs.cast_sv_as,  get_ptr(sv_buf))
-        local sl_ptr  = ffi.cast(subs.cast_sl_as,  get_ptr(sl_buf))
-        -- local dv_ptr  = ffi.cast(subs.cast_sv_as,  get_ptr(dv_buf))
-        -- local dv_ptr  = ffi.cast("bool *", get_ptr(nn_dv_buf))
-        -- local dl_ptr  = ffi.cast(subs.cast_sl_as,  get_ptr(dl_buf))
-  
+      -- with the same values of sl, sv, dl we perform many different joins
+      for k, join_type in ipairs(join_types) do
+        local dv_ptr  = ffi.cast(subs.cast_sv_as, get_ptr(dv_bufs[join_type]))
+        local nn_dv_ptr  = ffi.cast("bool *", get_ptr(nn_dv_bufs[join_type))
+        local func_name = subs.fns[k]
         local status = qc[func_name](
           sv_ptr, sl_ptr, dl_ptr, dv_ptr, nn_dv_ptr, 
-          in_ptr, in_len, val_ptr, cnt_ptr, 
-          in_idx, num_val_buf, subs.max_num_in_chunk, overflow)
-        if ( ( a:is_eov() ) and ( overflow[0] == true ) ) then
-          a:unget_chunk(in_chunk_num)
-          -- print("X: Ungetting input chunk " .. in_chunk_num)
-        end
-
-        -- print("Return from C code, overflow = ", overflow[0]);
-        -- print("Return from C code, in_idx = ", in_idx[0]);
-        assert(status == 0, "C error in UNIQUE")
-        -- If output buffer is (truly) full then return it 
-        if ( overflow[0] == true ) then 
-          for _, join_type in ipairs(join_types) do 
-            if ( join_type ~= my_join_type ) then
-              -- TODO vectors.cnt:put_chunk(cnt_buf, num_val_buf[0])
-            end
-            -- TODO return num_val_buf[0], val_buf
-          end
+          sl_len, dl_len, XXXX)
+          assert(status == 0)
+      end
+      for _, join_type in ipairs(join_types) do 
+        if ( join_type ~= my_join_type ) then
+          vectors[join_type]:put_chunk(
+            dv_bufs[join_type], dl_len, 
+            nn_dv_bufs[join_type])
         end 
+      end
+      return dl_len, dv_bufs[my_join_type], nn_dv_bufs[my_join_type]
         --===================================================
-      end -- end of while 
     end
     lgens[my_join_type] = gen
   end
-  local val_args = {}
+  local dst_val_args = {}
   val_args.qtype = subs.val_qtype
   val_args.max_num_in_chunk = subs.max_num_in_chunk
   val_args.has_nulls = false
@@ -146,4 +138,4 @@ local function expander_unique(
 
   return vectors.val, vectors.cnt
 end
-return expander_unique
+return expanderjoin
