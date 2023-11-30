@@ -14,17 +14,17 @@ return function (
   assert(type(src_val) == "lVector")
   local sv_qtype = src_val:qtype()
   assert(is_base_qtype(sv_qtype))
-  assert(sv:has_nulls() == false)
+  assert(src_val:has_nulls() == false)
 
   assert(type(src_lnk) == "lVector")
   local sl_qtype = src_lnk:qtype()
   assert(is_base_qtype(sl_qtype))
-  assert(sl:has_nulls() == false)
+  assert(src_val:has_nulls() == false)
 
   assert(type(dst_lnk) == "lVector")
   local dl_qtype = dst_lnk:qtype()
   assert(is_base_qtype(dl_qtype))
-  assert(dl:has_nulls() == false)
+  assert(dst_lnk:has_nulls() == false)
 
   assert(src_val:max_num_in_chunk() == src_lnk:max_num_in_chunk())
   assert(src_val:max_num_in_chunk() == dst_lnk:max_num_in_chunk())
@@ -41,6 +41,7 @@ return function (
   end
   --===============================================
   for k, join_type in ipairs(join_types) do 
+    local subs = {}
     local T = {}
     T[#T+1] = "join"
     T[#T+1] = join_type
@@ -65,6 +66,8 @@ return function (
       error("bad join_type")
     end
 
+    subs.max_num_in_chunk = src_val:max_num_in_chunk()
+
     subs.src_val_qtype = sv_qtype
     subs.src_val_ctype = cutils.str_qtype_to_str_ctype(subs.src_val_qtype)
     subs.src_val_cast_as = subs.src_val_ctype .. " *"
@@ -84,7 +87,8 @@ return function (
     subs.dst_val_bufsz = subs.dst_val_width * subs.max_num_in_chunk
     subs.nn_dst_val_bufsz = 1 * subs.max_num_in_chunk
   
-    subs.tmpl   = "OPERATORS/JOIN/lua/join.tmpl"
+    -- NOTE separate template for each join type 
+    subs.tmpl   = "OPERATORS/JOIN/lua/join_" .. join_type.. ".tmpl"
     subs.incdir = "OPERATORS/JOIN/gen_inc/"
     subs.srcdir = "OPERATORS/JOIN/gen_src/"
     subs.incs   = { "UTILS/inc", "OPERATORS/JOIN/gen_inc/" }

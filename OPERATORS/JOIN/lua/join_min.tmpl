@@ -1,0 +1,89 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+#include "q_incs.h"
+//START_FOR_CDEF
+extern int
+${fn}(
+      const ${val_ctype} * const in,
+      uint32_t in_len,
+      ${val_ctype} * restrict val,
+      ${cnt_ctype} * restrict cnt,
+      uint32_t *ptr_in_idx,
+      uint32_t *ptr_num_val_buf,
+      uint32_t sz_val_buf,
+      bool *ptr_overflow 
+      );
+//STOP_FOR_CDEF
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+int
+${fn}(
+      const ${val_ctype} * const in,
+      uint32_t in_len,
+      ${val_ctype} * restrict val,
+      ${cnt_ctype} * restrict cnt,
+      uint32_t *ptr_in_idx,
+      uint32_t *ptr_num_val_buf,
+      uint32_t sz_val_buf,
+      bool *ptr_overflow 
+      )
+{
+  int status = 0;
+  
+  if ( in  == NULL ) { go_BYE(-1); }
+  if ( val == NULL ) { go_BYE(-1); }
+  if ( cnt == NULL ) { go_BYE(-1); }
+  if ( in_len == 0 ) { go_BYE(-1); }
+  if ( ptr_in_idx == NULL ) { go_BYE(-1); }
+  if ( ptr_num_val_buf == NULL ) { go_BYE(-1); }
+  if ( *ptr_num_val_buf > sz_val_buf ) { go_BYE(-1); }
+  //-----------------------------------
+
+  uint32_t in_idx = *ptr_in_idx;
+  uint32_t num_val_buf  = *ptr_num_val_buf;
+
+  uint32_t i = 0;
+  for ( i = in_idx; i < in_len; i++ ) {
+    ${val_ctype} curr_val;
+    ${val_ctype} in_val = in[i];
+    if ( num_val_buf == 0 ) {
+      val[num_val_buf] = in_val;
+      cnt[num_val_buf] = 1;
+      num_val_buf++; 
+    }
+    else {
+      curr_val = val[num_val_buf-1];
+      if ( in_val == curr_val ) { 
+        cnt[num_val_buf-1]++;
+      }
+      else {
+        if ( num_val_buf < sz_val_buf  ) {  // space in input buffer
+          val[num_val_buf] = in_val;
+          cnt[num_val_buf] = 1;
+          num_val_buf++; 
+        }
+        else {
+          *ptr_overflow = true; 
+          // THIS IS LEGIT CASE if ( i == 0 ) { go_BYE(-1); } 
+          if ( i == 0 ) { 
+            *ptr_in_idx = 0;
+          }
+          else { 
+            *ptr_in_idx = i-1;
+          }
+          *ptr_num_val_buf = num_val_buf;
+          return status; // IMPORTANT 
+        }
+      }
+    }
+  }
+  *ptr_in_idx = i;
+  *ptr_num_val_buf = num_val_buf;
+BYE:
+  return status;
+}
+]],
+}
