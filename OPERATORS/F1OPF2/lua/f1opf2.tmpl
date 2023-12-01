@@ -5,6 +5,10 @@ return require 'Q/UTILS/lua/code_gen' {
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
+#include <string.h>
+#include <limits.h>
+#include "qtypes.h"
 #include "q_macros.h"
 //START_FOR_CDEF
 extern int
@@ -35,6 +39,7 @@ ${fn}(
     ${code}
     out[i] = c;
   } 
+  if ( status < 0 ) { WHEREAMI; }
 
   return status;
 }

@@ -119,6 +119,17 @@ local function vnot(x,  optargs)
 end
 T.vnot = vnot
 require('Q/q_export').export('vnot', vnot)
+
+local function tm_to_epoch(x, optargs)
+  local expander = require 'Q/OPERATORS/F1OPF2/lua/expander_f1opf2'
+  local status, col = pcall(expander, "tm_to_epoch", x, optargs)
+  if ( not status ) then print(col) end
+  assert(status, "Could not execute tm_to_epoch")
+  return col
+end
+T.tm_to_epoch = tm_to_epoch
+require('Q/q_export').export('tm_to_epoch', tm_to_epoch)
+    
     
 local function vnegate(x, optargs)
   local expander = require 'Q/OPERATORS/F1OPF2/lua/expander_f1opf2'
