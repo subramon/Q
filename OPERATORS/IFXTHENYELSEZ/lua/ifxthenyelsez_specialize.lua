@@ -1,58 +1,51 @@
 local cutils  = require 'libcutils'
-local qconsts = require 'Q/UTILS/lua/q_consts'
-local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
-local variations = { vv = true, vs = true, sv = true, ss = true }
-local oktypes = {}
-oktypes["I1"] = true
-oktypes["I2"] = true
-oktypes["I4"] = true
-oktypes["I8"] = true
-oktypes["F4"] = true
-oktypes["F8"] = true
+local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local Scalar  = require 'libsclr'
+local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 
 return function (
-  variation,
   x,
   y,
   z
   )
-  assert(variations[variation])
-  assert(type(x) == "lVector")
-  assert(not x:has_nulls())
-  assert(x:fldtype() == "B1")
   local subs = {}
+  assert(type(x) == "lVector")
+  subs.max_num_in_chunk == x:max_num_in_chunk()
+  assert(not x:has_nulls())
+  assert(x:fldtype() == "BL") -- TODO P3 Allow B1 as well 
 
-  if ( variation == "vv" ) then 
-    assert(type(y) == "lVector")
+  if ( ( type(y) == "lVector" ) and ( type(z) == "lVector" ) ) then 
+    subs.variation = "vv"
+    assert(subs.max_num_in_chunk == y:max_num_in_chunk())
+    assert(is_base_qtype(y:qtype()))
     assert(not y:has_nulls())
-    assert(type(z) == "lVector")
+
+    assert(subs.max_num_in_chunk == z:max_num_in_chunk())
+    assert(is_base_qtype(z:qtype()))
     assert(not z:has_nulls())
-  elseif ( variation == "vs" ) then 
-    assert(type(y) == "lVector")
-    assert(not y:has_nulls())
-    assert(type(z) == "Scalar")
-    assert(z:fldtype() == y:fldtype())
-  elseif ( variation == "sv" ) then 
-    assert(type(y) == "Scalar")
-    assert(type(z) == "lVector")
-    assert(y:fldtype() == z:fldtype())
+  elseif ( ( type(y) == "lVector" ) and 
+    ( ( type(z) == "Scalar" ) or ( type(z) == "number" ) ) ) then 
+    subs.variation = "vs"
+    z = assert(Scalar.new(z, y:qtype()))
+  elseif ( ( ( type(y) == "Scalar" ) or ( type(y) == "number") ) 
+    and ( type(z) == "lVector" ) ) then 
+    subs.variation = "sv"
     assert(not z:has_nulls())
-  elseif ( variation == "ss" ) then 
-    assert(type(y) == "Scalar")
-    assert(type(z) == "Scalar")
-    assert(y:fldtype() == z:fldtype())
+    y = assert(Scalar.new(y, z:qtype()))
+  elseif ( ( ( type(y) == "Scalar" ) or ( type(y) == "number") ) and
+           ( ( type(z) == "Scalar" ) or ( type(z) == "number") ) ) then
+    subs.variation = "ss"
+    -- TODO 
   else
-    error("")
+    error("bad types for ifxthenyelsez")
   end
-  subs.qtype = y:fldtype()
-  assert(oktypes[subs.qtype], subs.qtype)
-  subs.ctype = qconsts.qtypes[subs.qtype].ctype
+  --==================================================
+  subs.fn = subs.variation .. "_ifxthenyelsez_" .. subs.qtype 
+  -- ??? subs.qtype = qtype
 
-  local tmpl = qconsts.Q_SRC_ROOT	 .. "/OPERATORS/IFXTHENYELSEZ/lua/" .. variation .. "_ifxthenyelsez.tmpl"
-  assert(cutils.isfile(tmpl))
-
-  subs.fn = variation .. "_ifxthenyelsez_" .. subs.qtype 
-  subs.qtype = qtype
-  subs.tmpl = tmpl
+  subs.tmpl = "/OPERATORS/IFXTHENYELSEZ/lua/" .. subs.variation .. "_ifxthenyelsez.tmpl"
+  subs.incdir = "OPERATORS/IFXTHENYELSEZ/gen_inc/"
+  subs.srcdir = "OPERATORS/IFXTHENYELSEZ/gen_src/"
+  subs.incs = { "OPERATORS/IFXTHENYELSEZ/gen_inc/" }
   return subs
 end

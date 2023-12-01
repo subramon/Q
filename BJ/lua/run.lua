@@ -59,14 +59,15 @@ maxt = maxt + (7*86400) -- set to a week ahead
 --=========================================
 -- convert TM to time in seconds since epoch
 T1.effective_secs = Q.tm_to_epoch(T1.effective_tm)
+assert(T1.expiry_tm:eval())
 local x = T1.expiry_tm:get_nulls()
 T1.expiry_secs    = Q.tm_to_epoch(T1.expiry_tm):eval()
 T1.expiry_secs:set_nulls(x)
 --=========================================
 local x = T1.expiry_secs:get_nulls()
-assert(type(x) == "BL")
-T1.expiry_secs = Q.ifxthenyelsez(x, maxt, T1.expiry_secs)
-T1.expiry_secs:eval()
+assert(x:qtype() == "BL")
+local y = Q.ifxthenyelsez(x, maxt, T1.expiry_secs)
+y:eval()
 error("PREMATURE")
 --==================================================
 for _, stop_time in ipairs(stop_times) do 

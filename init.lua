@@ -35,6 +35,7 @@ require "Q/OPERATORS/PERMUTE/lua/permute"
 require 'Q/OPERATORS/UNIQUE/lua/unique'
 require 'Q/OPERATORS/JOIN/lua/join'
 require "Q/OPERATORS/IDX_SORT/lua/idx_sort"
+require "Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez"
 
 require "Q/UTILS/lua/import"
 require "Q/UTILS/lua/register_qop" 
@@ -74,7 +75,6 @@ require 'Q/OPERATORS/GROUPBY/lua/groupby'
 
 require 'Q/OPERATORS/HASH/lua/hash'
 
-require "Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez"
 require 'Q/OPERATORS/INDEX/lua/indexing'
 
 
