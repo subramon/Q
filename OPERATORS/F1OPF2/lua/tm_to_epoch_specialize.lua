@@ -8,7 +8,8 @@ return function (
   optargs
   )
   local subs = {}; 
-  assert(type(f1) == "lVector"); assert(not f1:has_nulls())
+  assert(type(f1) == "lVector"); 
+  assert(not f1:has_nulls())
 
   subs.f1_qtype = f1:qtype()
   assert(subs.f1_qtype == "TM1") -- TODO P4 extend to TM 

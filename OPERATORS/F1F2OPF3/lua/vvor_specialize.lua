@@ -13,8 +13,10 @@ return function (
   optargs
   )
   local subs = {}; 
-  assert(type(f1) == "lVector"); assert(not f1:has_nulls())
-  assert(type(f2) == "lVector"); assert(not f2:has_nulls())
+  assert(type(f1) == "lVector"); 
+  assert(not f1:has_nulls())
+  assert(type(f2) == "lVector"); 
+  assert(not f2:has_nulls())
   subs.f1_qtype = f1:qtype();   
   subs.f2_qtype = f2:qtype();   
   assert(is_in(subs.f1_qtype, { "BL", "I1", "I2", "I4", "I8", }))

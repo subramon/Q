@@ -165,6 +165,9 @@ function lVector:eov()
   return self
 end
 function lVector:drop_nulls()
+  if ( not self._nn_vec ) then return self end -- quiet quick return
+  local nn_vector = self._nn_vec
+  nn_vector:delete() -- THINK Is this too aggressive?
   self._nn_vec = nil
   return self
 end

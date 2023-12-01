@@ -27,9 +27,6 @@ local function load1()
   local format = "%Y-%m-%d"
   T.effective_tm = Q.SC_to_TM(T.effective_d, format, { out_qtype = "TM1" })
   T.expiry_tm = Q.SC_to_TM(T.expiry_d, format, { out_qtype = "TM1" })
-  -- convert TM to time in seconds since epoch
-  T.effective_secs = Q.tm_to_epoch(T.effective_tm)
-  T.expiry_secs    = Q.tm_to_epoch(T.expiry_tm)
   return T
 end
 return load1
