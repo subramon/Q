@@ -83,8 +83,14 @@ for _, stop_time in ipairs(stop_times) do
   T1prime.current_retail_a = Q.where(T1.current_retail_a, keep)
   T1prime.tcin = Q.shift_right(T1prime.tcin_loc, 32):convert("I4")
 -- Join prices from T1prime to T4
-
 --[[
+  local X = Q.join(T1prime.regular_retail_a, T1prime.tcin, T4.tcin,
+     {"num", "sum"})
+  T4.regular_avg = Q.vvdiv(X.sum, X.num)
+
+  local X = Q.join(T1prime.current_retail_a, T1prime.tcin, T4.tcin,
+     {"num", "sum"})
+  T4.current_avg = Q.vvdiv(X.sum, X.num)
   T4.regular_avg = Q.vvdiv(T4.regular_numer, T4.regular_denom)
   T4.current_avg = Q.vvdiv(T4.current_numer, T4.current_denom)
   Q.print_csv({T4.tcin, T4.regular_avg, T4.current_avg}, 
