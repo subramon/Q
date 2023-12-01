@@ -46,6 +46,7 @@ gen_inc_files : \
 	../inc/rdtsc.h \
 	../inc/rs_mmap.h \
 	../inc/set_bit_u64.h \
+	../inc/tm2time.h  \
 	../inc/trim.h 
 
 #----------------------------------
@@ -161,6 +162,9 @@ SC_to_txt.c : ../inc/SC_to_txt.h
 ../inc/trim.h : 
 	luajit ../src/cli_extract_func_decl.lua trim.c ${INCDIR}
 
+../inc/tm2time.h : 
+	luajit ../src/cli_extract_func_decl.lua tm2time.c ${INCDIR}
+
 GEN_INC_FILES = \
 	../inc/BL_to_txt.h   \
 	../inc/file_exists.h  \
@@ -205,6 +209,7 @@ SRCS += rs_mmap.c
 SRCS += SC_to_txt.c 
 SRCS += set_bit_u64.c  
 SRCS += spooky_hash.c 
+SRCS += tm2time.c 
 SRCS += trim.c 
 SRCS += txt_to_BL.c 
 SRCS += txt_to_SC.c 

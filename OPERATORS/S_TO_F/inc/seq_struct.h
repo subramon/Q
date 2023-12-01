@@ -31,5 +31,25 @@ typedef struct _seq_I8_rec_type {
    int64_t start;
    int64_t by;
 } SEQ_I8_REC_TYPE;
+
+typedef struct _seq_UI1_rec_type {
+   uint8_t start;
+   uint8_t by;
+} SEQ_UI1_REC_TYPE;
+
+typedef struct _seq_UI2_rec_type {
+   uint16_t start;
+   uint16_t by;
+} SEQ_UI2_REC_TYPE;
+
+typedef struct _seq_UI4_rec_type {
+   uint32_t start;
+   uint32_t by;
+} SEQ_UI4_REC_TYPE;
+
+typedef struct _seq_UI8_rec_type {
+   uint64_t start;
+   uint64_t by;
+} SEQ_UI8_REC_TYPE;
 // STOP_FOR_CDEF
 #endif

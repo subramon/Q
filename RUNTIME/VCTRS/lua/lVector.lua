@@ -164,10 +164,6 @@ function lVector:eov()
   self._generator = nil -- IMPORTANT, we no longer have a generator 
   return self
 end
-function lVector:get_nulls()
-  if ( not self._nn_vec ) then return nil end 
-  return self._nn_vec
-end
 function lVector:drop_nulls()
   self._nn_vec = nil
   return self
@@ -341,16 +337,22 @@ function lVector:unset_nulls()
   self._nn_vec = nil
 end
 
+-- TODO P2 Think whether taking nn away from current is desired behavior
+function lVector:get_nulls() -- IMPORTANT Takes away nn from current vector
+  local x = assert(self._nn_vec) -- must have an nn_vec currently
+  self._nn_vec = nil
+  return x
+end
+
 function lVector:set_nulls(nn_vec)
   assert(not self._nn_vec) -- must not have an nn_vec currently
-  -- TODO P1 MUST IT BE EOV? assert(self:is_eov()) -- must be ended for input
+  assert(self:is_eov()) -- -- TODO P1 MUST IT BE EOV? 
   --===============
   assert(type(nn_vec) == "lVector")
   assert(nn_vec:has_nulls() == false) -- nn cannot have nulls
-  -- TODO P1 MUST IT BE EOV ?? assert(nn_vec:is_eov()) -- nn vec must also be ended for input
+  assert(nn_vec:is_eov()) -- -- TODO P1 MUST IT BE EOV ?? 
   assert(nn_vec:num_elements() == self:num_elements()) -- sizes must match
-  local nn_qtype = nn_vec:qtype() 
-  assert(nn_qtype == "BL") -- TODO consider adding B1 
+  assert((nn_vec:qtype() == "BL") or (nn_vec:qtype() == "BL"))
 
   self._nn_vec = nn_vec
   return self 

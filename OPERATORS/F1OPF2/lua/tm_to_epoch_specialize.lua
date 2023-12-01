@@ -29,8 +29,9 @@ return function (
 
   subs.code = [[
   struct tm t1; memset(&t1, 0, sizeof(struct tm));
+  t_assign(&t1, &a); 
   time_t tempt = tm2time(&t1); 
-  if ( tempt > INT_MAX ) { status = -1; }
+  // if ( tempt > INT_MAX ) { status = -1; }
   c = (uint32_t)tempt;
   ]]
 

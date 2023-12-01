@@ -47,26 +47,45 @@ local T1_tcin_loc, T1_to_del = sort_tcin_loc_del(
 -- create unique TCIN's
 local T4 = {}
 T4.tcin = Q.unique(T1.tcin):eval()
--- convert TM1 to I4 time since epoch 
--- set null values to INT_MAX
--- eliminate rows based on date range 
 -- join T2_to_del from T2 into T1 
--- create to_del based on all deletions
-local to_del = Q.vvor(T1_to_del, T1_T2_to_del)
-to_del = Q.vvor(to_del, T1_to_del_date)
-local keep = Q.vnot(to_del):eval()
+local X = Q.join(T2_to_del, T2_tcin_loc, T1_tcin_loc)
+local T2T1_to_del = X.val
+-- del1 has all deletions except for time based ones
+local del1 = Q.vvor(T1_to_del, T2T1_to_del)
 -- create T2' based on rows that survive deletion
-local T2prime = {}
-T2prime.tcin_loc = Q.where(T2_tcin_loc, keep)
-T2prime.regular_retail_a = Q.where(T2.regular_retail_a, keep)
-T2prime.current_retail_a = Q.where(T2.current_retail_a, keep)
-T2prime.tcin = Q.shift_right(T2prime.tcin_loc):convert("I4")
--- Join prices from T2prime to T4
+-- 2023-10-22 = 1697932800 -- Saturday 
+-- 2023-10-29 = 1698537600 -- Saturday 
+local stop_times = { 1697932800 1698537600, } 
+assert(type(stop_times) == "table"); assert(#stop_times >= 1)
+local maxt = stop_times[1]
+for _, stop_time in ipairs(stop_times) do 
+  if ( stop_tome > maxt ) then maxt = stop_time end 
+end
+maxt = maxt + (7*86400) -- set to a week ahead 
+local x = T1.expiry_secs:get_nulls()
+local y = Q.ifxthenyelsez(x, maxt, T1.expirys_secs)
+T1.expiry_secs = y
+--==================================================
+for _, stop_time in ipairs(stop_times) do 
+  -- find rows to discard based on stop_time 
+  local x = Q.vslt(T1.expiry_secs, stop_time)
+  local y = Q.vsgeq(T1.effective_secs, stop_time)
+  local z = Q.vvor(x, y)
+  local to_del = Q.vvor(z, del1)
+  local keep = Q.vnot(to_del):eval()
+  -- ==========================================
+  local T1prime = {}
+  T1prime.tcin_loc = Q.where(T1_tcin_loc, keep)
+  T1prime.regular_retail_a = Q.where(T1.regular_retail_a, keep)
+  T1prime.current_retail_a = Q.where(T1.current_retail_a, keep)
+  T1prime.tcin = Q.shift_right(T1prime.tcin_loc):convert("I4")
+-- Join prices from T1prime to T4
 
 T4.regular_avg = Q.vvdiv(T4.regular_numer, T4.regular_denom)
 T4.current_avg = Q.vvdiv(T4.current_numer, T4.current_denom)
 Q.print_csv({T4.tcin, T4.regular_avg, T4.current_avg}, 
   { opfile = "_x.csv"})
+end
 
 -- cleanup/checking/....
 assert(cVector.check_all())

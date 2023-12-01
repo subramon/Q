@@ -19,9 +19,16 @@ tests.t1 = function()
   cVector.check_all(true, true)
   local x = Q.SC_to_TM(T.datetime, format, { out_qtype = "TM1"})
   assert(type(x) == "lVector")
+  -- x:eval(); x:pr()
+
 
   local y = Q.tm_to_epoch(x):eval()
   y:pr()
+  local chk_y = Q.seq({start = 1493629200, by = 86400, 
+    len = y:num_elements(), qtype = y:qtype(), })
+  local n1, n2 = Q.sum(Q.vveq(y, chk_y)):eval()
+  assert(n1 == n2)
+  
   print("Test t1 succeeded")
 end
 tests.t1()
