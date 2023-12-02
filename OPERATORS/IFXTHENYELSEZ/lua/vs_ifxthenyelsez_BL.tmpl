@@ -1,0 +1,52 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+//START_FOR_CDEF
+extern int
+${fn}(  
+      bool * restrict const x, // condition field 
+      ${wctype} * restrict const y, // input field 1
+      const ${wctype} * const ptr_sval_z, // scalar val
+      ${wctype} * restrict const w, // output field
+      uint32_t n
+      );
+//STOP_FOR_CDEF
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+
+int
+${fn}(  
+      bool * restrict const x, // condition field 
+      ${wctype} * restrict const y, // input field 1
+      const ${wctype} * const ptr_sval_z, // scalar val
+      ${wctype} * restrict const w, // output field
+      uint32_t n
+      )
+{
+  int status = 0;
+  if ( n == 0 ) { go_BYE(-1); }
+  if ( x == NULL ) { go_BYE(-1); }
+  if ( y == NULL ) { go_BYE(-1); }
+  if ( ptr_sval_z == NULL ) { go_BYE(-1); }
+  if ( w == NULL ) { go_BYE(-1); }
+  register ${wctype} sval_z = *ptr_sval_z;
+
+#pragma omp parallel for schedule(static, 256)
+  for ( uint32_t i = 0; i < n; i++ ) { 
+    
+    if ( x[i] ) { 
+      w[i] = y[i];
+    }
+    else {
+      w[i] = sval_z;
+    }
+  }
+BYE:
+  return status;
+}
+   ]]
+}

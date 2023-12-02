@@ -1,75 +1,97 @@
 local qc      = require 'Q/UTILS/lua/qcore'
 local ffi     = require 'ffi'
+local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
+local Scalar  = require 'libsclr'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
 local function expander_ifxthenyelsez(x, y, z)
-  assert(type(x) == "lVector")
-  assert(type(y) == "lVector")
-  assert(type(z) == "lVector")
   local spfn = require("Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez_specialize" )
   assert(type(spfn) == "function")
   local status, subs = pcall(spfn, x, y, z)
   assert(status, subs)
   qc.q_add(subs)
+  local func_name = subs.fn; assert(qc[func_name])
 
-  -- allocate buffer for output
-  local chunk_size = cVector.chunk_size() 
-  local wbufsz = chunk_size * ffi.sizeof(subs.ctype)
-  local wbuf = cmem.new(0)
   local l_chunk_num = 0
-  local cast_x_as = qconsts.qtypes[x:fldtype()].ctype .. "*"
-  local cast_y_as = qconsts.qtypes[y:fldtype()].ctype .. "*"
-  local cast_z_as = qconsts.qtypes[z:fldtype()].ctype .. "*"
-  local cast_w_as = qconsts.qtypes[subs.qtype].ctype .. "*"
-  --
+
   local function gen(chunk_num)
-    local cast_xptr, cast_yptr, cast_zptr, cast_wbuf
+    local cast_yptr, cast_zptr
     assert(chunk_num == l_chunk_num)
-    if ( not wbuf:is_data() ) then
-      wbuf = cmem.new({ size = wbufsz, qtype = subs.ctype})
-      wbuf:is_stealable(true)
-    end
-    local xlen, xptr = x:chunk(l_chunk_num) 
+    local wbuf = cmem.new({ size = subs.wbufsz, qtype = subs.wqtype})
+    wbuf:is_stealable(true)
+    local xlen, xptr = x:get_chunk(l_chunk_num) 
     if ( xlen == 0 )  then
-      return 0, nil, nil
+      wbuf:delete()
+      return 0
     end
-    if ( variation == "vv" ) then 
-      local ylen, yptr = y:chunk(l_chunk_num) 
-      local zlen, zptr = z:chunk(l_chunk_num) 
+    if ( subs.variation == "vv" ) then 
+      local ylen, yptr = y:get_chunk(l_chunk_num) 
+      local zlen, zptr = z:get_chunk(l_chunk_num) 
       assert(xlen == ylen)
       assert(xlen == zlen)
-      cast_yptr = ffi.cast(cast_y_as, get_ptr(yptr))
-      cast_zptr = ffi.cast(cast_z_as, get_ptr(zptr))
-    elseif ( variation == "vs" ) then 
-      local ylen, yptr = y:chunk(l_chunk_num) 
-      assert(xlen == ylen)
-      cast_yptr = ffi.cast(cast_y_as, get_ptr(yptr))
-      cast_zptr = XXXXXX
-    elseif ( variation == "sv" ) then 
-      cast_yptr = XXXXXX
-      local zlen, zptr = y:chunk(l_chunk_num) 
-      assert(xlen == zlen)
-      cast_zptr = ffi.cast(cast_z_as, get_ptr(zptr))
-    elseif ( variation = "ss" ) then 
-      cast_yptr = XXXXXX
-      cast_zptr = XXXXXX
+      cast_yptr = ffi.cast(subs.cast_y_as, get_ptr(yptr))
+      cast_zptr = ffi.cast(subs.cast_z_as, get_ptr(zptr))
+    elseif ( subs.variation == "vs" ) then 
+      if ( type(z) == "number" ) then 
+        z = assert(Scalar.new(z, z:qtype()))
+      end
+      local ylen, yptr = y:get_chunk(l_chunk_num) 
+      assert(ylen == xlen)
+      cast_yptr = ffi.cast(subs.cast_y_as, get_ptr(yptr))
+
+      cast_zptr = get_ptr(z:to_cmem(), subs.wqtype)
+      -- TODO P4 Why does this not work? cast_zptr = subs.cast_zptr
+    elseif ( subs.variation == "sv" ) then 
+      if ( type(y) == "number" ) then 
+        y = assert(Scalar.new(y, z:qtype()))
+      end
+      -- TODO P4 Why does this not work?  cast_yptr = subs.cast_yptr
+      cast_yptr = get_ptr(y:to_cmem(), subs.wqtype)
+
+      local zlen, zptr = z:get_chunk(l_chunk_num) 
+      assert(zlen == xlen)
+      cast_zptr = ffi.cast(subs.cast_z_as, get_ptr(zptr))
+    elseif ( subs.variation == "ss" ) then 
+      if ( type(y) == "number" ) then 
+        y = assert(Scalar.new(y, subs.wqtype))
+      end
+      cast_yptr = get_ptr(y:to_cmem(), subs.wqtype)
+
+      if ( type(z) == "number" ) then 
+        z = assert(Scalar.new(z, subs.wqtype))
+      end
+      cast_zptr = get_ptr(z:to_cmem(), subs.wqtype)
     else
-      error("")
+      error("bad variation in ifxthenyelsez")
     end
     --=============================================
-    cast_xptr = ffi.cast(cast_x_as, get_ptr(xptr))
-    cast_wbuf = ffi.cast(cast_w_as, get_ptr(wbuf))    
+    local cast_xptr = ffi.cast(subs.cast_x_as, get_ptr(xptr))
+    local cast_wbuf = ffi.cast(subs.cast_w_as, get_ptr(wbuf))    
     --=============================================
-    local start_time = qc.RDTSC()
-    local status = qc[func_name](cast_xptr, cast_yptr, cast_zptr, cast_wbuf, ylen)
+    local start_time = cutils.rdtsc()
+    local status = qc[func_name](cast_xptr, cast_yptr, cast_zptr, 
+      cast_wbuf, xlen)
     record_time(start_time, func_name)
     assert(status == 0)
+    -- START release resources acquired 
+    x:unget_chunk(l_chunk_num) 
+    if ( subs.variation == "vv" ) then 
+      y:unget_chunk(l_chunk_num) 
+      z:unget_chunk(l_chunk_num) 
+    elseif ( subs.variation == "vs" ) then 
+      y:unget_chunk(l_chunk_num) 
+    elseif ( subs.variation == "sv" ) then 
+      z:unget_chunk(l_chunk_num) 
+    end
+    -- STOP  release resources acquired 
     l_chunk_num = l_chunk_num + 1
-    return ylen, wbuf, nil
+    return xlen, wbuf
   end
-  return lVector( {gen = gen, has_nulls = false, qtype = subs.qtype} )
+  local vargs = {gen = gen, has_nulls = false, 
+    max_num_in_chunk = subs.max_num_in_chunk, qtype = subs.wqtype}
+  return lVector(vargs)
 end
 return expander_ifxthenyelsez
