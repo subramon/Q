@@ -32,6 +32,8 @@ local function sort_tcin_loc_del(tcin, location_id, to_del, is_debug)
   end 
   local to_del   = Q.vconvert(Q.vsand(srt_compkey, one), "I1")
   local tcin_loc = Q.shift_right(srt_compkey, 1)
+  to_del:eval() -- XXXX 
+  tcin_loc:eval() -- XXXX 
   return tcin_loc, to_del 
 end
 return  sort_tcin_loc_del

@@ -63,11 +63,12 @@ return function (
   if ( subs.f3_ctype == "bool" ) then subs.f3_for_ispctype = "int8_t" end
   --===============
   local common_qtype = promote(subs.f1_qtype, subs.f2_qtype)
+  local common_ctype 
   if ( common_qtype == "BL" ) then 
-    common_qtype = "(uint8_t)"
+    common_ctype = "(uint8_t)"
   else
-    common_qtype  = "(u" .. 
-      cutils.str_qtype_to_str_ctype(subs.f3_qtype) .. ")"
+    common_ctype  = "(u" .. 
+      cutils.str_qtype_to_str_ctype(common_qtype) .. ")"
   end
   
   --===============
@@ -75,8 +76,8 @@ return function (
   subs.cst_cargs = ffi.NULL
 
   subs.code = "c = " ..
-    "(" .. common_qtype .. "a) | " .. 
-    "(" .. common_qtype .. "b);"
+    "(" .. common_ctype .. "a) | " .. 
+    "(" .. common_ctype .. "b);"
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"

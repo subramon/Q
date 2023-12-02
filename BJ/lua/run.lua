@@ -45,8 +45,8 @@ local T1_tcin_loc, T1_to_del = sort_tcin_loc_del(
 local T4 = {}
 T4.tcin = Q.unique(T1.tcin):eval()
 -- join T2_to_del from T2 into T1 
-local X = Q.join(T2_to_del, T2_tcin_loc, T1_tcin_loc)
-local T1_to_del_from_T2 = assert(X.val)
+local J1 = Q.join(T2_to_del, T2_tcin_loc, T1_tcin_loc)
+local T1_to_del_from_T2 = assert(J1.val)
 T1_to_del_from_T2:drop_nulls()
 -- del1 has all deletions except for time based ones
 local del1 = Q.vvor(T1_to_del, T1_to_del_from_T2)
@@ -66,25 +66,27 @@ T1.expiry_secs:set_nulls(x)
 --=========================================
 local x = T1.expiry_secs:get_nulls()
 assert(x:qtype() == "BL")
-local y = Q.ifxthenyelsez(x, maxt, T1.expiry_secs)
-y:eval()
-error("PREMATURE")
+local y = Q.ifxthenyelsez(x, maxt, T1.expiry_secs):eval()
+T1.expiry_secs = y:eval()
+x:delete() -- not null vector not needed any more 
 --==================================================
-for _, stop_time in ipairs(stop_times) do 
+--[==[
+for i, stop_time in ipairs(stop_times) do 
   -- find rows to discard based on stop_time 
   local x = Q.vslt(T1.expiry_secs, stop_time)
   local y = Q.vsgeq(T1.effective_secs, stop_time)
   local z = Q.vvor(x, y)
   local to_del = Q.vvor(z, del1)
-  local keep = Q.vnot(to_del):eval()
+  local keep = Q.vnot(to_del)
+  local n1, n2 = Q.sum(keep):eval()
+  print(i, "Keeping " .. n1:to_num() .. " rows out of " .. n2:to_num())
   -- ==========================================
   local T1prime = {}
   T1prime.tcin_loc = Q.where(T1_tcin_loc, keep)
   T1prime.regular_retail_a = Q.where(T1.regular_retail_a, keep)
   T1prime.current_retail_a = Q.where(T1.current_retail_a, keep)
   T1prime.tcin = Q.shift_right(T1prime.tcin_loc, 32):convert("I4")
--- Join prices from T1prime to T4
---[[
+- Join prices from T1prime to T4
   local X = Q.join(T1prime.regular_retail_a, T1prime.tcin, T4.tcin,
      {"num", "sum"})
   T4.regular_avg = Q.vvdiv(X.sum, X.num)
@@ -96,15 +98,19 @@ for _, stop_time in ipairs(stop_times) do
   T4.current_avg = Q.vvdiv(T4.current_numer, T4.current_denom)
   Q.print_csv({T4.tcin, T4.regular_avg, T4.current_avg}, 
   { opfile = "_x.csv"})
-  --]]
 end
+--]==]
 
 -- cleanup/checking/....
 assert(cVector.check_all())
-for k, v in pairs(T1) do v:delete() end; T = nil ; 
-for k, v in pairs(T2) do v:delete() end; T = nil ; 
-assert(cVector.check_all())
+for k, v in pairs(T1) do v:delete() end; 
+for k, v in pairs(T2) do v:delete() end; 
+for k, v in pairs(T4) do v:delete() end; 
+for k, v in pairs(J1) do v:delete() end; 
+T1.effective_secs:delete()
+T1.expiry_secs:delete()
 collectgarbage()
+assert(cVector.check_all())
 print("MEM", lgutils.mem_used())
 print("DSK", lgutils.dsk_used())
 -- assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
