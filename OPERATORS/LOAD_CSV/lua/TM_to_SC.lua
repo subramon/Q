@@ -42,7 +42,10 @@ local function TM_to_SC(
     out_buf:stealable(true)
     local cst_out_buf = get_ptr(out_buf, "char  * ")
     local len, base_data = inv:get_chunk(chunk_idx)
-    if ( len == 0 ) then return 0, nil end 
+    if ( len == 0 ) then 
+      out_buf:delete()
+      return 0
+    end 
     local in_ptr = get_ptr(base_data, cst_in_as)
     assert(in_ptr ~= ffi.NULL)
     local start_time = cutils.rdtsc()

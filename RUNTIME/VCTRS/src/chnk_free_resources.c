@@ -6,6 +6,7 @@
 #include "l2_file_name.h"
 #include "chnk_free_resources.h"
 
+#define VERBOSE
 int 
 chnk_free_resources(
     uint32_t tbsp,
@@ -21,8 +22,11 @@ chnk_free_resources(
   if ( ptr_val->num_writers > 0 ) { go_BYE(-1); }
   //---------------------------------------------------
   if ( ptr_val->l1_mem != NULL ) { 
-    free_if_non_null(ptr_val->l1_mem);
+    // printf("Releasing chunk of vector [%s]", ptr_val->name);
+    printf("Releasing chunk ");
+    printf(" of size %u \n", ptr_val->size);
     status = decr_mem_used(ptr_val->size); cBYE(status);
+    free_if_non_null(ptr_val->l1_mem);
   }
   // TODO P4 If it takes time to free resources, we should
   // put this in a shared memory queue for the memory manager to deal with

@@ -14,7 +14,7 @@
 extern vctr_rs_hmap_t *g_vctr_hmap;
 extern chnk_rs_hmap_t *g_chnk_hmap;
 
-#undef VERBOSE
+#define VERBOSE
 int
 vctr_del(
     uint32_t tbsp, // table space 

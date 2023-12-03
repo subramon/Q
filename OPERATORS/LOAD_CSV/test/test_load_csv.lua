@@ -15,6 +15,8 @@ local test_print  = true -- turn false if you want only load_csv tested
 --=======================================================
 local tests = {}
 tests.t1 = function()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local M = {}
   local O = { is_hdr = true }
   -- TODO P1 Test with different memo_len values 
@@ -78,10 +80,18 @@ tests.t1 = function()
   end
   --===================
   assert(cVector.check_all())
+  T.i4:delete()
+  T.f4:delete()
+  assert(lgutils.mem_used() == 0)
+  assert(lgutils.dsk_used() == 0)
+  collectgarbage("restart")
+  assert(cVector.check_all())
   print("Test t1 succeeded")
 end
 --=======================================================
 tests.t2 = function()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local M = {}
   local O = { is_hdr = true }
   M[1] = { name = "i1", qtype = "I4", has_nulls = false }
@@ -136,10 +146,19 @@ tests.t2 = function()
     end
   end
   assert(cVector.check_all())
+  assert(T.i1:delete())
+  assert(T.s1:delete())
+  assert(cVector.check_all())
+  assert(lgutils.mem_used() == 0)
+  assert(lgutils.dsk_used() == 0)
+  collectgarbage("restart")
+  assert(cVector.check_all())
   print("Test t2 succeeded")
 end
 --=======================================================
 tests.t3 = function()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local M = {}
   local O = { is_hdr = true, fld_sep = "comma", memo_len = -1  }
   M[#M+1] = { is_memo = false, name = "datetime", qtype = "SC", width=20}
@@ -177,10 +196,18 @@ tests.t3 = function()
     end
   end
   assert(cVector.check_all())
+  for _, v in pairs(T) do assert(v:delete()) end
+  assert(cVector.check_all())
+  assert(lgutils.mem_used() == 0)
+  assert(lgutils.dsk_used() == 0)
+  collectgarbage("restart")
+  assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 --==============================================================
 tests.t4 = function()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local M = {}
   local O = { is_hdr = true }
   M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
@@ -196,6 +223,8 @@ tests.t4 = function()
   local x = Q.SC_to_TM(T.datetime, format):set_name("x")
   assert(type(x) == "lVector")
   x:eval()
+  if ( T.datetime:has_nulls() ) then assert(x:has_nulls()) end 
+  if ( not T.datetime:has_nulls() ) then assert(not x:has_nulls()) end 
   assert(x:check())
   assert(x:num_elements() == T.datetime:num_elements())
   x:pr("_3", 0, 0, format); 
@@ -225,10 +254,19 @@ tests.t4 = function()
   end
   --===================
   assert(cVector.check_all())
+  for k, v in pairs(T) do v:delete() end 
+  x:delete()
+  y:delete()
+  assert(lgutils.mem_used() == 0)
+  assert(lgutils.dsk_used() == 0)
+  collectgarbage("restart")
+  assert(cVector.check_all())
   print("Test t4 succeeded")
 end
 --==============================================================
 tests.t4a = function()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local M = {}
   local O = { is_hdr = true }
   M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
@@ -262,9 +300,18 @@ tests.t4a = function()
   end
   --===================
   assert(cVector.check_all())
+  for k, v in pairs(T) do v:delete() end 
+  x:delete()
+  y:delete()
+  assert(lgutils.mem_used() == 0)
+  assert(lgutils.dsk_used() == 0)
+  collectgarbage("restart")
+  assert(cVector.check_all())
   print("Test t4a succeeded")
 end
 tests.t5 = function()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local M = {}
   local O = { is_hdr = true, memo_len = -1  }
   M[#M+1] = { name = "datetime", qtype = "SC", has_nulls = false, width=20}
@@ -340,10 +387,19 @@ tests.t5 = function()
     end
   end
   assert(cVector.check_all())
+  for k, v in pairs(T) do v:delete() end 
+  for k, v in pairs(out) do v:delete() end 
+  x:delete()
+  assert(lgutils.mem_used() == 0)
+  assert(lgutils.dsk_used() == 0)
+  collectgarbage("restart")
+  assert(cVector.check_all())
   print("Test t5 succeeded")
 end
 -- Testing null values
 tests.t6 = function() 
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local datafile = qcfg.q_src_root .. "/OPERATORS/LOAD_CSV/test/in6.csv"
   assert(plpath.isfile(datafile))
   -- TODO P2 Implement B1 for _, nn_qtype in ipairs( { "B1", "BL", } ) do 
@@ -358,25 +414,34 @@ tests.t6 = function()
     assert(T.i4:has_nulls() == true)
     assert(T.f4:has_nulls() == true)
   
+    T.i4:eval() 
+    -- eval() need to evaluate because we cannot mess with nulls until eov 
+
     local nn_i4 = T.i4:get_nulls()
     assert(type(nn_i4) == "lVector")
     assert(nn_i4:qtype() == nn_qtype)
+    T.i4:set_nulls(nn_i4) -- because get_nulls breaks connection
   
     local nn_f4 = T.f4:get_nulls()
     assert(type(nn_f4) == "lVector")
     assert(nn_f4:qtype() == nn_qtype)
+    T.f4:set_nulls(nn_f4) -- because get_nulls breaks connection
 
-    T.i4:eval()
+    print("XXXXXXXXXXXXXXXXXXXXXXXXX")
     T.i4:check()
     T.i4:pr("/tmp/_i4")
     T.f4:pr("/tmp/_f4")
     T.i4:check()
 
-    local n1, n2 = Q.sum(nn_i4):eval()
+    local r = Q.sum(nn_i4)
+    local n1, n2 = r:eval()
+    r:delete()
     assert(n1:to_num() == 6 )
     assert(n2:to_num() == 11 )
 
-    local n1, n2 = Q.sum(nn_f4):eval()
+    local r = Q.sum(nn_f4)
+    local n1, n2 = r:eval()
+    r:delete()
     assert(n1:to_num() == 6 )
     assert(n2:to_num() == 11 )
 
@@ -388,9 +453,15 @@ tests.t6 = function()
     T.i4:check()
     local opfile = "/tmp/_xxx"
     Q.print_csv(U, { impl = "C", opfile = opfile } )
+    --=====================================
+    assert(cVector.check_all())
+    for k, v in pairs(T) do v:delete() end 
+    assert(lgutils.mem_used() == 0)
+    assert(lgutils.dsk_used() == 0)
+    collectgarbage("restart")
+    assert(cVector.check_all())
+    print("Test t6 succeeded for nn_qtype = ", nn_qtype)
   end
-  assert(cVector.check_all())
-  print("Test t6 succeeded")
   
 end
 tests.t1()

@@ -424,7 +424,13 @@ function lVector:put_chunk(c, n, nn_c)
     local nn_vec = nn_vector._base_vec
     assert(cVector.put_chunk(nn_vec, nn_c, n))
   else
-    assert(nn_c == nil)
+    -- TODO THINK Why are we getting nn_c if vector does not have nulls?
+    if ( type(nn_c) == "CMEM" ) then
+      print("STRANGE")
+      nn_c:delete() -- not needed
+    else
+      assert(nn_c == nil)
+    end
   end
   self._chunk_num = self._chunk_num + 1 
 end
@@ -488,7 +494,13 @@ function lVector:get_chunk(chnk_idx)
     end
     --==============================
     -- check for early termination
-    if ( num_elements == 0 ) then return 0 end 
+    if ( num_elements == 0 ) then 
+      -- following delete is an additional precuation. Ideally
+      -- generator would have deleted it in this case
+      if ( buf ) then assert(type(buf) == "CMEM"); buf:delete() end 
+      if ( nn_buf ) then assert(type(nn_buf) == "CMEM"); nn_buf:delete() end 
+      return 0 
+    end 
     --===========================
     -- release old chunks
     -- NOTE that memo_len == 0 is meanignless 
@@ -696,6 +708,11 @@ function lVector.null()
 end
 
 function lVector:delete()
+  if ( self:has_nulls() ) then 
+    -- print("Deleting nn for ", self:name())
+    local nn_vector = self._nn_vec
+    assert(cVector.delete(nn_vector._base_vec))
+  end
   return  cVector.delete(self._base_vec)
 end
 

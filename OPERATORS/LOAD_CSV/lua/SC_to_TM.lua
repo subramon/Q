@@ -56,24 +56,36 @@ local function SC_to_TM(
   local bufsz = subs.max_num_in_chunk * out_width
   local nn_bufsz = subs.max_num_in_chunk * 1
   local l_chunk_num = 0
+  local has_nulls invec:has_nulls()
   local function gen(chunk_num)
     assert(chunk_num == l_chunk_num)
     -- create space for output 
-    local buf = assert(cmem.new( { size = bufsz, qtype = subs.out_qtype}))
+    local buf = assert(cmem.new( { name = "SC_to_TM" .. tostring(chunk_num),
+      size = bufsz, qtype = subs.out_qtype}))
     buf:stealable(true)
     local cst_buf = get_ptr(buf, out_ctype .. "  *")
 
-    local nn_buf = assert(cmem.new({ size = nn_bufsz, qtype = "BL"}))
-    nn_buf:stealable(true)
+    local nn_buf
+    if ( has_nulls ) then 
+      nn_buf = assert(cmem.new(
+        { name = "nn_SC_to_TM" .. tostring(chunk_num),
+        size = nn_bufsz, qtype = "BL"}))
+      nn_buf:stealable(true)
+    end
     local cst_nn_buf = get_ptr(nn_buf, "bool *")
     -- get input
     local len, base_data, nn_data  = invec:get_chunk(l_chunk_num)
-    if ( len == 0 ) then return 0, nil end 
+    if ( len == 0 ) then 
+      buf:delete()
+      nn_buf:delete()
+      return 0, nil 
+    end 
     assert(type(base_data) == "CMEM")
     local base_ptr = get_ptr(base_data, "char *")
     assert(base_ptr ~= ffi.NULL)
     local nn_ptr
     if ( has_nulls ) then 
+      assert(nn_data)
       nn_ptr = get_ptr(nn_data, "bool *")
       assert(nn_ptr ~= ffi.NULL)
     end
