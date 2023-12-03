@@ -49,8 +49,14 @@ local T1_tcin_loc, T1_to_del = sort_tcin_loc_del(
 -- create unique TCIN's
 
 local T4 = {}
+local val, cnt = Q.unique(T1.tcin)
+assert(type(val) == "lVector")
+assert(type(cnt) == "lVector")
+val:eval()
+assert(cnt:num_elements() == val:num_elements())
+T4.tcin = val; val = nil
+T4.cnt  = cnt; cnt = nil
 --[[
-T4.tcin = Q.unique(T1.tcin):set_name("T4_tcin"):eval()
 -- join T2_to_del from T2 into T1 
 local J1 = Q.join(T2_to_del, T2_tcin_loc, T1_tcin_loc)
 local T1_to_del_from_T2 = assert(J1.val)

@@ -42,11 +42,11 @@ local function expander_unique(op, a)
 
     local function gen(chunk_num)
       assert(chunk_num == l_chunk_num)
-      local val_buf = cmem.new(subs.val_bufsz)
+      local val_buf = cmem.new({ size = subs.val_bufsz, name = "unique_val"})
       val_buf:zero()
       val_buf:stealable(true)
   
-      local cnt_buf = cmem.new(subs.cnt_bufsz)
+      local cnt_buf = cmem.new({ size = subs.cnt_bufsz, name = "unique_cnt"})
       cnt_buf:zero()
       cnt_buf:stealable(true)
 
@@ -83,7 +83,7 @@ local function expander_unique(op, a)
           if ( my_name == "val" ) then 
             vectors.cnt:put_chunk(cnt_buf, num_val_buf[0])
             vectors.cnt:eov()
-          return num_val_buf[0], val_buf
+            return num_val_buf[0], val_buf
           elseif ( my_name == "cnt" ) then 
             vectors.val:put_chunk(val_buf, num_val_buf[0])
             vectors.val:eov()
@@ -102,11 +102,13 @@ local function expander_unique(op, a)
           in_idx, num_val_buf, subs.max_num_in_chunk, overflow)
         if ( ( a:is_eov() ) and ( overflow[0] == true ) ) then
           a:unget_chunk(in_chunk_num)
-          -- print("X: Ungetting input chunk " .. in_chunk_num)
+          print("X: Ungetting input chunk " .. in_chunk_num)
         end
 
-        -- print("Return from C code, overflow = ", overflow[0]);
-        -- print("Return from C code, in_idx = ", in_idx[0]);
+        print("Return from C code, in_len = ", in_len)
+        print("Return from C code, in_idx = ", in_idx[0]);
+        print("Return from C code, num_val_buf = ", num_val_buf[0])
+        print("Return from C code, overflow = ", overflow[0]);
         assert(status == 0, "C error in UNIQUE")
         -- If output buffer is (truly) full then return it 
         if ( overflow[0] == true ) then 
