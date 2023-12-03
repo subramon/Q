@@ -6,7 +6,6 @@
 #include "l2_file_name.h"
 #include "chnk_free_resources.h"
 
-#define VERBOSE
 int 
 chnk_free_resources(
     uint32_t tbsp,
@@ -23,8 +22,10 @@ chnk_free_resources(
   //---------------------------------------------------
   if ( ptr_val->l1_mem != NULL ) { 
     // printf("Releasing chunk of vector [%s]", ptr_val->name);
+#ifdef VERBOSE
     printf("Releasing chunk ");
-    printf(" of size %u \n", ptr_val->size);
+    printf("of size %u \n", ptr_val->size);
+#endif
     status = decr_mem_used(ptr_val->size); cBYE(status);
     free_if_non_null(ptr_val->l1_mem);
   }
@@ -41,6 +42,7 @@ chnk_free_resources(
       free_if_non_null(l2_file);
       status = decr_dsk_used(ptr_val->size); cBYE(status);
       ptr_val->l2_exists = false;
+      printf("Decreaed dsk by %u for %s \n", ptr_val->size, l2_file);
     }
   }
 BYE:

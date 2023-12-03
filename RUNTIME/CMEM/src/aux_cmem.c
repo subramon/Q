@@ -6,7 +6,7 @@
 #ifdef USE_GLOBALS
 #include "mod_mem_used.h"
 #endif
-#define VERBOSE
+#undef VERBOSE
 int 
 cmem_free( 
     CMEM_REC_TYPE *ptr_cmem

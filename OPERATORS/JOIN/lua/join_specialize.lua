@@ -1,7 +1,10 @@
 local cutils        = require 'libcutils'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 local is_in         = require 'Q/UTILS/lua/is_in'
-local good_join_types = { "val", "cnt", "sum", "min", "max", }
+local is_int_qtype  = require 'Q/UTILS/lua/is_int_qtype'
+-- TODO need to implement is 
+-- TODO need to test, only val tested so far
+local good_join_types = { "val", "cnt", "sum", "min", "max", "is", }
 return function (
   src_val,
   src_lnk,

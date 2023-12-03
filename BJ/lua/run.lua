@@ -56,12 +56,11 @@ val:eval()
 assert(cnt:num_elements() == val:num_elements())
 T4.tcin = val; val = nil
 T4.cnt  = cnt; cnt = nil
---[[
 -- join T2_to_del from T2 into T1 
 local J1 = Q.join(T2_to_del, T2_tcin_loc, T1_tcin_loc)
 local T1_to_del_from_T2 = assert(J1.val)
 T1_to_del_from_T2:drop_nulls()
--- del1 has all deletions except for time based ones
+-- T1_del1 has all deletions except for time based ones
 local T1_del1 = Q.vvor(T1_to_del, T1_to_del_from_T2)
 -- create T2' based on rows that survive deletion
 local maxt = 0
@@ -71,7 +70,10 @@ end
 maxt = maxt + (7*86400) -- set to a week ahead 
 --=========================================
 -- convert TM to time in seconds since epoch
-T1.effective_secs = Q.tm_to_epoch(T1.effective_tm)
+
+T1.effective_tm:eval()
+assert(T1.expiry_tm:is_eov())
+T1.effective_secs = Q.tm_to_epoch(T1.effective_tm):set_name("T1_effective_secs")
 T1.expiry_tm:eval()
 local x = T1.expiry_tm:get_nulls()
 T1.expiry_secs    = Q.tm_to_epoch(T1.expiry_tm):eval()
@@ -79,15 +81,76 @@ T1.expiry_secs:set_nulls(x)
 --=========================================
 local x = T1.expiry_secs:get_nulls()
 assert(x:qtype() == "BL")
-local y = Q.ifxthenyelsez(x, maxt, T1.expiry_secs):eval()
-T1.expiry_secs:delete(); 
+local y = Q.ifxthenyelsez(x, maxt, T1.expiry_secs):
+  set_name("T1_expiry_secs"):eval()
 x:delete() -- not null vector not needed any more 
+T1.expiry_secs:delete(); 
 T1.expiry_secs = y
---]]
+
+
+for i, stop_time in ipairs(stop_times) do 
+  -- find rows to discard based on stop_time 
+  local t = Q.const({val = stop_time, 
+    len = T1.expiry_secs:num_elements(),
+    qtype = T1.expiry_secs:qtype()}):eval() -- for debugging only
+  local x = Q.vsgt(T1.expiry_secs, stop_time)
+  local y = Q.vsleq(T1.effective_secs, stop_time)
+  local z = Q.vvand(x, y)
+  local notz = Q.vnot(z) --- to get rid off 
+  local to_del = Q.vvor(notz, T1_del1)
+  local keep = Q.vnot(to_del)
+  local r = Q.sum(keep)
+  local n1, n2 = r:eval()
+  t:delete()
+  x:delete()
+  y:delete()
+  z:delete()
+  notz:delete()
+  to_del:delete()
+  r:delete()
+  local num_to_keep = n1:to_num()
+  if ( num_to_keep == 0 ) then 
+    print("Nothing to keep from T1")
+  else
+    print(i, "Keeping " .. num_to_keep .. " from T1")
+    -- ==========================================
+    local T1prime = {}
+    T1prime.tcin_loc = Q.where(T1_tcin_loc, keep):eval()
+    T1prime.regular_retail_a = Q.where(T1.regular_retail_a, keep):eval()
+    T1prime.current_retail_a = Q.where(T1.current_retail_a, keep):eval()
+    local tmp = Q.shift_right(T1prime.tcin_loc, 32)
+    T1prime.tcin = Q.vconvert(tmp, "I4"):eval()
+    tmp:delete()
+    Q.print_csv({
+      T1prime.tcin_loc, 
+      T1prime.regular_retail_a, 
+      T1prime.current_retail_a, 
+      T1prime.tcin, }, { opfile = "_x.csv" })
+    local X = Q.join(T1prime.regular_retail_a, T1prime.tcin, T4.tcin,
+     {"cnt", "sum"})
+    X.num:eval()
+    assert(X.sum:is_eov())
+    for k, v in pairs(T1prime) do v:delete() end 
+    for k, v in pairs(X) do v:delete() end 
+  end
+  keep:delete()
+end
+  --[==[[
+-- Join prices from T1prime to T4
+  T4.regular_avg = Q.vvdiv(X.sum, X.num)
+
+  local X = Q.join(T1prime.current_retail_a, T1prime.tcin, T4.tcin,
+     {"num", "sum"})
+  T4.current_avg = Q.vvdiv(X.sum, X.num)
+  T4.regular_avg = Q.vvdiv(T4.regular_numer, T4.regular_denom)
+  T4.current_avg = Q.vvdiv(T4.current_numer, T4.current_denom)
+  Q.print_csv({T4.tcin, T4.regular_avg, T4.current_avg}, 
+  { opfile = "_x.csv"})
+--]==]
 if ( true ) then 
-  for k, v in pairs(T1) do print("T1 free " .. v:name()); v:delete() end 
-  for k, v in pairs(T2) do print("T2 free " .. v:name()); v:delete() end 
-  for k, v in pairs(T4) do print("T4 free " .. v:name()); v:delete() end 
+  for k, v in pairs(T1) do v:delete() end 
+  for k, v in pairs(T2) do v:delete() end 
+  for k, v in pairs(T4) do v:delete() end 
   c1:delete()
   c2:delete()
   c3:delete()
@@ -98,14 +161,12 @@ if ( true ) then
   T1_to_del:delete()
   T1_keep:delete()
   T1_unsrt_to_del:delete()
-
-  --[[
-  for k, v in pairs(J1) do print("J1 free " .. v:name()); v:delete() end 
+  for k, v in pairs(J1) do v:delete() end 
   T1_to_del_from_T2:delete()
   T1_del1:delete()
+
   T1.effective_secs:delete()
   T1.expiry_secs:delete()
-  --]]
   print("MEM", lgutils.mem_used())
   assert(lgutils.mem_used() == 0)
   print("DSK", lgutils.dsk_used())
@@ -115,36 +176,6 @@ if ( true ) then
   return 0 
 end
 --==================================================
---[==[
-for i, stop_time in ipairs(stop_times) do 
-  -- find rows to discard based on stop_time 
-  local x = Q.vslt(T1.expiry_secs, stop_time)
-  local y = Q.vsgeq(T1.effective_secs, stop_time)
-  local z = Q.vvor(x, y)
-  local to_del = Q.vvor(z, del1)
-  local keep = Q.vnot(to_del)
-  local n1, n2 = Q.sum(keep):eval()
-  print(i, "Keeping " .. n1:to_num() .. " rows out of " .. n2:to_num())
-  -- ==========================================
-  local T1prime = {}
-  T1prime.tcin_loc = Q.where(T1_tcin_loc, keep)
-  T1prime.regular_retail_a = Q.where(T1.regular_retail_a, keep)
-  T1prime.current_retail_a = Q.where(T1.current_retail_a, keep)
-  T1prime.tcin = Q.shift_right(T1prime.tcin_loc, 32):convert("I4")
-- Join prices from T1prime to T4
-  local X = Q.join(T1prime.regular_retail_a, T1prime.tcin, T4.tcin,
-     {"num", "sum"})
-  T4.regular_avg = Q.vvdiv(X.sum, X.num)
-
-  local X = Q.join(T1prime.current_retail_a, T1prime.tcin, T4.tcin,
-     {"num", "sum"})
-  T4.current_avg = Q.vvdiv(X.sum, X.num)
-  T4.regular_avg = Q.vvdiv(T4.regular_numer, T4.regular_denom)
-  T4.current_avg = Q.vvdiv(T4.current_numer, T4.current_denom)
-  Q.print_csv({T4.tcin, T4.regular_avg, T4.current_avg}, 
-  { opfile = "_x.csv"})
-end
---]==]
 
 -- cleanup/checking/....
 assert(cVector.check_all())

@@ -711,7 +711,10 @@ function lVector:delete()
   if ( self:has_nulls() ) then 
     -- print("Deleting nn for ", self:name())
     local nn_vector = self._nn_vec
-    assert(cVector.delete(nn_vector._base_vec))
+    assert(type(nn_vector) == "lVector")
+    -- local x = cVector.delete(nn_vector._base_vec)
+    -- TODO Why is x == false?
+    local x = nn_vector:delete()
   end
   return  cVector.delete(self._base_vec)
 end

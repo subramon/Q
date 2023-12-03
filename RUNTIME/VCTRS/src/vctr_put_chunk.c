@@ -87,7 +87,7 @@ vctr_put_chunk(
   }
   else {
 #ifdef VERBOSE
-    printf("VCTR A Malloc of %u for [%s] \n", chnk_size, vctr_val.name);
+    printf("%s Malloc of %u for [%s] \n", __FILE__, chnk_size, vctr_val.name);
 #endif
     status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, chnk_size); 
     cBYE(status);

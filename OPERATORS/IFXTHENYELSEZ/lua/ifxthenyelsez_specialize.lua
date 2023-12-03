@@ -14,6 +14,7 @@ return function (
   assert(type(x) == "lVector")
   subs.max_num_in_chunk = x:max_num_in_chunk()
   assert(not x:has_nulls())
+  assert(subs.max_num_in_chunk > 0)
 
   local xqtype = x:qtype()
   assert((x:qtype() == "BL") or(x:qtype() == "B1"))
@@ -53,7 +54,6 @@ return function (
       z = assert(Scalar.new(z, y:qtype()))
     end
     assert(y:qtype() == z:qtype())
-    local c = z:to_cmem(); subs.cast_zptr = get_ptr(c, z:qtype())
     subs.wqtype = y:qtype()
   elseif ( ( ( type(y) == "Scalar" ) or ( type(y) == "number") ) 
     and ( type(z) == "lVector" ) ) then 
@@ -66,7 +66,6 @@ return function (
       y = assert(Scalar.new(y, z:qtype()))
     end
     assert(y:qtype() == z:qtype())
-    local c = y:to_cmem(); subs.cast_yptr = get_ptr(c, y:qtype())
     subs.wqtype = y:qtype()
 
   elseif ( ( ( type(y) == "Scalar" ) or ( type(y) == "number") ) and
@@ -88,8 +87,6 @@ return function (
     else
       error("")
     end
-    local c = y:to_cmem(); subs.cast_yptr = get_ptr(c, y:qtype())
-    local c = z:to_cmem(); subs.cast_zptr = get_ptr(c, z:qtype())
   else
     error("bad types for ifxthenyelsez")
   end

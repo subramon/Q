@@ -67,6 +67,9 @@ chnk_drop_mem(
         memcpy(ptr_val->l1_mem, X, nX); 
         munmap(X, nX); X = NULL; nX = 0;
         status = incr_mem_used(ptr_val->size); cBYE(status);
+#ifdef VERBOSE
+        printf("%s Allocated %u \n", __FILE__, ptr_val->size);
+#endif
       }
       status = unlink(l2_file); cBYE(status); 
       status = decr_dsk_used(ptr_val->size); cBYE(status);

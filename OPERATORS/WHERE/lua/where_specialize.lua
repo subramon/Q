@@ -7,6 +7,7 @@ return function (a, b, optargs)
   local subs = {}; 
   assert(type(a) == "lVector")
   local a_qtype = a:qtype()
+  assert(a:max_num_in_chunk() > 0)
   local max_num_in_chunk = a:max_num_in_chunk()
   assert(is_base_qtype(a_qtype))
   assert(not a:has_nulls()) -- TODO P4 For later 
@@ -15,6 +16,8 @@ return function (a, b, optargs)
   local b_qtype = b:qtype()
   assert( (b_qtype == "BL") or (b_qtype == "B1"))
   assert(not b:has_nulls())
+  assert(b:max_num_in_chunk() > 0)
+  print("XXXXXX", b:max_num_in_chunk(), max_num_in_chunk)
   assert(b:max_num_in_chunk() == max_num_in_chunk)
 
   subs.fn      = "where_" .. a_qtype .. "_" .. b_qtype 

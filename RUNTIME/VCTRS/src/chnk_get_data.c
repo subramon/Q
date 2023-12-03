@@ -47,6 +47,9 @@ chnk_get_data(
     cBYE(status);
     memcpy(ptr_val->l1_mem, X, nX); 
     incr_mem_used(ptr_val->size);
+#ifdef VERBOSE
+    printf("%s Allocated %u \n", __FILE__, ptr_val->size);
+#endif
   }
   char *data  = ptr_val->l1_mem; 
   if ( data == NULL ) { go_BYE(-1); }

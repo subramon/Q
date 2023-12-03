@@ -67,7 +67,7 @@ local function expander_join(
       --==========================================================
       local dl_len, dl_buf = dst_lnk:get_chunk(l_chunk_num)
       dst_start[0] = 0
-      print("DST:   Getting " .. l_chunk_num .. " of size " .. dl_len)
+      -- print("DST:   Getting " .. l_chunk_num .. " of size " .. dl_len)
       if ( dl_len == 0 ) then
         if ( true ) then -- TODO P0 MAJOR HACK
           print("XXXXXX")
@@ -93,7 +93,7 @@ local function expander_join(
         print("Iteration " .. iter .. " for dst chunk ".. l_chunk_num)
         local sv_len, sv_buf = src_val:get_chunk(src_chunk_num)
         local sl_len, sl_buf = src_lnk:get_chunk(src_chunk_num)
-         print("SRC:   Getting " .. src_chunk_num)
+         -- print("SRC:   Getting " .. src_chunk_num)
         -- basic tests 
         assert(sl_len == sv_len)
         if ( sv_buf ) then assert(sl_buf) end 
@@ -114,28 +114,32 @@ local function expander_join(
           local nn_dv_ptr  = ffi.cast("bool *", 
             get_ptr(nn_dv_bufs[join_type]))
           local func_name = subs.fn
+          --[[
           print("Calling   " .. func_name 
             .. " src_start = " .. src_start[0] 
             .. " dst_start = " .. dst_start[0])
+            --]]
           local status = qc[func_name](
             sv_ptr, sl_ptr, src_start, sl_len, dl_ptr, dv_ptr, nn_dv_ptr, 
             dst_start, dl_len)
           assert(status == 0)
+          --[[
           print("Done with " .. func_name 
             .. " src_start = " .. src_start[0] 
             .. " src_len = " .. sl_len 
             .. " dst_start = " .. dst_start[0] 
             .. " dst_len = " .. dl_len )
+            --]]
         end
         -- unget the source, we may end up getting same chunk again 
-        print("SRC: Ungetting " .. src_chunk_num)
+        -- print("SRC: Ungetting " .. src_chunk_num)
         src_val:unget_chunk(src_chunk_num)
         src_lnk:unget_chunk(src_chunk_num)
         -- handle case when you need to get next chunk of source
         if ( sl_len > 0 and src_start[0] == sl_len ) then 
           -- source buffer consumed 
           if ( sl_len == subs.max_num_in_chunk ) then 
-            print("SRC: Getting ready for next chunk")
+            -- print("SRC: Getting ready for next chunk")
             src_chunk_num = src_chunk_num + 1
             src_start[0] = 0
           else
@@ -157,7 +161,7 @@ local function expander_join(
         end 
       end
       dst_lnk:unget_chunk(l_chunk_num)
-      print("DST: Ungetting " .. l_chunk_num)
+      -- print("DST: Ungetting " .. l_chunk_num)
       l_chunk_num = l_chunk_num + 1 
       return dl_len, dv_bufs[my_join_type], nn_dv_bufs[my_join_type]
         --===================================================

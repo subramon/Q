@@ -50,6 +50,7 @@ static int l_sclr_to_cmem( lua_State *L)
   int status = 0;
   SCLR_REC_TYPE *ptr_sclr = NULL;
   CMEM_REC_TYPE *ptr_cmem = NULL;
+  char *cmem_name = NULL;
 
   int num_args = lua_gettop(L); if ( num_args != 1 )  { go_BYE(-1); }
 
@@ -60,6 +61,15 @@ static int l_sclr_to_cmem( lua_State *L)
   if ( ptr_cmem == NULL ) { WHEREAMI; goto BYE; }
   memset(ptr_cmem, '\0', sizeof(CMEM_REC_TYPE));
 
+  if ( *ptr_sclr->name == '\0' ) { 
+    cmem_name = strdup("Scalar");
+  }
+  else {
+    size_t len = strlen(ptr_sclr->name) + 4 + strlen("Scalar_");
+    cmem_name = malloc(len);
+    sprintf(cmem_name, "Scalar_%s", ptr_sclr->name);
+  }
+
   size_t size = sizeof(SCLR_REC_TYPE);
   status = cmem_malloc(ptr_cmem, size, ptr_sclr->qtype, "Scalar");
   cBYE(status);
@@ -68,8 +78,10 @@ static int l_sclr_to_cmem( lua_State *L)
 
   luaL_getmetatable(L, "CMEM"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+  free_if_non_null(cmem_name);
   return 1;
 BYE:
+  free_if_non_null(cmem_name);
   lua_pushnil(L);
   lua_pushstring(L, __func__);
   lua_pushnumber(L, status);

@@ -60,10 +60,6 @@ vctr_put1(
     chnk_rs_hmap_key_t chnk_key = 
     { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
     char *l1_mem = NULL;
-#ifdef VERBOSE
-    printf("VCTR A Malloc of %u for [%s] \n", chnk_size, vctr_val.name);
-#endif
-
     status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT,
         chnk_size);
     cBYE(status);
@@ -72,6 +68,10 @@ vctr_put1(
     chnk_val.qtype = qtype;
     chnk_val.size  = chnk_size;
     status = incr_mem_used( chnk_size);
+#ifdef VERBOSE
+        printf("%s Allocated %u for %s \n", __FILE__, chnk_size, 
+            vctr_val.name);
+#endif
     //-------------------------------
     status = g_chnk_hmap[tbsp].put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
     cBYE(status);

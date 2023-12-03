@@ -14,7 +14,6 @@
 extern vctr_rs_hmap_t *g_vctr_hmap;
 extern chnk_rs_hmap_t *g_chnk_hmap;
 
-#define VERBOSE
 int
 vctr_del(
     uint32_t tbsp, // table space 
@@ -59,6 +58,9 @@ vctr_del(
     size_t nX = g_vctr_hmap[tbsp].bkts[where_found].val.nX;
     if ( ( X != NULL ) && ( nX != 0 ) ) { munmap(X, nX); }
     g_vctr_hmap[tbsp].bkts[where_found].val.is_lma = false;
+  }
+  if ( ( is_lma ) && ( is_persist ) ) { 
+    printf("Not deleting file baclup for Vctr: %s \n", val.name); 
   }
   //-------------------------------------------
   if ( ( val.is_lma ) || ( val.num_elements == 0 ) ) {

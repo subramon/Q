@@ -35,7 +35,8 @@ chnk_first(
   { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
   char *l1_mem = NULL;
 #ifdef VERBOSE
-  printf("VCTR 0 Malloc of %u for [%s] \n", chnk_size, vctr_val.name);
+  printf("%s VCTR Malloc of %u for [%s] \n", 
+      __FILE__, chnk_size, ptr_vctr_val->name);
 #endif
   status = posix_memalign((void **)&l1_mem, Q_VCTR_ALIGNMENT, chnk_size);
   cBYE(status);

@@ -1,5 +1,3 @@
-#undef VERBOSE
-
 #include "luaconf.h"
 #include "lua.h"
 #include "lauxlib.h"

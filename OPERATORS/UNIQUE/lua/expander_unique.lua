@@ -71,7 +71,7 @@ local function expander_unique(op, a)
               -- print("Getting chunk " .. in_chunk_num)
             end
           else 
-            print("Need to finish consuming input in chunk", in_chunk_num)
+            -- print("Need to finish consuming input in chunk", in_chunk_num)
           end
         end
         --=== START handle case where no more input 
@@ -102,13 +102,13 @@ local function expander_unique(op, a)
           in_idx, num_val_buf, subs.max_num_in_chunk, overflow)
         if ( ( a:is_eov() ) and ( overflow[0] == true ) ) then
           a:unget_chunk(in_chunk_num)
-          print("X: Ungetting input chunk " .. in_chunk_num)
+          -- print("X: Ungetting input chunk " .. in_chunk_num)
         end
 
-        print("Return from C code, in_len = ", in_len)
-        print("Return from C code, in_idx = ", in_idx[0]);
-        print("Return from C code, num_val_buf = ", num_val_buf[0])
-        print("Return from C code, overflow = ", overflow[0]);
+        -- print("Return from C code, in_len = ", in_len)
+        -- print("Return from C code, in_idx = ", in_idx[0]);
+        -- print("Return from C code, num_val_buf = ", num_val_buf[0])
+        -- print("Return from C code, overflow = ", overflow[0]);
         assert(status == 0, "C error in UNIQUE")
         -- If output buffer is (truly) full then return it 
         if ( overflow[0] == true ) then 

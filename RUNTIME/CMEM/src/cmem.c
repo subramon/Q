@@ -476,9 +476,15 @@ l_cmem_is_stealable(
     lua_State *L
     ) 
 {
+  int num_args = lua_gettop(L);
+  if ( num_args != 1 ) { WHEREAMI; goto BYE; }
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 1, "CMEM");
   lua_pushboolean(L, ptr_cmem->is_stealable);
   return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
 }
 
 static int l_cmem_me( lua_State *L) {

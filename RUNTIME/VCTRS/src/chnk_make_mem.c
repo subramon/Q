@@ -50,6 +50,9 @@ chnk_make_mem(
       cBYE(status);
       memcpy(ptr_val->l1_mem, X, nX); 
       incr_mem_used(ptr_val->size); 
+#ifdef VERBOSE
+      printf("%s Allocated %u \n", __FILE__, ptr_val->size);
+#endif
       break;
     case 2 : 
       if ( ptr_val->l2_exists ) { /* nothing to do  */ goto BYE; }
@@ -61,6 +64,9 @@ chnk_make_mem(
       fclose_if_non_null(fp);
       status = incr_dsk_used(ptr_val->size); cBYE(status);
       ptr_val->l2_exists = true; 
+#ifdef VERBOSE
+        printf("%s Disk Usage up by %u \n", __FILE__, ptr_val->size);
+#endif
       break;
     default : 
       go_BYE(-1);

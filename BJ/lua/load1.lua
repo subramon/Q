@@ -3,6 +3,7 @@ local plutils= require 'pl.utils'
 local plfile = require 'pl.file'
 local plpath = require 'pl.path'
 require 'Q/UTILS/lua/strict'
+local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local Q       = require 'Q'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 --=======================================================
@@ -29,6 +30,7 @@ local function load1()
     set_name("effective_tm")
   T.expiry_tm = Q.SC_to_TM(T.expiry_d, format, { out_qtype = "TM1" }):
     set_name("expiry_tm")
+  lVector.conjoin({ T.effective_tm, T.expiry_tm})
   return T
 end
 return load1
