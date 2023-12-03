@@ -95,6 +95,7 @@ local function SC_to_TM(
       status = qc[subs.fn](base_ptr, nn_ptr, in_width, len, format, 
       cst_buf, cst_nn_buf)
     else
+      print("XXXX", subs.fn)
       status = qc[subs.fn](base_ptr, in_width, len, format, cst_buf)
     end
     record_time(start_time, "load_csv_fast")

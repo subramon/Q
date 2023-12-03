@@ -2,6 +2,7 @@
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local cutils  = require 'libcutils'
+local lgutils = require 'liblgutils'
 local cVector = require 'libvctr'
 local plpath  = require 'pl.path'
 local plfile  = require 'pl.file'
@@ -17,6 +18,8 @@ local qtypes = {
   "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8", }
 tests.t1 = function ()
   for _, qtype in ipairs(qtypes) do 
+    collectgarbage("stop")
+    assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
     local val_table = {1, 2, 3, 4, 5}
     local cnt_table = {1, 2, 4, 2, 1}
     local chk_val = Q.mk_col(val_table, qtype)
@@ -36,22 +39,37 @@ tests.t1 = function ()
     assert(cnt:qtype() == "I8")
     assert(val:qtype() == qtype)
   
-    local n1, n2 = Q.sum(Q.vveq(val, chk_val)):eval()
+    local x = Q.vveq(val, chk_val)
+    local r = Q.sum(x)
+    local n1, n2 = r:eval()
     assert(n1 == n2)
-    local n1, n2 = Q.sum(Q.vveq(cnt, chk_cnt)):eval()
+    x:delete()
+    r:delete()
+  
+    --=============================
+    local x = Q.vveq(cnt, chk_cnt)
+    local r = Q.sum(x)
+    local n1, n2 = r:eval()
     assert(n1 == n2)
+    x:delete()
+    r:delete()
   
     assert(val:check())
     assert(cnt:check())
     assert(chk_val:check())
     assert(chk_cnt:check())
     assert(a:check())
+    assert(cVector.check_all())
+    --=============================
     val:delete()
     cnt:delete()
     chk_val:delete()
     chk_cnt:delete()
     a:delete()
-    collectgarbage()
+    assert(lgutils.mem_used() == 0)
+    assert(lgutils.dsk_used() == 0)
+    collectgarbage("restart")
+    assert(cVector.check_all())
     print("Test t1 succeeded for qtype ", qtype)
   end
   print("Test t1 succeeded")
@@ -60,6 +78,8 @@ end
 -- validating unique to return unique values from input vector
 -- where num_elements are greater than chunk_size 
 tests.t2 = function ()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local len = qcfg.max_num_in_chunk * 2 + 17 
   local val_table = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
   local cnt_table = { 6556, 6556, 6556, 6555, 6555, 6555,
@@ -67,40 +87,84 @@ tests.t2 = function ()
   local period = 10
   local qtype = "I4"
   local inval = Q.period({start = 1, by = 1, period = 10, len = len, qtype = qtype })
-  inval = Q.sort(inval, "asc")
-  inval = inval:lma_to_chunks()
+  local inval1 = Q.sort(inval, "asc")
+  local inval2 = inval1:lma_to_chunks()
   local chk_val = Q.mk_col(val_table, qtype)
   local chk_cnt = Q.mk_col(cnt_table, qtype)
-  local val, cnt = Q.unique(inval)
+  local val, cnt = Q.unique(inval2)
 
-  local n1, n2 = Q.sum(Q.vveq(val, chk_val)):eval()
+  --=============================
+  local x = Q.vveq(cnt, chk_cnt)
+  local r = Q.sum(x)
+  local n1, n2 = r:eval()
   assert(n1 == n2)
-  local n1, n2 = Q.sum(Q.vveq(cnt, chk_cnt)):eval()
-  assert(n1 == n2)
+  x:delete()
+  r:delete()
+
+  assert(val:check())
+  assert(cnt:check())
+  assert(chk_val:check())
+  assert(chk_cnt:check())
+  assert(inval:check())
+  assert(inval1:check())
+  assert(inval2:check())
+
+  assert(val:delete())
+  assert(cnt:delete())
+  assert(chk_val:delete())
+  assert(chk_cnt:delete())
+  assert(inval:delete())
+  assert(inval1:delete())
+  assert(inval2:delete())
+
+  assert(lgutils.mem_used() == 0)
+  assert(lgutils.dsk_used() == 0)
+  collectgarbage("restart")
+  assert(cVector.check_all())
+
   print("Test t2 succeeded")
 end
 
 -- validating unique to return unique values from input vector
 -- where num_elements are greater than chunk_size
 tests.t3 = function ()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local len = 2*qcfg.max_num_in_chunk+ 17
   local qtype = "I8"
   local inval = Q.seq({start = 1, by = 1, len = len, qtype = qtype })
   local chk_cnt =  Q.const({val = 1, len = len, qtype = qtype })
   local val, cnt = Q.unique(inval)
 
-  local n1, n2 = Q.sum(Q.vveq(val, inval)):eval()
+  --=============================
+  local x = Q.vveq(val, inval)
+  local r = Q.sum(x)
+  local n1, n2 = r:eval()
   assert(n1 == n2)
-  local n1, n2 = Q.sum(Q.vveq(cnt, chk_cnt)):eval()
+  x:delete()
+  r:delete()
+
+  local x = Q.vveq(cnt, chk_cnt)
+  local r = Q.sum(x)
+  local n1, n2 = r:eval()
   assert(n1 == n2)
+  x:delete()
+  r:delete()
 
   assert(inval:check())
   assert(val:check())
   assert(cnt:check())
+  assert(chk_cnt:check())
   assert(cVector.check_all())
-  inval:delete()
-  val:delete()
-  cnt:delete()
+    --=============================
+  assert(inval:delete())
+  assert(val:delete())
+  assert(cnt:delete())
+  assert(chk_cnt:delete())
+  assert(lgutils.mem_used() == 0)
+  assert(lgutils.dsk_used() == 0)
+  collectgarbage("restart")
+  assert(cVector.check_all())
 
   print("Test t3 succeeded")
 end

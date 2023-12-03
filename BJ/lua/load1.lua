@@ -25,8 +25,10 @@ local function load1()
   assert(type(T.tcin) == "lVector")
   -- convert SC to TM
   local format = "%Y-%m-%d"
-  T.effective_tm = Q.SC_to_TM(T.effective_d, format, { out_qtype = "TM1" })
-  T.expiry_tm = Q.SC_to_TM(T.expiry_d, format, { out_qtype = "TM1" })
+  T.effective_tm = Q.SC_to_TM(T.effective_d, format, { out_qtype = "TM1" }):
+    set_name("effective_tm")
+  T.expiry_tm = Q.SC_to_TM(T.expiry_d, format, { out_qtype = "TM1" }):
+    set_name("expiry_tm")
   return T
 end
 return load1

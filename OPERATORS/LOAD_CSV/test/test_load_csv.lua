@@ -473,6 +473,4 @@ tests.t5()
 tests.t6()
 -- return tests
 collectgarbage()
-print("MEM", lgutils.mem_used())
-print("DSK", lgutils.dsk_used())
 assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
