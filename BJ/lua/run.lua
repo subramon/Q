@@ -101,7 +101,7 @@ for i, stop_time in ipairs(stop_times) do
   local keep = Q.vnot(to_del)
   local r = Q.sum(keep)
   local n1, n2 = r:eval()
-  t:delete()
+  t:delete() 
   x:delete()
   y:delete()
   z:delete()
@@ -111,7 +111,7 @@ for i, stop_time in ipairs(stop_times) do
   local num_to_keep = n1:to_num()
   if ( num_to_keep == 0 ) then 
     print("Nothing to keep from T1")
-  else
+  else -- ELSE AAAA 
     print(i, "Keeping " .. num_to_keep .. " from T1")
     -- ==========================================
     local T1prime = {}
@@ -125,28 +125,45 @@ for i, stop_time in ipairs(stop_times) do
       T1prime.tcin_loc, 
       T1prime.regular_retail_a, 
       T1prime.current_retail_a, 
-      T1prime.tcin, }, { opfile = "_x.csv" })
-    local X = Q.join(T1prime.regular_retail_a, T1prime.tcin, T4.tcin,
-     {"cnt", "sum"})
-    X.num:eval()
-    assert(X.sum:is_eov())
+      T1prime.tcin, }, { opfile = "_T1prime.csv" })
+    -- Join prices from T1prime to T 4
+    for _, fld in ipairs({"regular", "current"}) do 
+      infld = fld .. "_retail_a"
+      local join_types = {"cnt", "sum"}
+      local X = Q.join(T1prime[infld], T1prime.tcin, T4.tcin, join_types)
+      X.sum:eval()
+      X.cnt:pr()
+      assert(X.sum:num_elements() == T4.tcin:num_elements())
+      assert(X.cnt:is_eov())
+      local x = X.sum:get_nulls()
+      local denom = Q.ifxthenyelsez(x, X.cnt, 1) 
+      outfld = fld .. "_avg"
+      local tmp = Q.vvdiv(X.sum, denom)
+      T4[outfld] = Q.ifxthenyelsez(x, tmp, 0):eval()
+      T4[outfld]:set_nulls(x)
+      T4[outfld]:pr()
+      denom:delete()
+      tmp:delete()
+      for k, v in pairs(X) do v:delete() end 
+    end
+    -- get ready for printing 
+    T4.stop_time = Q.const({val = stop_time, qtype = "I4",
+      len = T4.tcin:num_elements()})
+    local Tpr = {}
+    local hdr = {}
+    for k, v in pairs(T4) do 
+      hdr[#hdr+1] = k
+      Tpr[#Tpr+1] = v
+    end
+    hdr = table.concat(hdr,",")
+    Q.print_csv(Tpr, { headers = hdr, opfile = "_T4.csv"})
+    --================================================
     for k, v in pairs(T1prime) do v:delete() end 
-    for k, v in pairs(X) do v:delete() end 
-  end
+    for k, v in pairs(T4) do v:delete() end 
+  end -- ELSE AAA
   keep:delete()
 end
-  --[==[[
--- Join prices from T1prime to T4
-  T4.regular_avg = Q.vvdiv(X.sum, X.num)
 
-  local X = Q.join(T1prime.current_retail_a, T1prime.tcin, T4.tcin,
-     {"num", "sum"})
-  T4.current_avg = Q.vvdiv(X.sum, X.num)
-  T4.regular_avg = Q.vvdiv(T4.regular_numer, T4.regular_denom)
-  T4.current_avg = Q.vvdiv(T4.current_numer, T4.current_denom)
-  Q.print_csv({T4.tcin, T4.regular_avg, T4.current_avg}, 
-  { opfile = "_x.csv"})
---]==]
 if ( true ) then 
   for k, v in pairs(T1) do v:delete() end 
   for k, v in pairs(T2) do v:delete() end 

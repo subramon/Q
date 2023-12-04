@@ -40,7 +40,14 @@ return function (
   assert(type(join_types) == "table")
   assert(#join_types >= 1)
   for k, join_type in ipairs(join_types) do 
+    assert(type(join_type) == "string")
     assert(is_in(join_type, good_join_types))
+  end
+  -- check no duplicates
+  for k1, j1 in ipairs(join_types) do 
+    for k2, j2 in ipairs(join_types) do 
+      if ( k1 ~= k2 ) then assert(j1~= j2)  end 
+    end
   end
   --===============================================
   for k, join_type in ipairs(join_types) do 
@@ -58,13 +65,19 @@ return function (
          ( join_type == "max" ) ) then
       dv_qtype = sv_qtype
     elseif ( join_type == "sum" ) then 
-      if ( is_int_qtype(sv_qtype) ) then 
+      if ( ( sv_qtype == "I1" ) or ( sv_qtype == "I2" ) or 
+           ( sv_qtype == "I4" ) or ( sv_qtype == "I8" ) ) then 
         dv_qtype = "I8"
+      elseif ( ( sv_qtype == "UI1" ) or ( sv_qtype == "UI2" ) or 
+           ( sv_qtype == "UI4" ) or ( sv_qtype == "UI8" ) ) then 
+        dv_qtype = "UI8"
       else
         dv_qtype = "F8"
       end
     elseif ( join_type == "cnt" ) then 
       dv_qtype = "I8"
+    elseif ( join_type == "is" ) then 
+      dv_qtype = "BL"
     else
       error("bad join_type")
     end
@@ -88,7 +101,14 @@ return function (
     subs.dst_val_cast_as = subs.dst_val_ctype .. " *"
     subs.dst_val_width = cutils.get_width_qtype(subs.dst_val_qtype)
     subs.dst_val_bufsz = subs.dst_val_width * subs.max_num_in_chunk
-    subs.nn_dst_val_bufsz = 1 * subs.max_num_in_chunk
+    if ( ( join_type == "cnt" ) or ( join_type == "is" ) ) then
+      -- no null value created
+      subs.dst_has_nulls = false
+      subs.nn_dst_val_bufsz = 0
+    else
+      subs.dst_has_nulls = true
+      subs.nn_dst_val_bufsz = 1 * subs.max_num_in_chunk
+    end
   
     -- NOTE separate template for each join type 
     subs.tmpl   = "OPERATORS/JOIN/lua/join_" .. join_type.. ".tmpl"

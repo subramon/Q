@@ -53,13 +53,18 @@ local function expander_join(
       -- allocate buffers for output 
       local dv_bufs = {}; local nn_dv_bufs = {}
       for _, join_type in ipairs(join_types) do
-        local dv_buf = assert(cmem.new(subs.src_val_bufsz))
-        dv_buf:zero()
+        local dv_buf = assert(cmem.new(subs.dst_val_bufsz))
+        -- for k, v in pairs(subs) do print(k,v) end 
+        dv_buf:zero() -- IMPORTANT initialization
         dv_buf:stealable(true)
   
-        local nn_dv_buf = assert(cmem.new(subs.nn_dst_val_bufsz))
-        nn_dv_buf:zero()
-        nn_dv_buf:stealable(true)
+        local nn_dv_buf
+        if ( subs.dst_has_nulls ) then 
+          -- not all join types produce a nn vector 
+          nn_dv_buf = assert(cmem.new(subs.nn_dst_val_bufsz))
+          nn_dv_buf:zero() -- IMPORTANT initialization
+          nn_dv_buf:stealable(true)
+        end
 
         dv_bufs[join_type]    = dv_buf
         nn_dv_bufs[join_type] = nn_dv_buf
@@ -76,7 +81,7 @@ local function expander_join(
           src_last_chunk_gotten = -1
         end
         dv_buf:delete()
-        nn_dv_buf:delete()
+        if ( nn_dv_buf ) then nn_dv_buf:delete() end 
         for _, join_type in ipairs(join_types) do 
           if ( join_type ~= my_join_type ) then
             vectors[join_type]:eov() -- tell other vectors they are over 
@@ -109,16 +114,20 @@ local function expander_join(
           --======================================================
         -- with the same values of sl, sv, dl we perform many different joins
         for k, join_type in ipairs(join_types) do
-          local dv_ptr  = ffi.cast(subs.src_val_cast_as, 
+          local dv_ptr  = ffi.cast(subs.dst_val_cast_as, 
             get_ptr(dv_bufs[join_type]))
-          local nn_dv_ptr  = ffi.cast("bool *", 
-            get_ptr(nn_dv_bufs[join_type]))
+          local nn_dv_ptr = ffi.NULL
+          if ( nn_dv_bufs[join_type] ) then 
+            nn_dv_ptr  = ffi.cast("bool *", 
+              get_ptr(nn_dv_bufs[join_type]))
+          end
           local func_name = subs.fn
           --[[
           print("Calling   " .. func_name 
             .. " src_start = " .. src_start[0] 
             .. " dst_start = " .. dst_start[0])
             --]]
+          print("FUNC", func_name)
           local status = qc[func_name](
             sv_ptr, sl_ptr, src_start, sl_len, dl_ptr, dv_ptr, nn_dv_ptr, 
             dst_start, dl_len)
@@ -161,7 +170,8 @@ local function expander_join(
         end 
       end
       dst_lnk:unget_chunk(l_chunk_num)
-      -- print("DST: Ungetting " .. l_chunk_num)
+      print("DST: Ungetting " .. l_chunk_num)
+      print("SRC: Returning " .. dl_len) 
       l_chunk_num = l_chunk_num + 1 
       return dl_len, dv_bufs[my_join_type], nn_dv_bufs[my_join_type]
         --===================================================
@@ -171,9 +181,9 @@ local function expander_join(
   for _, join_type in ipairs(join_types) do 
     local subs = multi_subs[join_type]
     local vargs = {}
-    vargs.has_nulls        = true
+    vargs.has_nulls        = subs.dst_has_nulls
     vargs.gen              = gens[join_type]
-    vargs.qtype            = subs.src_val_qtype
+    vargs.qtype            = subs.dst_val_qtype
     vargs.max_num_in_chunk = subs.max_num_in_chunk
 
     vectors[join_type] = lVector(vargs)

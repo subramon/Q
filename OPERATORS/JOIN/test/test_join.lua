@@ -119,6 +119,90 @@ tests.t2 = function()
   end
   print("Test t2 succeeded")
 end
-tests.t1()
-tests.t2()
+tests.t3_sum = function ()
+  for _, qtype in ipairs(qtypes) do 
+    local sl = Q.mk_col(
+      {1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4,4, 5 }, qtype)
+    local sv = Q.vsmul(sl, 10)
+    local dl = Q.mk_col(
+      {1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5}, qtype)
+    local T = Q.join(sv, sl, dl, { "sum" })
+    assert(type(T) == "table")
+    local dv_sum = assert(T.sum)
+    assert(type(dv_sum) == "lVector")
+    local dv_qtype = dv_sum:qtype()
+    --============================
+    if ( ( qtype == "I1" ) or ( qtype == "I2" ) or 
+         ( qtype == "I4" ) or ( qtype == "I8" ) ) then 
+      assert(dv_qtype == "I8")
+    elseif ( ( qtype == "UI1" ) or ( qtype == "UI2" ) or 
+         ( qtype == "UI4" ) or ( qtype == "UI8" ) ) then 
+      assert(dv_qtype == "UI8")
+    else
+      assert(dv_qtype == "F8")
+    end
+    --============================
+    assert(dv_sum:has_nulls())
+    assert(dv_sum:max_num_in_chunk() == sv:max_num_in_chunk())
+    dv_sum:set_name("dv_sum")
+
+    dv_sum:eval()
+    Q.print_csv({sv,sl}, {header = "sv,sl",  opfile = "_src.csv"})
+    dv_sum:drop_nulls() -- for print to work 
+    Q.print_csv({dl,dv_sum}, {header = "dl,dv",  opfile = "_dst.csv"})
+    -- dv_sum:pr()
+    assert(sl:check())
+    assert(sv:check())
+    assert(dl:check())
+    assert(dv_sum:check())
+    sl:delete()
+    sv:delete()
+    dl:delete()
+    dv_sum:delete()
+    cVector.check_all()
+    print("Test t3_sum succeeded for qtype .. ", qtype)
+    -- error("PREMATURE")
+  end
+  print("Test t3_sum succeeded")
+end
+tests.t3_cnt = function ()
+  for _, qtype in ipairs(qtypes) do 
+    local sl = Q.mk_col(
+      {1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4,4, 5 }, qtype)
+    local sv = Q.vsmul(sl, 10)
+    local dl = Q.mk_col(
+      {1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5}, qtype)
+    local T = Q.join(sv, sl, dl, { "cnt" })
+    assert(type(T) == "table")
+    local dv_cnt = assert(T.cnt)
+    assert(type(dv_cnt) == "lVector")
+    local dv_qtype = dv_cnt:qtype()
+    assert(dv_qtype == "I8")
+    assert(not dv_cnt:has_nulls())
+    assert(dv_cnt:max_num_in_chunk() == sv:max_num_in_chunk())
+    dv_cnt:set_name("dv_cnt")
+
+    dv_cnt:eval()
+    Q.print_csv({sv,sl}, {header = "sv,sl",  opfile = "_src.csv"})
+    dv_cnt:drop_nulls() -- for print to work 
+    Q.print_csv({dl,dv_cnt}, {header = "dl,dv",  opfile = "_dst.csv"})
+    -- dv_cnt:pr()
+    assert(sl:check())
+    assert(sv:check())
+    assert(dl:check())
+    assert(dv_cnt:check())
+    sl:delete()
+    sv:delete()
+    dl:delete()
+    dv_cnt:delete()
+    cVector.check_all()
+    print("Test t3_cnt succeeded for qtype .. ", qtype)
+    -- error("PREMATURE")
+  end
+  print("Test t3_sum succeeded")
+end
+-- WORKS tests.t1()
+-- WORKS tests.t2()
+-- WORKS tests.t3_sum()
+tests.t3_cnt()
 -- return tests
