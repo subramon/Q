@@ -1,8 +1,10 @@
 -- FUNCTIONAL 
+local plpath = require 'pl.path'
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local qtypes = { "I4", "I8", "F4", "F8", }
 local tests = {}
+local qcfg = require 'Q/UTILS/lua/qcfg'
 --=========================================
 tests.t1 = function()
   for _, qtype in ipairs(qtypes) do 
@@ -45,5 +47,23 @@ tests.t1 = function()
   print("Test t1 succeeded")
 
 end
-tests.t1()
+tests.t2 = function()
+  local M = {}
+  local O = { is_hdr = true }
+  M[#M+1] = { name = "val", qtype = "I8", has_nulls = false}
+  M[#M+1] = { name = "idx", qtype = "I4", has_nulls = false}
+  local datafile = qcfg.q_src_root .. "/OPERATORS/IDX_SORT/test/test1.csv"
+  assert(plpath.isfile(datafile))
+  local T = Q.load_csv(datafile, M, O)
+  T.val:eval()
+  local srt_idx, srt_val = Q.idx_sort(T.idx, T.val, "asc")
+  srt_idx = srt_idx:lma_to_chunks()
+  srt_val = srt_val:lma_to_chunks()
+  local tcin = Q.shift_right(srt_val, 33):eval()
+  Q.print_csv({tcin, srt_val, srt_idx}, { opfile = "_temp.csv"})
+  print("Test t2 completed")
+end
+
+-- WORKS tests.t1()
+tests.t2()
 -- return tests

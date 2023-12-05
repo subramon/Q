@@ -17,7 +17,6 @@ return function (a, b, optargs)
   assert( (b_qtype == "BL") or (b_qtype == "B1"))
   assert(not b:has_nulls())
   assert(b:max_num_in_chunk() > 0)
-  print("XXXXXX", b:max_num_in_chunk(), max_num_in_chunk)
   assert(b:max_num_in_chunk() == max_num_in_chunk)
 
   subs.fn      = "where_" .. a_qtype .. "_" .. b_qtype 

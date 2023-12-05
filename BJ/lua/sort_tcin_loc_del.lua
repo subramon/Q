@@ -1,7 +1,9 @@
 local Q = require 'Q'
 local Scalar = require 'libsclr'
 
-local function sort_tcin_loc_del(tcin, location_id, to_del, is_debug)
+local function sort_tcin_loc_del(tcin, location_id, to_del, 
+    with_idx, is_debug)
+  assert(type(with_idx) == "boolean")
   if ( type(is_debug) == "nil" ) then
     is_debug = false
   end
@@ -12,11 +14,15 @@ local function sort_tcin_loc_del(tcin, location_id, to_del, is_debug)
   --=================================================
   local r = Q.sum(to_del)
   local num_to_del = r:eval()
+  r:delete()
   local x = Q.shift_left(tcin, 1)
   local y = Q.shift_left(location_id, 1)
-  local z = Q.vvor(y, to_del)
+  local z = Q.vvor(y, to_del):eval()
+  y:delete()
   --=================================================
-  local compkey = Q.concat(x, z)
+  local compkey = Q.concat(x, z):eval()
+  x:delete()
+  z:delete()
   local one = Scalar.new(1, compkey:qtype())
   if ( is_debug ) then 
     local x = Q.vsand(compkey, one)
@@ -26,8 +32,19 @@ local function sort_tcin_loc_del(tcin, location_id, to_del, is_debug)
     x:delete()
     r:delete()
   end 
-  local srt_compkey = Q.sort(compkey, "asc")
-  srt_compkey = srt_compkey:lma_to_chunks()
+  local srt_compkey, srt_idx
+  local len = tcin:num_elements()
+  if ( with_idx ) then 
+    local idx = Q.seq({start = 0, by = 1, qtype = "I4", len = len}):eval()
+    x, y = Q.idx_sort(idx, compkey, "asc")
+    srt_idx     = x:lma_to_chunks(); x:delete()
+    srt_compkey = y:lma_to_chunks(); y:delete()
+    Q.print_csv({srt_compkey, srt_idx}, { opfile = "_sorted.csv"})
+    idx:delete()
+  else
+    y = Q.sort(compkey, "asc")
+    srt_compkey = y:lma_to_chunks(); y:delete()
+  end
   
   if ( is_debug ) then 
     assert(srt_compkey:num_elements() == compkey:num_elements())
@@ -55,6 +72,6 @@ local function sort_tcin_loc_del(tcin, location_id, to_del, is_debug)
   srt_compkey:delete()
   to_del:delete()
   -- STOP : Just for testing 
-  return tcin_loc, out_to_del 
+  return tcin_loc, out_to_del, srt_idx
 end
 return  sort_tcin_loc_del

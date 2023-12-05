@@ -21,7 +21,7 @@ local function expander_join(
   if not status then 
     print(multi_subs); error("Specializer failed " .. sp_fn_name)
   end
-  for _, subs in pairs(multi_subs) do 
+  for i, subs in pairs(multi_subs) do 
     local func_name = subs.fn 
     qc.q_add(subs)
     assert(qc[func_name], "Symbol not defined " .. func_name)
@@ -53,6 +53,7 @@ local function expander_join(
       -- allocate buffers for output 
       local dv_bufs = {}; local nn_dv_bufs = {}
       for _, join_type in ipairs(join_types) do
+        local subs = multi_subs[join_type]
         local dv_buf = assert(cmem.new(subs.dst_val_bufsz))
         -- for k, v in pairs(subs) do print(k,v) end 
         dv_buf:zero() -- IMPORTANT initialization
@@ -75,7 +76,7 @@ local function expander_join(
       -- print("DST:   Getting " .. l_chunk_num .. " of size " .. dl_len)
       if ( dl_len == 0 ) then
         if ( true ) then -- TODO P0 MAJOR HACK
-          print("XXXXXX")
+          print("XXXXXX MAJOR HACK THINK THIS THROUGH XXXXXX ")
           sv_buf:unget_chunk(src_last_chunk_gotten)
           sl_buf:unget_chunk(src_last_chunk_gotten)
           src_last_chunk_gotten = -1
@@ -95,7 +96,7 @@ local function expander_join(
       -- to produce one chunk of dv 
       local iter = 1 -- for debugging 
       while true do  -- start while loop AA
-        print("Iteration " .. iter .. " for dst chunk ".. l_chunk_num)
+        -- print("Iteration " .. iter .. " for dst chunk ".. l_chunk_num)
         local sv_len, sv_buf = src_val:get_chunk(src_chunk_num)
         local sl_len, sl_buf = src_lnk:get_chunk(src_chunk_num)
          -- print("SRC:   Getting " .. src_chunk_num)
@@ -113,7 +114,12 @@ local function expander_join(
         local dl_ptr  = ffi.cast(subs.src_lnk_cast_as, get_ptr(dl_buf))
           --======================================================
         -- with the same values of sl, sv, dl we perform many different joins
+        local init_src_start = src_start[0]
+        local init_dst_start = dst_start[0]
+        local final_src_start 
+        local final_dst_start
         for k, join_type in ipairs(join_types) do
+          local subs = multi_subs[join_type]
           local dv_ptr  = ffi.cast(subs.dst_val_cast_as, 
             get_ptr(dv_bufs[join_type]))
           local nn_dv_ptr = ffi.NULL
@@ -122,24 +128,33 @@ local function expander_join(
               get_ptr(nn_dv_bufs[join_type]))
           end
           local func_name = subs.fn
+
+          src_start[0] = init_src_start
+          dst_start[0] = init_dst_start
           --[[
           print("Calling   " .. func_name 
+            .. " join_type = " .. join_type 
+            .. " iter = " .. iter 
             .. " src_start = " .. src_start[0] 
             .. " dst_start = " .. dst_start[0])
             --]]
-          print("FUNC", func_name)
+
           local status = qc[func_name](
             sv_ptr, sl_ptr, src_start, sl_len, dl_ptr, dv_ptr, nn_dv_ptr, 
             dst_start, dl_len)
           assert(status == 0)
-          --[[
+          final_src_start = src_start[0]
+          final_dst_start = dst_start[0]
+--[[
           print("Done with " .. func_name 
             .. " src_start = " .. src_start[0] 
             .. " src_len = " .. sl_len 
             .. " dst_start = " .. dst_start[0] 
             .. " dst_len = " .. dl_len )
-            --]]
+--]]
         end
+        src_start[0] = final_src_start
+        dst_start[0] = final_dst_start
         -- unget the source, we may end up getting same chunk again 
         -- print("SRC: Ungetting " .. src_chunk_num)
         src_val:unget_chunk(src_chunk_num)
@@ -152,11 +167,11 @@ local function expander_join(
             src_chunk_num = src_chunk_num + 1
             src_start[0] = 0
           else
-            print("Will continue working on same src chunk")
+            -- print("Will continue working on same src chunk")
           end
         end
         if ( dst_start[0] == dl_len ) then
-          print("Breaking while loop")
+          -- print("Breaking while loop")
           break 
         end
         iter = iter + 1 

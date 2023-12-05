@@ -779,6 +779,7 @@ function lVector:chunks_to_lma()
 end
 --==================================================
 function lVector:lma_to_chunks()
+  -- TODO MAKE THIS IDEMPOTENT. Not currently the case
   local new_vec = setmetatable({}, lVector)
   new_vec._qtype  = self:qtype()
   new_vec._base_vec = assert(cVector.lma_to_chnks(self._base_vec))

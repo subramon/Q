@@ -49,11 +49,7 @@ ${fn}(
 
   // If no source values available, all dst_values are set to null
   if ( ( src_val == NULL ) || ( *ptr_src_start >= sn ) ) {
-    for ( ; ; didx++ ) { 
-      if ( didx >= dn ) { break; }
-      if ( dst_val[didx] > 0 ) { continue; } // IMPORTANT 
-      dst_val[didx] = 0;
-    }
+    didx = dn;
     goto BYE;
   }
   if ( *ptr_src_start >= sn ) { go_BYE(-1); } 
