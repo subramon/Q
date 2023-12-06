@@ -756,6 +756,23 @@ function lVector.conjoin(T)
   end
 end
 --==================================================
+function lVector:append(x)
+  assert(type(x) == "lVector")
+  assert(x:is_eov())
+  assert(self:is_eov())
+  assert(x:is_lma())
+  assert(self:is_lma())
+  if ( self:has_nulls() ) then assert(x:has_nulls()) end 
+  if ( not self:has_nulls() ) then assert(not x:has_nulls()) end 
+
+  assert(cVector.append(self._base_vec, x._base_vec))
+  if ( self:has_nulls() ) then 
+    print("NOP NOP NOP ")
+    -- TODO 
+  end
+  return  true -- TODO P0 MAJOR HACK 
+end
+--==================================================
 function lVector:early_free()
   return  cVector.early_free(self._base_vec)
 end
@@ -765,32 +782,36 @@ function lVector:self()
 end
 --==================================================
 function lVector:chunks_to_lma()
-  local new_vec = setmetatable({}, lVector)
-  new_vec._qtype  = self:qtype()
-  new_vec._base_vec = assert(cVector.chnks_to_lma(self._base_vec))
+  local new_vector = setmetatable({}, lVector)
+  new_vector._qtype  = self:qtype()
+  new_vector._base_vec = assert(cVector.chnks_to_lma(self._base_vec))
   if ( self._nn_vec ) then 
-    local nn_vec = assert(self._nn_vec)
-    assert(type(nn_vec) == "lVector")
-    assert(( nn_vec:qtype() == "B1" ) or ( nn_vec:qtype() == "BL" ))
-    new_nn_vec._base_vec = assert(cVector.chnks_to_lma(self._nn_vec))
-    new_vec._nn_vec = new_nn_vec
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+
+    local new_nn_vector = setmetatable({}, lVector)
+    new_nn_vector._base_vec = cVector.chnks_to_lma(nn_vector._base_vec)
+    new_vector._nn_vector = new_nn_vector
   end
-  return new_vec
+  return new_vector
 end
 --==================================================
 function lVector:lma_to_chunks()
   -- TODO MAKE THIS IDEMPOTENT. Not currently the case
-  local new_vec = setmetatable({}, lVector)
-  new_vec._qtype  = self:qtype()
-  new_vec._base_vec = assert(cVector.lma_to_chnks(self._base_vec))
+  local new_vector = setmetatable({}, lVector)
+  new_vector._qtype  = self:qtype()
+  new_vector._base_vec = assert(cVector.lma_to_chnks(self._base_vec))
   if ( self._nn_vec ) then 
-    local nn_vec = assert(self._nn_vec)
-    assert(type(nn_vec) == "lVector")
-    assert(( nn_vec:qtype() == "B1" ) or ( nn_vec:qtype() == "BL" ))
-    new_nn_vec._base_vec = assert(cVector.lma_to_chnks(self._nn_vec))
-    new_vec._nn_vec = new_nn_vec
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+
+    local new_nn_vector = setmetatable({}, lVector)
+    new_nn_vector._base_vec = cVector.lma_to_chnks(nn_vector._base_vec)
+    new_vector._nn_vec = new_nn_vector
   end
-  return new_vec
+  return new_vector
 end
 --==================================================
 function lVector:get_lma_read()

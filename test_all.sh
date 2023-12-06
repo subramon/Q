@@ -8,12 +8,27 @@ if [ "$LUA_CPATH" == "" ]; then echo "ERROR: source setup.sh"; exit 1; fi
 # TODO P0 Put vector:check() for every vector created 
 # TODO P0 Put DFE scripts as part of tests 
 
+cd ~/Q/RUNTIME/CMEM/test/
+qjit test_cmem.lua
+# qjit stress_test_cmem.lua
+
+cd ~/Q/RUNTIME/CUTILS/test/
+qjit test_cutils.lua
+# qjit stress_test.lua
+
+cd ~/Q/RUNTIME/SCLR/test/
+qjit test_sclr_cmem.lua
+qjit test_sclr_arith.lua 
+qjit test_sclr_eq.lua 
+qjit test_sclr_I8.lua
+qjit test_sclr.lua
+
 cd ~/Q/RUNTIME/VCTRS/src/
 ./ut1
 ./ut2
 ./ut_memo
 cd ~/Q/RUNTIME/VCTRS/test/
-qjit test1.lua  
+qjit test1.lua  # TODO NEEDS WORK 
 qjit test_lma.lua  
 qjit test_memo.lua  
 qjit test_ref_count.lua
@@ -26,6 +41,10 @@ qjit test_import.lua
 rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/data/
 rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/meta/
 #--------------------------------------------------------
+
+cd ~/Q/OPERATORS/JOIN/test/
+qjit  test_join.lua
+qjit  test_join_2.lua
 
 cd ~/Q/OPERATORS/S_TO_F/test/
 qjit  test_const.lua

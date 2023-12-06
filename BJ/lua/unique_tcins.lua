@@ -7,7 +7,7 @@ local function unique_tcins(tcin)
   assert(type(cnt) == "lVector")
   val:eval()
   assert(cnt:num_elements() == val:num_elements())
-  -- Q.print_csv({val,cnt}, {opfile = "_initial_T4.csv"})
+  Q.print_csv({val,cnt}, {opfile = "_initial_T4.csv"})
   local T4 = {}
   T4.tcin = val; 
   cnt:delete()

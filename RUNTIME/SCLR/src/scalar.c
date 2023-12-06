@@ -529,7 +529,7 @@ static int l_sclr_new( lua_State *L) {
     if ( qtype == Q0 ) { go_BYE(-1); }
   }
   else {
-    qtype = I8; // default 
+    qtype = F8; // default  -- use same behavior as Lua
   }
   SCLR_REC_TYPE *ptr_sclr = NULL;
   ptr_sclr = (SCLR_REC_TYPE *)lua_newuserdata(L, sizeof(SCLR_REC_TYPE));

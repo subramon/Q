@@ -201,8 +201,8 @@ tests.t3_cnt = function ()
   end
   print("Test t3_sum succeeded")
 end
--- WORKS tests.t1()
--- WORKS tests.t2()
--- WORKS tests.t3_sum()
+tests.t1()
+tests.t2()
+tests.t3_sum()
 tests.t3_cnt()
 -- return tests

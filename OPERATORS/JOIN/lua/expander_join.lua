@@ -131,13 +131,13 @@ local function expander_join(
 
           src_start[0] = init_src_start
           dst_start[0] = init_dst_start
-          --[[
+--[[
           print("Calling   " .. func_name 
             .. " join_type = " .. join_type 
             .. " iter = " .. iter 
             .. " src_start = " .. src_start[0] 
             .. " dst_start = " .. dst_start[0])
-            --]]
+--]]
 
           local status = qc[func_name](
             sv_ptr, sl_ptr, src_start, sl_len, dl_ptr, dv_ptr, nn_dv_ptr, 
@@ -185,8 +185,8 @@ local function expander_join(
         end 
       end
       dst_lnk:unget_chunk(l_chunk_num)
-      print("DST: Ungetting " .. l_chunk_num)
-      print("SRC: Returning " .. dl_len) 
+      -- print("DST: Ungetting " .. l_chunk_num)
+      -- print("SRC: Returning " .. dl_len) 
       l_chunk_num = l_chunk_num + 1 
       return dl_len, dv_bufs[my_join_type], nn_dv_bufs[my_join_type]
         --===================================================

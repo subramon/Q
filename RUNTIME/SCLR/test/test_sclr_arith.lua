@@ -17,10 +17,10 @@ tests.t1 = function ()
     w = (z == Scalar.new(333, "F4"))
     assert(w == true)
 
-    assert(Scalar.gt(z, 331))
-    assert(Scalar.lt(z, 334))
-    assert(Scalar.geq(z, 333))
-    assert(Scalar.leq(z, 333))
+    assert(Scalar.gt(z, Scalar.new(331)))
+    assert(Scalar.lt(z, Scalar.new(334)))
+    assert(Scalar.geq(z, Scalar.new(333)))
+    assert(Scalar.leq(z, Scalar.new(333)))
 
     --[[ TODO P4 Would be nice if following syntax would work
     assert(z > 331)

@@ -53,6 +53,7 @@
 #include "vctr_width.h"
 #include "num_read_write.h"
 
+#include "vctr_append.h"
 #include "vctr_kill.h"
 
 #ifdef NEEDED
@@ -129,6 +130,24 @@ static int l_vctr_kill( lua_State *L) {
   //------------------------------
   status = vctr_kill(ptr_v->tbsp, ptr_v->uqid ); 
   if ( status != 0 ) { goto BYE; } // silent error 
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------------
+static int l_vctr_append( lua_State *L) {
+  int status = 0;
+  int num_args =  lua_gettop(L);
+  if ( num_args != 2 ) { go_BYE(-1); } 
+  VCTR_REC_TYPE *ptr_dst = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  VCTR_REC_TYPE *ptr_src = (VCTR_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
+  //------------------------------
+  status = vctr_append(ptr_dst->tbsp, ptr_dst->uqid,
+    ptr_src->tbsp, ptr_src->uqid);
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -1273,6 +1292,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "is_killable", l_vctr_is_killable },
     { "nop", l_vctr_nop },
     //--------------------------------
+    { "append",           l_vctr_append },
     { "get_lma_read",     l_get_lma_read },
     { "get_lma_write",    l_get_lma_write },
     { "unget_lma_read",   l_unget_lma_read },
@@ -1344,6 +1364,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "kill", l_vctr_kill },
     { "killable", l_vctr_killable },
     //--------------------------------
+    { "append",           l_vctr_append },
     { "get_lma_read",     l_get_lma_read },
     { "get_lma_write",    l_get_lma_write },
     { "unget_lma_read",   l_unget_lma_read },

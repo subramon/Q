@@ -44,6 +44,7 @@ SRCS +=	vctr_num_elements.c
 SRCS +=	vctr_new_uqid.c  
 SRCS +=	vctr_persist.c  
 SRCS +=	vctr_kill.c  
+SRCS +=	vctr_append.c  
 SRCS +=	vctr_print.c  
 SRCS +=	vctr_putn.c  
 SRCS +=	vctr_put1.c 

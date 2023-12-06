@@ -31,6 +31,9 @@ local function load1()
   T.expiry_tm = Q.SC_to_TM(T.expiry_d, format, { out_qtype = "TM1" }):
     set_name("expiry_tm")
   lVector.conjoin({ T.effective_tm, T.expiry_tm})
+  T.expiry_tm:eval() -- DEL_FOR_OPT 
+  assert(T.effective_tm:is_eov()) -- DEL_FOR_OPT
+  assert(T.tcin:is_eov()) -- DEL_FOR_OPT
   return T
 end
 return load1

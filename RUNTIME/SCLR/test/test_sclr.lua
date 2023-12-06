@@ -8,14 +8,14 @@ local status, x, s1, s2, s3, r1, r2
 local tests = {}
 tests.t1 = function()
   -- create boolean scalars in several different ways
-  local sb = assert(Scalar.new("true", "B1"))
-  sb = assert(Scalar.new(true, "B1"))
+  local sb = assert(Scalar.new("true", "BL"))
+  sb = assert(Scalar.new(true, "BL"))
   local x = assert(Scalar.to_str(sb))
   assert(x == "true")
-  sb = Scalar.new("false", "B1")
+  sb = Scalar.new("false", "BL")
   assert(Scalar.to_str(sb) == "false")
   print(sb:qtype())
-  assert(sb:qtype() == "B1")
+  assert(sb:qtype() == "BL")
   print("test 1 passed")
 end
 
@@ -323,8 +323,8 @@ tests.t15 = function()
   -- TODO print("test t15 passed")
 end
 -- return tests
-tests.t2()
 tests.t1()
+tests.t2()
 tests.t3()
 tests.t4()
 tests.t5()
@@ -337,6 +337,6 @@ tests.t10_I4()
 tests.t10_I8()
 tests.t11()
 tests.t12()
--- tests.t13()
--- tests.t14()
--- tests.t15()
+tests.t13()
+tests.t14()
+tests.t15()

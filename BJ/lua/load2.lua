@@ -18,6 +18,8 @@ local function load2()
   local T = Q.load_csv(datafile, M, O)
   assert(type(T) == "table")
   assert(type(T.tcin) == "lVector")
+  T.tcin:eval() -- DEL_FOR_OPT
+  assert(T.location_id:is_eov()) -- DEL_FOR_OPT
   return T
 end
 return load2
