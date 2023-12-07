@@ -171,6 +171,23 @@ BYE:
   return 2;
 }
 //----------------------------------------------
+static int l_vctr_file_info( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  int64_t sz;
+  char * name = vctr_file_info(ptr_v->tbsp, ptr_v->uqid, &sz);
+  if ( name == NULL ) { go_BYE(-1); } 
+  lua_pushstring(L, name); // 99% sure that no strdup needed
+  lua_pushnumber(L, sz); 
+  return 2;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------------
 static int l_vctr_get_name( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
@@ -1302,7 +1319,9 @@ static const struct luaL_Reg vector_methods[] = {
     { "set_memo", l_vctr_set_memo },
     { "set_name", l_vctr_set_name },
     //--------------------------------
+    { "count", l_vctr_count },
     { "name", l_vctr_get_name },
+    { "file_info", l_vctr_file_info },
     { "qtype", l_vctr_get_qtype },
     { "num_chunks", l_vctr_num_chunks },
     { "num_elements", l_vctr_num_elements },
@@ -1376,6 +1395,7 @@ static const struct luaL_Reg vector_functions[] = {
     //--------------------------------
     { "count", l_vctr_count },
     { "name", l_vctr_get_name },
+    { "file_info", l_vctr_file_info },
     { "qtype", l_vctr_get_qtype },
     { "num_chunks", l_vctr_num_chunks },
     { "num_elements", l_vctr_num_elements },

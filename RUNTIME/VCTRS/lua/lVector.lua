@@ -342,7 +342,12 @@ end
 
 -- TODO P2 Think whether taking nn away from current is desired behavior
 function lVector:get_nulls() -- IMPORTANT Takes away nn from current vector
-  local x = assert(self._nn_vec) -- must have an nn_vec currently
+  -- must have an nn_vec currently
+  if ( not self._nn_vec ) then 
+    print("No nn vector, returning nil") 
+    return nil 
+  end 
+  local x = assert(self._nn_vec) 
   self._nn_vec = nil
   return x
 end
@@ -866,14 +871,6 @@ function lVector:unget_lma_write()
   return self
 end
 --==================================================
---[[ DEPRECATED
-function lVector:make_lma()
-  -- TODO P3 What about nn vector?
-  local file_name, file_sz = cVector.make_lma(self._base_vec)
-  return file_name, file_sz 
-end
---]]
---==================================================
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
 function lVector:kill()
   local nn_success
@@ -944,6 +941,12 @@ function lVector:cast(qtype) -- DANGEROUS, USE WITH CAUTION
   assert(cVector.cast(self._base_vec, qtype))
   self._qtype = qtype
   return self
+end
+--==================================================
+function lVector:file_info() 
+  local file_name, sz = cVector.file_info(self._base_vec)
+  if ( file_name == ffi.NULL ) then return nil, 0 end 
+  return file_name, sz
 end
 --==================================================
 return lVector
