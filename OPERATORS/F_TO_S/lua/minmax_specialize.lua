@@ -5,7 +5,7 @@ local Scalar    = require 'libsclr'
 local lVector   = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
-local good_qtypes =  { "I1", "I2", "I4", "I8", "F4", "F8", 
+local good_qtypes =  { "BL", "I1", "I2", "I4", "I8", "F4", "F8", 
   "UI1", "UI2", "UI4", "UI8", }
 local qc        = require 'Q/UTILS/lua/qcore'
 

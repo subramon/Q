@@ -6,7 +6,7 @@ local tests = {}
 
 local function in_t1 (n)
   local x = Q.seq( {start = 0, by = 1, qtype = "I4", len = n} )
-  local y = Q.seq( {start = 1, by = 1, qtype = "I4", len = n} )
+  local y = Q.seq( {start = 10, by = 10, qtype = "I4", len = n} )
   local z = Q.concat(x, y)
   assert(z:qtype() == "I8")
   local X = Q.split(z, { out_qtypes = { "I4", "I4", }})
@@ -33,14 +33,10 @@ local function in_t1 (n)
   U[4] = y1
   Q.print_csv(U, { impl = "C", opfile = "_xx" .. tostring(n) })
 
-  --[[ TODO 
   local n1, n2 = Q.sum(Q.vveq(x, x1)):eval()
   assert(n1 == n2)
-  assert(n1:to_num() == n)
   local n1, n2 = Q.sum(Q.vveq(y, y1)):eval()
   assert(n1 == n2)
-  assert(n1:to_num() == n)
-  --]]
 
   print("Successfully completed t1")
   return true

@@ -129,16 +129,18 @@ for i, stop_time in ipairs(stop_times) do
     T1prime.current_retail_a = Q.where(T1.current_retail_a, keep):eval()
     keep:delete()
 
-    local tmp = Q.shift_right(T1prime.tcin_loc, 32)
-    T1prime.tcin = Q.vconvert(tmp, "I4"):eval()
-    tmp:delete()
-    --[[
+    local tmp = Q.split(T1prime.tcin_loc, { out_qtypes = { "I4", "I4" }})
+    T1prime.tcin = tmp[1]
+    T1prime.location_id = tmp[2]
+    T1prime.location_id:eval()
+
     Q.print_csv({
-      T1prime.tcin_loc, 
+      T1prime.tcin, 
+      T1prime.location_id, 
       T1prime.regular_retail_a, 
       T1prime.current_retail_a, 
-      T1prime.tcin, }, { opfile = "_T1prime_" stop_time . ".csv" })
-      --]]
+    }, { opfile = "_T1prime_" .. stop_time .. ".csv" })
+
     -- Join prices from T1prime to T4
     for i, fld in ipairs({"regular", "current", }) do 
       infld = fld .. "_retail_a"

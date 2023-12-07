@@ -17,10 +17,29 @@ local function sort_tcin_loc_del(tcin, location_id, to_del,
   r:delete()
   local x = Q.shift_left(tcin, 1)
   local y = Q.shift_left(location_id, 1)
+  -- location_id:eval(); location_id:pr("_locaton_id")
+  -- y:eval(); y:pr("_shifted_location_id")
+  if ( is_debug ) then 
+    local n1, n2 = Q.min(to_del):eval()
+    assert(n1:to_num() >= 0)
+    local n1, n2 = Q.max(to_del):eval()
+    assert(n1:to_num() <= 1)
+  end
   local z = Q.vvor(y, to_del):eval()
   y:delete()
   --=================================================
   local compkey = Q.concat(x, z):eval()
+  if ( is_debug ) then 
+    local X = Q.split(compkey, { out_qtypes = { "I4", "I4"}})
+    X[1]:eval()
+    local n1, n2 = Q.sum(Q.vveq(X[1], x)):eval()
+    assert(n1 == n2)
+    local n1, n2 = Q.sum(Q.vveq(X[2], z)):eval()
+    assert(n1 == n2)
+    -- X[2]:pr()
+    X[1]:delete()
+    X[2]:delete()
+  end
   x:delete()
   z:delete()
   local one = Scalar.new(1, compkey:qtype())

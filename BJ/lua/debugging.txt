@@ -1,0 +1,98 @@
+There is a discrepancy between what I produce and what is in price_features_cds.csv Here is my debugging steps. 
+
+Let us focus on one "stop time": -- 2023-11-04 = 1699056000 -- Saturday
+In other words, we are focusing on the week that ends on this Saturday.
+
+Let us focus on one tcin: 88347594. 
+My results are as follows
+
+tcin,n_stores,stop_time,
+88347594,1953,1699056000,
+current_avg,current_min,current_max,
+316.544020,29.990000,449.989990,
+regular_avg,regular_min,regular_max
+449.774936,29.990000,449.989990
+
+let us take this one step a time.  We have 2 tables
+T1 = price_cds_dump.csv
+T2 = ils_cds_dump.csv
+
+=============================================================
+* Number of rows in T2 = 7950 
+Verified by 
+$ wc ../data/ils_cds_dump.csv
+  7951   7951 172868 ../data/ils_cds_dump.csv # 1 line for header
+=============================================================
+* Number of rows in T2 to be deleted = 1 
+  based on item_location_status_c IN { "M", "S", "I" } 
+This is validated by 
+$ grep '"S"' ils_cds_dump.csv | wc
+      1       1      21
+$ grep '"M"' ils_cds_dump.csv | wc
+      0       0       0
+$ grep '"I"' ils_cds_dump.csv | wc
+      0       0       0
+
+=============================================================
+* Number of rows in T1 = 14011
+Verified by 
+$ wc ../data/price_cds_dump.csv
+ 14012  14012 916401 ../data/price_cds_dump.csv
+=============================================================
+* Number of rows in T1 to be deleted = 0
+  based on channel_n !=  "STORE"
+This is validated by 
+$ grep -v '"STORE"' price_cds_dump.csv | grep -v tcin | wc
+      0       0       0
+=============================================================
+Number of rows to be deleted from T1 based on T2 = 0 
+This is validated by 
+
+$ grep '"S"' ils_cds_dump.csv
+"13462173","332","S"
+$ grep 13462173 price_cds_dump.csv | grep '"332"' | wc
+      0       0       0
+=============================================================
+Based on above,
+Number of rows to be deleted from T1 = 0
+=============================================================
+Now, let's see how many rows of T1 need to be deleted based on time
+According to my code, the number of rows that pass == 5570
+See _T1prime.csv (attached)
+
+Assume for the minute that this is good. Let's see whether it matches the 
+output
+count matches based on
+grep 88347594 _T1prime_1699056000.csv | wc
+   1953    1953   69819
+===========================================
+For regular price
+min matches based on 
+grep 88347594 _T1prime_1699056000.csv | cut -f 3 -d "," | sort -n | head -1
+29.990000
+max matches based on 
+grep 88347594 _T1prime_1699056000.csv | cut -f 3 -d "," | sort -n | tail -n 1
+449.989990
+avg matches based on ((29.99*1)+(449.99*1952))/(1+1952) = 449.7749
+
+===========================================
+For current price
+min matches based on 
+$ grep 88347594 _T1prime_1699056000.csv | cut -f 4 -d "," | sort -n | head -1
+29.990000
+max matches bsed on 
+$ grep 88347594 _T1prime_1699056000.csv | cut -f 4 -d "," | sort -n | tail -n 1
+449.989990
+avg matches based on 
+$ grep 88347594 _T1prime_1699056000.csv | cut -f 4 -d "," | sort -n |  grep '29.99' | wc
+      1       1      10
+$ grep 88347594 _T1prime_1699056000.csv | cut -f 4 -d "," | sort -n |  grep '249.99' | wc
+   1301    1301   14311
+$ grep 88347594 _T1prime_1699056000.csv | cut -f 4 -d "," | sort -n |  grep '449.98' | wc
+    651     651    7161
+
+avg = ((29.99*1)+(249.99*1301)+(449.98*651))/(1+1301+651)=316.54
+
+I *suspect* that the problem lies in my logic for eliminating rows in T1 table
+based on the stop time, effective_d, expiry_d. Any suggestions on how we probe
+further?
