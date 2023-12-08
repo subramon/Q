@@ -295,6 +295,29 @@ load_csv_fast(
           status = set_bit_u64(data_ptr, row_ctr, tempI1); cBYE(status);
         }
         break;
+      case BL:
+        {
+          bool *data_ptr = (bool *)data[col_ctr];
+          bool tempBL = false;
+          if ( !is_val_null ) { 
+            if ( ( strcasecmp(buf, "true") == 0 ) || 
+                  ( strcmp(buf, "1") == 0 ) ) { 
+              tempBL = true;
+            }
+            else {
+              if ( ( strcasecmp(buf, "false") == 0 ) || 
+                  ( strcmp(buf, "0") == 0 ) ) { 
+                tempBL = false;
+              }
+              else {
+                fprintf(stderr, "Bad value for boolean = [%s] \n", buf);
+                go_BYE(-1);
+              }
+            }
+          }
+          data_ptr[row_ctr] = tempBL;
+        }
+        break;
       case I1:
         {
           int8_t *data_ptr = (int8_t *)data[col_ctr];

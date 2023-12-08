@@ -10,6 +10,8 @@ local lgutils  = require 'liblgutils'
 local blksz = qcfg.max_num_in_chunk 
 local tests = {}
 tests.t1 = function() 
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local val = (2048*1048576)-1
   local len = blksz * 2 + 3
   local qtype = "I4"
@@ -61,9 +63,11 @@ tests.t1 = function()
   -- make a few more vectors just for fun
   local c3 = Q.const(args):set_name("c3"):eval()
   local c4 = Q.const(args):set_name("c4"):eval()
+  assert(cVector.check_all(true, true)) -- checking on all vectors
   c3:delete()
   c4:delete()
 
+  collectgarbage("restart")
   assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   assert(cVector.check_all(true, true)) -- checking on all vectors
   print("Test t1 succeeded")

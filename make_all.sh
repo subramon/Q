@@ -30,7 +30,7 @@ cd $Q_SRC_ROOT/RUNTIME/VCTRS/src/; make clean && make
 cd $Q_SRC_ROOT/QJIT/LuaJIT-2.1.0-beta3/src; rm -f ./luajit; make
 
 #--- generate specializers
-pushd . ; cd $Q_SRC_ROOT/OPERATORS/F1S1OPF2/lua; make clean && make; popd;
+# pushd . ; cd $Q_SRC_ROOT/OPERATORS/F1S1OPF2/lua; make clean && make; popd;
 
 # FOR ASAN export LD_PRELOAD=/usr/lib/gcc/arm-linux-gnueabihf/8/libasan.so
 

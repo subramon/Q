@@ -201,8 +201,42 @@ tests.t3_cnt = function ()
   end
   print("Test t3_sum succeeded")
 end
-tests.t1()
-tests.t2()
-tests.t3_sum()
-tests.t3_cnt()
+tests.t_is = function()
+  local O = { is_hdr = true, max_num_in_chunk = 64  }
+  local M = {}
+  M[#M+1] = { name = "id", qtype = "I4", has_nulls = false, }
+  M[#M+1] = { name = "lnk", qtype = "I4", has_nulls = false, }
+  M[#M+1] = { name = "val", qtype = "I4", has_nulls = false, }
+  local datafile = qcfg.q_src_root ..  "/OPERATORS/JOIN/test/join_src_is.csv"
+  assert(plpath.isfile(datafile))
+  local Tsrc = Q.load_csv(datafile, M, O)
+  assert(Tsrc.id:max_num_in_chunk() == 64)
+  -- load destination data 
+  local M = {}
+  M[#M+1] = { name = "id", qtype = "I4", has_nulls = false, }
+  M[#M+1] = { name = "lnk", qtype = "I4", has_nulls = false, }
+  M[#M+1] = { name = "is", qtype = "BL", has_nulls = false, }
+  datafile = qcfg.q_src_root ..  "/OPERATORS/JOIN/test/join_dst_is.csv"
+  assert(plpath.isfile(datafile))
+  local Tdst = Q.load_csv(datafile, M, O)
+  assert(Tdst.id:max_num_in_chunk() == 64)
+
+  local T = Q.join(Tsrc.val, Tsrc.lnk, Tdst.lnk, { "is" })
+  assert(type(T) == "table")
+  local dv_is = assert(T.is)
+  assert(type(dv_is) == "lVector")
+  assert(dv_is:qtype() == "BL")
+
+  dv_is:eval()
+  local n1, n2 = Q.sum(Q.vveq(dv_is, Tdst.is)):eval()
+  assert(n1 == n2)
+
+  print("Test join [is] succeeded")
+end
+
+-- tests.t1()
+-- tests.t2()
+-- tests.t3_sum()
+-- tests.t3_cnt()
+tests.t_is()
 -- return tests

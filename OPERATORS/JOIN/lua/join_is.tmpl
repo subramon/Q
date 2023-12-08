@@ -1,0 +1,86 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+#include "q_incs.h"
+//START_FOR_CDEF
+extern int
+${fn}(
+      const ${src_val_ctype} * const src_val, // [sn] 
+      const ${src_lnk_ctype} * const src_lnk, // [sn] 
+      uint32_t *ptr_src_start,
+      uint32_t sn,
+      const ${src_lnk_ctype} * const dst_lnk, // [dn] 
+      ${dst_val_ctype} * dst_val, // [dn] 
+      bool * nn_dst_val, // [dn] 
+      uint32_t *ptr_dst_start,
+      uint32_t dn
+      );
+//STOP_FOR_CDEF
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+int
+${fn}(
+      const ${src_val_ctype} * const src_val, // [sn] 
+      const ${src_lnk_ctype} * const src_lnk, // [sn] 
+      uint32_t *ptr_src_start,
+      uint32_t sn,
+      const ${src_lnk_ctype} * const dst_lnk, // [dn] 
+      ${dst_val_ctype} * dst_val, // [dn] 
+      bool * nn_dst_val, // [dn] 
+      uint32_t *ptr_dst_start,
+      uint32_t dn
+      )
+{
+  int status = 0;
+  
+
+  if ( nn_dst_val != NULL ) { go_BYE(-1); }
+  if ( dst_val == NULL ) { go_BYE(-1); }
+  if ( dst_lnk == NULL ) { go_BYE(-1); }
+  if ( *ptr_dst_start >= dn ) { go_BYE(-1); } // TODO CHECK > or >=
+
+  uint32_t sidx = *ptr_src_start; 
+  uint32_t didx = *ptr_dst_start; 
+
+  if ( src_val == NULL ) { if ( src_lnk != NULL ) { go_BYE(-1); } }
+  if ( src_val != NULL ) { if ( src_lnk == NULL ) { go_BYE(-1); } }
+
+  // If no source values available, all dst_values are set to null
+  if ( ( src_val == NULL ) || ( *ptr_src_start >= sn ) ) {
+    didx = dn;
+    goto BYE;
+  }
+  if ( *ptr_src_start >= sn ) { go_BYE(-1); } 
+  if ( sidx >= sn ) { go_BYE(-1); } 
+  if ( didx >= dn ) { go_BYE(-1); } 
+  //---------------------
+  for ( int i = 0; ; i++ ) { 
+    // for debugging printf("Iteration  %d \n", i);
+    if ( sidx >= sn ) { 
+      *ptr_src_start = sn; goto BYE;
+    }
+    if ( didx >= dn ) { 
+      *ptr_dst_start = dn; goto BYE;
+    }
+    ${src_lnk_ctype} l_src_lnk = src_lnk[sidx];
+    ${src_lnk_ctype} l_dst_lnk = dst_lnk[didx];
+    if ( l_src_lnk < l_dst_lnk ) { 
+      sidx++;
+    }
+    else if ( l_src_lnk > l_dst_lnk ) { 
+      didx++; 
+    }
+    else { // l_src_lnk == l_dst_lnk 
+      dst_val[didx] = true;
+      didx++; 
+    }
+  }
+BYE:
+  *ptr_src_start = sidx; 
+  *ptr_dst_start = didx;
+  return status;
+}
+]],
+}
