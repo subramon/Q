@@ -8,6 +8,7 @@ local qc        = require 'Q/UTILS/lua/qcore'
 local qcfg      = require 'Q/UTILS/lua/qcfg'
 local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
 local is_int_qtype = require 'Q/UTILS/lua/is_int_qtype'
+local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 
 -- cdef the necessary struct within pcall to prevent error on second call
 local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
@@ -22,7 +23,7 @@ return function (
   local qtype = assert(largs.qtype)
   local len   = assert(largs.len)
   local by    = assert(largs.by)
-  assert(is_int_qtype(qtype))
+  assert(is_base_qtype(qtype)) -- at one time I had restricted this to int
   assert(len > 0, "vector length must be positive")
 
   local subs = {};

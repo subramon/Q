@@ -1,0 +1,45 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include "q_macros.h"
+//START_FOR_CDEF
+extern int
+permute_from_${val_qtype}_${perm_qtype}(
+    const ${val_ctype} * const x,
+    const ${perm_ctype} * const p,
+    uint32_t n,
+    uint64_t num_elements,
+    ${val_ctype} *y
+    );
+//STOP_FOR_CDEF
+
+]],
+definition = [[
+
+#include "permute_from_${val_qtype}_${perm_qtype}.h"
+
+int
+permute_from_${val_qtype}_${perm_qtype}(
+    const ${val_ctype} *const x,
+    const ${perm_ctype} * const p,
+    uint32_t n,
+    uint64_t num_elements,
+    ${val_ctype} *y
+    )
+{
+  int status = 0;
+  for ( uint32_t i = 0; i < n; i++ ) { 
+    ${perm_ctype} pos = p[i];
+    if ( pos < 0 ) { go_BYE(-1); } 
+    if ( (uint64_t)pos >= num_elements ) { go_BYE(-1); } 
+    ${val_ctype} xval = x[pos];
+    y[i] = xval; }
+BYE:
+  return status;
+}
+]]
+}

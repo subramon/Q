@@ -72,10 +72,15 @@ cprint(
           break;
         case BL : fprintf(fp, "%s", ((const bool *)X)[i] ? "true" : "false");
                   break;
+
         case I1 : fprintf(fp, "%d", ((const int8_t *)X)[i]); break;
         case I2 : fprintf(fp, "%d", ((const int16_t *)X)[i]); break;
         case I4 : fprintf(fp, "%d", ((const int32_t *)X)[i]); break;
         case I8 : fprintf(fp, "%" PRIi64 "", ((const int64_t *)X)[i]); break;
+        case UI1 : fprintf(fp, "%u", ((const uint8_t *)X)[i]); break;
+        case UI2 : fprintf(fp, "%u", ((const uint16_t *)X)[i]); break;
+        case UI4 : fprintf(fp, "%u", ((const uint32_t *)X)[i]); break;
+        case UI8 : fprintf(fp, "%" PRIu64 "", ((const uint64_t *)X)[i]); break;
         case F4 : fprintf(fp, "%f", ((const float *)X)[i]); break;
         case F8 : fprintf(fp, "%lf", ((const double *)X)[i]); break;
         case SC :  

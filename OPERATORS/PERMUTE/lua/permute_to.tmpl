@@ -8,7 +8,7 @@ return require 'Q/UTILS/lua/code_gen' {
 #include "q_macros.h"
 //START_FOR_CDEF
 extern int
-permute_${val_qtype}_${perm_qtype}(
+permute_to_${val_qtype}_${perm_qtype}(
     ${val_ctype} *x,
     ${perm_ctype} *p,
     uint32_t n,
@@ -23,7 +23,7 @@ definition = [[
 #include "permute_${val_qtype}_${perm_qtype}.h"
 
 int
-permute_${val_qtype}_${perm_qtype}(
+permute_to_${val_qtype}_${perm_qtype}(
     ${val_ctype} *x,
     ${perm_ctype} *p,
     uint32_t n,

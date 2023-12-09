@@ -5,10 +5,10 @@ local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local qc       = require 'Q/UTILS/lua/qcore'
 local record_time = require 'Q/UTILS/lua/record_time'
 
-local function expander_permute(x, p, direction, optargs)
-  local specializer = "Q/OPERATORS/PERMUTE/lua/permute_specialize"
+local function expander_permute_to(x, p, optargs)
+  local specializer = "Q/OPERATORS/PERMUTE/lua/permute_to_specialize"
   local spfn = assert(require(specializer))
-  local subs = assert(spfn(x, p, direction, optargs))
+  local subs = assert(spfn(x, p, optargs))
   assert(type(subs) == "table")
   local func_name = assert(subs.fn)
   qc.q_add(subs)
@@ -58,7 +58,7 @@ local function expander_permute(x, p, direction, optargs)
   -- Indicate write is over 
   y:unget_lma_write()
   y:eov()
-  record_time(t_start, "permute")
+  record_time(t_start, "permute_to")
   return y
 end
-return expander_permute
+return expander_permute_to

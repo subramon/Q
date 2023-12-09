@@ -27,7 +27,7 @@ local function get_ptr(
     local ctype = cutils.str_qtype_to_str_ctype(qtype)
     if ( ctype == nil ) then
       local cast_as = qtype
-      assert(ends_with(trim(qtype), "*"))
+      assert(ends_with(trim(qtype), "*"), "bad qtype = " .. qtype)
       ret_ptr = ffi.cast(cast_as, y)
     else
       ret_ptr = ffi.cast(ctype .. " *", y)

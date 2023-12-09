@@ -53,18 +53,18 @@ local prm_qtypes = { "I1", "I2", "I4", "I8", }
       p2args.qtype = prm_qtype 
       local p2 = Q.seq(p2args):set_name("p2")
 
-      local y = Q.permute(x, p, "to", yargs):set_name("y")
+      local y = Q.permute_to(x, p, yargs):set_name("y")
       assert(type(y) == "lVector")
       assert(y:is_eov())
       y = y:lma_to_chunks()
       -- y:pr()
 
-      local y2 = Q.permute(x, p2, "to", yargs):set_name("y")
+      local y2 = Q.permute_to(x, p2, yargs):set_name("y")
       assert(type(y2) == "lVector")
       assert(y2:is_eov())
       y2 = y2:lma_to_chunks()
 
-      local z = Q.permute(y, p, "to", zargs):set_name("z")
+      local z = Q.permute_to(y, p, zargs):set_name("z")
       assert(z:is_eov())
       z = z:lma_to_chunks()
       local n1, n2 = Q.sum(Q.vveq(x, z)):eval()

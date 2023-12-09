@@ -46,7 +46,7 @@ local function process_opt_args(
   for i, v in ipairs(outV) do 
     num_vecs = num_vecs + 1
     assert(type(v) == "lVector")
-    assert(v:is_eov())
+    assert(v:is_eov(), "vector not complete " .. i .. v:name())
     if ( i == 1 ) then
       lenV = v:num_elements()
       max_num_in_chunk = v:max_num_in_chunk()

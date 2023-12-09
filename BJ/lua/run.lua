@@ -47,6 +47,8 @@ local to_del = Q.vnot(to_keep)
 local T1_tcin_loc, T1_to_del, T1_srt_idx = sort_tcin_loc_del(
   T1.tcin, T1.location_id, to_del, true, is_debug)
 assert(type(T1_srt_idx) == "lVector")
+T1_srt_idx:pr("_srt_idx")
+T1_tcin_loc:pr("_tcin_loc")
 -- at this stage, we have (from T1)
 -- (1) T1_tcin_loc which is a composite key sorted ascendiing with 
 -- tcin in top 32 bits and location_id in bottom 32 bits
@@ -84,14 +86,27 @@ T1.expiry_secs = y
 assert(T1_srt_idx:is_eov())
 assert(T1.expiry_secs:num_elements() == T1_srt_idx:num_elements())
 assert(T1.expiry_secs:max_num_in_chunk() == T1_srt_idx:max_num_in_chunk())
-local x = Q.permute(T1.expiry_secs, T1_srt_idx, "to")
-local y = x:lma_to_chunks(); x:delete(); 
-T1.expiry_secs:delete(); T1.expiry_secs = y
-
 assert(T1.effective_secs:num_elements() == T1_srt_idx:num_elements())
-local x = Q.permute(T1.effective_secs, T1_srt_idx, "to")
-local y = x:lma_to_chunks(); x:delete()
-T1.effective_secs:delete(); T1.effective_secs = y
+
+local x = T1.expiry_secs:chunks_to_lma()
+local y = Q.permute_from(x, T1_srt_idx):eval()
+x:delete(); T1.expiry_secs:delete(); T1.expiry_secs = y
+
+local x = T1.effective_secs:chunks_to_lma()
+local y = Q.permute_from(x, T1_srt_idx):eval()
+x:delete(); T1.effective_secs:delete(); T1.effective_secs = y
+
+local x = T1.lno:chunks_to_lma()
+local y = Q.permute_from(x, T1_srt_idx):eval()
+x:delete(); T1.lno:delete(); T1.lno = y
+
+local x = T1.regular_retail_a:chunks_to_lma()
+local y = Q.permute_from(x, T1_srt_idx):eval()
+x:delete(); T1.regular_retail_a:delete(); T1.regular_retail_a = y
+
+local x = T1.current_retail_a:chunks_to_lma()
+local y = Q.permute_from(x, T1_srt_idx):eval()
+x:delete(); T1.current_retail_a:delete(); T1.current_retail_a = y
 
 --=========================================
 
@@ -124,6 +139,7 @@ for i, stop_time in ipairs(stop_times) do
     T4.stop_time = Q.const({val = stop_time, 
       len = T4.tcin:num_elements(), qtype = "I4"}):eval()
     local T1prime = {}
+    T1prime.lno              = Q.where(T1.lno, keep):eval()
     T1prime.tcin_loc         = Q.where(T1_tcin_loc, keep):eval()
     T1prime.regular_retail_a = Q.where(T1.regular_retail_a, keep):eval()
     T1prime.current_retail_a = Q.where(T1.current_retail_a, keep):eval()
@@ -135,6 +151,7 @@ for i, stop_time in ipairs(stop_times) do
     T1prime.location_id:eval()
 
     Q.print_csv({
+      T1prime.lno, 
       T1prime.tcin, 
       T1prime.location_id, 
       T1prime.regular_retail_a, 

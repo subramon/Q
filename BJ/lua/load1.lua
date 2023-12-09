@@ -12,6 +12,7 @@ local rootdir = assert(os.getenv("Q_SRC_ROOT"))
 local function load1()
   local M = {}
   local O = { is_hdr = true }
+  M[#M+1] = { name = "lno", qtype = "I4", has_nulls = false, memo_len = -1 }
   M[#M+1] = { name = "tcin", qtype = "I4", has_nulls = false, memo_len = -1 }
   M[#M+1] = { name = "location_id", qtype = "I4", has_nulls = false, memo_len = -1  }
   M[#M+1] = { name = "effective_d", qtype = "SC", width = 12, has_nulls = false, memo_len = -1  }
@@ -34,6 +35,25 @@ local function load1()
   T.expiry_tm:eval() -- DEL_FOR_OPT 
   assert(T.effective_tm:is_eov()) -- DEL_FOR_OPT
   assert(T.tcin:is_eov()) -- DEL_FOR_OPT
+  T.tcin:eval()
+  --[[
+  local cols = {
+    "lno",
+    "tcin",
+    "location_id",
+    "effective_secs", 
+    "effective_d",
+    "expiry_secs",
+    "expiry_d", }
+  local Tpr = {}
+  local hdrs = {}
+  for i, k in ipairs(cols) do 
+    Tpr[i] = T[k]
+    hdrs[i] = k
+  end
+  local header = table.concat(hdrs, ",")
+  Q.print_csv(Tpr, { opfile = "_T.csv", impl = "C", header = header})
+  --]]
   return T
 end
 return load1

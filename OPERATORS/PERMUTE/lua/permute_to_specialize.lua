@@ -2,7 +2,7 @@ local cutils  = require 'libcutils'
 local lgutils = require 'liblgutils'
 local is_in   = require 'Q/UTILS/lua/is_in'
 
-local function permute_specialize(invec, p, direction, optargs)
+local function permute_to_specialize(invec, p, optargs)
   local subs = {}
 
   if ( optargs ) then assert(type(optargs) == "table") end 
@@ -12,24 +12,16 @@ local function permute_specialize(invec, p, direction, optargs)
   assert(not invec:has_nulls())
   assert(not p:has_nulls())
 
-  assert(type(direction) == "string")
-  assert( ( direction == "from" ) or ( direction == "to" ) ) 
-  local n = 0
-  if ( direction == "from" ) then
-    error("TO BE IMPLEMENTED")
-  elseif ( direction == "to" ) then
     -- we need to know size of output vector 
-    if ( invec:is_eov() ) then 
-      n = invec:num_elements()
-    elseif ( p:is_eov() ) then 
-      n = p:num_elements()
-    else
-      assert(type(optargs) == "table")
-      assert(type(optargs.num_elements) == "number")
-      n = optargs.num_elements 
-    end
+  local n = 0
+  if ( invec:is_eov() ) then 
+    n = invec:num_elements()
+  elseif ( p:is_eov() ) then 
+    n = p:num_elements()
   else
-    error("invalid direction" .. direction)
+    assert(type(optargs) == "table")
+    assert(type(optargs.num_elements) == "number")
+    n = optargs.num_elements 
   end
   assert((type(n) == "number") and (n > 0))
   subs.num_elements = n
@@ -53,18 +45,17 @@ local function permute_specialize(invec, p, direction, optargs)
     assert(is_in(subs.perm_qtype, { "I8" }))
   end
 
-  subs.direction = direction
-  subs.file_name = "_permute_" .. (cutils.rdtsc() % 2^32)-- some temp name 
+  subs.file_name = "_permute_to_" .. (cutils.rdtsc() % 2^32)-- some temp name 
   subs.dir_name  = lgutils.data_dir()
   subs.file_sz   = subs.val_width * subs.num_elements
   --========================================
-  subs.fn = "permute_" .. subs.val_qtype .. "_" .. subs.perm_qtype
+  subs.fn = "permute_to_" .. subs.val_qtype .. "_" .. subs.perm_qtype
 
-  subs.tmpl   = "OPERATORS/PERMUTE/lua/permute.tmpl"
+  subs.tmpl   = "OPERATORS/PERMUTE/lua/permute_to.tmpl"
   subs.incdir = "OPERATORS/PERMUTE/gen_inc/"
   subs.srcdir = "OPERATORS/PERMUTE/gen_src/"
   subs.incs = { "UTILS/inc/", "OPERATORS/PERMUTE/gen_inc/" }
   return subs
 end
-return permute_specialize
+return permute_to_specialize
 
