@@ -14,6 +14,7 @@ local load1 = require 'load1'
 local load2 = require 'load2'
 local sort_tcin_loc_del = require 'sort_tcin_loc_del'
 local unique_tcins = require 'unique_tcins'
+local permute = require 'permute'
 
 local is_debug = true 
 collectgarbage("stop")
@@ -88,26 +89,8 @@ assert(T1.expiry_secs:num_elements() == T1_srt_idx:num_elements())
 assert(T1.expiry_secs:max_num_in_chunk() == T1_srt_idx:max_num_in_chunk())
 assert(T1.effective_secs:num_elements() == T1_srt_idx:num_elements())
 
-local x = T1.expiry_secs:chunks_to_lma()
-local y = Q.permute_from(x, T1_srt_idx):eval()
-x:delete(); T1.expiry_secs:delete(); T1.expiry_secs = y
-
-local x = T1.effective_secs:chunks_to_lma()
-local y = Q.permute_from(x, T1_srt_idx):eval()
-x:delete(); T1.effective_secs:delete(); T1.effective_secs = y
-
-local x = T1.lno:chunks_to_lma()
-local y = Q.permute_from(x, T1_srt_idx):eval()
-x:delete(); T1.lno:delete(); T1.lno = y
-
-local x = T1.regular_retail_a:chunks_to_lma()
-local y = Q.permute_from(x, T1_srt_idx):eval()
-x:delete(); T1.regular_retail_a:delete(); T1.regular_retail_a = y
-
-local x = T1.current_retail_a:chunks_to_lma()
-local y = Q.permute_from(x, T1_srt_idx):eval()
-x:delete(); T1.current_retail_a:delete(); T1.current_retail_a = y
-
+permute(T1_srt_idx, T1, {"expiry_secs", "effective_secs", "lno", 
+"regular_retail_a", "current_retail_a", })
 --=========================================
 
 local final_T4 = {}; local final_empty = true
