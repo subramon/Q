@@ -46,7 +46,6 @@ local function SC_to_XX(
       out_len   = out_len   + 1
       ptr_to_chars = ptr_to_chars + in_width
     end
-    assert(out_len == len)
     invec:unget_chunk(chunk_idx)
     if ( len <  max_num_in_chunk ) then return len, buf end 
     chunk_idx = chunk_idx + 1
