@@ -51,7 +51,7 @@ local function vehicle_tpc_circ_cart(T)
   local b1 = Q.vseq(T.pvehicle, rev_pvehicle_lkp['TPC'])
   local b2 = Q.vseq(T.pvehicle, rev_pvehicle_lkp['CIRCULAR'])
   local b3 = Q.vseq(T.pvehicle, rev_pvehicle_lkp['CARTWHEEL'])
-  local b4  = Q.vvand(b1, b2)
+  local b4  = Q.vvor(b1, b2)
   local b   = Q.vvor(b4, b3)
   return b
 end 
@@ -73,10 +73,10 @@ local function finance_selector(T)
   local b3 = Q.vseq(T.finance_type, 23)
   local b4 = Q.vseq(T.finance_type, 26)
   local b5 = Q.vseq(T.finance_type, 28)
-  local b6 = Q.vvand(b1, b2)
-  local b7 = Q.vvand(b6, b3)
-  local b8 = Q.vvand(b7, b4)
-  local b  = Q.vvand(b8, b5)
+  local b6 = Q.vvor(b1, b2)
+  local b7 = Q.vvor(b6, b3)
+  local b8 = Q.vvor(b7, b4)
+  local b  = Q.vvor(b8, b5)
   return b
 end 
 
@@ -96,14 +96,18 @@ local function select_promo(
   -- package.loaded['Q/UTILS/lua/qcfg'].memo_len = 1
   qcfg._modify("memo_len", 1)
   qcfg._modify("is_killable", true)
-    -- b.calendar_d between a.promotion_start_ct_ts and a.promotion_end_ct_ts
+  -- b.calendar_d between a.promotion_start_ct_ts and a.promotion_end_ct_ts
   local a  = time_selector(T, calendar_lb, calendar_ub)
+  a:eval(); print(a:num_elements())
   -- lower(promotion_status) in ('ready','messaging','live', 'completed']
   local b = status_selector(T)
+  b:eval(); print(b:num_elements())
   -- AND lower(promotion_channel) in ('online_and_store', 'store_only']
   local c = channel_selector(T)
+  c:eval(); print(c:num_elements())
   -- AND UPPER(trim(promotion_vehicle)) IN ('TPC', 'CIRCULAR', 'CARTWHEEL']
   local d = vehicle_tpc_circ_cart(T)
+  d:eval(); print(d:num_elements())
   -- (promotion_type = 'Sale']
   local is_sale = Q.vseq(T.ptype, rev_ptype_lkp['Sale'])
   -- (promotion_type = 'basket']
