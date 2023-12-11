@@ -46,6 +46,7 @@ qcfg.memo_len = -1 --  Vector code uses this default value
 -- 1 means 1 previous chunk kept, 2 means 2 previous chunks and so on
 -- TODO THINK qcfg.has_nulls = false -- Vector code uses this default value
 
+qcfg.is_killable = false -- DO NOT CHANGE THIS 
 -- Following function used to modify qcfg at run time 
 local function modify(key, val)
   qcfg[key] = val

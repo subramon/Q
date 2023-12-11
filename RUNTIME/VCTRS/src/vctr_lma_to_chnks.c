@@ -65,7 +65,8 @@ vctr_lma_to_chnks(
 
   // Create output vector 
   uint32_t new_uqid = 0; 
-  status = vctr_add1(v.qtype, v.width, v.max_num_in_chnk, -1, &new_uqid);
+  status = vctr_add1(v.qtype, v.width, v.max_num_in_chnk, -1, 
+      v.is_killable, &new_uqid);
   cBYE(status);
   // START check that output vector got created
   uint32_t new_where;

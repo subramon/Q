@@ -1028,7 +1028,7 @@ static int l_vctr_add1( lua_State *L)
 {
   int status = 0;
   VCTR_REC_TYPE *ptr_v = NULL;
-  bool is_key; int64_t itmp; 
+  bool is_key; int64_t itmp; bool is_killable = false;
   const char * str_qtype = NULL, *str_name = NULL, *file_name = NULL;
   uint32_t width = 0; 
   uint32_t max_num_in_chnk;
@@ -1039,6 +1039,9 @@ static int l_vctr_add1( lua_State *L)
   if ( !lua_istable(L, 1) ) { go_BYE(-1); }
   luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
   // CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
+  //------------------- get is_killable 
+  status = get_bool_from_tbl(L, 1, "is_killable", &is_key, &is_killable);  
+  cBYE(status);
   //------------------- get name
   status = get_str_from_tbl(L, 1, "name", &is_key, &str_name);  
   cBYE(status);
@@ -1084,7 +1087,7 @@ static int l_vctr_add1( lua_State *L)
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
   status = vctr_add1(qtype, width, max_num_in_chnk, memo_len,
-      &ptr_v->uqid); 
+      is_killable, &ptr_v->uqid); 
   cBYE(status);
   if ( ( str_name != NULL ) && ( * str_name != '\0' ) ) {
     status = vctr_set_name(ptr_v->tbsp, ptr_v->uqid, str_name); cBYE(status);

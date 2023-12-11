@@ -62,7 +62,7 @@ vctr_kill(
   int status = 0;
   if ( tbsp != 0 ) { go_BYE(-1); } 
   bool is_found; uint32_t where_found = ~0;
-  vctr_rs_hmap_key_t key; memset(&key, 0, sizeof(vctr_rs_hmap_key_t));
+  vctr_rs_hmap_key_t key = vctr_uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);

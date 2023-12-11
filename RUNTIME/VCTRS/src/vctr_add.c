@@ -17,6 +17,7 @@ vctr_add1(
     uint32_t width,
     uint32_t in_max_num_in_chnk,
     int memo_len,
+    bool is_killable,
     uint32_t *ptr_uqid
     )
 {
@@ -50,7 +51,7 @@ vctr_add1(
   vctr_rs_hmap_val_t val = 
     { .qtype = qtype, .max_num_in_chnk = max_num_in_chnk, 
       .memo_len = memo_len, .width = width, .num_chnks = 0,
-      .ref_count = 1 } ;
+      .is_killable = is_killable, .ref_count = 1 } ;
   status = g_vctr_hmap[tbsp].put(&g_vctr_hmap[tbsp], &key, &val); cBYE(status);
 #ifdef DEBUG
   new_vctr_cnt = vctr_cnt(tbsp);

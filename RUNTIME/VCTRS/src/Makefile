@@ -87,6 +87,7 @@ TEST3_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
 TEST3_SRCS += ../../../QJIT/GUTILS/src/lua_state.c
 TEST3_OBJS = $(TEST3_SRCS:.c=.o)
 
+# QCFLAGS += -DVERBOSE
 # NOTE: Add -DVERBOSE to following to get messages printed out 
 .c.o : 
 	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 

@@ -45,6 +45,7 @@ vctr_chnks_to_lma(
   if ( v.num_elements == 0 ) { go_BYE(-1); }
   if ( v.width == 0 ) { go_BYE(-1); }
   if ( v.is_lma ) { go_BYE(-1); }
+  if ( v.is_killable ) { go_BYE(-1); }
   if ( v.num_readers != 0 ) { go_BYE(-1); }
   if ( v.num_writers != 0 ) { go_BYE(-1); }
   if ( v.X != NULL ) { go_BYE(-1); }
@@ -60,9 +61,9 @@ vctr_chnks_to_lma(
 
   // Create output vector 
   uint32_t new_uqid = 0; 
-  status = vctr_add1(v.qtype, v.width, v.max_num_in_chnk, -1, &new_uqid);
+  status = vctr_add1(v.qtype, v.width, v.max_num_in_chnk, -1, 
+      v.is_killable, &new_uqid);
   cBYE(status);
-  qtype_t xx = v.qtype;
   // START check that output vector got created
   uint32_t new_where;
   status = vctr_is(0, new_uqid, &vctr_is_found, &new_where); 

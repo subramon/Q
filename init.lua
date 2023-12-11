@@ -8,6 +8,7 @@ require "Q/OPERATORS/LOAD_CSV/lua/SC_to_TM"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_SC"
 require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
+require "Q/OPERATORS/LOAD_CSV/lua/SC_to_lkp"
 
 require "Q/OPERATORS/MK_COL/lua/mk_col"
 require "Q/OPERATORS/S_TO_F/lua/s_to_f"

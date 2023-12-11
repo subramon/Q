@@ -54,6 +54,7 @@ function lVector:check(is_at_rest, is_for_all)
       assert(nn_vector:num_readers()   == self:num_readers())
       assert(nn_vector:num_writers()   == self:num_writers())
       assert(nn_vector:is_early_free() == self:is_early_free())
+      assert(nn_vector:is_killable()   == self:is_killable())
     end
   end 
   -- check congruence between base vector and siblings
@@ -295,6 +296,14 @@ function lVector.new(args)
   end
   assert(type(vector._memo_len) == "number")
   --=================================================
+  if ( type(args.is_killable) ~= "boolean"  ) then 
+    args.is_killable = qcfg.is_killable
+    print("YYY", qcfg.is_killable)
+    print("YYYYYYYYYYYY")
+  end
+  assert(type(args.is_killable) == "boolean")
+  --=================================================
+  print("XXXXXXXX")
   vector._base_vec = assert(cVector.add1(args))
   if ( args.has_nulls ) then 
     -- assemble args for nn Vector 
@@ -314,6 +323,9 @@ function lVector.new(args)
     end
     if ( args.memo_len ) then 
       nn_args.memo_len  = args.memo_len 
+    end
+    if ( args.is_killable ) then 
+      nn_args.is_killable  = args.is_killable 
     end
     ----------------------------------- 
     local nn_vector = setmetatable({}, lVector)
@@ -350,6 +362,13 @@ function lVector:get_nulls() -- IMPORTANT Takes away nn from current vector
   local x = assert(self._nn_vec) 
   self._nn_vec = nil
   return x
+end
+function lVector:nn_qtype() 
+  if ( not self._nn_vec ) then 
+    print("No nn vector, returning nil"); return nil 
+  end 
+  local x = assert(self._nn_vec) 
+  return x:qtype()
 end
 
 function lVector:set_nulls(nn_vec)
@@ -871,9 +890,13 @@ function lVector:unget_lma_write()
   return self
 end
 --==================================================
+function lVector:is_killable()
+  return  cVector.is_killable(self._base_vec)
+end
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
 function lVector:kill()
   local nn_success
+  print("Lua kill called on " .. self:name())
   local success = cVector.kill(self._base_vec)
   if ( self._nn_vec ) then 
     nn_success = cVector.kill(self._nn_vec)
