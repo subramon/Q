@@ -19,8 +19,10 @@ return function (
 
   local f1_qtype = f1:qtype();   
   local f2_qtype = f2:qtype();   
-  assert(is_in(f1_qtype, { "I1", "I2", "I4", "I8", "F4", "F8", }))
-  assert(is_in(f2_qtype, { "I1", "I2", "I4", "I8", "F4", "F8", }))
+  assert(is_in(f1_qtype, 
+  { "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8", }))
+  assert(is_in(f2_qtype, 
+  { "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8", }))
   subs.max_num_in_chunk = f1:max_num_in_chunk()
   assert(f1:max_num_in_chunk() == f2:max_num_in_chunk())
 
@@ -31,7 +33,8 @@ return function (
       f3_qtype = optargs.f3_qtype
     end
   end
-  assert(is_in(f3_qtype, { "I1", "I2", "I4", "I8", "F4", "F8", }))
+  assert(is_in(f3_qtype, 
+    { "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8", }))
 
   subs.fn = operator .. "_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"

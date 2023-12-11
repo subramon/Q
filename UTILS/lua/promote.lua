@@ -10,11 +10,18 @@ return function(
   ftype2
   )
 
-  assert(is_in(ftype1, { "BL", "I1", "I2", "I4", "I8", "F4","F8" }))
-  assert(is_in(ftype2, { "BL", "I1", "I2", "I4", "I8", "F4","F8" }))
+  assert(is_in(ftype1, 
+  {"BL", "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4","F8"}))
+  assert(is_in(ftype2, 
+  {"BL", "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4","F8"}))
 
   local p = {}
   p.BL = { BL = "BL", I1 = "I1", I2 = "I2", I4 = "I4", I8 = "I8", F4 = "F4", F8 = "F8"}
+  p.UI1 = { BL = "UI1", UI1 = "UI1", UI2 = "UI2", UI4 = "UI4", UI8 = "UI8", F4 = "F4", F8 = "F8"}
+  p.UI2 = { BL = "UI2", UI1 = "UI2", UI2 = "UI2", UI4 = "UI4", UI8 = "UI8", F4 = "F4", F8 = "F8"}
+  p.UI4 = { BL = "UI4", UI1 = "UI4", UI2 = "UI4", UI4 = "UI4", UI8 = "UI8", F4 = "F4", F8 = "F8"}
+  p.UI8 = { BL = "UI8", UI1 = "UI8", UI2 = "UI8", UI4 = "UI8", UI8 = "UI8", F4 = "F4", F8 = "F8"}
+
   p.I1 = { BL = "I1", I1 = "I1", I2 = "I2", I4 = "I4", I8 = "I8", F4 = "F4", F8 = "F8"}
   p.I2 = { BL = "I2", I1 = "I2", I2 = "I2", I4 = "I4", I8 = "I8", F4 = "F4", F8 = "F8"}
   p.I4 = { BL = "I4", I1 = "I4", I2 = "I4", I4 = "I4", I8 = "I8", F4 = "F4", F8 = "F8"}
@@ -22,5 +29,6 @@ return function(
   p.F4 = { BL = "F4", I1 = "F4", I2 = "F4", I4 = "F4", I8 = "I8", F4 = "F4", F8 = "F8"}
   p.F8 = { BL = "F8", I1 = "F8", I2 = "F8", I4 = "F8", I8 = "F8", F4 = "F8", F8 = "F8"}
 
-  return (p[ftype1])[ftype2]
+  local x = assert(p[ftype1][ftype2])
+  return x
 end

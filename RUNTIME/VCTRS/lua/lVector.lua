@@ -298,12 +298,9 @@ function lVector.new(args)
   --=================================================
   if ( type(args.is_killable) ~= "boolean"  ) then 
     args.is_killable = qcfg.is_killable
-    print("YYY", qcfg.is_killable)
-    print("YYYYYYYYYYYY")
   end
   assert(type(args.is_killable) == "boolean")
   --=================================================
-  print("XXXXXXXX")
   vector._base_vec = assert(cVector.add1(args))
   if ( args.has_nulls ) then 
     -- assemble args for nn Vector 
@@ -890,13 +887,19 @@ function lVector:unget_lma_write()
   return self
 end
 --==================================================
+-- use this function to set kill-ability of vector 
+function lVector:killable(val)
+  assert(type(val) == "boolean")
+  return cVector.killable(self._base_vec, val)
+end
+--==================================================
 function lVector:is_killable()
   return  cVector.is_killable(self._base_vec)
 end
+--==================================================
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
 function lVector:kill()
   local nn_success
-  print("Lua kill called on " .. self:name())
   local success = cVector.kill(self._base_vec)
   if ( self._nn_vec ) then 
     nn_success = cVector.kill(self._nn_vec)

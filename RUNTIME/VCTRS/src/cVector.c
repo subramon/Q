@@ -159,10 +159,11 @@ BYE:
 static int l_vctr_killable( lua_State *L) {
   int status = 0;
   int num_args =  lua_gettop(L);
-  if ( num_args != 1 ) { go_BYE(-1); } 
+  if ( num_args != 2 ) { go_BYE(-1); } 
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  bool val = lua_toboolean(L, 2); 
   //------------------------------
-  status = vctr_killable(ptr_v->tbsp, ptr_v->uqid ); cBYE(status);
+  status = vctr_killable(ptr_v->tbsp, ptr_v->uqid, val ); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:

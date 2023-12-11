@@ -27,6 +27,8 @@
 #include "qtypes.h"
 #include "rdtsc.h"
 #include "rs_mmap.h"
+#include "tm2time.h"
+extern char *strptime(const char *s, const char *format, struct tm *tm);
 
 int luaopen_libcutils (lua_State *L);
 
@@ -42,6 +44,30 @@ static int l_cutils_basename(
   const char *base = basename(x);
   lua_pushstring(L, base);
   free_if_non_null(x);
+  return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
+//----------------------------------------
+static int l_cutils_date_str_to_epoch( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  time_t t_epoch;
+  if ( lua_gettop(L) != 2 ) { go_BYE(-1); }
+  const char *date_str = luaL_checkstring(L, 1);
+  const char *format   = luaL_checkstring(L, 2);
+  //------------------
+  struct tm l_tm; memset(&l_tm, 0, sizeof(struct tm));
+  char *rslt = strptime(date_str, format, &l_tm);
+  if ( rslt == NULL ) { go_BYE(-1); }
+  t_epoch = tm2time(&l_tm);
+  //------------------
+  lua_pushnumber(L, t_epoch);
   return 1; 
 BYE:
   lua_pushnil(L);
@@ -638,6 +664,7 @@ BYE:
 static const struct luaL_Reg cutils_methods[] = {
     { "basename",    l_cutils_basename },
     { "copyfile",    l_cutils_copyfile },
+    { "date_str_to_epoch",     l_cutils_date_str_to_epoch },
     { "dirname",     l_cutils_dirname },
     { "currentdir",  l_cutils_currentdir },
     { "getfiles",    l_cutils_getfiles },
@@ -666,6 +693,7 @@ static const struct luaL_Reg cutils_methods[] = {
 static const struct luaL_Reg cutils_functions[] = {
     { "basename",    l_cutils_basename },
     { "copyfile",    l_cutils_copyfile },
+    { "date_str_to_epoch",     l_cutils_date_str_to_epoch },
     { "dirname",     l_cutils_dirname },
     { "currentdir",  l_cutils_currentdir },
     { "delete",      l_cutils_delete },

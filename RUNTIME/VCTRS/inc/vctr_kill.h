@@ -1,7 +1,8 @@
 extern int
 vctr_killable(
     uint32_t tbsp,
-    uint32_t vctr_uqid
+    uint32_t vctr_uqid,
+    bool bval
     );
 extern int 
 vctr_is_killable(

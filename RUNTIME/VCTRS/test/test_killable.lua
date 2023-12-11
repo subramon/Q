@@ -8,12 +8,19 @@ local tests = {}
 tests.t1 = function()
   assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   qcfg._modify("is_killable", true)
-  print("XXX", qcfg.is_killable)
   local x = Q.seq({start = 1, by = 1, len = len, qtype = "I4"}):set_name("x")
   assert(x:is_killable() == true)
   qcfg._modify("is_killable", false)
   local y = Q.seq({start = 1, by = 1, len = len, qtype = "I4"}):set_name("y")
   assert(y:is_killable() == false)
+
+  -- change back and forth 
+  assert(y:killable(true))
+  assert(y:is_killable() == true)
+  assert(y:killable(false))
+  assert(y:is_killable() == false)
+
+
   local z = Q.vvadd(x, y):eval()
   cVector.check_all()
   print(">>>> START DELIBERATE ERROR")

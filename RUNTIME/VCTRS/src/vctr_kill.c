@@ -8,11 +8,13 @@
 
 extern vctr_rs_hmap_t *g_vctr_hmap;
 
-// once a vector has been marked killable, you cannot undo it 
+// once a vector has been marked killable, you can undo it 
+// only if it has zero elements in it 
 int
 vctr_killable(
     uint32_t tbsp,
-    uint32_t vctr_uqid
+    uint32_t vctr_uqid,
+    bool bval
     )
 {
   int status = 0;
@@ -24,11 +26,11 @@ vctr_killable(
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
-  if ( val.is_killable ) { goto BYE; } // nothing to do 
+  if ( val.is_killable ) { if ( val.num_elements > 0 ) { go_BYE(-1); } }
   if ( val.is_trash ) { go_BYE(-1); }
   if ( val.is_eov ) { go_BYE(-1); }
   if ( val.is_early_free ) { go_BYE(-1); }
-  g_vctr_hmap[tbsp].bkts[where_found].val.is_killable = true; 
+  g_vctr_hmap[tbsp].bkts[where_found].val.is_killable = bval; 
 BYE:
   return status;
 }

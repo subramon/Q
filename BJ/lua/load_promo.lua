@@ -108,9 +108,19 @@ local function load_promo(is_debug)
   if ( is_debug ) then 
     cVector.check_all()
   end 
+  -- we do not need nulls for these 
+  -- In general, it is a bad idea to drop nulls when they are needed
+  -- However, because of the particular query we are doing, it is okay
+  T.pstatus:drop_nulls()
+  T.pchannel:drop_nulls()
+  T.pvehicle:drop_nulls()
+  T.ptype:drop_nulls()
+  T.visibility_rank:drop_nulls()
+  T.finance_type:drop_nulls()
+ 
   return T
 end
--- return load_promo
+return load_promo
 --[[ 
 -- UNIT TEST 
 local T = load_promo()
