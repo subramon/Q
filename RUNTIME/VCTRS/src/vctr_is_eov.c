@@ -19,7 +19,10 @@ vctr_is_eov(
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
-  if ( !is_found ) { go_BYE(-1); }
+  if ( !is_found ) { 
+    printf("%s, Vector %u not found \n", __FILE__, vctr_uqid); 
+    go_BYE(-1); 
+  }
   *ptr_is_eov = val.is_eov;
 BYE:
   return status;

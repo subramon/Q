@@ -380,7 +380,7 @@ static int l_vctr_chk( lua_State *L) {
     status = vctrs_chk(ptr_v->tbsp, is_at_rest);  cBYE(status);
   }
   else {
-    status = vctr_chk(ptr_v->tbsp, ptr_v->uqid, is_at_rest);  cBYE(status);
+    status = vctr_chk(ptr_v->tbsp, ptr_v->uqid, is_at_rest); cBYE(status);
   }
   lua_pushboolean(L, true);
   return 1;

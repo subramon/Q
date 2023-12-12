@@ -100,7 +100,9 @@ vctr_unget_chunk(
 
   status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
-  if ( !vctr_is_found ) { go_BYE(-1); }
+  if ( !vctr_is_found ) { 
+    go_BYE(-1); 
+  }
 
   /* DECIDED AGAINST USING LMA FOR CHUNK ACCESS 
      vctr_rs_hmap_val_t *ptr_val = 
@@ -119,7 +121,9 @@ vctr_unget_chunk(
   status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, 
       &chnk_where_found);
   cBYE(status);
-  if ( chnk_is_found == false ) { go_BYE(-1); } 
+  if ( chnk_is_found == false ) { 
+    go_BYE(-1); 
+  } 
   chnk_rs_hmap_val_t *ptr_chnk = 
     &g_chnk_hmap[tbsp].bkts[chnk_where_found].val;
   if ( ptr_chnk->num_readers == 0 ) { go_BYE(-1); }

@@ -71,7 +71,9 @@ vctr_chk(
   bool vctr_is_found; uint32_t vctr_where_found;
   status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
-  if ( !vctr_is_found ) { go_BYE(-1); }
+  if ( !vctr_is_found ) { 
+    fprintf(stderr, "Could not find vector [%u:%u]\n", 
+        tbsp, vctr_uqid); go_BYE(-1); }
 
   vctr_rs_hmap_val_t vctr_val = g_vctr_hmap[tbsp].bkts[vctr_where_found].val;
   uint32_t qtype           = vctr_val.qtype;

@@ -497,7 +497,7 @@ function lVector:get_chunk(chnk_idx)
       error("")
     end
   end
-  if ( to_generate ) then 
+  if ( to_generate ) then -- IF TO GENERATE
     -- print(" invoke the generator  for " .. self:name(), self._chunk_num)
     if ( type(self._generator) == "nil" ) then return 0, nil end 
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
@@ -581,7 +581,7 @@ function lVector:get_chunk(chnk_idx)
     -- TODO print("XXX", chnk_idx, self:num_readers(chnk_idx), self:name())
     -- TODO assert(self:num_readers(chnk_idx) == 1)
     return num_elements, buf, nn_buf
-  else 
+  else -- ELSE OF IF TO GENERATE
     -- print(" Archival chunk for " .. self:name(), self._chunk_num)
     if ( qcfg.debug ) then self:check(false) end 
     local nn_x, nn_n
@@ -890,7 +890,9 @@ end
 -- use this function to set kill-ability of vector 
 function lVector:killable(val)
   assert(type(val) == "boolean")
-  return cVector.killable(self._base_vec, val)
+  local status = cVector.killable(self._base_vec, val)
+  assert(status)
+  return self
 end
 --==================================================
 function lVector:is_killable()

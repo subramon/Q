@@ -70,6 +70,7 @@ vctr_kill(
       &where_found);
   if ( !is_found ) { return -1; } // TODO P2 Should we be silent here?
   if ( !val.is_killable ) { goto BYE; } // silent exit
+  // fprintf(stderr, "Vector [%u:%s] killed \n", vctr_uqid, val.name);
   status = vctr_del(tbsp, vctr_uqid, &is_found); 
   if ( !is_found ) { go_BYE(-1); } 
 BYE:

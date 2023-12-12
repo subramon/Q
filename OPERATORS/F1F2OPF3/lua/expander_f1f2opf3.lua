@@ -38,23 +38,24 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
       f1:kill() 
       f2:kill()
     end
-    -- following is experimental as of Feb 2023
-    f1:prefetch(l_chunk_num+1)
-    f2:prefetch(l_chunk_num+1)
+    -- following prefetch is experimental as of Feb 2023
+    -- f1:prefetch(l_chunk_num+1)
+    -- f2:prefetch(l_chunk_num+1)
     --==================
-    if f1_len > 0 then
-      local chunk1 = get_ptr(f1_chunk, subs.f1_cast_as)
-      local chunk2 = get_ptr(f2_chunk, subs.f2_cast_as)
-      local chunk3 = get_ptr(buf,      subs.f3_cast_as)
-      local start_time = cutils.rdtsc()
-      local status = 
-      qc[func_name](chunk1, chunk2, f1_len, subs.cst_cargs, chunk3)
-      assert(status == 0)
-      record_time(start_time, func_name)
-    end
+    local chunk1 = get_ptr(f1_chunk, subs.f1_cast_as)
+    local chunk2 = get_ptr(f2_chunk, subs.f2_cast_as)
+    local chunk3 = get_ptr(buf,      subs.f3_cast_as)
+    local start_time = cutils.rdtsc()
+    local status = 
+    qc[func_name](chunk1, chunk2, f1_len, subs.cst_cargs, chunk3)
+    assert(status == 0)
+    record_time(start_time, func_name)
+
     f1:unget_chunk(l_chunk_num)
     f2:unget_chunk(l_chunk_num)
     if ( f1_len < subs.max_num_in_chunk ) then 
+      assert(f1:is_eov())
+      assert(f2:is_eov())
       if ( subs.cargs ) then subs.cargs:delete() end 
       f1:kill(); 
       f2:kill();
