@@ -169,6 +169,7 @@ main(
   status = mkdir(g_data_dir_root[tbsp], 0744);
   if ( g_dsk_used != 0 ) { go_BYE(-1); } 
   status = vctr_make_mem(tbsp, uqid, 2); cBYE(status);
+  // TODO NEED TO TEST status = vctr_l1_to_l2(tbsp, uqid, 0); cBYE(status);
   if ( g_dsk_used == 0 ) { go_BYE(-1); } 
   uint64_t bak_mem_used = g_mem_used;
   uint64_t bak_dsk_used = g_dsk_used;

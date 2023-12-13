@@ -58,9 +58,7 @@ local function internal_save(
       -- print(vec:memo_len() )
     else
       -- flush vector to disk and mark for persistence
-      local tmp = vec:chunks_to_lma() -- copy from level 1 to level 2 
-      vec:delete()
-      vec = tmp
+      vec:make_mem(2) -- copy from level 1 to level 2 
       print("Saving " .. vec:name())
       vec:persist()  -- indicate not to free level 2 upon delete
       fp:write(name, " = lVector ( { uqid = ", vec:uqid(), " } )\n" )
@@ -68,9 +66,7 @@ local function internal_save(
       if ( vec:has_nulls() ) then
         local nn_vec  = vec:get_nulls()
         local nn_uqid = nn_vec:uqid()
-        local tmp = nn_vec:l1_to_l2() 
-        nn_vec:delete()  
-        nn_vec = tmp
+        nn_vec:make_mem(2) 
         nn_vec:persist()  
         local nn_name = "_nn_" .. tostring(nn_uqid)
         fp:write("local " .. nn_name, " = lVector({uqid = ",nn_uqid,"})\n" )

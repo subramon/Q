@@ -901,7 +901,7 @@ static int l_vctr_make_mem( lua_State *L) {
   int level = luaL_checknumber(L, 2);
   if ( num_args == 3 ) { 
     chnk_idx = luaL_checknumber(L, 3);
-    if ( chnk_idx < 0 ) { 
+    if ( chnk_idx != -1 ) { 
       lua_pushboolean(L, false);
       return 1;
     }
