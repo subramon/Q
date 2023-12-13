@@ -35,7 +35,7 @@ local function q_cdef( infile, incs)
   if ( cdefd[infile] ) then
     -- print("Skipping cdef of " .. infile)
   else
-    -- print("cdef'ing " .. infile)
+    print("cdef'ing " .. infile)
     local y = for_cdef(infile, incs)
     ffi.cdef(y)
     cdefd[infile] = true
@@ -139,7 +139,6 @@ local function q_add(
     if ( not ispc ) then
       assert(compile_and_link( dotc, subs.srcs, subs.incs, subs.libs, fn))
     else
-      print("YYYYYYYY")
       local dotos      = assert(
         compile("C", dotc, subs.srcs, subs.incs))
       dotos = assert(

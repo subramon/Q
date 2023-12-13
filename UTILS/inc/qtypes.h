@@ -2,6 +2,7 @@
 #define __QTYPES_H
 //START_FOR_CDEF
 typedef uint16_t bfloat16; 
+#include "custom1.h" // for CUSTOM1
 typedef enum { 
   Q0, // mixed  must be first one 
 
@@ -26,6 +27,9 @@ typedef enum {
   SV,  // variable length strings
   TM,  // time struct  tm_t
   TM1, // time struct  tm_t
+
+  CUSTOM1, // for MG experiment 
+
   NUM_QTYPES // must be last one 
 } qtype_t;
 // STOP extract_for_qtypes.tex

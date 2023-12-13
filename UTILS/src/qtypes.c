@@ -76,6 +76,8 @@ get_width_c_qtype(
 
     case TM1 : return sizeof(tm_t); break;
     case TM  : return sizeof(struct tm); break;
+
+    case CUSTOM1  : return sizeof(custom1_t); break;
     default : return 0; break;
   }
 }
@@ -123,6 +125,8 @@ get_c_qtype(
   if ( strncmp("TM1:", str_qtype, 3) == 0 ) { return TM1; }  
 
   if ( strcmp("TM", str_qtype) == 0 ) { return TM; }  
+
+  if ( strcmp("CUSTOM1", str_qtype) == 0 ) { return CUSTOM1; }  
   return Q0;
 }
 const char *
@@ -150,6 +154,8 @@ get_str_qtype(
 
   if ( qtype == TM1 ) { return "TM1"; }
   if ( qtype == TM ) { return "TM"; }
+
+  if ( qtype == CUSTOM1 ) { return "CUSTOM1"; }
 
   if ( qtype == SC ) { return "SC"; }
   return NULL; 
@@ -180,6 +186,8 @@ str_qtype_to_str_ctype(
 
   if ( strcmp(str_qtype, "TM1") == 0 ) { return "tm_t"; } 
   if ( strcmp(str_qtype, "TM") == 0 ) { return "struct tm"; } 
+
+  if ( strcmp(str_qtype, "CUSTOM1") == 0 ) { return "custom1_t"; } 
   return NULL; 
 }
 
@@ -208,5 +216,6 @@ str_qtype_to_str_ispctype(
 
   if ( strcmp(str_qtype, "TM1") == 0 ) { return "tm_t"; } 
   if ( strcmp(str_qtype, "TM") == 0 ) { return "struct tm"; } 
+  if ( strcmp(str_qtype, "CUSTOM1") == 0 ) { return "custom1_t"; } 
   return NULL; 
 }
