@@ -48,8 +48,8 @@ local to_del = Q.vnot(to_keep)
 local T1_tcin_loc, T1_to_del, T1_srt_idx = sort_tcin_loc_del(
   T1.tcin, T1.location_id, to_del, true, is_debug)
 assert(type(T1_srt_idx) == "lVector")
-T1_srt_idx:pr("_srt_idx")
-T1_tcin_loc:pr("_tcin_loc")
+-- T1_srt_idx:pr("_srt_idx")
+--- T1_tcin_loc:pr("_tcin_loc")
 -- at this stage, we have (from T1)
 -- (1) T1_tcin_loc which is a composite key sorted ascendiing with 
 -- tcin in top 32 bits and location_id in bottom 32 bits
@@ -62,9 +62,18 @@ local T4 = unique_tcins(T1.tcin) -- contains 1 column tcin
 -- join T2_to_del from T2 into T1 
 local J1 = Q.join(T2_to_del, T2_tcin_loc, T1_tcin_loc)
 local T1_to_del_from_T2 = assert(J1.val)
-T1_to_del_from_T2:drop_nulls()
+
+--[[ should not drop nulls below because of following comment from Joya
+--Regarding Price = 0 for TCIN = 88347594 and location_id = 1822, This 
+--is not impacting my SQL as I am doing inner join on Price and ILS. As 
+--the item location is not in ILS, its being excluded and not used in 
+--aggregation
+--]]
+T1_to_del_from_T2:eval()
+local also_to_del = Q.vnot(T1_to_del_from_T2:get_nulls())
 -- T1_del1 has all deletions except for time based ones
-local T1_del1 = Q.vvor(T1_to_del, T1_to_del_from_T2)
+local w1 = Q.vvor(T1_to_del, T1_to_del_from_T2)
+local T1_del1 = Q.vvor(w1, also_to_del)
 -- create T2' based on rows that survive deletion
 --=========================================
 -- convert TM to time in seconds since epoch
@@ -133,6 +142,8 @@ for i, stop_time in ipairs(stop_times) do
     T1prime.location_id = tmp[2]
     T1prime.location_id:eval()
 
+    local srt_lno = Q.sort(T1prime.lno, "asc")
+    srt_lno:pr("_sorted_lno")
     Q.print_csv({
       T1prime.lno, 
       T1prime.tcin, 
@@ -159,10 +170,10 @@ for i, stop_time in ipairs(stop_times) do
       denom:delete()
       tmp:delete()
       T4.n_stores = X.cnt
-      X.sum:delete()
       -- transfer min/max fields 
       X.max:drop_nulls(); outfld = fld .. "_max"; T4[outfld] = X.max
       X.min:drop_nulls(); outfld = fld .. "_min"; T4[outfld] = X.min
+                          outfld = fld .. "_sum"; T4[outfld] = X.sum
     end
     --================================================
     -- copy everything from T4 (except tcin) into final 
@@ -189,8 +200,8 @@ for i, stop_time in ipairs(stop_times) do
   end -- ELSE AAA
 end
 local cols = { "tcin", "n_stores", "stop_time", 
-  "current_avg", "current_min", "current_max", 
-  "regular_avg", "regular_min", "regular_max", }
+  "current_avg", "current_min", "current_max", "current_sum", 
+  "regular_avg", "regular_min", "regular_max", "regular_sum", }
 
 
 local col_names = {}
@@ -201,6 +212,7 @@ end
 local header = table.concat(cols, ",")
 Q.print_csv(Tpr, { opfile = "_final.csv", header = header })
 print("All done, cleaning up")
+os.execute("sleep 100")
 
 if ( true ) then 
   for k, v in pairs(T1) do v:delete() end 
@@ -226,6 +238,9 @@ if ( true ) then
   T1_del1:delete()
   T1.effective_secs:delete()
   T1.expiry_secs:delete()
+
+  also_to_del:delete()
+  w1:delete()
 
   print("Early return")
   return 0 
