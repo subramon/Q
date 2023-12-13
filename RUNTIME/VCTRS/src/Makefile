@@ -51,6 +51,7 @@ SRCS +=	vctr_put1.c
 SRCS +=	vctr_put_chunk.c  
 SRCS +=	vctr_memo.c  
 SRCS +=	vctr_width.c  
+SRCS +=	vctr_l1_to_l2.c  
 SRCS +=	num_read_write.c  
 
 SRCS +=	chnk_cnt.c  
@@ -61,6 +62,7 @@ SRCS +=	chnk_get_data.c
 SRCS +=	chnk_is.c  
 SRCS +=	chnk_make_mem.c  
 SRCS +=	chnk_drop_mem.c  
+SRCS +=	chnk_l1_to_l2.c  
 
 OBJS = $(SRCS:.c=.o)
 

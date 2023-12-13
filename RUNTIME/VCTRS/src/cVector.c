@@ -26,6 +26,7 @@
 
 #include "vctr_drop_mem.h"
 #include "chnk_drop_mem.h"
+#include "vctr_l1_to_l2.h"
 
 #include "vctr_make_mem.h"
 #include "chnk_make_mem.h"
@@ -1289,7 +1290,27 @@ BYE:
   lua_pushnumber(L, status);
   return 2;
 }
-//-----------------------
+static int l_vctr_l1_to_l2( lua_State *L) {
+  int status = 0;
+  int num_args = lua_gettop(L); 
+  if ( ( num_args < 0 ) || ( num_args > 2 ) )  { go_BYE(-1); } 
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_nn_v = NULL; uint64_t nn_uqid = 0; // for nn vector 
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  if ( num_args == 2 ) { 
+    ptr_nn_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
+  }
+  if ( ptr_nn_v != NULL ) { nn_uqid = ptr_nn_v->uqid; } 
+  status = vctr_l1_to_l2(ptr_v->tbsp, ptr_v->uqid, nn_uqid); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static const struct luaL_Reg vector_methods[] = {
     { "__gc",    l_vctr_free   },
     { "delete",    l_vctr_free   }, // try not to call this explicitly
@@ -1350,6 +1371,8 @@ static const struct luaL_Reg vector_methods[] = {
     { "make_mem",    l_vctr_make_mem },
     { "rehydrate", l_vctr_rehydrate },
     { "null", l_vctr_null },
+    //--------------------------------
+    { "l1_to_l2", l_vctr_l1_to_l2 },
     //--------------------------------
     { "put1", l_vctr_put1 },
     { "putn", l_vctr_putn },
@@ -1425,6 +1448,8 @@ static const struct luaL_Reg vector_functions[] = {
     { "make_mem",    l_vctr_make_mem },
     { "rehydrate", l_vctr_rehydrate },
     { "null", l_vctr_null },
+    //--------------------------------
+    { "l1_to_l2", l_vctr_l1_to_l2 },
     //--------------------------------
     { "put1", l_vctr_put1 },
     { "putn", l_vctr_putn },
