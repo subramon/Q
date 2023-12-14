@@ -36,7 +36,7 @@ get_cell(
 //STOP_FUNC_DECL
 {
   int status = 0;
-  char dquote = '"'; 
+  char dquote = '"';  char squote = '\'';
   char bslash = '\\'; char eoln = '\n';
   uint32_t bufidx = 0;
   bool is_trim = true;
@@ -53,11 +53,20 @@ get_cell(
   memset(lbuf, '\0', bufsz);
   memset(buf, '\0', bufsz);
   char last_char;
-  bool start_dquote = false;
-  if ( X[xidx] == dquote ) { // must end with dquote
-    start_dquote = true;
-    last_char = '"';
-    xidx++;
+  // TODO P1 NEED TO FINISH HANDLING SQUOTE 
+  bool start_dquote = false, start_squote = false, start_quote = false;
+  if ( ( X[xidx] == dquote ) || ( X[xidx] == squote ) ) {
+    start_quote = true;
+    if ( X[xidx] == dquote ) { // must end with dquote
+      start_dquote = true;
+      last_char = dquote;
+      xidx++;
+    }
+    if ( X[xidx] == squote ) { // must end with squote
+      start_squote = true;
+      last_char = squote;
+      xidx++;
+    }
   }
   else {
     if ( is_last_col ) { 
@@ -101,7 +110,9 @@ get_cell(
       lbuf[bufidx++] = X[xidx++];
       continue;
     }
-    if ( bufidx >= bufsz ) { go_BYE(-1); }
+    if ( bufidx >= bufsz ) { 
+      go_BYE(-1); 
+    }
     lbuf[bufidx++] = X[xidx++];
   }
 BYE:

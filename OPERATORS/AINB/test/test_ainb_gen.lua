@@ -1,7 +1,7 @@
 require 'Q/UTILS/lua/strict'
 local qc = require 'Q/UTILS/lua/q_core'
 local ffi = require 'ffi'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local qcfg = require 'Q/UTILS/lua/qcfg'
 
 local fns_name = "simple_ainb_I4_I4"
 local chunk_count = 0
@@ -9,7 +9,7 @@ local chunk_count = 0
 local function my_magic_function(aptr, alen, bptr, blen, cbuf)
   print("Validating Generator Function, Length: ", alen)
   aptr = ffi.cast("int32_t *", aptr)
-  local diff = chunk_count * qconsts.chunk_size
+  local diff = chunk_count * qcfg.max_num_in_chunk
   for i = 1, alen do
     assert(aptr[i-1] == (i + diff), "Value Mismatch, Actual: " .. aptr[i-1] .. ", Expected: " .. (i + diff))
   end

@@ -3,7 +3,7 @@
 //START_FOR_CDEF
 typedef uint16_t bfloat16; 
 //  TODO P2 This should be uncommented #include "custom1.h" // for CUSTOM1
-typedef struct {
+typedef struct _custom1_t {
   float intercept;
   float baseprice_lift;
   float promo_lift;

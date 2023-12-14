@@ -24,8 +24,10 @@ return function (
     end 
   end 
   local in_qtype = f1:qtype()
+  print("YYYYYY", f1:has_nulls())
   subs.has_nulls = f1:has_nulls() 
   if ( subs.has_nulls ) then 
+    print("XXXXXXXXXXXXXXX")
     local nn_vector = f1:get_nulls()
     assert(type(nn_vector) == "lVector")
     assert(nn_vector:qtype() == "BL") -- TODO P4 Allow B1

@@ -17,15 +17,15 @@ return function (
   local out_qtype = "BL"
   if ( optargs ) then 
     assert(type(optargs) == "table")
-    if ( optargs.default_val ) then 
+    if ( type(optargs.default_val) ~= "nil" ) then 
       default_val = optargs.default_val
-      assert(type(default_val) == "boolean")
     end
-    if ( optargs.out_qtype ) then 
+    if ( type(optargs.out_qtype) ~= "nil" ) then 
       out_qtype = optargs.out_qtype
-      assert(type(default_val) == "boolean")
     end
   end
+  assert(type(default_val) == "boolean")
+  assert(type(out_qtype) == "string")
   local subs = {}
   --== check the comparison 
   assert(is_base_qtype(in_qtype))

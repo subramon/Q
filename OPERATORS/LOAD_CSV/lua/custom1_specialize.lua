@@ -1,4 +1,18 @@
 local cutils = require 'libcutils'
+--[[ We auto generate code so no longer needed 
+local keys = require 'Q/UTILS/src/custom1_terms'
+local tbl_of_str_to_C_array = require 'Q/UTILS/lua/tbl_of_str_to_C_array'
+
+assert(type(keys) == "table")
+assert(#keys > 0)
+for k, v in ipairs(keys) do 
+  assert(type(v) == "string")
+  assert(#v > 0) for k2, v2 in ipairs(keys) do  -- slow check for uniqueness
+    if ( k ~= k2 ) then assert(v ~= v2) end 
+  end
+end
+--]]
+
 return function(invec)
   local subs = {}
 
@@ -21,6 +35,12 @@ return function(invec)
   subs.dotc = "UTILS/src/custom_code/src/mk_custom1.c"
   subs.doth = "UTILS/src/custom_code/inc/mk_custom1.h"
   subs.incs = { "UTILS/inc", "UTILS/src/custom_code/inc/", }
+  subs.libs = { "-ljansson", }
+
+--[[ We auto generate code so no longer needed 
+  subs.ckeys = tbl_of_str_to_C_array(keys)
+  subs.keys = keys
+  --]]
 
   return subs
 end

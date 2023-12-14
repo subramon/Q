@@ -15,6 +15,8 @@ local function select_ranges(f1, lb, ub, optargs )
   local spfn = assert(require(sp_fn_name))
   local subs = assert(spfn(f1, lb, ub, optargs ))
   assert(type(subs) == "table")
+  print("XXXX", f1:has_nulls())
+  assert(subs.has_nulls == false)
   --=================================
   local nC = subs.max_num_in_chunk -- alias 
   local lbnum = lb:num_elements() -- number of ranges
@@ -27,18 +29,19 @@ local function select_ranges(f1, lb, ub, optargs )
     -- check expected chunk_num and generator's chunk_idx state
     assert(chunk_num == chunk_idx)
     local f2_buf = assert(cmem.new(subs.bufsz))
-    f2_buf:stealable(true)
     f2_buf:zero()
+    f2_buf:stealable(true)
     local cst_f2_buf  = ffi.cast(subs.f2_cast_as, get_ptr(f2_buf))
     local num_in_f2   = 0
     local space_in_f2 = nC
 
-    local nn_f2_buf, cst_nn_f2_buf
+    local nn_f2_buf 
+    local cst_nn_f2_buf = ffi.NULL
     if ( subs.has_nulls ) then 
       local nn_bufsz =  ffi.sizeof("bool") * subs.max_num_in_chunk
-      nn_f2_buf = assert(cmem.new(nn_bufsz))
-      nn_f2_buf:stealable(true)
+      nn_f2_buf = cmem.new( { size = nn_bufsz, qtype = "BL"})
       nn_f2_buf:zero()
+      nn_f2_buf:stealable(true)
       cst_nn_f2_buf  = ffi.cast("bool *", get_ptr(nn_f2_buf))
     end
 
@@ -66,11 +69,15 @@ local function select_ranges(f1, lb, ub, optargs )
       local f1_len, f1_buf, nn_f1_buf = f1:get_chunk(f1_chunk_idx)
       local cst_f1_buf  = ffi.cast(subs.f1_cast_as, get_ptr(f1_buf))
       local cst_nn_f1_buf
-      if ( subs.has_nulls ) then assert(type(nn_f1_buf) == "CMEM") end
+      if ( subs.has_nulls ) then 
+        print("XXX", f1:has_nulls())
+        print("XX", type(nn_f1_buf))
+        assert(type(nn_f1_buf) == "CMEM") 
+      end
       if ( nn_f1_buf ) then 
         cst_nn_f1_buf = ffi.cast("bool *", get_ptr(nn_f1_buf))
       end
-      assert(f1_len > 0) 
+      assert(f1_len > 0) -- TODO P1 IS THIS OKAY????????
       -- TODO P4 ignore bad ranges instead of asserting on them 
       local num_in_f1 = f1_len - f1_chunk_off
       local num_to_copy = lmin(space_in_f2, num_in_f1)

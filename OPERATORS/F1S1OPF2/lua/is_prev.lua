@@ -18,8 +18,7 @@ local function is_prev(f1, cmp, optargs )
   local in_qtype = f1:qtype()
   local status, subs = pcall(spfn, in_qtype, cmp, optargs)
   if not status then print(subs) end
-  local default_val = subs.default_val
-  assert(type(default_val) == "boolean")
+  assert(type(subs.default_val) == "boolean")
   assert(status, "Specializer " .. sp_fn_name .. " failed")
   local func_name = assert(subs.fn)
   -- START: Dynamic compilation
@@ -54,7 +53,7 @@ local function is_prev(f1, cmp, optargs )
     --===========================================
     local cst_f1_buf = ffi.cast(f1_cast_as, get_ptr(f1_buf))
     local start_time = cutils.rdtsc()
-    qc[func_name](cst_f1_buf, f1_len, default_val, first_call,
+    qc[func_name](cst_f1_buf, f1_len, subs.default_val, first_call,
       cst_f2_buf, cst_last_val)
     record_time(start_time, func_name)
     f1:unget_chunk(chunk_idx)

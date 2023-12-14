@@ -1,3 +1,4 @@
+Use join with join_type = "is" when both A and B are sorted
 Inputs
 Column A of length n1, n1 : expected to be large
 Column B of length n2, n2 expected to be small

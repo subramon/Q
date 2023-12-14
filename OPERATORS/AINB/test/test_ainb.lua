@@ -1,7 +1,6 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
-local diff = require 'Q/UTILS/lua/diff'
 local tests = {}
 local script_dir = os.getenv("Q_SRC_ROOT") .. "/OPERATORS/AINB/test/"
 tests.t1 = function() 
@@ -13,7 +12,9 @@ tests.t1 = function()
   local opt_args = { opfile = "/tmp/_out1.txt" }
   Q.print_csv({a, c}, opt_args)
   -- prepending script_dir so that this test will work from any location
-  assert(diff(script_dir .. "out1.txt", "/tmp/_out1.txt"))
+  local f1 = plfile.read(script_dir .. "out1.txt")
+  local f2 = plfile.read("/tmp/_out1.txt")
+  assert(f1 == f2)
   print("Test t1 succeeded")
 end
 
@@ -45,4 +46,6 @@ tests.t3 = function()
   assert(n == expected_n)
 end
 
-return tests
+tests.t1()
+
+-- return tests
