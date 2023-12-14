@@ -191,7 +191,7 @@ load_csv_fast(
         WHEREAMI; // go_BYE(-1); 
       }
     }
-    if ( width[i] >= max_width ) { go_BYE(-1); } 
+    if ( width[i] > max_width ) { go_BYE(-1); } 
   }
   *ptr_nR = 0;
   // mmap the file

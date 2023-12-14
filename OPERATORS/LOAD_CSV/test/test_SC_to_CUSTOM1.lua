@@ -17,7 +17,9 @@ tests.t1 = function()
     "/OPERATORS/LOAD_CSV/test/SC_to_CUSTOM1_in.csv"
   assert(plpath.isfile(infile))
   local T = Q.load_csv(infile, M, O)
+  local x = Q.SC_to_CUSTOM1(T.str):eval()
   T.str:delete()
+  x:delete()
   assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   print("Test t1 succeeded")
 end

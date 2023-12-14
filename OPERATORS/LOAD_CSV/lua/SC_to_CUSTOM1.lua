@@ -27,14 +27,14 @@ local function SC_to_CUSTOM1(
 
     local out_ptr = get_ptr(out_buf, subs.cast_out_as)
     local in_len, in_chunk = invec:get_chunk(l_chunk_num)
-    assert(type(len) == "number")
-    if ( len == 0 ) then 
+    assert(type(in_len) == "number")
+    if ( in_len == 0 ) then 
       buf:delete()
       return 0, nil 
     end 
     --====================================
     local in_ptr = get_ptr(in_chunk, subs.cast_in_as)
-    local status = qc[fn](in_ptr, in_len, subs.in_width, out_ptr);
+    local status = qc[func_name](in_ptr, in_len, subs.in_width, out_ptr);
     assert(status == 0)
     invec:unget_chunk(l_chunk_num)
     if ( in_len < subs.max_num_in_chunk ) then 
@@ -48,6 +48,6 @@ local function SC_to_CUSTOM1(
   vargs.qtype = subs.out_qtype
   vargs.has_nulls = false
   vargs.max_num_in_chunk = subs.max_num_in_chunk
-  return lVector(vctr_args)
+  return lVector(vargs)
 end
 return require('Q/q_export').export('SC_to_CUSTOM1', SC_to_CUSTOM1)
