@@ -11,15 +11,30 @@ local function SC_to_lkp_specialize(invec, lkp_tbl, optargs)
     subs.has_nulls = true
   end
   assert(type(lkp_tbl) == "table")
+  -- check if over-rides required 
+  local out_qtype 
   if ( optargs ) then 
     assert(type(optargs) == "table")
+    if ( optargs.out_qtype ) then 
+      out_qtype = optargs.out_qtype 
+      assert(is_int_qtype(out_qtype))
+      assert(is_int_qtype ~= "BL")
+    end 
   end
   assert(#lkp_tbl > 0)
   -- TODO P3 Consider using UI1 and UI2 instead 
   if ( #lkp_tbl < 127 ) then
-    subs.out_qtype = "I1"
+    if ( out_qtype ) then 
+      subs.out_qtype = promote("I1", out_qtype) 
+    else 
+      subs.out_qtype = "I1"
+    end
   elseif ( #lkp_tbl < 32767 ) then
-    subs.out_qtype = "I2"
+    if ( out_qtype ) then 
+      subs.out_qtype = promote("I2", out_qtype) 
+    else 
+      subs.out_qtype = "I2"
+    end
   else
     error("TODO")
   end
