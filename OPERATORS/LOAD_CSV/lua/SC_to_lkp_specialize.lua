@@ -1,5 +1,7 @@
 local cutils = require 'libcutils'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local is_int_qtype = require 'Q/UTILS/lua/is_int_qtype'
+local promote = require 'Q/UTILS/lua/promote'
 
 local function SC_to_lkp_specialize(invec, lkp_tbl, optargs)
   local subs = {}
@@ -18,7 +20,7 @@ local function SC_to_lkp_specialize(invec, lkp_tbl, optargs)
     if ( optargs.out_qtype ) then 
       out_qtype = optargs.out_qtype 
       assert(is_int_qtype(out_qtype))
-      assert(is_int_qtype ~= "BL")
+      assert(out_qtype ~= "BL")
     end 
   end
   assert(#lkp_tbl > 0)
