@@ -211,26 +211,32 @@ function lVector:has_gen()
   if ( self._generator ) then return true  else return false end 
 end
 
+--=================================================
 function lVector:uqid()
   local uqid = cVector.uqid(self._base_vec)
   assert(type(uqid) == "number")
   return uqid
 end
-
+--=================================================
 function lVector:tbsp()
   local tbsp = cVector.tbsp(self._base_vec)
   assert(type(tbsp) == "number")
   return tbsp
 end
-
+--=================================================
 function lVector:memo_len()
   return self._memo_len
 end
-
+--=================================================
 function lVector:qtype()
   return self._qtype
 end
-
+--=================================================
+function lVector:nn_qtype()
+  if ( not self._nn_vec ) then return nil end 
+  return self._nn_vec:qtype()
+end
+--=================================================
 function lVector.new(args)
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector

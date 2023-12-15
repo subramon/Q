@@ -76,7 +76,7 @@ local function validate_meta(
       width = assert(fld_M.width)
       assert(type(width) ==  "number")
       assert(width >= 2)
-      assert(width <= qcfg.max_width_SC)
+      assert(width <= qcfg.max_width_SC, "max width is " .. qcfg.max_width_SC)
     elseif fld_M.qtype == "B1" then 
       width = 1
     else

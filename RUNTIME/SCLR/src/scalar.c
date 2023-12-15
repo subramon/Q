@@ -144,14 +144,26 @@ BYE:
   return 2;
 }
 
+static int l_sclr_to_bool( lua_State *L) {
+  int status = 0;
+  if ( lua_gettop(L) < 1 ) { WHEREAMI; goto BYE; }
+  SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
+  qtype_t qtype = ptr_sclr->qtype;
+  if ( qtype != BL ) { go_BYE(-1); } 
+  lua_pushboolean(L, ptr_sclr->val.bl); 
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
 static int l_sclr_to_num( lua_State *L) {
   int status = 0;
   if ( lua_gettop(L) < 1 ) { WHEREAMI; goto BYE; }
   SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
   qtype_t qtype = ptr_sclr->qtype;
   switch ( qtype ) { 
-    case BL : lua_pushnumber(L, ptr_sclr->val.bl); break;
-
     case I1 : lua_pushnumber(L, ptr_sclr->val.i1); break;
     case I2 : lua_pushnumber(L, ptr_sclr->val.i2); break;
     case I4 : lua_pushnumber(L, ptr_sclr->val.i4); break;
@@ -676,6 +688,7 @@ static const struct luaL_Reg sclr_methods[] = {
     { "conv", l_sclr_conv },
     { "name", l_sclr_name },
     { "to_str", l_sclr_to_str },
+    { "to_bool", l_sclr_to_bool },
     { "to_num", l_sclr_to_num },
     { "to_cmem", l_sclr_to_cmem },
     { "to_data", l_sclr_to_data },
@@ -706,6 +719,7 @@ static const struct luaL_Reg sclr_functions[] = {
     { "to_cmem", l_sclr_to_cmem },
     { "to_data", l_sclr_to_data },
     { "to_num", l_sclr_to_num },
+    { "to_bool", l_sclr_to_bool },
     { "to_str", l_sclr_to_str },
     { NULL,  NULL         }
 };

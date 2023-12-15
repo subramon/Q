@@ -12,6 +12,7 @@ require "Q/OPERATORS/LOAD_CSV/lua/SC_to_CUSTOM1"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_lkp"
 
 require "Q/OPERATORS/MK_COL/lua/mk_col"
+require "Q/OPERATORS/MK_COL/lua/mk_tbl"
 require "Q/OPERATORS/S_TO_F/lua/s_to_f"
 require "Q/OPERATORS/F_TO_S/lua/f_to_s"
 

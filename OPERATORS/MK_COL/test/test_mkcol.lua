@@ -3,6 +3,7 @@ require 'Q/UTILS/lua/strict'
 local Q       = require 'Q'
 local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
+local from_scalar = require 'Q/UTILS/lua/from_scalar'
 local tests = {}
 tests.t1 = function()
   -- input table of values 1,2,3 of type I4, given to mk_col
@@ -29,11 +30,12 @@ tests.t2 = function()
   local uqid = col:uqid()
   assert(col:qtype() == "I4")
   --===================================
-  local nn_col = assert(col:get_nulls())
+  local nn_col = assert(col:get_nulls()) 
   assert(type(nn_col) == "lVector")
   assert(nn_col:has_nulls() == false)
   local nn_uqid = nn_col:uqid()
   assert(nn_col:qtype() == "BL")
+  col:set_nulls(nn_col) ---  because get_nulls is breaking 
   --=====================================
   assert(nn_col:num_elements() == col:num_elements())
   for i = 1, col:num_elements() do  
@@ -52,6 +54,22 @@ tests.t2 = function()
   cVector.check_all(true, true)
   print("Test t2 succeeded")
 end   
+tests.test_mk_tbl = function()
+  -- input table of values 1,2,3 of type I4, given to mk_col
+  local qtype = "I4"
+  local intbl = { 1, 2, 3, 4 } 
+  local col = assert(Q.mk_col(intbl, qtype))
+  local tbl = assert(Q.mk_tbl(col))
+  assert(type(tbl) == "table")
+  assert(#tbl == #intbl)
+  for i = 1, #tbl do 
+    tbl[i] = from_scalar(tbl[i])
+    assert(type(tbl[i]) == type(intbl[i]))
+    assert(tbl[i] == intbl[i])
+  end
+  print("Test test_mk_tbl succeeded")
+end   
 -- return tests
 tests.t1()
 tests.t2()
+tests.test_mk_tbl()

@@ -13,6 +13,7 @@ return function (
   --===========================================
   assert(type(f1) == "lVector")
   subs.max_num_in_chunk = f1:max_num_in_chunk()
+  -- can override max num in chunk using optargs
   if ( optargs ) then 
     assert(type(optargs) == "table")
     if ( optargs.max_num_in_chunk ) then 
@@ -23,31 +24,54 @@ return function (
       subs.max_num_in_chunk = optargs.max_num_in_chunk 
     end 
   end 
-  local in_qtype = f1:qtype()
-  print("YYYYYY", f1:has_nulls())
+  subs.in_qtype = f1:qtype()
   subs.has_nulls = f1:has_nulls() 
-  if ( subs.has_nulls ) then 
-    print("XXXXXXXXXXXXXXX")
-    local nn_vector = f1:get_nulls()
-    assert(type(nn_vector) == "lVector")
-    assert(nn_vector:qtype() == "BL") -- TODO P4 Allow B1
+  if ( sub.has_nulls ) then 
+    assert(sub.nn_qtype == "BL") -- TODO P4 support B1 
   end
   --=================================
-  assert(type(lb) == "lVector")
-  assert(type(ub) == "lVector")
-  local lb_qtype = lb:qtype()
-  local ub_qtype = ub:qtype()
-  -- Following eov check can be relaxed but will need work
-  -- because get1 does not trigger a generator call 
-  assert(lb:is_eov())
-  assert(ub:is_eov())
-  --=======================
-  assert(is_in(lb_qtype, { "I1", "I2", "I4", "I8", }))
-  assert(is_in(ub_qtype, { "I1", "I2", "I4", "I8", }))
-  assert(lb:num_elements() == ub:num_elements())
-  assert(lb:num_elements() > 0)
+  -- NOTE: Assumption is that the number of ranges is small 
+  local lb_tbl, ub_tbl
+  if ( type(lb) == "number" ) then 
+    assert(type(ub) == "number" )
+    lb_tbl = { lb }
+    ub_tbl = { ub }
+  elseif ( type(lb) == "lVector" ) then 
+    assert(type(ub) == "lVector" )
+
+    assert(lb:is_eov())
+    assert(ub:is_eov())
+
+    assert(is_in(lb_qtype, { "I1", "I2", "I4", "I8", }))
+    assert(is_in(ub_qtype, { "I1", "I2", "I4", "I8", }))
+
+    assert(lb:num_elements() == ub:num_elements())
+    assert(lb:num_elements() > 0)
+
+    local xlb = mk_tbl(lb) -- mk_tbl is inverse of mk_col
+    for k, v in ipairs(xlb) do 
+      lb_tbl[k] = from_scalar(v)
+      assert(type(lb_tbl[k]) == "number")
+      assert(lb_tbl[k] >= 0)
+    end
+
+    local xub  = mk_tbl(ub)
+    for k, v in ipairs(xlb) do 
+      ub_tbl[k] = from_scalar(v)
+      assert(type(ub_tbl[k]) == "number")
+      assert(ub_tbl[k] > lb_tbl[k])
+    end
+  else
+    error("bad types for ranges")
+  end
+  --==== Now we convert lb_tbl/ub_tbl to a specification as follows
+  -- For each output chunk to tbe created, we create a list of 
+  -- (chunk, lb, ub). Note that if we sum (ub-lb) for a given output chunk
+  -- we will get the size of that chunk. 
+  -- The size of each output chunk == subs.max_num_in_chunk except
+  -- for the last one which *may* be less than that 
+
   --=================================
-  subs.in_qtype = in_qtype
   subs.in_ctype = cutils.str_qtype_to_str_ctype(in_qtype)
   subs.out_qtype = in_qtype
   subs.out_ctype = cutils.str_qtype_to_str_ctype(subs.out_qtype)
