@@ -1,13 +1,13 @@
 local ffi     = require 'ffi'
-local qc      = require 'Q/UTILS/lua/qcore'
-local is_in   = require 'Q/UTILS/lua/is_in'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
-local function lmin(x, y) if ( x < y ) then return x else return y end end
+local function min(x, y)
+  if ( x < y ) then return x else return y end
+end
 
 local function select_ranges(f1, lb, ub, optargs )
   --=================================
@@ -15,89 +15,75 @@ local function select_ranges(f1, lb, ub, optargs )
   local spfn = assert(require(sp_fn_name))
   local subs = assert(spfn(f1, lb, ub, optargs ))
   assert(type(subs) == "table")
-  print("XXXX", f1:has_nulls())
-  assert(subs.has_nulls == false)
   --=================================
-  local nC = subs.max_num_in_chunk -- alias 
-  local lbnum = lb:num_elements() -- number of ranges
-  --- preserve across calls to f2_gen()
-  local chunk_idx = 0
-  local lbidx = 0 -- which range to read from 
-  local lboff = 0 -- how many elements of range lbidx have been consumed
+  --- preserve following across calls to gen()
+  local start_idx = 1   -- must be outside function, in closure
+  local stop_idx = #subs.lb -- must be outside function, in closure
+  assert(start_idx <= stop_idx)
+  local l_chunk_num = 0
+  local stuff_left = true  -- indicates more to be consumed
   --=================================
-  local f2_gen = function(chunk_num)
-    -- check expected chunk_num and generator's chunk_idx state
-    assert(chunk_num == chunk_idx)
-    local f2_buf = assert(cmem.new(subs.bufsz))
-    f2_buf:zero()
-    f2_buf:stealable(true)
-    local cst_f2_buf  = ffi.cast(subs.f2_cast_as, get_ptr(f2_buf))
-    local num_in_f2   = 0
-    local space_in_f2 = nC
-
-    local nn_f2_buf 
-    local cst_nn_f2_buf = ffi.NULL
-    if ( subs.has_nulls ) then 
-      local nn_bufsz =  ffi.sizeof("bool") * subs.max_num_in_chunk
-      nn_f2_buf = cmem.new( { size = nn_bufsz, qtype = "BL"})
-      nn_f2_buf:zero()
-      nn_f2_buf:stealable(true)
-      cst_nn_f2_buf  = ffi.cast("bool *", get_ptr(nn_f2_buf))
+  local function gen(chunk_num)
+    assert(chunk_num == l_chunk_num)
+    if ( stuff_left == false ) then return 0 end 
+    local outbuf = cmem.new({size = subs.bufsz, qtype = subs.out_qtype})
+    outbuf:zero()
+    outbuf:stealable(true)
+    local out_ptr = get_ptr(outbuf, subs.f2_cast_as)
+    local out_len = 0 
+    local nC = subs.max_num_in_chunk -- abbreviation
+  
+    local space_left = nC -- space in current chunk
+    local new_start = start_idx
+    while ( ( stuff_left ) and ( space_left > 0 ) ) do 
+      for i = start_idx, stop_idx do 
+        new_start = i
+        local xlb = subs.lb[i]
+        local xub = subs.ub[i]
+        local num_in_range = xub - xlb 
+        -- this while loop iterates over input chunks
+        -- If input chunk size == output chunk size, then this loop
+        -- can execute at most twice. 
+        while ( ( space_left > 0 ) and ( num_in_range > 0 ) ) do
+          -- start consuming from (chunk_idx/chunk_pos)
+          local chunk_idx = math.floor(xlb / nC)
+          local chunk_pos = xlb % nC
+          local num_in_chunk, chunk = f1:get_chunk(chunk_idx)
+          assert(type(chunk) == "CMEM")
+          local num_left_in_chunk = num_in_chunk - chunk_idx
+          assert(num_left_in_chunk > 0)
+          -- amount to consume from this chunk is the smaller of 
+          -- num_in_range and num_left_in_chunk, space_left
+          local num_to_consume = 
+            min(space_left, min(num_in_range, num_left_in_chunk))
+          assert(num_to_consume > 0)
+          -- consume "num_to_consume" from chunk_idx starting at chunk_pos
+          local in_ptr = get_ptr(chunk, subs.f1_cast_as)
+          ffi.C.memcpy(out_ptr+out_len, in_ptr+chunk_pos, num_to_consume * subs.width)
+          f1:unget_chunk(chunk_idx)
+          --============
+          out_len = out_len + num_to_consume 
+          space_left = space_left - num_to_consume
+          num_in_range = num_in_range - num_to_consume
+          xlb = xlb + num_to_consume 
+          subs.lb[i] = xlb
+        end -- end while 
+      end
+      if ( space_left > 0 ) then
+        stuff_left = false
+      end
     end
-
-    while ( space_in_f2 > 0 ) do 
-      if ( lbidx >= lbnum ) then break end -- no more input 
-      local ilb = lb:get1(lbidx):to_num()
-      local iub = ub:get1(lbidx):to_num()
-      assert(ilb < iub)
-      ilb = ilb + lboff 
-      assert(ilb <= iub)
-      if ( ilb == iub ) then -- this range has been consumed
-        lbidx = lbidx + 1 
-        if ( lbidx >= lbnum ) then -- no more ranges
-          break
-        else
-          lboff = 0
-          ilb = lb:get1(lbidx):to_num()
-          iub = ub:get1(lbidx):to_num()
-          assert(ilb < iub)
-        end
-      end
-      assert(ilb < iub)
-      local f1_chunk_idx = math.floor(ilb / nC)
-      local f1_chunk_off = ilb % nC
-      local f1_len, f1_buf, nn_f1_buf = f1:get_chunk(f1_chunk_idx)
-      local cst_f1_buf  = ffi.cast(subs.f1_cast_as, get_ptr(f1_buf))
-      local cst_nn_f1_buf
-      if ( subs.has_nulls ) then 
-        print("XXX", f1:has_nulls())
-        print("XX", type(nn_f1_buf))
-        assert(type(nn_f1_buf) == "CMEM") 
-      end
-      if ( nn_f1_buf ) then 
-        cst_nn_f1_buf = ffi.cast("bool *", get_ptr(nn_f1_buf))
-      end
-      assert(f1_len > 0) -- TODO P1 IS THIS OKAY????????
-      -- TODO P4 ignore bad ranges instead of asserting on them 
-      local num_in_f1 = f1_len - f1_chunk_off
-      local num_to_copy = lmin(space_in_f2, num_in_f1)
-      num_to_copy = lmin(num_to_copy, (iub-ilb))
-      ffi.C.memcpy(cst_f2_buf + num_in_f2, cst_f1_buf + f1_chunk_off,
-        num_to_copy * subs.width)
-      -- do copy for nn as well assuming it is needed
-      if ( subs.has_nulls) then 
-        ffi.C.memcpy(cst_nn_f2_buf + num_in_f2, cst_nn_f1_buf+f1_chunk_off,
-          num_to_copy * ffi.sizeof("bool"))
-      end
-      num_in_f2 = num_in_f2 + num_to_copy
-      lboff = lboff + num_to_copy
-      space_in_f2 = space_in_f2 - num_to_copy
-      f1:unget_chunk(f1_chunk_idx)
-    end
-    chunk_idx = chunk_idx + 1
-    return num_in_f2, f2_buf, nn_f2_buf
+    l_chunk_num = l_chunk_num + 1
+    start_idx = new_start --- set up for next call 
+    if ( out_len == 0 ) then outbuf:delete(); return 0; end 
+    return out_len, outbuf
   end
-  return lVector{gen=f2_gen, has_nulls=subs.has_nulls, qtype=subs.out_qtype,
-    max_num_in_chunk = subs.max_num_in_chunk}
+  --=================================
+  local  vargs = {}
+  vargs.gen = gen
+  vargs.has_nulls = subs.has_nulls
+  vargs.qtype = subs.out_qtype
+  vargs.max_num_in_chunk = subs.max_num_in_chunk
+  return lVector(vargs)
 end
 return select_ranges

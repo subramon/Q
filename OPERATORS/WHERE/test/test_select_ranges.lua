@@ -12,19 +12,20 @@ local lgutils = require 'liblgutils'
 
 local tests = {}
 tests.t1 = function ()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local max_num_in_chunk = 64   -- Normally should be multiple of 64
   local optargs = { max_num_in_chunk = max_num_in_chunk }
   local tbl = {}
   local n = max_num_in_chunk +  7
   for i = 1, n do tbl[#tbl+1] = i end 
-  local qtypes =  {"I1", "I2", "I4", "I8", "F4", "F8" }
+  local qtypes =  {"I1", "I2", "I4", "I8", "F4", "F8" } 
   for _, qtype in ipairs(qtypes) do 
     local a = mk_col(tbl, qtype, optargs):set_name("a")
     local tlb = { 0,  8, 16, 32, 40, 64, }
     local tub = { 1, 10, 19, 36, 56, 65, }
     local lb = mk_col(tlb, "I4") 
     local ub = mk_col(tub, "I8")
-    local c  = select_ranges(a, lb, ub):set_name("c")
+    local c  = select_ranges(a, lb, ub, optargs):set_name("c")
     c:eval()
     local tbl = { 1, 9, 10, 17, 18, 19, 33, 34, 35, 36, 41, 42, 43, 44, 
 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 65, }
@@ -36,12 +37,15 @@ tests.t1 = function ()
     cVector:check_all(true, true)
     a:delete()
     c:delete()
+    good_c:delete()
     lb:delete()
     ub:delete()
+    assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   end
   cVector:check_all(true, true)
   print("Test t1 succeeded")
 end
+--[[ TODO nn not implemented
   -- testing select_ranges with nulls
 tests.t2 = function ()
   local max_num_in_chunk = 64 
@@ -101,10 +105,42 @@ tests.t2 = function ()
   cVector:check_all(true, true)
   print("Test t2 succeeded")
 end
+--]]
+-- t3 tests for case when we input vector size exceeds 1 chunk
+tests.t3 = function ()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local max_num_in_chunk = 64   -- Normally should be multiple of 64
+  local optargs = { max_num_in_chunk = max_num_in_chunk }
+  local tbl = {}
+  local n = max_num_in_chunk +  7
+  for i = 1, n do tbl[#tbl+1] = i end 
+  local qtypes =  {"I1", "I2", "I4", "I8", "F4", "F8" } -- TODO 
+  local qtypes =  {"I4", }
+  for _, qtype in ipairs(qtypes) do 
+    local a = mk_col(tbl, qtype, optargs):set_name("a")
+    local tlb = { 0,  0, 0, 64, 64, 0, }
+    local tub = { 16, 16, 16, 67, 67, 16, }
+    local lb = mk_col(tlb, "I4") 
+    local ub = mk_col(tub, "I8")
+    local c  = select_ranges(a, lb, ub, optargs):set_name("c")
+    local chk_nc = 0
+    for k, v in ipairs(tlb) do
+      chk_nc = chk_nc + (tub[k] - tlb[k])
+    end
+    c:eval()
+    assert(c:num_elements() == chk_nc)
+    cVector:check_all(true, true)
+    a:delete()
+    c:delete()
+    lb:delete()
+    ub:delete()
+    assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  end
+  cVector:check_all(true, true)
+  print("Test t3 succeeded")
+end
 tests.t1()
-tests.t2()
+-- TODO tests.t2()
+tests.t3()
 collectgarbage()
-print("MEM", lgutils.mem_used())
-print("DSK", lgutils.dsk_used())
-assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests

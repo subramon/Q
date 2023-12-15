@@ -1,7 +1,10 @@
+local Q       = require 'Q'
 local ffi     = require 'ffi'
 local is_in   = require 'Q/UTILS/lua/is_in'
+local from_scalar   = require 'Q/UTILS/lua/from_scalar'
 local cutils  = require 'libcutils'
 
+local good_qtypes = { "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8",  }
 return function (
   f1,
   lb,
@@ -17,6 +20,7 @@ return function (
   if ( optargs ) then 
     assert(type(optargs) == "table")
     if ( optargs.max_num_in_chunk ) then 
+      print("WARNING!!!!! Untested")
       assert(type(optargs.max_num_in_chunk) == "number")
       assert(optargs.max_num_in_chunk > 0)
       assert( ( ( optargs.max_num_in_chunk / 64 ) * 64 ) == 
@@ -26,12 +30,13 @@ return function (
   end 
   subs.in_qtype = f1:qtype()
   subs.has_nulls = f1:has_nulls() 
-  if ( sub.has_nulls ) then 
-    assert(sub.nn_qtype == "BL") -- TODO P4 support B1 
+  if ( subs.has_nulls ) then 
+    assert(subs.nn_qtype == "BL") -- TODO P4 support B1 
   end
   --=================================
   -- NOTE: Assumption is that the number of ranges is small 
-  local lb_tbl, ub_tbl
+  local lb_tbl = {}
+  local ub_tbl = {}
   if ( type(lb) == "number" ) then 
     assert(type(ub) == "number" )
     lb_tbl = { lb }
@@ -42,21 +47,21 @@ return function (
     assert(lb:is_eov())
     assert(ub:is_eov())
 
-    assert(is_in(lb_qtype, { "I1", "I2", "I4", "I8", }))
-    assert(is_in(ub_qtype, { "I1", "I2", "I4", "I8", }))
+    assert(is_in(lb:qtype(), good_qtypes))
+    assert(is_in(ub:qtype(), good_qtypes))
 
     assert(lb:num_elements() == ub:num_elements())
     assert(lb:num_elements() > 0)
 
-    local xlb = mk_tbl(lb) -- mk_tbl is inverse of mk_col
+    local xlb = Q.mk_tbl(lb) -- mk_tbl is inverse of mk_col
     for k, v in ipairs(xlb) do 
       lb_tbl[k] = from_scalar(v)
       assert(type(lb_tbl[k]) == "number")
       assert(lb_tbl[k] >= 0)
     end
 
-    local xub  = mk_tbl(ub)
-    for k, v in ipairs(xlb) do 
+    local xub  = Q.mk_tbl(ub)
+    for k, v in ipairs(xub) do 
       ub_tbl[k] = from_scalar(v)
       assert(type(ub_tbl[k]) == "number")
       assert(ub_tbl[k] > lb_tbl[k])
@@ -64,6 +69,8 @@ return function (
   else
     error("bad types for ranges")
   end
+  subs.lb = lb_tbl
+  subs.ub = ub_tbl
   --==== Now we convert lb_tbl/ub_tbl to a specification as follows
   -- For each output chunk to tbe created, we create a list of 
   -- (chunk, lb, ub). Note that if we sum (ub-lb) for a given output chunk
@@ -72,8 +79,8 @@ return function (
   -- for the last one which *may* be less than that 
 
   --=================================
-  subs.in_ctype = cutils.str_qtype_to_str_ctype(in_qtype)
-  subs.out_qtype = in_qtype
+  subs.in_ctype = cutils.str_qtype_to_str_ctype(subs.in_qtype)
+  subs.out_qtype = subs.in_qtype
   subs.out_ctype = cutils.str_qtype_to_str_ctype(subs.out_qtype)
 
   subs.f1_cast_as = subs.in_ctype  .. "*" 
