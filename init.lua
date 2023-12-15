@@ -33,6 +33,7 @@ require "Q/OPERATORS/GROUPBY/lua/groupby"
 require "Q/OPERATORS/F1OPF2F3/lua/f1opf2f3"
 require "Q/OPERATORS/F1OPF2/lua/f1opf2"
 
+require "Q/OPERATORS/FIND/lua/find"
 require "Q/OPERATORS/SORT1/lua/sort1"
 require "Q/OPERATORS/PERMUTE/lua/permute_to"
 require "Q/OPERATORS/PERMUTE/lua/permute_from"

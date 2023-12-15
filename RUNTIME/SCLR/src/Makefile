@@ -79,5 +79,5 @@ _outer_eval_arith.c: gen_arith.lua
 	luajit gen_arith.lua
 _eval_cmp.c: gen_cmp.lua
 	luajit gen_cmp.lua
-_outer_eval_cmp.c: gen_cmp.lua
-	luajit gen_cmp.lua
+# _outer_eval_cmp.c: gen_cmp.lua
+# 	luajit gen_cmp.lua
