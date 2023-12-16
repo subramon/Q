@@ -125,4 +125,12 @@ extern const char *
 str_qtype_to_str_ispctype(
     const char * const str_qtype
     );
+extern bfloat16
+F4_to_F2(
+    float x
+    );
+extern float
+F2_to_F4(
+    bfloat16 x
+    );
 #endif // __QTYPES_H

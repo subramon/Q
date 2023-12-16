@@ -115,6 +115,7 @@ get_c_qtype(
   if ( strcmp("UI4", str_qtype) == 0 ) { return UI4; }
   if ( strcmp("UI8", str_qtype) == 0 ) { return UI8; }
 
+  if ( strcmp("F2", str_qtype) == 0 ) { return F2; }
   if ( strcmp("F4", str_qtype) == 0 ) { return F4; }
   if ( strcmp("F8", str_qtype) == 0 ) { return F8; }
 
@@ -149,6 +150,7 @@ get_str_qtype(
   if ( qtype == UI4 ) { return "UI4"; }
   if ( qtype == UI8 ) { return "UI8"; }
 
+  if ( qtype == F2 ) { return "F2"; }
   if ( qtype == F4 ) { return "F4"; }
   if ( qtype == F8 ) { return "F8"; }
 
@@ -181,6 +183,7 @@ str_qtype_to_str_ctype(
   if ( strcmp(str_qtype, "UI4") == 0 ) { return "uint32_t"; } 
   if ( strcmp(str_qtype, "UI8") == 0 ) { return "uint64_t"; } 
 
+  if ( strcmp(str_qtype, "F2") == 0 ) { return "bfloat16"; } 
   if ( strcmp(str_qtype, "F4") == 0 ) { return "float"; } 
   if ( strcmp(str_qtype, "F8") == 0 ) { return "double"; } 
 
@@ -191,6 +194,7 @@ str_qtype_to_str_ctype(
   return NULL; 
 }
 
+// NOTE: Not all types supported for ispc
 const char *
 str_qtype_to_str_ispctype(
     const char * const str_qtype
@@ -198,7 +202,7 @@ str_qtype_to_str_ispctype(
 {
   if ( strcmp(str_qtype, "Q0") == 0 ) { return NULL; } 
 
-  if ( strcmp(str_qtype, "B1") == 0 ) { return "uint64"; } 
+  if ( strcmp(str_qtype, "B1") == 0 ) { return NULL; } 
   if ( strcmp(str_qtype, "BL") == 0 ) { return "int8"; } 
 
   if ( strcmp(str_qtype, "I1") == 0 ) { return "int8"; } 
@@ -211,11 +215,35 @@ str_qtype_to_str_ispctype(
   if ( strcmp(str_qtype, "UI4") == 0 ) { return "uint32"; } 
   if ( strcmp(str_qtype, "UI8") == 0 ) { return "uint64"; } 
 
+  if ( strcmp(str_qtype, "F2") == 0 ) { return NULL; }
   if ( strcmp(str_qtype, "F4") == 0 ) { return "float"; } 
   if ( strcmp(str_qtype, "F8") == 0 ) { return "double"; } 
 
-  if ( strcmp(str_qtype, "TM1") == 0 ) { return "tm_t"; } 
-  if ( strcmp(str_qtype, "TM") == 0 ) { return "struct tm"; } 
-  if ( strcmp(str_qtype, "CUSTOM1") == 0 ) { return "custom1_t"; } 
+  if ( strcmp(str_qtype, "TM1") == 0 ) { return NULL; } 
+  if ( strcmp(str_qtype, "TM") == 0 ) { return NULL; } 
+  if ( strcmp(str_qtype, "CUSTOM1") == 0 ) { return NULL; } 
   return NULL; 
 }
+
+bfloat16
+F4_to_F2(
+    float x
+    )
+{
+  bfloat16 y = 0;
+  memcpy(&y, ((char *)&x)+2, 2);
+
+  return y;
+}
+
+float
+F2_to_F4(
+    bfloat16 x
+    )
+{
+  float y = 0;
+  memcpy(((char *)&y)+2, &x, 2);
+
+  return y;
+}
+

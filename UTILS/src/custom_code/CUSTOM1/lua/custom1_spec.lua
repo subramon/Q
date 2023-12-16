@@ -1,7 +1,6 @@
 local terms = {
   "intercept",
-  "baseprice_lift",
-  "promo_lift",
+  --===========================
   "goodfriday",
   "easter",
   "mardigras",
@@ -20,14 +19,20 @@ local terms = {
   "christmas_minus",
   "christmas",
   "newyearsday",
+  --===========================
   "t_o_y",
-  "sls_unit_q_L1",
-  "sls_unit_q_L2",
   "n_week",
   "time_band",
   "btcs_value",
+  "sls_unit_q_L1",
+  "sls_unit_q_L2",
   "sls_unit_q_L3",
   "sls_unit_q_L4",
   "sls_unit_q_L5",
+  --========================
+  "baseprice",
+  "offerprice",
+  "baseprice_lift",
+  "promo_lift",
 }
   return terms
