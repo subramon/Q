@@ -4,38 +4,40 @@
 typedef uint16_t bfloat16; 
 //  TODO P2 This should be uncommented #include "custom1.h" // for CUSTOM1
 typedef struct _custom1_t {
-  float intercept;
-  float baseprice_lift;
-  float promo_lift;
-  float goodfriday;
-  float easter;
-  float mardigras;
-  float memorialday;
-  float mothersday_minus;
-  float mothersday;
-  float presidentsday;
-  float superbowl_minus;
-  float superbowl;
-  float thanksgiving;
-  float valentines;
-  float stpatricks;
-  float cincodemayo;
-  float julyfourth;
-  float halloween;
-  float christmas_minus;
-  float christmas;
-  float newyearsday;
-  float t_o_y;
-  float sls_unit_q_L1;
-  float sls_unit_q_L2;
-  float n_week;
-  float time_band;
-  float btcs_value;
-  float sls_unit_q_L3;
-  float sls_unit_q_L4;
-  float sls_unit_q_L5;
-  uint64_t bmask; 
-} custom1_t; 
+  bfloat16 intercept;
+  bfloat16 goodfriday;
+  bfloat16 easter;
+  bfloat16 mardigras;
+  bfloat16 memorialday;
+  bfloat16 mothersday_minus;
+  bfloat16 mothersday;
+  bfloat16 presidentsday;
+  bfloat16 superbowl_minus;
+  bfloat16 superbowl;
+  bfloat16 thanksgiving;
+  bfloat16 valentines;
+  bfloat16 stpatricks;
+  bfloat16 cincodemayo;
+  bfloat16 julyfourth;
+  bfloat16 halloween;
+  bfloat16 christmas_minus;
+  bfloat16 christmas;
+  bfloat16 newyearsday;
+  bfloat16 t_o_y;
+  bfloat16 n_week;
+  bfloat16 time_band;
+  bfloat16 btcs_value;
+  bfloat16 sls_unit_q_L1;
+  bfloat16 sls_unit_q_L2;
+  bfloat16 sls_unit_q_L3;
+  bfloat16 sls_unit_q_L4;
+  bfloat16 sls_unit_q_L5;
+  bfloat16 baseprice;
+  bfloat16 offerprice;
+  bfloat16 baseprice_lift;
+  bfloat16 promo_lift;
+} ;
+
 typedef enum { 
   Q0, // mixed  must be first one 
 

@@ -22,7 +22,7 @@ mk_custom1(
     } 
     json_t *x = NULL;
     uint64_t bmask = 0;
-#include "generated_code.c"
+#include "gen_mk_custom1.c"
     Y[i].bmask = bmask;
   }
 

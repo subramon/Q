@@ -14,9 +14,9 @@ local x = [[
     }
 ]]
 
-local terms = require 'Q/UTILS/src/custom1_terms'
-local outfile = "generated_code.c"
-local fp = assert(io.open("generated_code.c", "w"))
+local terms = require 'Q/CUSTOM_CODE/CUSTOM1/lua/custom1_spec'
+local outfile = "../src/gen_mk_custom1.c"
+local fp = assert(io.open(outfile, "w"))
 
 for k, v in ipairs(terms) do 
   local y = string.gsub(x, "__TERM__", v)

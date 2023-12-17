@@ -6,8 +6,8 @@ local x = [[
   }
 ]]
 
-local terms = require 'Q/UTILS/src/custom1_terms'
-local outfile = "gen_pr_custom1.c"
+local terms = require 'Q/CUSTOM_CODE/CUSTOM1/lua/custom1_spec'
+local outfile = "../src/gen_pr_custom1.c"
 local fp = assert(io.open(outfile, "w"))
 
 local mcr_def = [[
