@@ -1,222 +1,254 @@
   if ( (x->bmask & ((uint64_t)1 << 0)) != 0 ) {
-    sprintf(tmp, "\"intercept\" : %f ", x->intercept);
+    float ftmp = F2_to_F4(x->intercept);  \
+    sprintf(tmp, "'intercept' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 1)) != 0 ) {
-    sprintf(tmp, "\"goodfriday\" : %f ", x->goodfriday);
+    float ftmp = F2_to_F4(x->goodfriday);  \
+    sprintf(tmp, "'goodfriday' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 2)) != 0 ) {
-    sprintf(tmp, "\"easter\" : %f ", x->easter);
+    float ftmp = F2_to_F4(x->easter);  \
+    sprintf(tmp, "'easter' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 3)) != 0 ) {
-    sprintf(tmp, "\"mardigras\" : %f ", x->mardigras);
+    float ftmp = F2_to_F4(x->mardigras);  \
+    sprintf(tmp, "'mardigras' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 4)) != 0 ) {
-    sprintf(tmp, "\"memorialday\" : %f ", x->memorialday);
+    float ftmp = F2_to_F4(x->memorialday);  \
+    sprintf(tmp, "'memorialday' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 5)) != 0 ) {
-    sprintf(tmp, "\"mothersday_minus\" : %f ", x->mothersday_minus);
+    float ftmp = F2_to_F4(x->mothersday_minus);  \
+    sprintf(tmp, "'mothersday_minus' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 6)) != 0 ) {
-    sprintf(tmp, "\"mothersday\" : %f ", x->mothersday);
+    float ftmp = F2_to_F4(x->mothersday);  \
+    sprintf(tmp, "'mothersday' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 7)) != 0 ) {
-    sprintf(tmp, "\"presidentsday\" : %f ", x->presidentsday);
+    float ftmp = F2_to_F4(x->presidentsday);  \
+    sprintf(tmp, "'presidentsday' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 8)) != 0 ) {
-    sprintf(tmp, "\"superbowl_minus\" : %f ", x->superbowl_minus);
+    float ftmp = F2_to_F4(x->superbowl_minus);  \
+    sprintf(tmp, "'superbowl_minus' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 9)) != 0 ) {
-    sprintf(tmp, "\"superbowl\" : %f ", x->superbowl);
+    float ftmp = F2_to_F4(x->superbowl);  \
+    sprintf(tmp, "'superbowl' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 10)) != 0 ) {
-    sprintf(tmp, "\"thanksgiving\" : %f ", x->thanksgiving);
+    float ftmp = F2_to_F4(x->thanksgiving);  \
+    sprintf(tmp, "'thanksgiving' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 11)) != 0 ) {
-    sprintf(tmp, "\"valentines\" : %f ", x->valentines);
+    float ftmp = F2_to_F4(x->valentines);  \
+    sprintf(tmp, "'valentines' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 12)) != 0 ) {
-    sprintf(tmp, "\"stpatricks\" : %f ", x->stpatricks);
+    float ftmp = F2_to_F4(x->stpatricks);  \
+    sprintf(tmp, "'stpatricks' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 13)) != 0 ) {
-    sprintf(tmp, "\"cincodemayo\" : %f ", x->cincodemayo);
+    float ftmp = F2_to_F4(x->cincodemayo);  \
+    sprintf(tmp, "'cincodemayo' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 14)) != 0 ) {
-    sprintf(tmp, "\"julyfourth\" : %f ", x->julyfourth);
+    float ftmp = F2_to_F4(x->julyfourth);  \
+    sprintf(tmp, "'julyfourth' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 15)) != 0 ) {
-    sprintf(tmp, "\"halloween\" : %f ", x->halloween);
+    float ftmp = F2_to_F4(x->halloween);  \
+    sprintf(tmp, "'halloween' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 16)) != 0 ) {
-    sprintf(tmp, "\"christmas_minus\" : %f ", x->christmas_minus);
+    float ftmp = F2_to_F4(x->christmas_minus);  \
+    sprintf(tmp, "'christmas_minus' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 17)) != 0 ) {
-    sprintf(tmp, "\"christmas\" : %f ", x->christmas);
+    float ftmp = F2_to_F4(x->christmas);  \
+    sprintf(tmp, "'christmas' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 18)) != 0 ) {
-    sprintf(tmp, "\"newyearsday\" : %f ", x->newyearsday);
+    float ftmp = F2_to_F4(x->newyearsday);  \
+    sprintf(tmp, "'newyearsday' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 19)) != 0 ) {
-    sprintf(tmp, "\"t_o_y\" : %f ", x->t_o_y);
+    float ftmp = F2_to_F4(x->t_o_y);  \
+    sprintf(tmp, "'t_o_y' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 20)) != 0 ) {
-    sprintf(tmp, "\"n_week\" : %f ", x->n_week);
+    float ftmp = F2_to_F4(x->n_week);  \
+    sprintf(tmp, "'n_week' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 21)) != 0 ) {
-    sprintf(tmp, "\"time_band\" : %f ", x->time_band);
+    float ftmp = F2_to_F4(x->time_band);  \
+    sprintf(tmp, "'time_band' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 22)) != 0 ) {
-    sprintf(tmp, "\"btcs_value\" : %f ", x->btcs_value);
+    float ftmp = F2_to_F4(x->btcs_value);  \
+    sprintf(tmp, "'btcs_value' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 23)) != 0 ) {
-    sprintf(tmp, "\"sls_unit_q_L1\" : %f ", x->sls_unit_q_L1);
+    float ftmp = F2_to_F4(x->sls_unit_q_L1);  \
+    sprintf(tmp, "'sls_unit_q_L1' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 24)) != 0 ) {
-    sprintf(tmp, "\"sls_unit_q_L2\" : %f ", x->sls_unit_q_L2);
+    float ftmp = F2_to_F4(x->sls_unit_q_L2);  \
+    sprintf(tmp, "'sls_unit_q_L2' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 25)) != 0 ) {
-    sprintf(tmp, "\"sls_unit_q_L3\" : %f ", x->sls_unit_q_L3);
+    float ftmp = F2_to_F4(x->sls_unit_q_L3);  \
+    sprintf(tmp, "'sls_unit_q_L3' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 26)) != 0 ) {
-    sprintf(tmp, "\"sls_unit_q_L4\" : %f ", x->sls_unit_q_L4);
+    float ftmp = F2_to_F4(x->sls_unit_q_L4);  \
+    sprintf(tmp, "'sls_unit_q_L4' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 27)) != 0 ) {
-    sprintf(tmp, "\"sls_unit_q_L5\" : %f ", x->sls_unit_q_L5);
+    float ftmp = F2_to_F4(x->sls_unit_q_L5);  \
+    sprintf(tmp, "'sls_unit_q_L5' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 28)) != 0 ) {
-    sprintf(tmp, "\"baseprice\" : %f ", x->baseprice);
+    float ftmp = F2_to_F4(x->baseprice);  \
+    sprintf(tmp, "'baseprice' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 29)) != 0 ) {
-    sprintf(tmp, "\"offerprice\" : %f ", x->offerprice);
+    float ftmp = F2_to_F4(x->offerprice);  \
+    sprintf(tmp, "'offerprice' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 30)) != 0 ) {
-    sprintf(tmp, "\"baseprice_lift\" : %f ", x->baseprice_lift);
+    float ftmp = F2_to_F4(x->baseprice_lift);  \
+    sprintf(tmp, "'baseprice_lift' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }
 
   /*-------------------------------------------------*/
   if ( (x->bmask & ((uint64_t)1 << 31)) != 0 ) {
-    sprintf(tmp, "\"promo_lift\" : %f ", x->promo_lift);
+    float ftmp = F2_to_F4(x->promo_lift);  \
+    sprintf(tmp, "'promo_lift' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }

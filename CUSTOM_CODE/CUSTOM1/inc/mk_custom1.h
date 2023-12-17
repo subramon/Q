@@ -1,4 +1,4 @@
-#include "custom1.h"
+#include "qtypes.h"
 //START_FOR_CDEF
 extern int
 mk_custom1(

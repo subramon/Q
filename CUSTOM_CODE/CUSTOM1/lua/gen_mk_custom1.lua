@@ -3,14 +3,15 @@ local x = [[
     if ( x != NULL ) { 
       bmask |= ((uint64_t)1 << __IDX__);
       if ( json_is_real(x) ) { 
-        Y[i].__TERM__ = json_real_value(x); 
+        ftmp = (float)json_real_value(x); 
       }
       else if ( json_is_integer(x) ) { 
-        Y[i].__TERM__ = json_integer_value(x); 
+        ftmp = (float)json_integer_value(x); 
       }
       else {
         go_BYE(-1);
       }
+      Y[i].__TERM__ = F4_to_F2(ftmp);
     }
 ]]
 

@@ -1,6 +1,7 @@
 local x = [[
   if ( (x->bmask & ((uint64_t)1 << __IDX__)) != 0 ) {
-    sprintf(tmp, "\"__TERM__\" : %f ", x->__TERM__);
+    float ftmp = F2_to_F4(x->__TERM__);  \
+    sprintf(tmp, "'__TERM__' : %f ", ftmp);  \
     status = cat_to_buf(&buf, &bufsz, &buflen, tmp, 0);  \
     mcr_pr_comma();
   }

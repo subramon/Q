@@ -9,7 +9,8 @@ for k, v in ipairs(T) do
   H[#H+1] = "  bfloat16 " .. v .. ";" 
   
 end
-H[#H+1] = "} ; "
+H[#H+1] = "  uint64_t bmask; "
+H[#H+1] = "} custom1_t; "
 H[#H+1] = "#endif // CUSTOM1_H"
 H[#H+1] = "\n"
 local  outstr = table.concat(H, "\n")

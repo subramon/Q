@@ -58,6 +58,11 @@ vctr_print_lma(
       case I2 : fprintf(fp, "%d\n", ((int16_t *)Y)[i]); break; 
       case I4 : fprintf(fp, "%d\n", ((int32_t *)Y)[i]); break; 
       case I8 : fprintf(fp, "%" PRIi64 "\n", ((int64_t *)Y)[i]); break; 
+      case F2 : {
+                  float ftmp = F2_to_F4(((bfloat16 *)Y)[i]);
+                  fprintf(fp, "%f\n", ftmp);
+                }
+                break;
       case F4 : fprintf(fp, "%f\n", ((float *)Y)[i]); break; 
       case F8 : fprintf(fp, "%lf\n", ((double *)Y)[i]); break; 
       case SC : { 

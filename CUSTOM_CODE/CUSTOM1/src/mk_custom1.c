@@ -13,6 +13,7 @@ mk_custom1(
   int status = 0;
   json_t *root = NULL;
   json_error_t error;
+  float ftmp;
 
   for ( uint32_t i = 0; i < nX; i++ ) {
     root = json_loads(X+(i*width), 0, &error);

@@ -1,6 +1,7 @@
 #include "q_incs.h"
 #include "qtypes.h"
 #include "cprint.h"
+#include "pr_custom1.h"
 #include "get_bit_u64.h"
 
 // TODO P3 Need to fiully implement formats
@@ -127,6 +128,16 @@ cprint(
                          tptr[i].tm_yday);
                      }
                      fprintf(fp, "%s", buf);
+                  }
+                  break;
+        case CUSTOM1 : 
+                  {
+                    char *buf = NULL; 
+                    custom1_t *data_ptr = (custom1_t *)data;
+                    data_ptr += i; 
+                    status = pr_custom1(data_ptr, &buf); cBYE(status);
+                    fprintf(fp, "'%s'\n", buf);
+                    free_if_non_null(buf); 
                   }
                   break;
         default : 

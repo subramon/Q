@@ -1,3 +1,4 @@
+-- must be a table (see custom1_extract)
 local terms = {
   "intercept",
   --===========================

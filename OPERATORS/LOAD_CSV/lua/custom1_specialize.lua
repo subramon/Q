@@ -32,9 +32,9 @@ return function(invec)
   subs.bufsz = subs.max_num_in_chunk * subs.out_width
 
   subs.fn = "mk_custom1"
-  subs.dotc = "UTILS/src/custom_code/src/mk_custom1.c"
-  subs.doth = "UTILS/src/custom_code/inc/mk_custom1.h"
-  subs.incs = { "UTILS/inc", "UTILS/src/custom_code/inc/", }
+  subs.dotc = "CUSTOM_CODE/CUSTOM1/src/mk_custom1.c"
+  subs.doth = "CUSTOM_CODE/CUSTOM1/inc/mk_custom1.h"
+  subs.incs = { "UTILS/inc", "CUSTOM_CODE/CUSTOM1/inc/", }
   subs.libs = { "-ljansson", }
 
 --[[ We auto generate code so no longer needed 

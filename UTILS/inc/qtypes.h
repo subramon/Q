@@ -36,7 +36,8 @@ typedef struct _custom1_t {
   bfloat16 offerprice;
   bfloat16 baseprice_lift;
   bfloat16 promo_lift;
-} ;
+  uint64_t bmask;
+} custom1_t;
 
 typedef enum { 
   Q0, // mixed  must be first one 
