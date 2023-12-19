@@ -171,4 +171,14 @@ end
 T.vsand = vsand
 require('Q/q_export').export('vsand', vsand)
     
+local function get_bit(x, y, optargs)
+  local expander = require 'Q/OPERATORS/F1S1OPF2/lua/expander_f1s1opf2'
+  local status, col = pcall(expander, "get_bit", x, y, optargs)
+  if ( not status ) then print(col) end
+  assert(status, "Could not execute get_bit")
+  return col
+end
+T.get_bit = get_bit
+require('Q/q_export').export('get_bit', get_bit)
+    
 return T
