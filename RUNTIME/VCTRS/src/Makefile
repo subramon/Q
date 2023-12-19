@@ -2,7 +2,6 @@ CC=gcc
 
 INCS := -I../inc/ 
 INCS += -I../../../UTILS/inc/
-INCS += -I../../../CUSTOM_CODE/CUSTOM1/inc/
 INCS += -I../../CMEM/inc/
 INCS += -I../../SCLR/inc/
 INCS += -I../../../TMPL_FIX_HASHMAP/inc/
@@ -64,9 +63,6 @@ SRCS +=	chnk_is.c
 SRCS +=	chnk_make_mem.c  
 SRCS +=	chnk_drop_mem.c  
 SRCS +=	chnk_l1_to_l2.c  
-
-# CUSTOM CODE 
-SRCS += ../../../CUSTOM_CODE/CUSTOM1/src/pr_custom1.c
 
 OBJS = $(SRCS:.c=.o)
 

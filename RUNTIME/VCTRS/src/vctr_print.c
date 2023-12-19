@@ -10,7 +10,6 @@
 #include "rs_mmap.h"
 #include "chnk_get_data.h"
 #include "get_bit_u64.h"
-#include "pr_custom1.h" // CUSTOM CODE 
 #include "vctr_print.h"
 
 extern vctr_rs_hmap_t *g_vctr_hmap;
@@ -253,6 +252,12 @@ vctr_print(
         case UI2 : fprintf(fp, "%d\n", ((uint16_t *)data)[i]); break; 
         case UI4 : fprintf(fp, "%d\n", ((uint32_t *)data)[i]); break; 
         case UI8 : fprintf(fp, "%" PRIu64 "\n", ((uint64_t *)data)[i]); break; 
+        case F2 : 
+                   {
+                     float ftmp = F2_to_F4(((bfloat16 *)data)[i]);
+                     fprintf(fp, "%f\n", ftmp);
+                   }
+                   break; 
         case F4 : fprintf(fp, "%f\n", ((float *)data)[i]); break; 
         case F8 : fprintf(fp, "%lf\n", ((double *)data)[i]); break; 
         case SC : { 
@@ -288,16 +293,6 @@ vctr_print(
 
                      fprintf(fp, "%s\n", buf);
                    }
-                  break;
-        case CUSTOM1 : 
-                  {
-                    char *buf = NULL; 
-                    custom1_t *data_ptr = (custom1_t *)data;
-                    data_ptr += i; 
-                    status = pr_custom1(data_ptr, &buf); cBYE(status);
-                    fprintf(fp, "'%s'\n", buf);
-                    free_if_non_null(buf); 
-                  }
                   break;
         default : go_BYE(-1); break;
       }
