@@ -10,9 +10,6 @@ EXTSO=${Q_ROOT}/lib/${MYSO}
 
 all : ${MYSO} ${EXTSO}
 
-../inc/custom1.h : 
-	lua mk_custom1.lua custom1_terms.lua
-
 gen_inc_files : \
 	../inc/txt_to_BL.h \
 	../inc/txt_to_SC.h \
@@ -243,7 +240,7 @@ GEN_OBJS = $(GEN_SRCS:.c=.o)
 ${EXTSO} : ${MYSO}
 	cp ${MYSO} ${EXTSO}
 
-${MYSO} : ${GEN_OBJS} ${OBJS}  ../inc/custom1.h
+${MYSO} : ${GEN_OBJS} ${OBJS}  
 	gcc -shared ${QCFLAGS} ${QLDFLAGS} ${INCS} \
 		${GEN_OBJS} ${OBJS} -o ${MYSO}
 

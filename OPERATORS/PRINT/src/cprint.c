@@ -130,16 +130,6 @@ cprint(
                      fprintf(fp, "%s", buf);
                   }
                   break;
-        case CUSTOM1 : 
-                  {
-                    char *buf = NULL; 
-                    custom1_t *data_ptr = (custom1_t *)data;
-                    data_ptr += i; 
-                    status = pr_custom1(data_ptr, &buf); cBYE(status);
-                    fprintf(fp, "'%s'\n", buf);
-                    free_if_non_null(buf); 
-                  }
-                  break;
         default : 
                   fprintf(stderr, "Unknown qtypes[%d] = %d \n", j, qtypes[j]);
                   go_BYE(-1); 

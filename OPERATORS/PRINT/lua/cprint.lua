@@ -23,8 +23,7 @@ local function cprint(
   subs.dotc = "OPERATORS/PRINT/src/cprint.c"
   subs.doth = "OPERATORS/PRINT/inc/cprint.h"
   subs.srcs = { "UTILS/src/get_bit_u64.c" }
-  subs.incs = { "OPERATORS/PRINT/inc/", "UTILS/inc/",
-    "/CUSTOM_CODE/CUSTOM1/inc/", }
+  subs.incs = { "OPERATORS/PRINT/inc/", "UTILS/inc/", }
   subs.structs = nil -- no structs need to be cdef'd
   subs.libs = nil -- no libaries need to be linked
   qc.q_add(subs); 

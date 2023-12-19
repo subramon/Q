@@ -1,2 +1,0 @@
-  src_pk, src_t_start, src_t_stop,
-  dst_pk, dst_t_start, dst_t_stop, dst_val, optargs)

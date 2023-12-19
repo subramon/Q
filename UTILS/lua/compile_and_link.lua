@@ -29,9 +29,16 @@ local function compile_and_link(
   end
   --===============================
   local str_incs = {}
+  local src_root = qcfg.q_src_root
   if ( incs ) then
     for _, v in ipairs(incs) do
-      local incdir = qcfg.q_src_root .. v
+      local incdir 
+      if ( string.find(v, "/") ~= 1 ) then
+        -- we do not have fully qualified path
+        incdir = src_root .. "/" .. v
+      else
+        incdir = v
+      end 
       assert(cutils.isdir(incdir), incdir)
       str_incs[#str_incs+1] = "-I" .. incdir
     end

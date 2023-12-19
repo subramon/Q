@@ -38,8 +38,14 @@ local function for_cdef(
     assert(type(incs) == "table")
     local str_incs = {}
     for k, v in ipairs(incs) do
-      local incdir = src_root .. "/" .. v
-      assert(cutils.isdir(incdir))
+      local incdir 
+      if ( string.find(v, "/") ~= 1 ) then
+        -- we do not have fully qualified path
+        incdir = src_root .. "/" .. v
+      else
+        incdir = v
+      end 
+      assert(cutils.isdir(incdir), "Missing directory " .. incdir)
       str_incs[k] = "-I" .. incdir
     end
     incs = table.concat(str_incs, " ")

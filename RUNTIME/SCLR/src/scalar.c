@@ -224,6 +224,12 @@ static int l_sclr_to_str( lua_State *L) {
     case UI4 : nw = snprintf(buf, BUFLEN, "%u", ptr_sclr->val.i4); break;
     case UI8 : nw = snprintf(buf, BUFLEN, "%" PRIu64, ptr_sclr->val.i8); break;
     //------------------------------------------
+    case F2 : 
+               {
+                 float ftmp = F2_to_F4(ptr_sclr->val.f2);
+                 nw = snprintf(buf, BUFLEN, "%f", ftmp); 
+               }
+               break;
     case F4 : nw = snprintf(buf, BUFLEN, "%f", ptr_sclr->val.f4); break;
     case F8 : nw = snprintf(buf, BUFLEN, "%lf", ptr_sclr->val.f8); break;
     //------------------------------------------
