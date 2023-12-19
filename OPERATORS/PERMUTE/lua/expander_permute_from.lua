@@ -18,7 +18,9 @@ local function expander_permute_from(x, p, optargs)
   local t_start = cutils.rdtsc()
 
   -- Now, get access to x's data and perform the operation
-  local xcmem = x:get_lma_write()
+  assert(x:num_readers() == 0)
+  local xcmem = x:get_lma_read()
+  assert(x:num_readers() == 1)
   assert(xcmem:is_foreign() == true)
   local xptr = get_ptr(xcmem)
   xptr = ffi.cast(subs.cast_x_as, xptr)
@@ -32,7 +34,9 @@ local function expander_permute_from(x, p, optargs)
     local plen, p_chunk = p:get_chunk(chunk_num) 
     if ( plen == 0 ) then 
       ybuf:delete() 
-      x:unget_lma_write()
+      x:unget_lma_read()
+      assert(x:num_readers() == 0)
+      x:kill()
       return 0
     end
     local pptr = get_ptr(p_chunk, subs.cast_p_as)
@@ -40,7 +44,9 @@ local function expander_permute_from(x, p, optargs)
     qc[func_name](xptr, pptr, plen, subs.num_elements, yptr)
     p:unget_chunk(chunk_num)
     if ( plen < subs.max_num_in_chunk ) then -- no more calls 
-      x:unget_lma_write()
+      x:unget_lma_read()
+      assert(x:num_readers() == 0)
+      x:kill()
     end
     l_chunk_num = l_chunk_num + 1 
     return plen, ybuf

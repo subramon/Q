@@ -56,6 +56,7 @@ local prm_qtypes = { "I4" }
       local p2 = Q.seq(p2args):set_name("p2")
 
       local xprime = x:eval():chunks_to_lma()
+      assert(xprime:num_readers() == 0)
       local y = Q.permute_from(xprime, p):set_name("y")
       assert(type(y) == "lVector")
       assert(y:qtype() == x:qtype())
@@ -64,6 +65,7 @@ local prm_qtypes = { "I4" }
       x:pr("_x")
       p:pr("_p")
       y:pr("_y")
+      assert(xprime:num_readers() == 0)
 
 --[[
       local y2 = Q.permute_from(x, p2, yargs):set_name("y")
