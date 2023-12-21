@@ -84,7 +84,8 @@ vctr_del(
       }
       else {
         // we may have deleted chunks that are too 
-        uint32_t watermark = val.max_chnk_idx - val.memo_len;
+        // The +1 is important here
+        uint32_t watermark = val.max_chnk_idx + 1 - val.memo_len;
         if ( chnk_idx >= watermark ) {
           if ( !is_found ) { go_BYE(-1); }
         }

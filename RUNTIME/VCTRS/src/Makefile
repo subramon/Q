@@ -30,6 +30,7 @@ SRCS +=	vctr_is_early_free.c
 SRCS +=	vctr_is_eov.c  
 SRCS +=	vctr_is_persist.c  
 SRCS +=	vctr_make_mem.c  
+SRCS +=	vctr_nop.c  
 
 SRCS +=	vctr_chnks_to_lma.c  
 SRCS +=	vctr_lma_to_chnks.c
@@ -62,6 +63,7 @@ SRCS +=	chnk_get_data.c
 SRCS +=	chnk_is.c  
 SRCS +=	chnk_make_mem.c  
 SRCS +=	chnk_drop_mem.c  
+SRCS +=	chnk_nop.c  
 SRCS +=	chnk_l1_to_l2.c  
 
 OBJS = $(SRCS:.c=.o)

@@ -14,8 +14,12 @@ local function idx_sort(idx, val, ordr)
 
   local t_start = cutils.rdtsc()
   -- create new vectors with old vector's data but in lma format
-  local outidx = idx:chunks_to_lma()
-  local outval = val:chunks_to_lma()
+
+  local outidx = idx:chunks_to_lma():set_name("outidx")
+  local outval = val:chunks_to_lma():set_name("outval")
+
+  assert(outidx:num_readers() == 0); assert(outidx:num_writers() == 0)
+  assert(outval:num_readers() == 0); assert(outval:num_writers() == 0)
 
   -- Now, get access to idx data 
   local idx_cmem, _, idx_len = outidx:get_lma_write()
@@ -29,12 +33,19 @@ local function idx_sort(idx, val, ordr)
   assert(val_cmem:is_foreign() == true)
   local val_ptr = get_ptr(val_cmem, subs.cast_val_as)
 
+  assert(outidx:num_readers() == 0); assert(outidx:num_writers() == 1)
+  assert(outval:num_readers() == 0); assert(outval:num_writers() == 1)
+
   -- do the real work 
   qc[func_name](idx_ptr, val_ptr, idx_len)
   -- Indicate write is over 
   outidx:unget_lma_write()
   outval:unget_lma_write()
   record_time(t_start, "sort1")
+
+  assert(outidx:num_readers() == 0); assert(outidx:num_writers() == 0)
+  assert(outval:num_readers() == 0); assert(outval:num_writers() == 0)
+
   return outidx, outval 
 
 end

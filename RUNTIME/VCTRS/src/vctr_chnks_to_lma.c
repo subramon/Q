@@ -30,6 +30,7 @@ vctr_chnks_to_lma(
   int status = 0;
   char *lma_file = NULL;
   char *X = NULL, *bak_X = NULL; size_t nX = 0, bak_nX = 0;
+  char *l2_file = NULL;
 
   *ptr_new_uqid = 0;
   if ( tbsp != 0 ) { go_BYE(-1); } 
@@ -100,25 +101,44 @@ vctr_chnks_to_lma(
         &chnk_where_found);
     cBYE(status);
     if ( !chnk_is_found ) { go_BYE(-1); }
-    uint32_t num_in_chnk = 
-      g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_elements;
-    uint32_t num_readers = 
-      g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers;
-    uint32_t num_writers = 
-      g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_writers;
+    chnk_rs_hmap_val_t *ptr_val = 
+      &(g_chnk_hmap[tbsp].bkts[chnk_where_found].val);
+    //-------------------------------
+    uint32_t num_in_chnk = ptr_val->num_elements;
+    uint32_t num_readers = ptr_val->num_readers;
+    uint32_t num_writers = ptr_val->num_writers;
     if ( num_readers != 0 ) { go_BYE(-1); } 
     if ( num_writers != 0 ) { go_BYE(-1); } 
-    char *data  = chnk_get_data(tbsp, chnk_where_found, false);
-    if ( data == NULL ) { go_BYE(-1); } 
-    size_t bytes_to_copy = num_in_chnk * v.width;
+    // IMPORTANT: Bypass direct chnk_get_data call 
+    // This is because we don't want to force a load into l1 mem 
+    // Note that whatI am doing is somewhat dangerous since I am 
+    // bypassing my own APIs like chnk_get_data(). The reason is 
+    // efficiency. Time will tell if this was a smart move
+    char *data = NULL; size_t bytes_to_copy; 
+    char *Y = NULL; size_t nY = 0;
+    if ( ptr_val->l1_mem != NULL ) { 
+      data  = chnk_get_data(tbsp, chnk_where_found, false);
+      num_readers = ptr_val->num_readers;
+      if ( num_readers != 1 ) { go_BYE(-1); } 
+      g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers = 0;
+    }
+    else {
+      if ( !ptr_val->l2_exists ) { go_BYE(-1); } 
+      l2_file = l2_file_name(tbsp, old_uqid, chnk_idx);
+      if ( l2_file == NULL ) { go_BYE(-1); }
+      status = rs_mmap(l2_file, &Y, &nY, 0); cBYE(status);
+      data = Y;
+    }
+    bytes_to_copy = num_in_chnk * v.width;
+    free_if_non_null(l2_file);
     if ( bytes_to_copy > nX ) { go_BYE(-1); } 
+    if ( data == NULL ) { go_BYE(-1); } 
+    //------------------------------------------------------------
     memcpy(X, data, bytes_to_copy); 
     X  += bytes_to_copy;
     nX -= bytes_to_copy;
-    if ( g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers != 1 ) {
-      go_BYE(-1); 
-    }
-    g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers = 0;
+    //--- release data if needed 
+    if ( Y != NULL ) { munmap(Y, nY); }
 
   }
   // update meta data for new vector
@@ -130,5 +150,6 @@ vctr_chnks_to_lma(
 BYE:
   mcr_rs_munmap(bak_X, bak_nX); // X, nX are modified in the loop
   free_if_non_null(lma_file);
+  free_if_non_null(l2_file);
   return status;
 }

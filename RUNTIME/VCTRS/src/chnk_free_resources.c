@@ -46,7 +46,7 @@ chnk_free_resources(
       free_if_non_null(l2_file);
       status = decr_dsk_used(ptr_val->size); cBYE(status);
       ptr_val->l2_exists = false;
-      printf("Decreaed dsk by %u for %s \n", ptr_val->size, l2_file);
+      // printf("Decreaed dsk by %u for %s \n", ptr_val->size, l2_file);
     }
   }
 BYE:

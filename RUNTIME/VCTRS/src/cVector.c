@@ -24,6 +24,7 @@
 #include "vctr_lma_to_chnks.h"
 #include "vctr_chnks_to_lma.h"
 
+#include "vctr_nop.h"
 #include "vctr_drop_mem.h"
 #include "chnk_drop_mem.h"
 #include "vctr_l1_to_l2.h"
@@ -254,8 +255,7 @@ static int l_vctr_nop( lua_State *L) {
   if ( ptr_v == NULL ) { go_BYE(-1); }
   uint32_t uqid = ptr_v->uqid; 
   uint32_t tbsp = ptr_v->tbsp; 
-  bool  is_found; uint32_t where_found = ~0;
-  status = vctr_is(tbsp, uqid, &is_found, &where_found); cBYE(status);
+  status = vctr_nop(tbsp, uqid); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:

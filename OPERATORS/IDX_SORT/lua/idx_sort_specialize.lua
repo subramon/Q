@@ -13,11 +13,15 @@ return function(idx, val, ordr)
   --======================
   assert(type(idx) == "lVector")
   assert(is_in(idx:qtype(), good_idx_types))
+  assert(idx:memo_len() < 0) -- cannot memo, need full Vector 
+  idx:eval() -- force an eval 
   assert(idx:is_eov())
   assert(idx:has_nulls() == false)
   --======================
   assert(type(val) == "lVector")
   assert(is_in(val:qtype(), good_val_types))
+  assert(val:memo_len() < 0) -- cannot memo, need full Vector 
+  val:eval() -- force an eval 
   assert(val:is_eov())
   assert(val:has_nulls() == false)
   --======================
