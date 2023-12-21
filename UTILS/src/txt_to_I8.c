@@ -17,18 +17,13 @@ txt_to_I8(
   fprintf(stderr, "Invalid number [%s]\n", X); go_BYE(-1); }
   out = strtoll(X, &endptr, 10);
   if ( ( endptr != NULL ) && ( *endptr != '\0' ) && ( *endptr != '\n' ) ) { go_BYE(-1); }
-  if ( ( out < LLONG_MIN ) || ( out > LLONG_MAX ) ) { go_BYE(-1); }
-  if ( ((errno == ERANGE) && ((out == LLONG_MAX) || (out == LLONG_MIN)))
-      || ((errno != 0) && (out == 0))) {
-    fprintf(stderr, "Could not convert [%s] to I8\n", X);
-    go_BYE(-1);
-  }
-
-  if (endptr == X) {
-    fprintf(stderr, "No digits were found\n"); go_BYE(-1);
-  }
+  if ( ( errno == ERANGE ) || ( errno == EINVAL ) ) { go_BYE(-1); } 
+  if (endptr == X) { go_BYE(-1); }
 
   *ptr_out = (int64_t)out;
 BYE:
+  if ( status < 0 ) { 
+    fprintf(stderr, "Could not convert [%s] to I8\n", X);
+  }
   return status ;
 }

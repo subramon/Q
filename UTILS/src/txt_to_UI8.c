@@ -16,9 +16,7 @@ txt_to_UI8(
   fprintf(stderr, "Invalid number [%s]\n", X); go_BYE(-1); }
   unsigned long long int out = strtoull(X, &endptr, 10);
   if ( ( endptr != NULL ) && ( *endptr != '\0' ) && ( *endptr != '\n' ) ) { go_BYE(-1); }
-  if ( out > ULONG_MAX ) { go_BYE(-1); }
   if ( ( errno == ERANGE ) || ( errno == EINVAL ) ) { go_BYE(-1); } 
-
   if (endptr == X) { go_BYE(-1); } 
 
   *ptr_out = (uint64_t)out;

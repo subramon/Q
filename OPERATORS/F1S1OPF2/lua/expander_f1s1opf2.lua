@@ -15,6 +15,7 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
   if ( type(sclr) == "number" ) then 
     sclr = Scalar.new(sclr, f1:qtype()) 
   end
+  assert(type(sclr) == "Scalar")
   sclr:set_name("f1s1opf2")
   local subs = assert(spfn(f1, sclr, optargs))
 

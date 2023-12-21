@@ -78,23 +78,33 @@ local print_csv = function (
       for colidx, v in ipairs(V) do
         if ( is_html ) then io.write("<td> ") end
         local  s, s_nn = assert(v:get1(rowidx))
-        assert(not s_nn, "To be implemented") -- TODO P2
-        if ( type(s) == "Scalar" ) then 
-          if ( v:qtype() == "SC" ) then 
-            assert(io.write(cutils.quote_str(s:to_str())))
-          elseif ( ( v:qtype() == "TM" ) or ( v:qtype() == "TM1" ) ) then
-            error("NOT IMPLEMENTED")
-          else
-            assert(io.write(s:to_str()))
-          end 
-        elseif ( type(s) == "CMEM" ) then 
-          -- TODO P1 Can we delete this else case?
-          -- ffi.string is necessary to convert to Lua string
-          local instr = ffi.string(get_ptr(s, "SC"))
-          assert(io.write(cutils.quote_str(instr)))
-        else
-          error("")
+        --======================================================
+        local to_pr = true 
+        if ( s_nn ) then 
+          assert(type(s_nn) == "Scalar" ) 
+          to_pr = s_nn:to_bool() 
         end
+        if ( not to_pr ) then 
+          assert(io.write(""))
+        else
+          if ( type(s) == "Scalar" ) then 
+            if ( v:qtype() == "SC" ) then 
+              assert(io.write(cutils.quote_str(s:to_str())))
+            elseif ( ( v:qtype() == "TM" ) or ( v:qtype() == "TM1" ) ) then
+              error("NOT IMPLEMENTED")
+            else
+              assert(io.write(s:to_str()))
+            end 
+          elseif ( type(s) == "CMEM" ) then 
+            -- TODO P1 Can we delete this else case?
+            -- ffi.string is necessary to convert to Lua string
+            local instr = ffi.string(get_ptr(s, "SC"))
+            assert(io.write(cutils.quote_str(instr)))
+          else
+            error("")
+          end
+        end
+        --======================================================
         if ( colidx == nV ) then 
           if ( is_html ) then 
             assert(io.write("</tr>\n"), "Write failed")

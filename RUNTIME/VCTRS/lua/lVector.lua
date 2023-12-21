@@ -473,7 +473,7 @@ function lVector:get1(elem_idx)
     assert(type(nn_vector) == "lVector")
     nn_sclr = cVector.get1(nn_vector._base_vec, elem_idx)
     assert(type(nn_sclr) == "Scalar") 
-    assert(nn_sclr:qtype() == "BL") -- TODO P2 Consider switching to B1
+    assert(nn_sclr:qtype() == "BL") 
   end
   return sclr, nn_sclr
 end
