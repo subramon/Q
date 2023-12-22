@@ -43,7 +43,9 @@ local function SC_to_lkp(
     local in_len, in_chunk, nn_in_chunk = invec:get_chunk(l_chunk_num)
     if ( in_len == 0 ) then 
       buf:delete()
-      nn_buf:delete()
+      if ( subs.has_nulls ) then 
+        nn_buf:delete()
+      end
       return 0, nil 
     end 
     local in_ptr  = get_ptr(in_chunk, "char *")

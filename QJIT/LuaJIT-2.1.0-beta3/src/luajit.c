@@ -263,7 +263,8 @@ static void dotty(lua_State *L)
   int status;
   const char *oldprogname = progname;
   progname = NULL;
-  for ( uint64_t iter = 0; ; iter++ ) {
+  uint64_t iter = 0;
+  for ( ; ; iter++ ) {
     // START RAMESH
     int l_halt; __atomic_load(&g_master_halt, &l_halt, 0);
     if ( l_halt == 1 ) { break; } 

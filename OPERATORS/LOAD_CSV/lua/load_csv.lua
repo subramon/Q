@@ -110,6 +110,17 @@ local function load_csv(
         end 
         -- print("put all chunks")
         --=====================
+        if ( this_num_rows_read == 0 ) then 
+          for k, v in ipairs(M) do
+            if ( v.is_load ) then 
+              l_data[v.name]:delete()
+              if ( v.has_nulls ) then
+                nn_l_data[v.name]:delete()
+              end
+            end
+          end
+        end
+        --=====================
         if ( this_num_rows_read < max_num_in_chunk ) then 
           -- signal eov for all vectors other than yourself
           for _, v in ipairs(M) do 

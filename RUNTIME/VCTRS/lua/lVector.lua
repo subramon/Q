@@ -545,14 +545,14 @@ function lVector:get_chunk(chnk_idx)
       end
     end
     --===========================
-    if ( self._siblings ) then 
+    if ( ( self._siblings ) and ( #self._siblings > 0 ) ) then 
       assert(type(self._siblings) == "table")
       for _, v in ipairs(self._siblings) do
         assert(type(v) == "lVector") assert(type(v) == "lVector")
-        --[[
+--[[
         print("Vector " .. self:name(), " requesting chunk " .. chnk_idx .. 
           " for sibling", v:name())
-          --]]
+--]]
         local x, y, z = v:get_chunk(chnk_idx)
         assert(x == num_elements)
         if ( x < self._max_num_in_chunk ) then 
@@ -774,10 +774,13 @@ function lVector.conjoin(T)
   assert(#T > 1)
   for k1, v1 in ipairs(T) do
     assert(type(v1) == "lVector")
+    -- can conjoin only if vector is empty
+    assert(v1:num_elements() == 0 )
     for k2, v2 in ipairs(T) do
       if ( k1 ~= k2 ) then
         assert(v1:max_num_in_chunk() == v2:max_num_in_chunk())
         v1:add_sibling(v2)
+        -- print("Adding " .. v2:name() .. " as sibling of " .. v1:name())
       end
     end
   end
