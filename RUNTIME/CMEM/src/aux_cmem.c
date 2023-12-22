@@ -6,7 +6,6 @@
 #ifdef USE_GLOBALS
 #include "mod_mem_used.h"
 #endif
-#undef VERBOSE
 int 
 cmem_free( 
     CMEM_REC_TYPE *ptr_cmem
@@ -17,7 +16,7 @@ cmem_free(
 
 #ifdef VERBOSE
   if ( *ptr_cmem->cell_name != '\0' ) {  
-    printf("CMEM Freeing %lld from %s \n", ptr_cmem->size, ptr_cmem->cell_name);
+    printf("CMEM Freeing of %lld for %s \n", ptr_cmem->size, ptr_cmem->cell_name);
   }
 #endif
 
@@ -89,6 +88,9 @@ cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
     status = posix_memalign(&data, CMEM_ALIGNMENT, size);
     cBYE(status);
     return_if_malloc_failed(data);
+#ifdef DEBUG
+    memset(data, 0, size);
+#endif
 #ifdef USE_GLOBALS
     status = incr_mem_used(size);  cBYE(status);
 #endif
@@ -100,7 +102,7 @@ cmem_malloc( // INTERNAL NOT VISIBLE TO LUA
   if ( cell_name != NULL ) { 
     strncpy(ptr_cmem->cell_name, cell_name, Q_MAX_LEN_CELL_NAME);
 #ifdef VERBOSE
-    printf("CMEM Malloc of %lld  for %s \n", ptr_cmem->size, ptr_cmem->cell_name);
+    printf("CMEM Malloc  of %lld  for %s \n", ptr_cmem->size, ptr_cmem->cell_name);
 #endif
   }
   ptr_cmem->is_foreign = false;
