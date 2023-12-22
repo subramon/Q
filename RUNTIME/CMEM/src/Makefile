@@ -29,7 +29,7 @@ SRCS +=	../../../UTILS/src/cat_to_buf.c
 
 OBJS = $(SRCS:.c=.o)
 
-# NOTE: Add -DVERBOSE to following to get messages printed out 
+# QCFLAGS += -DVERBOSE # NOTE: Add -DVERBOSE for verbosity
 .c.o : 
 	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) -DGLOBALS
 # GLOBALS needed for g_mem_used
