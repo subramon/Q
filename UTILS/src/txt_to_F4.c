@@ -9,6 +9,7 @@ txt_to_F4(
 //STOP_FUNC_DECL
 {
   int status = 0;
+static int n_bad_values = 0; 
   char *endptr;
   double out;
   if ( ( X == NULL ) || ( *X == '\0' ) ) { go_BYE(-1); }
@@ -16,7 +17,12 @@ txt_to_F4(
   out = strtold(X, &endptr);
   if ( ( *endptr != '\0' ) && ( *endptr != '\n' ) ) { go_BYE(-1); }
   if ( endptr == X ) { go_BYE(-1); }
-  if ( ( out < - FLT_MAX ) || ( out > FLT_MAX ) ) { go_BYE(-1); }
+  if ( ( out < - FLT_MAX ) || ( out > FLT_MAX ) ) { 
+printf("bad flt %8d: %s\n", ++n_bad_values, X); 
+
+out = FLT_MAX;
+// go_BYE(-1); 
+}
   *ptr_out = (float)out;
  BYE:
   return status ;

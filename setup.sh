@@ -16,14 +16,13 @@ Q_SRC_ROOT="$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
 export Q_SRC_ROOT="${Q_SRC_ROOT}"
 echo "Q_SRC_ROOT= ${Q_SRC_ROOT}"
 #-----------------------------------
-export Q_ROOT="${Q_ROOT:=${HOME}/local/Q}"
+export Q_ROOT="/mnt/storage/local/Q/"
 echo "Q_ROOT= $Q_ROOT"
-mkdir -p $HOME/local/
-mkdir -p $HOME/local/Q/
-mkdir -p $HOME/local/Q/lib/
-mkdir -p $HOME/local/Q/bin/
-mkdir -p $HOME/local/Q/config/
-mkdir -p $HOME/local/Q/csos/
+mkdir -p $Q_ROOT/
+mkdir -p $Q_ROOT/lib/
+mkdir -p $Q_ROOT/bin/
+mkdir -p $Q_ROOT/config/
+mkdir -p $Q_ROOT/csos/
 #-----------------------------------
 QCFLAGS=" -g -std=gnu99  -fPIC"
 QCFLAGS+=" -DDEBUG "
@@ -66,10 +65,6 @@ if [ $IS_ARM_32 == 0 ] || [ $IS_ARM_64 == 0 ]; then
   QCFLAGS+=" -DARM "
   QCFLAGS+=" -Wno-cast-align " # too many warnings produced
   export Q_IS_ARM="true"
-else
-  QCFLAGS+=" -Wduplicated-cond -Wmisleading-indentation "
-  QCFLAGS+=" -Wnull-dereference "
-  QCFLAGS+=" -Wduplicated-branches -Wrestrict "
 fi
 export QCFLAGS="${QCFLAGS}"
 echo "QCFLAGS= $QCFLAGS"

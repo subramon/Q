@@ -98,7 +98,14 @@ vctr_get1(
 
   if ( qtype == SC ) { 
     data += (width * chnk_off);
-    if ( data[width-1] != '\0' ) { go_BYE(-1); } 
+#ifdef DEBUG
+    bool found = false;
+    for ( uint32_t k = 0; k < width; k++ ) { 
+      if ( data[k] == '\0' ) { found = true; break; }
+    }
+    if ( !found ) { go_BYE(-1); } 
+    // THIS CHECK ASSUMES INITIALIZATION TO 0 if ( data[width-1] != '\0' ) { go_BYE(-1); } 
+#endif
     ptr_sclr->val.str = malloc(width * sizeof(char));
     return_if_malloc_failed(ptr_sclr->val.str);
     memcpy(ptr_sclr->val.str, data, width); 

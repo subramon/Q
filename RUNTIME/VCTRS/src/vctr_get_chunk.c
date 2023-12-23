@@ -40,8 +40,10 @@ vctr_get_chunk(
   chnk_size = width * max_num_in_chnk;
 
   //-------------------------------
+  // Changed my mind on following
   /* DECIDED NOT TO RELY ON LMA file backup. Each chunk must
    * have its own backup. I may be wrong on this one. Time will tell
+   */
   if ( g_vctr_hmap[tbsp].bkts[vctr_where_found].val.is_lma ) { 
     status = vctr_get_chunk_lma(
         &(g_vctr_hmap[tbsp].bkts[vctr_where_found].val),
@@ -49,9 +51,10 @@ vctr_get_chunk(
     cBYE(status);
     goto BYE;
   }
-  */
+
   //-------------------------------
-  status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);
+  status = chnk_is(tbsp, vctr_uqid, chnk_idx, 
+      &chnk_is_found, &chnk_where_found);
   cBYE(status);
   if ( chnk_is_found == false ) { 
     *ptr_yes_vec_no_chunk = true; status = -1; goto BYE;
@@ -100,23 +103,23 @@ vctr_unget_chunk(
 
   status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
-  if ( !vctr_is_found ) { 
-    go_BYE(-1); 
+  if ( !vctr_is_found ) { go_BYE(-1); }
+
+  // DECIDED AGAINST USING LMA FOR CHUNK ACCESS 
+  // Changed my mind on above
+  vctr_rs_hmap_val_t *ptr_val = 
+     &g_vctr_hmap[tbsp].bkts[vctr_where_found].val;
+  if ( ptr_val->is_lma ) {
+    if ( ptr_val->num_readers == 0 ) { go_BYE(-1); }
+    ptr_val->num_readers--;
+    if ( ptr_val->num_readers == 0 ) { 
+      munmap(ptr_val->X, ptr_val->nX);
+      ptr_val->X = NULL; ptr_val->nX = 0; 
+    }
+    goto BYE;
+    // TODO P2 update touch time  for vector similar to chunk below 
   }
 
-  /* DECIDED AGAINST USING LMA FOR CHUNK ACCESS 
-     vctr_rs_hmap_val_t *ptr_val = 
-     &g_vctr_hmap[tbsp].bkts[vctr_where_found].val;
-     if ( ptr_val->is_lma ) {
-     if ( ptr_val->num_readers == 0 ) { go_BYE(-1); }
-     ptr_val->num_readers--;
-     if ( ptr_val->num_readers == 0 ) { 
-     munmap(ptr_val->X, ptr_val->nX);
-     ptr_val->X = NULL; ptr_val->nX = 0; 
-     }
-     }
-     */
-  if ( in_chnk_idx < 0 ) { go_BYE(-1); }
   uint32_t chnk_idx = (uint32_t)in_chnk_idx;
   status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, 
       &chnk_where_found);
@@ -135,10 +138,10 @@ BYE:
   return status;
 }
 
-#ifdef XXXXXX
 // This function was needed if we wanted to get chunk data from lma file
 // Decided against it for now 
-static int
+// NOTE: Changed my mind on above
+int
 vctr_get_chunk_lma(
     vctr_rs_hmap_val_t *ptr_val,
     uint32_t tbsp,
@@ -179,5 +182,3 @@ vctr_get_chunk_lma(
 BYE:
   return status;
 }
-#endif
-
