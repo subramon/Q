@@ -1,4 +1,5 @@
 local plpath = require 'pl.path'
+local pldir  = require 'pl.dir'
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
@@ -24,7 +25,7 @@ tests.t0 = function()
     local y = x:chunks_to_lma():set_name("y_" .. tostring(i))
     assert(type(y) == "lVector")
     assert(y:check())
-    assert(y:uqid() ~= old_uqid)
+    assert(y:uqid() == old_uqid)
     assert(y:is_lma() == true)
 
     local old_uqid = y:uqid()
@@ -34,8 +35,8 @@ tests.t0 = function()
     assert(xprime:is_eov() == x:is_eov())
     assert(xprime:num_elements() == x:num_elements())
     assert(xprime:tbsp() == 0)
-    assert(xprime:uqid() ~= old_uqid)
-    assert(xprime:is_lma() == false)
+    assert(xprime:uqid() == old_uqid)
+    assert(xprime:is_lma() == true)
     assert(xprime:width() == x:width())
     assert(xprime:qtype() == x:qtype())
     local xprime_uqid = xprime:uqid()
@@ -44,8 +45,9 @@ tests.t0 = function()
     local xpp = xprime:chunks_to_lma():set_name("xpp" .. tostring(i))
     assert(type(xpp) == "lVector")
     assert(xpp:check())
-    assert(xpp:uqid() ~= old_uqid)
+    assert(xpp:uqid() == old_uqid)
   end
+  assert(cVector.check_all())
   --[[
   local y = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "test0_y", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
@@ -151,53 +153,57 @@ tests.t3 = function()
 end
 -- test steal
 tests.t4 = function()
-  local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
+  local qtype = "I4"
+  local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
     name = "test4_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
-  assert(x1:eval())
-  assert(x1:is_eov())
-  assert(x1:is_lma() == false)
-  local y1 = x1:chunks_to_lma()
-  assert(y1:is_lma() == true)
-  local file_name, file_sz = y1:file_info()
-  print("file_name = ", file_name)
-  print("file_sz = ", file_sz)
+  assert(x:eval())
+  assert(x:is_eov())
+  assert(x:is_lma() == false)
+  local y = x:chunks_to_lma()
+  assert(y:is_lma() == true)
+  assert(x:is_lma() == true)
+  local file_name, file_sz = y:file_info()
+  local clone_file_name = file_name .. "_clone"
+  pldir.copyfile(file_name, clone_file_name)
   assert(type(file_name) == "string")
   assert(type(file_sz) == "number")
   assert(plpath.isfile(file_name))
   local chk_file_sz = plpath.getsize(file_name)
   assert(file_sz == chk_file_sz)
   local vargs = {}
-  vargs.file_name = file_name
-  vargs.name = "clone of y1"
+  vargs.file_name = clone_file_name
+  vargs.name = "clone"
   vargs.qtype = qtype
   vargs.max_num_in_chunk = 64 
   vargs.num_elements = len
-  local y = lVector(vargs)
-  assert(type(y) == "lVector")
-  assert(y:name() == "clone of y1")
-  assert(y:qtype() == qtype)
-  assert(y:num_elements() == len)
-  assert(y:is_eov() == true)
-  assert(y:is_lma() == true)
-  print("XXXXXXXXXXXXX")
+  local z = lVector(vargs)
+  assert(type(z) == "lVector")
+  assert(z:name() == "clone")
+  assert(z:qtype() == qtype)
+  assert(z:num_elements() == len)
+  assert(z:is_eov() == true)
+  assert(z:is_lma() == true)
+  assert(z:uqid() ~= x:uqid())
   for i = 1, len do
-    local c1 = y1:get1(i-1)
-    local c2 = y:get1(i-1)
-    print(i, c1, c2)
-    assert(c1 == c2)
+    local cx = assert(x:get1(i-1))
+    local cy = assert(y:get1(i-1))
+    local cz = assert(z:get1(i-1))
+    assert(cx == cy)
+    assert(cy == cz)
   end
   -- y.pr()
 
-  local y1_cmem = y1:get_lma_read()
-  assert(type(y1_cmem) == "CMEM")
-  assert(y1_cmem:size() == file_sz)
-  local cast_y1_as = cutils.str_qtype_to_str_ctype(qtype) .. " *"
-  local y1_ptr = get_ptr(y1_cmem, cast_y1_as)
+  local x_cmem = x:get_lma_read()
+  assert(type(x_cmem) == "CMEM")
+  assert(x_cmem:size() == file_sz)
+  local cast_x_as = cutils.str_qtype_to_str_ctype(qtype) .. " *"
+  local xptr = get_ptr(x_cmem, cast_x_as)
   for i = 1, len do 
-    assert(y1_ptr[i-1] == i)
+    assert(xptr[i-1] == i)
   end
-  assert(y1:unget_lma_read())
-  x1 = nil; y1 = nil; y = nil; collectgarbage()
+  assert(x:unget_lma_read())
+  assert(cVector.check_all())
+  x = nil; y = nil; z = nil; collectgarbage()
   assert(cVector.check_all())
   print("Test t4 succeeded")
 end
@@ -263,13 +269,13 @@ tests.t7 = function()
   print("Test t7 succeeded")
 end
 -- return tests
--- WORKS tests.t0()
--- WORKS tests.t1()
--- WORKS tests.t2()
--- WORKS tests.t3()
+tests.t0()
+tests.t1()
+tests.t2()
+tests.t3()
 tests.t4()
--- TODO tests.t5()
--- TODO tests.t6()
--- TODO tests.t7()
+tests.t5()
+tests.t6()
+tests.t7()
 collectgarbage()
 assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

@@ -14,11 +14,6 @@ vctr_get_lma_X_nX(
     char **ptr_X,
     size_t *ptr_nX
     );
-extern char *
-vctr_steal_lma(
-    uint32_t tbsp,
-    uint32_t uqid
-    );
 extern int
 vctr_get_lma_read(
     uint32_t tbsp,

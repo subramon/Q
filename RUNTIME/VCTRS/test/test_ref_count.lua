@@ -6,25 +6,30 @@ local qcfg    = require 'Q/UTILS/lua/qcfg'
 local lgutils = require 'liblgutils'
 local tests = {}
 tests.t1 = function()
-  local x = lVector({ qtype = "F4", width = 4})
+  local len = qcfg.max_num_in_chunk * 3 + 17;
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local x = Q.const({val = 0, qtype = "F4", len = len}):eval()
   assert(x:ref_count() == 1)
   local x_uqid = x:uqid()
   assert(x_uqid == 1)
   local y = lVector({uqid = x_uqid})
   assert(type(y) == "lVector")
   local y_uqid = y:uqid()
-  print(y_uqid, x_uqid)
   assert(y_uqid == x_uqid)
   assert(y:ref_count() == 2)
-  x = nil
-  collectgarbage()
+  x = nil; collectgarbage()
   assert(y:ref_count() == 1)
   assert(cVector.check_all())
+  y = nil; collectgarbage()
+
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("Test t1 succeeded")
 end
 tests.t2 = function()
   -- create a vector 
-  local n1 = cVector.count(0); print("n1 = ", n1)
+  local n1 = cVector.count(0); assert(n1 == 0)
   local x = lVector({ qtype = "F4", width = 4})
   assert(type(x) == "lVector")
   local n = 10
@@ -34,7 +39,7 @@ tests.t2 = function()
     x:put1(s)
   end
   x:eov()
-  local n2 = cVector.count(0); print("n2 = ", n2)
+  local n2 = cVector.count(0); 
   assert(n2 == (n1+1))
   -- create a nnn vector for it 
   local nn_x = lVector({ qtype = "BL"})
@@ -46,7 +51,7 @@ tests.t2 = function()
     nn_x:put1(s)
   end
   nn_x:eov()
-  local n3 = cVector.count(0); print("n3 = ", n3)
+  local n3 = cVector.count(0);
   assert(n3 == (n2+1))
   -- associate nn_x with x 
   x:set_nulls(nn_x)
@@ -72,4 +77,3 @@ end
 tests.t1()
 tests.t2()
 collectgarbage()
-assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

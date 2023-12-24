@@ -63,43 +63,38 @@ vctr_del(
     printf("Not deleting file baclup for Vctr: %s \n", val.name); 
   }
   //-------------------------------------------
-  if ( ( val.is_lma ) || ( val.num_elements == 0 ) ) {
-    // no chunks to delete
-  }
-  else { 
-    // Delete chunks in vector before deleting vector 
-    if ( val.num_chnks == 0 ) { go_BYE(-1); }
-    for ( uint32_t chnk_idx = 0; chnk_idx <= val.max_chnk_idx; chnk_idx++ ){
-      uint32_t old_nitems = g_chnk_hmap[tbsp].nitems;
-      if ( old_nitems == 0 ) { go_BYE(-1); }
-      bool is_found = true;
-      status = chnk_del(tbsp, uqid, chnk_idx, is_persist); 
-      if ( status == -3 ) { status = 0; is_found = false; } 
-      cBYE(status);
-      if ( val.memo_len < 0 ) {  
-        // memo length infinite means all chunks must have been saved
-        if ( !is_found ) { 
-          go_BYE(-1); 
-        }
+  if ( ( val.num_elements == 0 ) && ( val.num_chnks != 0 ) ) { go_BYE(-1); }
+  // Delete chunks in vector before deleting vector 
+  for ( uint32_t chnk_idx = 0; chnk_idx <= val.max_chnk_idx; chnk_idx++ ){
+    uint32_t old_nitems = g_chnk_hmap[tbsp].nitems;
+    if ( old_nitems == 0 ) { go_BYE(-1); }
+    bool is_found = true;
+    status = chnk_del(tbsp, uqid, chnk_idx, is_persist); 
+    if ( status == -3 ) { status = 0; is_found = false; } 
+    cBYE(status);
+    if ( val.memo_len < 0 ) {  
+      // memo length infinite means all chunks must have been saved
+      if ( !is_found ) { 
+        go_BYE(-1); 
+      }
+    }
+    else {
+      // we may have deleted chunks that are too 
+      // The +1 is important here but needs more thought TODO P3
+      uint32_t watermark = val.max_chnk_idx + 1 - val.memo_len;
+      if ( chnk_idx >= watermark ) {
+        if ( !is_found ) { go_BYE(-1); }
       }
       else {
-        // we may have deleted chunks that are too 
-        // The +1 is important here
-        uint32_t watermark = val.max_chnk_idx + 1 - val.memo_len;
-        if ( chnk_idx >= watermark ) {
-          if ( !is_found ) { go_BYE(-1); }
-        }
-        else {
-          if ( is_found ) { 
-            printf("Found chunk %u. Should not have existed\n", chnk_idx);
-            // go_BYE(-1); 
-          }
+        if ( is_found ) { 
+          printf("Found chunk %u. Should not have existed\n", chnk_idx);
+          // go_BYE(-1); 
         }
       }
-      uint32_t new_nitems = g_chnk_hmap[tbsp].nitems;
-      if ( is_found ) { 
-        if ( new_nitems != (old_nitems-1) ) { go_BYE(-1); }
-      }
+    }
+    uint32_t new_nitems = g_chnk_hmap[tbsp].nitems;
+    if ( is_found ) { 
+      if ( new_nitems != (old_nitems-1) ) { go_BYE(-1); }
     }
   }
   bool is_found;

@@ -1,5 +1,6 @@
 #include "q_incs.h"
 #include "qtypes.h"
+#include "cmem_struct.h"
 #include "qjit_consts.h"
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_is.h"
@@ -7,6 +8,7 @@
 #include "mod_mem_used.h"
 #include "get_file_size.h"
 #include "file_exists.h"
+#include "vctr_put_chunk.h"
 #include "vctr_set_lma.h"
 
 
@@ -44,7 +46,13 @@ vctr_set_lma(
   int64_t filesz = get_file_size(in_file_name); 
   if ( filesz <= 0 ) { go_BYE(-1); } 
   if ( !file_exists(in_file_name) ) { go_BYE(-1); } 
+  // Check if space exists for file about to be created 
+  int64_t dsk_used = get_dsk_used(); 
+  int64_t dsk_allowed = get_dsk_allowed(); 
+  if ( dsk_allowed < dsk_used ) { go_BYE(-1); }
+  if ( dsk_allowed - dsk_used < filesz ) { go_BYE(-1); }
   status = incr_dsk_used(filesz); cBYE(status);
+  //-----------------------------------------
   status = rename(in_file_name, lma_file); cBYE(status);
 
   uint32_t width = val.width;
@@ -55,6 +63,26 @@ vctr_set_lma(
   }
   else {
     if ( ( num_elements * width ) < (uint64_t)filesz ) { go_BYE(-1); }
+  }
+  // Create empty chunks 
+  if ( val.max_num_in_chnk == 0 ) { go_BYE(-1); } 
+  uint32_t num_chunks = num_elements / val.max_num_in_chnk;
+  if ( (num_chunks * val.max_num_in_chnk) != num_elements ) { 
+    num_chunks++;
+  }
+  uint32_t num_elements_to_put = num_elements;
+  for ( uint32_t chnk_idx = 0; chnk_idx < num_chunks; chnk_idx++ ) {
+    CMEM_REC_TYPE cmem; memset(&cmem, 0, sizeof(CMEM_REC_TYPE));
+    cmem.is_stealable = true; 
+    cmem.is_foreign   = false; 
+    uint32_t chnk_num_elements = mcr_min(val.max_num_in_chnk, 
+        num_elements_to_put);
+    if ( chnk_num_elements == 0 ) { go_BYE(-1); }
+    // ??? cmem.size = chnk_num_elements * width;
+    cmem.size = val.max_num_in_chnk * width;
+    num_elements_to_put -= chnk_num_elements;
+    status = vctr_put_chunk(tbsp, vctr_uqid, &cmem, chnk_num_elements);
+
   }
 
   g_vctr_hmap[tbsp].bkts[vctr_where_found].val.is_lma = true; 

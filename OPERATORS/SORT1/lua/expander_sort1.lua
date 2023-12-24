@@ -25,16 +25,17 @@ local function expander_sort1(x, sort_order, optargs)
       in_situ = optargs.in_situ
     end
   end
-  if ( in_situ ) then 
-    assert(x:is_lma()) 
-    x = x:clone_lma() -- TODO TO BE IMPLEMENTED
-  else
-    x = x:chunks_to_lma()
+  x:chunks_to_lma()
+  -- We need input vector to be fully materialized and prepped for lma
+  assert(x:is_eov())
+  assert(x:is_lma()) 
+  if ( not in_situ ) then 
+    local file_name, file_sz = x:file_info()
+    local copy_file_name = file_name .. cutils.rdtsc()
+    cutils.copy_file(file_name, copy_file_name)
   end 
   --=============================
   local t_start = cutils.rdtsc()
-  -- We need input vector to be fully materialized and prepped for lma
-  assert(x:is_lma())
 
   --======================================
   -- Now, get access to y's data and perform the operation

@@ -112,12 +112,6 @@ vctr_chk(
     if ( vctr_val.num_readers != 0 ) { go_BYE(-1); }
     if ( vctr_val.num_writers != 0 ) { go_BYE(-1); }
   }
-  else {
-    // NOTE that we do not maintain 2 representations of the data
-    // If it is in lma, then it cannot be in chunks
-    if ( vctr_val.num_chnks != 0 ) { go_BYE(-1); } 
-    if ( vctr_val.max_chnk_idx != 0 ) { go_BYE(-1); } 
-  }
   //----------------------------------------------
   if ( ( vctr_val.num_readers == 0 ) && ( vctr_val.num_writers == 0 ) ) { 
     if ( vctr_val.X != NULL ) { go_BYE(-1); }
@@ -244,11 +238,19 @@ vctr_chk(
     else {
       // if data not in L2, must be in L1 
       if ( chnk_val.l2_exists == false ) { 
-        if ( chnk_val.l1_mem == NULL ) { go_BYE(-1); }
+        if ( chnk_val.l1_mem == NULL ) { 
+          if ( !vctr_val.is_lma ) { 
+            go_BYE(-1); 
+          }
+        }
       }
       else { // check that file exists 
         char *l2_file = l2_file_name(tbsp, vctr_uqid, chnk_idx);
-        if ( !isfile(l2_file) ) { go_BYE(-1); }
+        if ( !isfile(l2_file) ) { 
+          if ( !vctr_val.is_lma ) { 
+            go_BYE(-1); 
+          }
+        }
         int64_t filesz = get_file_size(l2_file);
         if ( filesz != good_filesz ) { go_BYE(-1); }
         free_if_non_null(l2_file);

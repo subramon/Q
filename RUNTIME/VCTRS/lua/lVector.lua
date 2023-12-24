@@ -4,6 +4,7 @@
 -- self._meta.meaning or self._meta.max
 local ffi     = require 'ffi'
 local cVector = require 'libvctr'
+local cutils  = require 'libcutils'
 local Scalar  = require 'libsclr'
 local register_type = require 'Q/UTILS/lua/register_type'
 local qcfg = require'Q/UTILS/lua/qcfg'
@@ -199,6 +200,21 @@ function lVector:nop()
   local status = cVector.nop(self._base_vec)
   assert(type(status) == "boolean")
   return status
+end
+
+function lVector:clone()
+  assert(self:has_nulls() == false) -- TODO 
+  assert(self:is_lma() ) -- TODO 
+  local vargs = {}
+  local file_name, _ = self:file_info()
+  vargs.file_name = file_name .. cutils.rdtsc()
+  vargs.name = "clone_" 
+  if ( self:name() ) then vargs.name = vargs.name .. self:name() end 
+  vargs.qtype = self:qtype()
+  vargs.max_num_in_chunk = self:max_num_in_chunk()
+  vargs.num_elements = self:num_elements()
+  local z = lVector(vargs)
+  return z
 end
 
 function lVector:is_persist()
@@ -812,36 +828,27 @@ function lVector:self()
 end
 --==================================================
 function lVector:chunks_to_lma()
-  local new_vector = setmetatable({}, lVector)
-  new_vector._qtype  = self:qtype()
-  new_vector._base_vec = assert(cVector.chnks_to_lma(self._base_vec))
+  -- TODO VERIFY THAT THIS IS IDEMPOTENT. 
+  assert(cVector.chnks_to_lma(self._base_vec))
   if ( self._nn_vec ) then 
     local nn_vector = assert(self._nn_vec)
     assert(type(nn_vector) == "lVector")
     assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-
-    local new_nn_vector = setmetatable({}, lVector)
-    new_nn_vector._base_vec = cVector.chnks_to_lma(nn_vector._base_vec)
-    new_vector._nn_vector = new_nn_vector
+    assert(cVector.chnks_to_lma(nn_vector._base_vec))
   end
-  return new_vector
+  return self
 end
 --==================================================
 function lVector:lma_to_chunks()
-  -- TODO MAKE THIS IDEMPOTENT. Not currently the case
-  local new_vector = setmetatable({}, lVector)
-  new_vector._qtype  = self:qtype()
-  new_vector._base_vec = assert(cVector.lma_to_chnks(self._base_vec))
+  -- TODO VERIFY THAT THIS IS IDEMPOTENT. 
+  assert(cVector.lma_to_chnks(self._base_vec))
   if ( self._nn_vec ) then 
     local nn_vector = assert(self._nn_vec)
     assert(type(nn_vector) == "lVector")
     assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-
-    local new_nn_vector = setmetatable({}, lVector)
-    new_nn_vector._base_vec = cVector.lma_to_chnks(nn_vector._base_vec)
-    new_vector._nn_vec = new_nn_vector
+    assert(cVector.lma_to_chnks(nn_vector._base_vec))
   end
-  return new_vector
+  return self
 end
 --==================================================
 function lVector:get_lma_read()

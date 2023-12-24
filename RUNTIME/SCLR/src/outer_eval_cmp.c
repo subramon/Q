@@ -26,7 +26,8 @@ static int l_sclr_eq(lua_State *L)
     if ( str1 == NULL ) { go_BYE(-1); }
     if ( str2 == NULL ) { go_BYE(-1); }
     if ( strcmp(str1, str2) == 0 ) { bval = true; } 
-    goto BYE; 
+    lua_pushboolean(L, bval);
+    return 1; 
   }
   if ( qtype1 == TM1 ) {
     printf("TODO \n"); goto BYE;

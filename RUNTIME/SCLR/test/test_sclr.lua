@@ -22,9 +22,12 @@ end
 --================
 tests.t2 = function()
   -- create SC scalar
-  s1 = Scalar.new("123", "SC")
-  assert(s1)
-  s2 = Scalar.new(123, "SC")
+  s1 = assert(Scalar.new("123", "SC"))
+  assert(s1:qtype() == "SC")
+  s2 = assert(Scalar.new(123, "SC"))
+  assert(s2:qtype() == "SC")
+  print(s1)
+  print(s2)
   assert(s1 == s2)
   -- create integer and floating point scalars
   s1 = Scalar.new(123, "I4")
@@ -44,7 +47,7 @@ tests.t2 = function()
   -- TODO y = x:to_str(x, "I4")
   -- TODO assert(y == "123")
   --================
-  assert(Scalar.eq(s1, s2) == false)
+  assert(Scalar.eq(s1, s2) == true)
   print("test 2 passed")
 end
 
