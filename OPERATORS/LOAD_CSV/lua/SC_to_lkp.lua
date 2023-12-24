@@ -61,7 +61,7 @@ local function SC_to_lkp(
         -- nothing to do 
         else
           local in_str = ffi.string(in_ptr) -- , subs.in_width)
-          local lkp_val = assert(rev_lkp_tbl[in_str])
+          local lkp_val = assert(rev_lkp_tbl[in_str], in_str)
           out_ptr[i-1] = lkp_val 
           nn_out_ptr[i-1] = true 
         end
