@@ -4,7 +4,7 @@ local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local qc      = require 'Q/UTILS/lua/qcore'
 local record_time      = require 'Q/UTILS/lua/record_time'
 
-local function idx_sort(idx, val, ordr)
+local function idx_sort(idx, val, ordr, optargs)
   local specializer = "Q/OPERATORS/IDX_SORT/lua/idx_sort_specialize"
   local spfn = assert(require(specializer))
   local subs = assert(spfn(idx, val, ordr))
@@ -13,13 +13,29 @@ local function idx_sort(idx, val, ordr)
   qc.q_add(subs)
 
   local t_start = cutils.rdtsc()
-  -- create new vectors with old vector's data but in lma format
 
-  local outidx = idx:chunks_to_lma():set_name("outidx")
-  local outval = val:chunks_to_lma():set_name("outval")
+  idx:chunks_to_lma(); val:chunks_to_lma()
 
-  assert(outidx:num_readers() == 0); assert(outidx:num_writers() == 0)
-  assert(outval:num_readers() == 0); assert(outval:num_writers() == 0)
+  assert(idx:num_readers() == 0); assert(idx:num_writers() == 0)
+  assert(val:num_readers() == 0); assert(val:num_writers() == 0)
+  -- determine whether to sort in place
+  local in_situ = false
+  if ( optargs ) then
+    assert(type(optargs) == "table")
+    if ( optargs.in_situ ) then
+      assert(type(optargs.in_situ) == "boolean")
+      in_situ = optargs.in_situ
+    end
+  end
+  local outidx, outval
+  if ( in_situ ) then 
+    outidx = idx
+    outval = val
+  else
+    outidx = idx:clone()
+    outval = val:clone()
+  end 
+  --=============================
 
   -- Now, get access to idx data 
   local idx_cmem, _, idx_len = outidx:get_lma_write()

@@ -75,8 +75,12 @@ qjit test_repeater.lua
 qjit test_logical_op.lua
 qjit test_register_hypot.lua
 
+cd ~/Q/OPERATORS/IDX_SORT/test/
+qjit test_idx_sort.lua
+
 cd ~/Q/OPERATORS/SORT1/test/
 qjit test_sort.lua
+qjit test_unsigned.lua
 
 cd ~/Q/OPERATORS/PERMUTE/test/
 qjit test_permute.lua

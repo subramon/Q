@@ -68,6 +68,7 @@ tests.t1 = function()
     assert(is_in(v, { "test", "src" } ))
   end
   --==========
+  os.execute("rm -r -f /tmp/_xxxx")
   cutils.makepath("/tmp/_xxxx")
   assert(cutils.isdir("/tmp/_xxxx"))
   

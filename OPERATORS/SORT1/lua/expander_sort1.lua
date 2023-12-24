@@ -25,14 +25,12 @@ local function expander_sort1(x, sort_order, optargs)
       in_situ = optargs.in_situ
     end
   end
-  x:chunks_to_lma()
   -- We need input vector to be fully materialized and prepped for lma
   assert(x:is_eov())
+  x:chunks_to_lma()
   assert(x:is_lma()) 
   if ( not in_situ ) then 
-    local file_name, file_sz = x:file_info()
-    local copy_file_name = file_name .. cutils.rdtsc()
-    cutils.copy_file(file_name, copy_file_name)
+    x = x:clone()
   end 
   --=============================
   local t_start = cutils.rdtsc()
