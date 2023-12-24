@@ -37,7 +37,9 @@ chnk_get_data(
 
   if ( ptr_val->l1_mem == NULL ) {
     // Get it from l2 mem. Must exist there or error 
-    if ( ptr_val->l2_exists == false ) { go_BYE(-1); } 
+    if ( ptr_val->l2_exists == false ) { 
+      status = -1; goto BYE; // silent failure. Caller must handle 
+    } 
     l2_file = l2_file_name(tbsp, ptr_key->vctr_uqid, ptr_key->chnk_idx);
     if ( l2_file == NULL ) { go_BYE(-1); }
     status = rs_mmap(l2_file, &X, &nX, 0); cBYE(status);

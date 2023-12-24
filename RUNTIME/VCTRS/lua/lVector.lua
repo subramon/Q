@@ -207,7 +207,12 @@ function lVector:clone()
   assert(self:is_lma() ) -- TODO 
   local vargs = {}
   local file_name, _ = self:file_info()
-  vargs.file_name = file_name .. cutils.rdtsc()
+  -- make a unique name 
+  local t = cutils.rdtsc()
+  t = t - (math.floor(t/100000000)*100000000)
+  vargs.file_name = file_name .. tostring(t)
+  assert(cutils.copyfile(file_name, vargs.file_name))
+  --=================
   vargs.name = "clone_" 
   if ( self:name() ) then vargs.name = vargs.name .. self:name() end 
   vargs.qtype = self:qtype()

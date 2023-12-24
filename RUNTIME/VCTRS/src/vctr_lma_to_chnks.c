@@ -76,7 +76,7 @@ vctr_lma_to_chnks(
     uint32_t pre = ptr_chnk->num_readers;
     char *chnk_data = chnk_get_data(tbsp, chnk_where, false);
     if ( chnk_data == NULL ) { 
-      char *Y = v.X + (chnk_idx)*v.max_num_in_chnk;
+      char *Y = v.X + (uint64_t)(v.width*chnk_idx)*(uint64_t)v.max_num_in_chnk;
       uint32_t bytes_to_copy = v.width * ptr_chnk->num_elements;
       if ( level == 1 ) { 
         status = posix_memalign((void **)&(ptr_chnk->l1_mem), 
@@ -94,6 +94,7 @@ vctr_lma_to_chnks(
         status = mk_file(NULL, l2_file, ptr_chnk->size);
         status = rs_mmap(l2_file, &Z, &nZ, 1); cBYE(status);
         memcpy(Z, Y, bytes_to_copy);
+        ptr_chnk->l2_exists = true;
         incr_dsk_used(ptr_chnk->size);
         free_if_non_null(l2_file);
       }
