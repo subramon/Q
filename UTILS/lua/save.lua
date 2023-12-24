@@ -36,7 +36,6 @@ local function internal_save(
     end
   elseif ( type(value) == "lVector" ) then
     local vec = value
-    vec:nop()
     -- TODO P4 At some point, we might want to relax following
     local num_elements = vec:num_elements()
     local has_gen = vec:has_gen() 

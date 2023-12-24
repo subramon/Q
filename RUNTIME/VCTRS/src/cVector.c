@@ -456,18 +456,8 @@ static int l_vctr_chnks_to_lma( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  uint32_t new_uqid = 0;
-  status = vctr_chnks_to_lma(ptr_v->tbsp, ptr_v->uqid, &new_uqid); 
-  cBYE(status);
-  //-- create output vector 
-  VCTR_REC_TYPE *ptr_newv = (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
-  return_if_malloc_failed(ptr_newv);
-  memset(ptr_newv, '\0', sizeof(VCTR_REC_TYPE));
-  ptr_newv->tbsp = 0; // created in your own table space 
-  ptr_newv->uqid = new_uqid; 
-  luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
-  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
-
+  status = vctr_chnks_to_lma(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -478,20 +468,16 @@ BYE:
 //----------------------------------------
 static int l_vctr_lma_to_chnks( lua_State *L) {
   int status = 0;
-  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  int n_args = lua_gettop(L);
+  int level = 2;  // default behavior 
+  if ( !( ( n_args == 1 ) || ( n_args == 2 ) ) ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  uint32_t new_uqid = 0;
-  status = vctr_lma_to_chnks(ptr_v->tbsp, ptr_v->uqid, &new_uqid); 
+  if ( n_args == 2 ) { 
+    level = luaL_checknumber(L, 2);
+  }
+  status = vctr_lma_to_chnks(ptr_v->tbsp, ptr_v->uqid, level); 
   cBYE(status);
-  //-- create output vector 
-  VCTR_REC_TYPE *ptr_newv = (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
-  return_if_malloc_failed(ptr_newv);
-  memset(ptr_newv, '\0', sizeof(VCTR_REC_TYPE));
-  ptr_newv->tbsp = 0; // created in your own table space 
-  ptr_newv->uqid = new_uqid; 
-  luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
-  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
-
+  lua_pushboolean(L, true);
   return 1;
 BYE:
   lua_pushnil(L);

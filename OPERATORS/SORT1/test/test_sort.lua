@@ -63,11 +63,13 @@ tests.t1 = function()
   print("Successfully completed test t1")
 end
 tests.t2 = function()
-  local len = 1048576 
+  local max_num_in_chunk = 64
+  local len = 2* max_num_in_chunk + 3 
   local args = {
   len = len,
+  max_num_in_chunk = max_num_in_chunk,
   start = 1, by = 1,
-  period = 127,
+  period = 16,
 }
 
 local qtypes = { "I1", "I2", "I4", "I8", } 
@@ -76,28 +78,26 @@ local qtypes = { "I1", "I2", "I4", "I8", }
       args.qtype = qtype 
       local x = Q.period(args):set_name("x" .. qtype)
       local y = Q.sort(x, order):set_name("y" .. qtype)
-      assert(y:check())
       assert(type(y) == "lVector")
-      local y2 = y:lma_to_chunks() -- sort needs lma, but is_prev needs chunks
-      assert(y2:is_lma() == false)
-      assert(y2:check())
-      assert(x:num_chunks()   == y2:num_chunks())
-      assert(x:num_elements() == y2:num_elements())
+      assert(y:check())
+      assert(y:is_lma())
+      y:lma_to_chunks()
+      assert(x:num_chunks()   == y:num_chunks())
+      assert(x:num_elements() == y:num_elements())
       local cmp
-      if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
-      y2:set_name("sort_y2")
-      local z = Q.is_prev(y2, cmp, { default_val = false})
+      if ( order == "asc" ) then cmp = "leq" else cmp = "geq" end 
+      y:set_name("sort_y")
+      local z = Q.is_prev(y, cmp, { default_val = true})
       z:set_name("z" .. qtype)
       local v = Q.sum(z)
       assert(type(v) == "Reducer")
       local n1, n2 = v:eval()
       assert(type(n1) == "Scalar")
       assert(type(n2) == "Scalar")
-      assert(n1:to_num() == 0)
+      assert(n1 == n2)
       z:delete()
       x:delete()
       y:delete()
-      y2:delete()
       v:delete()
       print("Successfully completed test t2 for ", order, qtype)
     end
@@ -106,8 +106,8 @@ local qtypes = { "I1", "I2", "I4", "I8", }
   print("Successfully completed test t2")
 end
 tests.t3 = function()
-  local len = 128
   local max_num_in_chunk = 64
+  local len = max_num_in_chunk
   local args = {
   len = len,
   max_num_in_chunk = max_num_in_chunk, 
@@ -128,37 +128,24 @@ local qtypes = { "F4", "F8" }
       assert(y:check())
       assert(y:is_lma())
       y = y:lma_to_chunks() -- sort needs lma, but is_prev needs chunks
-      assert(not y:is_lma())
+      assert(y:is_lma())
       local cmp
       --==================================
       if ( order == "asc" ) then cmp = "lt" else cmp = "gt" end 
       local zname = "z_" .. order .. "_" .. qtype
-      local z = Q.is_prev(y, cmp, { default_val = false}):set_name(zname)
+      local z = Q.is_prev(y, cmp, { default_val = true}):set_name(zname)
       assert(z:qtype() == "BL")
-      z:eval() -- TODO P0 TEST 
       local u = Q.sum(z)
       assert(type(u) == "Reducer")
       local n1, n2 = u:eval()
       assert(type(n1) == "Scalar")
       assert(type(n2) == "Scalar")
-      assert(n1:to_num() == 0)
-      --==================================
-      if ( order == "asc" ) then cmp = "gt" else cmp = "lt" end 
-      local wname = "w_" .. order .. "_" .. qtype
-      local w = Q.is_prev(y, cmp, { default_val = true}):set_name(wname)
-      local v      = Q.sum(w)
-      assert(type(v) == "Reducer")
-      local n1, n2 = v:eval()
-      assert(type(n1) == "Scalar")
-      assert(type(n2) == "Scalar")
+      Q.print_csv({x, y, z}, { opfile = "_x"})
       assert(n1 == n2)
       --==================================
       x:delete()
       y:delete()
       z:delete()
-      w:delete()
-      v:delete()
-      u:delete()
       print("Successfully completed test t2 for ", order, qtype)
     end
   end

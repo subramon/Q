@@ -36,7 +36,9 @@ vctr_put_chunk(
   bool is_found; uint32_t vctr_where;
 
   if ( vctr_uqid == 0 ) { go_BYE(-1); }
-  if ( ptr_cmem->data == NULL ) { go_BYE(-1); }
+  // Had to allow data == NULL when vector is created from file using 
+  // vctr_set_lma and we have to create empty chunks
+  // if ( ptr_cmem->data == NULL ) { go_BYE(-1); }
   if ( n == 0 ) { go_BYE(-1); }
 
   vctr_rs_hmap_key_t vctr_key = vctr_uqid;

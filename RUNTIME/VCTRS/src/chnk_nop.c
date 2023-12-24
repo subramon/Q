@@ -24,7 +24,7 @@ chnk_nop(
   status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found,
       &chnk_where_found);
   cBYE(status);
-  if ( !chnk_is_found ) { go_BYE(-1); }
+  if ( !chnk_is_found ) { printf("Chunk %u not found \n", chnk_idx); go_BYE(-1); }
 
   chnk_rs_hmap_val_t *ptr_val =
     &(g_chnk_hmap[tbsp].bkts[chnk_where_found].val);

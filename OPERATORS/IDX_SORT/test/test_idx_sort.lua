@@ -64,6 +64,6 @@ tests.t2 = function()
   print("Test t2 completed")
 end
 
--- WORKS tests.t1()
+tests.t1()
 tests.t2()
 -- return tests

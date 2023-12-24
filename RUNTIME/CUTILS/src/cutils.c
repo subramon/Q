@@ -212,7 +212,11 @@ static int l_cutils_makepath(
   int status = 0;
   const char *const dir_name = luaL_checkstring(L, 1);
   if ( !isdir(dir_name) ) { 
-    status = mkdir(dir_name, 0777); cBYE(status);
+    status = mkdir(dir_name, 0777); 
+    if ( status < 0 ) { 
+    fprintf(stderr, "Failed to make directory [%s]\n", dir_name);
+    }
+    cBYE(status);
   }
   lua_pushboolean(L, true);
   return 1;

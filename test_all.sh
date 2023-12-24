@@ -32,6 +32,7 @@ qjit test1.lua  # TODO NEEDS WORK
 qjit test_lma.lua  
 qjit test_memo.lua  
 qjit test_ref_count.lua
+qjit test_clone.lua
 qjit test_save.lua-- TODO P2 some automation needed for q_config 
 # qjit test_restore.lua -- TODO P2 some automation needed for q_config 
 cd ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/
@@ -74,8 +75,12 @@ qjit test_repeater.lua
 qjit test_logical_op.lua
 qjit test_register_hypot.lua
 
+cd ~/Q/OPERATORS/IDX_SORT/test/
+qjit test_idx_sort.lua
+
 cd ~/Q/OPERATORS/SORT1/test/
 qjit test_sort.lua
+qjit test_unsigned.lua
 
 cd ~/Q/OPERATORS/PERMUTE/test/
 qjit test_permute.lua
