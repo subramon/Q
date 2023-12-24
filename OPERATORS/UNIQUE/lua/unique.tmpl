@@ -45,7 +45,7 @@ ${fn}(
   uint32_t in_idx = *ptr_in_idx;
   uint32_t num_val_buf  = *ptr_num_val_buf;
 
-  uint32_t i = 0;
+  uint32_t i;
   for ( i = in_idx; i < in_len; i++ ) {
     ${val_ctype} curr_val;
     ${val_ctype} in_val = in[i];
@@ -67,13 +67,7 @@ ${fn}(
         }
         else {
           *ptr_overflow = true; 
-          // THIS IS LEGIT CASE if ( i == 0 ) { go_BYE(-1); } 
-          if ( i == 0 ) { 
-            *ptr_in_idx = 0;
-          }
-          else { 
-            *ptr_in_idx = i-1;
-          }
+         *ptr_in_idx = i; // I had i-1 but I think that is wrong
           *ptr_num_val_buf = num_val_buf;
           return status; // IMPORTANT 
         }

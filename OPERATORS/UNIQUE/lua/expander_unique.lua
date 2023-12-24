@@ -8,24 +8,22 @@ local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local function expander_unique(op, a)
   -- Verification
   assert(op == "unique")
-  assert(type(a) == "lVector", "a must be a lVector ")
-  local sp_fn_name = "Q/OPERATORS/UNIQUE/lua/unique_specialize"
+  local sp_fn_name = "Q/OPERATORS/UNIQUE/lua/" .. op .. "_specialize"
   local spfn = assert(require(sp_fn_name))
 
   local status, subs = pcall(spfn, a)
   if not status then print(subs) end
-  assert(status, "Specializer failed " .. sp_fn_name)
   local func_name = assert(subs.fn)
   qc.q_add(subs)
   assert(qc[func_name], "Symbol not defined " .. func_name)
 
   -- TODO P1 Check that a is sorted. a = sort_utility(a)
+  assert(a:get_meta("sort_order") == "asc") -- TODO Improve 
   
-  -- track how much of input you have consumed 
+  -- records which element of input buffer to examine
   local in_idx = ffi.new("uint32_t[?]", 1)
-  -- how much of input buffer has been filled up
+  -- how much of output buffer has been filled up
   local num_val_buf = ffi.new("uint32_t[?]", 1)
-  num_val_buf[0] = 0
   -- whether val_buf will overflow if we consume more input
   local overflow = ffi.new("bool[?]", 1)
   overflow[0] = false
@@ -42,43 +40,56 @@ local function expander_unique(op, a)
 
     local function gen(chunk_num)
       assert(chunk_num == l_chunk_num)
-      local val_buf = cmem.new({ size = subs.val_bufsz, name = "unique_val"})
+      -- print("Generating chunk ", chunk_num)
+      -- START Create buffers for output 
+      local val_buf = cmem.new(
+        { size = subs.val_bufsz, name = "unique_val"})
       val_buf:zero()
       val_buf:stealable(true)
   
-      local cnt_buf = cmem.new({ size = subs.cnt_bufsz, name = "unique_cnt"})
+      local cnt_buf = cmem.new(
+        { size = subs.cnt_bufsz, name = "unique_cnt"})
       cnt_buf:zero()
       cnt_buf:stealable(true)
 
-      num_val_buf[0] = 0
-  
+      num_val_buf[0] = 0 -- indicates val_buf/cnt_buf are empty
+      overflow[0] = false 
+      -- STOP  Create buffers for output 
+      --
       while ( true ) do 
+        -- START Get access to input data 
         -- If first time OR you have consumed entire input chnk, get more
         if ( not in_buf ) then
-          in_idx[0] = 0
           in_len, in_buf = a:get_chunk(in_chunk_num)
-          -- print("Getting chunk " .. in_chunk_num)
+          in_idx[0] = 0
+          -- print("A: Getting chunk " .. in_chunk_num)
         else
+          -- if you have consumed everthing in current  chunk 
           if ( in_len == in_idx[0] ) then 
             a:unget_chunk(in_chunk_num)
-            -- print("Ungetting input chunk " .. in_chunk_num)
+            ----  print("X: Ungetting input chunk " .. in_chunk_num)
             if ( in_len < a:max_num_in_chunk() ) then
-              in_len = 0 -- indicating end of input
+              -- there cannot be any more chunks in input 
+              assert(a:is_eov())
+              in_len = 0; in_buf = nil -- indicate end of input
             else
               in_chunk_num = in_chunk_num + 1 
               in_len, in_buf = a:get_chunk(in_chunk_num)
               in_idx[0] = 0
-              -- print("Getting chunk " .. in_chunk_num)
+              -- print("B: Getting chunk " .. in_chunk_num)
             end
           else 
-            -- print("Need to finish consuming input in chunk", in_chunk_num)
+            -- print("Need to finish consuming input in chnk",in_chunk_num)
           end
         end
+        -- STOP  Get access to input data 
         --=== START handle case where no more input 
         if in_len == 0 then
+          -- print("NO MORE INPUT")
           if ( num_val_buf[0] == 0 ) then 
             val_buf:delete()
             cnt_buf:delete()
+            return 0
           end
           if ( my_name == "val" ) then 
             vectors.cnt:put_chunk(cnt_buf, num_val_buf[0])
@@ -100,18 +111,15 @@ local function expander_unique(op, a)
   
         local status = qc[func_name](in_ptr, in_len, val_ptr, cnt_ptr, 
           in_idx, num_val_buf, subs.max_num_in_chunk, overflow)
-        if ( ( a:is_eov() ) and ( overflow[0] == true ) ) then
-          a:unget_chunk(in_chunk_num)
-          -- print("X: Ungetting input chunk " .. in_chunk_num)
-        end
-
-        -- print("Return from C code, in_len = ", in_len)
-        -- print("Return from C code, in_idx = ", in_idx[0]);
-        -- print("Return from C code, num_val_buf = ", num_val_buf[0])
-        -- print("Return from C code, overflow = ", overflow[0]);
         assert(status == 0, "C error in UNIQUE")
+
+
         -- If output buffer is (truly) full then return it 
         if ( overflow[0] == true ) then 
+          -- print("Return from C code, in_len = ", in_len)
+          -- print("Return from C code, in_idx = ", in_idx[0]);
+          -- print("Return from C code, num_val_buf = ", num_val_buf[0])
+          -- print("Return from C code, overflow = ", overflow[0]);
           if ( my_name == "val" ) then 
             vectors.cnt:put_chunk(cnt_buf, num_val_buf[0])
             l_chunk_num = l_chunk_num + 1 

@@ -18,7 +18,7 @@ local function expander_where(a, b, optargs)
   -- TODO P3 Write a test for case of pre-computed
   -- Check min and max value from bit vector metadata
   local minval = b:get_meta("min")
-  local maxval = b:get_meta("min")
+  local maxval = b:get_meta("max")
   if ( minval and maxval) then 
     assert(type(minval) == "Scalar")
     assert(type(maxval) == "Scalar")
@@ -41,9 +41,8 @@ local function expander_where(a, b, optargs)
   local ab_chunk_num = 0 
   local l_chunk_num = 0
 
-
   -- aidx must be in the closure of the generator 
-  -- aidx counts how much of input buffer we have consumed
+  -- aidx tells us which element of input buffer(s) we need to examine
   -- useful because we may have consumed half of it and have
   -- to return because output bufer is full. When we come back
   -- we need to know where we left off
@@ -53,27 +52,21 @@ local function expander_where(a, b, optargs)
   
   local a_name = a:name()
   local b_name = b:name()
-  local function where_gen(chunk_num)
+  local function gen(chunk_num)
+    -- print("WHERE: Generating chunk ", chunk_num)
     assert(chunk_num == l_chunk_num)
-    -- print("Get chunk " .. chunk_num .. " for " .. a_name .. " and " .. b_name)
     -- n_out counts number of entries in output buffer
     local n_out = cmem.new(ffi.sizeof("uint64_t"))
     local c_n_out = ffi.cast("uint64_t *", get_ptr(n_out, "UI8"))
     c_n_out[0] = 0 
     local out_buf = cmem.new(subs.size)
+    out_buf:zero()
     out_buf:stealable(true)
-    local num_in_out
+    local num_in_out = 0
     repeat
-      aidx:nop()
-      n_out:nop()
+      -- print("WHERE: Getting Input chunk/idx = ", ab_chunk_num, c_aidx[0])
       local a_len, a_chunk, a_nn_chunk = a:get_chunk(ab_chunk_num)
       local b_len, b_chunk, b_nn_chunk = b:get_chunk(ab_chunk_num)
-      if ( a_len ~= b_len ) then 
-        print("WHERE EOV a: " .. a_name .. " = " .. tostring(a:is_eov()))
-        print("WHERE EOV b: " .. b_name .. " = " .. tostring(b:is_eov()))
-        print("WHERE Length a: " .. a_name .. " = " .. a_len)
-        print("WHERE Length b: " .. b_name .. " = " .. b_len)
-      end
       assert(a_len == b_len) -- See Detailed note at end 
       local ab_len = a_len -- lmin(a_len, b_len)
       -- See Detailed Note at end for why ab_len is needed
@@ -84,6 +77,7 @@ local function expander_where(a, b, optargs)
         n_out:delete()
         return num_in_out, out_buf
       end
+      --================================================
       local cast_a_buf   = get_ptr(a_chunk, subs.cast_a_as)
       local cast_b_buf   = get_ptr(b_chunk, subs.cast_b_as)
       local cast_out_buf = get_ptr(out_buf, subs.cast_a_as)
@@ -93,16 +87,20 @@ local function expander_where(a, b, optargs)
       assert(status == 0)
       record_time(start_time, func_name)
       num_in_out = tonumber(c_n_out[0])
+      assert(num_in_out <= subs.max_num_in_chunk)
+      -- print("num_in_out = ",  num_in_out)
       -- if you have consumed all you got from the a_chunk,
       -- then you need to move to the next chunk
+      -- print("WHERE: Ungetting ", ab_chunk_num)
+      a:unget_chunk(ab_chunk_num)
+      b:unget_chunk(ab_chunk_num)
       if ( tonumber(c_aidx[0]) == ab_len ) then
-        a:unget_chunk(ab_chunk_num)
-        b:unget_chunk(ab_chunk_num)
         ab_chunk_num = ab_chunk_num + 1
         c_aidx[0] = 0
       end
       if ( ab_len < a:max_num_in_chunk() ) then 
         -- no more input, flush whatever is in output buffer
+        -- print(" no more input, flush whatever is in output buffer")
         local num_in_out = tonumber(c_n_out[0])
         aidx:delete()
         n_out:delete()
@@ -112,7 +110,12 @@ local function expander_where(a, b, optargs)
     l_chunk_num = l_chunk_num + 1 
     return num_in_out, out_buf
   end
-  return lVector( { gen = where_gen, has_nulls = false, qtype = subs.a_qtype } )
+  local vargs = {}
+  vargs.gen = gen
+  vargs.has_nulls = false
+  vargs.qtype = subs.a_qtype
+  vargs.max_num_in_chunk = subs.max_num_in_chunk
+  return lVector(vargs)
 end
 return expander_where
 
