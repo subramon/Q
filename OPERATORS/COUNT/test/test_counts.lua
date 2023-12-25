@@ -1,7 +1,10 @@
 -- FUNCTIONAL 
 require 'Q/UTILS/lua/strict'
-local Q = require 'Q'
-local qconsts = require 'Q/UTILS/lua/q_consts'
+local Q      = require 'Q'
+local Scalar = require 'libsclr'
+local qcfg   = require 'Q/UTILS/lua/qcfg'
+local nC = qcfg.max_num_in_chunk
+
 
 local tests = {}
 
@@ -11,8 +14,9 @@ tests.t1 = function()
   local qtype = "I1"
   local value = 100
   local vec = Q.mk_col(tbl, qtype)
-  local result = Q.counts(vec, value)
-  assert(result:eval():to_num() == 1)
+  local rdcr = Q.count(vec, value)
+  assert(type(rdcr) == "Reducer")
+  local count = rdcr:eval()
   print("Successfully completed test t1")
 end
 
@@ -22,39 +26,52 @@ tests.t2 = function()
   local qtype = "I1"
   local value = 45
   local vec = Q.mk_col(tbl, qtype)
-  local result = Q.counts(vec, value)
+  local result = Q.count(vec, value)
   assert(result:eval():to_num() == 0)
   print("Successfully completed test t2")
 end
 
-
--- validating count operator to return count of a given number value
--- from input vector where num_elements < chunk_size
+-- testing with num_elements >, <, == chunk_size
 tests.t3 = function()
-  local input_vec = Q.period({start = 1, by = 1, period = 10, len = 50000, qtype = "I2"}):eval()
-  local result = Q.counts(input_vec, 10)
-  assert(result:eval():to_num() == 5000)
+  local nC = 128
+  for iter = 1, 3 do 
+    local len
+    if ( iter == 1 ) then 
+      len = nC - 7 
+    elseif ( iter == 2 ) then 
+      len = nC + 7 
+    else
+      len = nC
+    end
+    local args = {start = 1, by = 1, period = 10, len = len, 
+      qtype = "I2", max_num_in_chunk = nC}
+    local input_vec = Q.period(args)
+    local rdcr = Q.count(input_vec, 10)
+    assert(type(rdcr) == "Reducer")
+    local count = rdcr:eval()
+    assert(type(count) == "Scalar")
+    count = count:to_num()
+    if ( iter == 1 ) then assert(count == 12 ) 
+    elseif ( iter == 2 ) then assert(count == 13 ) 
+    elseif ( iter == 3 ) then assert(count == 12 ) 
+    else error("XXX") end
+  end
   print("Successfully completed test t3")
-end
-
--- validating count operator to return count of a given number value
--- from input vector where num_elements > chunk_size
-tests.t4 = function()
-  local input_vec = Q.period({start = 1, by = 1, period = 10, len = 65536*2, qtype = "I2"}):eval()
-  local result = Q.counts(input_vec, 10)
-  assert(result:eval():to_num() == 13107)
-  print("Successfully completed test t4")
 end
 
 -- validating count operator to return count of a given scalar value
 -- from input vector where num_elements > chunk_size
 tests.t5 = function()
+  local nC = 256
   local Scalar = require "libsclr"
   local qtype = "I2"
-  local input_vec = Q.period({start = 1, by = 1, period = 10, len = 65536*2, qtype = qtype}):eval()
+  local len = nC*2
+  local input_vec = Q.period({start = 1, by = 1, period = 10, len = len, qtype = qtype, max_num_in_chunk = nC}):eval()
   local s_val = Scalar.new(10, qtype) 
-  local result = Q.counts(input_vec, s_val)
-  assert(result:eval():to_num() == 13107)
+  local rdcr = Q.count(input_vec, s_val)
+  local count = rdcr:eval()
+  count = count:to_num()
+  assert(count == 51)
   print("Successfully completed test t5")
 end
 
@@ -66,11 +83,17 @@ tests.t6 = function()
   local value = 128
   local vec = Q.mk_col(tbl, qtype)
   print("START: Deliberate error attempt")
-  local status, reason = pcall(Q.counts,vec, value)
+  local status, reason = pcall(Q.count,vec, value)
   print(status, reason)
   print("STOP: Deliberate error attempt")
   assert(status == false)
   print("Successfully completed test t6")
 end
 
-return tests
+tests.t1()
+tests.t2()
+tests.t3()
+tests.t5()
+tests.t6()
+
+--return tests

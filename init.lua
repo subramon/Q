@@ -41,6 +41,8 @@ require 'Q/OPERATORS/JOIN/lua/join'
 require "Q/OPERATORS/IDX_SORT/lua/idx_sort"
 require "Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez"
 
+require "Q/OPERATORS/COUNT/lua/count"
+
 require "Q/UTILS/lua/import"
 require "Q/UTILS/lua/register_qop" 
 
@@ -66,7 +68,6 @@ require "Q/OPERATORS/AX_EQUALS_B/lua/linear_solver"
 require "Q/OPERATORS/CAST/lua/cast"
 require "Q/OPERATORS/CAT/lua/cat"
 require "Q/OPERATORS/CLONE/lua/clone"
--- TODO P1 NEED TO DO MEM_INITIALIZE require "Q/OPERATORS/COUNT/lua/counts"
 
 require "Q/OPERATORS/DROP_NULLS/lua/drop_nulls"
 

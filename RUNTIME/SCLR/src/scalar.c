@@ -573,6 +573,18 @@ static int l_sclr_new( lua_State *L) {
         case I8 : 
           ptr_sclr->val.i8 = ((int64_t *)ptr_cmem->data)[0];
           break;
+        case UI1 : 
+          ptr_sclr->val.ui1 = ((uint8_t *)ptr_cmem->data)[0];
+          break;
+        case UI2 : 
+          ptr_sclr->val.ui2 = ((uint16_t *)ptr_cmem->data)[0];
+          break;
+        case UI4 : 
+          ptr_sclr->val.ui4 = ((uint32_t *)ptr_cmem->data)[0];
+          break;
+        case UI8 : 
+          ptr_sclr->val.ui8 = ((uint64_t *)ptr_cmem->data)[0];
+          break;
         case F4 : 
           ptr_sclr->val.f4 = ((float *)ptr_cmem->data)[0];
           break;
