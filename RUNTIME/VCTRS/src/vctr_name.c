@@ -25,7 +25,6 @@ vctr_set_name(
       &where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
-  if ( val.is_trash    ) { go_BYE(-1); }
   vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap[tbsp].bkts;
   strcpy(bkts[where].val.name, name);
 
@@ -46,7 +45,6 @@ vctr_get_name(
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
   cBYE(status);
   if ( !is_found ) { return NULL; } 
-  if ( val.is_trash ) { return NULL; } 
   vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap[tbsp].bkts;
   return bkts[where].val.name;
 BYE:
@@ -66,7 +64,6 @@ vctr_get_max_num_in_chunk(
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); } 
-  if ( val.is_trash ) { go_BYE(-1); } 
   vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap[tbsp].bkts;
   *ptr_max_num_in_chunk = bkts[where].val.max_num_in_chnk;
 BYE:
@@ -87,7 +84,6 @@ vctr_get_qtype(
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
-  if ( val.is_trash ) { go_BYE(-1); }
   vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap[tbsp].bkts;
   *ptr_qtype = bkts[where].val.qtype;
 BYE:
@@ -108,7 +104,6 @@ vctr_get_ref_count(
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
-  if ( val.is_trash ) { go_BYE(-1); }
   vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap[tbsp].bkts;
   *ptr_ref_count = bkts[where].val.ref_count;
 BYE:
@@ -135,4 +130,46 @@ vctr_file_info(
   return lma_file; 
 BYE:
   return NULL;
+}
+int
+vctr_set_error(
+    uint32_t tbsp,
+    uint32_t uqid
+    )
+{
+  int status = 0;
+  bool is_found; uint32_t where;
+
+  vctr_rs_hmap_key_t key = uqid;
+  vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
+      &where);
+  cBYE(status);
+  if ( !is_found ) { go_BYE(-1); }
+  g_vctr_hmap[tbsp].bkts[where].val.is_err = true;
+
+BYE:
+  return status;
+}
+
+int
+vctr_is_error(
+    uint32_t tbsp,
+    uint32_t uqid,
+    bool *ptr_is_err
+    )
+{
+  int status = 0;
+  bool is_found; uint32_t where;
+
+  vctr_rs_hmap_key_t key = uqid;
+  vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
+      &where);
+  cBYE(status);
+  if ( !is_found ) { go_BYE(-1); }
+  *ptr_is_err = g_vctr_hmap[tbsp].bkts[where].val.is_err;
+
+BYE:
+  return status;
 }

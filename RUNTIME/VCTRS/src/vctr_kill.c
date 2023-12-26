@@ -27,7 +27,6 @@ vctr_killable(
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
   if ( val.is_killable ) { if ( val.num_elements > 0 ) { go_BYE(-1); } }
-  if ( val.is_trash ) { go_BYE(-1); }
   // I used to have the is_eov check but I think it is not necessary
   // if ( val.is_eov ) { go_BYE(-1); }
   if ( val.is_early_free ) { go_BYE(-1); }

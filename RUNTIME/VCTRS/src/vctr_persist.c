@@ -25,7 +25,6 @@ vctr_persist(
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
-  if ( val.is_trash ) { go_BYE(-1); }
   // Cannot persist a vector if we have freed some of its chunks 
   if ( val.is_early_free ) { go_BYE(-1); }
   // This is okay: if ( val.is_persist ) { go_BYE(-1); }

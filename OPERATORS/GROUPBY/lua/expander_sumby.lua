@@ -53,19 +53,19 @@ local function expander_sumby(operator, val, grp, nb, cnd, optargs)
 
     return vval, vcnt
   end
-  local chunk_idx = 0
+  local l_chunk_num = 0
   local function sumby_gen(chunk_num)
-    assert(chunk_num == chunk_idx)
+    assert(chunk_num == l_chunk_num)
     --=============================================
-    local val_len, val_chunk = val:get_chunk(chunk_idx)
-    local grp_len, grp_chunk = grp:get_chunk(chunk_idx)
+    local val_len, val_chunk = val:get_chunk(l_chunk_num)
+    local grp_len, grp_chunk = grp:get_chunk(l_chunk_num)
     local cnd_len, cnd_chunk
     local cast_cnd_chunk = ffi.NULL
     if ( cnd ) then 
-      cnd_len, cnd_chunk = cnd:get_chunk(chunk_idx)
+      cnd_len, cnd_chunk = cnd:get_chunk(l_chunk_num)
     end
     assert(val_len == grp_len)
-    if ( chunk_idx == 0 ) then assert(val_len > 0 ) end
+    if ( l_chunk_num == 0 ) then assert(val_len > 0 ) end
     if ( val_len == 0 ) then return nil end 
     --=============================================
     local cast_val_chnk = get_ptr(val_chunk, subs.cast_val_fld_as)
@@ -78,16 +78,17 @@ local function expander_sumby(operator, val, grp, nb, cnd, optargs)
     local status = qc[func_name](
         cast_val_chnk, val_len, cast_grp_chnk, cast_cnd_chunk, 
         cast_out_val_buf, cast_out_cnt_buf, nb)
-    assert(status == 0, "C error in SUMBY")
-    val:unget_chunk(chunk_idx)
-    grp:unget_chunk(chunk_idx)
+    val:unget_chunk(l_chunk_num)
+    grp:unget_chunk(l_chunk_num)
     if ( cnd ) then 
-      cnd:unget_chunk(chunk_idx)
+      cnd:unget_chunk(l_chunk_num)
     end
+    -- move status check to after ungets
+    assert(status == 0, "C error in SUMBY")
     if ( val_len < val:max_num_in_chunk() ) then 
       return nil
     end
-    chunk_idx = chunk_idx + 1
+    l_chunk_num = l_chunk_num + 1
     return { out_val_buf, out_cnt_buf}
   end
   local rargs = {}

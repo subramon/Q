@@ -43,7 +43,6 @@ vctr_get_memo_len(
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
-  if ( val.is_trash ) { go_BYE(-1); }
   vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap[tbsp].bkts;
   *ptr_memo_len = bkts[where].val.memo_len;
 BYE:

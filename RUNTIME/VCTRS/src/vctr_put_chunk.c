@@ -47,7 +47,6 @@ vctr_put_chunk(
       &vctr_val, &is_found, &vctr_where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); } // vector exists 
-  if ( vctr_val.is_trash  ) { go_BYE(-1); }
   if ( vctr_val.is_eov    ) { go_BYE(-1); } // vector can be appended to 
   // cannot put more than can fit in chunk
   if ( n > vctr_val.max_num_in_chnk ) { go_BYE(-1); } 

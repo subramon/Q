@@ -7,6 +7,8 @@ local lgutils = require 'liblgutils'
 local tests = {}
 
 tests.t0 = function()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local nb = 2
   local col = Q.mk_col({0, 1, 0, 0, 1, 1, 1, 0, 1}, "I1")
   local rslt = Q.numby(col, nb):eval()
@@ -15,22 +17,32 @@ tests.t0 = function()
   assert(rslt:get1(1):to_num() == 5)
   col:delete()
   rslt:delete()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("Test t0 completed")
 end
 
 tests.t0_1 = function()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   -- negative test
   -- input column exceeds limit i.e value >= nb
   local nb = 2
   local col = Q.mk_col({0, 1, 0, 0, 1, 1, 1, 2, 1}, "I1")
   local rslt = Q.numby(col, nb)
-  local status, rslt = pcall(rslt.eval, rslt)
-  assert(status == false)
+  assert(type(rslt) == "lVector")
+  rslt:eval()
+  assert(rslt:is_error() == true)
   col:delete()
+  rslt:delete()
+  -- TODO assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("Test t0_1 completed")
 end
 
 tests.t0_2 = function()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   -- input column has all 1's
   local nb = 2
   local col = Q.mk_col({1, 1, 1, 1, 1, 1, 1, 1, 1}, "I1")
@@ -40,6 +52,9 @@ tests.t0_2 = function()
   assert(rslt:get1(1):to_num() == 9)
   col:delete()
   rslt:delete()
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
   print("Test t0_2 completed")
 end
 
@@ -57,20 +72,27 @@ tests.t0_3 = function()
 end
 
 tests.t1 = function()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   local max_num_in_chunk = 64 
   local len = 2*max_num_in_chunk + 1
   local period = 3
   local a = Q.period( { len = len, start = 0, by = 1, period = period, 
      qtype = "I4", max_num_in_chunk = max_num_in_chunk, })
 
-  local rslt = Q.numby(a, period)
+  local rslt = Q.numby(a, period):eval()
   -- Q.print_csv(rslt)
   a:delete()
   rslt:delete()
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
   print("Test t1 completed")
 end
 
 tests.t2 = function()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   local max_num_in_chunk = 64 
   local len = 2*max_num_in_chunk + 1
   local lb = 0
@@ -78,7 +100,6 @@ tests.t2 = function()
   local range = ub - lb + 1
   local a = Q.rand({ len = len, lb = 0, ub = 4, qtype = "I4",
     max_num_in_chunk = max_num_in_chunk})
-  Q.numby = require 'Q/OPERATORS/GROUPBY/lua/expander_numby'
   local rslt = Q.numby(a, range)
   assert(type(rslt) == "lVector")
   -- Q.print_csv(rslt)
@@ -93,11 +114,16 @@ tests.t2 = function()
   end
   a:delete()
   rslt:delete()
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
   print("Test t2 completed")
 end
 
 
 tests.t3 = function()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   -- Elements equal to chunk_size
   local period = 3
   local max_num_in_chunk = 64 
@@ -109,6 +135,11 @@ tests.t3 = function()
   for i = 1, period do 
     assert(rslt:get1(i-1) == Scalar.new(len/period))
   end
+  a:delete()
+  rslt:delete()
+  local post = lgutils.mem_used()
+  -- TODO assert(pre == post)
+  collectgarbage("restart")
   print("Test t3 completed")
 end
 -- return tests
@@ -119,7 +150,3 @@ tests.t0_3()
 tests.t1()
 -- TODO tests.t2() Depends on rand which needs to be fixe
 tests.t3()
-collectgarbage()
-print("MEM", lgutils.mem_used())
-print("DSK", lgutils.dsk_used())
-assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

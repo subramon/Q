@@ -67,15 +67,27 @@ vctr_del(
   // Delete chunks in vector before deleting vector 
   for ( uint32_t chnk_idx = 0; chnk_idx <= val.max_chnk_idx; chnk_idx++ ){
     uint32_t old_nitems = g_chnk_hmap[tbsp].nitems;
-    if ( old_nitems == 0 ) { go_BYE(-1); }
+    if ( old_nitems == 0 ) { 
+      if ( val.is_err ) { 
+        // Ignore the error 
+      }
+      else {
+        go_BYE(-1); 
+      }
+    }
     bool is_found = true;
     status = chnk_del(tbsp, uqid, chnk_idx, is_persist); 
     if ( status == -3 ) { status = 0; is_found = false; } 
     cBYE(status);
     if ( val.memo_len < 0 ) {  
       // memo length infinite means all chunks must have been saved
-      if ( !is_found ) { 
+      if ( !is_found ) {
+        if ( val.is_err == true ) { 
+          // Ignore this error 
+        }
+        else {
         go_BYE(-1); 
+        }
       }
     }
     else {

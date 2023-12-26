@@ -97,6 +97,33 @@ LUALIB_API void *luaL_testudata (
 
 int luaopen_libvctr (lua_State *L);
 //-----------------------------------
+static int l_vctr_is_error( lua_State *L) {
+  int status = 0;
+  bool brslt; 
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_is_error(ptr_v->tbsp, ptr_v->uqid, &brslt); cBYE(status);
+  lua_pushboolean(L, brslt);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------------------
+static int l_vctr_set_error( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_set_error(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------------------
 static int l_vctr_set_name( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
@@ -110,6 +137,7 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
+//-----------------------------------
 static int l_vctr_get_qtype( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
@@ -1329,6 +1357,8 @@ static const struct luaL_Reg vector_methods[] = {
     { "cast", l_vctr_cast },
     { "set_memo", l_vctr_set_memo },
     { "set_name", l_vctr_set_name },
+    { "set_error", l_vctr_set_error },
+    { "is_error", l_vctr_is_error },
     //--------------------------------
     { "count", l_vctr_count },
     { "name", l_vctr_get_name },
@@ -1405,6 +1435,8 @@ static const struct luaL_Reg vector_functions[] = {
     { "cast", l_vctr_cast },
     { "set_memo", l_vctr_set_memo},
     { "set_name", l_vctr_set_name },
+    { "set_error", l_vctr_set_error },
+    { "is_error", l_vctr_is_error },
     //--------------------------------
     { "count", l_vctr_count },
     { "name", l_vctr_get_name },

@@ -65,27 +65,28 @@ end
 
 
 tests.t4 = function()
-  local len = get_max_num_in_chunk() * 2 + (get_max_num_in_chunk()/2-1)
+  local nC = 256
+  local len = 2*nC + math.floor(nC/2) + 1 
   local n_grp = 3
 
-  local val = Q.seq( {start = 1, by = 1, qtype = "I4", len = len} )
-  local grp = Q.period({ len = len, start = 0, by = 1, period = n_grp, qtype = "I4"})
+  local val = Q.seq( {start = 1, by = 1, qtype = "I4", len = len,
+max_num_in_chunk = nC } )
+  local grp = Q.period({ len = len, start = 0, by = 1, period = n_grp, qtype = "I4",
+max_num_in_chunk = nC })
   local exp_val = { 279599787, 279613440, 279627093, }
 
   local optargs = {}
   for _, bval in ipairs{true, false} do 
     optargs.is_safe = bval 
     local res, cnt = Q.sumby(val, grp, n_grp, nil, optargs):eval()
-    -- Q.print_csv({res, cnt})
+    local exp_res = Q.mk_col({ 68587, 68801, 68373, }, "I8")
+    local exp_cnt = Q.mk_col({ 214, 214, 213, }, "I8")
   
-    local n1, n2 = Q.sum(cnt):eval()
-    assert(n1:to_num() == len)
+    local n1, n2 = Q.sum(Q.vveq(res, exp_res)):eval()
+    assert(n1 == n2)
   
-    -- vefiry
-    for i = 1, n_grp do 
-      local chk_val = res:get1(i-1)
-      assert(chk_val:to_num() == exp_val[i])
-    end
+    local n1, n2 = Q.sum(Q.vveq(cnt, exp_cnt)):eval()
+    assert(n1 == n2)
   end
 
   print("Test t4 completed")

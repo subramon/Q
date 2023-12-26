@@ -20,7 +20,6 @@ vctr_eov(
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
-  if ( val.is_trash ) { go_BYE(-1); }
   // vctr_eoc() is idempotent operator. Hence, following has been commented
   // if ( val.is_eov ) { go_BYE(-1); }
   g_vctr_hmap[tbsp].bkts[where_found].val.is_eov = true; 

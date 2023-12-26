@@ -132,6 +132,16 @@ function lVector:name()
   return name
 end
 
+function lVector:is_error()
+  local x, y = cVector.is_error(self._base_vec)
+  if ( type(x) == "boolean" ) then return x else return nil end 
+end
+
+function lVector:set_error()
+  local status = cVector.set_error(self._base_vec)
+  return self
+end
+
 function lVector:set_name(name)
   assert(type(name) == "string")
   local status = cVector.set_name(self._base_vec, name)
@@ -529,6 +539,11 @@ function lVector:get_chunk(chnk_idx)
     if ( type(self._generator) == "nil" ) then return 0, nil end 
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
+    -- IMPORTANT: See how error in Vector creation is indicated
+    if ( ( num_elements == 0 ) and 
+         ( type(buf) == "boolean" ) and ( buf == false ) ) then 
+      self:set_error()
+    end
     --==============================
     if ( num_elements > 0 ) then  
       assert(type(buf) == "CMEM")

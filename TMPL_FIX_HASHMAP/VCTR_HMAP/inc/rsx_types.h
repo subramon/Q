@@ -26,7 +26,7 @@ typedef struct _vctr_meta_t {
   bool is_persist;   // l2 should not be deleted on vector delete
   bool is_writable;   // false => no changes allowed
   bool is_early_free; // true => >=0 chunks has been freed early
-  bool is_trash; // true => marked for garbage collection 
+  bool is_err; // true => error in creating vector => all the normal checks will not apply.
   bool is_lma; // true => there exists a file that allows Linear Memory Access (lma) 
   int num_readers; // for lma 
   int num_writers; // for lma 

@@ -47,7 +47,10 @@ local function expander_numby(a, nb, optargs)
       local status = qc[func_name](cast_a_chunk, a_len, cast_out_buf, nb)
       record_time(start_time, func_name)
       a:unget_chunk(chunk_idx)
-      assert(status == 0, "C error in NUMBY")
+      if ( status ~= 0 ) then -- NOTE how we indicate error to lVector
+        print("Error in C code of " .. func_name)
+        return 0, false -- NOTE how we indicate error to lVector
+      end 
       if a_len < a_max_num_in_chunk then -- this is last chunk of a
         return nb, out_buf
       end

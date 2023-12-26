@@ -26,5 +26,4 @@ rsx_pr_val(
   fprintf(fp, "nC = %" PRIu32 "\n", ptr_val->num_chnks);
   fprintf(fp, "nS = %" PRIu32 "\n", ptr_val->max_num_in_chnk);
   fprintf(fp, "is_eov = %s \n", ptr_val->is_eov ? "true" : "false" );
-  fprintf(fp, "is_trash = %s \n", ptr_val->is_trash ? "true" : "false" );
 }

@@ -35,7 +35,6 @@ vctr_early_free(
   // conditions under which early free not allowed
   if ( ptr_vctr_val->is_persist ) { go_BYE(-1); }
   if ( ptr_vctr_val->is_writable ) { go_BYE(-1); }
-  if ( ptr_vctr_val->is_trash ) { go_BYE(-1); }
   //----------------
   // conditions under which early free ignored
   if ( ptr_vctr_val->num_elements == 0 ) { goto BYE; }

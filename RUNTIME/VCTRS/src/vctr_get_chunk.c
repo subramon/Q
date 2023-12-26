@@ -5,6 +5,7 @@
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_is.h"
 #include "vctr_is.h"
+#include "vctr_lma_access.h"
 #include "vctr_get_chunk.h"
 #include "chnk_get_data.h"
 #include "rdtsc.h"
