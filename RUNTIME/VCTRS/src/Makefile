@@ -28,7 +28,6 @@ SRCS +=	vctr_incr_ref_count.c
 SRCS +=	vctr_is.c  
 SRCS +=	vctr_is_early_free.c  
 SRCS +=	vctr_is_eov.c  
-SRCS +=	vctr_is_persist.c  
 SRCS +=	vctr_make_mem.c  
 SRCS +=	vctr_nop.c  
 

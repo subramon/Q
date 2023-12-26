@@ -40,7 +40,6 @@
 #include "chnk_get_data.h"
 #include "vctr_is_eov.h"
 #include "vctr_is_early_free.h"
-#include "vctr_is_persist.h"
 #include "vctr_get_chunk.h"
 #include "vctr_get1.h"
 #include "vctr_name.h"

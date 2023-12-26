@@ -4,6 +4,29 @@ local cVector  = require 'libvctr'
 local basic_serialize = require 'Q/UTILS/lua/basic_serialize'
 local should_save = require 'Q/UTILS/lua/should_save'
 
+-- skip_save() tells us whether saving of this vector should be skipped
+local function skip_save(vec)
+  -- TODO P4 At some point, we might want to relax following
+  local num_elements = vec:num_elements()
+  local has_gen      = vec:has_gen() 
+  local is_eov       = vec:is_eov() 
+  local is_err       = vec:is_err() 
+  local memo_len     = vec:memo_len() 
+
+  assert(type(num_elements) == "number")
+  assert(type(has_gen)      == "boolean")
+  assert(type(is_eov)       == "boolean")
+  assert(type(is_err)       == "boolean")
+  assert(type(memo_len)     == "number")
+
+  if ( ( num_elements == 0 ) or ( has_gen == true ) or 
+       ( is_eov == false ) or ( is_err = true ) or ( memo_len >= 0 ) ) then
+    return false
+  else
+    return true
+  end
+end
+
 -- TODO Indrajeet make 2 args, one is name of table, other is filename
 -- function internal_save(name, value, saved)
 local function internal_save(
@@ -13,9 +36,14 @@ local function internal_save(
   Tsaved,
   fp
   )
-  -- print("Internal save of " .. name .. " at depth " .. depth)
+  print("Internal save of " .. name .. " at depth " .. depth)
   if not should_save(name, value) then return end
   assert(type(Tsaved) == "table")
+  assert(type(depth) == "number")
+  assert(depth >= 0)
+  assert(type(name) == "string")
+  assert(#name > 0)
+  --=======================================
   if ( ( type(value) == "number" ) or
        ( type(value) == "string" ) or
        ( type(value) == "boolean" ) ) then
@@ -36,20 +64,8 @@ local function internal_save(
     end
   elseif ( type(value) == "lVector" ) then
     local vec = value
-    -- TODO P4 At some point, we might want to relax following
-    local num_elements = vec:num_elements()
-    local has_gen = vec:has_gen() 
-    local is_eov = vec:is_eov() 
-    local memo_len = vec:memo_len() 
-
-    assert(type(num_elements) == "number")
-    assert(type(has_gen) == "boolean")
-    assert(type(is_eov) == "boolean")
-    assert(type(memo_len) == "number")
-
-    if ( ( num_elements == 0 ) or ( has_gen == true ) or 
-         ( is_eov == false ) or ( memo_len >= 0 ) ) then
-      -- skip ths vector
+    local is_skip = skip_save(vec) 
+     if ( is_skip ) then -- skip ths vector
       print("Not saving lVector: " .. name )
       -- print(vec:num_elements())
       -- print(vec:has_gen() ) 
@@ -71,7 +87,6 @@ local function internal_save(
         fp:write("local " .. nn_name, " = lVector({uqid = ",nn_uqid,"})\n" )
         fp:write(name, ":set_nulls(" .. nn_name .. ")\n")
       end
-
     end
   elseif ( type(value) == "Scalar" ) then
     local sclr = value
@@ -79,10 +94,6 @@ local function internal_save(
     assert(type(scalar_str) == "string")
     fp:write(name .. " = " .. scalar_str)
     fp:write("\n")
-  elseif ( type(value) == "lAggregator" ) then
-    print("Serialization of Aggregators not supported as yet"); -- TODO P2
-  elseif ( type(value) == "lDNN" ) then
-    print("Serialization of DNNs not supported as yet"); -- TODO P2
   else
     error("cannot save " .. name .. " of type " .. type(value))
   end

@@ -25,10 +25,31 @@ vctr_persist(
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
-  // Cannot persist a vector if we have freed some of its chunks 
+  if ( val.is_err ) { go_BYE(-1); }
+  // Cannot persist a vector if we (may) have freed some of its chunks 
   if ( val.is_early_free ) { go_BYE(-1); }
+  if ( val.memo_len >= 0 ) { go_BYE(-1); }
   // This is okay: if ( val.is_persist ) { go_BYE(-1); }
   g_vctr_hmap[tbsp].bkts[where_found].val.is_persist = bval;
+BYE:
+  return status;
+}
+
+int
+vctr_is_persist(
+    uint32_t tbsp,
+    uint32_t vctr_uqid,
+    bool *ptr_is_persist
+    )
+{
+  int status = 0;
+  bool is_found; uint32_t where_found = ~0;
+  vctr_rs_hmap_key_t key = vctr_uqid;
+  vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
+  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
+      &where_found);
+  if ( !is_found ) { go_BYE(-1); }
+  *ptr_is_persist = val.is_persist;
 BYE:
   return status;
 }
