@@ -1,3 +1,11 @@
+Saving when is_lma == true, what do we do with chunk mem?
+
+Why is there no matching decr_ref_count for incr_ref_count
+
+Delete following from lVector.lua. 
+Not good to have info on both C and Lua side. 
+Keep it in C even if there is a cost of crossing C API to fetch it 
+
 Make the C implementation of print_csv the default
 
 Confirm that updates and gets do not cause movements in hashmap

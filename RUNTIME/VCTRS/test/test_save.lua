@@ -7,7 +7,10 @@ local is_in = require 'Q/UTILS/lua/is_in'
 local max_num_in_chunk = get_max_num_in_chunk()
 local len = 2 * max_num_in_chunk + 3 
 x = Q.const({ val = 1, qtype = "I4", len = len}):set_name("XX"):eval()
+assert(x:ref_count() == 1)
 assert(Q.save())
+assert(x:ref_count() == 1)
+x:nop()
 local ddir = lgutils.data_dir()
 local data_files = pldir.getfiles(ddir)
 local exp_files = {

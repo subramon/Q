@@ -25,7 +25,6 @@ chnk_free_resources(
   if ( ptr_val->num_writers > 0 ) { go_BYE(-1); }
   //---------------------------------------------------
   if ( ptr_val->l1_mem != NULL ) { 
-    // printf("Releasing chunk of vector [%s]", ptr_val->name);
 #ifdef VERBOSE
     printf("Releasing chunk ");
     printf("of size %u \n", ptr_val->size);

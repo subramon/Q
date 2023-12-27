@@ -68,6 +68,12 @@ init_session(
     //-----------------------------------
     g_vctr_uqid = 0;
     for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) { 
+      g_vctr_hmap[tbsp].bkts[i].val.X = NULL;
+      g_vctr_hmap[tbsp].bkts[i].val.nX = 0;
+      g_vctr_hmap[tbsp].bkts[i].val.is_killable = false;
+      g_vctr_hmap[tbsp].bkts[i].val.num_readers = 0;
+      g_vctr_hmap[tbsp].bkts[i].val.num_writers = 0;
+      g_vctr_hmap[tbsp].bkts[i].val.ref_count   = 0;
       if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
 
       vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
@@ -88,6 +94,9 @@ init_session(
     // reset touch time 
     for ( uint32_t i = 0; i < g_chnk_hmap[tbsp].size; i++ ) { 
       g_chnk_hmap[tbsp].bkts[i].val.touch_time = 0;
+      g_chnk_hmap[tbsp].bkts[i].val.l1_mem = NULL;
+      g_chnk_hmap[tbsp].bkts[i].val.num_readers = 0;
+      g_chnk_hmap[tbsp].bkts[i].val.num_writers = 0;
     }
     printf("<<<<<<<<<<<< RESTORING SESSION ============\n");
   }

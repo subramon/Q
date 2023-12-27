@@ -35,9 +35,13 @@ vctr_del(
   // if ( val.ref_count == 0 ) { go_BYE(-1); }
   g_vctr_hmap[tbsp].bkts[where_found].val.ref_count--;
   if ( g_vctr_hmap[tbsp].bkts[where_found].val.ref_count > 0 ) {
+#ifdef VERBOSE
+    if ( val.name[0] != '\0' ) { 
+      printf("Not Deleting Vctr: %s because ref count = %u \n", 
+          val.name); }
+#endif
     goto BYE;
   }
-  val = g_vctr_hmap[tbsp].bkts[where_found].val;
 #ifdef VERBOSE
   if ( val.name[0] != '\0' ) { printf("Deleting Vctr: %s \n", val.name); }
 #endif

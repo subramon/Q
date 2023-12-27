@@ -268,6 +268,31 @@ tests.t7 = function()
   assert(cVector.check_all())
   print("Test t7 succeeded")
 end
+-- tests deletion of lma 
+tests.t8 = function()
+  local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
+    name = "test0_x", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+  x:eval()
+  for i = 1, 1000 do  
+    -- print("Iteration ", i)
+    x:chunks_to_lma()
+    assert(x:is_lma())
+    local file_name, file_sz = x:file_info()
+    assert(type(file_name) == "string")
+    assert(plpath.exists(file_name))
+    assert(type(file_sz) == "number")
+    assert(file_sz > 0)
+    --=== now delete the lma file 
+    x:drop_mem(3)
+    assert(not x:is_lma())
+    -- print(">>>>>>>>> START Deliberate Error")
+    local file_name, file_sz = x:file_info()
+    -- print(">>>>>>>>> STOP  Deliberate Error")
+    assert(file_sz < 0)
+    assert(x:check())
+  end
+  print("Test t8 succeeded")
+end
 -- return tests
 tests.t0()
 tests.t1()
@@ -277,5 +302,6 @@ tests.t4()
 tests.t5()
 tests.t6()
 tests.t7()
+tests.t8()
 collectgarbage()
 assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

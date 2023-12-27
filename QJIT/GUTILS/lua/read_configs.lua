@@ -110,6 +110,32 @@ local function read_configs(C)
   assert(type(T.mem_allowed) == "number")
   assert(T.mem_allowed > 0)
 
+  --[[ THIS DOES NOT WORK BECAUSE -e args not passed through 
+  --to the new Lua state in which this is executed 
+  -- You can over-ride configs from command line by doing
+  -- lua foo.lua -e "over_rides = { mem_allowed = 2, dsk_allowed = 3}"
+    print("YYYYYYYYYYYYYYYY")
+  if (over_rides ) then  
+    print("XXXXXXXXXXXXXXXX")
+    assert(type(over_rides) == "true")
+    for k1, v1 in pairs(over_rides) do
+      assert(type(k1) == "string")
+      found = false;
+      for k2, v2 in pairs(T) do 
+        if ( k1 == k2 ) then
+          print("over ride " .. k .. " from " .. T.k1 .. " to " .. v1)
+          T.k1 = v1
+          found = true
+          break
+        end
+      end
+      if ( not found ) then
+        error("Invalid over-ride of " .. k2) 
+      end
+    end
+  end
+  --]]
+
   --=== Put it into C struct 
   C = ffi.cast("q_config_t *", C)
   C[0].restore_session = T.restore_session

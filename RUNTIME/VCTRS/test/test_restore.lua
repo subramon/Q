@@ -26,11 +26,21 @@ assert(x:qtype() == "I4")
 local width = x:width()
 assert(width == 4)
 assert(x:num_elements() == len)
+-- Create a copy of vector x, delete x and then make sure copy exists
+assert(x:ref_count() == 2)
+local copy_x = lVector({uqid = x:uqid()})
+assert(copy_x:ref_count() == 3)
+assert(x:ref_count() == 3)
+x:delete()
+x = nil
+assert(copy_x:ref_count() == 2)
+--==========================
 assert(lgutils.mem_used() == 0)
 local expected = math.ceil(len/max_num_in_chunk)*max_num_in_chunk*width
 assert(lgutils.dsk_used() == expected)
 -- create a new vector y 
 y = Q.const({ val = 1, qtype = "F4", len = len}):set_name("YY"):eval()
+print("Saving")
 assert(Q.save())
 -- restore old config file 
 plfile.copy(save_config_file, orig_config_file)

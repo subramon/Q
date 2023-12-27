@@ -10,20 +10,20 @@ local function skip_save(vec)
   local num_elements = vec:num_elements()
   local has_gen      = vec:has_gen() 
   local is_eov       = vec:is_eov() 
-  local is_err       = vec:is_err() 
+  local is_error       = vec:is_error() 
   local memo_len     = vec:memo_len() 
 
   assert(type(num_elements) == "number")
   assert(type(has_gen)      == "boolean")
   assert(type(is_eov)       == "boolean")
-  assert(type(is_err)       == "boolean")
+  assert(type(is_error)       == "boolean")
   assert(type(memo_len)     == "number")
 
-  if ( ( num_elements == 0 ) or ( has_gen == true ) or 
-       ( is_eov == false ) or ( is_err = true ) or ( memo_len >= 0 ) ) then
-    return false
-  else
+  if ( ( num_elements == 0 ) or ( memo_len >= 0 ) or 
+    ( has_gen ) or ( not is_eov ) or ( is_error ) ) then
     return true
+  else
+    return false
   end
 end
 
@@ -36,8 +36,8 @@ local function internal_save(
   Tsaved,
   fp
   )
-  print("Internal save of " .. name .. " at depth " .. depth)
   if not should_save(name, value) then return end
+  print("Internal save of " .. name .. " at depth " .. depth)
   assert(type(Tsaved) == "table")
   assert(type(depth) == "number")
   assert(depth >= 0)
