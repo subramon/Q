@@ -1,3 +1,16 @@
+===================
+In file included from
+/home/svdfeapi/Q//OPERATORS/PERMUTE/gen_inc/permute_from_UI8_I4.h:6:0,
+from
+/home/svdfeapi/Q//OPERATORS/PERMUTE/gen_src//permute_from_UI8_I4.c:2:
+/home/svdfeapi/Q//UTILS/inc/qtypes.h:65:5: warning: ‘struct tm’
+declared inside parameter list [enabled by default]
+);
+^
+/home/svdfeapi/Q//UTILS/inc/qtypes.h:65:5: warning:
+its scope is only this definition or declaration,
+which is probably not what you want [enabled by default]
+===================
 Saving when is_lma == true, what do we do with chunk mem?
 
 Why is there no matching decr_ref_count for incr_ref_count

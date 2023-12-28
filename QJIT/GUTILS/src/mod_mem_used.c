@@ -100,7 +100,7 @@ incr_dsk_used(
 {
   int status = 0;
   if ( x == 0 ) { go_BYE(-1); }
-  if ( x > (1024*1048576 ) ) { go_BYE(-1); } // sanity test 
+  // if ( x > (1024*1048576 ) ) { go_BYE(-1); } // sanity test 
   status = lock_mem(); cBYE(status);
   if ( (x + g_dsk_used) > g_dsk_allowed ) { 
     WHEREAMI; status = -1; 
@@ -120,7 +120,7 @@ decr_dsk_used(
 {
   int status = 0;
   if ( x == 0 ) { go_BYE(-1); }
-  if ( x > (1024*1048576 ) ) { go_BYE(-1); } // sanity test 
+//  if ( x > (1024*1048576 ) ) { go_BYE(-1); } // sanity test 
   status = lock_mem(); cBYE(status);
   if ( x > g_dsk_used ) { 
     WHEREAMI; status = -1; 

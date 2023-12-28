@@ -1,7 +1,7 @@
 
 INCS=-I. \
      	-I../inc/ \
-	-I../../../UTILS/inc/ \
+	-I../../../UTILS/src/ \
 	-I../../../UTILS/inc  \
 	-I/usr/include/lua5.1 \
 

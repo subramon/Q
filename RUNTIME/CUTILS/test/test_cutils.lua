@@ -74,6 +74,11 @@ tests.t1 = function()
   
   local nl = assert(cutils.num_lines("./stress_test.lua"))
   assert(nl == 12)
+  --=============
+  local x, y, z = cutils.mem_info()
+  print("pagesize = ", x)
+  print("bytes = ", y)
+  print("pages = ", z)
   print("Test t1 succeeded")
 end
 tests.t1()
