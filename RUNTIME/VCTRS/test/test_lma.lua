@@ -15,6 +15,8 @@ local len = 3 * max_num_in_chunk + 7
 local tests = {}
 -- test conversion from chunks to lma and back 
 tests.t0 = function()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("stop")
   local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "test0_x", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   x:eval()
@@ -58,8 +60,10 @@ tests.t0 = function()
   assert(n1:to_num() == n2:to_num())
   --]]
 
-  x = nil; collectgarbage()
   assert(cVector.check_all())
+  x:delete()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("Test t0 succeeded")
 end
 tests.t1 = function()
@@ -82,6 +86,8 @@ tests.t1 = function()
 end
 -- test read access
 tests.t2 = function()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("stop")
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "test2_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   assert(x1:eval())
@@ -114,12 +120,16 @@ tests.t2 = function()
   assert(not status)
   print(">>> STOP  DELIBERATE ERROR")
 
-  x1 = nil; y1 = nil; collectgarbage()
   assert(cVector.check_all())
+  x1:delete()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("Test t2 succeeded")
 end
 -- test write access
 tests.t3 = function()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("stop")
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
     name = "test3_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   assert(x1:eval())
@@ -147,12 +157,16 @@ tests.t3 = function()
   local c = y1:get_lma_write()
   assert(type(c) == "CMEM")
   y1:unget_lma_write()
-  y1 = nil; y1 = nil; collectgarbage()
   assert(cVector.check_all())
+  x1:delete()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("Test t3 succeeded")
 end
 -- test steal
 tests.t4 = function()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("stop")
   local qtype = "I4"
   local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
     name = "test4_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
@@ -203,24 +217,32 @@ tests.t4 = function()
   end
   assert(x:unget_lma_read())
   assert(cVector.check_all())
-  x = nil; y = nil; z = nil; collectgarbage()
-  assert(cVector.check_all())
+  x:delete()
+  z:delete()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("Test t4 succeeded")
 end
 -- test print
 tests.t5 = function()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("stop")
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
     name = "test5_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   assert(x1:eval())
   assert(x1:is_eov())
   local y1 = x1:chunks_to_lma()
   -- x1:pr()
-  x1 = nil; y1 = nil; collectgarbage()
   assert(cVector.check_all())
+  x1:delete()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("Test t5 succeeded")
 end
 -- test modify 
 tests.t6 = function()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("stop")
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
     name = "x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   assert(x1:eval())
@@ -237,12 +259,16 @@ tests.t6 = function()
     local s = y1:get1(i-1)
     assert(s == Scalar.new(i*10, qtype))
   end 
-  y1 = nil; y1 = nil; collectgarbage()
   assert(cVector.check_all())
+  x1:delete()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("Test t6 succeeded")
 end
 -- test num_readers for chunks 
 tests.t7 = function()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("stop")
   local max_num_in_chunk = 64 
   local len = 2 * max_num_in_chunk + 17 
   local num_chunks = math.ceil(len/max_num_in_chunk)
@@ -264,12 +290,16 @@ tests.t7 = function()
     assert(x1:num_readers(0) == niters-i)
     C[i] = nil
   end
-  x1 = nil; collectgarbage()
   assert(cVector.check_all())
+  x1:delete()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("Test t7 succeeded")
 end
 -- tests deletion of lma 
 tests.t8 = function()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("stop")
   local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "test0_x", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   x:eval()
@@ -291,7 +321,66 @@ tests.t8 = function()
     assert(file_sz < 0)
     assert(x:check())
   end
+  assert(cVector.check_all())
+  x:delete()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("Test t8 succeeded")
+end
+-- tests lma can serve get_chunks()
+tests.t9 = function()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("stop")
+  local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
+    name = "x", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+  x:eval()
+  local m1 = lgutils.mem_used()
+  for i = 1, 1000 do  
+    local pre = lgutils.mem_used()
+    local y = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
+      name = "y", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+    local m2 = lgutils.mem_used()
+    assert(m1+64 == m2) -- 64 is for Q.seq info 
+    x:chunks_to_lma()
+    assert(x:max_num_in_chunk() == max_num_in_chunk)
+    local z = Q.vvadd(x, y):eval()
+    -- local r = Q.sum(z)
+    -- local  n1, n2 = r:eval()
+    local m3 = lgutils.mem_used()
+    local width = cutils.get_width_qtype(qtype)
+    local nC = x:num_chunks()
+    assert(m3 == 3 * nC * max_num_in_chunk * width) -- 3 vectors x, y, z
+    -- Note that the 64 bytes for Q.seq has been deleted 
+
+    --=================================
+    --=== now delete the lma file 
+    x:drop_mem(3)
+    local m4 = lgutils.mem_used()
+    assert(m3 == m4) -- dropping lma files does not change mem usage
+    assert(x:max_num_in_chunk() == max_num_in_chunk)
+    -- check lma file does not exist
+    local file_name, file_sz = x:file_info()
+    assert(file_sz < 0)
+    -- repeat access to x 
+    z:delete()
+    z = Q.vvadd(x, y):eval()
+    -- local r = Q.sum(z)
+    -- local  n1, n2 = r:eval()
+    --==  cleanup
+    y:delete()
+    z:delete()
+    -- r:delete()
+    local post = lgutils.mem_used()
+    assert(pre == post)
+  end
+  x:nop()
+  x:delete()
+  print("DSK", lgutils.dsk_used())
+  assert(lgutils.dsk_used() == 0)
+  print("MEM", lgutils.mem_used())
+  assert(lgutils.mem_used() == 0)
+  collectgarbage("restart")
+  print("Test t9 succeeded")
 end
 -- return tests
 tests.t0()
@@ -303,5 +392,6 @@ tests.t5()
 tests.t6()
 tests.t7()
 tests.t8()
+tests.t9()
 collectgarbage()
 assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
