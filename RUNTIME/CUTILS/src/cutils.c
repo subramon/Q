@@ -23,6 +23,7 @@
 #include "get_bit_u64.h"
 #include "isdir.h"
 #include "isfile.h"
+#include "mem_info.h"
 #include "mk_file.h"
 #include "qtypes.h"
 #include "rdtsc.h"
@@ -279,6 +280,23 @@ BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
   return 2;
+}
+//----------------------------------------
+static int l_cutils_mem_info( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 0 ) { go_BYE(-1); }
+  size_t pagesize = 0; int64_t bytes = 0; size_t pages = 0;
+  status = mem_info(&pagesize, &bytes, &pages); cBYE(status);
+  lua_pushnumber(L, pagesize);
+  lua_pushnumber(L, bytes);
+  lua_pushnumber(L, pages);
+  return 3;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
 }
 //----------------------------------------
 static int l_cutils_getsize( 
@@ -681,6 +699,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "isfile",      l_cutils_isfile },
     { "is_qtype",     l_cutils_is_qtype },
     { "makepath",    l_cutils_makepath },
+    { "mem_info",     l_cutils_mem_info },
     { "mk_file",     l_cutils_mk_file },
     { "mkstemp",     l_cutils_mkstemp },
     { "num_lines",   l_cutils_num_lines },
@@ -711,6 +730,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "makepath",    l_cutils_makepath },
+    { "mem_info",     l_cutils_mem_info },
     { "mk_file",     l_cutils_mk_file },
     { "mkstemp",     l_cutils_mkstemp },
     { "num_lines",   l_cutils_num_lines },
