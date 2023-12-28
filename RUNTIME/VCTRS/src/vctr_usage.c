@@ -50,11 +50,16 @@ vctr_usage(
     chnk_rs_hmap_val_t chnk_val = 
       g_chnk_hmap[tbsp].bkts[chnk_where_found].val;
       // if data not in L2, must be in L1 
-    if ( chnk_val.l2_exists == false ) { 
+    if ( ( chnk_val.l1_mem == NULL ) && ( chnk_val.l2_exists == false ) 
+      && ( vctr_val.is_lma == false ) ) {
+      go_BYE(-1);
+    }
+    if ( chnk_val.l1_mem != NULL ) {
       if ( chnk_val.size == 0 ) { go_BYE(-1); } 
       *ptr_mem_usage += chnk_val.size;
     }
-    else { // check that file exists 
+    if ( chnk_val.l2_exists ) { 
+      // check that file exists 
       l2_file = l2_file_name(tbsp, vctr_uqid, chnk_idx);
       int64_t filesz = get_file_size(l2_file);
       if ( filesz <= 0 ) { go_BYE(-1); } 

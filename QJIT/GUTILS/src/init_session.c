@@ -12,6 +12,7 @@
 #include "chnk_rs_hmap_unfreeze.h"
 
 #include "vctr_usage.h"
+#include "vctr_del.h"
 #include "web_struct.h"
 #include "mem_mgr_struct.h"
 
@@ -66,38 +67,58 @@ init_session(
         "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin");
     cBYE(status);
     //-----------------------------------
-    g_vctr_uqid = 0;
-    for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) { 
-      g_vctr_hmap[tbsp].bkts[i].val.X = NULL;
-      g_vctr_hmap[tbsp].bkts[i].val.nX = 0;
-      g_vctr_hmap[tbsp].bkts[i].val.is_killable = false;
-      g_vctr_hmap[tbsp].bkts[i].val.num_readers = 0;
-      g_vctr_hmap[tbsp].bkts[i].val.num_writers = 0;
-      g_vctr_hmap[tbsp].bkts[i].val.ref_count   = 0;
-      if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
-
-      vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
-      uint32_t vctr_uqid = key;
-      if ( vctr_uqid > g_vctr_uqid ) { g_vctr_uqid = vctr_uqid; } 
-      //--- Set usage statistics
-      uint64_t mem, dsk; 
-      status = vctr_usage(tbsp, vctr_uqid, &mem, &dsk); cBYE(status);
-      status = incr_dsk_used(dsk); cBYE(status);
-    }
-    if ( g_vctr_hmap[tbsp].nitems == 0 ) {
-      if ( g_vctr_uqid != 0 ) { go_BYE(-1); }
-    }
-    else {
-      if ( g_vctr_uqid == 0 ) { go_BYE(-1); }
-    }
-    //-----------------------------------
-    // reset touch time 
+    // reset chunk info. Do this before vctr_usage() is called
+    // since we want l1_mem to be 0 
     for ( uint32_t i = 0; i < g_chnk_hmap[tbsp].size; i++ ) { 
       g_chnk_hmap[tbsp].bkts[i].val.touch_time = 0;
       g_chnk_hmap[tbsp].bkts[i].val.l1_mem = NULL;
       g_chnk_hmap[tbsp].bkts[i].val.num_readers = 0;
       g_chnk_hmap[tbsp].bkts[i].val.num_writers = 0;
     }
+    //-----------------------------------
+    g_vctr_uqid = 0;
+    int num_deletes = 0;
+    for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) { 
+      g_vctr_hmap[tbsp].bkts[i].val.X = NULL;
+      g_vctr_hmap[tbsp].bkts[i].val.nX = 0;
+      g_vctr_hmap[tbsp].bkts[i].val.is_killable = false;
+      g_vctr_hmap[tbsp].bkts[i].val.num_readers = 0;
+      g_vctr_hmap[tbsp].bkts[i].val.num_writers = 0;
+      if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
+
+      vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
+      uint32_t vctr_uqid = key;
+      if ( vctr_uqid > g_vctr_uqid ) { g_vctr_uqid = vctr_uqid; } 
+      // Need to delete vectors that have not been persisted
+      if ( g_vctr_hmap[tbsp].bkts[i].val.is_persist == false ) { 
+        bool is_found = false;
+        status = vctr_del(tbsp, vctr_uqid, &is_found); cBYE(status);
+        if ( !is_found ) { go_BYE(-1); } 
+        num_deletes++;
+      }
+      // Decrement ref_count after above delete 
+      g_vctr_hmap[tbsp].bkts[i].val.ref_count   = 0;
+      if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
+      //--- Set usage statistics
+      uint64_t mem, dsk; 
+      status = vctr_usage(tbsp, vctr_uqid, &mem, &dsk); cBYE(status);
+      if ( mem != 0 ) { go_BYE(-1); } // cannot have mem at this stage
+      if ( dsk == 0 ) { go_BYE(-1); } // must have   dsk at this stage
+      status = incr_dsk_used(dsk); cBYE(status);
+    }
+    if ( num_deletes == 0 ) { 
+      // Can't do following if we delete vectors in above loop
+      if ( g_vctr_hmap[tbsp].nitems == 0 ) {
+        if ( g_vctr_uqid != 0 ) { go_BYE(-1); }
+      }
+      else {
+        if ( g_vctr_uqid == 0 ) { go_BYE(-1); }
+      }
+    }
+    else {
+      printf("Deleted %d vectors that were not persisted\n", num_deletes);
+    }
+    //-----------------------------------
     printf("<<<<<<<<<<<< RESTORING SESSION ============\n");
   }
   else { 

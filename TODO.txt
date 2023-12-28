@@ -1,3 +1,6 @@
+Use shell script to run test_save/test_restore 
+
+save meta_data in Q.save() e.g., sort_order
 ===================
 In file included from
 /home/svdfeapi/Q//OPERATORS/PERMUTE/gen_inc/permute_from_UI8_I4.h:6:0,

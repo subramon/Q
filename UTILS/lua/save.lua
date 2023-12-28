@@ -66,17 +66,19 @@ local function internal_save(
     local vec = value
     local is_skip = skip_save(vec) 
      if ( is_skip ) then -- skip ths vector
-      print("Not saving lVector: " .. name )
-      -- print(vec:num_elements())
-      -- print(vec:has_gen() ) 
-      -- print(vec:is_eov() )
-      -- print(vec:memo_len() )
+      print("Not saving lVector: " .. vec:name())
+      print(vec:num_elements())
+      print(vec:has_gen() ) 
+      print(vec:is_eov() )
+      print(vec:memo_len() )
+      -- TODO P2 Think. Is following delete() needed?
+      vec:delete() -- Delete this vector from hashmaps
     else
       -- flush vector to disk and mark for persistence
       if ( not vec:is_lma() ) then 
         vec:make_mem(2) -- copy from level 1 to level 2 
       end
-      print("Saving " .. vec:name())
+      print("Saving [" .. vec:name() .. "]")
       vec:persist()  -- indicate not to free level 2 upon delete
       fp:write(name, " = lVector ( { uqid = ", vec:uqid(), " } )\n" )
       -- repeat above for nn vector assuming it exists
