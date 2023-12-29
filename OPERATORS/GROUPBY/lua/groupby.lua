@@ -2,10 +2,9 @@ local T = {}
 
 -- TODO P4 consider auto-generating following
 
-local function numby(g, ng, optargs)
+local function numby(g, n_grp, cnd, optargs)
   local expander = require 'Q/OPERATORS/GROUPBY/lua/expander_numby'
-  assert(g, "no arg g to numby")
-  local status, col = pcall(expander, g, ng, optargs)
+  local status, col = pcall(expander, g, n_grp, optargs)
   if not status then print(col) end
   assert(status, "Could not execute NUMBY")
   return col

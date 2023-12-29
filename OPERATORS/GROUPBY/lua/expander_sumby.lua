@@ -13,15 +13,9 @@ local function expander_sumby(operator, val, grp, nb, cnd, optargs)
 
   local status, subs = pcall(spfn, val, grp, nb, cnd, optargs)
   if not status then print(subs) end
-  assert(status, "Specializer failed " .. sp_fn_name)
-
-  -- START: Dynamic compilation
+  assert(status, subs)
   local func_name = assert(subs.fn)
-  if ( not qc[func_name] ) then
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
-  end
-  assert(qc[func_name], "Symbol not defined " .. func_name)
-  -- STOP: Dynamic compilation
+  qc.q_add(subs); print("Dynamic compilation kicking in... ")
 
   -- allocate buffer for output
   local out_val_buf = assert(cmem.new(subs.out_val_buf_size))

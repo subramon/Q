@@ -9,8 +9,9 @@ return require 'Q/UTILS/lua/code_gen' {
 
 //START_FOR_CDEF
 extern int ${fn}(
-    ${in_ctype} *X, /* [nX] */
+    ${val_ctype} *X, /* [nX] */
     uint32_t nX,
+    bool         *cond, /* [nX] */
     ${out_ctype}  *Z, /* [nZ] */
     uint32_t nZ
     );
@@ -19,8 +20,9 @@ extern int ${fn}(
 definition = [[
 #include "${fn}.h"
 int ${fn}(
-    ${in_ctype} *X, /* [nX] */
+    ${val_ctype} *X, /* [nX] */
     uint32_t nX,
+    bool *cond,
     ${out_ctype}  *Z, /* [nZ] */
     uint32_t nZ
     )
@@ -30,7 +32,8 @@ int ${fn}(
   if ( nX == 0 ) { WHEREAMI; return -1; }
   if ( nZ == 0 ) { WHEREAMI; return -1; }
   for ( uint64_t i = 0; i < nX; i++ ) {
-    ${in_ctype} x = X[i];
+    ${val_ctype} x = X[i];
+    if ( ( cond ) && ( cond[i] == 0 ) ) { continue; }
     ${checking_code}
     Z[x]++;
   }

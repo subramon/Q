@@ -1,4 +1,6 @@
+local ffi      = require 'ffi'
 local lVector  = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local Reducer  = require 'Q/RUNTIME/RDCR/lua/Reducer'
 local qc       = require 'Q/UTILS/lua/qcore'
 local cmem     = require 'libcmem'
 local cVector  = require 'libvctr'
@@ -6,63 +8,83 @@ local cutils   = require 'libcutils'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
-local function expander_numby(a, nb, optargs)
+local function expander_numby(val, nb, cnd, optargs)
   if ( not optargs ) then optargs = {} end 
   assert(type(optargs) == "table")
   -- nb is a number and we assume that the value of a are in
   -- [0 .. nb-1 ]
   local sp_fn_name = "Q/OPERATORS/GROUPBY/lua/numby_specialize"
   local spfn = assert(require(sp_fn_name))
-  local subs = assert(spfn(a, nb, optargs))
+  local subs = assert(spfn(val, nb, cnd, optargs))
   local func_name = assert(subs.fn)
-
   qc.q_add(subs); 
 
-  local n_out = subs.max_num_in_chunk 
- -- note this is *NOT* nb or nb+1
-  -- this is because when we allocate for a Vector, we allocate in chunks
-  -- of a given size. This could be wasteful when nb << max_num_in_chunk
-  -- Might want to reconsider the choice of Vector and consider
-  -- a Reducer instead. 
-  -- TODO P2 I think it is okay for n_out to be nb. Try it out 
-  local sz_out = n_out * cutils.get_width_qtype(subs.out_qtype)
-  local chunk_idx = 0
-  local out_buf = assert(cmem.new(sz_out))
-  out_buf:zero() -- particularly important for this operator
-  out_buf:stealable(true)
-  local a_max_num_in_chunk = a:max_num_in_chunk()
+  -- allocate buffer for output
+  local g_rdcr_err = false
+  local out_buf = assert(cmem.new(
+  { size = subs.out_buf_size, qtype = subs.out_qtype}))
+  out_buf:zero() -- IMPORTANT 
+  out_buf:stealable(true) 
+  local cast_out_buf = get_ptr(out_buf, subs.cast_out_as)
 
-  local function numby_gen(chunk_num)
+  local destructor = function(rdcr_val)
+    assert(type(rdcr_val) == "CMEM")
+    rdcr_val:delete()
+    -- print("Destrictor returning")
+    return true
+  end
+  --=====================================================
+  local vectorizer = function(rdcr_val)
+    if ( g_rdcr_err ) then return nil end 
+    assert(type(rdcr_val) == "CMEM")
+    local vnum = lVector.new( {qtype = subs.out_qtype, gen = true, 
+    has_nulls = false, max_num_in_chunk = subs.max_num_in_chunk})
+    vnum:put_chunk(rdcr_val, nb)
+    vnum:eov()
+    return vnum
+  end
+  local l_chunk_num = 0
+  --========================================================
+  local function gen(chunk_num)
     -- Adding assert on chunk_idx to have sync between expected 
     -- chunk_num and generator's chunk_idx state
-    assert(chunk_num == chunk_idx)
-    while true do
-      local a_len, a_chunk, _ = a:get_chunk(chunk_idx)
-      if a_len == 0 then
-        return nb, out_buf
-      end
-      local cast_a_chunk = get_ptr(a_chunk, subs.cast_in_as)
-      local cast_out_buf = get_ptr(out_buf, subs.cast_out_as)
-      local start_time = cutils.rdtsc()
-      local status = qc[func_name](cast_a_chunk, a_len, cast_out_buf, nb)
-      record_time(start_time, func_name)
-      a:unget_chunk(chunk_idx)
-      if ( status ~= 0 ) then -- NOTE how we indicate error to lVector
-        print("Error in C code of " .. func_name)
-        return 0, false -- NOTE how we indicate error to lVector
-      end 
-      if a_len < a_max_num_in_chunk then -- this is last chunk of a
-        return nb, out_buf
-      end
-      chunk_idx = chunk_idx + 1
+    assert(chunk_num == l_chunk_num)
+    local val_len, val_chunk = val:get_chunk(l_chunk_num)
+    if ( val_len == 0 ) then return nil end -- indicates end for Reducer
+    local cast_val_chnk = get_ptr(val_chunk, subs.cast_val_as)
+
+    local cast_cnd_chnk = ffi.NULL
+    if ( cnd ) then 
+      cnd_len, cnd_chunk = cnd:get_chunk(l_chunk_num)
+      assert(val_len == cnd_len)
+      cast_cnd_chnk = get_ptr(cnd_chunk, subs.cast_cnd_as)
     end
+    local start_time = cutils.rdtsc()
+    local status = qc[func_name](cast_val_chnk, val_len, cast_cnd_chnk,
+      cast_out_buf, nb)
+    record_time(start_time, func_name)
+    -- release resources
+    val:unget_chunk(chunk_num)
+    if ( cnd ) then 
+      cnd:unget_chunk(chunk_num)
+    end
+    -- check for error 
+    if ( status ~= 0 ) then 
+      g_rdcr_err = true; return nil
+    end
+    if val_len < val:max_num_in_chunk() then -- this is last chunk of a
+      return nil
+    end
+    l_chunk_num = l_chunk_num + 1 
+    return out_buf
   end
-  local vargs = optargs
-  vargs.max_num_in_chunk = subs.max_num_in_chunk
-  vargs.gen = numby_gen
-  vargs.has_nulls = false
-  vargs.qtype = subs.out_qtype 
-  return lVector(vargs)
+  local rargs = {}
+  rargs.gen = gen
+  rargs.destructor = destructor
+  rargs.func = vectorizer
+  rargs.value = out_buf
+  local r =  Reducer (rargs)
+  return r
 end
 
 return expander_numby

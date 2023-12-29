@@ -12,16 +12,17 @@ return function (
   optargs
   )
   local subs = {}
-  assert(type(nb) == "number")
-  assert(nb > 1)
-
   assert(type(optargs) == "table")
   local operator = optargs.operator 
   assert(type(operator) == "string")
   assert(is_in(operator, { "sumby", "minby", "maxby", }))
 
+  --========================================
+  if ( type(nb) == "Scalar") then nb = nb:to_num() end 
+  assert(type(nb) == "number")
   subs.max_num_in_chunk = get_max_num_in_chunk(optargs)
-  assert(nb <= subs.max_num_in_chunk) -- TODO P3 Relax this assumption
+  assert( ( nb >= 1 ) and ( nb <= subs.max_num_in_chunk ) )
+  subs.nb = nb 
   --==============================================
   assert(type(val_fld) == "lVector")
   assert(val_fld:has_nulls() == false)

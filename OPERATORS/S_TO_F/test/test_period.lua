@@ -1,13 +1,16 @@
 -- FUNCTIONAL 
 require 'Q/UTILS/lua/strict'
-local Q      = require 'Q'
-local qcfg   = require 'Q/UTILS/lua/qcfg'
-local Scalar = require 'libsclr'
+local Q       = require 'Q'
+local qcfg    = require 'Q/UTILS/lua/qcfg'
+local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'
+local lgutils = require 'liblgutils'
 
 local blksz = qcfg.max_num_in_chunk 
 local tests = {}
 tests.t1 = function()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local len = blksz * 7 + 19 
   local start  = 1
   local by     = 2
@@ -30,6 +33,9 @@ tests.t1 = function()
     if ( cnt == period ) then val = start; cnt = 0 end 
   end
   assert(cVector.check_all())
+  c1:delete()
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  collectgarbage("restart")
   print("successfully executed t1")
 end
 tests.t1()
