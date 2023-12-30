@@ -285,6 +285,123 @@ BYE:
   lua_pushnumber(L, status);
   return 3;
 }
+static int l_sclr_shift( lua_State *L) {
+  int status = 0;
+
+  if ( lua_gettop(L) != 3 ) { WHEREAMI; goto BYE; }
+  SCLR_REC_TYPE *ptr_sclr=(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
+  const char *direction = luaL_checkstring(L, 2);
+  if ( direction == NULL ) { go_BYE(-1); }
+  if ( !( ( strcmp(direction, "left") == 0 ) ||
+         ( strcmp(direction, "right") == 0 ) ) ) { 
+    go_BYE(-1); 
+  }
+  int itmp = luaL_checknumber(L, 3);
+  if ( itmp < 0 ) { go_BYE(-1); } 
+  if ( itmp > 63 ) { go_BYE(-1); } 
+  uint32_t shift_by = (uint32_t)itmp;
+
+  qtype_t qtype = ptr_sclr->qtype;
+  uint64_t val = 0;
+
+  switch ( qtype ) { 
+    case I1 : case UI1 : val = ptr_sclr->val.ui1; break;
+    case I2 : case UI2 : val = ptr_sclr->val.ui2; break;
+    case I4 : case UI4 : val = ptr_sclr->val.ui4; break;
+    case I8 : case UI8 : val = ptr_sclr->val.ui8; break;
+    default : go_BYE(-1); break;
+  }
+  if ( strcmp(direction, "left") == 0 ) {
+    val = val << shift_by;
+  }
+  else if ( strcmp(direction, "right") == 0 ) {
+    val = val >> shift_by;
+  }
+  else {
+    go_BYE(-1);
+  }
+
+
+  ptr_sclr->val.ui8 = val;
+  ptr_sclr->qtype = UI8;
+
+  // Push the scalar back 
+  lua_pop(L, 2); // pop off direction and shift by
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+static int l_sclr_bitwise( lua_State *L) {
+  int status = 0;
+
+  int  nargs = lua_gettop(L);
+  if ( nargs != 3 ) { WHEREAMI; goto BYE; }
+  SCLR_REC_TYPE *ptr_s1 =(SCLR_REC_TYPE *)luaL_checkudata(L, 1, "Scalar");
+  SCLR_REC_TYPE *ptr_s2 =(SCLR_REC_TYPE *)luaL_checkudata(L, 2, "Scalar");
+  const char *bop = luaL_checkstring(L, 3);
+  if ( bop == NULL ) { go_BYE(-1); } 
+
+  //---------------------------------------------
+  qtype_t qtype1 = ptr_s1->qtype; uint64_t val1; 
+  switch ( qtype1 ) { 
+    case I1 : val1 = ptr_s1->val.i1; break; 
+    case I2 : val1 = ptr_s1->val.i2; break; 
+    case I4 : val1 = ptr_s1->val.i4; break; 
+    case I8 : val1 = ptr_s1->val.i8; break; 
+    case UI1 : val1 = ptr_s1->val.ui1; break; 
+    case UI2 : val1 = ptr_s1->val.ui2; break; 
+    case UI4 : val1 = ptr_s1->val.ui4; break; 
+    case UI8 : val1 = ptr_s1->val.ui8; break; 
+      break;
+    default : 
+      go_BYE(-1); 
+      break;
+  }
+  //---------------------------------------------
+  qtype_t qtype2 = ptr_s2->qtype; uint64_t val2; 
+  switch ( qtype2 ) { 
+    case I1 : val2 = ptr_s2->val.i1; break; 
+    case I2 : val2 = ptr_s2->val.i2; break; 
+    case I4 : val2 = ptr_s2->val.i4; break; 
+    case I8 : val2 = ptr_s2->val.i8; break; 
+    case UI1 : val2 = ptr_s2->val.ui1; break; 
+    case UI2 : val2 = ptr_s2->val.ui2; break; 
+    case UI4 : val2 = ptr_s2->val.ui4; break; 
+    case UI8 : val2 = ptr_s2->val.ui8; break; 
+      break;
+    default : 
+      go_BYE(-1); 
+      break;
+  }
+  uint64_t val = 0;
+  if ( strcmp(bop, "or") == 0 ) { 
+    val = val1 | val2; 
+  }
+  else if ( strcmp(bop, "and") == 0 ) { 
+    val = val1 & val2; 
+  }
+  else if ( strcmp(bop, "xor") == 0 ) { 
+    val = val1 ^ val2; 
+  }
+  else {
+    go_BYE(-1); 
+  }
+  ptr_s1->val.ui8 = val;
+  ptr_s1->qtype = UI8;
+  //---------------------------------------------
+  if ( nargs > 1 ) { lua_pop(L, nargs-1); } // pop off second scalar and bop 
+  // Push the scalar back 
+  return 1;
+BYE:
+  if ( nargs > 1 ) { lua_pop(L, nargs-1); } // pop off second scalar and bop 
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
 static int l_sclr_abs( lua_State *L) {
   int status = 0;
 
@@ -296,6 +413,10 @@ static int l_sclr_abs( lua_State *L) {
     case I2 : ptr_sclr->val.i2 = abs(ptr_sclr->val.i2); break;
     case I4 : ptr_sclr->val.i4 = abs(ptr_sclr->val.i4); break;
     case I8 : ptr_sclr->val.i8 = llabs(ptr_sclr->val.i8); break;
+    case UI1 : /* nothing to do */ break;
+    case UI2 : /* nothing to do */ break;
+    case UI4 : /* nothing to do */ break;
+    case UI8 : /* nothing to do */ break;
     case F4 : ptr_sclr->val.f4 = fabsf(ptr_sclr->val.f4); break;
     case F8 : ptr_sclr->val.f8 = fabs(ptr_sclr->val.f8); break;
     default : go_BYE(-1); break;
@@ -703,6 +824,7 @@ BYE:
 static const struct luaL_Reg sclr_methods[] = {
     { "__gc", l_sclr_free },
     { "abs", l_sclr_abs },
+    { "bitwise", l_sclr_bitwise },
     { "conv", l_sclr_conv },
     { "name", l_sclr_name },
     { "to_str", l_sclr_to_str },
@@ -713,11 +835,14 @@ static const struct luaL_Reg sclr_methods[] = {
     { "qtype", l_qtype },
     { "reincarnate", l_sclr_reincarnate },
     { "set_name", l_sclr_set_name },
+    { "shift", l_sclr_shift },
     { NULL,          NULL               },
 };
  
 static const struct luaL_Reg sclr_functions[] = {
     { "abs", l_sclr_abs },
+    { "bitwise", l_sclr_bitwise },
+    { "conv", l_sclr_conv },
     { "add", l_sclr_add },
     { "conv", l_sclr_conv },
     { "div", l_sclr_div },
@@ -733,6 +858,7 @@ static const struct luaL_Reg sclr_functions[] = {
     { "qtype", l_qtype },
     { "reincarnate", l_sclr_reincarnate },
     { "set_name", l_sclr_set_name },
+    { "shift", l_sclr_shift },
     { "sub", l_sclr_sub },
     { "to_cmem", l_sclr_to_cmem },
     { "to_data", l_sclr_to_data },

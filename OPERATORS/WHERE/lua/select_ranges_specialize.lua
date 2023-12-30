@@ -37,7 +37,11 @@ return function (
   -- NOTE: Assumption is that the number of ranges is small 
   local lb_tbl = {}
   local ub_tbl = {}
-  if ( type(lb) == "number" ) then 
+  if ( type(lb) == "Scalar" ) then 
+    assert(type(ub) == "Scalar" )
+    lb_tbl = { from_scalar(lb) }
+    ub_tbl = { from_scalar(ub) }
+  elseif ( type(lb) == "number" ) then 
     assert(type(ub) == "number" )
     lb_tbl = { lb }
     ub_tbl = { ub }
@@ -69,8 +73,8 @@ return function (
   else
     error("bad types for ranges")
   end
-  subs.lb = lb_tbl
-  subs.ub = ub_tbl
+  subs.lb_tbl = lb_tbl
+  subs.ub_tbl = ub_tbl
   --==== Now we convert lb_tbl/ub_tbl to a specification as follows
   -- For each output chunk to tbe created, we create a list of 
   -- (chunk, lb, ub). Note that if we sum (ub-lb) for a given output chunk

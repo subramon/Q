@@ -325,7 +325,75 @@ tests.t15 = function()
   -- TODO local valI8 = assert(Scalar.new("0x1", "I8"))
   -- TODO print("test t15 passed")
 end
+tests.t_shift = function()
+  for _, qtype in ipairs(
+    { "I1", "I2", "I4", "I8",  "UI1", "UI2", "UI4", "UI8", }) do 
+    local x = Scalar.new(3, qtype):shift("left", 1)
+    local y = assert(Scalar.new(6, qtype))
+    assert(type(y) == "Scalar")
+    assert(y:qtype() == qtype)
+    assert(type(x) == "Scalar")
+    assert(x:qtype() == "UI8")
+    assert(x == y)
+
+    local x = Scalar.new(3, qtype):shift("right", 1)
+    local y = assert(Scalar.new(1, qtype))
+    assert(x == y)
+    assert(x:qtype() == "UI8")
+  end
+  print("Test t_shift completed successfully")
+end
+tests.t_abs = function()
+  for _, qtype in ipairs({ "I1", "I2", "I4", "I8", "F4", "F8", }) do
+    local x = assert(Scalar.new(1, qtype))
+    local y = assert(Scalar.new(1, qtype))
+    assert(x == y)
+    x = x:abs()
+    assert(type(x) == "Scalar")
+    assert(x == y)
+    local x = assert(Scalar.new(-1, qtype))
+    x = x:abs()
+    assert(type(x) == "Scalar")
+    assert(x == y)
+  end
+  print("Test t_abs completed successfully")
+end
+tests.t_bitwise = function()
+  for _, qtype in ipairs(
+    { "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8",}) do 
+    local x = assert(Scalar.new(1, qtype))
+    local y = assert(Scalar.new(2, qtype))
+    local z = Scalar.bitwise(x, y, "or")
+    assert(z:qtype() == "UI8")
+    assert(z == Scalar.new(3, qtype))
+
+    -- Unfortunately, x is modified in place. Hence, we need to
+    -- re-initialize it 
+    local x = assert(Scalar.new(1, qtype))
+    local z = Scalar.bitwise(x, y, "and")
+    assert(z:qtype() == "UI8")
+    assert(z == Scalar.new(0, qtype))
+
+    local x = assert(Scalar.new(1, qtype))
+    local z = Scalar.bitwise(x, y, "xor")
+    assert(z:qtype() == "UI8")
+    assert(z == Scalar.new(3, qtype))
+    -- TODO Write more tests 
+
+  end
+  print("Test t_bitwise completed successfully")
+end
+tests.t_bad_bitwise = function()
+  for _, qtype in ipairs( { "F4", "F8", }) do 
+    local x = assert(Scalar.new(1, qtype))
+    local y = assert(Scalar.new(2, qtype))
+    local z = Scalar.bitwise(x, y, "or")
+    assert(z == nil)
+  end
+  print("Test t_bad_bitwise completed successfully")
+end
 -- return tests
+--[[
 tests.t1()
 tests.t2()
 tests.t3()
@@ -343,3 +411,8 @@ tests.t12()
 tests.t13()
 tests.t14()
 tests.t15()
+tests.t_abs()
+tests.t_shift()
+--]]
+tests.t_bitwise()
+-- tests.t_bad_bitwise()

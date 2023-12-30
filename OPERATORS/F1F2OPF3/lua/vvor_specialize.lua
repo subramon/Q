@@ -57,7 +57,7 @@ return function (
   end
   subs.f3_cast_as = subs.f3_ctype .. "*"
 
-  subs.chunk_size = 4096 -- TODO P4 experiment with the value
+  subs.chunk_size = 1024 -- TODO P4 experiment with the value
   -- following is to stop gcc warning about passing bool to int8
   subs.f3_for_ispctype = subs.f3_ctype
   if ( subs.f3_ctype == "bool" ) then subs.f3_for_ispctype = "int8_t" end

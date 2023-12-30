@@ -66,6 +66,7 @@ return function (operator, x, optargs)
   subs.srcdir = "OPERATORS/F_TO_S/gen_src/"
   subs.incdir = "OPERATORS/F_TO_S/gen_inc/"
   subs.tmpl   = "OPERATORS/F_TO_S/lua/minmax.tmpl"
+  subs.libs = { "-lgomp", }
   subs.incs = { "UTILS/inc", "OPERATORS/F_TO_S/inc/", "OPERATORS/F_TO_S/gen_inc/", }
   subs.structs = { "OPERATORS/F_TO_S/inc/minmax_struct.h",
                    "RUNTIME/SCLR/inc/sclr_struct.h" }

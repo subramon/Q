@@ -88,5 +88,6 @@ return function (x, optargs)
     subs.doth = "OPERATORS/F_TO_S/inc/sum_B1.h"
     subs.srcs = { "UTILS/src/get_bit_u64.c" }
   end
+  subs.libs = { "-lgomp", }
   return subs
 end

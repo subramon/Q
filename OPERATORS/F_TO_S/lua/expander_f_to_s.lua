@@ -46,6 +46,7 @@ return function (a, x, optargs)
   local l_chunk_num = 0
   --==================
   local lgen = function(chunk_num)
+    -- print("F_TO_S: Generating ", chunk_num)
     assert(chunk_num == l_chunk_num)
     local offset = l_chunk_num * max_num_in_chunk
     local x_len, x_chunk, nn_x_chunk = x:get_chunk(l_chunk_num)

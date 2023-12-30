@@ -72,6 +72,7 @@ return function (
   subs.f2_buf_sz  = subs.f2_width * subs.max_num_in_chunk 
 
   subs.fn = "get_bit" .. "_" .. f1_qtype .. "_" .. f2_qtype
+  subs.chunk_size = 1024 -- For OpenMP. TODO experiment with value
 
   subs.cargs      = s1:to_data()
   subs.s1_qtype   = s1_qtype

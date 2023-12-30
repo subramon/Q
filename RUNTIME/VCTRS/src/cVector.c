@@ -895,7 +895,13 @@ static int l_vctr_free( lua_State *L) {
     // This is because of vctr_null() Not dangerous 
     goto BYE;
   }
-  status = vctr_del(ptr_v->tbsp, ptr_v->uqid, &is_found); cBYE(status); 
+  status = vctr_del(ptr_v->tbsp, ptr_v->uqid, &is_found); 
+  if ( status < 0 ) { 
+    char * name = vctr_get_name(ptr_v->tbsp, ptr_v->uqid); 
+    if ( name == NULL ) { go_BYE(-1); } 
+    printf("Error deleting vector [%s]\n", name);
+  }
+  cBYE(status); 
   lua_pushboolean(L, is_found);
   return 1;
 BYE:

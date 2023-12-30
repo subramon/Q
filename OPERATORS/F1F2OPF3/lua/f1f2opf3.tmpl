@@ -31,16 +31,24 @@ ${fn}(
       ${f3_ctype} * restrict out 
       )
 
-{ 
+{
   int status = 0;
+  uint32_t nT = sysconf(_SC_NPROCESSORS_ONLN);
+  uint32_t block_size = nR / nT;
 #pragma omp parallel for schedule(static)
-  for ( uint32_t i = 0; i < nR; i++ ) {  
-    ${f1_ctype} a = in1[i]; 
-    ${f2_ctype} b = in2[i]; 
-    ${f3_ctype} c;
-    ${code}
-    out[i] = c;
-  } 
+  for ( uint32_t t = 0; t < nT; t++ ) { 
+    uint32_t lb = t * block_size;
+    uint32_t ub = lb + block_size;
+    if ( t == 0               ) { lb = 0;  }
+    if ( t == (nT-1) ) { ub = nR; }
+    for ( uint32_t i  = lb; i < ub; i++ ) {  
+      ${f1_ctype} a = in1[i]; 
+      ${f2_ctype} b = in2[i]; 
+      ${f3_ctype} c;
+      ${code}
+      out[i] = c;
+    }
+  }
   return status;
 }
    ]]

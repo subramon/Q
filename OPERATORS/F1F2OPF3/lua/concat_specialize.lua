@@ -105,7 +105,7 @@ return function (
   cst_cargs[0]["shift_by"] = shift_by
   subs.cst_cargs = cst_cargs
 
-  subs.chunk_size = 4096 -- TODO P4 experiment 
+  subs.chunk_size = 1024 -- TODO P4 experiment 
 
   subs.f1_cast_as = subs.f1_ctype .. "*"
   subs.f2_cast_as = subs.f2_ctype .. "*"

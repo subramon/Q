@@ -64,7 +64,7 @@ return function (
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
   subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}
   subs.libs = { "-lgomp", "-lm", } 
-  subs.chunk_size = 4096 -- TODO P4 experiment
+  subs.chunk_size = 1024 -- TODO P4 experiment
   if ( qcfg.use_ispc ) then 
     subs.comment_ispc = "" 
     subs.f1_ctype_ispc = cutils.str_qtype_to_str_ispctype(f1_qtype)

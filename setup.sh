@@ -16,8 +16,8 @@ Q_SRC_ROOT="$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
 export Q_SRC_ROOT="${Q_SRC_ROOT}"
 echo "Q_SRC_ROOT= ${Q_SRC_ROOT}"
 #-----------------------------------
-export Q_ROOT="/home/subramon/local/Q/"
-# export Q_ROOT="/mnt/storage/local/Q/"
+# export Q_ROOT="/home/subramon/local/Q/"
+export Q_ROOT="/mnt/storage/local/Q/"
 echo "Q_ROOT= $Q_ROOT"
 mkdir -p $Q_ROOT/
 mkdir -p $Q_ROOT/lib/
@@ -25,8 +25,10 @@ mkdir -p $Q_ROOT/bin/
 mkdir -p $Q_ROOT/config/
 mkdir -p $Q_ROOT/csos/
 #-----------------------------------
-QCFLAGS=" -g -std=gnu99  -fPIC"
-QCFLAGS+=" -DDEBUG "
+QCFLAGS=" -std=gnu99  -fPIC"
+QCFLAGS+=" -g " # Comment for speed 
+QCFLAGS+=" -DDEBUG " # Comment for speed 
+# QCFLAGS+=" -Ofast " # UnComment for speed 
 QCFLAGS+=" -Wall -W -Waggregate-return -Wcast-align -Wmissing-prototypes"
 QCFLAGS+=" -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable "
 QCFLAGS+=" -Wunused-parameter -Wno-pedantic -fopenmp -Wno-unused-label " 
