@@ -1,8 +1,9 @@
 local cutils = require 'libcutils'
 local is_in = require 'Q/UTILS/lua/is_in'
 local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
+local lcl_chunk_size = require 'Q/OPERATORS/GROUPBY/lua/lcl_chunk_size'
 local val_qtypes = { 'I1', 'I2', 'I4', 'I8', 'F4', 'F8' }
-local grp_qtypes = { 'I1', 'I2', 'I4', 'I8' }
+local grp_qtypes = { 'I1', 'I2', 'I4', 'I8', 'UI1', 'UI2', 'UI4', 'UI8', }
 
 return function (
   val_fld, -- value to be aggregated
@@ -20,9 +21,8 @@ return function (
   --========================================
   if ( type(nb) == "Scalar") then nb = nb:to_num() end 
   assert(type(nb) == "number")
-  subs.max_num_in_chunk = get_max_num_in_chunk(optargs)
-  assert( ( nb >= 1 ) and ( nb <= subs.max_num_in_chunk ) )
   subs.nb = nb 
+  subs.max_num_in_chunk = lcl_chunk_size(nb, optargs)
   --==============================================
   assert(type(val_fld) == "lVector")
   assert(val_fld:has_nulls() == false)
@@ -35,7 +35,7 @@ return function (
   assert(type(grp_fld) == "lVector")
   assert(grp_fld:has_nulls() == false)
   subs.grp_qtype = grp_fld:qtype()
-  assert(is_in(subs.grp_qtype, grp_qtypes))
+  assert(is_in(subs.grp_qtype, grp_qtypes), "Bad grp_qtype = " .. subs.grp_qtype)
   subs.grp_ctype = cutils.str_qtype_to_str_ctype(subs.grp_qtype)
   subs.cast_grp_fld_as = subs.grp_ctype .. " *"
 

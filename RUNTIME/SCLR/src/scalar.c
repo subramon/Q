@@ -758,6 +758,13 @@ static int l_sclr_new( lua_State *L) {
           status = txt_to_UI8(str_val, &(ptr_sclr->val.ui8)); 
           break;
           //------------------------------------------------------
+        case F2 : 
+          {
+            float ftmp;  
+            status = txt_to_F4(str_val, &ftmp); cBYE(status);
+            ptr_sclr->val.f2 = F4_to_F2(ftmp); 
+          }
+          break;
         case F4 : 
           status = txt_to_F4(str_val, &(ptr_sclr->val.f4)); 
           break;

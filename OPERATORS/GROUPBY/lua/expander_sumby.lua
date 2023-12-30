@@ -15,33 +15,47 @@ local function expander_sumby(operator, val, grp, nb, cnd, optargs)
   if not status then print(subs) end
   assert(status, subs)
   local func_name = assert(subs.fn)
-  qc.q_add(subs); print("Dynamic compilation kicking in... ")
+  qc.q_add(subs); 
 
   -- allocate buffer for output
-  local out_val_buf = assert(cmem.new(subs.out_val_buf_size))
+  local out_val_buf = assert(cmem.new(
+  { size = subs.out_val_buf_size, qtype = subs.out_val_qtype}))
   out_val_buf:zero() -- IMPORTANT 
   out_val_buf:stealable(true) 
   local cast_out_val_buf = get_ptr(out_val_buf, subs.cast_out_val_as)
 
-  local out_cnt_buf = assert(cmem.new(subs.out_cnt_buf_size))
+  local out_cnt_buf = assert(cmem.new(
+  { size = subs.out_cnt_buf_size, qtype = subs.out_cnt_qtype}))
   out_cnt_buf:zero() -- IMPORTANT 
   out_cnt_buf:stealable(true) 
   local cast_out_cnt_buf = get_ptr(out_cnt_buf, subs.cast_out_cnt_as)
 
+  local destructor = function(rdcr_val)
+    assert(type(rdcr_val) == "table")
+    assert(#rdcr_val == 2)
+    assert(type(rdcr_val[1]) == "CMEM")
+    rdcr_val[1]:delete()
+    assert(type(rdcr_val[2]) == "CMEM")
+    rdcr_val[2]:delete()
+    -- print("Destrictor returning")
+    return true
+  end
   local vectorizer = function(rdcr_val)
     assert(type(rdcr_val) == "table")
     
     local r_out_val_buf = rdcr_val[1]
     assert(type(r_out_val_buf) == "CMEM")
     local vval = lVector.new(
-    {qtype = subs.out_val_qtype, gen = true, has_nulls = false})
+    {qtype = subs.out_val_qtype, gen = true, has_nulls = false,
+     max_num_in_chunk = subs.max_num_in_chunk})
     vval:put_chunk(r_out_val_buf, nb)
     vval:eov()
 
     local r_out_cnt_buf = rdcr_val[2]
     assert(type(r_out_cnt_buf) == "CMEM")
     local vcnt = lVector.new(
-    {qtype = subs.out_cnt_qtype, gen = true, has_nulls = false})
+    {qtype = subs.out_cnt_qtype, gen = true, has_nulls = false, 
+     max_num_in_chunk = subs.max_num_in_chunk})
     vcnt:put_chunk(r_out_cnt_buf, nb)
     vcnt:eov()
 
@@ -88,6 +102,7 @@ local function expander_sumby(operator, val, grp, nb, cnd, optargs)
   local rargs = {}
   rargs.gen = sumby_gen
   rargs.func = vectorizer
+  rargs.destructor = destructor
   rargs.value = { out_val_buf, out_cnt_buf}
   local r =  Reducer (rargs)
   return r

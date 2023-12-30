@@ -5,6 +5,7 @@ local qc       = require 'Q/UTILS/lua/qcore'
 local cmem     = require 'libcmem'
 local cVector  = require 'libvctr'
 local cutils   = require 'libcutils'
+local lgutils  = require 'liblgutils'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
@@ -41,6 +42,7 @@ local function expander_numby(val, nb, cnd, optargs)
     has_nulls = false, max_num_in_chunk = subs.max_num_in_chunk})
     vnum:put_chunk(rdcr_val, nb)
     vnum:eov()
+    vnum:nop()
     return vnum
   end
   local l_chunk_num = 0

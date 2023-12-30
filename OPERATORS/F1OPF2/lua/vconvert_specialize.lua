@@ -36,16 +36,18 @@ return function (
   if ( ( subs.f1_qtype == "F2" ) and ( subs.f2_qtype == "F4" ) ) then 
     subs.dotc = "OPERATORS/F1OPF2/src/convert_F2_F4.c"
     subs.doth = "OPERATORS/F1OPF2/inc/convert_F2_F4.h"
+    subs.incs = { "OPERATORS/F1OPF2/inc/", "UTILS/inc/" }
   elseif ( ( subs.f1_qtype == "F4" ) and ( subs.f2_qtype == "F2" ) ) then 
     subs.dotc = "OPERATORS/F1OPF2/src/convert_F4_F2.c"
     subs.doth = "OPERATORS/F1OPF2/inc/convert_F4_F2.h"
+    subs.incs = { "OPERATORS/F1OPF2/inc/", "UTILS/inc/" }
   else
-    subs.tmpl        = "OPERATORS/F1OPF2/lua/f1opf2.tmpl"
+    subs.tmpl = "OPERATORS/F1OPF2/lua/f1opf2.tmpl"
+    subs.incs = { "OPERATORS/F1OPF2/gen_inc/", 
+      "OPERATORS/F1OPF2/inc/", "UTILS/inc/" }
   end
   subs.srcdir      = "OPERATORS/F1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1OPF2/gen_inc/"
-  subs.incs        = { "OPERATORS/F1OPF2/gen_inc/", 
-    "OPERATORS/F1OPF2/inc/", "UTILS/inc/" }
   subs.libs        = { "-lgomp", "-lm" }
 --[[ TODO 
   -- for ISPC

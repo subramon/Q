@@ -19,6 +19,8 @@ GEN_SRC := _eval_arith.c
 GEN_SRC += _outer_eval_arith.c 
 GEN_SRC += _eval_cmp.c	 
 
+outer_eval_cmp.o : QCFLAGS += -Wno-sign-compare
+scalar.o : QCFLAGS += -Wno-sign-compare
 SRC := scalar.c
 SRC += aux_scalar.c
 # SRC += outer_eval_cmp.c  # included in scalar.c

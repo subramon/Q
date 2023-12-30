@@ -67,6 +67,13 @@ vctr_del(
     printf("Not deleting file baclup for Vctr: %s \n", val.name); 
   }
   //-------------------------------------------
+  if ( ( val.num_elements == 0 ) && ( val.num_chnks == 0 ) ) { 
+    // This can happen when we call get_chunk on a vector but
+    // never call put_chunk. Typically for intermediate vectors
+    // Makes me wonder how this interplays with memo_len
+    // TODO P2 Think about this.
+    goto BYE;
+  }
   if ( ( val.num_elements == 0 ) && ( val.num_chnks != 0 ) ) { go_BYE(-1); }
   // Delete chunks in vector before deleting vector 
   for ( uint32_t chnk_idx = 0; chnk_idx <= val.max_chnk_idx; chnk_idx++ ){

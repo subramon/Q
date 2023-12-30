@@ -10,8 +10,8 @@ local qc        = require 'Q/UTILS/lua/qcore'
 local is_in     = require 'Q/UTILS/lua/is_in'
 
 local i_qtypes = {"BL", "B1", "I1", "I2", "I4", "I8"}
-local f_qtypes = {"F4", "F8"}
-local good_qtypes = { "BL", "B1", "I1", "I2", "I4", "I8", "F4", "F8"}
+local f_qtypes = { "F2", "F4", "F8"}
+local good_qtypes = { "BL", "B1", "I1", "I2", "I4", "I8", "F2", "F4", "F8"}
 
 qc.q_cdef("OPERATORS/F_TO_S/inc/sum_struct.h", { "UTILS/inc/" })
 
@@ -87,6 +87,13 @@ return function (x, optargs)
     subs.dotc = "OPERATORS/F_TO_S/src/sum_B1.c"
     subs.doth = "OPERATORS/F_TO_S/inc/sum_B1.h"
     subs.srcs = { "UTILS/src/get_bit_u64.c" }
+  end
+  -- handle F2 as special case
+  if ( qtype == "F2" ) then 
+    subs.tmpl = nil
+    subs.dotc = "OPERATORS/F_TO_S/src/sum_F2.c"
+    subs.doth = "OPERATORS/F_TO_S/inc/sum_F2.h"
+    -- subs.srcs = { "UTILS/src/get_bit_u64.c" }
   end
   subs.libs = { "-lgomp", }
   return subs

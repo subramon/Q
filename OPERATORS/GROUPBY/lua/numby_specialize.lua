@@ -2,6 +2,7 @@ local cutils = require 'libcutils'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local in_qtypes = { 'I1', 'I2', 'I4', 'I8', 'UI1', 'UI2', 'UI4', 'UI8', }
 local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
+local lcl_chunk_size = require 'Q/OPERATORS/GROUPBY/lua/lcl_chunk_size'
 
 return function (
   val_fld,  -- value to be aggregated
@@ -28,23 +29,7 @@ return function (
   assert(type(nb) == "number")
   assert(nb >= 1 )
   subs.nb = nb 
-  --========================================
-  -- default for max_num_in_chunk
-  local y = math.floor(nb / 64)
-  if ( ( y * 64 ) ~= nb ) then y = y + 1 end 
-  subs.max_num_in_chunk = y * 64
-  -- over-ride max_num_in_chunk if needed
-  if optargs then
-    assert(type(optargs) == "table")
-    if ( optargs.max_num_in_chunk ) then  
-      local x = optargs.max_num_in_chunk
-      assert(type(x) == "number")
-      assert(x >= 64 )
-      assert( (math.floor(x / 64 ) *64) == x)
-      assert(nb <= x)
-      subs.max_num_in_chunk = x
-    end
-  end
+  subs.max_num_in_chunk = lcl_chunk_size(nb, optargs)
   --========================================
   -- Keeping default is_safe value as true
   -- This will not allow C code to write values at incorrect locations
@@ -74,8 +59,11 @@ return function (
   if ( subs.is_safe == false ) then subs.fn = subs.fn .. "_unsafe" end
 
   if ( subs.is_safe ) then 
-    subs.checking_code = 
-    " if ( ( x < 0 ) || ( (uint32_t)x >= nZ ) ) { go_BYE(-1); } "
+    subs.checking_code = [[
+    if ( ( x < 0 ) || ( (uint32_t)x >= nZ ) ) { 
+      go_BYE(-1); 
+    }
+    ]]
     subs.bye = "BYE: "
   else
     subs.fn = subs.fn .. "_unsafe" 

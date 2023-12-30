@@ -13,7 +13,8 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
   optargs = optargs or {}
   optargs.__operator = a -- for use in specializer if needed
   if ( type(sclr) == "number" ) then 
-    sclr = Scalar.new(sclr, f1:qtype()) 
+    assert(type(f1) == "lVector")
+    sclr = assert(Scalar.new(sclr, f1:qtype()) )
   end
   assert(type(sclr) == "Scalar")
   sclr:set_name("f1s1opf2")
@@ -60,6 +61,7 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
   vargs.gen = f2_gen
   vargs.has_nulls = false
   vargs.qtype = subs.f2_qtype
-  return lVector(vargs)
+  vargs.max_num_in_chunk = subs.max_num_in_chunk
+  return  lVector(vargs)
 end 
 return expander_f1s1opf2
