@@ -22,7 +22,9 @@ local function expander_find(x, y, optargs)
     prev_pos = pos
     local z = assert(x:get1(pos))
     if ( subs.sclr == z ) then 
-      rslt = pos break end
+      rslt = pos 
+      break 
+    end
     if ( subs.sclr < z ) then ub = pos end 
     if ( subs.sclr > z ) then lb = pos end 
   end

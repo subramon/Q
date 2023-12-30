@@ -470,6 +470,58 @@ static int l_sclr_gt(lua_State *L)
       }
       break;
       //-------------------------------------------------------------
+    case UI1 : 
+      switch ( qtype2 )  {
+        case BL : if ( s1->val.ui1  > s2->val.bl ) { bval = true; } break;
+        case I1 : if ( s1->val.ui1  > s2->val.i1 ) { bval = true; }  break; 
+        case I2 : if ( s1->val.ui1  > s2->val.i2 ) { bval = true; }  break; 
+        case I4 : if ( s1->val.ui1  > s2->val.i4 ) { bval = true; }  break; 
+        case I8 : if ( s1->val.ui1  > s2->val.i8 ) { bval = true; }  break; 
+        case F4 : if ( s1->val.ui1  > s2->val.f4 ) { bval = true; }  break; 
+        case F8 : if ( s1->val.ui1  > s2->val.f8 ) { bval = true; }  break; 
+        default : go_BYE(-1); break;
+      }
+      break;
+      //-------------------------------------------------------------
+    case UI2 : 
+      switch ( qtype2 )  {
+        case BL : if ( s1->val.ui2  > s2->val.bl ) { bval = true; } break;
+        case I1 : if ( s1->val.ui2  > s2->val.i1 ) { bval = true; }  break; 
+        case I2 : if ( s1->val.ui2  > s2->val.i2 ) { bval = true; }  break; 
+        case I4 : if ( s1->val.ui2  > s2->val.i4 ) { bval = true; }  break; 
+        case I8 : if ( s1->val.ui2  > s2->val.i8 ) { bval = true; }  break; 
+        case F4 : if ( s1->val.ui2  > s2->val.f4 ) { bval = true; }  break; 
+        case F8 : if ( s1->val.ui2  > s2->val.f8 ) { bval = true; }  break; 
+        default : go_BYE(-1); break;
+      }
+      break;
+      //-------------------------------------------------------------
+    case UI4 : 
+      switch ( qtype2 )  {
+        case BL : if ( s1->val.ui4  > s2->val.bl ) { bval = true; } break;
+        case I1 : if ( s1->val.ui4  > s2->val.i1 ) { bval = true; }  break; 
+        case I2 : if ( s1->val.ui4  > s2->val.i2 ) { bval = true; }  break; 
+        case I4 : if ( s1->val.ui4  > s2->val.i4 ) { bval = true; }  break; 
+        case I8 : if ( s1->val.ui4  > s2->val.i8 ) { bval = true; }  break; 
+        case F4 : if ( s1->val.ui4  > s2->val.f4 ) { bval = true; }  break; 
+        case F8 : if ( s1->val.ui4  > s2->val.f8 ) { bval = true; }  break; 
+        default : go_BYE(-1); break;
+      }
+      break;
+      //-------------------------------------------------------------
+    case UI8 : 
+      switch ( qtype2 )  {
+        case BL : if ( s1->val.ui8  > s2->val.bl ) { bval = true; } break;
+        case I1 : if ( s1->val.ui8  > s2->val.i1 ) { bval = true; }  break; 
+        case I2 : if ( s1->val.ui8  > s2->val.i2 ) { bval = true; }  break; 
+        case I4 : if ( s1->val.ui8  > s2->val.i4 ) { bval = true; }  break; 
+        case I8 : if ( s1->val.ui8  > s2->val.i8 ) { bval = true; }  break; 
+        case F4 : if ( s1->val.ui8  > s2->val.f4 ) { bval = true; }  break; 
+        case F8 : if ( s1->val.ui8  > s2->val.f8 ) { bval = true; }  break; 
+        default : go_BYE(-1); break;
+      }
+      break;
+      //-------------------------------------------------------------
     case F4 : 
       switch ( qtype2 )  {
         case BL : if ( s1->val.f4  > s2->val.bl ) { bval = true; } break;
@@ -550,6 +602,10 @@ static int l_sclr_lt(lua_State *L)
         case I2 : if ( s1->val.i1  < s2->val.i2 ) { bval = true; }  break; 
         case I4 : if ( s1->val.i1  < s2->val.i4 ) { bval = true; }  break; 
         case I8 : if ( s1->val.i1  < s2->val.i8 ) { bval = true; }  break; 
+        case UI1 : if ( s1->val.i1 < s2->val.ui1 ) { bval = true; }  break;
+        case UI2 : if ( s1->val.i1 < s2->val.ui2 ) { bval = true; }  break;
+        case UI4 : if ( s1->val.i1 < s2->val.ui4 ) { bval = true; }  break;
+        case UI8 : if ( s1->val.i1 < s2->val.ui8 ) { bval = true; }  break;
         case F4 : if ( s1->val.i1  < s2->val.f4 ) { bval = true; }  break; 
         case F8 : if ( s1->val.i1  < s2->val.f8 ) { bval = true; }  break; 
         default : go_BYE(-1); break;
@@ -563,6 +619,10 @@ static int l_sclr_lt(lua_State *L)
         case I2 : if ( s1->val.i2  < s2->val.i2 ) { bval = true; }  break; 
         case I4 : if ( s1->val.i2  < s2->val.i4 ) { bval = true; }  break; 
         case I8 : if ( s1->val.i2  < s2->val.i8 ) { bval = true; }  break; 
+        case UI1 : if ( s1->val.i2 < s2->val.ui1 ) { bval = true; }  break;
+        case UI2 : if ( s1->val.i2 < s2->val.ui2 ) { bval = true; }  break;
+        case UI4 : if ( s1->val.i2 < s2->val.ui4 ) { bval = true; }  break;
+        case UI8 : if ( s1->val.i2 < s2->val.ui8 ) { bval = true; }  break;
         case F4 : if ( s1->val.i2  < s2->val.f4 ) { bval = true; }  break; 
         case F8 : if ( s1->val.i2  < s2->val.f8 ) { bval = true; }  break; 
         default : go_BYE(-1); break;
@@ -576,6 +636,10 @@ static int l_sclr_lt(lua_State *L)
         case I2 : if ( s1->val.i4  < s2->val.i2 ) { bval = true; }  break; 
         case I4 : if ( s1->val.i4  < s2->val.i4 ) { bval = true; }  break; 
         case I8 : if ( s1->val.i4  < s2->val.i8 ) { bval = true; }  break; 
+        case UI1 : if ( s1->val.i4  < s2->val.ui1 ) { bval = true; }  break;
+        case UI2 : if ( s1->val.i4  < s2->val.ui2 ) { bval = true; }  break;
+        case UI4 : if ( s1->val.i4  < s2->val.ui4 ) { bval = true; }  break;
+        case UI8 : if ( s1->val.i4  < s2->val.ui8 ) { bval = true; }  break;
         case F4 : if ( s1->val.i4  < s2->val.f4 ) { bval = true; }  break; 
         case F8 : if ( s1->val.i4  < s2->val.f8 ) { bval = true; }  break; 
         default : go_BYE(-1); break;
@@ -589,8 +653,64 @@ static int l_sclr_lt(lua_State *L)
         case I2 : if ( s1->val.i8  < s2->val.i2 ) { bval = true; }  break; 
         case I4 : if ( s1->val.i8  < s2->val.i4 ) { bval = true; }  break; 
         case I8 : if ( s1->val.i8  < s2->val.i8 ) { bval = true; }  break; 
+        case UI1 : if ( s1->val.i8  < s2->val.ui1 ) { bval = true; }  break;
+        case UI2 : if ( s1->val.i8  < s2->val.ui2 ) { bval = true; }  break;
+        case UI4 : if ( s1->val.i8  < s2->val.ui4 ) { bval = true; }  break;
+        case UI8 : if ( s1->val.i8  < s2->val.ui8 ) { bval = true; }  break;
         case F4 : if ( s1->val.i8  < s2->val.f4 ) { bval = true; }  break; 
         case F8 : if ( s1->val.i8  < s2->val.f8 ) { bval = true; }  break; 
+        default : go_BYE(-1); break;
+      }
+      break;
+      //-------------------------------------------------------------
+    case UI1 : 
+      switch ( qtype2 )  {
+        case BL : if ( s1->val.ui1  < s2->val.bl ) { bval = true; } break;
+        case I1 : if ( s1->val.ui1  < s2->val.i1 ) { bval = true; }  break; 
+        case I2 : if ( s1->val.ui1  < s2->val.i2 ) { bval = true; }  break; 
+        case I4 : if ( s1->val.ui1  < s2->val.i4 ) { bval = true; }  break; 
+        case I8 : if ( s1->val.ui1  < s2->val.i8 ) { bval = true; }  break; 
+        case F4 : if ( s1->val.ui1  < s2->val.f4 ) { bval = true; }  break; 
+        case F8 : if ( s1->val.ui1  < s2->val.f8 ) { bval = true; }  break; 
+        default : go_BYE(-1); break;
+      }
+      break;
+      //-------------------------------------------------------------
+    case UI2 : 
+      switch ( qtype2 )  {
+        case BL : if ( s1->val.ui2  < s2->val.bl ) { bval = true; } break;
+        case I1 : if ( s1->val.ui2  < s2->val.i1 ) { bval = true; }  break; 
+        case I2 : if ( s1->val.ui2  < s2->val.i2 ) { bval = true; }  break; 
+        case I4 : if ( s1->val.ui2  < s2->val.i4 ) { bval = true; }  break; 
+        case I8 : if ( s1->val.ui2  < s2->val.i8 ) { bval = true; }  break; 
+        case F4 : if ( s1->val.ui2  < s2->val.f4 ) { bval = true; }  break; 
+        case F8 : if ( s1->val.ui2  < s2->val.f8 ) { bval = true; }  break; 
+        default : go_BYE(-1); break;
+      }
+      break;
+      //-------------------------------------------------------------
+    case UI4 : 
+      switch ( qtype2 )  {
+        case BL : if ( s1->val.ui4  < s2->val.bl ) { bval = true; } break;
+        case I1 : if ( s1->val.ui4  < s2->val.i1 ) { bval = true; }  break; 
+        case I2 : if ( s1->val.ui4  < s2->val.i2 ) { bval = true; }  break; 
+        case I4 : if ( s1->val.ui4  < s2->val.i4 ) { bval = true; }  break; 
+        case I8 : if ( s1->val.ui4  < s2->val.i8 ) { bval = true; }  break; 
+        case F4 : if ( s1->val.ui4  < s2->val.f4 ) { bval = true; }  break; 
+        case F8 : if ( s1->val.ui4  < s2->val.f8 ) { bval = true; }  break; 
+        default : go_BYE(-1); break;
+      }
+      break;
+      //-------------------------------------------------------------
+    case UI8 : 
+      switch ( qtype2 )  {
+        case BL : if ( s1->val.ui8  < s2->val.bl ) { bval = true; } break;
+        case I1 : if ( s1->val.ui8  < s2->val.i1 ) { bval = true; }  break; 
+        case I2 : if ( s1->val.ui8  < s2->val.i2 ) { bval = true; }  break; 
+        case I4 : if ( s1->val.ui8  < s2->val.i4 ) { bval = true; }  break; 
+        case I8 : if ( s1->val.ui8  < s2->val.i8 ) { bval = true; }  break; 
+        case F4 : if ( s1->val.ui8  < s2->val.f4 ) { bval = true; }  break; 
+        case F8 : if ( s1->val.ui8  < s2->val.f8 ) { bval = true; }  break; 
         default : go_BYE(-1); break;
       }
       break;

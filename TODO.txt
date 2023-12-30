@@ -1,3 +1,5 @@
+Should we use -flto? https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
+
 -- In Scalar, some are modified in place and some are not
 -- Have some way of being consistent about this 
 

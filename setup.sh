@@ -26,9 +26,17 @@ mkdir -p $Q_ROOT/config/
 mkdir -p $Q_ROOT/csos/
 #-----------------------------------
 QCFLAGS=" -std=gnu99  -fPIC"
-QCFLAGS+=" -g " # Comment for speed 
-QCFLAGS+=" -DDEBUG " # Comment for speed 
-# QCFLAGS+=" -Ofast " # UnComment for speed 
+# QCFLAGS+=" -g " # Comment for speed 
+# QCFLAGS+=" -DDEBUG " # Comment for speed 
+# QCFLAGS+=" -O3 " 
+QCFLAGS+=" -Ofast " # UnComment for speed 
+
+# O3 covers most of the optimisations. The remaining options come 
+# "at a cost". If you can tolerate some random rounding and your code 
+# isn't dependent on IEEE floating point standards then you can try 
+# -Ofast. This disregards standards compliance and can give you faster code.
+
+
 QCFLAGS+=" -Wall -W -Waggregate-return -Wcast-align -Wmissing-prototypes"
 QCFLAGS+=" -Wnested-externs -Wshadow -Wwrite-strings -Wunused-variable "
 QCFLAGS+=" -Wunused-parameter -Wno-pedantic -fopenmp -Wno-unused-label " 
