@@ -5,6 +5,7 @@
 #include "chnk_rs_hmap_struct.h"
 #include "l2_file_name.h"
 #include "chnk_is.h"
+#include "vctr_name.h"
 #include "get_file_size.h"
 #include "vctr_usage.h"
 
@@ -70,5 +71,37 @@ vctr_usage(
 BYE:
   free_if_non_null(lma_file);
   free_if_non_null(l2_file);
+  return status;
+}
+// For debugging. Prints vectors that are using memory or disk 
+int
+vctr_hogs(
+    const char * const mode
+    )
+{
+  int status = 0;
+  printf("uqid,name,mem_usage,dsk_usage\n");
+  uint32_t tbsp = 0; // only for your own tablespace 
+  for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) {
+    if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
+    vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
+    uint32_t vctr_uqid = key;
+    //--- Check usage statistics
+    uint64_t mem, dsk; 
+    status = vctr_usage(tbsp, vctr_uqid, &mem, &dsk); cBYE(status);
+    char * name = vctr_get_name(tbsp, vctr_uqid); 
+    bool skip = false;
+    if ( ( mode != NULL ) && ( strcmp(mode, "mem") == 0 ) ) {
+      if ( mem == 0 ) { skip = true; }
+    }
+    if ( ( mode != NULL ) && ( strcmp(mode, "dsk") == 0 ) ) {
+      if ( dsk == 0 ) { skip = true; }
+    }
+    if ( skip == false ) { 
+      printf("%u:[%s]%" PRIu64",%"PRIu64"\n",
+          vctr_uqid, name == NULL ? "anonymous" : name, mem, dsk);
+    }
+  }
+BYE:
   return status;
 }

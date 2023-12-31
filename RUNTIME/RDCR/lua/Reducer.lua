@@ -64,8 +64,14 @@ end
 function Reducer:delete()
   local pre_mem = lgutils.mem_used()
   -- print("Destructor called on " .. self._name)
-  if ( self._is_eor == false ) then return false end 
-  if ( not self._destructor ) then return false end 
+  -- See change below if ( self._is_eor == false ) then return false end 
+  if ( self._is_eor == false ) then 
+    print("WARNING! You are a deleting a nascent Reducer")
+  end
+  if ( not self._destructor ) then 
+    print("WARNING! You are a deleting a Reducer that has no destructor")
+    return false 
+  end 
   assert(self._destructor(self._value))
   local post_mem = lgutils.mem_used()
   if ( pre_mem ~= post_mem ) then 

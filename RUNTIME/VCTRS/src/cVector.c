@@ -17,6 +17,7 @@
 #include "vctr_chk.h"
 #include "vctr_cnt.h"
 #include "vctr_del.h"
+#include "vctr_usage.h" // for vctr_hogs()
 
 #include "vctr_set_lma.h"
 #include "vctr_lma_access.h"
@@ -322,12 +323,30 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_hogs( lua_State *L) {
+  int status = 0;
+  int nargs = lua_gettop(L);
+  if ( !( nargs == 0 || ( nargs == 1 ) ) ) { go_BYE(-1); }
+  char *mode = NULL;
+  if ( nargs == 1 ) { 
+    mode = luaL_checkstring(L, 1);
+  }
+  status = vctr_hogs(mode); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_vctr_check_all( lua_State *L) {
   uint32_t tbsp = 0;
   if (  lua_gettop(L) == 1 ) { 
     tbsp = luaL_checknumber(L, 1); 
   }
-  int status = status = vctrs_chk(tbsp, false); 
+  int status = vctrs_chk(tbsp, false); 
   if ( status == 0 ) { 
     lua_pushboolean(L, true);
   }
@@ -1411,6 +1430,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "delete",    l_vctr_free   }, // try not to call this explicitly
     { "chk", l_vctr_chk },
     { "check_all", l_vctr_check_all },
+    { "hogs", l_vctr_hogs },
 
     { "free", l_vctr_free },
     { "chunk_delete", l_chnk_delete },

@@ -31,7 +31,7 @@ local function expander_numby(val, nb, cnd, optargs)
   local destructor = function(rdcr_val)
     assert(type(rdcr_val) == "CMEM")
     rdcr_val:delete()
-    -- print("Destrictor returning")
+    -- print("NUMBY: Destructor returning")
     return true
   end
   --=====================================================
