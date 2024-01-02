@@ -40,6 +40,7 @@ require 'Q/OPERATORS/UNIQUE/lua/unique'
 require 'Q/OPERATORS/JOIN/lua/join'
 require "Q/OPERATORS/IDX_SORT/lua/idx_sort"
 require "Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez"
+require "Q/OPERATORS/AINB/lua/get_idx_by_val"
 
 require "Q/OPERATORS/COUNT/lua/count"
 
@@ -60,7 +61,6 @@ require 'Q/QTILS/lua/head'
 
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"
--- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/get_idx_by_val"
 -- TODO P3 require "Q/OPERATORS/APPROX/FREQUENT/lua/approx_frequent"
 -- TODO P3 require "Q/OPERATORS/APPROX/QUANTILE/lua/approx_quantile"
 require "Q/OPERATORS/AX_EQUALS_B/lua/linear_solver"
