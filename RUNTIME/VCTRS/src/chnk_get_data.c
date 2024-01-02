@@ -20,6 +20,7 @@ chnk_get_data(
     )
 {
   int status = 0;
+  char *data = NULL;
   char *l2_file = NULL;
   char *X = NULL; size_t nX = 0;
   chnk_rs_hmap_key_t *ptr_key = &(g_chnk_hmap[tbsp].bkts[chnk_where].key);
@@ -53,7 +54,7 @@ chnk_get_data(
     printf("%s Allocated %u \n", __FILE__, ptr_val->size);
 #endif
   }
-  char *data  = ptr_val->l1_mem; 
+  data  = ptr_val->l1_mem; 
   if ( data == NULL ) { go_BYE(-1); }
 BYE:
   free_if_non_null(l2_file);

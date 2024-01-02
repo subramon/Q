@@ -1,4 +1,6 @@
 #!/bin/ballsh
+CC = gcc
+
 INCS := -I./inc/
 INCS += -I../../UTILS/inc/
 INCS += -I../../RUNTIME/VCTRS/inc/

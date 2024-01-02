@@ -134,7 +134,7 @@ vctr_print(
   }
   bool vctr_is_found, chnk_is_found;
   bool nn_vctr_is_found, nn_chnk_is_found;
-  qtype_t qtype, nn_qtype;
+  qtype_t qtype, nn_qtype = Q0;
   uint64_t num_elements, num_to_pr, pr_idx;
   uint64_t nn_num_elements;
   uint32_t vctr_where_found, chnk_where_found;

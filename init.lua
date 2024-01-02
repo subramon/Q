@@ -116,5 +116,6 @@ if ( lgutils.is_restore_session() ) then
 else
   print("NOT restoring session")
 end
+print("Session restored")
 --======================
 return require 'Q/q_export'

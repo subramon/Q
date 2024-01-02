@@ -31,7 +31,8 @@ vctr_usage(
 
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &vctr_key, 
       &vctr_val, &vctr_is_found, &vctr_where_found);
-  if ( !vctr_is_found ) { go_BYE(-1); }
+  if ( !vctr_is_found ) { 
+    go_BYE(-1); }
   // how much mem/dsk used at vector level 
   if ( vctr_val.is_lma ) { 
     lma_file = l2_file_name(tbsp, vctr_uqid, ((uint32_t)~0));

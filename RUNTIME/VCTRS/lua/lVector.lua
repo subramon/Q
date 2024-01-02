@@ -274,6 +274,7 @@ function lVector.new(args)
   assert(type(args) == "table")
   --=================================================
   if ( args.uqid )  then 
+    print("Rehydrating " .. args.uqid)
     assert(type(args.uqid) == "number")
     assert(args.uqid > 0)
     -- START: I believe (99%) that the following is correct

@@ -77,28 +77,33 @@ init_session(
     }
     //-----------------------------------
     g_vctr_uqid = 0;
+    // We need to delete any vectors that had *NOT* been persisted
+    // Cannot do this in the loop below. Must be done before
+    // Reason is that when you delete, things move around
     int num_deletes = 0;
     for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) { 
+      if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
+      if ( g_vctr_hmap[tbsp].bkts[i].val.is_persist == true ) { continue; }
+      vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
+      uint32_t vctr_uqid = key;
+      bool is_found = false;
+      status = vctr_del(tbsp, vctr_uqid, &is_found); cBYE(status);
+      if ( !is_found ) { go_BYE(-1); } 
+      printf("Deleted vector %u \n", vctr_uqid);
+      num_deletes++;
+    }
+    //-------------------
+    for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) { 
+      if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
       g_vctr_hmap[tbsp].bkts[i].val.X = NULL;
       g_vctr_hmap[tbsp].bkts[i].val.nX = 0;
       g_vctr_hmap[tbsp].bkts[i].val.is_killable = false;
       g_vctr_hmap[tbsp].bkts[i].val.num_readers = 0;
       g_vctr_hmap[tbsp].bkts[i].val.num_writers = 0;
-      if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
-
       vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
       uint32_t vctr_uqid = key;
       if ( vctr_uqid > g_vctr_uqid ) { g_vctr_uqid = vctr_uqid; } 
-      // Need to delete vectors that have not been persisted
-      if ( g_vctr_hmap[tbsp].bkts[i].val.is_persist == false ) { 
-        bool is_found = false;
-        status = vctr_del(tbsp, vctr_uqid, &is_found); cBYE(status);
-        if ( !is_found ) { go_BYE(-1); } 
-        num_deletes++;
-      }
-      // Decrement ref_count after above delete 
       g_vctr_hmap[tbsp].bkts[i].val.ref_count   = 0;
-      if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
       //--- Set usage statistics
       uint64_t mem, dsk; 
       status = vctr_usage(tbsp, vctr_uqid, &mem, &dsk); cBYE(status);

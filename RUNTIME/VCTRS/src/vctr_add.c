@@ -23,8 +23,10 @@ vctr_add1(
 {
   int status = 0;
   uint32_t tbsp =  0; // cannot add to a different tablespace => tbsp = 0
+#ifdef DEBUG
   uint32_t old_vctr_cnt, new_vctr_cnt;
   old_vctr_cnt = vctr_cnt(tbsp);
+#endif
   if ( ( qtype == Q0 ) || ( qtype >= NUM_QTYPES ) ) { go_BYE(-1); }
   *ptr_uqid = vctr_new_uqid();
   vctr_rs_hmap_key_t key = *ptr_uqid; 

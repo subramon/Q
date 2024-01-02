@@ -327,7 +327,7 @@ static int l_vctr_hogs( lua_State *L) {
   int status = 0;
   int nargs = lua_gettop(L);
   if ( !( nargs == 0 || ( nargs == 1 ) ) ) { go_BYE(-1); }
-  char *mode = NULL;
+  const char *mode = NULL;
   if ( nargs == 1 ) { 
     mode = luaL_checkstring(L, 1);
   }
