@@ -1,9 +1,7 @@
-local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
-local base_qtype  = require 'Q/UTILS/lua/is_base_qtype'
-local qconsts     = require 'Q/UTILS/lua/q_consts'
+local lVector     = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local ffi         = require 'ffi' 
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
-local qc          = require 'Q/UTILS/lua/q_core'
+local qc          = require 'Q/UTILS/lua/qcore'
 local cmem        = require 'libcmem'
 local Scalar      = require 'libsclr'
 local record_time = require 'Q/UTILS/lua/record_time'
@@ -17,69 +15,58 @@ local function get_val_by_idx(x, y, optargs)
 
   local sp_fn_name = "Q/OPERATORS/GET/lua/get_val_by_idx_specialize"
   local spfn = assert(require(sp_fn_name))
-  local status, subs, tmpl = pcall(spfn, x:fldtype(), y:fldtype(), 
-    optargs)
+  local status, subs = pcall(spfn, x, y, optargs)
   if not status then print(subs) end
   assert(status, "Error in specializer " .. sp_fn_name)
+  qc.q_add(subs)
   local func_name = assert(subs.fn)
-  -- START: Dynamic compilation
-  if ( not qc[func_name] ) then
-    print("Dynamic compilation kicking in... ")
-    qc.q_add(subs, tmpl, func_name)
-  end
-  -- STOP: Dynamic compilation
   assert(qc[func_name], "Symbol not available" .. func_name)
 
   --=====================================
-  local f2_cast_as = subs.in2_ctype .. "*" 
-  local null_val = assert(subs.null_val)
-  assert(type(null_val) == "Scalar")
-  local ptr_null_val = ffi.cast(f2_cast_as,  get_ptr(null_val:to_cmem()))
-  --=====================================
 
-  local f3_qtype = assert(subs.out_qtype)
-  local f3_width = qconsts.qtypes[f3_qtype].width
-  local buf_sz = qconsts.chunk_size * f3_width
-  local f3_buf = nil
-
-  local first_call = true
-  local chunk_idx = 0
-  local myvec 
+  local l_chunk_num = 0
   local f3_gen = function(chunk_num)
-    
-    -- Adding assert on chunk_idx to have sync between expected 
-    -- chunk_num and generator's chunk_idx state
-    assert(chunk_num == chunk_idx, 
-      "chunk_num = " .. chunk_num  .. "chunk_idx = " .. chunk_idx)
-    if ( first_call ) then 
-      first_call = false
-      f3_buf = assert(cmem.new(buf_sz, f3_qtype))
-      myvec:no_memcpy(f3_buf) -- hand control of this f3_buf to the vector 
+    assert(chunk_num == l_chunk_num)
+    local out_buf = cmem.new( { size = subs.bufsz, qtype = subs.out_qtype})
+    out_buf:zero()
+    out_buf:stealable(true)
+    out_ptr = get_ptr(out_buf, subs.cast_out_as)
+    local nn_out_buf; local nn_out_ptr = ffi.NULL
+    if ( x:has_nulls() ) then 
+      nn_out_buf = cmem.new( { size = subs.nn_bufsz, qtype = subs.nn_out_qtype})
+      nn_out_buf:zero()
+      nn_out_buf:stealable(true)
+      nn_out_ptr = get_ptr(nn_out_buf, subs.cast_nn_out_as)
     end
-    local f3_cast_as = subs.out_ctype .. "*"
 
     local f2_len, f2_ptr = y:get_all()
     assert(f2_len == nR2)
     local ptr2 = ffi.cast(f2_cast_as,  get_ptr(f2_ptr))
 
-    local f1_len, f1_chunk, nn_f1_chunk
-    f1_len, f1_chunk, nn_f1_chunk = x:chunk(chunk_idx)
-    local f1_cast_as = subs.in1_ctype .. "*"
-
-    if f1_len > 0 then
-      local chunk1 = ffi.cast(f1_cast_as,  get_ptr(f1_chunk))
-      local chunk3 = ffi.cast(f3_cast_as,  get_ptr(f3_buf))
-      local start_time = qc.RDTSC()
-      qc[func_name](chunk1, ptr2, f1_len, nR2, ptr_null_val, chunk3)
-      record_time(start_time, func_name)
-    else
-      f3_buf = nil
+    local x_len, x_chunk, nn_x_chunk = x:get_chunk(chunk_num)
+    local x_ptr = get_ptr(x_chunk, subs.cast_x_as)
+    local nn_x_ptr
+    if ( nn_x_chunk ) then 
+      nn_x_ptr = get_ptr(nn_x_chunk, subs.cast_nn_x_as)
     end
-    chunk_idx = chunk_idx + 1
-    return f1_len, f3_buf
+    if ( x_len == 0 ) then
+      out_buf:delete()
+      if ( nn_out_buf ) then nn_out_buf:delete() end
+      return 0
+    end 
+    local start_time = qc.RDTSC()
+    local status = qc[func_name](xptr, x_len, yptr, y_len, out_ptr, nn_out_ptr) 
+    x:unget_chunk(chunk_num)
+    assert(status == 0)
+    l_chunk_num = l_chunk_num + 1 
+    return x_len, out_buf, nn_out_buf
   end
-  myvec = lVector{gen=f3_gen, nn=false, qtype=f3_qtype, has_nulls=false}
-  return myvec
+  local vargs = {}
+  vargs.gen = gen 
+  vargs.qtype = subs.out_qtype
+  vargs.max_num_in_chunk = subs.max_num_in_chunk
+  vargs.has_nulls = subs.out_has_nulls
+  return lVector(vargs)
 end
 
 return require('Q/q_export').export('get_val_by_idx', get_val_by_idx)

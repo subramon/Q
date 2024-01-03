@@ -46,7 +46,6 @@ local function get_idx_by_val(x, y, optargs)
     local xptr = get_ptr(x_chunk, subs.cast_x_as)
     local yptr = get_ptr(ycmem, subs.cast_y_as)
     local start_time = cutils.rdtsc()
-    print("x_len = ", x_len)
     local status = qc[func_name](xptr, x_len, yptr, y_len,
       out_ptr, nn_out_ptr)
     x:unget_chunk(chunk_num)

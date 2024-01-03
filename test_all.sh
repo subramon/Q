@@ -43,6 +43,10 @@ rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/data/
 rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/meta/
 #--------------------------------------------------------
 
+cd ~/Q/OPERATORS/AINB/test/
+qjit  test_get_idx_by_val.lua
+# TODO qjit  test_ainb.lua
+
 cd ~/Q/OPERATORS/COUNT/test/
 qjit  test_count.lua
 
