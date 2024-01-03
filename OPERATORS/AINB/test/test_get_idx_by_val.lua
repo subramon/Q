@@ -5,35 +5,24 @@ local qcfg	= require 'Q/UTILS/lua/qcfg'
 local tests = {}
 
 tests.t1 = function()
-  local len = qcfg.max_num_in_chunk * 2 + 1
+  local nC = 128 
+  local len = (nC * 2) + 1
 
-  local x = Q.seq( {start = len, by = -1, qtype = "I4", len = len} )
-  local y = Q.seq( {start = 1, by = 1, qtype = "I4", len = len} )
-  local idx = Q.seq( {start = 0, by = 1, qtype = "I4", len = len} )
-  local z = Q.get_idx_by_val(x, y):eval()
-  z:pr()
-  --[[
-  -- Q.print_csv({x, z})
-  -- some checking now
-  local x1 = Q.vsgeq(idx, n_src)
-  local x2 = Q.vsneq(z, -1)
-  local x3 = Q.vvand(x1, x2)
-  local n1, n2 = Q.sum(x3):eval()
-  assert(n1:to_num() == 0)
-  
-  local x1 = Q.vslt(x, n_src)
-  local x2 = Q.vveq(z, exp_z)
-  local x3 = Q.vvand(x1, x2)
-  local n1, n2 = Q.sum(x3):eval()
-  -- Q.print_csv({x,y,z,exp_z,x1,x2,x3})
-  local  exp_n = Q.sum(x1):eval()
+  local x = Q.seq( {start = len, by = -1, qtype = "I4", max_num_in_chunk = nC, len = len} ):set_name("x")
+  local y = Q.seq( {start = 1, by = 1, qtype = "I4", max_num_in_chunk = nC, len = len} ):set_name("y")
+  local chk = Q.seq( {start = len-1, by = -1, qtype = "I4", max_num_in_chunk = nC, len = len} ):set_name("y")
+  local z = Q.get_idx_by_val(x, y):set_name("z"):eval()
+  local nn_z = z:get_nulls()
+  local r1 = Q.sum(nn_z)
+  local n1, n2 = r1:eval()
+  assert(n1 == n2)
 
-  assert(n1 ==  exp_n)
-  
-  -- local n1, n2 = Q.sum(Q.vveq(z, exp_z)):eval()
-  -- assert(n1:to_num() == x_length)
-  -- assert(n2:to_num() == x_length)
-  --]]
+  -- Q.print_csv({x, y, z})
+  local w = Q.vveq(z, chk)
+  local r = Q.sum(w)
+  local n1, n2 = r:eval()
+  assert(n1 == n2)
+  --
   print("Successfully completed t1")
 end
 -- return tests

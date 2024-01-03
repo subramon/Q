@@ -55,7 +55,12 @@ vctr_chnks_to_lma(
   // START: Create new empty backup file 
   lma_file = l2_file_name(0, uqid, ((uint32_t)~0));
   if ( lma_file == NULL ) { go_BYE(-1); }
-  if ( file_exists(lma_file) ) { go_BYE(-1); } 
+  if ( file_exists(lma_file) ) { 
+    fprintf(stderr ,"SUSPICIOUS but not necessarily error. ");
+    fprintf(stderr, "LMA File [%s] exists for vector (%u,%s)\n",
+        lma_file, uqid, v->name);
+    // go_BYE(-1); 
+  } 
 
   uint64_t filesz = v->num_elements * v->width;
   if ( filesz == 0 ) { go_BYE(-1); }

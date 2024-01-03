@@ -4,6 +4,7 @@ return require 'Q/UTILS/lua/code_gen' {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <omp.h>
 //START_FOR_CDEF
 extern int
@@ -33,11 +34,16 @@ ${fn}(
 {
   int status = 0;
 
-#pragma omp parallel for schedule(static, 256)
+// #pragma omp parallel for schedule(static, ${omp_chunk_size})
   for ( uint32_t i = 0; i < nA; i++ ) { 
-    c[i] = 0; nn_c[i] = false;
+    c[i] = 0; 
+    if ( nn_c != NULL ) { nn_c[i] = false; }
     for ( uint32_t j = 0; j < nB; j++ ) { 
-      if ( a[j] == b[j] ) { c[i] = j; nn_c[i] = true;break; }
+      if ( a[i] == b[j] ) { 
+        c[i] = j; 
+        if ( nn_c != NULL ) { nn_c[i] = true; }
+        break; 
+      }
     }
   }
   return status;
