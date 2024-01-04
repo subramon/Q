@@ -35,6 +35,7 @@ return function (a, largs)
     --=============================
     local lb = subs.max_num_in_chunk * l_chunk_num
     if ( lb >= subs.len) then 
+      buf:delete()
       cargs:delete()
       return 0, nil 
     end 

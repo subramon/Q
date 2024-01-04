@@ -36,17 +36,45 @@ ${fn}(
 
 { 
   int status = 0;
+  ${out_val_ctype} **Zs = NULL;
 
-  if ( nR_in == 0 ) { WHEREAMI; return -1; }
-  if ( nR_out == 0 ) { WHEREAMI; return -1; }
-  for ( uint64_t i = 0; i < nR_in; i++ ) {
-    if ( ( cnd_fld != NULL ) && ( cnd_fld[i] == false ) ) { continue; }
-    ${grp_ctype} x = grp_fld[i];
-    ${checking_code}
-    out_cnt_fld[x]++;
-    ${operating_code} // for sumby: out_val_fld[x] += val_fld[i];
+  if ( nR_in == 0 ) { go_BYE(-1); } 
+  if ( nR_out == 0 ) { go_BYE(-1); } 
+
+  int nT1 = nR_in / ( 16 * nR_out ); 
+  int nT2 = sysconf(_SC_NPROCESSORS_ONLN);
+  int nT = mcr_min(nT1, nT2); 
+  nT = mcr_max(1, nT);
+  int block_size = nR_in / nT;
+  printf("NUMBY using %d cores \n", nT);
+
+  if ( nT == 1 ) { 
+    for ( uint64_t i = 0; i < nR_in; i++ ) {
+      if ( ( cnd_fld != NULL ) && ( cnd_fld[i] == false ) ) { continue; }
+      ${grp_ctype} x = grp_fld[i];
+      ${checking_code}
+      out_cnt_fld[x]++;
+      ${operating_code} // for sumby: out_val_fld[x] += val_fld[i];
+    }
   }
-${bye}
+  else {
+    Zs = malloc(nT * sizeof(${out_val_ctype} *));
+    return_if_malloc_failed(Zs);
+    memset(Zs, 0, nT * sizeof(${out_val_ctype} *));
+    for ( int t = 0; t < nT; t++ ) { 
+      Zs[t] = malloc(nR_out * sizeof(${out_val_ctype}));
+      return_if_malloc_failed(Zs);
+      memset(Zs[t], 0, nR_out * sizeof(${out_val_ctype}));
+    }
+// TODO #pragma omp parallel for schedule(static)
+  }
+BYE:
+  if ( Zs != NULL ) { 
+    for ( int t = 0; t < nT; t++ ) {
+      free_if_non_null(Zs[t]);
+    }
+    free_if_non_null(Zs);
+  }
   return status;
 }
 ]]

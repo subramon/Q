@@ -1,10 +1,12 @@
 require 'Q/UTILS/lua/strict'
-local Q = require 'Q'
-local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
+local Q       = require 'Q'
+local lgutils = require 'liblgutils'
 
 local tests = {}
 
 tests.t1 = function()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   local val = Q.mk_col({1, 2, 4, 5, 6, 7, 8, 9}, "I8")
   local grp = Q.mk_col({0, 1, 2, 1, 1, 2, 0, 2}, "I2")
   local exp_val = {9, 13, 20}
@@ -27,12 +29,24 @@ tests.t1 = function()
       assert(chk_val:to_num() == exp_val[i])
       assert(chk_cnt:to_num() == exp_cnt[i])
     end
+    out_val:delete()
+    out_cnt:delete()
+    res:delete()
     print("Test t1 completed for " .. tostring(bval))
   end
+  -- cleanup
+  val:delete()
+  grp:delete()
+
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
   print("Test t1 completed")
 end
 
 tests.t2 = function()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   -- sumby test in safe mode ( default is safe mode )
   -- group by column exceeds limit
   local val = Q.mk_col({1, 2, 4, 5, 6, 7, 8, 9}, "I4")
@@ -40,9 +54,15 @@ tests.t2 = function()
   local n_grp = 3
   print(">>> START DELIBERATE ERROR")
   local res = Q.sumby(val, grp, n_grp)
-  local status = pcall(res.eval, res)
+  local status, x, y = pcall(res.eval, res)
   print("<<< START DELIBERATE ERROR")
   assert(status == false)
+  local post = lgutils.mem_used()
+  val:delete()
+  grp:delete()
+  res:delete()
+  -- TODO assert(pre == post)
+  collectgarbage("restart")
   print("Test t2 completed")
 end
 
@@ -78,11 +98,24 @@ max_num_in_chunk = nC })
   local optargs = {}
   for _, bval in ipairs{true, false} do 
     optargs.is_safe = bval 
-    local res, cnt = Q.sumby(val, grp, n_grp, nil, optargs):eval()
-    local exp_res = Q.mk_col({ 68587, 68801, 68373, }, "I8")
-    local exp_cnt = Q.mk_col({ 214, 214, 213, }, "I8")
+    local rdcr = Q.sumby(val, grp, n_grp, nil, optargs)
+    assert(type(rdcr) == "Reducer")
+    local res, cnt = rdcr:eval()
+    assert(res:num_elements() == 3)
+    assert(cnt:num_elements() == 3)
+
+    local exp_res = Q.mk_col({ 68587, 68801, 68373, }, "I8",
+      { max_num_in_chunk = res:max_num_in_chunk()} )
+    local exp_cnt = Q.mk_col({ 214, 214, 213, }, "I8",
+      { max_num_in_chunk = cnt:max_num_in_chunk()} )
   
+    print(res:num_elements())
+    print(exp_res:max_num_in_chunk())
     local n1, n2 = Q.sum(Q.vveq(res, exp_res)):eval()
+    res:pr()
+    exp_res:pr()
+    cnt:pr()
+    exp_cnt:pr()
     assert(n1 == n2)
   
     local n1, n2 = Q.sum(Q.vveq(cnt, exp_cnt)):eval()
@@ -93,6 +126,8 @@ max_num_in_chunk = nC })
 end
 -- testing with condition field 
 tests.t5 = function()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   local val = Q.mk_col({1, 2, 4, 5, 6, 7, 8, 9}, "I8")
   local grp = Q.mk_col({0, 1, 2, 1, 1, 2, 0, 2}, "I2")
   local cnd = Q.mk_col({
@@ -119,8 +154,17 @@ tests.t5 = function()
       assert(chk_val:to_num() == exp_val[i])
       assert(chk_cnt:to_num() == exp_cnt[i])
     end
+    out_val:delete()
+    out_cnt:delete()
+    res:delete()
     print("Test t5 completed for " .. tostring(bval))
   end
+  val:delete()
+  grp:delete()
+  cnd:delete()
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
   print("Test t5 completed")
 end
 

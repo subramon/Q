@@ -64,11 +64,9 @@ return function (
       go_BYE(-1); 
     }
     ]]
-    subs.bye = "BYE: "
   else
     subs.fn = subs.fn .. "_unsafe" 
     subs.checking_code = " /* No checks made on value */ "
-    subs.bye = " "
   end
   subs.tmpl   = "OPERATORS/GROUPBY/lua/numby.tmpl"
   subs.srcdir = "OPERATORS/GROUPBY/gen_src/"

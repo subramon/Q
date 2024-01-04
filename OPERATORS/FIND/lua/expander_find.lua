@@ -14,10 +14,12 @@ local function expander_find(x, y, optargs)
   -- binary search in Lua 
   local lb = 0 
   local ub = x:num_elements()
+  local top_ub = ub
   local rslt = -1 
   local prev_pos = -1 
   while true do 
     local pos = math.floor((lb+ub)/2)
+    if ( pos == top_ub ) then pos = pos - 1 end 
     if ( pos == prev_pos ) then break end 
     prev_pos = pos
     local z = assert(x:get1(pos))

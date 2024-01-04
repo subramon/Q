@@ -5,6 +5,10 @@ return require 'Q/UTILS/lua/code_gen' {
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include "q_macros.h"
 
 //START_FOR_CDEF
@@ -28,16 +32,64 @@ int ${fn}(
     )
 {
   int status = 0;
+  ${out_ctype} **Zs = NULL;
 
-  if ( nX == 0 ) { WHEREAMI; return -1; }
-  if ( nZ == 0 ) { WHEREAMI; return -1; }
-  for ( uint64_t i = 0; i < nX; i++ ) {
-    ${val_ctype} x = X[i];
-    if ( ( cond ) && ( cond[i] == 0 ) ) { continue; }
-    ${checking_code}
-    Z[x]++;
+  if ( nX == 0 ) { go_BYE(-1); }
+  if ( nZ == 0 ) { go_BYE(-1); }
+
+  int nT1 = nX / ( 16 * nZ ); 
+  int nT2 = sysconf(_SC_NPROCESSORS_ONLN);
+  int nT = mcr_min(nT1, nT2); 
+  nT = mcr_max(1, nT);
+  int block_size = nX / nT;
+  printf("NUMBY using %d cores \n", nT);
+
+  if ( nT == 1 ) { 
+    for ( uint32_t i = 0; i < nX; i++ ) {
+      ${val_ctype} x = X[i];
+      if ( ( cond ) && ( cond[i] == 0 ) ) { continue; }
+      ${checking_code}
+      Z[x]++;
+    }
   }
-${bye}
+  else {
+    Zs = malloc(nT * sizeof(${out_ctype} *));
+    return_if_malloc_failed(Zs);
+    memset(Zs, 0, nT * sizeof(${out_ctype} *));
+    for ( int t = 0; t < nT; t++ ) { 
+      Zs[t] = malloc(nZ * sizeof(${out_ctype}));
+      return_if_malloc_failed(Zs);
+      memset(Zs[t], 0, nZ * sizeof(${out_ctype}));
+    }
+#pragma omp parallel for schedule(static)
+    for ( int t = 0; t < nT; t++ ) { 
+      int32_t lb = t  * block_size;
+      int32_t ub = lb + block_size;
+      if ( t == 0  ) { lb = 0; }
+      if ( t == nT-1  ) { ub = nX; }
+      for ( int i = lb; i < ub; i++ ) { 
+        ${val_ctype} x = X[i];
+        if ( ( cond ) && ( cond[i] == 0 ) ) { continue; }
+        if ( ( x < 0 ) || ( (uint32_t)x >= nZ ) ) { status = -1; continue; }
+        Zs[t][x]++;
+      }
+    }
+    cBYE(status);
+    //--- Now sequential (pair-wise for later) merging of results
+    for ( int t = 0; t < nT; t++ ) { 
+      int64_t *Zt = Zs[t];
+      for ( uint32_t j = 0; j < nZ; j++ ) { 
+        Z[j] += Zt[j];
+      }
+    }
+  }
+BYE:
+  if ( Zs != NULL ) { 
+    for ( int t = 0; t < nT; t++ ) {
+      free_if_non_null(Zs[t]);
+    }
+    free_if_non_null(Zs);
+  }
   return status;
 }
 ]]

@@ -52,7 +52,9 @@ local function expander_numby(val, nb, cnd, optargs)
     -- chunk_num and generator's chunk_idx state
     assert(chunk_num == l_chunk_num)
     local val_len, val_chunk = val:get_chunk(l_chunk_num)
-    if ( val_len == 0 ) then return nil end -- indicates end for Reducer
+    if ( val_len == 0 ) then 
+      return nil -- indicates end for Reducer
+    end 
     local cast_val_chnk = get_ptr(val_chunk, subs.cast_val_as)
 
     local cast_cnd_chnk = ffi.NULL

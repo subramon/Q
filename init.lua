@@ -41,6 +41,7 @@ require 'Q/OPERATORS/JOIN/lua/join'
 require "Q/OPERATORS/IDX_SORT/lua/idx_sort"
 require "Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez"
 require "Q/OPERATORS/AINB/lua/get_idx_by_val"
+require "Q/OPERATORS/GET/lua/get_val_by_idx"
 
 require "Q/OPERATORS/COUNT/lua/count"
 
@@ -72,7 +73,6 @@ require "Q/OPERATORS/CLONE/lua/clone"
 require "Q/OPERATORS/DROP_NULLS/lua/drop_nulls"
 
 
-require "Q/OPERATORS/GET/lua/get_val_by_idx"
 require "Q/OPERATORS/GET/lua/set_sclr_val_by_idx"
 require "Q/OPERATORS/GET/lua/add_vec_val_by_idx"
 require 'Q/OPERATORS/GETK/lua/getk'

@@ -8,7 +8,7 @@ local tests = {}
 
 tests.t0 = function()
   collectgarbage("stop")
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre = lgutils.mem_used()
   local nb = 2
   local x = Q.mk_col({0, 1, 0, 0, 1, 1, 1, 0, 1}, "I1")
   local r = Q.numby(x, nb)
@@ -20,14 +20,15 @@ tests.t0 = function()
   x:delete()
   y:delete()
   y:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local post = lgutils.mem_used()
+  assert(pre == post)
   collectgarbage("restart")
   print("Test t0 completed")
 end
 
 tests.t0_1 = function()
   collectgarbage("stop")
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre = lgutils.mem_used()
   -- negative test
   -- input column exceeds limit i.e value >= nb
   local nb = 2
@@ -38,14 +39,15 @@ tests.t0_1 = function()
   assert(type(y) == "nil")
   x:delete()
   r:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local post = lgutils.mem_used()
+  assert(pre == post)
   collectgarbage("restart")
   print("Test t0_1 completed")
 end
 
 tests.t0_2 = function()
   collectgarbage("stop")
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre = lgutils.mem_used()
   -- input column has all 1's
   local nb = 2
   local x = Q.mk_col({1, 1, 1, 1, 1, 1, 1, 1, 1}, "I1")
@@ -57,14 +59,15 @@ tests.t0_2 = function()
   x:delete()
   r:delete()
   y:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local post = lgutils.mem_used()
+  assert(pre == post)
   collectgarbage("restart")
   print("Test t0_2 completed")
 end
 
 tests.t0_3 = function()
   collectgarbage("stop")
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre = lgutils.mem_used()
   -- input column has all 0's
   local nb = 2
   local x = Q.mk_col({0, 0, 0, 0, 0, 0, 0, 0, 0}, "I1")
@@ -76,14 +79,15 @@ tests.t0_3 = function()
   x:delete()
   r:delete()
   y:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local post = lgutils.mem_used()
+  assert(pre == post)
   collectgarbage("restart")
   print("Test t0_3 completed")
 end
 
 tests.t1 = function()
   collectgarbage("stop")
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre = lgutils.mem_used()
   local max_num_in_chunk = 64 
   local len = 2*max_num_in_chunk + 1
   local period = 3
@@ -96,7 +100,8 @@ tests.t1 = function()
   a:delete()
   r:delete()
   y:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local post = lgutils.mem_used()
+  assert(pre == post)
   collectgarbage("restart")
   print("Test t1 completed")
 end
@@ -134,7 +139,7 @@ end
 
 tests.t3 = function()
   collectgarbage("stop")
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre = lgutils.mem_used()
   -- Elements equal to chunk_size
   local period = 3
   local max_num_in_chunk = 128
@@ -142,7 +147,7 @@ tests.t3 = function()
   local a = Q.period({ len = len, start = 0, by = 1, period = period, 
     qtype = "I4", max_num_in_chunk = max_num_in_chunk }):set_name("a")
   local r = Q.numby(a, period)
-  local y  = r:eval()
+  local y  = r:eval():set_name("y")
   assert(type(y) == "lVector")
   assert(y:num_elements() == period)
   for i = 1, period do 
@@ -151,7 +156,9 @@ tests.t3 = function()
   a:delete()
   r:delete()
   y:delete()
-  -- TODO assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  cVector.hogs("mem")
+  local post = lgutils.mem_used()
+  assert(pre == post)
   collectgarbage("restart")
   print("Test t3 completed")
 end

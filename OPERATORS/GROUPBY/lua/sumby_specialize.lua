@@ -76,10 +76,8 @@ return function (
   if ( subs.is_safe ) then 
     subs.checking_code = 
       "    if ( ( x < 0 ) || ( x >= (int)nR_out ) ) { go_BYE(-1); } "
-    subs.bye = "BYE: "
   else
     subs.checking_code = ""
-    subs.bye = ""
   end
   if ( operator == "sumby" ) then 
     subs.operating_code = "out_val_fld[x] += val_fld[i]; "

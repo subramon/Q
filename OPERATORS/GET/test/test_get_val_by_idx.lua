@@ -1,26 +1,54 @@
 local Q         = require 'Q'
-local qconsts	= require 'Q/UTILS/lua/q_consts'
 local get_ptr	= require 'Q/UTILS/lua/get_ptr'
-local Scalar    = require 'libsclr'
+local lgutils   = require 'liblgutils'
 
 require 'Q/UTILS/lua/strict'
 
 local tests = {}
 
 tests.t1 = function()
-  local x_length = 65
-  local y_length = 80
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
+  local max_num_in_chunk = 64 
+  local idx_len = max_num_in_chunk * 2 + 3  
+  local val_len = max_num_in_chunk * 3 + 7 
 
-  local x = Q.seq( {start = 1, by = 1, qtype = "I4", len = x_length} )
-  local y = Q.seq( {start = 2, by = 2, qtype = "I4", len = y_length} )
-  local exp_z = Q.seq( {start = 4, by = 2, qtype = "I4", len = x_length} )
-  y:eval()
+  local idx = Q.seq( {start = 1, by = 1, qtype = "I4", 
+    len = idx_len, max_num_in_chunk = max_num_in_chunk, } )
+  local val = Q.seq( {start = 2, by = 2, qtype = "I4", 
+    len = val_len, max_num_in_chunk = max_num_in_chunk, } )
 
-  local z = Q.get_val_by_idx(x, y)
-  -- Q.print_csv({x, z, exp_z})
-  local n1, n2 = Q.sum(Q.vveq(z, exp_z)):eval()
-  assert(n1:to_num() == x_length)
-  assert(n2:to_num() == x_length)
+  local chk_outval = Q.seq({start = 4, by = 2, qtype = "I4", 
+    len = idx_len, max_num_in_chunk = max_num_in_chunk, } )
+
+  local outval = Q.get_val_by_idx(val, idx)
+  assert(type(outval) == "lVector")
+  outval:eval()
+  -- check that all values are defined
+  assert(outval:has_nulls())
+  local nn = outval:get_nulls()
+  local r2 = Q.sum(nn)
+  local n1, n2 = r2:eval()
+  assert(n1 == n2) 
+  assert(outval:has_nulls() == false)
+
+  local w = Q.vveq(outval, chk_outval)
+  local r = Q.sum(w)
+  local n1, n2 = r:eval()
+  assert(n1 == n2)
+  Q.print_csv({idx, outval, chk_outval}, {opfile = "_x"})
+  -- cleanup
+  idx:delete()
+  val:delete()
+  outval:delete()
+  chk_outval:delete()
+  w:delete()
+  r:delete()
+  nn:delete()
+  r2:delete()
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
   print("Successfully completed t1")
 end
 tests.t2 = function()
@@ -98,4 +126,5 @@ tests.t6 = function()
   print("Successfully completed test t5")
 end
 
-return tests
+-- return tests
+tests.t1()

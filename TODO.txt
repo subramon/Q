@@ -1,3 +1,5 @@
+Merge AINB and GET and delete things that aren't needed any more
+
 Should we use -flto? https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
 
 -- In Scalar, some are modified in place and some are not
