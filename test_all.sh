@@ -111,7 +111,6 @@ qjit test_numby.lua
 # TODO qjit test_xby.lua
 # TODO qjit test_maxby.lua       
 # TODO qjit test_minby_raw_minby.lua  
-# TODO qjit test_sumby.lua
 
 cd ~/Q/TESTS/HMAP/lua/
 qjit dfeds_report_prep.lua
