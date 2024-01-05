@@ -167,11 +167,67 @@ tests.t5 = function()
   collectgarbage("restart")
   print("Test t5 completed")
 end
+-- testing for multi-threaded case 
+tests.t6 = function()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
 
-tests.t1()
-tests.t2()
-tests.t3()
-tests.t4()
-tests.t5()
+  local nC = 65536
+  local len = 2*nC + math.floor(nC/2) + 1 
+  local n_grp = 3
+
+  local val = Q.const( {val = 2, qtype = "I4", len = len, 
+    max_num_in_chunk = nC } )
+  local grp = Q.period({ len = len, start = 0, by = 1, 
+    period = n_grp, qtype = "I4", max_num_in_chunk = nC })
+  local exp_val = { 109228, 109228, 109226, }
+  local exp_cnt = { 54614, 54614, 54613, }
+
+  local res = Q.sumby(val, grp, n_grp)
+  assert(type(res) == "Reducer")
+  local out_val, out_cnt = res:eval()
+
+
+  assert(type(out_val) == "lVector")
+  assert(type(out_cnt) == "lVector")
+  assert(out_val:num_elements() == n_grp)
+  assert(out_cnt:num_elements() == n_grp)
+  Q.print_csv({out_val, out_cnt})
+
+  local r1 = Q.sum(out_val)
+  local n1, n2 = r1:eval()
+  assert(n1:to_num() == 2 * len)
+  r1:delete()
+
+  local r2 = Q.sum(out_cnt)
+  local n1, n2 = r2:eval()
+  assert(n1:to_num() == len)
+  r2:delete()
+
+  for i = 1, n_grp do 
+    local chk_val = out_val:get1(i-1)
+    local chk_cnt = out_cnt:get1(i-1)
+    assert(chk_val:to_num() == exp_val[i])
+    assert(chk_cnt:to_num() == exp_cnt[i])
+  end
+
+  out_val:delete()
+  out_cnt:delete()
+  res:delete()
+  val:delete()
+  grp:delete()
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
+  print("Test t6 completed")
+end
+
+
+-- WORKS tests.t1()
+-- WORKS tests.t2()
+-- WORKS tests.t3()
+-- WORKS tests.t4()
+-- WORKS tests.t5()
+tests.t6()
 
 -- return tests

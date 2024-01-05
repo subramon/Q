@@ -75,20 +75,34 @@ return function (
   end
   if ( subs.is_safe ) then 
     subs.checking_code = 
-      "    if ( ( x < 0 ) || ( x >= (int)nR_out ) ) { go_BYE(-1); } "
+      "    if ( ( g < 0 ) || ( g >= (int)nR_out ) ) { go_BYE(-1); } "
   else
     subs.checking_code = ""
   end
   if ( operator == "sumby" ) then 
-    subs.operating_code = "out_val_fld[x] += val_fld[i]; "
+    subs.operating_code = "out_val_fld[g] += val_fld[i]; "
+    subs.parallel_code = "vals[t][g] += val_fld[i]; "
+    subs.merging_code = "out_val_fld[g] += vals[t][g]; "
   elseif ( operator == "minby" ) then 
     subs.operating_code = 
-      "if ( val_fld[i] < out_val_fld[x]  ) then " ..
-      "out_val_fld[x] = val_fld[i] "
+      "if ( val_fld[i] < out_val_fld[g]  ) { " ..
+      "out_val_fld[g] = val_fld[i] };  "
+    subs.parallel_code = 
+      "if ( val_fld[i] < vals[t][g]  ) { " ..
+      "vals[t][g] = val_fld[i] }; "
+    subs.merging_code = 
+      "if ( vals[t][g] < out_val_fld[g] ) { " ..
+      "out_val_fld[g] = vals[t][g]; } "
   elseif ( operator == "sumby" ) then 
     subs.operating_code = 
-      "if ( val_fld[i] > out_val_fld[x]  ) then " ..
-      "out_val_fld[x] = val_fld[i] "
+      "if ( val_fld[i] > out_val_fld[g]  ) then " ..
+      "out_val_fld[g] = val_fld[i] "
+    subs.parallel_code = 
+      "if ( val_fld[g] > vals[t][g]  ) then " ..
+      "vals[t][g] = val_fld[i] "
+    subs.merging_code = 
+      "if ( vals[t][g] > out_val_fld[g] ) { " ..
+      "out_val_fld[g] = vals[t][g]; } "
   else
     error("")
   end
