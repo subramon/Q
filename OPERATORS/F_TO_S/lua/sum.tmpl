@@ -9,9 +9,9 @@ declaration = [[
 extern int
 ${fn}(  
       const ${ctype} * restrict in,  
-      uint64_t nR,
+      uint32_t nR,
       ${accumulator_ctype}  *ptr_args,
-      uint64_t unused // for compatibility with min, max, ...
+      uint32_t unused // for compatibility with min, max, ...
       ) 
 ;
 //STOP_FOR_CDEF
@@ -21,26 +21,26 @@ definition = [[
 int
 ${fn}(  
       const ${ctype} * restrict in,
-      uint64_t nR,  
+      uint32_t nR,  
       ${accumulator_ctype}  *ptr_args,
-      uint64_t unused // for compatibility with min, max, ...
+      uint32_t unused // for compatibility with min, max, ...
       )
 
 {
   int status = 0;
   ${reduce_ctype} sum = 0;
   uint32_t nT = sysconf(_SC_NPROCESSORS_ONLN);
-  uint64_t block_size = nR / nT;
+  uint32_t block_size = nR / nT;
 #pragma omp parallel for schedule(static)
   for ( uint32_t t = 0; t < nT; t++ ) { 
-    uint64_t lb = t * block_size;
-    uint64_t ub = lb + block_size;
+    uint32_t lb = t * block_size;
+    uint32_t ub = lb + block_size;
     if ( t == 0               ) { lb = 0;  }
     if ( t == (nT-1) ) { ub = nR; }
 
     ${reduce_ctype} lsum = 0;
 #pragma omp simd reduction(+:lsum)
-    for ( uint64_t i  = lb; i < ub; i++ ) {  
+    for ( uint32_t i  = lb; i < ub; i++ ) {  
       lsum += in[i];
     }
 #pragma omp critical (_${fn})
