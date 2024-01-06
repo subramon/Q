@@ -1,3 +1,10 @@
+Consider conjoining reducers
+
+Implement early free. This is for case when you do z := x where y and 
+since we produce z in full chunks, we might consume n >1 chunks of x, y
+before we produce a full chunk of z. At this stage, we want to tell 
+x and y that they can delete everything except latest chunk
+
 Merge AINB and GET and delete things that aren't needed any more
 
 Should we use -flto? https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html

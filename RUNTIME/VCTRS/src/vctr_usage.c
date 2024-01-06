@@ -48,7 +48,7 @@ vctr_usage(
     status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, 
         &chnk_where_found);
     cBYE(status);
-    if ( !chnk_is_found ) { go_BYE(-1); } 
+    if ( !chnk_is_found ) { continue; } // NOTE Not throwing error
     chnk_rs_hmap_val_t chnk_val = 
       g_chnk_hmap[tbsp].bkts[chnk_where_found].val;
       // if data not in L2, must be in L1 

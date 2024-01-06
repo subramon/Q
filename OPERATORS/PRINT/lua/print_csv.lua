@@ -40,13 +40,16 @@ local print_csv = function (
   --======================
   local lb, ub, where = process_filter(filter, lenV)
   local nV = #V
-  if ( opt_args and opt_args.impl == "C" ) then 
-    print("Using C print implementation")
+  local use_C = true
+  if ( ( opt_args ) and ( opt_args.impl ) and ( opt_args.impl== "Lua" ) ) then 
+    use_C = false
+  end
+  if ( use_C ) then
+    -- print("Using C print implementation")
     assert(cprint(opfile, is_html, where, formats, lb, ub, V, max_num_in_chunk))
-    print("Done  C print implementation")
     return true 
   end
-  print("Using Lua print implementation")
+  -- print("Using Lua print implementation")
   -- Now we have a slower Lua implementation
   -- Output ALWAYS go to a file, to stdout if no filename given 
   local fp = nil -- file pointer

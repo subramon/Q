@@ -42,7 +42,7 @@ int ${fn}(
   int nT = mcr_min(nT1, nT2); 
   nT = mcr_max(1, nT);
   int block_size = nX / nT;
-  printf("NUMBY using %d cores \n", nT);
+  // printf("NUMBY using %d cores \n", nT);
 
   if ( nT == 1 ) { 
     for ( uint32_t i = 0; i < nX; i++ ) {

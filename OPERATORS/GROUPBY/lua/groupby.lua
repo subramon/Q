@@ -4,7 +4,7 @@ local T = {}
 
 local function numby(g, n_grp, cnd, optargs)
   local expander = require 'Q/OPERATORS/GROUPBY/lua/expander_numby'
-  local status, col = pcall(expander, g, n_grp, optargs)
+  local status, col = pcall(expander, g, n_grp, cnd, optargs)
   if not status then print(col) end
   assert(status, "Could not execute NUMBY")
   return col

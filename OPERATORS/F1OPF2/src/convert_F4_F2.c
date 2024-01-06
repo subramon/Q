@@ -10,6 +10,7 @@ convert_F4_F2(
     )
 {
   int status = 0;
+#pragma omp parallel for schedule(static, 1024)
   for ( uint32_t i = 0; i < nX; i++ ) { 
     Y[i] = F4_to_F2(X[i]);
   }

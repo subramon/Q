@@ -42,7 +42,6 @@ local function expander_numby(val, nb, cnd, optargs)
     has_nulls = false, max_num_in_chunk = subs.max_num_in_chunk})
     vnum:put_chunk(rdcr_val, nb)
     vnum:eov()
-    vnum:nop()
     return vnum
   end
   local l_chunk_num = 0
@@ -57,6 +56,7 @@ local function expander_numby(val, nb, cnd, optargs)
     end 
     local cast_val_chnk = get_ptr(val_chunk, subs.cast_val_as)
 
+    local cnd_len, cnd_chunk
     local cast_cnd_chnk = ffi.NULL
     if ( cnd ) then 
       cnd_len, cnd_chunk = cnd:get_chunk(l_chunk_num)

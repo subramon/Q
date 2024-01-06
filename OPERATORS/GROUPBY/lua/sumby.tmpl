@@ -47,7 +47,7 @@ ${fn}(
   int nT = mcr_min(nT1, nT2); 
   nT = mcr_max(1, nT);
   int block_size = nR_in / nT;
-  printf("NUMBY using %d cores \n", nT);
+  // printf("NUMBY using %d cores \n", nT);
 
   if ( nT == 1 ) { 
     for ( uint64_t i = 0; i < nR_in; i++ ) {
@@ -116,7 +116,7 @@ BYE:
     for ( int t = 0; t < nT; t++ ) {
       free_if_non_null(cnts[t]);
     }
-    free_if_non_null(vals);
+    free_if_non_null(cnts);
   }
   // STOP  Free thread local space 
   return status;

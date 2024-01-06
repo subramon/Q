@@ -81,6 +81,13 @@ cprint(
         case UI2 : fprintf(fp, "%u", ((const uint16_t *)X)[i]); break;
         case UI4 : fprintf(fp, "%u", ((const uint32_t *)X)[i]); break;
         case UI8 : fprintf(fp, "%" PRIu64 "", ((const uint64_t *)X)[i]); break;
+
+        case F2 : 
+                   {
+                     float ftmp = F2_to_F4(((const bfloat16 *)X)[i]); 
+                     fprintf(fp, "%f", ftmp);
+                   }
+                   break;
         case F4 : fprintf(fp, "%f", ((const float *)X)[i]); break;
         case F8 : fprintf(fp, "%lf", ((const double *)X)[i]); break;
         case SC :  
@@ -130,8 +137,13 @@ cprint(
                   }
                   break;
         default : 
-                  fprintf(stderr, "Unknown qtypes[%d] = %d \n", j, qtypes[j]);
+                  {
+                    const char * str = NULL;
+                    str = get_str_qtype(qtypes[j]);
+                  fprintf(stderr, "Unknown qtypes[%d] = %d = %s \n", 
+                      j, qtypes[j], str == NULL ? "Q0" : str );
                   go_BYE(-1); 
+                  }
                   break;
       }
       if ( is_html ) { fprintf(fp, "</td> "); }
