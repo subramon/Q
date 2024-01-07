@@ -939,10 +939,6 @@ static int l_vctr_make_mem( lua_State *L) {
   int level = luaL_checknumber(L, 2);
   if ( num_args == 3 ) { 
     chnk_idx = luaL_checknumber(L, 3);
-    if ( chnk_idx != -1 ) { 
-      lua_pushboolean(L, false);
-      return 1;
-    }
   }
   if ( chnk_idx < 0 ) { 
     status = vctr_make_mem(ptr_v->tbsp, ptr_v->uqid, level); 
@@ -1407,6 +1403,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "pr", l_vctr_print },
     // creation, new, ...
     { "add1", l_vctr_add1 },
+    { "drop_mem",    l_vctr_drop_mem },
     { "drop_mem",    l_vctr_drop_mem },
     { "make_mem",    l_vctr_make_mem },
     { "rehydrate", l_vctr_rehydrate },

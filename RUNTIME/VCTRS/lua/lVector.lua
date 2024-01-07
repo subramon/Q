@@ -879,8 +879,7 @@ function lVector:get_lma_read()
     local nn_vector = assert(self._nn_vec)
     assert(type(nn_vector) == "lVector")
     assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-    local nn_vec = nn_vector._base_vec
-    local nn_x = assert(cVector.get_lma_read(nn_vec._base_vec))
+    nn_x = assert(cVector.get_lma_read(nn_vector._base_vec))
   end
   return x, nn_x, self:num_elements()
 end
@@ -892,34 +891,41 @@ function lVector:get_lma_write()
     local nn_vector = assert(self._nn_vec)
     assert(type(nn_vector) == "lVector")
     assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-    local nn_vec = nn_vector._base_vec
-    local nn_x = assert(cVector.get_lma_write(nn_vec._base_vec))
+    nn_x = assert(cVector.get_lma_write(nn_vector._base_vec))
   end
+  -- FOLLOWING IS SUPER IMPORTANT 
+  -- If there are chunks, we need to delete them 
+  -- This is because the request for write access => changes to lma file
+  -- Then, the chunks are no longer consistent.
+  self:drop_mem(1)
+  self:drop_mem(2)
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    local nn_vec = nn_vector._base_vec
+    assert(cVector.drop_mem(nn_vec, 1))
+    assert(cVector.drop_mem(nn_vec, 2))
+  end 
   return x, nn_x, self:num_elements()
 end
 --==================================================
 function lVector:unget_lma_read()
-  local x, nn_x
-  local x = assert(cVector.unget_lma_read(self._base_vec))
+  assert(cVector.unget_lma_read(self._base_vec))
   if ( self._nn_vec ) then 
     local nn_vector = assert(self._nn_vec)
     assert(type(nn_vector) == "lVector")
     assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-    local nn_vec = nn_vector._base_vec
-    local nn_x = assert(cVector.unget_lma_read(nn_vec._base_vec))
+    assert(cVector.unget_lma_read(nn_vector._base_vec))
   end
   return self
 end
 --==================================================
 function lVector:unget_lma_write()
-  local x, nn_x
-  local x = assert(cVector.unget_lma_write(self._base_vec))
+  assert(cVector.unget_lma_write(self._base_vec))
   if ( self._nn_vec ) then 
     local nn_vector = assert(self._nn_vec)
     assert(type(nn_vector) == "lVector")
     assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-    local nn_vec = nn_vector._base_vec
-    local nn_x = assert(cVector.unget_lma_write(nn_vec._base_vec))
+    assert(cVector.unget_lma_write(nn_vector._base_vec))
   end
   return self
 end
@@ -941,7 +947,8 @@ function lVector:kill()
   local nn_success
   local success = cVector.kill(self._base_vec)
   if ( self._nn_vec ) then 
-    nn_success = cVector.kill(self._nn_vec)
+    local nn_vector = assert(self._nn_vec)
+    nn_success = cVector.kill(nn_vector._base_vec)
   end
   return success, nn_success
 end

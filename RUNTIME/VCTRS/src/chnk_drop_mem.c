@@ -47,7 +47,12 @@ chnk_drop_mem(
   switch ( level ) { 
     case 1 : 
       if ( ptr_chnk->l1_mem == NULL ) { goto BYE; } // nothing to do 
-      if ( !ptr_chnk->l2_exists) { 
+      if ( ( ptr_chnk->l2_exists == false ) && ( is_lma == false ) ) { 
+        /* If above is true => no backup exists for this chunk
+         * => Do not free it */
+      }
+      else {
+        /* OLD CODE  TODO P1 Consider whether commenting is correct 
         if ( is_lma ) { 
           // we can restore this data from the vector file 
         }
@@ -58,11 +63,13 @@ chnk_drop_mem(
           fwrite(ptr_chnk->l1_mem, ptr_chnk->size, 1, fp);
           fclose_if_non_null(fp);
           status = incr_dsk_used(ptr_chnk->size); cBYE(status);
+          printf("Increasing disk used\n");
           ptr_chnk->l2_exists = true;
         }
+        */
+        free_if_non_null(ptr_chnk->l1_mem);
+        status = decr_mem_used(ptr_chnk->size); cBYE(status);
       }
-      free_if_non_null(ptr_chnk->l1_mem);
-      status = decr_mem_used(ptr_chnk->size); cBYE(status);
       break;
       //--------------------------------------------------
     case 2 : 
@@ -72,7 +79,12 @@ chnk_drop_mem(
 
       l2_file = l2_file_name(tbsp, vctr_uqid, chnk_idx);
       if ( l2_file == NULL )  { go_BYE(-1); }
-      if ( ptr_chnk->l1_mem == NULL ) { 
+      if ( ( ptr_chnk->l1_mem == NULL ) && ( is_lma == false ) ) {
+        /* If above is true => no backup exists for this chunk
+         * => Do not free it */
+      }
+      else {
+        /* OLD CODE  TODO P1 Consider whether commenting is correct 
         if ( is_lma ) { 
           // we can resurrect data from vector file 
         }
@@ -86,10 +98,8 @@ chnk_drop_mem(
           memcpy(ptr_chnk->l1_mem, X, nX); 
           munmap(X, nX); X = NULL; nX = 0;
           status = incr_mem_used(ptr_chnk->size); cBYE(status);
-#ifdef VERBOSE
-          printf("%s Allocated %u \n", __FILE__, ptr_chnk->size);
-#endif
         }
+        */
         status = unlink(l2_file); cBYE(status); 
         status = decr_dsk_used(ptr_chnk->size); cBYE(status);
         ptr_chnk->l2_exists = false; 

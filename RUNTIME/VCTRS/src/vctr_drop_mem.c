@@ -37,37 +37,33 @@ vctr_drop_mem(
 
   if ( level == 3 ) {
     vctr_rs_hmap_val_t *ptr_vctr =
-    &(g_vctr_hmap[tbsp].bkts[vctr_where_found].val);
+      &(g_vctr_hmap[tbsp].bkts[vctr_where_found].val);
     if ( ptr_vctr->is_lma == false ) { 
       // Nothing to do since no memory exists at this level
       goto BYE;
     }
-    else { // Make sure that all chunks can be resurrected
-      bool all_mem = true; 
-      for ( uint32_t chnk_idx = 0; chnk_idx < num_chnks; chnk_idx++ ) { 
-        bool chnk_mem;
-        status = chnk_is_mem(tbsp, vctr_uqid, chnk_idx, &chnk_mem); 
-        cBYE(status);
-        if ( chnk_mem == false ) { all_mem = false; break; }
-      }
-      if ( all_mem ) { // we can delete the lma file 
-        lma_file = l2_file_name(0, vctr_uqid, ((uint32_t)~0));
-        if ( lma_file == NULL ) { go_BYE(-1); }
-        if ( !file_exists(lma_file) ) { go_BYE(-1); } 
-
-        int64_t filesz = get_file_size(lma_file); 
-        if ( filesz < 0 ) { go_BYE(-1); } 
-        unlink(lma_file); 
-        status = decr_dsk_used(filesz); 
-
-        ptr_vctr->is_lma = false;
-      }
-      else {
-        goto BYE; // nothing to do 
-      }
+    // Make sure that all chunks can be resurrected
+    bool all_mem = true; 
+    for ( uint32_t chnk_idx = 0; chnk_idx < num_chnks; chnk_idx++ ) { 
+      bool chnk_mem;
+      status = chnk_is_mem(tbsp, vctr_uqid, chnk_idx, &chnk_mem); 
+      cBYE(status);
+      if ( chnk_mem == false ) { all_mem = false; break; }
     }
+    if ( all_mem ) { // we can delete the lma file 
+      lma_file = l2_file_name(0, vctr_uqid, ((uint32_t)~0));
+      if ( lma_file == NULL ) { go_BYE(-1); }
+      if ( !file_exists(lma_file) ) { go_BYE(-1); } 
+
+      int64_t filesz = get_file_size(lma_file); 
+      if ( filesz < 0 ) { go_BYE(-1); } 
+      unlink(lma_file); 
+      status = decr_dsk_used(filesz); 
+
+      ptr_vctr->is_lma = false;
+    }
+    goto BYE; 
   }
-  if ( level == 3 ) { goto BYE; } // all done
   // Control comes here => level in {1, 2}
   for ( uint32_t chnk_idx = 0; chnk_idx < num_chnks; chnk_idx++ ) { 
     status = chnk_drop_mem(tbsp, vctr_uqid, chnk_idx, level); 

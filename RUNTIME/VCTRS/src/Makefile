@@ -20,6 +20,7 @@ SRCS +=	vctr_cnt.c
 SRCS +=	vctr_chk.c
 SRCS +=	vctr_del.c  
 SRCS +=	vctr_drop_mem.c  
+SRCS +=	vctr_make_mem.c  
 SRCS +=	vctr_early_free.c  
 SRCS +=	vctr_eov.c  
 SRCS +=	vctr_get1.c  
@@ -28,7 +29,6 @@ SRCS +=	vctr_incr_ref_count.c
 SRCS +=	vctr_is.c  
 SRCS +=	vctr_is_early_free.c  
 SRCS +=	vctr_is_eov.c  
-SRCS +=	vctr_make_mem.c  
 SRCS +=	vctr_nop.c  
 
 SRCS +=	vctr_chnks_to_lma.c  

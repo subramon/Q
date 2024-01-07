@@ -9,10 +9,11 @@ local function permute_from_specialize(invec, p, optargs)
   assert(type(invec) == "lVector")
   assert(type(p) == "lVector")
 
-  assert(invec:is_lma()) -- needed for permute from 
-
-  assert(not invec:has_nulls())
   assert(not p:has_nulls())
+  if ( invec:is_lma() == false ) then
+    invec:chunks_to_lma()
+  end
+
 
   subs.num_elements = invec:num_elements()
   subs.val_width  = invec:width()
@@ -50,7 +51,29 @@ local function permute_from_specialize(invec, p, optargs)
   subs.incdir = "OPERATORS/PERMUTE/gen_inc/"
   subs.srcdir = "OPERATORS/PERMUTE/gen_src/"
   subs.incs = { "UTILS/inc/", "OPERATORS/PERMUTE/gen_inc/" }
-  return subs
+
+  --========================================
+  -- Now deal with nulls in input vector if any
+  local nn_subs 
+  if ( invec:has_nulls() ) then 
+    subs.has_nulls = true -- IMPORTANT
+    nn_subs = {}
+    assert(invec:nn_qtype() == "BL")
+    nn_subs.val_qtype = "BL"
+    nn_subs.val_ctype = "bool"
+    nn_subs.cast_as = "bool *"
+    nn_subs.bufsz = subs.max_num_in_chunk 
+    nn_subs.perm_qtype = subs.perm_qtype
+    nn_subs.perm_ctype = subs.perm_ctype
+    nn_subs.fn = "permute_from_BL_" .. subs.perm_qtype
+
+    nn_subs.tmpl   = "OPERATORS/PERMUTE/lua/permute_from.tmpl"
+    nn_subs.incdir = "OPERATORS/PERMUTE/gen_inc/"
+    nn_subs.srcdir = "OPERATORS/PERMUTE/gen_src/"
+    nn_subs.incs = { "UTILS/inc/", "OPERATORS/PERMUTE/gen_inc/" }
+  end
+  --========================================
+  return subs, nn_subs
 end
 return permute_from_specialize
 
