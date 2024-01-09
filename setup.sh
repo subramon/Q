@@ -16,8 +16,8 @@ Q_SRC_ROOT="$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
 export Q_SRC_ROOT="${Q_SRC_ROOT}"
 echo "Q_SRC_ROOT= ${Q_SRC_ROOT}"
 #-----------------------------------
-# export Q_ROOT="/home/subramon/local/Q/"
-export Q_ROOT="/mnt/storage/local/Q/"
+export Q_ROOT="/home/subramon/local/Q/"
+# export Q_ROOT="/mnt/storage/local/Q/"
 echo "Q_ROOT= $Q_ROOT"
 mkdir -p $Q_ROOT/
 mkdir -p $Q_ROOT/lib/
@@ -26,9 +26,9 @@ mkdir -p $Q_ROOT/config/
 mkdir -p $Q_ROOT/csos/
 #-----------------------------------
 QCFLAGS=" -std=gnu99  -fPIC     "
-# QCFLAGS+=" -g " # Comment for speed 
-# QCFLAGS+=" -DDEBUG " # Comment for speed 
-QCFLAGS+=" -O3 " 
+QCFLAGS+=" -g " # Comment for speed 
+QCFLAGS+=" -DDEBUG " # Comment for speed 
+# QCFLAGS+=" -O3 " 
 # QCFLAGS+=" -Ofast " # UnComment for speed 
 
 # O3 covers most of the optimisations. The remaining options come 

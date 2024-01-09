@@ -33,14 +33,14 @@
 #include "vctr_make_mem.h"
 #include "chnk_make_mem.h"
 
+#include "vctr_early_free.h" // equivalent of kill()
+
 #include "vctr_eov.h"
-#include "vctr_early_free.h"
 #include "vctr_incr_ref_count.h"
 #include "vctr_is.h"
 #include "chnk_is.h"
 #include "chnk_get_data.h"
 #include "vctr_is_eov.h"
-#include "vctr_is_early_free.h"
 #include "vctr_get_chunk.h"
 #include "vctr_get1.h"
 #include "vctr_name.h"
@@ -533,13 +533,47 @@ BYE:
 }
 
 //----------------------------------------
-static int l_vctr_is_early_free( lua_State *L) {
+static int l_vctr_early_freeable( lua_State *L) {
+  int status = 0;
+  bool bval = false;
+  int num_args = lua_gettop(L); 
+  if ( ( num_args != 1 ) && ( num_args != 2 ) ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  if ( num_args == 2 ) { 
+    bval = lua_toboolean(L, 2); 
+  }
+  status = vctr_early_freeable(ptr_v->tbsp, ptr_v->uqid, bval); 
+  cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_early_free( lua_State *L) {
+  int status = 0;
+  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_early_free(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
+static int l_vctr_is_early_freeable( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  bool b_is_early_free; 
-  status = vctr_is_early_free(ptr_v->tbsp, ptr_v->uqid, &b_is_early_free);
-  lua_pushboolean(L, b_is_early_free);
+  bool b_is_early_freeable; 
+  status = vctr_is_early_freeable(ptr_v->tbsp, ptr_v->uqid, &b_is_early_freeable);
+  lua_pushboolean(L, b_is_early_freeable);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -982,20 +1016,6 @@ BYE:
   return 3;
 }
 //---------------------------------------------
-static int l_vctr_early_free( lua_State *L) {
-  int status = 0;
-  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
-  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vctr_early_free(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
-  lua_pushboolean(L, true);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  lua_pushnumber(L, status);
-  return 3;
-}
-//----------------------------------------
 static int l_chnk_delete( lua_State *L) {
   int status = 0;
   int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
@@ -1355,17 +1375,20 @@ static const struct luaL_Reg vector_methods[] = {
     { "chunk_delete", l_chnk_delete },
     //--------------------------------
     { "eov",    l_vctr_eov },
-    { "early_free",    l_vctr_early_free },
     // DEPRECATED { "make_lma",         l_make_lma },
     { "chnks_to_lma", l_vctr_chnks_to_lma },
     { "lma_to_chnks", l_vctr_lma_to_chnks },
+    //--------------------------------
     { "kill", l_vctr_kill },
     { "killable", l_vctr_killable },
+    { "is_killable", l_vctr_is_killable },
+    //--------------------------------
+    { "early_free",    l_vctr_early_free },
+    { "early_freeable",    l_vctr_early_freeable },
+    { "is_early_freeable", l_vctr_is_early_freeable },
     //--------------------------------
     { "is_eov", l_vctr_is_eov },
     { "is_lma", l_vctr_is_lma },
-    { "is_early_free", l_vctr_is_early_free },
-    { "is_killable", l_vctr_is_killable },
     { "nop", l_vctr_nop },
     //--------------------------------
     { "append",           l_vctr_append },
@@ -1433,9 +1456,11 @@ static const struct luaL_Reg vector_functions[] = {
     { "chunk_delete", l_chnk_delete },
     //--------------------------------
     { "early_free",    l_vctr_early_free },
+    { "early_freeable",    l_vctr_early_freeable },
+    { "is_early_freeable", l_vctr_is_early_freeable },
+    //--------------------------------
     { "is_eov", l_vctr_is_eov },
     { "is_lma", l_vctr_is_lma },
-    { "is_early_free", l_vctr_is_early_free },
     { "is_killable", l_vctr_is_killable },
     { "is_persist", l_vctr_is_persist },
     //--------------------------------

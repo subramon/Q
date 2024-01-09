@@ -194,12 +194,6 @@ function lVector:is_lma()
   return b_is_lma
 end
 
-function lVector:is_early_free()
-  local b_is_early_free = cVector.is_early_free(self._base_vec)
-  assert(type(b_is_early_free) == "boolean")
-  return b_is_early_free
-end
-
 function lVector:is_eov()
   local b_is_eov = cVector.is_eov(self._base_vec)
   assert(type(b_is_eov) == "boolean")
@@ -213,8 +207,8 @@ function lVector:nop()
 end
 
 function lVector:clone()
-  assert(self:has_nulls() == false) -- TODO 
-  assert(self:is_lma() ) -- TODO 
+  assert(self:has_nulls() == false) -- TODO P2
+  assert(self:is_lma() ) -- TODO P2
   local vargs = {}
   local file_name, _ = self:file_info()
   -- make a unique name 
@@ -839,11 +833,31 @@ function lVector:append(x)
   end
   return  true -- TODO P0 MAJOR HACK 
 end
+-- REGARDING early free. This was motivated by the following case
+-- Say you do z := x where y.
+-- since we produce z in full chunks, we might consume n >1 chunks of x, y
+-- before we produce a full chunk of z. 
+-- So, we cannot x:memo(n) since we don't know what n would be 
+-- When early_free() is called on a vector which is early_freeable()
+-- we delete all but the last chunk
 --==================================================
-function lVector:early_free()
-  return  cVector.early_free(self._base_vec)
+function lVector:early_free() -- equivalent of kill() 
+  assert(cVector.early_free(self._base_vec))
+  return self
 end
 --==================================================
+function lVector:is_early_free() 
+  local b_is_early_free = cVector.is_early_free(self._base_vec)
+  assert(type(b_is_early_free) == "boolean")
+  return b_is_early_free
+end
+--==================================================
+function lVector:early_freeable(bval) -- equivalent of killable()
+  assert(cVector.early_freeable(self._base_vec, bval))
+  return self
+end
+--==================================================
+
 function lVector:self()
   return self._base_vec
 end

@@ -110,6 +110,16 @@ end
 T.vabs = vabs
 require('Q/q_export').export('vabs', vabs)
     
+local function vabs(x,  optargs)
+  local expander = require 'Q/OPERATORS/F1OPF2/lua/expander_f1opf2'
+  local status, col = pcall(expander, "vabs", x, optargs)
+  if ( not status ) then print(col) end
+  assert(status, "Could not execute vabs")
+  return col
+end
+T.vabs = vabs
+require('Q/q_export').export('vabs', vabs)
+
 local function vnot(x,  optargs)
   local expander = require 'Q/OPERATORS/F1OPF2/lua/expander_f1opf2'
   local status, col = pcall(expander, "vnot", x, optargs)

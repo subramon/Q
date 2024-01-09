@@ -21,9 +21,9 @@ typedef struct _chnk_rs_hmap_val_t {
   bool     l2_exists;
   // Sometimes we know that a vector is not needed before chunk n
   // In that case, we do NOT delete the chunk but we delete its resources
-  // and mark is_early_free = true;
-  // Cannot save a vector if any of its chunks have is_early_free == true
-  bool is_early_free; 
+  // and mark was_early_freed = true;
+  // Cannot save a vector if any of its chunks have was_early_freed == true
+  bool was_early_freed; 
   uint32_t size; // we do not expect a chunk to exceed 4G, a vector might
   //-----
   char *l1_mem;

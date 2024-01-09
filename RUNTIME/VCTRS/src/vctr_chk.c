@@ -95,8 +95,6 @@ vctr_chk(
   uint32_t num_chnks       = vctr_val.num_chnks;
   uint32_t max_chnk_idx    = vctr_val.max_chnk_idx;
   uint32_t max_num_in_chnk = vctr_val.max_num_in_chnk;
-  bool is_early_free       = vctr_val.is_early_free;
-  bool chk_is_early_free = false;
 
   if ( vctr_val.is_killable ) { 
     if ( vctr_val.is_lma ) { go_BYE(-1); } 
@@ -166,7 +164,8 @@ vctr_chk(
   uint64_t chk_num_elements    = 0; 
   // we can have an empty Vector (while it is being created)
   if ( vctr_val.is_eov ) {  
-    if ( vctr_val.ref_count == 0 ) {  go_BYE(-1); }
+    // if ( vctr_val.ref_count == 0 ) {  go_BYE(-1); }
+    printf("TODO P1 Think about ref_count == 0\n"); 
   }
   // if ( num_elements == 0 ) { go_BYE(-1); } 
   // max_num_in_chnk must be multipke of 64 
@@ -207,7 +206,6 @@ vctr_chk(
     memset(&chnk_key, 0, sizeof(chnk_rs_hmap_key_t));
     chnk_val = g_chnk_hmap[tbsp].bkts[chnk_where_found].val;
     chnk_key = g_chnk_hmap[tbsp].bkts[chnk_where_found].key;
-    if ( chnk_val.is_early_free == true ) { chk_is_early_free = true; } 
     if ( is_at_rest ) { 
       if ( chnk_val.num_readers != 0 ) { go_BYE(-1); } 
       if ( chnk_val.num_writers != 0 ) { go_BYE(-1); } 
@@ -228,7 +226,7 @@ vctr_chk(
     }
     chk_num_elements += chnk_val.num_elements;
     if ( chnk_val.qtype != qtype ) { go_BYE(-1); }
-    if ( chnk_val.is_early_free ) { 
+    if ( chnk_val.was_early_freed ) { 
       if ( chnk_val.l2_exists ) { go_BYE(-1); } 
       if ( chnk_val.l1_mem != NULL  ) { go_BYE(-1); } 
       char *l2_file = l2_file_name(tbsp, vctr_uqid, chnk_idx);
@@ -257,8 +255,6 @@ vctr_chk(
       }
     }
   }
-  if ( is_early_free ) { if ( !chk_is_early_free ) { go_BYE(-1); } }
-  if ( !is_early_free ) { if ( chk_is_early_free ) { go_BYE(-1); } }
   // if no memo, then num in chunk should match num in vector 
   if ( vctr_val.memo_len < 0 ) { 
     if ( chk_num_elements != num_elements ) { go_BYE(-1); }

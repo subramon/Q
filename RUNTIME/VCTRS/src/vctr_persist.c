@@ -27,7 +27,7 @@ vctr_persist(
   if ( !is_found ) { go_BYE(-1); }
   if ( val.is_err ) { go_BYE(-1); }
   // Cannot persist a vector if we (may) have freed some of its chunks 
-  if ( val.is_early_free ) { go_BYE(-1); }
+  if ( val.is_early_freeable ) { go_BYE(-1); }
   if ( val.memo_len >= 0 ) { go_BYE(-1); }
   // This is okay: if ( val.is_persist ) { go_BYE(-1); }
   g_vctr_hmap[tbsp].bkts[where_found].val.is_persist = bval;

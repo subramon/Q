@@ -1,9 +1,7 @@
-Consider conjoining reducers
+Why do we have CLONE as an operator if it is in lVector
+Also, lVector allows us to clone only if is_lma() == true
 
-Implement early free. This is for case when you do z := x where y and 
-since we produce z in full chunks, we might consume n >1 chunks of x, y
-before we produce a full chunk of z. At this stage, we want to tell 
-x and y that they can delete everything except latest chunk
+Consider conjoining reducers
 
 Merge AINB and GET and delete things that aren't needed any more
 

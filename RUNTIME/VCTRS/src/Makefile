@@ -27,7 +27,6 @@ SRCS +=	vctr_get1.c
 SRCS +=	vctr_get_chunk.c  
 SRCS +=	vctr_incr_ref_count.c  
 SRCS +=	vctr_is.c  
-SRCS +=	vctr_is_early_free.c  
 SRCS +=	vctr_is_eov.c  
 SRCS +=	vctr_nop.c  
 

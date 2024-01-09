@@ -31,7 +31,7 @@ local function expander_where(a, b, optargs)
     end
   end
   --==============================================
-  local subs = assert(spfn(a, b))
+  local subs = assert(spfn(a, b, optargs))
   local func_name = assert(subs.fn)
   qc.q_add(subs)
   
@@ -53,7 +53,7 @@ local function expander_where(a, b, optargs)
   local a_name = a:name()
   local b_name = b:name()
   local function gen(chunk_num)
-    -- print("WHERE: Generating chunk ", chunk_num)
+    print("WHERE: Generating chunk ", chunk_num)
     assert(chunk_num == l_chunk_num)
     -- n_out counts number of entries in output buffer
     local n_out = cmem.new(ffi.sizeof("uint64_t"))
@@ -64,7 +64,7 @@ local function expander_where(a, b, optargs)
     out_buf:stealable(true)
     local num_in_out = 0
     repeat
-      -- print("WHERE: Getting Input chunk/idx = ", ab_chunk_num, c_aidx[0])
+      print("WHERE: Getting Input chunk/idx = ", ab_chunk_num, c_aidx[0])
       local a_len, a_chunk, a_nn_chunk = a:get_chunk(ab_chunk_num)
       local b_len, b_chunk, b_nn_chunk = b:get_chunk(ab_chunk_num)
       assert(a_len == b_len) -- See Detailed note at end 
@@ -75,6 +75,8 @@ local function expander_where(a, b, optargs)
         local num_in_out = tonumber(c_n_out[0])
         aidx:delete()
         n_out:delete()
+        a:early_free() -- EXPERIMENTAL Jan 8 2024
+        b:early_free() -- EXPERIMENTAL Jan 8 2024
         return num_in_out, out_buf
       end
       --================================================
@@ -91,7 +93,7 @@ local function expander_where(a, b, optargs)
       -- print("num_in_out = ",  num_in_out)
       -- if you have consumed all you got from the a_chunk,
       -- then you need to move to the next chunk
-      -- print("WHERE: Ungetting ", ab_chunk_num)
+      print("WHERE: Ungetting ", ab_chunk_num)
       a:unget_chunk(ab_chunk_num)
       b:unget_chunk(ab_chunk_num)
       if ( tonumber(c_aidx[0]) == ab_len ) then
@@ -104,9 +106,13 @@ local function expander_where(a, b, optargs)
         local num_in_out = tonumber(c_n_out[0])
         aidx:delete()
         n_out:delete()
+        a:early_free() -- EXPERIMENTAL Jan 8 2024
+        b:early_free() -- EXPERIMENTAL Jan 8 2024
+        print("No more input: returning from WHERE")
         return num_in_out, out_buf
       end
     until ( num_in_out == subs.max_num_in_chunk )
+    print("Returning from WHERE")
     l_chunk_num = l_chunk_num + 1 
     return num_in_out, out_buf
   end
