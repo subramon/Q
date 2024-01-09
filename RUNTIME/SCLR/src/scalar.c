@@ -766,7 +766,17 @@ static int l_sclr_new( lua_State *L) {
           }
           break;
         case F4 : 
-          status = txt_to_F4(str_val, &(ptr_sclr->val.f4)); 
+          {
+            if ( strcmp(str_val, "FLT_MIN") ) {
+              ptr_sclr->val.f4 = FLT_MIN;
+            }
+            else if ( strcmp(str_val, "FLT_MAX") ) {
+              ptr_sclr->val.f4 = FLT_MAX;
+            }
+            else { 
+            status = txt_to_F4(str_val, &(ptr_sclr->val.f4)); 
+            }
+          }
           break;
         case F8 : 
           status = txt_to_F8(str_val, &(ptr_sclr->val.f8)); 

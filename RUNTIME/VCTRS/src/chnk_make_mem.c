@@ -57,7 +57,10 @@ chnk_make_mem(
     case 2 : 
       if ( ptr_val->l2_exists ) { /* nothing to do  */ goto BYE; }
 
-      if ( isfile(l2_file) ) { go_BYE(-1); } 
+      if ( isfile(l2_file) ) { 
+        printf("STRANGE\n"); WHEREAMI; 
+        // go_BYE(-1); 
+      } 
       fp = fopen(l2_file, "wb"); 
       size_t nr = fwrite(ptr_val->l1_mem, ptr_val->size, 1, fp);
       if ( nr != 1 ) { go_BYE(-1); }
