@@ -1,3 +1,6 @@
 buildvm
 luajit
-
+buildvm_arch.h
+lj_bcdef.h
+lj_libdef.h
+lj_vm.S

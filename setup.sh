@@ -26,9 +26,9 @@ mkdir -p $Q_ROOT/config/
 mkdir -p $Q_ROOT/csos/
 #-----------------------------------
 QCFLAGS=" -std=gnu99  -fPIC     "
-QCFLAGS+=" -g " # Comment for speed 
-QCFLAGS+=" -DDEBUG " # Comment for speed 
-# QCFLAGS+=" -O3 " 
+# QCFLAGS+=" -g " # Comment for speed 
+# QCFLAGS+=" -DDEBUG " # Comment for speed 
+QCFLAGS+=" -O3 " 
 # QCFLAGS+=" -Ofast " # UnComment for speed 
 
 # O3 covers most of the optimisations. The remaining options come 
