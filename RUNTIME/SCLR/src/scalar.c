@@ -767,10 +767,10 @@ static int l_sclr_new( lua_State *L) {
           break;
         case F4 : 
           {
-            if ( strcmp(str_val, "FLT_MIN") ) {
+            if ( strcmp(str_val, "FLT_MIN") == 0 ) {
               ptr_sclr->val.f4 = FLT_MIN;
             }
-            else if ( strcmp(str_val, "FLT_MAX") ) {
+            else if ( strcmp(str_val, "FLT_MAX") == 0 ) {
               ptr_sclr->val.f4 = FLT_MAX;
             }
             else { 

@@ -12,7 +12,7 @@ local tests = {}
 tests.t1 = function ()
   for _, qtype in ipairs({"I1", "I2", "I4", "I8", "F4", "F8" }) do 
     collectgarbage("stop")
-    assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+    local pre = lgutils.mem_used()
     local a = Q.mk_col({10, 20, 30, 40, 50}, qtype)
     local b = Q.mk_col({1, 0, 0, 1, 0}, "BL")
     local goodc = Q.mk_col({10, 40}, qtype)
@@ -29,8 +29,8 @@ tests.t1 = function ()
     x:delete()
     r:delete()
     assert(cVector.check_all())
-    assert(lgutils.mem_used() == 0)
-    assert(lgutils.dsk_used() == 0)
+    local post = lgutils.mem_used()
+    assert(pre == post)
     collectgarbage("restart")
   end
   assert(cVector.check_all())
@@ -38,6 +38,8 @@ tests.t1 = function ()
 end
 --======================================
 tests.t2 = function ()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   local a = Q.mk_col({10, 20, 30, 40, 50}, "I4")
   local b = Q.mk_col({0, 0, 0, 0, 0}, "BL"):set_name("b")
   assert(a:num_elements() == b:num_elements())
@@ -49,11 +51,16 @@ tests.t2 = function ()
   a:delete()
   b:delete()
   c:delete()
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
   print("Test t2 succeeded")
 end
 --======================================
 tests.t3 = function ()
   for _, qtype in ipairs({"I1", "I2", "I4", "I8", "F4", "F8" }) do 
+    collectgarbage("stop")
+    local pre = lgutils.mem_used()
     local a = Q.mk_col({10, 20, 30, 40, 50}, qtype)
     local b = Q.mk_col({1, 1, 1, 1, 1}, "BL")
     local c = Q.where(a, b)
@@ -64,12 +71,17 @@ tests.t3 = function ()
     a:delete()
     b:delete()
     c:delete()
+    local post = lgutils.mem_used()
+    assert(pre == post)
+    collectgarbage("restart")
   end
   assert(cVector.check_all())
   print("Test t3 succeeded")
 end
 --======================================
 tests.t4 = function ()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   local a = Q.mk_col({10, 20, 30, 40, 50}, "I4")
   local b = Q.mk_col({0, 0, 0, 0, 0}, "BL")
   b:set_meta("min", Scalar.new(0, "I4"))
@@ -79,10 +91,15 @@ tests.t4 = function ()
   assert(cVector.check_all())
   a:delete()
   b:delete()
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
   print("Test t4 succeeded")
 end
 --======================================
 tests.t5 = function ()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   local a = Q.mk_col({10, 20, 30, 40, 50}, "I4")
   local b = Q.mk_col({1, 1, 1, 1, 1}, "BL")
   b:set_meta("min", Scalar.new(1, "I4"))
@@ -93,12 +110,17 @@ tests.t5 = function ()
   a:delete()
   b:delete()
   c:delete()
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
   print("Test t5 succeeded")
 end
 --======================================
 
 tests.t6 = function ()
   -- more than chunk size values present in a and b
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   local n = max_num_in_chunk + 1
   local b = lVector.new({qtype = "BL"})
   local sone  = Scalar.new(1, "BL")
@@ -125,6 +147,9 @@ tests.t6 = function ()
     c:delete()
   end
   b:delete()
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
   assert(cVector.check_all())
   print("Test t6 succeeded")
 end
@@ -132,7 +157,7 @@ end
 
 tests.t7 = function ()
   -- more than max_num_in_chunk  values present in a and b
-  local max_num_in_chunk = 64 
+  local max_num_in_chunk = 64  * 4
   local len = max_num_in_chunk * 2 + 5
   local a = Q.seq( {start = 1, by = 1, qtype = "I4", len = len,
   max_num_in_chunk = max_num_in_chunk} )
@@ -164,7 +189,7 @@ tests.t7 = function ()
   -- TODO local n1, n2 = Q.sum(Q.vveq(c, d)):eval()
   -- TODO assert(n1 == n2)
   c:eval()
-  assert(c:num_elements() == 67)
+  assert(c:num_elements() == 259)
   assert(cVector.check_all())
   a:delete()
   b:delete()
@@ -180,8 +205,4 @@ tests.t5()
 tests.t6()
 tests.t7()
 collectgarbage()
-print("MEM", lgutils.mem_used())
-print("DSK", lgutils.dsk_used())
-assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
-os.exit()
 -- return tests

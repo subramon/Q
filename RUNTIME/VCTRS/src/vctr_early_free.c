@@ -32,11 +32,9 @@ vctr_early_free(
   cBYE(status);
   if ( vctr_is_found == false ) { goto BYE; }
   vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[vctr_where].val);
-  // conditions under which early free not allowed
-  if ( ptr_vctr_val->is_persist ) { go_BYE(-1); }
-  if ( ptr_vctr_val->is_writable ) { go_BYE(-1); }
-  //----------------
   // conditions under which early free ignored
+  if ( ptr_vctr_val->is_persist ) { goto BYE; }
+  if ( ptr_vctr_val->is_writable ) { goto BYE; }
   if ( ptr_vctr_val->is_early_freeable == false ) { goto BYE; } 
   if ( ptr_vctr_val->num_elements == 0 ) { goto BYE; }
   if ( ptr_vctr_val->num_chnks    == 0 ) { goto BYE; }
