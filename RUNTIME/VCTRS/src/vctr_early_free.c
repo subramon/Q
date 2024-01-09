@@ -100,7 +100,7 @@ vctr_early_freeable(
   if ( val.is_early_freeable ) { if ( val.num_elements > 0 ) { go_BYE(-1); } }
   if ( val.is_eov ) { go_BYE(-1); } // TODO P2 Is this too cautious?
 
-  g_vctr_hmap[tbsp].bkts[where_found].val.is_killable = bval; 
+  g_vctr_hmap[tbsp].bkts[where_found].val.is_early_freeable = bval; 
 BYE:
   return status;
 }

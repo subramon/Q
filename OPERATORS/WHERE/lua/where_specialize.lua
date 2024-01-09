@@ -31,8 +31,6 @@ return function (a, b, optargs)
 
   local width = cutils.get_width_qtype(a_qtype)
   subs.max_num_in_chunk = get_max_num_in_chunk(optargs)
-  for k, v in pairs(optargs) do print(k, v) end 
-  print(subs.max_num_in_chunk)
   subs.size = width * subs.max_num_in_chunk
   subs.cast_a_as   = cutils.str_qtype_to_str_ctype(a_qtype) .. "*"
   subs.cast_b_as   = cutils.str_qtype_to_str_ctype(b_qtype) .. "*"

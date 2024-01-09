@@ -32,11 +32,12 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
     f2_len, f2_chunk, nn_f2_chunk = f2:get_chunk(l_chunk_num)
     assert(f1_len == f2_len)
     -- early exit 
-    if ( f1_len ==0 ) then 
+    if ( f1_len == 0 ) then 
       buf:delete()
       if ( subs.cargs ) then subs.cargs:delete() end 
       f1:kill() 
       f2:kill()
+      return 0 
     end
     -- following prefetch is experimental as of Feb 2023
     -- f1:prefetch(l_chunk_num+1)
