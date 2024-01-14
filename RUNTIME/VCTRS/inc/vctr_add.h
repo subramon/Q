@@ -4,6 +4,7 @@ vctr_add1(
     uint32_t width,
     uint32_t in_chnk_size,
     int memo_len,
-    bool is_killable,
+    int num_lives_kill,
+    int num_lives_free,
     uint32_t *ptr_uqid
     );

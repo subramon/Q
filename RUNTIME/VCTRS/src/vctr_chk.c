@@ -19,8 +19,7 @@ extern chnk_rs_hmap_t *g_chnk_hmap;
 
 int
 vctrs_chk(
-    uint32_t tbsp,
-    bool is_at_rest
+    uint32_t tbsp
     )
 {
   int status = 0;
@@ -46,7 +45,7 @@ vctrs_chk(
       }
       continue; 
     }
-    status = vctr_chk(tbsp, g_vctr_hmap[tbsp].bkts[i].key, is_at_rest); 
+    status = vctr_chk(tbsp, g_vctr_hmap[tbsp].bkts[i].key);
     cBYE(status); 
     total_num_chunks += g_vctr_hmap[tbsp].bkts[i].val.num_chnks;
   }
@@ -59,8 +58,7 @@ BYE:
 int
 vctr_chk(
     uint32_t tbsp,
-    uint32_t vctr_uqid,
-    bool is_at_rest
+    uint32_t vctr_uqid
     )
 {
   int status = 0;
@@ -96,12 +94,31 @@ vctr_chk(
   uint32_t max_chnk_idx    = vctr_val.max_chnk_idx;
   uint32_t max_num_in_chnk = vctr_val.max_num_in_chnk;
 
-  if ( vctr_val.is_killable ) { 
-    if ( vctr_val.is_lma ) { go_BYE(-1); } 
+  //----------------------------------------------
+  if ( vctr_val.num_lives_kill < 0 ) { go_BYE(-1); } 
+  if ( vctr_val.num_lives_free < 0 ) { go_BYE(-1); } 
+  //----------------------------------------------
+  if ( vctr_val.is_persist ) { 
+    if ( vctr_val.is_early_freeable ) { go_BYE(-1); }
+    if ( vctr_val.is_killable ) { go_BYE(-1); }
+  }
+  //----------------------------------------------
+  if ( vctr_val.num_lives_free > 0 ) { 
     if ( vctr_val.is_persist ) { go_BYE(-1); } 
-    if ( vctr_val.is_writable ) { go_BYE(-1); } 
-    if ( vctr_val.num_readers > 1 ) { go_BYE(-1); } 
-    if ( vctr_val.num_writers > 0 ) { go_BYE(-1); } 
+    if ( vctr_val.is_early_freeable == false ) { go_BYE(-1); }
+  }
+  //----------------------------------------------
+  if ( vctr_val.num_lives_kill > 0 ) { 
+    if ( vctr_val.is_persist ) { go_BYE(-1); } 
+    if ( vctr_val.is_killable == false ) { go_BYE(-1); }
+  }
+  //----------------------------------------------
+  if ( vctr_val.is_early_freeable == false ) { 
+    if ( vctr_val.num_lives_free > 0 ) { go_BYE(-1); }
+  }
+  //----------------------------------------------
+  if ( vctr_val.is_killable == false ) { 
+    if ( vctr_val.num_lives_kill > 0 ) { go_BYE(-1); }
   }
   //----------------------------------------------
   if ( vctr_val.is_lma == false ) { 
@@ -176,6 +193,8 @@ vctr_chk(
   // early exit case
   if ( ( vctr_val.is_lma ) && ( num_chnks == 0 ) ) { goto BYE; }
   //------------
+  int max_early_free_idx = -1; 
+  uint32_t num_early_freed = 0;
   for ( uint32_t chnk_idx = 0; chnk_idx <= max_chnk_idx; chnk_idx++ ) {
     if ( num_elements == 0 ) { break; } // NOTE: Special case for empty vec
     bool chnk_is_found; uint32_t chnk_where_found;
@@ -206,10 +225,12 @@ vctr_chk(
     memset(&chnk_key, 0, sizeof(chnk_rs_hmap_key_t));
     chnk_val = g_chnk_hmap[tbsp].bkts[chnk_where_found].val;
     chnk_key = g_chnk_hmap[tbsp].bkts[chnk_where_found].key;
-    if ( is_at_rest ) { 
-      if ( chnk_val.num_readers != 0 ) { go_BYE(-1); } 
-      if ( chnk_val.num_writers != 0 ) { go_BYE(-1); } 
+    if ( chnk_val.was_early_freed ) { 
+      max_early_free_idx = chnk_idx;
+      num_early_freed++;
     }
+    if ( chnk_val.num_readers != 0 ) { go_BYE(-1); } 
+    if ( chnk_val.num_writers != 0 ) { go_BYE(-1); } 
     if ( chnk_val.num_readers > 0 ) { 
       if ( chnk_val.num_writers != 0 ) { go_BYE(-1); } 
     }
@@ -255,9 +276,20 @@ vctr_chk(
       }
     }
   }
-  // if no memo, then num in chunk should match num in vector 
-  if ( vctr_val.memo_len < 0 ) { 
-    if ( chk_num_elements != num_elements ) { go_BYE(-1); }
+  if ( vctr_val.is_early_freeable ) { 
+    if ( vctr_val.num_early_freed != max_early_free_idx+1 ) { go_BYE(-1); }
+    if ( vctr_val.num_chnks       != num_early_freed   +1 ) { go_BYE(-1); }
+  }
+
+  // if chunk i was early freed => chunks 0..i-1 should have been feed
+  for ( int chnk_idx = 0; chnk_idx <= max_early_free_idx; chnk_idx++ ){
+    bool chnk_is_found; uint32_t chnk_where_found;
+    status = chnk_is(tbsp, vctr_uqid, (uint32_t)chnk_idx,
+        &chnk_is_found, &chnk_where_found);
+    cBYE(status);
+    chnk_rs_hmap_val_t *ptr_chnk = 
+      &(g_chnk_hmap[tbsp].bkts[chnk_where_found].val);
+    if ( ptr_chnk->was_early_freed == false ) { go_BYE(-1); }
   }
 BYE:
   return status;

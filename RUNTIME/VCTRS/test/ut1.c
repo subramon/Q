@@ -64,7 +64,7 @@ main(
   status = init_session(); cBYE(status); 
   //----------------------------------
   uint32_t vctr_chnk_size = 32; // for easy testing 
-  uint32_t uqid; status = vctr_add1(F4, 0, vctr_chnk_size, -1, false, &uqid); 
+  uint32_t uqid; status = vctr_add1(F4, 0, vctr_chnk_size, -1, 0, 0, &uqid); 
   cBYE(status);
   if ( uqid != 1 ) { go_BYE(-1); }
   //----------------------------------
@@ -115,7 +115,7 @@ main(
 
   // Test putting of Scalars
   vctr_chnk_size = 32; // for easy testing 
-  status = vctr_add1(I4, 0, vctr_chnk_size, -1, false, &uqid); 
+  status = vctr_add1(I4, 0, vctr_chnk_size, -1, 0, 0, &uqid); 
   cBYE(status);
   if ( uqid != 2 ) { go_BYE(-1); }
   SCLR_REC_TYPE sclr; memset(&sclr, 0, sizeof(SCLR_REC_TYPE));

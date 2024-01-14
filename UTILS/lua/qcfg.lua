@@ -46,9 +46,26 @@ qcfg.memo_len = -1 --  Vector code uses this default value
 -- 1 means 1 previous chunk kept, 2 means 2 previous chunks and so on
 -- TODO THINK qcfg.has_nulls = false -- Vector code uses this default value
 
-qcfg.is_killable = false -- DO NOT CHANGE THIS 
+qcfg.num_lives_kill = 0 -- default
+qcfg.num_lives_free = 0 -- default
 -- Following function used to modify qcfg at run time 
 local function modify(key, val)
+  if ( key == "num_lives_kill" ) then
+    assert(type(val) == "number")
+    assert(val >= 0)
+    assert(val <= 16) -- some reasonable limit 
+  elseif ( key == "num_lives_free" ) then
+    assert(type(val) == "number")
+    assert(val >= 0)
+    assert(val <= 16) -- some reasonable limit 
+  elseif ( key == "memo_len" ) then
+    assert(type(val) == "number")
+    if ( val < 0 ) then 
+      assert(val == -1)
+    end
+  else
+    assert("Unknown key " .. key)
+  end
   qcfg[key] = val
 end
 qcfg._modify = modify 

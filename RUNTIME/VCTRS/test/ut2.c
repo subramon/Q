@@ -77,7 +77,7 @@ main(
   uint32_t max_num_in_chunk = 32; // for easy testing 
   qtype_t qtype = F4;
   uint32_t uqid; status = vctr_add1(qtype, 0, max_num_in_chunk, -1,
-      false, &uqid); 
+      0, 0, &uqid); 
   cBYE(status);
   uint32_t num_chunks = 4;
   CMEM_REC_TYPE cmem; 

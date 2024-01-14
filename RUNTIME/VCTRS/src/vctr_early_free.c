@@ -34,10 +34,12 @@ vctr_early_free(
   vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[vctr_where].val);
   // conditions under which early free ignored
   if ( ptr_vctr_val->is_persist ) { goto BYE; }
-  if ( ptr_vctr_val->is_writable ) { goto BYE; }
   if ( ptr_vctr_val->is_early_freeable == false ) { goto BYE; } 
   if ( ptr_vctr_val->num_elements == 0 ) { goto BYE; }
   if ( ptr_vctr_val->num_chnks    == 0 ) { goto BYE; }
+  if ( ptr_vctr_val->num_lives_free  == 0 ) { go_BYE(-1); }
+  ptr_vctr_val->num_lives_free--;
+  if ( ptr_vctr_val->num_lives_free  != 0 ) { goto BYE; }
   // Note that we have < and not <= below. 
   // We do not delete most recent chunk
   for ( uint32_t chnk_idx = 0; 
@@ -55,6 +57,7 @@ vctr_early_free(
         ( ptr_chnk_val->l2_exists == true ) ) {
         go_BYE(-1);
       }
+      // Following ensures a chunk is not freed twice
       continue; 
     }
     // memory for chunk must exist 
@@ -64,6 +67,7 @@ vctr_early_free(
       continue; 
     }
     // free resources for the chunk. Note that we do NOT free the chunk
+    ptr_vctr_val->num_early_freed++;
     printf("Deleting chunk for early free\n");
     status = chnk_free_resources(tbsp, ptr_chnk_key, ptr_chnk_val,
         ptr_vctr_val->is_persist); 
@@ -79,15 +83,18 @@ BYE:
 // once a vector has been marked early_freeable, you can undo it 
 // only if it has zero elements in it 
 int
-vctr_early_freeable(
+vctr_set_num_lives_free(
     uint32_t tbsp,
     uint32_t vctr_uqid,
-    bool bval
+    int num_lives_free
     )
 {
   int status = 0;
   // nothing to do for vectors in other tablespaces
   if ( tbsp != 0 ) { goto BYE; } 
+  if ( num_lives_free < 0 ) { go_BYE(-1); }
+  if ( num_lives_free == 0 ) { goto BYE; }
+  if ( num_lives_free >= 16 ) { go_BYE(-1); } // some reasonable limit 
   bool is_found; uint32_t where_found = ~0;
   vctr_rs_hmap_key_t key = vctr_uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
@@ -95,22 +102,24 @@ vctr_early_freeable(
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
   if ( val.is_persist ) { go_BYE(-1); }
-  if ( val.is_early_freeable ) { if ( val.num_elements > 0 ) { go_BYE(-1); } }
-  if ( val.is_eov ) { go_BYE(-1); } // TODO P2 Is this too cautious?
+  if ( val.num_elements > 0 ) { go_BYE(-1); }
+  if ( val.memo_len >= 0 ) { go_BYE(-1); }
+  // I don't think this is needed: if ( val.is_eov ) { go_BYE(-1); } 
 
-  g_vctr_hmap[tbsp].bkts[where_found].val.is_early_freeable = bval; 
+  g_vctr_hmap[tbsp].bkts[where_found].val.is_early_freeable = true; 
+  g_vctr_hmap[tbsp].bkts[where_found].val.num_lives_free = num_lives_free; 
 BYE:
   return status;
 }
 int 
-vctr_is_early_freeable(
+vctr_get_num_lives_free(
     uint32_t tbsp,
     uint32_t vctr_uqid,
-    bool *ptr_bval 
+    bool *ptr_is_early_freeable,
+    int *ptr_num_lives_free
     )
 {
   int status = 0;
-  *ptr_bval = false; 
   if ( tbsp != 0 ) { goto BYE; } 
   bool is_found; uint32_t where_found = ~0;
   vctr_rs_hmap_key_t key = vctr_uqid;
@@ -118,7 +127,8 @@ vctr_is_early_freeable(
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
   if ( !is_found ) { goto BYE; } 
-  *ptr_bval = val.is_early_freeable;
+  *ptr_is_early_freeable = val.is_early_freeable;
+  *ptr_num_lives_free = val.num_lives_free;
 BYE:
   return status;
 }

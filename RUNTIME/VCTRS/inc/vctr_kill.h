@@ -1,14 +1,15 @@
 extern int
-vctr_killable(
+vctr_set_num_lives_kill(
     uint32_t tbsp,
     uint32_t vctr_uqid,
-    bool bval
+    int num_lives_kill
     );
 extern int 
-vctr_is_killable(
+vctr_get_num_lives_kill(
     uint32_t tbsp,
     uint32_t vctr_uqid,
-    bool *ptr_bval 
+    bool *ptr_is_killable,
+    int *ptr_num_lives_kill
     );
 extern int
 vctr_kill(

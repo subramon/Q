@@ -203,13 +203,11 @@ local}.
 \ee
 
 \section{LuaJIT}
- I am going to make a difficult decision, favoring immediate 
- expediency for long term portability.  Basically, decision is to tie 
- ourselves to LuaJIT. This means we do {\bf not}  use features of Lua that 
- come after 5.1.3. This is a moving target, depending on what Mike Pall is
- willing to support. 
-
- Andrew: I think the value terra brings alone is probably worth that. 
+I am going to make a difficult decision, favoring immediate 
+expediency for long term portability.  Basically, decision is to tie 
+ourselves to LuaJIT. This means we do {\bf not}  use features of Lua that 
+come after 5.1.3. This is a moving target, depending on what Mike Pall is
+willing to support. 
 
 \subsection{Performance tips}
 Following are all available on \url{luajit.org} and reproduced for convenience. 
@@ -328,19 +326,114 @@ happens with programs that are statically linked against it.
 
 \subsection{Bit Vectors}
 
-\section{General coding guidelines}
-\subsection{No seg faults}
-Number of things we need to achieve this. 
-\be 
-\item  Trust nobody. Assert everything. 
-\item \TBC
-\ee
 
+\section{Freeing resources as soon as possible}
 
-\subsection{Makefiles for operators}
+A general principle of Q is to consume as few resources as possible. This
+extends to freeing resources as soon as one can determine that they are no
+longer needed. Garbage collection is one way of freeing resources that are no
+longer needed. However, garbage collection is done by Lua. While it is aware
+that a vector is ready for garbage collection, it is unaware of how much
+resources the vector is using. 
 
+We provide the Q programmer with three mechanisms to inform the Q runtime that a
+vector can be freed in total or in part. When using these mechanisms, we
+impose some constraints on how they can be used not for any intrinsic reason but
+because of my general belief that one should provide the system with as few
+degrees of freedom without hamstringing the Q programmer. 
+
+The three mechanisms that are supported are 
 \be
-\item You must have a target called {\tt clean} which deletes all files created
-by {\tt make}
+\item memo length
+\item is killable
+\item is early freeable
+\ee
+Some of them are mutually exclusive e.g., memo length is \(\geq 0 \Rightarrow\) is\_early\_freeable == false
+
+Thus far, we have described killable and early freeable as booleans. We did so
+for historical reasons and for simplicity. What we found was that we needed to
+extend this to the principle of the metaphorical cat that has nine lives.
+
+So, is killable became num\_kills. In the case where num\_kills == 1, this was
+the same as is\_killable == true. However, consider the case where num\_kills ==
+2. Then, the first kill issued on that vector does not cause the vector to tbe
+killed. Instead, the num\_kills is decremented by 1. The second kill will
+actually cause the vector to be killed. The same principle applies for early
+frees. 
+
+
+\subsection{Default Values and Persistence}
+The three mechanisms became
+\be
+\item memo\_len, default -1
+\item num\_lives\_kill, default 0
+\item num\_lives\_free, default 0
 \ee
 
+Default values for these properties is set in \verb+~/Q/UTILS/lua/qcfg.lua+
+They can be changed using \verb+qcfg._modify()+ 
+
+If, for any of the mechanisms listed above, the vector does not have the default
+values, then it will not be persisted. 
+Note that a vector can be saved (across sessions) only if it can be persisted.
+So, if you use anything other than the default values listed above, the vector
+will {\bf not} be persisted and not saved.
+%-------------------------------------------------------------
+
+\subsection{memo}
+You cannot set memo\_len \(\geq 0\) if
+\be
+\item is\_early\_free == true 
+\ee
+\subsubsection{memo action}
+
+%-------------------------------------------------------------
+\subsection{killable}
+
+You cannot modify the number of kill lives if 
+\be
+\item num\_elements \(> 0\)
+\item is\_persist = true 
+\ee
+
+\subsubsection{kill action}
+
+When kill is issued on a vector, we check whether it is killable. If not, we
+ignore the kill. Else, we we delete the vector. 
+
+
+%-------------------------------------------------------------
+\subsection{early freeable}
+
+You cannot mark a vector as early freeable if 
+\be
+\item num\_elements \(> 0\)
+\item is\_persist = true 
+\item memo\_len \(\geq 0\)
+\ee
+
+\subsubsection{early free action}
+
+When ``early free'' is issued on a vector, we ignore it if 
+\be
+\item is\_early\_freeable == false
+\item is\_persist == true
+\item num\_elements == 0 
+\item num\_chunks == 0 
+\ee
+
+Else, we delete all but the last chunk. In other words, once a vector has been
+early freed, it will have only one chunk. Let us say that prior to the free, it
+had \(n\) chunks, the resources consumed by the first \(n-1\) chunks will be
+deleted. The chunks themselves are not deleted; instead, for each such chunk, we set 
+was\_early\_freed \(\leftarrow\) true. 
+
+If an early free causes any chunk of a vector to be freed, then
+\be
+\item we mark was\_early\_freed \(\leftarrow\) true for that chunk
+\item we increment num\_early\_freed for that vector for every chunk that was
+freed. Note that a chunk can be freed only once. 
+\ee
+
+
+% TODO COnsider lma_to_chunks() and other lma interactions with above

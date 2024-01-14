@@ -23,6 +23,7 @@ vctr_set_memo(
   if ( !is_found ) { go_BYE(-1); }
   // once vector has elements in it, cannot modify its memo len 
   if ( val.num_elements > 0 ) { go_BYE(-1); } 
+  if ( val.is_persist ) { go_BYE(-1); } 
   //--------------------------
   g_vctr_hmap[tbsp].bkts[where_found].val.memo_len = memo_len;
 BYE:

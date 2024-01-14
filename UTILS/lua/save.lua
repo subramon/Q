@@ -10,17 +10,24 @@ local function skip_save(vec)
   local num_elements = vec:num_elements()
   local has_gen      = vec:has_gen() 
   local is_eov       = vec:is_eov() 
-  local is_error       = vec:is_error() 
+  local is_error     = vec:is_error() 
   local memo_len     = vec:memo_len() 
+  local num_lives_free     = vec:get_num_lives_free() 
+  local num_lives_kill     = vec:get_num_lives_kill() 
 
-  assert(type(num_elements) == "number")
-  assert(type(has_gen)      == "boolean")
-  assert(type(is_eov)       == "boolean")
+  assert(type(num_elements)   == "number")
+  assert(type(has_gen)        == "boolean")
+  assert(type(is_eov)         == "boolean")
   assert(type(is_error)       == "boolean")
-  assert(type(memo_len)     == "number")
+  assert(type(memo_len)       == "number")
+  assert(type(num_lives_free) == "number")
+  assert(type(num_lives_kill) == "number")
 
-  if ( ( num_elements == 0 ) or ( memo_len >= 0 ) or 
-    ( has_gen ) or ( not is_eov ) or ( is_error ) ) then
+  if ( 
+    ( num_elements == 0 ) or ( memo_len >= 0 ) or 
+    ( has_gen ) or ( not is_eov ) or ( is_error ) or
+    ( num_lives_free > 0 ) or ( num_lives_kill > 0 ) 
+    ) then
     return true
   else
     return false

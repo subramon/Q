@@ -54,8 +54,12 @@ function lVector:check(is_at_rest, is_for_all)
       assert(nn_vector:is_persist()    == self:is_persist())
       assert(nn_vector:num_readers()   == self:num_readers())
       assert(nn_vector:num_writers()   == self:num_writers())
-      assert(nn_vector:is_early_free() == self:is_early_free())
+
       assert(nn_vector:is_killable()   == self:is_killable())
+      assert(nn_vector:num_lives_kill()   == self:num_lives_kill())
+
+      assert(nn_vector:is_early_freeable()   == self:is_early_freeable())
+      assert(nn_vector:num_lives_free()   == self:num_lives_free())
     end
   end 
   -- check congruence between base vector and siblings
@@ -328,10 +332,29 @@ function lVector.new(args)
   end
   assert(type(vector._memo_len) == "number")
   --=================================================
-  if ( type(args.is_killable) ~= "boolean"  ) then 
-    args.is_killable = qcfg.is_killable
+  if ( args.num_lives_kill ) then 
+    assert(type(args.num_lives_kill) == "number" )
+    assert(args.num_lives_kill >= 0)
+  else
+    args.num_lives_kill = qcfg.num_lives_kill
   end
-  assert(type(args.is_killable) == "boolean")
+  if ( args.num_lives_kill == 0 ) then 
+    args.is_killable = false
+  else
+    args.is_killable = true
+  end
+  --=================================================
+  if ( args.num_lives_free ) then 
+    assert(type(args.num_lives_free) == "number" )
+    assert(args.num_lives_free >= 0)
+  else
+    args.num_lives_free = qcfg.num_lives_free
+  end
+  if ( args.num_lives_free == 0 ) then 
+    args.is_early_freeable = false
+  else
+    args.is_early_freeable = true
+  end
   --=================================================
   vector._base_vec = assert(cVector.add1(args))
   if ( args.has_nulls ) then 
@@ -353,9 +376,12 @@ function lVector.new(args)
     if ( args.memo_len ) then 
       nn_args.memo_len  = args.memo_len 
     end
-    if ( args.is_killable ) then 
-      nn_args.is_killable  = args.is_killable 
-    end
+
+    nn_args.is_killable  = args.is_killable 
+    nn_args.num_lives_kill  = args.num_lives_kill 
+
+    nn_args.is_early_freeable  = args.is_early_freeable 
+    nn_args.num_lives_free  = args.num_lives_free 
     ----------------------------------- 
     local nn_vector = setmetatable({}, lVector)
     nn_vector._base_vec = assert(cVector.add1(nn_args))
@@ -847,17 +873,19 @@ function lVector:early_free() -- equivalent of kill()
 end
 --==================================================
 function lVector:is_early_free() 
-  local b_is_early_free = cVector.is_early_free(self._base_vec)
+  local b_is_early_free, num_lives_free = 
+    cVector.get_num_lives_free(self._base_vec)
   assert(type(b_is_early_free) == "boolean")
-  return b_is_early_free
+  assert(type(num_lives_free) == "number")
+  return b_is_early_free, num_lives_free 
 end
 --==================================================
-function lVector:early_freeable(bval) -- equivalent of killable()
-  assert(cVector.early_freeable(self._base_vec, bval))
+function lVector:early_freeable(num_lives) -- equivalent of killable()
+  assert(type(num_lives) == "number")
+  assert(cVector.set_num_lives_free(self._base_vec, num_lives))
   return self
 end
 --==================================================
-
 function lVector:self()
   return self._base_vec
 end
@@ -946,14 +974,17 @@ end
 --==================================================
 -- use this function to set kill-ability of vector 
 function lVector:killable(val)
-  assert(type(val) == "boolean")
-  local status = cVector.killable(self._base_vec, val)
-  assert(status)
+  assert(type(val) == "number")
+  assert(cVector.killable(self._base_vec, val))
   return self
 end
 --==================================================
 function lVector:is_killable()
-  return  cVector.is_killable(self._base_vec)
+  local b_is_killable, num_lives_kill = 
+    cVector.get_num_lives_kill(self._base_vec)
+  assert(type(b_is_killable) == "boolean")
+  assert(type(num_lives_kill) == "number")
+  return b_is_killable, num_lives_kill
 end
 --==================================================
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
