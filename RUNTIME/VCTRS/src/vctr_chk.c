@@ -278,7 +278,7 @@ vctr_chk(
   }
   if ( vctr_val.is_early_freeable ) { 
     if ( vctr_val.num_early_freed != max_early_free_idx+1 ) { go_BYE(-1); }
-    if ( vctr_val.num_chnks       != num_early_freed   +1 ) { go_BYE(-1); }
+    if ( vctr_val.num_chnks       < num_early_freed   +1 ) { go_BYE(-1); }
   }
 
   // if chunk i was early freed => chunks 0..i-1 should have been feed

@@ -16,8 +16,8 @@ tests.t1 = function ()
   local in_max_num_in_chunk = 64 
   local out_max_num_in_chunk = 2 * in_max_num_in_chunk
   local in_len =  16 * in_max_num_in_chunk
-  local a = Q.seq({len = in_len, qtype = "I4", start = 1, by = 1}):early_freeable(true)
-  local c = Q.period({len = in_len, qtype = "I1", start = 0, by = 1, period = 2}):early_freeable(true)
+  local a = Q.seq({len = in_len, qtype = "I4", start = 1, by = 1}):early_freeable(1)
+  local c = Q.period({len = in_len, qtype = "I1", start = 0, by = 1, period = 2}):early_freeable(1)
   local b = Q.vconvert(c, "BL")
   local x = Q.where(a, b, { max_num_in_chunk = out_max_num_in_chunk}):set_name("x")
   assert(x:qtype() == "I4")
@@ -49,11 +49,11 @@ tests.t2 = function ()
   local out_max_num_in_chunk = 2 * in_max_num_in_chunk
   local in_len =  16 * in_max_num_in_chunk
   local a = Q.seq({len = in_len, qtype = "I4", start = 1, 
-  by = 1, max_num_in_chunk = in_max_num_in_chunk}):set_name("a"):early_freeable(true)
+  by = 1, max_num_in_chunk = in_max_num_in_chunk}):set_name("a"):early_freeable(1)
   local c = Q.period({len = in_len, qtype = "I1", start = 0, 
-    by = 1, period = 2, max_num_in_chunk = in_max_num_in_chunk}):set_name("c"):early_freeable(true)
+    by = 1, period = 2, max_num_in_chunk = in_max_num_in_chunk}):set_name("c"):early_freeable(1)
   assert(c:max_num_in_chunk() == in_max_num_in_chunk)
-  local b = Q.vconvert(c, "BL"):set_name("b"):early_freeable(true)
+  local b = Q.vconvert(c, "BL"):set_name("b"):early_freeable(1)
   assert(b:max_num_in_chunk() == in_max_num_in_chunk)
   local x = Q.where(a, b, { max_num_in_chunk = out_max_num_in_chunk}):set_name("x")
   assert(x:qtype() == "I4")

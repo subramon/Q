@@ -96,6 +96,7 @@ cd ~/Q/OPERATORS/WHERE/test/
 qjit test_where.lua
 qjit test_where_gen.lua
 qjit test_select_ranges.lua
+qjit test_early_free.lua
 bash run_tests.sh
 
 cd ~/Q/OPERATORS/F1OPF2/test/

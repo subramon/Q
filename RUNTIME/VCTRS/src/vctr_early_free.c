@@ -36,6 +36,7 @@ vctr_early_free(
   if ( ptr_vctr_val->is_persist ) { goto BYE; }
   if ( ptr_vctr_val->num_elements == 0 ) { goto BYE; }
   if ( ptr_vctr_val->num_chnks    == 0 ) { goto BYE; }
+  if ( ptr_vctr_val->is_early_freeable    == false ) { goto BYE; }
   // Note that we have < and not <= below. 
   // We do not delete most recent chunk
   for ( uint32_t chnk_idx = 0; 
