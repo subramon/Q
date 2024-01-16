@@ -20,7 +20,6 @@ chnk_free_resources(
   if ( ptr_val->num_readers > 0 ) { 
     printf("ERROR Freeing resources of chunk %u:%u\n", 
         ptr_key->vctr_uqid, ptr_key->chnk_idx); 
-    
     go_BYE(-1); }
   if ( ptr_val->num_writers > 0 ) { go_BYE(-1); }
   //---------------------------------------------------

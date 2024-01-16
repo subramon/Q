@@ -24,6 +24,8 @@ typedef struct _chnk_rs_hmap_val_t {
   // and mark was_early_freed = true;
   // Cannot save a vector if any of its chunks have was_early_freed == true
   bool was_early_freed; 
+  int num_lives_left; // if is_early_freeable in vector, then this is 
+  // initialized to num_lives_free
   uint32_t size; // we do not expect a chunk to exceed 4G, a vector might
   //-----
   char *l1_mem;

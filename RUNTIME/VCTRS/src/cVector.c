@@ -570,12 +570,13 @@ static int l_vctr_get_num_lives_free( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int num_lives; bool b_is_early_free;
+  int num_lives, num_early_freed; bool b_is_early_free;
   status = vctr_get_num_lives_free(ptr_v->tbsp, ptr_v->uqid, 
-      &b_is_early_free, &num_lives);
+      &b_is_early_free, &num_lives, &num_early_freed);
   lua_pushboolean(L, b_is_early_free);
   lua_pushnumber(L, num_lives);
-  return 2;
+  lua_pushnumber(L, num_early_freed);
+  return 3;
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);

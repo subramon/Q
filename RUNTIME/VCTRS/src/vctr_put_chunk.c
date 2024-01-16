@@ -99,6 +99,9 @@ vctr_put_chunk(
   { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
   chnk_rs_hmap_val_t chnk_val = { 
     .qtype = qtype, .l1_mem = l1_mem, .num_elements = n, .size = chnk_size };
+  if ( vctr_val.is_early_freeable ) { 
+    chnk_val.num_lives_left = vctr_val.num_lives_free;
+  }
   //-------------------------------
   status = g_chnk_hmap[tbsp].put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
   cBYE(status);

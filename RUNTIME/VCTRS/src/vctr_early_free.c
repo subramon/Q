@@ -34,12 +34,8 @@ vctr_early_free(
   vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[vctr_where].val);
   // conditions under which early free ignored
   if ( ptr_vctr_val->is_persist ) { goto BYE; }
-  if ( ptr_vctr_val->is_early_freeable == false ) { goto BYE; } 
   if ( ptr_vctr_val->num_elements == 0 ) { goto BYE; }
   if ( ptr_vctr_val->num_chnks    == 0 ) { goto BYE; }
-  if ( ptr_vctr_val->num_lives_free  == 0 ) { go_BYE(-1); }
-  ptr_vctr_val->num_lives_free--;
-  if ( ptr_vctr_val->num_lives_free  != 0 ) { goto BYE; }
   // Note that we have < and not <= below. 
   // We do not delete most recent chunk
   for ( uint32_t chnk_idx = 0; 
@@ -50,8 +46,6 @@ vctr_early_free(
     chnk_rs_hmap_key_t *ptr_chnk_key = &(g_chnk_hmap[tbsp].bkts[chnk_where].key);
     chnk_rs_hmap_val_t *ptr_chnk_val = &(g_chnk_hmap[tbsp].bkts[chnk_where].val);
     // handle case where chunk has already been early freed
-    if ( ptr_chnk_val->num_readers != 0 ) { continue; } 
-    if ( ptr_chnk_val->num_writers != 0 ) { continue; } 
     if ( ptr_chnk_val->was_early_freed ) { 
       if ( ( ptr_chnk_val->l1_mem != NULL ) ||
         ( ptr_chnk_val->l2_exists == true ) ) {
@@ -60,6 +54,13 @@ vctr_early_free(
       // Following ensures a chunk is not freed twice
       continue; 
     }
+    //---------------------------------------------------
+    if ( ptr_chnk_val->num_readers != 0 ) { continue; } 
+    if ( ptr_chnk_val->num_writers != 0 ) { continue; } 
+    if ( ptr_chnk_val->num_lives_left <= 0 ) { go_BYE(-1); }
+    ptr_chnk_val->num_lives_left--;
+    if ( ptr_chnk_val->num_lives_left > 0 ) { continue; }
+    //---------------------------------------------------
     // memory for chunk must exist 
     if ( ( ptr_chnk_val->l1_mem == NULL ) &&
         ( ptr_chnk_val->l2_exists == false ) ) {
@@ -116,7 +117,8 @@ vctr_get_num_lives_free(
     uint32_t tbsp,
     uint32_t vctr_uqid,
     bool *ptr_is_early_freeable,
-    int *ptr_num_lives_free
+    int *ptr_num_lives_free,
+    int *ptr_num_early_freed
     )
 {
   int status = 0;
@@ -129,6 +131,7 @@ vctr_get_num_lives_free(
   if ( !is_found ) { goto BYE; } 
   *ptr_is_early_freeable = val.is_early_freeable;
   *ptr_num_lives_free = val.num_lives_free;
+  *ptr_num_early_freed = val.num_early_freed;
 BYE:
   return status;
 }

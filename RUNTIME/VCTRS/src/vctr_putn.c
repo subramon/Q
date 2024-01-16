@@ -73,6 +73,9 @@ vctr_putn(
     chnk_val.qtype = qtype;
     chnk_val.size  = chnk_size;
     status = incr_mem_used( chnk_size);
+    if ( vctr_val.is_early_freeable ) { 
+      chnk_val.num_lives_left = vctr_val.num_lives_free;
+    }
     //-------------------------------
     status = g_chnk_hmap[tbsp].put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
     cBYE(status);

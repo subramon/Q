@@ -873,11 +873,12 @@ function lVector:early_free() -- equivalent of kill()
 end
 --==================================================
 function lVector:is_early_free() 
-  local b_is_early_free, num_lives_free = 
+  local b_is_early_free, num_lives_free, num_early_freed = 
     cVector.get_num_lives_free(self._base_vec)
   assert(type(b_is_early_free) == "boolean")
   assert(type(num_lives_free) == "number")
-  return b_is_early_free, num_lives_free 
+  assert(type(num_early_freed) == "number")
+  return b_is_early_free, num_lives_free, num_early_freed
 end
 --==================================================
 function lVector:early_freeable(num_lives) -- equivalent of killable()

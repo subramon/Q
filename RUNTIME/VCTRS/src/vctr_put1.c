@@ -66,7 +66,10 @@ vctr_put1(
     chnk_val.l1_mem = l1_mem; l1_mem = NULL;
     chnk_val.qtype = qtype;
     chnk_val.size  = chnk_size;
-    status = incr_mem_used( chnk_size);
+    status = incr_mem_used(chnk_size);
+  if ( vctr_val.is_early_freeable ) { 
+    chnk_val.num_lives_left = vctr_val.num_lives_free;
+  }
 #ifdef VERBOSE
         printf("%s Allocated %u for %s \n", __FILE__, chnk_size, 
             vctr_val.name);
