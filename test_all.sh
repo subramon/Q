@@ -12,6 +12,10 @@ cd ~/Q/RUNTIME/CMEM/test/
 qjit test_cmem.lua
 # qjit stress_test_cmem.lua
 
+cd ~/Q/UTILS/test/
+bash test_copy_file.sh
+bash test_line_breaks.sh
+
 cd ~/Q/RUNTIME/CUTILS/test/
 qjit test_cutils.lua
 # qjit stress_test.lua

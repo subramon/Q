@@ -4,6 +4,7 @@ declaration = [[
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <omp.h>
 #include "sum_struct.h"
 //START_FOR_CDEF
 extern int
@@ -29,7 +30,8 @@ ${fn}(
 {
   int status = 0;
   ${reduce_ctype} sum = 0;
-  uint32_t nT = sysconf(_SC_NPROCESSORS_ONLN);
+  // uint32_t nT = sysconf(_SC_NPROCESSORS_ONLN);
+  uint32_t nT = omp_get_num_threads(); 
   uint32_t block_size = nR / nT;
 #pragma omp parallel for schedule(static)
   for ( uint32_t t = 0; t < nT; t++ ) { 

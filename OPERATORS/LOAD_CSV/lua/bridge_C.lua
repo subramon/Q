@@ -32,6 +32,7 @@ local function bridge_C(
   local nC = #M
   local subs = {}
   subs.fn = "load_csv_fast"
+  -- TODO FIX We need to add get_fld_sep
   subs.dotc = "OPERATORS/LOAD_CSV/src/load_csv_fast.c"
   subs.doth = "OPERATORS/LOAD_CSV/inc/load_csv_fast.h"
   subs.incs = { "OPERATORS/LOAD_CSV/inc/", "UTILS/inc/" }
@@ -54,15 +55,9 @@ local function bridge_C(
   -- print("About to call ", func_name)
   local status = qc[func_name](infile, nC, fld_sep, max_num_in_chunk, max_width, num_rows_read, file_offset, c_qtypes, c_nn_qtype, is_trim, is_hdr,
   is_load, has_nulls, width, c_data, nn_c_data)
-  --[[
-  local status = qc[func_name](infile, nC, fld_sep,
-    max_num_in_chunk, max_width, num_rows_read, file_offset, 
-    c_qtypes, c_nn_qtype, 
-    is_trim, is_hdr, is_load, has_nulls, width, c_data, nn_c_data)
-    --]]
   local l_file_offset = tonumber(file_offset[0])
   -- print("C: l_file_offset = ", l_file_offset)
-  assert(status == 0, "load_csv_fast failed")
+  assert(status == 0)
   record_time(start_time, "load_csv_fast")
   return true
 end

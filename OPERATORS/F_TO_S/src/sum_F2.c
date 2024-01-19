@@ -1,3 +1,4 @@
+#include <omp.h>
 #include "sum_struct.h"
 #include "sum_B1.h"
 #include "qtypes.h" // for bfloat16
@@ -11,7 +12,8 @@ sum_F2(
 {
   int status = 0;
   
-  uint32_t nT = sysconf(_SC_NPROCESSORS_ONLN);
+  // uint32_t nT = sysconf(_SC_NPROCESSORS_ONLN);
+  uint32_t nT = omp_get_num_threads(); 
   uint32_t block_size = nR / nT;
   double gsum = 0;
 #pragma omp parallel for schedule(static)

@@ -14,6 +14,7 @@
 #include "rs_mmap.h"
 #include "trim.h"
 #include "set_bit_u64.h"
+#include "get_fld_sep.h"
 //STOP_INCLUDES
 #include "load_csv_fast.h"
 
@@ -141,7 +142,7 @@ load_csv_fast(
     uint64_t *ptr_nR,
     uint64_t *ptr_file_offset,
     const int *const c_qtypes, /* [nC] */
-    uint64_t in_c_nn_qtype,
+    int in_c_nn_qtype,
     const bool * const is_trim, /* [nC] */
     bool is_hdr, /* [nC] */
     const bool *  const is_load, /* [nC] */
@@ -155,27 +156,19 @@ load_csv_fast(
   int status = 0;
   char *mmap_file = NULL; //X
   uint64_t file_size = 0; //nX
-  char fld_sep;
   char *lbuf = NULL;
   char *buf = NULL;
 
 
   qtype_t c_nn_qtype = (qtype_t)in_c_nn_qtype;
-  if (( c_nn_qtype <= Q0 ) || ( c_nn_qtype >= NUM_QTYPES )) { go_BYE(-1); }
 
   buf = malloc(max_width * sizeof(char));
   return_if_malloc_failed(buf);
   lbuf = malloc(max_width * sizeof(char));
   return_if_malloc_failed(lbuf);
-  if ( strcasecmp(str_fld_sep, "comma") == 0 ) { 
-    fld_sep = ',';
-  }
-  else if ( strcasecmp(str_fld_sep, "tab") == 0 ) { 
-    fld_sep = '\t';
-  }
-  else {
-    go_BYE(-1);
-  }
+
+  char fld_sep = get_fld_sep(str_fld_sep);
+  if ( fld_sep == '\0' ) { go_BYE(-1); }
 
   //---------------------------------
   if ( ( infile == NULL ) || ( *infile == '\0' ) ) { go_BYE(-1); }
