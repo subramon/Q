@@ -15,111 +15,11 @@
 #include "trim.h"
 #include "set_bit_u64.h"
 #include "get_fld_sep.h"
+#include "chk_data.h"
+#include "asc_to_bin.h"
 //STOP_INCLUDES
 #include "load_csv_fast.h"
 
-/*- Note: I would have liked get_cell in a separate file but
-    causes havoc with our simplistic dynamic compilation strategy
-    where when we compile load_csv_fast.c, we get an undefined symbol
-    error for get_cell
-    */
-static size_t
-get_cell(
-    char *X,
-    size_t nX,
-    size_t xidx,
-    char fld_sep,
-    bool is_last_col,
-    char *buf,
-    char *lbuf,
-    size_t bufsz
-    )
-//STOP_FUNC_DECL
-{
-  int status = 0;
-  char dquote = '"';  char squote = '\'';
-  char bslash = '\\'; char eoln = '\n';
-  uint32_t bufidx = 0;
-  bool is_trim = true;
-  //--------------------------------
-  if ( X == NULL ) { go_BYE(-1); }
-  if ( nX == 0 ) { go_BYE(-1); }
-  if ( xidx == nX ) { go_BYE(-1); }
-  if ( buf == NULL ) { go_BYE(-1); }
-  if ( lbuf == NULL ) {
-    is_trim = false;
-    lbuf = buf;
-  }
-  if ( bufsz == 0 ) { go_BYE(-1); }
-  memset(lbuf, '\0', bufsz);
-  memset(buf, '\0', bufsz);
-  char last_char;
-  // TODO P1 NEED TO FINISH HANDLING SQUOTE 
-  bool start_dquote = false, start_squote = false, start_quote = false;
-  if ( ( X[xidx] == dquote ) || ( X[xidx] == squote ) ) {
-    start_quote = true;
-    if ( X[xidx] == dquote ) { // must end with dquote
-      start_dquote = true;
-      last_char = dquote;
-      xidx++;
-    }
-    if ( X[xidx] == squote ) { // must end with squote
-      start_squote = true;
-      last_char = squote;
-      xidx++;
-    }
-  }
-  else {
-    if ( is_last_col ) { 
-      last_char = eoln;
-    }
-    else {
-      last_char = fld_sep;
-    }
-  }
-  //----------------------------
-  for ( ; ; ) { 
-    if ( xidx > nX ) { go_BYE(-1); }
-    if ( xidx == nX ) {
-      if ( is_trim ) {
-        status = trim(lbuf, buf, bufsz); cBYE(status);
-      }
-      return xidx;
-    }
-    if ( X[xidx] == last_char ) {
-      xidx++; // jumo over last char;
-      if ( start_dquote ) { 
-        if ( xidx >= nX ) { go_BYE(-1); }
-        if ( is_last_col ) { 
-          if ( X[xidx] != eoln ) { go_BYE(-1); }
-        }
-        else {
-          if ( X[xidx] != fld_sep ) { go_BYE(-1); }
-        }
-        xidx++;
-      }
-      if ( is_trim ) {
-        status = trim(lbuf, buf, bufsz); cBYE(status);
-      }
-      return xidx;
-    }
-    //---------------------------------
-    if ( X[xidx] == bslash ) {
-      xidx++;
-      if ( xidx >= nX ) { go_BYE(-1); }
-      if ( bufidx >= bufsz ) { go_BYE(-1); }
-      lbuf[bufidx++] = X[xidx++];
-      continue;
-    }
-    if ( bufidx >= bufsz ) { 
-      go_BYE(-1); 
-    }
-    lbuf[bufidx++] = X[xidx++];
-  }
-BYE:
-  if ( status < 0 ) { xidx = 0; }
-  return xidx;
-}
 
 /*Given a CSV file, this function reads a cell at a time. It then 
  * places this into buffers provided by the caller.
@@ -167,8 +67,8 @@ load_csv_fast(
   lbuf = malloc(max_width * sizeof(char));
   return_if_malloc_failed(lbuf);
 
-  char fld_sep = get_fld_sep(str_fld_sep);
-  if ( fld_sep == '\0' ) { go_BYE(-1); }
+  char fld_sep;
+  status = get_fld_sep(str_fld_sep, &fld_sep); 
 
   //---------------------------------
   if ( ( infile == NULL ) || ( *infile == '\0' ) ) { go_BYE(-1); }
@@ -177,26 +77,7 @@ load_csv_fast(
   if ( ptr_file_offset == NULL ) { go_BYE(-1); }
 
   // Check on input data structures
-  for ( uint32_t i = 0; i < nC; i++ ) {
-    if ( data     == NULL ) { go_BYE(-1); }
-    if ( nn_data  == NULL ) { go_BYE(-1); }
-    if (  is_load[i] ) { 
-      if ( data[i] == NULL ) { go_BYE(-1); } 
-    }
-    else {
-      if (    data[i] != NULL ) { go_BYE(-1); } 
-      if ( nn_data[i] != NULL ) { go_BYE(-1); } 
-    }
-    if (  has_nulls[i] ) { 
-      if ( nn_data[i] == NULL ) { go_BYE(-1); } 
-    }
-    else {
-      if ( nn_data[i] != NULL ) { 
-        WHEREAMI; // go_BYE(-1); 
-      }
-    }
-    if ( width[i] > max_width ) { go_BYE(-1); } 
-  }
+  status = chk_data(data, nn_data, nC, has_nulls, width); cBYE(status);
   *ptr_nR = 0;
   // mmap the file
   status = rs_mmap(infile, &mmap_file, &file_size, false); cBYE(status);
@@ -383,9 +264,6 @@ load_csv_fast(
             data[col_ctr][ii++] = *cptr++;
           }
           // printf("%s\n", buf);
-          if ( (int)strlen(buf) >= width[col_ctr] ) { 
-            printf("hello world\n");
-            go_BYE(-1); }
           // strcpy(data_ptr+(row_ctr*width[col_ctr]), buf);
           */
         }

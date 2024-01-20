@@ -16,8 +16,7 @@ asc_to_bin(
     qtype_t qtype, 
     uint32_t width,
     uint32_t row_idx,
-    uint32_t col_idx,
-    char **data
+    char *data // pointer to data for specific column
     )
 {
   int status = 0; 
@@ -25,7 +24,7 @@ asc_to_bin(
     case B1:
       {
         int8_t tempI1 = 0;
-        uint64_t *data_ptr = (uint64_t *)data[col_idx];
+        uint64_t *data_ptr = (uint64_t *)data;
         status = txt_to_I1(buf, &tempI1);  cBYE(status);
         if ( ( tempI1 < 0 ) || ( tempI1 > 1 ) )  { go_BYE(-1); }
         status = set_bit_u64(data_ptr, row_idx, tempI1); cBYE(status);
@@ -33,7 +32,7 @@ asc_to_bin(
       break;
     case BL:
       {
-        bool *data_ptr = (bool *)data[col_idx];
+        bool *data_ptr = (bool *)data;
         bool tempBL = false;
         if ( !is_val_null ) { 
           if ( ( strcasecmp(buf, "true") == 0 ) || 
@@ -56,7 +55,7 @@ asc_to_bin(
       break;
     case I1:
       {
-        int8_t *data_ptr = (int8_t *)data[col_idx];
+        int8_t *data_ptr = (int8_t *)data;
         int8_t tempI1 = 0;
         if ( !is_val_null ) { status = txt_to_I1(buf, &tempI1); }
         data_ptr[row_idx] = tempI1;
@@ -64,7 +63,7 @@ asc_to_bin(
       break;
     case I2:
       {
-        int16_t *data_ptr = (int16_t *)data[col_idx];
+        int16_t *data_ptr = (int16_t *)data;
         int16_t tempI2 = 0;
         if ( !is_val_null ) { status = txt_to_I2(buf, &tempI2); }
         data_ptr[row_idx] = tempI2;
@@ -72,7 +71,7 @@ asc_to_bin(
       break;
     case I4:
       {
-        int32_t *data_ptr = (int32_t *)data[col_idx];
+        int32_t *data_ptr = (int32_t *)data;
         int32_t tempI4 = 0;
         if ( !is_val_null ) { status = txt_to_I4(buf, &tempI4); }
         data_ptr[row_idx] = tempI4;
@@ -80,7 +79,7 @@ asc_to_bin(
       break;
     case I8:
       {
-        int64_t *data_ptr = (int64_t *)data[col_idx];
+        int64_t *data_ptr = (int64_t *)data;
         int64_t tempI8 = 0;
         if ( !is_val_null ) { status = txt_to_I8(buf, &tempI8); }
         data_ptr[row_idx] = tempI8;
@@ -88,7 +87,7 @@ asc_to_bin(
       break;
     case F4:
       {
-        float *data_ptr = (float *)data[col_idx];
+        float *data_ptr = (float *)data;
         float tempF4 = 0;
         if ( !is_val_null ) { status = txt_to_F4(buf, &tempF4); }
         data_ptr[row_idx] = tempF4;
@@ -96,7 +95,7 @@ asc_to_bin(
       break;
     case F8:
       {
-        double *data_ptr = (double *)data[col_idx];
+        double *data_ptr = (double *)data;
         double tempF8 = 0;
         if ( !is_val_null ) { status = txt_to_F8(buf, &tempF8); }
         data_ptr[row_idx] = tempF8;
@@ -104,7 +103,7 @@ asc_to_bin(
       break;
     case SC : 
       {
-        char *data_ptr = (char *)data[col_idx];
+        char *data_ptr = (char *)data;
         memset(data_ptr+(row_idx*width), '\0', width);
         memcpy(data_ptr+(row_idx*width), buf,  width);
       }

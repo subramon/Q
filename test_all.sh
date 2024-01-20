@@ -130,5 +130,7 @@ qjit prep.lua
 cd ~/Q/OPERATORS/LOAD_CSV/test/
 qjit test_load_csv.lua
 qjit test_SC_to_XX.lua
+qjit test_SC_to_lkp.lua
 qjit test_SC_to_TM1.lua
+bash test_SC_to_TM.sh
 echo "Successfully completed $0 in $PWD"

@@ -14,7 +14,6 @@ txt_to_F4(
   char *endptr;
   double out;
   if ( ( X == NULL ) || ( *X == '\0' ) ) { status = -1; goto BYE; }
-  if ( !is_valid_chars_for_num(X) ) { status = -1; goto BYE; }
   out = strtold(X, &endptr);
   if ( ( *endptr != '\0' ) && ( *endptr != '\n' ) ) { status = -1; goto BYE; }
   if ( endptr == X ) { status = -1; goto BYE; } 

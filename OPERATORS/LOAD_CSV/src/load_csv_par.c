@@ -15,8 +15,11 @@
 #include "set_bit_u64.h"
 #include "rs_mmap.h"
 #include "trim.h"
+#include "get_fld_sep.h"
+#include "get_cell.h"
+#include "asc_to_bin.h"
 //STOP_INCLUDES
-#include "load_csv_fast.h"
+#include "load_csv_par.h"
 
 /* Inputs
  * 1. CSV file to be read
@@ -31,6 +34,7 @@
 int
 load_csv_par(
     const char * data_file,
+    bool is_hdr,
     uint64_t *ptr_bytes_read,  // INPUT and OUTPUT 
     uint32_t nC, // number of columns
     const char *str_fld_sep,
@@ -53,6 +57,7 @@ load_csv_par(
 {
   int status = 0;
   char *X = NULL; uint64_t nX = 0; 
+  char *bak_X = NULL; uint64_t bak_nX = 0; 
   char *Y = NULL; uint64_t nY = 0; 
   uint16_t *lens = NULL; uint64_t n_lens; // lens[i] == length of line i
 
@@ -75,38 +80,56 @@ load_csv_par(
   // mmap the file
   status = rs_mmap(data_file, &X, &nX, false); cBYE(status);
   if ( ( X == NULL ) || ( nX == 0 ) )  { go_BYE(-1); }
+  bak_X = X; bak_nX = nX;
+  X += bytes_read;
+  nX -= bytes_read;
   // mmap the line lengths file
-  status = rs_mmap(offset_file, &Y, &nY, false); cBYE(status);
+  status = rs_mmap(lengths_file, &Y, &nY, false); cBYE(status);
   if ( ( Y == NULL ) || ( nY == 0 ) ) { go_BYE(-1); }
   lens = (uint16_t *)Y;
   n_lens = nY / sizeof(uint16_t);
   if ( ( n_lens * sizeof(uint16_t) ) != nY ) { go_BYE(-1); } 
   uint64_t num_rows_total = n_lens;
+  lens += (chunk_num * chunk_size);
+  n_lens -= (chunk_num * chunk_size);
   // handle header if any 
+  uint32_t hdr_len = 0;
   if ( is_hdr ) { 
     num_rows_total--; 
-    if ( chunk_num == 0 )  {
-      bytes_read += lens[0];
-      lens++;
+    hdr_len = lens[0];
+    lens++;
+    n_lens--;
+    if ( chunk_num == 0 ) { 
+      X += hdr_len;
+      nX -= hdr_len;
     }
   }
   //-------------------------------------------
   uint64_t num_rows_read = chunk_size * chunk_num;
   uint64_t num_rows_to_read = mcr_min(chunk_size, 
-        (num_rows_total - num_rows_read));
+      (num_rows_total - num_rows_read));
   if ( num_rows_to_read == 0 ) { goto BYE; } // Nothing more to do 
-  // Position lens at right spot
-  lens   += num_rows_read * sizeof(uint16_t);
   // Find size of line to allocate (also create offsets)
   offsets = malloc(num_rows_to_read * sizeof(uint64_t));
   return_if_malloc_failed(offsets);
   uint32_t max_line_length = 0;
-  offsets[0] = bytes_read; 
+  offsets[0] = 0; 
   for ( uint32_t i = 0; i < num_rows_to_read; i++ ) {
-    max_lens = mcr_max(max_line_length, lens[i]);
+    max_line_length = mcr_max(max_line_length, lens[i]);
     if ( i > 0 ) { 
       offsets[i] = offsets[i-1] + lens[i-1];
+    }
   }
+#ifdef DEBUG
+  char *Z = X;
+  for ( uint32_t i = 0; i < num_rows_to_read; i++ ) {
+    char *cptr = Z + (lens[i]-1);
+    if ( *cptr != '\n' ) { 
+      go_BYE(-1);
+    }
+    Z += lens[i];
+  }
+#endif
   max_line_length++; // space for nullc
   // Get number of threads
   nT = omp_get_num_threads();
@@ -114,20 +137,26 @@ load_csv_par(
   lines = malloc(nT * sizeof(char *));
   return_if_malloc_failed(lines);
   memset(lines, 0,  nT * sizeof(char *));
-  for ( int i = 0.; i < nT; i++ ) {
+  for ( uint32_t i = 0.; i < nT; i++ ) {
     lines[i] = malloc(max_line_length);
     return_if_malloc_failed(lines[i]);
     memset(lines[i], 0,  max_line_length);
   }
 
-  uint32_t omp_chunk_size = mcr_min(64, num_rows_to_read/nT);
-#pragma omp parallel for schedule(static, omp_chunk_size)
+// TODO  uint32_t omp_chunk_size = mcr_min(64, num_rows_to_read/nT);
+// TODO #pragma omp parallel for schedule(static, omp_chunk_size)
   for ( uint32_t row_idx = 0; row_idx < num_rows_to_read; row_idx++ ) {
     int tid = omp_get_thread_num();
     // copy a line worth of data into your local buffer
     char *line = lines[tid];
-    memcpy(line, X+offsets[i], lens[i]);
+    if ( offsets[row_idx] + lens[row_idx] > nX ) { go_BYE(-1); }
+    bytes_read += lens[row_idx];
+    memcpy(line, X+offsets[row_idx], lens[row_idx]);
+
+    size_t lidx = 0; 
+    // lidx used to track progress as we consume cells in a line 
     for ( uint32_t col_idx = 0; col_idx < nC; col_idx++ ) {
+      if ( status < 0 ) { continue; }
       bool is_last_col;
       bool is_val_null;
       memset(buf, '\0', max_width); // Clear buffer into which cell is read
@@ -145,7 +174,7 @@ load_csv_par(
         tmp_buf = lbuf; 
       }
       // get the string value of the cell 
-      size_t xidx = get_cell(line, lens[i], 0, fld_sep, 
+      lidx = get_cell(line, lens[row_idx], lidx, fld_sep, 
           is_last_col, buf, tmp_buf, max_width-1);
       // If this column is not to be loaded then continue 
       if ( !is_load[col_idx] ) {
@@ -156,8 +185,8 @@ load_csv_par(
         is_val_null = true;
         if ( !has_nulls[col_idx] ) { 
           fprintf(stderr, "got null value when user said no null values\t");
-          fprintf(stderr, "chunk_num = %u, chunk_size = %u, i = %u \n",
-              chunk_num, chunk_size, i);
+          fprintf(stderr, "chunk # = %u, chunk sz = %u, row = %u \n",
+              chunk_num, chunk_size, row_idx);
           status = -1; continue; // cannot quit out of omp loop 
         }
       }
@@ -180,139 +209,26 @@ load_csv_par(
         }
       }
       // write data 
-      status = asc_to_bin(buf, c_types[col_idx], row_idx, data);
-      if ( status < 0 ) { continue; }
-      switch ( c_qtypes[col_idx] ) {
-        case B1:
-          {
-            int8_t tempI1 = 0;
-            uint64_t *data_ptr = (uint64_t *)data[col_idx];
-            status = txt_to_I1(buf, &tempI1);  cBYE(status);
-            if ( ( tempI1 < 0 ) || ( tempI1 > 1 ) )  { go_BYE(-1); }
-            status = set_bit_u64(data_ptr, row_idx, tempI1); cBYE(status);
-          }
-          break;
-        case BL:
-          {
-            bool *data_ptr = (bool *)data[col_idx];
-            bool tempBL = false;
-            if ( !is_val_null ) { 
-              if ( ( strcasecmp(buf, "true") == 0 ) || 
-                  ( strcmp(buf, "1") == 0 ) ) { 
-                tempBL = true;
-              }
-              else {
-                if ( ( strcasecmp(buf, "false") == 0 ) || 
-                    ( strcmp(buf, "0") == 0 ) ) { 
-                  tempBL = false;
-                }
-                else {
-                  fprintf(stderr, "Bad value for boolean = [%s] \n", buf);
-                  go_BYE(-1);
-                }
-              }
-            }
-            data_ptr[row_idx] = tempBL;
-          }
-          break;
-        case I1:
-          {
-            int8_t *data_ptr = (int8_t *)data[col_idx];
-            int8_t tempI1 = 0;
-            if ( !is_val_null ) { status = txt_to_I1(buf, &tempI1); }
-            data_ptr[row_idx] = tempI1;
-          }
-          break;
-        case I2:
-          {
-            int16_t *data_ptr = (int16_t *)data[col_idx];
-            int16_t tempI2 = 0;
-            if ( !is_val_null ) { status = txt_to_I2(buf, &tempI2); }
-            data_ptr[row_idx] = tempI2;
-          }
-          break;
-        case I4:
-          {
-            int32_t *data_ptr = (int32_t *)data[col_idx];
-            int32_t tempI4 = 0;
-            if ( !is_val_null ) { status = txt_to_I4(buf, &tempI4); }
-            data_ptr[row_idx] = tempI4;
-          }
-          break;
-        case I8:
-          {
-            int64_t *data_ptr = (int64_t *)data[col_idx];
-            int64_t tempI8 = 0;
-            if ( !is_val_null ) { status = txt_to_I8(buf, &tempI8); }
-            data_ptr[row_idx] = tempI8;
-          }
-          break;
-        case F4:
-          {
-            float *data_ptr = (float *)data[col_idx];
-            float tempF4 = 0;
-            if ( !is_val_null ) { status = txt_to_F4(buf, &tempF4); }
-            data_ptr[row_idx] = tempF4;
-          }
-          break;
-        case F8:
-          {
-            double *data_ptr = (double *)data[col_idx];
-            double tempF8 = 0;
-            if ( !is_val_null ) { status = txt_to_F8(buf, &tempF8); }
-            data_ptr[row_idx] = tempF8;
-          }
-          break;
-        case SC : 
-          {
-            char *data_ptr = (char *)data[col_idx];
-            memset(data_ptr+(row_idx*width[col_idx]), '\0', width[col_idx]);
-            memcpy(data_ptr+(row_idx*width[col_idx]), buf,  width[col_idx]);
-            /*
-
-               char *cptr = buf; int ii = row_idx*width[col_idx];;
-               for ( int jj = 0 ; 
-               ( ( *cptr != '\0' ) && ( jj < width[col_idx] ) ) ; jj++ ) { 
-               data[col_idx][ii++] = *cptr++;
-               }
-            // printf("%s\n", buf);
-            if ( (int)strlen(buf) >= width[col_idx] ) { 
-            printf("hello world\n");
-            go_BYE(-1); }
-            // strcpy(data_ptr+(row_idx*width[col_idx]), buf);
-            */
-          }
-          break;
-        default:
-          fprintf(stderr, "Control should not come here\n");
-          go_BYE(-1); 
-          break;
-      }
-      //--------------------------
+      status = asc_to_bin(buf, is_val_null, c_qtypes[col_idx], 
+          width[col_idx], row_idx, data[col_idx]);
       if ( status < 0 ) { 
-        fprintf(stderr, "Error for row %lu, col %d, cell [%s]\n",
+        fprintf(stderr, "Error for row %u, col %u, cell [%s]\n",
             row_idx, col_idx, buf);
+        continue; 
       }
-      cBYE(status);
-      col_idx++;
-      if ( col_idx == nC ) { 
-        col_idx = 0;
-        row_idx++;
-        if ( row_idx == chunk_size ) { 
-          // fprintf(stderr, "222: Breaking early\n");
-          break;
-        }
-      }
-      if ( xidx >= nX ) { // TODO P4 check == or >= 
-        break; 
-      } 
+      printf("%u:%u:%u:%s\n", chunk_num, row_idx, col_idx, buf);
+      //--------------------------
     }
+  }
   cBYE(status); // in case of error
-  *ptr_bytes_read = 0; // TODO P0
-  *ptr_num_rows_this_chunk = 0; // TODO P0 
+  if ( chunk_num == 0 )  {
+    bytes_read += hdr_len;
+  }
+  *ptr_bytes_read = bytes_read; 
+  *ptr_num_rows_this_chunk = num_rows_to_read;
 BYE:
   if ( lines != NULL ) { 
-    for ( int i = 0.; i < nT; i++ ) {
+    for ( uint32_t i = 0.; i < nT; i++ ) {
       free_if_non_null(lines[i]);
     }
     free_if_non_null(lines);
@@ -320,7 +236,7 @@ BYE:
   free_if_non_null(buf); 
   free_if_non_null(lbuf); 
   free_if_non_null(offsets);
-  mcr_rs_munmap(X, nX);
+  mcr_rs_munmap(bak_X, bak_nX);
   mcr_rs_munmap(Y, nY);
   return status;
 }

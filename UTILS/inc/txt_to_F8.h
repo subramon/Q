@@ -1,9 +1,10 @@
+#include <float.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include "q_macros.h"
-#include "is_valid_chars_for_num.h"
 
 extern int
 txt_to_F8(

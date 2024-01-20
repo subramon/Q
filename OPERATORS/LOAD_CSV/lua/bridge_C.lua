@@ -34,9 +34,13 @@ local function bridge_C(
   subs.fn = "load_csv_fast"
   -- TODO FIX We need to add get_fld_sep
   subs.dotc = "OPERATORS/LOAD_CSV/src/load_csv_fast.c"
-  subs.doth = "OPERATORS/LOAD_CSV/inc/load_csv_fast.h"
+  subs.doth ="OPERATORS/LOAD_CSV/inc/load_csv_fast.h" 
   subs.incs = { "OPERATORS/LOAD_CSV/inc/", "UTILS/inc/" }
   subs.srcs = { "UTILS/src/is_valid_chars_for_num.c", 
+    "OPERATORS/LOAD_CSV/src/get_cell.c",
+    "OPERATORS/LOAD_CSV/src/asc_to_bin.c",
+    "OPERATORS/LOAD_CSV/src/get_fld_sep.c",
+    "OPERATORS/LOAD_CSV/src/chk_data.c",
     "UTILS/src/get_bit_u64.c",  
     "UTILS/src/set_bit_u64.c",  
     "UTILS/src/rs_mmap.c",  
