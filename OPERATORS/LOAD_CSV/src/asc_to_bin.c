@@ -5,6 +5,10 @@
 #include "txt_to_I2.h"
 #include "txt_to_I4.h"
 #include "txt_to_I8.h"
+#include "txt_to_UI1.h"
+#include "txt_to_UI2.h"
+#include "txt_to_UI4.h"
+#include "txt_to_UI8.h"
 #include "txt_to_F4.h"
 #include "txt_to_F8.h"
 #include "set_bit_u64.h"
@@ -83,6 +87,38 @@ asc_to_bin(
         int64_t tempI8 = 0;
         if ( !is_val_null ) { status = txt_to_I8(buf, &tempI8); }
         data_ptr[row_idx] = tempI8;
+      }
+      break;
+    case UI1:
+      {
+        uint8_t *data_ptr = (uint8_t *)data;
+        uint8_t tempUI1 = 0;
+        if ( !is_val_null ) { status = txt_to_UI1(buf, &tempUI1); }
+        data_ptr[row_idx] = tempUI1;
+      }
+      break;
+    case UI2:
+      {
+        uint16_t *data_ptr = (uint16_t *)data;
+        uint16_t tempUI2 = 0;
+        if ( !is_val_null ) { status = txt_to_UI2(buf, &tempUI2); }
+        data_ptr[row_idx] = tempUI2;
+      }
+      break;
+    case UI4:
+      {
+        uint32_t *data_ptr = (uint32_t *)data;
+        uint32_t tempUI4 = 0;
+        if ( !is_val_null ) { status = txt_to_UI4(buf, &tempUI4); }
+        data_ptr[row_idx] = tempUI4;
+      }
+      break;
+    case UI8:
+      {
+        uint64_t *data_ptr = (uint64_t *)data;
+        uint64_t tempUI8 = 0;
+        if ( !is_val_null ) { status = txt_to_UI8(buf, &tempUI8); }
+        data_ptr[row_idx] = tempUI8;
       }
       break;
     case F4:

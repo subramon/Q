@@ -5,12 +5,7 @@
 #include <stdlib.h>
 #include "q_macros.h"
 #include "qtypes.h"
-#include "txt_to_I1.h"
-#include "txt_to_I2.h"
-#include "txt_to_I4.h"
-#include "txt_to_I8.h"
-#include "txt_to_F4.h"
-#include "txt_to_F8.h"
+#include "get_cell.h"
 #include "rs_mmap.h"
 #include "trim.h"
 #include "set_bit_u64.h"
@@ -35,10 +30,10 @@
 int
 load_csv_fast(
     const char * infile,
-    uint64_t nC,
+    uint32_t nC,
     const char *str_fld_sep,
-    uint64_t chunk_size,
-    uint64_t max_width,
+    uint32_t chunk_size,
+    uint32_t max_width,
     uint64_t *ptr_nR,
     uint64_t *ptr_file_offset,
     const int *const c_qtypes, /* [nC] */
@@ -49,13 +44,13 @@ load_csv_fast(
     const bool * const has_nulls, /* [nC] */
     const uint32_t * const width, /* [nC] */
     char **data, /* [nC][chunk_size] */
-    char **nn_data /* [nC][chunk_size] */
+    bool **nn_data /* [nC][chunk_size] */
     )
 //STOP_FUNC_DECL
 {
   int status = 0;
-  char *mmap_file = NULL; //X
-  uint64_t file_size = 0; //nX
+  char *X = NULL; // pointer to mmap'd file 
+  uint64_t nX = 0; // size of file 
   char *lbuf = NULL;
   char *buf = NULL;
 
@@ -77,16 +72,18 @@ load_csv_fast(
   if ( ptr_file_offset == NULL ) { go_BYE(-1); }
 
   // Check on input data structures
-  status = chk_data(data, nn_data, nC, has_nulls, width); cBYE(status);
+  status = chk_data(data, nn_data, nC, has_nulls, is_load, width, 
+      max_width); 
+  cBYE(status);
   *ptr_nR = 0;
   // mmap the file
-  status = rs_mmap(infile, &mmap_file, &file_size, false); cBYE(status);
-  if ( ( mmap_file == NULL ) || ( file_size == 0 ) )  { go_BYE(-1); }
-  if ( *ptr_file_offset > file_size ) { go_BYE(-1); }
+  status = rs_mmap(infile, &X, &nX, false); cBYE(status);
+  if ( ( X == NULL ) || ( nX == 0 ) )  { go_BYE(-1); }
+  if ( *ptr_file_offset > nX ) { go_BYE(-1); }
   //----------------------------------------
 
   uint64_t xidx = *ptr_file_offset; // "seek" to proper point in file
-  if ( xidx >= file_size ) {// nothing more to read 
+  if ( xidx >= nX ) {// nothing more to read 
     // fprintf(stderr, "Nothing more to read\n");
     goto BYE; 
   } 
@@ -108,7 +105,7 @@ load_csv_fast(
     // If trimming needed, we need to send a buffer for that purpose
     char *tmp_buf = NULL;
     if ( is_trim[col_ctr] ) { tmp_buf = lbuf; }
-    xidx = get_cell(mmap_file, file_size, xidx, fld_sep, is_last_col, buf, 
+    xidx = get_cell(X, nX, xidx, fld_sep, is_last_col, buf, 
         tmp_buf, max_width-1);
 
     // xidx == 0 => means the file is empty. 
@@ -123,7 +120,7 @@ load_csv_fast(
         col_ctr = 0;
         is_hdr = false;
       }
-      if ( xidx >= file_size ) { break; } 
+      if ( xidx >= nX ) { break; } 
       continue; 
     }
     // If this column is not to be loaded then continue 
@@ -298,6 +295,6 @@ load_csv_fast(
 BYE:
   free_if_non_null(buf); 
   free_if_non_null(lbuf); 
-  mcr_rs_munmap(mmap_file, file_size);
+  mcr_rs_munmap(X, file_size);
   return status;
 }

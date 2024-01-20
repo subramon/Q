@@ -216,7 +216,7 @@ load_csv_par(
             row_idx, col_idx, buf);
         continue; 
       }
-      printf("%u:%u:%u:%s\n", chunk_num, row_idx, col_idx, buf);
+      // printf("%u:%u:%u:%s\n", chunk_num, row_idx, col_idx, buf);
       //--------------------------
     }
   }

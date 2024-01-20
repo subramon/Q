@@ -3,12 +3,12 @@
 #include "chk_data.h"
 int 
 chk_data(
-    char **data, 
-    bool **nn_data, 
+    const char ** const data, 
+     const bool ** const nn_data, 
     uint32_t nC, 
-    bool *has_nulls, // [nC]
-    bool *is_load, // [nC]
-    uint32_t *width,  // [nC]
+    const bool * const has_nulls, // [nC]
+    const bool * const is_load, // [nC]
+    const uint32_t * const const  width,  // [nC]
     uint32_t max_width
     )
 {

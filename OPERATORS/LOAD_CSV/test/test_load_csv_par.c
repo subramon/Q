@@ -27,17 +27,25 @@ void
   bool is_hdr = true; // TODO experiment with is_hdr == false
   // STOP  Inputs 
 
-  char **data = NULL;
-  bool **nn_data = NULL;
+  char **data = NULL; char **bak_data = NULL; 
+  bool **nn_data = NULL; bool **bak_nn_data = NULL; 
   uint64_t bytes_read = 0;
   uint32_t chunk_num = 0; 
   uint32_t num_rows_this_chunk;
 
   data = malloc(nC * sizeof(char *));
   nn_data = malloc(nC * sizeof(bool *));
+
+  bak_data = malloc(nC * sizeof(char *));
+  memset(bak_data, 0,  nC * sizeof(char *));
+  bak_nn_data = malloc(nC * sizeof(bool *));
+  memset(bak_nn_data, 0,  nC * sizeof(bool *));
+
   for ( uint32_t i = 0; i < nC; i++ ) { 
     data[i] = malloc(4*1048576); // TODO P4 make this tighter
     nn_data[i] = malloc(1048576); // TODO P4 make this tighter
+    bak_data[i] = data[i];
+    bak_nn_data[i] = nn_data[i];
   }
   // START Quick check on lengths file 
   status = rs_mmap(data_file, &Z, &nZ, 0); cBYE(status);
@@ -56,7 +64,8 @@ void
   }
 
 
-  for ( ; ; chunk_num++ ) { 
+  uint32_t total_rows = 0;
+  for ( ; ; chunk_num++ ) {
     status = load_csv_par(
         data_file,
         is_hdr,
@@ -78,24 +87,59 @@ void
         lens_file
         );
     cBYE(status);
-    printf("Read %u for chunk %d \n", num_rows_this_chunk, chunk_num);
+    // printf("Read %u for chunk %d \n", num_rows_this_chunk, chunk_num);
+    total_rows += num_rows_this_chunk;
     if ( num_rows_this_chunk < chunk_size ) { 
-      printf("hello world\n");
       break; 
     }
+    // advance pointers to buffer for next chunk 
+    data[1] += ( chunk_size * sizeof(uint16_t)); 
+    for ( uint32_t i = 0; i < nC; i++ ) { 
+      nn_data[i] += ( chunk_size * sizeof(bool)); 
+    }
   }
+  // START: some very rudimentary checking 
+  if ( total_rows != 500000 ) { go_BYE(-1); } 
+  {
+    int16_t *I2ptr = (int16_t *)(bak_data[1]);
+    int16_t max = SHRT_MIN;
+    int16_t min = SHRT_MAX;
+    for ( uint32_t i = 0; i < total_rows; i++ ) { 
+      if ( I2ptr[i] > max ) { max = I2ptr[i]; }
+      if ( I2ptr[i] < min ) { min = I2ptr[i]; }
+      if ( I2ptr[i] > 10000 ) {
+        printf("hello world\n");
+      }
+    }
+    if ( max != 9999 ) { go_BYE(-1); }
+    if ( min != 1326 ) { go_BYE(-1); }
+  }
+  {
+    int64_t *I8ptr = (int64_t *)(bak_data[2]);
+    int64_t max = 0;
+    int64_t min = LONG_MAX;
+    for ( uint32_t i = 0; i < total_rows; i++ ) { 
+      if ( I8ptr[i] > max ) { max = I8ptr[i]; }
+      if ( I8ptr[i] < min ) { min = I8ptr[i]; }
+    }
+    if ( max != 998400000005226 ) { go_BYE(-1); }
+    if ( min !=  100000002868 ) { go_BYE(-1); }
+  }
+  printf("Test completed succesfully\n");
 BYE:
-  if ( data != NULL ) { 
+  free_if_non_null(data);
+  free_if_non_null(nn_data);
+  if ( bak_data != NULL ) { 
     for ( uint32_t i = 0; i < nC; i++ ) { 
-      free_if_non_null(data[i]);
+      free_if_non_null(bak_data[i]);
     }
-    free_if_non_null(data);
+    free_if_non_null(bak_data);
   }
-  if ( nn_data != NULL ) { 
+  if ( bak_nn_data != NULL ) { 
     for ( uint32_t i = 0; i < nC; i++ ) { 
-      free_if_non_null(nn_data[i]);
+      free_if_non_null(bak_nn_data[i]);
     }
-    free_if_non_null(nn_data);
+    free_if_non_null(bak_nn_data);
   }
   mcr_rs_munmap(X, nX);
   mcr_rs_munmap(Z, nZ);
