@@ -62,6 +62,7 @@ vctr_chk(
     )
 {
   int status = 0;
+  vctr_rs_hmap_val_t vctr_val; memset(&vctr_val, 0, sizeof(vctr_val));
 
   // early exit case
   if ( vctr_uqid == 0 ) { goto BYE; }
@@ -73,7 +74,7 @@ vctr_chk(
     fprintf(stderr, "Could not find vector [%u:%u]\n", 
         tbsp, vctr_uqid); go_BYE(-1); }
 
-  vctr_rs_hmap_val_t vctr_val = g_vctr_hmap[tbsp].bkts[vctr_where_found].val;
+  vctr_val = g_vctr_hmap[tbsp].bkts[vctr_where_found].val;
   uint32_t qtype           = vctr_val.qtype;
   if ( qtype >= NUM_QTYPES ) { go_BYE(-1); } 
   if ( qtype <= Q0 ) { go_BYE(-1); } 
@@ -182,7 +183,7 @@ vctr_chk(
   // we can have an empty Vector (while it is being created)
   if ( vctr_val.is_eov ) {  
     // if ( vctr_val.ref_count == 0 ) {  go_BYE(-1); }
-    printf("TODO P1 Think about ref_count == 0\n"); 
+    // TODO printf("TODO P1 Think about ref_count == 0\n"); 
   }
   // if ( num_elements == 0 ) { go_BYE(-1); } 
   // max_num_in_chnk must be multipke of 64 
@@ -229,7 +230,13 @@ vctr_chk(
       max_early_free_idx = chnk_idx;
       num_early_freed++;
     }
-    if ( chnk_val.num_readers != 0 ) { go_BYE(-1); } 
+    if ( chnk_val.num_readers != 0 ) { 
+      fprintf(stderr, "Error with chunk %u of vector %s\n",
+          chnk_idx, vctr_val.name);
+      fprintf(stderr, "num in chunk %u \n", chnk_val.num_elements);
+
+      go_BYE(-1); 
+    } 
     if ( chnk_val.num_writers != 0 ) { go_BYE(-1); } 
     if ( chnk_val.num_readers > 0 ) { 
       if ( chnk_val.num_writers != 0 ) { go_BYE(-1); } 
@@ -292,5 +299,8 @@ vctr_chk(
     if ( ptr_chnk->was_early_freed == false ) { go_BYE(-1); }
   }
 BYE:
+  if ( status < 0 ) { 
+    printf("Error with vector [%s] \n", vctr_val.name);
+  }
   return status;
 }

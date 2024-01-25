@@ -34,7 +34,7 @@ ${fn}(
   // Following needed because we may not always have b for some operations
   // like incr, decr, ....
   if ( ptr_sval != NULL ) { b = *ptr_sval; }
-#pragma omp parallel for schedule(static, ${chunk_size})
+#pragma omp parallel for schedule(static, ${omp_chunk_size})
   for ( uint32_t i = 0; i < nR; i++ ) {  
     ${f1_ctype} a = in[i]; 
     ${f2_ctype} c;

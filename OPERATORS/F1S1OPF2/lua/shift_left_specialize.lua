@@ -44,7 +44,7 @@ return function (
     .. "_" .. subs.f2_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
 
-  subs.chunk_size = 1024 -- TODO experiment with this 
+  subs.omp_chunk_size = 1024 -- TODO experiment with this 
 
   subs.ptr_to_sclr = ffi.cast(subs.cast_s1_as, s1:to_data())
 

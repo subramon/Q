@@ -1,3 +1,8 @@
+Consider parallelizing SC_to_lkp. Maybe write a C version that 
+does binary search on strings
+
+Why do we have DROP_NULLS as an operator?
+
 Why do we have CLONE as an operator if it is in lVector
 Also, lVector allows us to clone only if is_lma() == true
 

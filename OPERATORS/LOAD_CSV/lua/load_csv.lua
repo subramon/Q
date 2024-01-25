@@ -85,7 +85,7 @@ local function load_csv(
             end
           end
         end
-        print("chunk_num/mem_used = ", chunk_num, lgutils.mem_used())
+        -- print("chunk_num/mem_used = ", chunk_num, lgutils.mem_used())
         --===================================
         assert(chunk_num == l_chunk_num)
         l_chunk_num = l_chunk_num + 1 

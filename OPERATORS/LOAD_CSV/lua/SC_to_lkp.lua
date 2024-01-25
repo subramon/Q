@@ -1,12 +1,10 @@
 -- Provides a slow but easy way to convert a string into a number
-local qc            = require 'Q/UTILS/lua/qcore'
 local ffi           = require 'ffi'
 local cmem          = require 'libcmem'
 local cutils        = require 'libcutils'
 local get_ptr       = require 'Q/UTILS/lua/get_ptr'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
-local qcfg          = require 'Q/UTILS/lua/qcfg'
 local SC_to_lkp_specialize = 
   require 'Q/OPERATORS/LOAD_CSV/lua/SC_to_lkp_specialize'
 local function SC_to_lkp(
