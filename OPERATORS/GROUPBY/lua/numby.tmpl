@@ -8,6 +8,7 @@ return require 'Q/UTILS/lua/code_gen' {
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <omp.h>
 
 #include "q_macros.h"
 
@@ -38,7 +39,8 @@ int ${fn}(
   if ( nZ == 0 ) { go_BYE(-1); }
 
   int nT1 = nX / ( 16 * nZ ); 
-  int nT2 = sysconf(_SC_NPROCESSORS_ONLN);
+  // int nT2 = sysconf(_SC_NPROCESSORS_ONLN);
+  int nT2 = omp_get_num_threads(); 
   int nT = mcr_min(nT1, nT2); 
   nT = mcr_max(1, nT);
   int block_size = nX / nT;

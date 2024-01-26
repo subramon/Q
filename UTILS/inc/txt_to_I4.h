@@ -1,8 +1,11 @@
+#include <errno.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "is_valid_chars_for_num.h"
+#include "q_macros.h"
 
 extern int
 txt_to_I4(

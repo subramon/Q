@@ -4,6 +4,7 @@ return require 'Q/UTILS/lua/code_gen' {
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <omp.h>
 #include "minmax_struct.h"
 //START_FOR_CDEF
 extern int
@@ -30,7 +31,8 @@ ${fn}(
 
   ${ctype} val = ptr_args->val;
   int64_t     idx = ptr_args->idx;
-  uint32_t nT     = sysconf(_SC_NPROCESSORS_ONLN);
+  // uint32_t nT     = sysconf(_SC_NPROCESSORS_ONLN);
+  uint32_t nT = omp_get_num_threads(); 
 
   if ( offset == 0 ) { val = in[0]; idx = 0; }
   uint64_t block_size = nR / nT;

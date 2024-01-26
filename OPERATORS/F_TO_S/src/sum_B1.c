@@ -1,3 +1,4 @@
+#include <omp.h>
 #include "sum_struct.h"
 #include "sum_B1.h"
 #include "get_bit_u64.h"
@@ -11,7 +12,8 @@ sum_B1(
 {
   int status = 0;
   
-  uint32_t nT = sysconf(_SC_NPROCESSORS_ONLN);
+  // uint32_t nT = sysconf(_SC_NPROCESSORS_ONLN);
+  uint32_t nT = omp_get_num_threads(); 
   // Convert number of elements (nR) to number of 64 bit integers (nRprime)
   uint64_t nRprime = nR / 64; 
   uint64_t block_size = nRprime / nT;

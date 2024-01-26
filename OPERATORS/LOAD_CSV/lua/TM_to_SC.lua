@@ -51,7 +51,7 @@ local function TM_to_SC(
     local start_time = cutils.rdtsc()
     local status = qc["TM_to_SC"](in_ptr, len, format,
       cst_out_buf, out_width)
-    record_time(start_time, "load_csv_fast")
+    record_time(start_time, "TM_to_SC")
     assert(status == 0)
     inv:unget_chunk(chunk_idx)
     if ( len < max_num_in_chunk ) then return len, out_buf end 

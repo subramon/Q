@@ -96,7 +96,7 @@ local function SC_to_TM(
     else
       status = qc[subs.fn](base_ptr, in_width, len, format, cst_buf)
     end
-    record_time(start_time, "load_csv_fast")
+    record_time(start_time, "SC_to_TM")
     assert(status == 0)
     invec:unget_chunk(l_chunk_num)
     l_chunk_num = l_chunk_num + 1

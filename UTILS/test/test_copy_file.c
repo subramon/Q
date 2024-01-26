@@ -1,8 +1,8 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<inttypes.h>
-#include "_copy_file.h"
-#include "_get_file_size.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include "copy_file.h"
+#include "get_file_size.h"
 
 int main(int argc, char** argv) {
   int status = 0;

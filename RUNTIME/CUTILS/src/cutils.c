@@ -18,11 +18,12 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-#include "get_file_size.h"
 #include "file_exists.h"
 #include "get_bit_u64.h"
+#include "get_file_size.h"
 #include "isdir.h"
 #include "isfile.h"
+#include "line_breaks.h"
 #include "mem_info.h"
 #include "mk_file.h"
 #include "qtypes.h"
@@ -206,6 +207,25 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_cutils_line_breaks( 
+    lua_State *L
+    )
+{
+  int status = 0;
+
+  int nargs = lua_gettop(L);
+  if ( nargs != 2 ) { go_BYE(-1); }
+  const char *const infile = luaL_checkstring(L, 1);
+  const char *const outfile = luaL_checkstring(L, 2);
+  status = line_breaks(infile, outfile); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_cutils_makepath( 
     lua_State *L
     )
@@ -297,6 +317,7 @@ static int l_cutils_mem_info(
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
+  return 2;
 }
 //----------------------------------------
 static int l_cutils_getsize( 
@@ -697,9 +718,10 @@ static const struct luaL_Reg cutils_methods[] = {
     { "delete",      l_cutils_delete },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
-    { "is_qtype",     l_cutils_is_qtype },
+    { "is_qtype",    l_cutils_is_qtype },
+    { "line_breaks", l_cutils_line_breaks },
     { "makepath",    l_cutils_makepath },
-    { "mem_info",     l_cutils_mem_info },
+    { "mem_info",    l_cutils_mem_info },
     { "mk_file",     l_cutils_mk_file },
     { "mkstemp",     l_cutils_mkstemp },
     { "num_lines",   l_cutils_num_lines },
@@ -729,6 +751,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "is_qtype",     l_cutils_is_qtype },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
+    { "line_breaks", l_cutils_line_breaks },
     { "makepath",    l_cutils_makepath },
     { "mem_info",     l_cutils_mem_info },
     { "mk_file",     l_cutils_mk_file },

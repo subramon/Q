@@ -219,7 +219,7 @@ tests.t4 = function()
   T.datetime:eval()
   T.datetime:pr("_1", 0, 0, format); 
   T.store_id:pr("_2", 0, 0, format); 
-  cVector.check_all(true, true)
+  assert(cVector.check_all())
   local x = Q.SC_to_TM(T.datetime, format):set_name("x")
   assert(type(x) == "lVector")
   x:eval()
@@ -327,10 +327,10 @@ tests.t5 = function()
 
   local T = Q.load_csv(datafile, M, O)
   assert(T.datetime) 
-  cVector:check_all(true, true)
+  assert(cVector.check_all())
   local x = Q.SC_to_TM(T.datetime, format):set_name("out_datetime")
 
-  cVector:check_all(true, true)
+  assert(cVector.check_all())
 
   local tm_flds = { 
   "tm_sec",
@@ -348,9 +348,9 @@ tests.t5 = function()
     out[i] = Q.TM_to_I2(x, tm_fld):set_name("out_" ..tm_fld)
     assert(type(out[i]) ==  "lVector")
   end
-  cVector:check_all(true, true)
+  assert(cVector.check_all())
   for i, tm_fld in ipairs(tm_flds) do out[i]:eval() end -- TODO 
-  cVector:check_all(true, true)
+  assert(cVector.check_all())
 
   local chunk_idx = 0
   local n
@@ -373,7 +373,7 @@ tests.t5 = function()
   for i, tm_fld in ipairs(tm_flds) do 
     local x = plfile.read(tm_fld)
     local y = plfile.read("_" .. tm_fld)
-    assert(x == y)
+    assert(x == y, "Difference for file " .. tm_fld)
   end
 
   if ( test_print ) then 
@@ -382,7 +382,8 @@ tests.t5 = function()
       Q.print_csv(out, {opfile = opfile, impl = impl})
       local expected = qcfg.q_src_root .. 
       "/OPERATORS/LOAD_CSV/test/chk_in5.csv"
-      assert(plutils.readfile(expected) == plutils.readfile(opfile))
+      assert(plutils.readfile(expected) == plutils.readfile(opfile),
+        "Discrepancy between " .. expected .. " and " .. opfile)
       print("Tested print with impl = " .. impl)
     end
   end
@@ -427,7 +428,6 @@ tests.t6 = function()
     assert(nn_f4:qtype() == nn_qtype)
     T.f4:set_nulls(nn_f4) -- because get_nulls breaks connection
 
-    print("XXXXXXXXXXXXXXXXXXXXXXXXX")
     T.i4:check()
     T.i4:pr("/tmp/_i4")
     T.f4:pr("/tmp/_f4")
