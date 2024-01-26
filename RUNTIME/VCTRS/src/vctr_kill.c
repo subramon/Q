@@ -76,6 +76,10 @@ vctr_kill(
   if ( !is_found ) { return -1; } // TODO P2 Should we be silent here?
   if ( !val.is_killable ) { goto BYE; } // silent exit
   // fprintf(stderr, "Vector [%u:%s] killed \n", vctr_uqid, val.name);
+  if ( val.num_lives_kill > 0 ) {
+    g_vctr_hmap[tbsp].bkts[where_found].val.num_lives_kill--;
+    goto BYE;  // lost one life but not ready to die
+  }
   status = vctr_del(tbsp, vctr_uqid, &is_found); 
   if ( !is_found ) { go_BYE(-1); } 
 BYE:

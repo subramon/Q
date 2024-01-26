@@ -968,7 +968,7 @@ end
 -- use this function to set kill-ability of vector 
 function lVector:killable(val)
   assert(type(val) == "number")
-  assert(cVector.killable(self._base_vec, val))
+  assert(cVector.set_num_lives_kill(self._base_vec, val))
   return self
 end
 --==================================================

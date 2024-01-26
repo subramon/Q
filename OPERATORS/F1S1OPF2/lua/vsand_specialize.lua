@@ -39,6 +39,7 @@ return function (
   subs.s1_ctype   = cutils.str_qtype_to_str_ctype(s1_qtype)
   subs.cast_s1_as = subs.s1_ctype .. " *"
 
+  subs.omp_chunk_size = 1024
   subs.code = "c = a & b; "
   subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"

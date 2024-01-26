@@ -19,11 +19,7 @@ local function expander_f1opf2f3(op, x, optargs)
   if not status then print(subs) end
 
   local func_name = assert(subs.fn)
-  -- START: Dynamic compilation
-  if ( not qc[func_name] ) then
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
-  end
-  -- STOP: Dynamic compilation
+  qc.q_add(subs)
   assert(qc[func_name], "Symbol not defined " .. func_name)
   
   local l_chunk_num = 0

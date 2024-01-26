@@ -1,3 +1,4 @@
+
 Test load_csv_par
 
 Consider as alternative to strict
@@ -10,6 +11,12 @@ Understand reference count on Vectors properly
 
 Handle const pointers uniformly based on
 https://stackoverflow.com/questions/14562845/why-does-passing-char-as-const-char-generate-a-warning
+
+
+Consider parallelizing SC_to_lkp. Maybe write a C version that 
+does binary search on strings
+
+Why do we have DROP_NULLS as an operator?
 
 
 Why do we have CLONE as an operator if it is in lVector
@@ -31,7 +38,7 @@ Should we use -flto? https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
 Use shell script to run test_save/test_restore 
 
 save meta_data in Q.save() e.g., sort_order
-===================
+
 In file included from
 /home/svdfeapi/Q//OPERATORS/PERMUTE/gen_inc/permute_from_UI8_I4.h:6:0,
 from

@@ -27,12 +27,7 @@ local function add_vec_val_by_idx(idx, src, dst, optargs)
   assert(status, "Error in specializer " .. sp_fn_name)
   local func_name = assert(subs.fn)
 
-  -- START: Dynamic compilation
-  if ( not qc[func_name] ) then
-    qc.q_add(subs); print("Dynamic compilation kicking in... ")
-  end
-  -- STOP: Dynamic compilation
-
+  qc.q_add(subs)
   assert(qc[func_name], "Symbol not available" .. func_name)
 
   --=====================================

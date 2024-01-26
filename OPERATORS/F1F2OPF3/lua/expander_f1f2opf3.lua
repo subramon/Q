@@ -30,6 +30,14 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
     local f2_len, f2_chunk, nn_f2_chunk
     f1_len, f1_chunk, nn_f1_chunk = f1:get_chunk(l_chunk_num)
     f2_len, f2_chunk, nn_f2_chunk = f2:get_chunk(l_chunk_num)
+    if ( f1_len ~= f2_len) then
+      print(f1:name())
+      print(f2:name())
+      print(f1_len)
+      print(f2_len)
+      print(l_chunk_num)
+      print("op = ", op)
+    end
     assert(f1_len == f2_len)
     -- early exit 
     if ( f1_len == 0 ) then 
