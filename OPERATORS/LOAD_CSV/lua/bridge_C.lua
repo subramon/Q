@@ -11,6 +11,7 @@ local function bridge_C(
   infile, 
   fld_sep,
   is_hdr,
+  is_par,
   max_num_in_chunk,
   file_offset,
   num_rows_read,
@@ -31,10 +32,15 @@ local function bridge_C(
   local max_width = qcfg.max_width_SC
   local nC = #M
   local subs = {}
-  subs.fn = "load_csv_fast"
-  -- TODO FIX We need to add get_fld_sep
-  subs.dotc = "OPERATORS/LOAD_CSV/src/load_csv_fast.c"
-  subs.doth ="OPERATORS/LOAD_CSV/inc/load_csv_fast.h" 
+  if ( is_par ) then 
+    subs.fn = "load_csv_par"
+    subs.dotc = "OPERATORS/LOAD_CSV/src/load_csv_par.c"
+    subs.doth = "OPERATORS/LOAD_CSV/inc/load_csv_par.h"
+  else
+    subs.fn = "load_csv_seq"
+    subs.dotc = "OPERATORS/LOAD_CSV/src/load_csv_seq.c"
+    subs.doth = "OPERATORS/LOAD_CSV/inc/load_csv_seq.h"
+  end 
   subs.incs = { "OPERATORS/LOAD_CSV/inc/", "UTILS/inc/" }
   subs.srcs = { "UTILS/src/is_valid_chars_for_num.c", 
     "OPERATORS/LOAD_CSV/src/get_cell.c",
@@ -62,7 +68,7 @@ local function bridge_C(
   local l_file_offset = tonumber(file_offset[0])
   -- print("C: l_file_offset = ", l_file_offset)
   assert(status == 0)
-  record_time(start_time, "load_csv_fast")
+  record_time(start_time, "load_csv")
   return true
 end
 return bridge_C

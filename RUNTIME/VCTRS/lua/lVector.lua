@@ -28,39 +28,31 @@ setmetatable(lVector, mt)
 
 register_type(lVector, "lVector")
 
-function lVector:check(is_at_rest, is_for_all)
-  if ( type(is_at_rest) == "nil" ) then
-    is_at_rest = true
-  end
-  assert(type(is_at_rest) == "boolean")
-
-  if ( type(is_for_all) == "nil" ) then
-    is_for_all = false
-  end
-  assert(type(is_for_all) == "boolean")
-
-  local status = true; local nn_status = true
-  local status = cVector.chk(self._base_vec, is_at_rest, is_for_all)
+function lVector:check()
+  assert(cVector.chk(self._base_vec))
   local nn_status = true
-  if ( not is_for_all ) then 
-    if ( self._nn_vec ) then 
-      local nn_vector = assert(self._nn_vec)
-      assert(type(nn_vector) == "lVector")
-      assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
-      nn_status = cVector.chk(nn_vector._base_vec, is_at_rest, is_for_all)
-      -- check congruence between base vector and nn vector
-      assert(nn_vector:num_elements()  == self:num_elements())
-      assert(nn_vector:is_eov()        == self:is_eov())
-      assert(nn_vector:is_persist()    == self:is_persist())
-      assert(nn_vector:num_readers()   == self:num_readers())
-      assert(nn_vector:num_writers()   == self:num_writers())
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(type(nn_vector) == "lVector")
+    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    assert(cVector.chk(nn_vector._base_vec))
+    -- check congruence between base vector and nn vector
+    assert(nn_vector:num_elements()  == self:num_elements())
+    assert(nn_vector:is_eov()        == self:is_eov())
+    assert(nn_vector:is_persist()    == self:is_persist())
+    assert(nn_vector:num_readers()   == self:num_readers())
+    assert(nn_vector:num_writers()   == self:num_writers())
 
-      assert(nn_vector:is_killable()   == self:is_killable())
-      assert(nn_vector:num_lives_kill()   == self:num_lives_kill())
+    local b1, n1 = nn_vector:is_killable()
+    local b2, n2 = self:is_killable()
+    assert(b1 == b2)
+    assert(n1 == n2)
 
-      assert(nn_vector:is_early_freeable()   == self:is_early_freeable())
-      assert(nn_vector:num_lives_free()   == self:num_lives_free())
-    end
+    local b1, n1, m1 = nn_vector:is_early_freeable()
+    local b2, n2, m2 = self:is_early_freeable()
+    assert(b1 == b2)
+    assert(n1 == n2)
+    assert(m1 == m2)
   end 
   -- check congruence between base vector and siblings
   if ( self._siblings ) then 
@@ -71,7 +63,7 @@ function lVector:check(is_at_rest, is_for_all)
     end
   end
   --================================================
-  return (status and nn_status)
+  return true
 end
 
 function lVector:width()
@@ -872,7 +864,7 @@ function lVector:early_free() -- equivalent of kill()
   return self
 end
 --==================================================
-function lVector:is_early_free() 
+function lVector:is_early_freeable() 
   local b_is_early_free, num_lives_free, num_early_freed = 
     cVector.get_num_lives_free(self._base_vec)
   assert(type(b_is_early_free) == "boolean")

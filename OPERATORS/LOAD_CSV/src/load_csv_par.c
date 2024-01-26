@@ -6,17 +6,11 @@
 #include <omp.h>
 #include "q_macros.h"
 #include "qtypes.h"
-#include "txt_to_I1.h"
-#include "txt_to_I2.h"
-#include "txt_to_I4.h"
-#include "txt_to_I8.h"
-#include "txt_to_F4.h"
-#include "txt_to_F8.h"
 #include "set_bit_u64.h"
 #include "rs_mmap.h"
-#include "trim.h"
 #include "get_fld_sep.h"
 #include "get_cell.h"
+#include "chk_data.h"
 #include "asc_to_bin.h"
 //STOP_INCLUDES
 #include "load_csv_par.h"
@@ -50,7 +44,7 @@ load_csv_par(
     const uint32_t * const width, /* [nC] */
     uint32_t c_nn_qtype, // ideally uint32_t should be qtype_t 
     char ** restrict data, /* [nC][chunk_size] */
-    bool ** restrict nn_data, /* [nC][chunk_size] */
+    char ** restrict nn_data, /* [nC][chunk_size] */
     const char * lengths_file // NEW FOR PAR 
     )
 //STOP_FUNC_DECL
@@ -70,7 +64,10 @@ load_csv_par(
   uint32_t nT = 0; char **lines = NULL; // [nT][...]
   uint64_t *offsets = NULL;
   // Check on input data structures
-  // TODO 
+  status = chk_data(data, nn_data, nC, has_nulls, is_load, width, 
+      max_width); 
+  cBYE(status);
+  //--- allocate buffers
   buf = malloc(max_width * sizeof(char));
   return_if_malloc_failed(buf);
   lbuf = malloc(max_width * sizeof(char));

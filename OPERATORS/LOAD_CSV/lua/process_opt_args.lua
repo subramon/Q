@@ -3,6 +3,7 @@ local function process_opt_args(opt_args)
   -- opt_args default values
   -- is_hdr is set to false
   local is_hdr = false
+  local is_par = false
   local fld_sep = "comma"
   local memo_len  = qcfg.memo_len -- default 
   local max_num_in_chunk = qcfg.max_num_in_chunk
@@ -12,6 +13,10 @@ local function process_opt_args(opt_args)
     if opt_args["is_hdr"] ~= nil then
       assert(type(opt_args["is_hdr"]) == "boolean")
       is_hdr = opt_args["is_hdr"]
+    end
+    if opt_args["is_par"] ~= nil then
+      assert(type(opt_args["is_par"]) == "boolean")
+      is_par = opt_args["is_par"]
     end
     if opt_args["fld_sep"] ~= nil then
       assert(type(opt_args["fld_sep"]) == "string")
@@ -34,6 +39,6 @@ local function process_opt_args(opt_args)
       assert( ( ( max_num_in_chunk / 64 ) * 64 ) == max_num_in_chunk)
     end
   end
-  return is_hdr, fld_sep, memo_len, max_num_in_chunk, nn_qtype
+  return is_hdr, is_par, fld_sep, memo_len, max_num_in_chunk, nn_qtype
 end
 return  process_opt_args

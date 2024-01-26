@@ -17,6 +17,6 @@ load_csv_par(
     const uint32_t * const width, /* [nC] */
     uint32_t c_nn_qtype, // ideally uint32_t should be qtype_t 
     char ** restrict data, /* [nC][chunk_size] */
-    bool ** restrict nn_data, /* [nC][chunk_size] */
+    char ** restrict nn_data, /* [nC][chunk_size] */
     const char * lengths_file // NEW FOR PAR 
     );

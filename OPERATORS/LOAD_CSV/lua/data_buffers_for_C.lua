@@ -22,7 +22,7 @@ local function data_buffers_for_C(M, l_data, nn_l_data)
     if ( v.is_load ) then 
       x_data[i-1]  = get_ptr(l_data[v.name])
       if ( v.has_nulls ) then
-        nn_x_data[i-1] = get_ptr(nn_l_data[v.name])
+        nn_x_data[i-1] = get_ptr(nn_l_data[v.name], "char *")
       end
     end
   end

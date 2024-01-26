@@ -3,17 +3,19 @@
 #include "chk_data.h"
 int 
 chk_data(
-    const char ** const data, 
-     const bool ** const nn_data, 
+    const char * const * const data, 
+    const char * const * const nn_data, 
     uint32_t nC, 
     const bool * const has_nulls, // [nC]
     const bool * const is_load, // [nC]
-    const uint32_t * const const  width,  // [nC]
+    const uint32_t * const  width,  // [nC]
     uint32_t max_width
     )
 {
   int status = 0;
 
+  if ( max_width == 0 ) { go_BYE(-1); } 
+  if ( max_width > 65536 ) { go_BYE(-1); } // some sanity check 
   for ( uint32_t i = 0; i < nC; i++ ) {
     if ( data     == NULL ) { go_BYE(-1); }
     if ( nn_data  == NULL ) { go_BYE(-1); }
@@ -29,7 +31,7 @@ chk_data(
     }
     else {
       if ( nn_data[i] != NULL ) { 
-        WHEREAMI; // go_BYE(-1); 
+        go_BYE(-1); 
       }
     }
     if ( width[i] > max_width ) { go_BYE(-1); } 

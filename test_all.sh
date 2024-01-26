@@ -133,4 +133,5 @@ qjit test_SC_to_XX.lua
 qjit test_SC_to_lkp.lua
 qjit test_SC_to_TM1.lua
 bash test_SC_to_TM.sh
+bash test_load_csv.sh
 echo "Successfully completed $0 in $PWD"

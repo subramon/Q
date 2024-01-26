@@ -26,7 +26,6 @@ local function malloc_buffers_for_data(M, max_num_in_chunk)
           error("ERROR" .. v.nn_qtype)
         end
         local nn_name = "_" .. "nn_" .. v.name
-        cVector.check_all(true, true)
         nn_l_data[v.name] = cmem.new(
           {size = bufsz, qtype = v.nn_qtype, name = nn_name .. "_CSV"})
         nn_l_data[v.name]:stealable(true)

@@ -1,3 +1,17 @@
+Test load_csv_par
+
+Consider as alternative to strict
+http://lua-users.org/wiki/DetectingUndefinedVariables
+
+
+
+Understand reference count on Vectors properly
+
+
+Handle const pointers uniformly based on
+https://stackoverflow.com/questions/14562845/why-does-passing-char-as-const-char-generate-a-warning
+
+
 Why do we have CLONE as an operator if it is in lVector
 Also, lVector allows us to clone only if is_lma() == true
 

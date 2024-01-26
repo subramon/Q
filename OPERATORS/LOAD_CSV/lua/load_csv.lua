@@ -26,8 +26,8 @@ local function load_csv(
   assert(cutils.isfile(infile))
   assert(tonumber(cutils.getsize(infile)) > 0)
 
-  local is_hdr, fld_sep, global_memo_len, max_num_in_chunk, nn_qtype = 
-   process_opt_args(opt_args)
+  local is_hdr, is_par,fld_sep, global_memo_len, max_num_in_chunk, 
+    nn_qtype = process_opt_args(opt_args)
   local c_nn_qtype = cutils.get_c_qtype(nn_qtype)
   assert(validate_meta(M))
   -- if memo_len not provided for field, use global over-ride
@@ -85,13 +85,13 @@ local function load_csv(
             end
           end
         end
-        print("chunk_num/mem_used = ", chunk_num, lgutils.mem_used())
+        -- print("chunk_num/mem_used = ", chunk_num, lgutils.mem_used())
         --===================================
         assert(chunk_num == l_chunk_num)
         l_chunk_num = l_chunk_num + 1 
         --===================================
-        local x = bridge_C(M, infile, fld_sep, is_hdr, max_num_in_chunk,
-          file_offset, num_rows_read, x_data, nn_x_data,
+        local x = bridge_C(M, infile, fld_sep, is_hdr, is_par, 
+          max_num_in_chunk, file_offset, num_rows_read, x_data, nn_x_data,
           is_load, has_nulls, is_trim, width, c_qtypes, c_nn_qtype)
         assert(x == true)
         local this_num_rows_read = tonumber(num_rows_read[0])
