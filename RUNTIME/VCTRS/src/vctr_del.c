@@ -33,8 +33,8 @@ vctr_del(
   // Following is okay but happens rarely. Happens when you create a
   // vector but do not eval() it or get_chunk() it 
   // if ( val.ref_count == 0 ) { go_BYE(-1); }
-  g_vctr_hmap[tbsp].bkts[where_found].val.ref_count--;
   if ( g_vctr_hmap[tbsp].bkts[where_found].val.ref_count > 0 ) {
+    g_vctr_hmap[tbsp].bkts[where_found].val.ref_count--;
 #ifdef VERBOSE
     if ( val.name[0] != '\0' ) { 
       printf("Not Deleting Vctr: %s because ref count = %u \n", 

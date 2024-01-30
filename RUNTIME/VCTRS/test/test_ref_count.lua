@@ -63,7 +63,6 @@ tests.t2 = function()
     assert(type(Y[i]) == "lVector")
     local n4 = cVector.count(0); 
     assert(n4 == n3)
-    x:set_nulls(Y[i])
     assert(x:has_nulls())
   end
   x:drop_nulls()

@@ -174,8 +174,9 @@ function lVector:eov()
 end
 function lVector:drop_nulls()
   if ( not self._nn_vec ) then return self end -- quiet quick return
-  local nn_vector = self._nn_vec
-  nn_vector:delete() -- THINK Is this too aggressive?
+  -- Following is Too aggressive. 
+  -- Somebody else may be using it using get_nulls()
+  -- local nn_vector = self._nn_vec; nn_vector:delete() 
   self._nn_vec = nil
   return self
 end
@@ -395,21 +396,19 @@ function lVector:memo(memo_len)
   return self
 end
 
-function lVector:unset_nulls()
-  self._nn_vec = nil
-end
-
--- TODO P2 Think whether taking nn away from current is desired behavior
-function lVector:get_nulls() -- IMPORTANT Takes away nn from current vector
+-- In first implementation, get_nulls() would also drop_nulls()
+-- Now, you have to drop_nulls() explicitly if you want to
+function lVector:get_nulls() 
   -- must have an nn_vec currently
   if ( not self._nn_vec ) then 
     print("No nn vector, returning nil") 
     return nil 
   end 
   local x = assert(self._nn_vec) 
-  self._nn_vec = nil
+  -- This was old behavior self._nn_vec = nil
   return x
 end
+
 function lVector:nn_qtype() 
   if ( not self._nn_vec ) then 
     print("No nn vector, returning nil"); return nil 
