@@ -42,6 +42,7 @@ tests.t1 = function()
   local y = x 
   -- garbage collection should NOT delete the vector because there is 
   -- another reference to it 
+  assert(x:name() == "xvec")
   x = nil
   collectgarbage()
   local m3 = lgutils.mem_used()

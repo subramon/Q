@@ -34,6 +34,7 @@ cd ~/Q/RUNTIME/VCTRS/src/
 cd ~/Q/RUNTIME/VCTRS/test/
 qjit test1.lua  # TODO NEEDS WORK 
 qjit test_lma.lua  
+qjit test_gc.lua  
 qjit test_memo.lua  
 qjit test_ref_count.lua
 qjit test_clone.lua

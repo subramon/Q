@@ -9,6 +9,9 @@ local Scalar  = require 'libsclr'
 local register_type = require 'Q/UTILS/lua/register_type'
 local qcfg = require'Q/UTILS/lua/qcfg'
 --====================================
+local function ifxthenxelsey(x, y)
+  if ( x ) then return x else return y end
+end
 local lVector = {}
 lVector.__index = lVector
 
@@ -18,11 +21,12 @@ lVector.__index = lVector
 -- C files in ../src/
 -- Given that we are paying the price of using the C API, I think
 -- we can dispense with this __gc business
--- local setmetatable = require 'Q/UTILS/lua/rs_gc'
+local setmetatable = require 'Q/UTILS/lua/rs_gc'
 local mt = {
    __call = function (cls, ...)
       return cls.new(...)
    end,
+   __gc = true
  }
 setmetatable(lVector, mt)
 
@@ -262,6 +266,7 @@ end
 function lVector.new(args)
   local vector = setmetatable({}, lVector)
   vector._meta = {} -- for meta data stored in vector
+  vector._is_dead = false -- will be set to true upon deletion
   assert(type(args) == "table")
   --=================================================
   if ( args.uqid )  then 
@@ -782,17 +787,67 @@ function lVector.null()
   return cVector.null()
 end
 
+-- DANGEROUS FUNCTION. Use with great care. This is because you 
+-- want Lua to do garbage collection with its reference counting.
+-- Else, you could end up in the followint situation
+-- x = lVector(....) -- create  a vector pointed to by x 
+-- y = x 
+-- x:delete()
+-- y is left hanging to an empty vector -- dangerous situation
+
+lVector.__gc = function (vec)
+  local vname = ifxthenxelsey(vec:name(), "anonymous")
+  print("GC CALLED on " .. vname)
+  if ( vec._is_dead ) then
+    print("Vector already dead.")
+    return false
+  end 
+  --=========================================
+  if ( vec:has_nulls() ) then 
+    local nn_vector = vec._nn_vec
+    assert(type(nn_vector) == "lVector")
+    local vname = ifxthenxelsey(nn_vector:name(), "anonymous")
+    print("DELETE CALLED on " .. vname)
+    if ( nn_vector.is_dead ) then 
+      print("Vector already dead.")
+    else
+      -- local x = cVector.delete(nn_vector._base_vec)
+      -- TODO Why is x == false?
+      local x = nn_vector:delete()
+      nn_vector.is_dead = true 
+    end
+  end
+  vec._is_dead = true
+  return cVector.delete(vec._base_vec)
+end
+
 function lVector:delete()
+  print("DELETE CALLED")
+  local vname = ifxthenxelsey(self:name(), "anonymous")
+  print("DELETE CALLED on " .. vname)
+  if ( self._is_dead ) then
+    print("Vector already dead.")
+    return false
+  end 
+  --=========================================
   if ( self:has_nulls() ) then 
-    -- print("Deleting nn for ", self:name())
     local nn_vector = self._nn_vec
     assert(type(nn_vector) == "lVector")
-    -- local x = cVector.delete(nn_vector._base_vec)
-    -- TODO Why is x == false?
-    local x = nn_vector:delete()
+    local vname = ifxthenxelsey(nn_vector:name(), "anonymous")
+    print("DELETE CALLED on nn of " .. vname)
+    if ( nn_vector._is_dead ) then 
+      print("nn Vector already dead.")
+    else
+      -- local x = cVector.delete(nn_vector._base_vec)
+      -- TODO Why is x == false?
+      local x = nn_vector:delete()
+      nn_vector._is_dead = true
+    end
   end
+  self._is_dead = true
   return  cVector.delete(self._base_vec)
 end
+
 
 function lVector:siblings()
   if ( not self._siblings ) then return nil end
