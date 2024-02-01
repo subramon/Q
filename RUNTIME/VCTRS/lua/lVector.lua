@@ -208,8 +208,11 @@ function lVector:nop()
 end
 
 function lVector:clone()
-  assert(self:has_nulls() == false) -- TODO P2
-  assert(self:is_lma() ) -- TODO P2
+  -- current limitation, clone needs lma, cannot handle chunks 
+  if ( not self:is_lma() ) then
+    self:chunks_to_lma()
+  end
+  assert(self:is_lma() ) 
   local vargs = {}
   local file_name, _ = self:file_info()
   -- make a unique name 
@@ -224,6 +227,13 @@ function lVector:clone()
   vargs.max_num_in_chunk = self:max_num_in_chunk()
   vargs.num_elements = self:num_elements()
   local z = lVector(vargs)
+
+  -- clone the nn vector if there is one 
+  if ( self:has_nulls() ) then 
+    local nn_vector = assert(self._nn_vec)
+    local nn_z = lVector.clone(nn_vector) -- TODO P1 Check if this works
+    z:set_nulls(nn_z)
+  end
   return z
 end
 
@@ -796,25 +806,27 @@ end
 -- y is left hanging to an empty vector -- dangerous situation
 
 lVector.__gc = function (vec)
-  local vname = ifxthenxelsey(vec:name(), "anonymous")
-  print("GC CALLED on " .. vname)
   if ( vec._is_dead ) then
-    print("Vector already dead.")
+    -- print("Vector already dead.")
     return false
   end 
+  local vname = ifxthenxelsey(vec:name(), "anonymous_" .. vec:uqid())
+  -- print("GC CALLED on " .. vname)
   --=========================================
   if ( vec:has_nulls() ) then 
     local nn_vector = vec._nn_vec
     assert(type(nn_vector) == "lVector")
-    local vname = ifxthenxelsey(nn_vector:name(), "anonymous")
-    print("DELETE CALLED on " .. vname)
-    if ( nn_vector.is_dead ) then 
-      print("Vector already dead.")
+    if ( nn_vector._is_dead ) then 
+      -- print("Vector already dead.")
     else
+      local vname = ifxthenxelsey(nn_vector:name(), "anonymous_" .. 
+        nn_vector:uqid())
+      -- print("GC CALLED on nn " .. vname)
       -- local x = cVector.delete(nn_vector._base_vec)
       -- TODO Why is x == false?
-      local x = nn_vector:delete()
-      nn_vector.is_dead = true 
+      local x = cVector.delete(nn_vector._base_vec)
+      nn_vector._is_dead = true 
+      vec._nn_vec = nil
     end
   end
   vec._is_dead = true
@@ -822,25 +834,24 @@ lVector.__gc = function (vec)
 end
 
 function lVector:delete()
-  print("DELETE CALLED")
-  local vname = ifxthenxelsey(self:name(), "anonymous")
-  print("DELETE CALLED on " .. vname)
+  local vname = ifxthenxelsey(self:name(), "anonymous:" .. self:uqid())
+  -- print("DELETE CALLED on " .. vname)
   if ( self._is_dead ) then
-    print("Vector already dead.")
+    -- print("Vector already dead.")
     return false
   end 
   --=========================================
   if ( self:has_nulls() ) then 
     local nn_vector = self._nn_vec
     assert(type(nn_vector) == "lVector")
-    local vname = ifxthenxelsey(nn_vector:name(), "anonymous")
-    print("DELETE CALLED on nn of " .. vname)
+    local vname = ifxthenxelsey(nn_vector:name(), "anonymous:" .. nn_vector:uqid())
+    -- print("DELETE CALLED on nn of " .. vname)
     if ( nn_vector._is_dead ) then 
-      print("nn Vector already dead.")
+      -- print("nn Vector already dead.")
     else
       -- local x = cVector.delete(nn_vector._base_vec)
       -- TODO Why is x == false?
-      local x = nn_vector:delete()
+      local x = cVector.delete(nn_vector._base_vec)
       nn_vector._is_dead = true
     end
   end
@@ -891,17 +902,28 @@ end
 --==================================================
 function lVector:append(x)
   assert(type(x) == "lVector")
+  --=================
   assert(x:is_eov())
-  assert(self:is_eov())
+  if ( not x:is_lma() ) then 
+    x:chunks_to_lma()
+  end
   assert(x:is_lma())
+  --=================
+  assert(self:is_eov())
+  if ( not self:is_lma() ) then 
+    self:chunks_to_lma()
+  end
   assert(self:is_lma())
+  --=================
   if ( self:has_nulls() ) then assert(x:has_nulls()) end 
   if ( not self:has_nulls() ) then assert(not x:has_nulls()) end 
+  --=================
 
   assert(cVector.append(self._base_vec, x._base_vec))
   if ( self:has_nulls() ) then 
-    print("NOP NOP NOP ")
-    -- TODO 
+    local nn_vector = self._nn_vec
+    local nn_x = x._nn_vec
+    assert(cVector.append(nn_vector._base_vec, nn_x._base_vec))
   end
   return  true -- TODO P0 MAJOR HACK 
 end

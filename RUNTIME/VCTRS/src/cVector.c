@@ -225,7 +225,7 @@ static int l_vctr_get_name( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   char * name = vctr_get_name(ptr_v->tbsp, ptr_v->uqid); 
-  if ( name == NULL ) { go_BYE(-1); } 
+  if ( name == NULL ) { goto BYE; } // silent failure
   lua_pushstring(L, name); // 99% sure that no strdup needed
   return 1;
 BYE:

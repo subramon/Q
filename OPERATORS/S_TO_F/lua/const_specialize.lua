@@ -39,8 +39,7 @@ local function const_specialize(
     cutils.get_width_qtype(subs.out_qtype)
 
   -- set up args for C code
-  local val  = largs.val
-  assert(type(val) ~= nil)
+  local val  = assert(largs.val)
   local sclr_val 
 
   -- handle special case of B1 
@@ -50,6 +49,7 @@ local function const_specialize(
     subs.buf_size = subs.max_num_in_chunk / 8 
     -- sclr_val not used 
   else
+    -- print("CONST: Creating a scalar ", val, qtype)
     sclr_val = Scalar.new(val, qtype)
   end
   -- allocate cargs 
