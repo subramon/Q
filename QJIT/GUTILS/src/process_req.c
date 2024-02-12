@@ -44,6 +44,10 @@ process_req(
       sprintf(outbuf, "{ \"%s\" : \"OK\" }", api);
       break;
       //--------------------------------------------------------
+    case Favicon :  
+      sprintf(outbuf, "{ \"%s\" : \"OK\" }", api);
+      break;
+      //--------------------------------------------------------
     case SetDisk :  
       go_BYE(-1); // TODO P2 
       break;
