@@ -15,10 +15,10 @@ local function mk_op_files(M, opdir)
     opfiles[k] = ""
     nn_opfiles[k] = ""
     if ( v.is_load) then 
-      opfiles[k] = "_" .. v.name
+      opfiles[k] = "_" .. v.name .. ".bin"
       assert(cutils.mk_file(opdir, opfiles[k], 0, true))
       if ( v.has_nulls ) then 
-        nn_opfiles[k] = "_" .. v.name
+        nn_opfiles[k] = "_nn" .. opfiles[k]
         assert(cutils.mk_file(opdir, nn_opfiles[k], 0, true))
       end
     end
@@ -29,7 +29,7 @@ local function mk_op_files(M, opdir)
 end
 --=============================================
 local function process_optargs(optargs)
-  local fld_sep = ","
+  local fld_sep = "comma"
   local is_hdr = false
   if ( optargs ) then
     error("TODO")
@@ -107,7 +107,7 @@ local function vsplit(
   qc.q_add(subs); 
   --== STOP  Make C code 
   for k, infile in ipairs(infiles) do
-    qc.vsplit(infile, #M, fld_sep, max_width, l_c_qtypes, 
+    qc.vsplit(infile, #M, fld_sep, max_width, c_qtypes, 
     is_load, has_nulls, width, opfiles, nn_opfiles)
     print("Split ", k, infile)
   end
@@ -118,5 +118,6 @@ local function vsplit(
   l_is_trim:delete()
   l_width:delete()
   l_c_qtypes:delete()
+  return true
 end
 return require('Q/q_export').export('vsplit', vsplit)

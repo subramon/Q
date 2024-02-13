@@ -1,7 +1,7 @@
 local Q = require 'Q'
 
 local M = {}
-M[#M+1] = { name = "colSC", qtype = "SC", width = 31, has_nulls = false, is_load = true}
+M[#M+1] = { name = "colSC", qtype = "SC", width = 32, has_nulls = false, is_load = true}
 M[#M+1] = { name = "colI2", qtype = "I2", has_nulls = true, is_load = true}
 M[#M+1] = { name = "colI8", qtype = "I8", has_nulls = false, is_load = true}
 M[#M+1] = { name = "colI4", qtype = "I4", has_nulls = false, is_load = false, }
@@ -14,6 +14,5 @@ F[#F+1] = "./infile2.csv"
 F[#F+1] = "./infile3.csv"
 
 local opdir = "./"
-Q.vsplit(F, M, opdir)
-
-
+assert(Q.vsplit(F, M, opdir))
+print("Test vsplit completed")

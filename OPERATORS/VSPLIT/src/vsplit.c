@@ -49,8 +49,8 @@ vsplit(
   for ( uint32_t i = 0; i < nC; i++ ) { 
     if ( width[i] == 0 ) { go_BYE(-1); } 
     if ( is_load[i] == false ) { 
-      if ( opfiles[i] != NULL ) { go_BYE(-1); } 
-      if ( nn_opfiles[i] != NULL ) { go_BYE(-1); } 
+      // if ( opfiles[i] != NULL ) { go_BYE(-1); } 
+      // if ( nn_opfiles[i] != NULL ) { go_BYE(-1); } 
     }
     else {
       if ( opfiles[i] == NULL ) { go_BYE(-1); } 
