@@ -30,7 +30,7 @@ mk_file(
   char *full_name = NULL;
 
   if ( filename == NULL ) { go_BYE(-1); }
-  if ( filesize <= 0 ) { go_BYE(-1); }
+  // if ( filesize == 0 ) { go_BYE(-1); } // okay to create 0 sized file 
 
   /* Check that directory is accessible */
   if ( dir != NULL ) { 
@@ -60,6 +60,10 @@ mk_file(
   if (fd == -1) {
     fprintf(stderr, "Error opening %s file for writing\n", filename);
     go_BYE(-1);
+  }
+  if ( filesize == 0 ) { 
+    close(fd);
+    return status;
   }
   /* Stretch the file size to the size of the (mmapped) array of ints */
   result = lseek(fd, filesize - 1, SEEK_SET);

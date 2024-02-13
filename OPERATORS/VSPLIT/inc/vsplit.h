@@ -1,3 +1,4 @@
+//START_FOR_CDEF
 int
 vsplit(
     const char * infile,
@@ -8,6 +9,7 @@ vsplit(
     const bool *  const is_load, /* [nC] */
     const bool * const has_nulls, /* [nC] */
     const uint32_t * const width, /* [nC] */
-    char **opfiles,
-    char **nn_opfiles
+    const char ** const opfiles,
+    const char ** const nn_opfiles
     );
+//STOP_FOR_CDEF

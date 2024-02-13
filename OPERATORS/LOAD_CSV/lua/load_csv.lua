@@ -13,7 +13,6 @@ local data_buffers_for_C =
 local malloc_aux    = require "Q/OPERATORS/LOAD_CSV/lua/malloc_aux"
 local aux_for_C     = require "Q/OPERATORS/LOAD_CSV/lua/aux_for_C"
 local bridge_C      = require "Q/OPERATORS/LOAD_CSV/lua/bridge_C"
-local qcfg          = require 'Q/UTILS/lua/qcfg'
 local get_ptr       = require 'Q/UTILS/lua/get_ptr'
 
  --======================================

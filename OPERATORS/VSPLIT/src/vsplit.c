@@ -8,9 +8,7 @@
 #include "get_cell.h"
 #include "rs_mmap.h"
 #include "trim.h"
-#include "set_bit_u64.h"
 #include "get_fld_sep.h"
-#include "chk_data.h"
 #include "asc_to_bin.h"
 //STOP_INCLUDES
 #include "vsplit.h"
@@ -31,8 +29,8 @@ vsplit(
     const bool *  const is_load, /* [nC] */
     const bool * const has_nulls, /* [nC] */
     const uint32_t * const width, /* [nC] */
-    char **opfiles,
-    char **nn_opfiles
+    const char ** const opfiles,
+    const char ** const nn_opfiles
     )
 //STOP_FUNC_DECL
 {
@@ -136,11 +134,7 @@ vsplit(
     // write data 
     status = asc_to_bin(buf, is_val_null, c_qtypes[col_ctr], 
         width[col_ctr], 0, opbuf); 
-    // NOTE: Last 2 parametersrguments asc_to_bin. Different from load_csv()
-    int16_t *I2ptr = (int16_t *)opbuf;
-    int64_t *I8ptr = (int64_t *)opbuf;
-    int32_t *I4ptr = (int32_t *)opbuf;
-    float   *F4ptr = (float *)opbuf;
+    // NOTE: Last 2 parameters in  asc_to_bin different from load_csv()
     if ( status < 0 ) { 
       fprintf(stderr, "Error for row %lu, col %d, cell [%s]\n",
           row_ctr, col_ctr, buf);

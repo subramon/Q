@@ -48,6 +48,8 @@ require "Q/OPERATORS/COUNT/lua/count"
 require "Q/UTILS/lua/import"
 require "Q/UTILS/lua/register_qop" 
 
+require "Q/OPERATORS/VSPLIT/lua/vsplit" 
+
 --== These are from QTILS 
 require 'Q/QTILS/lua/fold'
 --[[
