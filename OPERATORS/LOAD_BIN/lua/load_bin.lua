@@ -1,168 +1,110 @@
 -- This version supports chunking in load_bin
 local ffi           = require 'ffi'
 local cutils        = require 'libcutils'
+local cmem          = require 'libcmem'
 local lgutils       = require 'liblgutils'
 local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
-local validate_meta = require "Q/OPERATORS/load_bin/lua/validate_meta"
-local process_opt_args = 
-  require "Q/OPERATORS/load_bin/lua/process_opt_args"
 local get_ptr       = require 'Q/UTILS/lua/get_ptr'
+local qc            = require 'Q/UTILS/lua/qcore'
+local qcfg          = require 'Q/UTILS/lua/qcfg'
+local get_max_num_in_chunk       = require 'Q/UTILS/lua/get_max_num_in_chunk'
 
  --======================================
 local function load_bin(
-  infile,   -- input file to read (string)
-  M,  -- metadata (table)
+  args,
   opt_args
   )
-  assert( type(infile) == "string")
+  -- START: Process args
+  assert(type(args) == "table")
+  local infile = assert(args.infile)
+  local nnfile = args.nnfile
+  local qtype = assert(args.qtype)
+  local width = 0
+  if ( qtype == "SC" ) then
+    width = assert(args.width)
+    assert(width >= 2)
+    assert(width < qcfg.max_width_SC)
+  else
+    assert(type(args.width) == "nil")
+    width = cutils.get_width_qtype(qtype)
+    assert(width> 0)
+  end
+  --=======================================
+  --== START Make C code 
+  local subs = {}
+  subs.fn = "load_data_from_file"
+  subs.dotc = "OPERATORS/LOAD_BIN/src/load_data_from_file.c"
+  subs.doth = "OPERATORS/LOAD_BIN/inc/load_data_from_file.h"
+  subs.incs = { "OPERATORS/LOAD_BIN/inc/", "UTILS/inc/", }
+  subs.srcs = { "UTILS/src/rs_mmap.c", }
+  qc.q_add(subs); 
+  --=======================================
+  local vargs = {}
+  vargs.qtype = qtype 
+  vargs.width = width 
+  vargs.max_num_in_chunk = get_max_num_in_chunk(optargs)
+  assert(type(infile) == "string")
   assert(cutils.isfile(infile))
-  assert(tonumber(cutils.getsize(infile)) > 0)
+  local file_size = cutils.getsize(infile)
+  local num_elements = math.floor(file_size / width)
+  assert((num_elements * width ) == file_size) -- multiple of width
 
-  local is_hdr, is_par,fld_sep, global_memo_len, max_num_in_chunk, 
-    nn_qtype = process_opt_args(opt_args)
-  local c_nn_qtype = cutils.get_c_qtype(nn_qtype)
-  assert(validate_meta(M))
-  -- if memo_len not provided for field, use global over-ride
-  for k, v in pairs(M) do 
-    if ( v.memo_len ) then 
-      assert(type(v.memo_len) == "number" )
-    else
-      v.memo_len = global_memo_len
-    end
-    -- same nn_qtype for all vectors 
-    if ( v.has_nulls ) then 
-      v.nn_qtype = nn_qtype
-    end 
+  local nn_file_size = 0
+  if ( nnfile ) then 
+    assert(type(nnfile) == "string")
+    assert(nnfile ~= infile)
+    assert(cutils.isfile(nnfile), "File not found " .. nnfile)
+    vargs.has_nulls = true
+    nn_file_size = cutils.getsize(nnfile)
+    assert(nn_file_size == num_elements) -- using "BL" for nn
+  else
+    vargs.has_nulls = false
   end
-  --=======================================
-
-  local l_file_offset, l_num_rows_read, l_is_load, l_has_nulls, 
-    l_is_trim, l_width, l_c_qtypes = 
-    malloc_aux(M)
-  local file_offset, num_rows_read, is_load, has_nulls, 
-    is_trim, width, c_qtypes = 
-    aux_for_C(M, l_file_offset, l_num_rows_read, l_is_load, l_has_nulls, 
-    l_is_trim, l_width, l_c_qtypes)
-  --=======================================
-  local vectors = {} 
-
+  local name    = "load_bin"
+  local nn_name = "nn_load_bin"
+  if ( optargs ) and ( optargs.name ) then 
+    assert(type(optargs.name) == "string")
+    name    = optargs.name
+    nn_name = "nn_" .. name
+  end
+  -- STOP : Process args
+  -- Allocate buffers
   local l_chunk_num = 0
-  -- This is tricky. We create generators for each vector
-  local lgens = {}
-  for midx, v in ipairs(M) do 
-    local my_name = v.name
-    if ( v.is_load ) then 
-      local name = v.name
-      local function lgen(chunk_num)
-        l_file_offset:nop()
-        l_num_rows_read:nop()
-        l_is_load:nop()
-        l_has_nulls:nop()
-        l_is_trim:nop()
-        l_width:nop()
-        l_c_qtypes:nop()
-        -- Allocate buffers for each loadable column 
-        local l_data, nn_l_data = 
-          malloc_buffers_for_data(M, max_num_in_chunk)
-        --=== Set up pointers to the data buffers for each loadable column
-        local c_data, nn_c_data = data_buffers_for_C(M, l_data, nn_l_data)
-        local x_data = get_ptr(c_data, "char **")
-        local nn_x_data = get_ptr(nn_c_data, "char **")
-
-        for k, v in ipairs(M) do
-          if ( v.is_load ) then 
-            l_data[v.name]:nop()
-            if ( v.has_nulls ) then
-              nn_l_data[v.name]:nop()
-            end
-          end
-        end
-        -- print("chunk_num/mem_used = ", chunk_num, lgutils.mem_used())
-        --===================================
-        assert(chunk_num == l_chunk_num)
-        l_chunk_num = l_chunk_num + 1 
-        --===================================
-        local x = bridge_C(M, infile, fld_sep, is_hdr, is_par, 
-          max_num_in_chunk, file_offset, num_rows_read, x_data, nn_x_data,
-          is_load, has_nulls, is_trim, width, c_qtypes, c_nn_qtype)
-        assert(x == true)
-        local this_num_rows_read = tonumber(num_rows_read[0])
-        -- following not necesssary. Old C programmer's habit
-        c_data:delete(); nn_c_data:delete()
-        --===================================
-        if ( this_num_rows_read > 0 ) then 
-          for _, v in ipairs(M) do 
-            if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
-              -- print("putting chunk for " .. v.name)
-              vectors[v.name]:put_chunk(
-                l_data[v.name], this_num_rows_read, nn_l_data[v.name])
-              -- print("put chunk for " .. v.name)
-            end
-          end
-        end 
-        -- print("put all chunks")
-        --=====================
-        if ( this_num_rows_read == 0 ) then 
-          for k, v in ipairs(M) do
-            if ( v.is_load ) then 
-              l_data[v.name]:delete()
-              if ( v.has_nulls ) then
-                nn_l_data[v.name]:delete()
-              end
-            end
-          end
-        end
-        --=====================
-        if ( this_num_rows_read < max_num_in_chunk ) then 
-          -- signal eov for all vectors other than yourself
-          for _, v in ipairs(M) do 
-            if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
-              vectors[v.name]:eov()
-            end
-          end
-          -- you can delete your local buffers
-          l_file_offset:delete()
-          l_num_rows_read:delete()
-          l_is_load:delete()
-          l_has_nulls:delete()
-          l_is_trim:delete()
-          l_width:delete()
-          l_c_qtypes:delete()
-        end
-        -- print("returning " ..  this_num_rows_read)
-        return this_num_rows_read, l_data[v.name], nn_l_data[v.name]
-      end
-      lgens[my_name] = lgen
+  local num_copied = 0
+  local function gen(chunk_num)
+    assert(chunk_num == l_chunk_num)
+    local nn_buf
+    local bufsz = vargs.max_num_in_chunk * vargs.width
+    local buf = cmem.new(
+      {size = bufsz, qtype = vargs.qtype, name = name})
+    buf:zero()
+    buf:stealable(true)
+    if ( nnfile ) then 
+      local nn_bufsz = vargs.max_num_in_chunk * 1 -- using "BL"
+      nn_buf = cmem.new(
+      {size = nn_bufsz, qtype = "BL", name = nn_name})
+      nn_buf:zero()
+      nn_buf:stealable(true)
     end
-  end
-  -- Note that you *may* have a vector that does not have any null 
-  -- vales but still has a nn_vec. This will happen if you marked it as
-  -- has_nulls==true. Caller's responsibility to clean this up
-  --==============================================
-  for _, v in ipairs(M) do 
-    if ( v.is_load ) then 
-      local tinfo = {}
-      tinfo.name      = v.name
-      tinfo.gen       = lgens[v.name]
-      tinfo.has_nulls = v.has_nulls
-      if ( tinfo.has_nulls ) then 
-        tinfo.nn_qtype  = nn_qtype
-      end 
-      tinfo.qtype     = v.qtype
-      tinfo.max_num_in_chunk  = max_num_in_chunk
-      if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
-      local V = lVector(tinfo)
-      V:set_name(v.name)
-      if ( v.meaning ) then 
-        V:set_meta("_meta.meaning", M[i].meaning)
-      end
-      -- print("max_num_in_chunk for " .. v.name .. " is " ..  v.max_num_in_chunk)
-      V:memo(v.memo_len)
-      vectors[v.name] = V
+    local num_to_copy = num_elements - num_copied
+    if ( num_to_copy > vargs.max_num_in_chunk ) then 
+      num_to_copy = vargs.max_num_in_chunk
     end
+    local bufptr = get_ptr(buf, "char *")
+    local status = qc.load_data_from_file(infile, num_copied, 
+      num_to_copy, width, bufptr)
+    assert(status == 0)
+    if ( nnfile ) then 
+      local nn_bufptr = get_ptr(nn_buf, "char *")
+      local status = qc.load_data_from_file(nnfile, num_copied, 
+        num_to_copy, 1, nn_bufptr)
+      assert(status == 0)
+    end 
+    num_copied = num_copied + num_to_copy
+    l_chunk_num = l_chunk_num + 1 
+    return num_to_copy, buf, nn_buf
   end
-  -- Note that while M is a table indexed as 1, 2, ...
-  -- the table of Vectors that we return is indexed with field names
-  return vectors
+  vargs.gen = gen
+  return lVector(vargs)
 end
 return require('Q/q_export').export('load_bin', load_bin)

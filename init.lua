@@ -49,6 +49,7 @@ require "Q/UTILS/lua/import"
 require "Q/UTILS/lua/register_qop" 
 
 require "Q/OPERATORS/VSPLIT/lua/vsplit" 
+require "Q/OPERATORS/LOAD_BIN/lua/load_bin" 
 
 --== These are from QTILS 
 require 'Q/QTILS/lua/fold'

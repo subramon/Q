@@ -129,7 +129,8 @@ vsplit(
     }
     // write nn_data if needed
     if ( has_nulls[col_ctr] ) {
-      fwrite(&is_val_null, sizeof(bool), 1, nn_ofps[col_ctr]);
+      bool is_nn = !is_val_null;
+      fwrite(&is_nn, sizeof(bool), 1, nn_ofps[col_ctr]);
     }
     // write data 
     status = asc_to_bin(buf, is_val_null, c_qtypes[col_ctr], 

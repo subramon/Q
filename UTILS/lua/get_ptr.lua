@@ -23,14 +23,18 @@ local function get_ptr(
   if ( y == ffi.NULL ) then print("Empty CMEM") return nil end
   -- Made qtype optional
   if qtype then
-    assert(type(qtype) == "string")
-    local ctype = cutils.str_qtype_to_str_ctype(qtype)
-    if ( ctype == nil ) then
-      local cast_as = qtype
-      assert(ends_with(trim(qtype), "*"), "bad qtype = " .. qtype)
-      ret_ptr = ffi.cast(cast_as, y)
+    if ( qtype == "SC" ) then 
+      ret_ptr = ffi.cast("char *", y)
     else
-      ret_ptr = ffi.cast(ctype .. " *", y)
+      assert(type(qtype) == "string")
+      local ctype = cutils.str_qtype_to_str_ctype(qtype)
+      if ( ctype == nil ) then
+        local cast_as = qtype
+        assert(ends_with(trim(qtype), "*"), "bad qtype = " .. qtype)
+        ret_ptr = ffi.cast(cast_as, y)
+      else
+        ret_ptr = ffi.cast(ctype .. " *", y)
+      end
     end
   else
     ret_ptr = ffi.cast("char *", y)

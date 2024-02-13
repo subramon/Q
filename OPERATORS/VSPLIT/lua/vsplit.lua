@@ -23,6 +23,14 @@ local function mk_op_files(M, opdir)
       end
     end
   end
+  opdir = opdir .. "/"
+  for k, v in ipairs(opfiles) do
+    opfiles[k] = opdir .. v
+  end
+  for k, v in ipairs(nn_opfiles) do
+    nn_opfiles[k] = opdir .. v
+  end
+
   local c_opfiles = tbl_of_str_to_C_array(opfiles)
   local c_nn_opfiles = tbl_of_str_to_C_array(nn_opfiles)
   return c_opfiles, c_nn_opfiles
@@ -66,6 +74,14 @@ local function vsplit(
   local is_hdr, fld_sep = process_optargs(optargs)
   local max_width = 1024 -- TODO THINK 
   assert(validate_meta(M))
+  -- default for is_load == true
+  for k, v in ipairs(M) do
+    if ( type(v.is_load) == "nil" ) then
+      v.is_load = true
+    else
+      assert(type(v.is_load) == "boolean")
+    end
+  end
   --=======================================
   local l_file_offset, l_num_rows_read, l_is_load, l_has_nulls, 
     l_is_trim, l_width, l_c_qtypes = 
