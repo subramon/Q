@@ -62,6 +62,7 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
       status = qc[func_name](chunk1, nn_chunk1, chunk2, nn_chunk2, f1_len, 
         subs.cst_cargs, chunk3, nn_chunk3)
     else
+      buf:nop()
       status = qc[func_name](chunk1, chunk2, f1_len, subs.cst_cargs, chunk3)
     end
     assert(status == 0)

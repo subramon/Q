@@ -61,6 +61,7 @@ local function idx_sort(idx, val, ordr, optargs)
 
   assert(outidx:num_readers() == 0); assert(outidx:num_writers() == 0)
   assert(outval:num_readers() == 0); assert(outval:num_writers() == 0)
+  outval:set_meta("sort_order", ordr)
 
   return outidx, outval 
 

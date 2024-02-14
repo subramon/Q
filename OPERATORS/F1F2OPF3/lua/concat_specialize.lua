@@ -95,6 +95,7 @@ return function (
   subs.f3_qtype = f3_qtype
   subs.f3_ctype = "u" .. cutils.str_qtype_to_str_ctype(f3_qtype)
   subs.f3_width = cutils.get_width_qtype(subs.f3_qtype)
+  subs.bufsz  = subs.f3_width * subs.max_num_in_chunk
 
   -- allocate cargs
   local sz = ffi.sizeof("f1f2opf3_concat_t")
