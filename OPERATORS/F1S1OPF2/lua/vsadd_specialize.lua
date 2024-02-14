@@ -39,6 +39,8 @@ return function (
   subs.cast_s1_as = subs.f1_ctype .. " *"
   subs.cast_cargs = ffi.cast(subs.s1_ctype .. " *", subs.cargs)
 
+  subs.omp_chunk_size = 1024 -- TODO experiment with this
+
   subs.code = "c = a + b; "
   subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"

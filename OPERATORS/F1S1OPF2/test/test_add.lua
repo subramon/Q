@@ -38,6 +38,22 @@ tests.t2 = function()
   end
   print("test t2 passed")
 end
+-- testing null values 
+tests.t3 = function()
+  local v_qtype = "F4"
+  local c1 = Q.mk_col({1,2,3,4,5,6,7,8}, v_qtype, 
+    { name = "c1"}, { true, false, true, false, true, false, true, false, })
+  local s_qtype = v_qtype 
+  local c2 = Q.vsdiv(c1, Scalar.new(2, s_qtype))
+  local c3 = Q.mk_col({1/2,2/2,3/2,4/2,5/2,6/2,7/2,8/2}, v_qtype, 
+    { name = "v3"}, { true, false, true, false, true, false, true, false, })
+  local n1, n2 = Q.sum(Q.vveq(c2, c3)):eval()
+  -- Q.print_csv({c1,c2,c3})
+  assert(n1:to_num() == 4)
+  assert(n2:to_num() == 8)
+  print("test t3 passed")
+end
 -- return tests
 tests.t1()
 tests.t2()
+tests.t3()
