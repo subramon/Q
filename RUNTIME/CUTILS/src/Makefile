@@ -25,6 +25,7 @@ SRCS += ../../../UTILS/src/line_breaks.c
 SRCS += ../../../UTILS/src/mk_file.c 
 SRCS += ../../../UTILS/src/rdtsc.c 
 SRCS += ../../../UTILS/src/rs_mmap.c 
+SRCS += ../../../UTILS/src/tm2time.c 
 
 OBJS = $(SRCS:.c=.o)
 

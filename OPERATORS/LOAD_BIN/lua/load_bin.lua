@@ -43,6 +43,12 @@ local function load_bin(
   vargs.qtype = qtype 
   vargs.width = width 
   vargs.max_num_in_chunk = get_max_num_in_chunk(optargs)
+  vargs.memo_len = -1 -- default
+  if ( ( optargs ) and ( optargs.memo_len ) ) then
+    vargs.memo_len = optargs.memo_len
+    assert(type(vargs.memo_len) == "number")
+  end
+
   assert(type(infile) == "string")
   assert(cutils.isfile(infile))
   local file_size = cutils.getsize(infile)
@@ -105,6 +111,6 @@ local function load_bin(
     return num_to_copy, buf, nn_buf
   end
   vargs.gen = gen
-  return lVector(vargs)
+  return lVector(vargs):set_name(args.name)
 end
 return require('Q/q_export').export('load_bin', load_bin)

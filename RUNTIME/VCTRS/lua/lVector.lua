@@ -143,6 +143,7 @@ function lVector:set_error()
 end
 
 function lVector:set_name(name)
+  if ( type(name) == "nil" ) then name = "" end 
   assert(type(name) == "string")
   local status = cVector.set_name(self._base_vec, name)
   return self
