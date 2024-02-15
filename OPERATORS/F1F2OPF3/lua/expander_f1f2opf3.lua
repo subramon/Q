@@ -42,6 +42,8 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
       buf:delete()
       nn_buf:delete()
       if ( subs.cargs ) then subs.cargs:delete() end 
+      print("A " .. op .. " sending kill to Vector " .. f1:name())
+      print("A " .. op .. " sending kill to Vector " .. f2:name())
       f1:kill() 
       f2:kill()
       return 0 
@@ -74,6 +76,8 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
       assert(f1:is_eov())
       assert(f2:is_eov())
       if ( subs.cargs ) then subs.cargs:delete() end 
+      print("B " .. op .. " sending kill to Vector " .. f1:name())
+      print("B " .. op .. " sending kill to Vector " .. f2:name())
       f1:kill(); 
       f2:kill();
     end

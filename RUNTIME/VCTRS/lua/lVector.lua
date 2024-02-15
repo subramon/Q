@@ -1061,6 +1061,7 @@ end
 function lVector:kill()
   local nn_success
   local success = cVector.kill(self._base_vec)
+  print("Lua received kill for " .. self:name() or "anonymous")
   if ( self._nn_vec ) then 
     local nn_vector = assert(self._nn_vec)
     nn_success = cVector.kill(nn_vector._base_vec)

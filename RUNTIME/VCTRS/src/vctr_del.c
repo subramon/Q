@@ -9,6 +9,7 @@
 #include "mod_mem_used.h"
 #include "vctr_is.h"
 #include "chnk_del.h"
+#include "vctr_usage.h"
 #include "vctr_del.h"
 
 extern vctr_rs_hmap_t *g_vctr_hmap;
@@ -24,10 +25,17 @@ vctr_del(
   int status = 0;
   uint32_t where_found = ~0;
   char *lma_file = NULL;
+  char *val_name = NULL;
 
   status = vctr_is(tbsp, uqid, ptr_is_found, &where_found); cBYE(status);
   if ( !*ptr_is_found ) { goto BYE; }
   vctr_rs_hmap_val_t val = g_vctr_hmap[tbsp].bkts[where_found].val;
+  if ( val.name[0] != '\0' ) { 
+    val_name = strdup(val.name);
+  }
+  else {
+    val_name = strdup("anonymous");
+  }
   bool is_persist = val.is_persist;
   bool is_lma     = val.is_lma;
   // Following is okay but happens rarely. Happens when you create a
@@ -110,7 +118,8 @@ vctr_del(
       }
       else {
         if ( is_found ) { 
-          printf("Found chunk %u. Should not have existed\n", chnk_idx);
+          printf("Found chunk %u in [%s]. Should not have existed\n", 
+              chnk_idx, val_name);
           // go_BYE(-1); 
         }
       }
@@ -125,10 +134,15 @@ vctr_del(
   status = g_vctr_hmap[0].del(&g_vctr_hmap[tbsp], &key, &val, &is_found); 
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
+  uint64_t mem_used, dsk_used;
+  status = vctr_usage(tbsp, uqid, &mem_used, &dsk_used); cBYE(status);
+  if ( mem_used != 0 ) { go_BYE(-1); } 
+  if ( dsk_used != 0 ) { go_BYE(-1); } 
 BYE:
   if ( status < 0 ) { 
     printf("Error in deleting Vector %s \n", val.name);
   }
   free_if_non_null(lma_file);
+  free_if_non_null(val_name);
   return status;
 }

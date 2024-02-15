@@ -53,6 +53,7 @@ tests.t2 = function()
     assert(val <= sub ) 
   end
   assert(c1:qtype() == qtype)
+  -- c1:pr()
   print("Test t2 succeeded")
 end
 -- tests.t1() TODO causes segfault 

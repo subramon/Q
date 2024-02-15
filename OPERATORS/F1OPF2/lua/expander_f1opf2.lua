@@ -34,6 +34,8 @@ local function expander_f1opf2(a, f1, optargs )
     if ( f1_len == 0 ) then 
       buf:delete()
       nn_buf:delete()
+      print("A " .. a .. " sending kill to " .. f1:name())
+      f1:kill()
       return 0, nil 
     end 
 
@@ -53,6 +55,10 @@ local function expander_f1opf2(a, f1, optargs )
     assert(status == 0)
     --==================================
     l_chunk_num = l_chunk_num + 1
+    if ( f1_len < subs.max_num_in_chunk ) then 
+      print("B " .. a .. " sending kill to " .. f1:name())
+      f1:kill()
+    end
     return f1_len, buf, nn_buf
   end
   local vargs = optargs 

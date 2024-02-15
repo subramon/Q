@@ -49,6 +49,9 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
       -- print("XX Returning 0 for chunk ", l_chunk_num)
       buf:delete()
       nn_buf:delete()
+      print(" A " .. a .. " sending kill to "
+       .. f1:name() or "anonymous")
+      f1:kill()
       return 0
     end
     --========================================
@@ -70,6 +73,11 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
     --==================================
     l_chunk_num = l_chunk_num + 1
     -- print("XX Returning ", f1_len, "  for chunk ", l_chunk_num)
+    if ( f1_len < subs.f2_max_num_in_chunk ) then 
+      print("B " .. a .. " sending kill to " 
+        .. f1:name() or "anonymous")
+      f1:kill()
+    end
     return f1_len, buf, nn_buf
   end
   local vargs = optargs 
