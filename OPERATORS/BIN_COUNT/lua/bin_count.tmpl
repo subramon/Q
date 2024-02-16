@@ -3,14 +3,18 @@ return require 'Q/UTILS/lua/code_gen' {
    declaration = [[
 
 #include "q_incs.h"
+#include "q_macros.h"
 //START_FOR_CDEF
 extern int
 ${fn}(  
-      const ${ctype} * restrict in,  
-      uint64_t nR,
-      ${ctype} value,
-      uint64_t *ptr_count
-      ) 
+      const ${ctype} * restrict invals,  
+      uint32_t n_invals,
+      ${ctype} *lb, // [nb]
+      ${ctype} *ub, // [nb]
+      int *lock,  // [nb]
+      int64_t *cnt, // [nb]
+      uint32_t nb
+      )
 ;
 //STOP_FOR_CDEF
 
@@ -21,29 +25,49 @@ ${fn}(
 
 int
 ${fn}(  
-      const ${ctype} * restrict in, // input vector [nR]
-      uint64_t nR,
-      ${ctype} value, // value of which occurrences is to be found
-      uint64_t *ptr_count // no. of occurences of a given value in input vector
+      const ${ctype} * restrict invals,  
+      uint32_t n_invals,
+      ${ctype} *lb, // [nb]
+      ${ctype} *ub, // [nb]
+      int *lock,  // [nb]
+      int64_t *cnt, // [nb]
+      uint32_t nb
       )
 
 {
   int status = 0;
-  if ( in == NULL ) { go_BYE(-1); }
-  if ( nR == 0 ) { go_BYE(-1); }
-  if ( ptr_count == NULL ) { go_BYE(-1); }
 
-  uint64_t counter = 0;
-  ${ctype} inv;
-  uint64_t count = *ptr_count;
-
-  for ( uint64_t i  = 0; i < nR; i++ ) {  
-    inv = in[i];
-    if ( inv == value ) {
-      counter++;
+// #pragma omp parallel for 
+  for ( uint32_t i  = 0; i < n_invals; i++ ) {  
+    if ( status < 0 ) { continue; }
+    ${ctype} inv = invals[i];
+    // find correct bin for inv
+    int lb_idx = 0;
+    int ub_idx = (int)nb;
+    int bin_idx = -1; (lb_idx+ub_idx)/2;
+    for ( ; ; ) { 
+      bin_idx = (lb_idx+ub_idx)/2;
+      ${ctype} this_lb = lb[bin_idx];
+      ${ctype} this_ub = ub[bin_idx];
+      if ( ( inv >= this_lb ) && ( inv < this_ub ) ) {
+        break;
+      }
+      else if ( inv < this_lb ) { 
+        ub_idx = bin_idx;
+      }
+      else if ( inv >= this_ub ) { 
+        lb_idx = bin_idx;
+      }
+      else {
+        WHEREAMI; status = -1;
+      }
     }
+#ifdef DEBUG
+    if ( ( bin_idx < 0 ) || ( bin_idx >= nb ) ) { status = -1; }
+#endif
+    __atomic_add_fetch(cnt+bin_idx, 1, 0); // one more in outQ
   }
-  *ptr_count = count + counter;  
+  cBYE(status);
 BYE:
   return status;
 }

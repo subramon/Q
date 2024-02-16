@@ -28,6 +28,7 @@ return function (
 
   subs.f3_qtype = f3_qtype
   subs.f3_width = cutils.get_width_qtype(subs.f3_qtype)
+  subs.bufsz = subs.max_num_in_chunk * subs.f3_width
 
   subs.fn = op .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"

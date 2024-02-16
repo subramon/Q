@@ -35,7 +35,8 @@ return function (
 
   subs.f2_width = cutils.get_width_qtype(subs.f2_qtype)
   subs.max_num_in_chunk = f1:max_num_in_chunk()
-  subs.f2_buf_sz = subs.max_num_in_chunk * subs.f2_width
+  subs.f2_max_num_in_chunk   = f1:max_num_in_chunk() 
+  subs.f2_buf_sz   = subs.f2_max_num_in_chunk * subs.f2_width
 
   subs.fn = 'vsgeq'
     .. "_" .. subs.f1_qtype 

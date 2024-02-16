@@ -1,5 +1,5 @@
 local T = {}
-local function bin_count(x, y)
+local function bin_count(x, y, optargs)
   -- Q.count(x, y): 
   -- x is a set of values
   -- y is a set of bin boundaries. Say that there are n of them
@@ -15,7 +15,7 @@ local function bin_count(x, y)
   -- z is of type I8 (which is overkill)
   -- y needs to be fully materialized
   local expander = assert(require 'Q/OPERATORS/BIN_COUNT/lua/expander_bin_count')
-  local status, z = pcall(expander, x, y)
+  local status, z = pcall(expander, x, y, optargs)
   if ( not status ) then print(z) end
   assert(status, "Could not execute bin_count")
   return z
