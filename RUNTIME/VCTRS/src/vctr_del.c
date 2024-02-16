@@ -80,6 +80,9 @@ vctr_del(
     // never call put_chunk. Typically for intermediate vectors
     // Makes me wonder how this interplays with memo_len
     // TODO P2 Think about this.
+    g_vctr_hmap[tbsp].bkt_full[where_found] = false; 
+    memset(&(g_vctr_hmap[tbsp].bkts[where_found]), 0, 
+        sizeof(vctr_rs_hmap_bkt_t));
     goto BYE;
   }
   if ( ( val.num_elements == 0 ) && ( val.num_chnks != 0 ) ) { go_BYE(-1); }
@@ -105,22 +108,27 @@ vctr_del(
           // Ignore this error 
         }
         else {
-        go_BYE(-1); 
+          if ( val.is_lma == false ) { 
+            go_BYE(-1); 
+          }
         }
       }
     }
     else {
       // we may have deleted chunks that are too 
-      // The +1 is important here but needs more thought TODO P3
+      // The +1 is important here but needs more thought TODO P2
       uint32_t watermark = val.max_chnk_idx + 1 - val.memo_len;
       if ( chnk_idx >= watermark ) {
         if ( !is_found ) { go_BYE(-1); }
       }
       else {
+        // more thought needed on the > or >= TODO P2 
+        if ( chnk_idx > watermark ) {
         if ( is_found ) { 
           printf("Found chunk %u in [%s]. Should not have existed\n", 
               chnk_idx, val_name);
           // go_BYE(-1); 
+        }
         }
       }
     }

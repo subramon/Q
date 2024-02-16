@@ -91,7 +91,7 @@ Reducer.__gc = function(rdcr)
     return false 
   end 
   assert(type(rdcr._destructor) == "function")
-  assert(rdcr._destructor(rdcr._value))
+  rdcr._destructor(rdcr._value)
 end
 
 function Reducer:delete()

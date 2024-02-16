@@ -146,6 +146,10 @@ function lVector:set_name(name)
   if ( type(name) == "nil" ) then name = "" end 
   assert(type(name) == "string")
   local status = cVector.set_name(self._base_vec, name)
+  if ( self._nn_vec ) then 
+    local nn_vector = self._nn_vec
+    local status = cVector.set_name(nn_vector._base_vec, "nn_" .. name)
+  end
   return self
 end
 function lVector:drop(level)
@@ -409,6 +413,11 @@ function lVector:memo(memo_len)
   if ( self:num_elements() > 0 ) then return nil end 
   assert(cVector.set_memo(self._base_vec, memo_len))
   self._memo_len = memo_len
+  if ( self._nn_vec ) then 
+    local nn_vector = assert(self._nn_vec)
+    assert(cVector.set_memo(nn_vector._base_vec, memo_len))
+    nn_vector._memo_len = memo_len
+  end
   return self
 end
 
@@ -1046,6 +1055,10 @@ end
 function lVector:killable(val)
   assert(type(val) == "number")
   assert(cVector.set_num_lives_kill(self._base_vec, val))
+  if ( self._nn_vec ) then 
+    local nn_vector = self._nn_vec
+    assert(cVector.set_num_lives_kill(nn_vector._base_vec, val))
+  end
   return self
 end
 --==================================================
@@ -1060,10 +1073,11 @@ end
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
 function lVector:kill()
   local nn_success
+  -- print("Lua received kill for " .. (self:name() or "anonymous"))
   local success = cVector.kill(self._base_vec)
-  print("Lua received kill for " .. self:name() or "anonymous")
   if ( self._nn_vec ) then 
     local nn_vector = assert(self._nn_vec)
+    -- print("Lua received kill for " .. (nn_vector:name() or "nn_anon"))
     nn_success = cVector.kill(nn_vector._base_vec)
   end
   return success, nn_success

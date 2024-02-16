@@ -1,0 +1,51 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+//START_FOR_CDEF
+extern int
+${fn}(  
+      const ${ctype} * restrict in,  
+      uint64_t nR,
+      ${ctype} value,
+      uint64_t *ptr_count
+      ) 
+;
+//STOP_FOR_CDEF
+
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+
+int
+${fn}(  
+      const ${ctype} * restrict in, // input vector [nR]
+      uint64_t nR,
+      ${ctype} value, // value of which occurrences is to be found
+      uint64_t *ptr_count // no. of occurences of a given value in input vector
+      )
+
+{
+  int status = 0;
+  if ( in == NULL ) { go_BYE(-1); }
+  if ( nR == 0 ) { go_BYE(-1); }
+  if ( ptr_count == NULL ) { go_BYE(-1); }
+
+  uint64_t counter = 0;
+  ${ctype} inv;
+  uint64_t count = *ptr_count;
+
+  for ( uint64_t i  = 0; i < nR; i++ ) {  
+    inv = in[i];
+    if ( inv == value ) {
+      counter++;
+    }
+  }
+  *ptr_count = count + counter;  
+BYE:
+  return status;
+}
+   ]]
+}

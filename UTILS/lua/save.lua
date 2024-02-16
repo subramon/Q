@@ -12,24 +12,26 @@ local function skip_save(vec)
   local is_eov       = vec:is_eov() 
   local is_error     = vec:is_error() 
   local memo_len     = vec:memo_len() 
-  local num_lives_free     = vec:get_num_lives_free() 
-  local num_lives_kill     = vec:get_num_lives_kill() 
+  local is_early_freeable, _ = vec:is_early_freeable() 
+  local is_killable, _       = vec:is_killable() 
 
-  assert(type(num_elements)   == "number")
-  assert(type(has_gen)        == "boolean")
-  assert(type(is_eov)         == "boolean")
-  assert(type(is_error)       == "boolean")
-  assert(type(memo_len)       == "number")
-  assert(type(num_lives_free) == "number")
-  assert(type(num_lives_kill) == "number")
+  assert(type(num_elements)      == "number")
+  assert(type(has_gen)           == "boolean")
+  assert(type(is_eov)            == "boolean")
+  assert(type(is_error)          == "boolean")
+  assert(type(memo_len)          == "number")
+  assert(type(is_early_freeable) == "boolean")
+  assert(type(is_killable)       == "boolean")
 
   if ( 
     ( num_elements == 0 ) or ( memo_len >= 0 ) or 
     ( has_gen ) or ( not is_eov ) or ( is_error ) or
-    ( num_lives_free > 0 ) or ( num_lives_kill > 0 ) 
+    ( is_early_freeable ) or ( is_killable ) 
     ) then
+    print("Not saving Vector " .. (vec:name() or "anonymous"))
     return true
   else
+    print("Saving Vector     " .. (vec:name() or "anonymous"))
     return false
   end
 end

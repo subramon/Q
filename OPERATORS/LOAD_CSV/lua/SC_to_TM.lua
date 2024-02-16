@@ -77,8 +77,7 @@ local function SC_to_TM(
     if ( len == 0 ) then 
       buf:delete()
       nn_buf:delete()
-      print("A SC_to_TM sending kill to Vector " 
-       .. invec:name() or "anonymous")
+      -- print("A SC_to_TM killing Vector " .. (invec:name() or "anon"))
       invec:kill()
       return 0, nil 
     end 
@@ -104,8 +103,8 @@ local function SC_to_TM(
     invec:unget_chunk(l_chunk_num)
     l_chunk_num = l_chunk_num + 1
     if ( len < subs.max_num_in_chunk ) then 
-      print("B SC_to_TM sending kill to Vector " 
-       .. invec:name() or "anonymous")
+      -- print("B SC_to_TM killing Vector " .. (invec:name() or "anon"))
+      invec:kill()
     end
     if ( has_nulls ) then 
       return len, buf, nn_buf

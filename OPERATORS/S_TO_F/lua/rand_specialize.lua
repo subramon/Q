@@ -48,6 +48,9 @@ return function (
     seed = largs.seed
   else
     seed = cutils.rdtsc() 
+    -- following is to make sure we stay as integer and not fp
+    seed = math.floor(seed)
+    seed = seed % (4096*1048576-1)
   end
   assert(type(seed) == "number")
   assert(seed > 0)

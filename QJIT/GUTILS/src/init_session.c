@@ -91,7 +91,8 @@ init_session(
       bool is_found = false;
       status = vctr_del(tbsp, vctr_uqid, &is_found); cBYE(status);
       if ( !is_found ) { go_BYE(-1); } 
-      printf("Deleted vector %u \n", vctr_uqid);
+      printf("Deleted vector %u:%s \n", vctr_uqid,
+        g_vctr_hmap[tbsp].bkts[i].val.name); 
       num_deletes++;
     }
     //-------------------
