@@ -45,6 +45,7 @@ require "Q/OPERATORS/GET/lua/get_val_by_idx"
 
 require "Q/OPERATORS/COUNT/lua/count"
 require "Q/OPERATORS/BIN_COUNT/lua/bin_count"
+require "Q/OPERATORS/BIN_PLACE/lua/bin_place"
 
 require "Q/UTILS/lua/import"
 require "Q/UTILS/lua/register_qop" 

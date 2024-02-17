@@ -51,7 +51,7 @@ return function (
   subs.cargs = nil
   subs.cst_cargs = ffi.NULL
 
-  subs.code = "c = a == b;"
+  subs.code = "c = a < b;"
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"

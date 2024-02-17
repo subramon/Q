@@ -1,0 +1,100 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include "q_macros.h"
+//START_FOR_CDEF
+extern int
+${fn}(  
+      const ${ctype} * restrict invals,  
+      uint32_t n_invals,
+      ${ctype} *lb, // [nb]
+      ${ctype} *ub, // [nb]
+      int *lock,  // [nb]
+      uint64_t *cnt, // [nb]
+      uint32_t nb,
+      ${ctype} * restrict outvals
+      )
+;
+//STOP_FOR_CDEF
+
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+
+int
+${fn}(  
+      const ${ctype} * restrict invals,  
+      uint32_t n_invals,
+      ${ctype} *lb, // [nb]
+      ${ctype} *ub, // [nb]
+      int *lock,  // [nb]
+      uint64_t *off, // [nb]
+      uint32_t nb,
+      ${ctype} * restrict outvals
+      )
+
+{
+  int status = 0;
+
+// #pragma omp parallel for 
+  for ( uint32_t i  = 0; i < n_invals; i++ ) {  
+    if ( status < 0 ) { continue; }
+    ${ctype} inval = invals[i];
+    // find correct bin for inval
+    int lb_idx = 0;
+    int ub_idx = (int)nb;
+    int bin_idx = -1; 
+    for ( ; ; ) { 
+      bin_idx = (lb_idx+ub_idx)/2;
+      ${ctype} this_lb = lb[bin_idx];
+      ${ctype} this_ub = ub[bin_idx];
+      if ( ( inval >= this_lb ) && ( inval < this_ub ) ) {
+        break;
+      }
+      else if ( inval < this_lb ) { 
+        ub_idx = bin_idx;
+      }
+      else if ( inval >= this_ub ) { 
+        lb_idx = bin_idx;
+      }
+      else {
+        WHEREAMI; status = -1;
+      }
+    }
+#ifdef DEBUG
+    if ( ( bin_idx < 0 ) || ( bin_idx >= (int)nb ) ) { status = -1; }
+#endif
+    // Having found the bin, we need to lock it so that we can write to it
+    for ( ; ; ) {
+      int l_expected = 0;
+      int l_desired  = 1; 
+      bool rslt = __atomic_compare_exchange(
+            lock+bin_idx, &l_expected, &l_desired, false,
+            __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+      if ( rslt ) { break; }
+      // control here => you have to wait 
+      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 10 * 1000000 };
+      nanosleep(&tmspec, NULL);
+    }
+    // place item in bin
+    uint64_t offset = off[bin_idx];
+    outvals[offset] = inval; 
+    // Indicate that you have written one more thing to the bin
+    __atomic_add_fetch(off+bin_idx, 1, 0); // one more in outQ
+    // release lock 
+    int l_expected = 1;
+    int l_desired  = 0; 
+    bool rslt = __atomic_compare_exchange(
+            lock+bin_idx, &l_expected, &l_desired, false,
+            __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+    if ( !rslt ) { WHEREAMI; /* unrecoverable */ status = -1; }
+  }
+  cBYE(status);
+BYE:
+  return status;
+}
+   ]]
+}
