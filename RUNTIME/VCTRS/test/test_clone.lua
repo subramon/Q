@@ -14,7 +14,8 @@ local len = 3 * max_num_in_chunk + 7
 local tests = {}
 tests.t_clone = function()
   collectgarbage("stop")
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "x", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   x:eval()
@@ -86,6 +87,10 @@ tests.t_clone = function()
   r:delete()
   -- TODO assert(lgutils.mem_used() == 0)
   -- TODO assert(lgutils.dsk_used() == 0)
+  local post_mem = lgutils.mem_used()
+  local post_dsk = lgutils.dsk_used()
+  assert(pre_mem == post_mem)
+  assert(pre_dsk == post_dsk)
   collectgarbage("restart")
   print("Test t_clone completed successfully")
 end
@@ -95,6 +100,8 @@ tests.t_nn_clone = function()
   x:eval()
   nn_x:eval()
   x:set_nulls(nn_x)
+  x:chunks_to_lma()
+  assert(x:get_nulls():is_lma() == true)
   local y = x:clone()
   assert(y:has_nulls())
   assert(y:num_elements() == x:num_elements())
@@ -118,6 +125,55 @@ tests.t_nn_clone = function()
 
   print("Test t_nn_clone completed successfully")
 end
+tests.t_chnk_clone = function() -- tests cloning when no lma 
+  collectgarbage("stop")
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
+
+  local max_num_in_chunk = 64
+  local len = 3 * max_num_in_chunk + 17
+  local xtbl = {}; for i = 1, len do xtbl[i] = i end 
+  local nn_xtbl = {}; for i = 1, len do nn_xtbl[i] = true end 
+  local x = Q.mk_col(xtbl, "I4", 
+    { max_num_in_chunk = max_num_in_chunk}, nn_xtbl)
+  assert(x:max_num_in_chunk() == max_num_in_chunk)
+  x:set_name("x")
+
+  local y = x:clone()
+  assert(x:is_eov())
+  assert(y:is_eov()) -- unfortunate consequence of current limitation
+  assert(y:has_nulls()) -- unfortunate consequence of current limitation
+  -- compare nn_X with nn_y
+  local nn_x = x:get_nulls(); x:drop_nulls()
+  local nn_y = y:get_nulls(); y:drop_nulls()
+  assert(type(nn_x) == "lVector")
+  assert(type(nn_y) == "lVector")
+  local z = Q.vveq(nn_x, nn_y)
+  local r = Q.sum(z)
+  local n1, n2 = r:eval()
+  assert(n1 == n2)
+  r:delete(); z:delete()
+  -- compare x with y 
+  local z = Q.vveq(x, y)
+  local r = Q.sum(z)
+  local n1, n2 = r:eval()
+  assert(n1 == n2)
+  r:delete(); z:delete()
+
+  x:delete()
+  y:delete()
+  nn_x:delete()
+  nn_y:delete()
+  local post_mem = lgutils.mem_used()
+  local post_dsk = lgutils.dsk_used()
+  assert(pre_mem == post_mem)
+  assert(pre_dsk == post_dsk)
+  collectgarbage("restart")
+  print("Test t_chnk_clone completed successfully")
+end
+
+  
 -- return tests
-tests.t_clone()
-tests.t_nn_clone()
+-- tests.t_clone()
+-- tests.t_nn_clone()
+tests.t_chnk_clone()

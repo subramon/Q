@@ -12,19 +12,14 @@ local function expander_bin_place(x, lb, ub, cnt, optargs)
   local func_name = assert(subs.fn)
   qc.q_add(subs)
 
-  -- We need input vector to be fully materialized and prepped for lma
-  assert(x:is_eov())
-  local nx = x:num_elements()
-  x:chunks_to_lma()
   y = x:clone()
+  local nx = y:num_elements()
   --=============================
   local t_start = cutils.rdtsc()
   -- Now, get access to pointers 
-  local xcmem, nn_xcmem, nx = x:get_lma_read()
-  local xptr = get_ptr(xcmem, subs.cast_in_as)
-  assert(x:num_readers() == 1)
 
-  local ycmem, nn_ycmem, ny = y:get_lma_write()
+  y:chunks_to_lma()
+  local ycmem, _, ny = y:get_lma_write()
   local yptr = get_ptr(ycmem, subs.cast_in_as)
   assert(y:num_writers() == 1)
 
@@ -43,10 +38,17 @@ local function expander_bin_place(x, lb, ub, cnt, optargs)
   -- notice difference: offset is writable and is cmem not vector
   -- notice difference: lock is writable and is cmem not vector
 
-  qc[func_name](xptr, nx, lbptr, ubptr, lckptr, offptr, nlb, yptr)
+  local chunk_num = 0
+  while true do 
+    local nx, xcmem, _ = x:get_chunk(chunk_num)
+    local xptr = get_ptr(xcmem, subs.cast_in_as)
+    qc[func_name](xptr, nx, lbptr, ubptr, lckptr, offptr, nlb, yptr)
+    x:unget_chunk(chunk_num)
+    chunk_num = chunk_num + 1 
+    if ( nx < x:max_num_in_chunk() ) then break end 
+  end
   -- Above is an unusual function: returns void instead of int status 
 
-  x:unget_lma_read() -- Indicate read is over 
   y:unget_lma_write() -- Indicate write is over 
   lb:unget_lma_read() -- Indicate read is over 
   ub:unget_lma_read() -- Indicate read is over 

@@ -212,12 +212,41 @@ function lVector:nop()
   return status
 end
 
+local function chnk_clone(v) -- for case when no lma
+  -- TODO Need to support lazy evaluation of ouptut vector 
+  -- Currently, we are generating entire vector here 
+  assert(type(v) == "lVector")
+  local vargs = {}
+  vargs.qtype            = v:qtype() 
+  vargs.width            = v:width() 
+  vargs.max_num_in_chunk = v:max_num_in_chunk() 
+  vargs.has_nulls        = v:has_nulls() 
+
+  vargs.memo_len = v:memo_len()
+  assert(vargs.memo_len == -1)
+
+  local b, n = v:is_killable(); assert(b == false); assert(n == 0)
+  vargs.num_lives_kill = 0
+
+  local b, n = v:is_early_freeable(); assert(b == false); assert(n == 0)
+  vargs.num_lives_free = 0
+
+  local w = lVector(vargs)
+  local chunk_num = 0
+  while true do 
+    local nv, v_cmem, nn_v_cmem = v:get_chunk(chunk_num)
+    w:put_chunk(v_cmem, nv, nn_v_cmem)
+    v:unget_chunk(chunk_num)
+    if ( nv < vargs.max_num_in_chunk ) then break end 
+    chunk_num = chunk_num + 1
+  end
+  return w
+end
 function lVector:clone()
   -- current limitation, clone needs lma, cannot handle chunks 
   if ( not self:is_lma() ) then
-    self:chunks_to_lma()
+    return chnk_clone(self)
   end
-  assert(self:is_lma() ) 
   local vargs = {}
   local file_name, _ = self:file_info()
   -- make a unique name 

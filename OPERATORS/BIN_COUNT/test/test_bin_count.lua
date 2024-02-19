@@ -47,12 +47,10 @@ tests.t1 = function()
   assert(altz:is_eov())
   assert(altz:num_elements() == altx:num_elements())
 
-  --[[
   local chk_x = Q.sort(altx, "ascending"):set_name("chk_x")
   local chk_z = Q.sort(altz, "ascending"):set_name("chk_z")
   local n1, n2 = Q.sum(Q.vveq(chk_x, chk_z)):eval()
   assert(n1 == n2)
-  --]]
 
 end 
 -- return tests

@@ -11,8 +11,7 @@ local function bin_place_specialize(x, lb, ub, cnt, optargs)
   local subs = {}
   assert(type(x) == "lVector")
   assert(x:has_nulls() == false)
-  x:eval() 
-  assert(x:is_eov())
+  -- x does not have to be eov 
   local qtypes = { 
     "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8",  "F4", "F8", }
   subs.qtype = x:qtype()
