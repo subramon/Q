@@ -22,6 +22,7 @@ SRCS += ../../../UTILS/src/get_time_usec.c
 SRCS += ../../../UTILS/src/isdir.c 
 SRCS += ../../../UTILS/src/isfile.c 
 SRCS += ../../../UTILS/src/line_breaks.c 
+SRCS += ../../../UTILS/src/mem_info.c 
 SRCS += ../../../UTILS/src/mk_file.c 
 SRCS += ../../../UTILS/src/rdtsc.c 
 SRCS += ../../../UTILS/src/rs_mmap.c 

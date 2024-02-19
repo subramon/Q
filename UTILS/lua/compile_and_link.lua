@@ -51,7 +51,7 @@ local function compile_and_link(
   if ( srcs ) then
     for _, v in ipairs(srcs) do
       local srcfile = qcfg.q_src_root .. v
-      assert(cutils.isfile(srcfile))
+      assert(cutils.isfile(srcfile), "File not found " .. srcfile)
       str_srcs[#str_srcs+1] = srcfile
     end
     str_srcs = table.concat(str_srcs, " ")

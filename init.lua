@@ -52,6 +52,7 @@ require "Q/UTILS/lua/register_qop"
 
 require "Q/OPERATORS/VSPLIT/lua/vsplit" 
 require "Q/OPERATORS/LOAD_BIN/lua/load_bin" 
+require "Q/OPERATORS/PAR_SORT/lua/par_sort"
 
 --== These are from QTILS 
 require 'Q/QTILS/lua/fold'

@@ -80,9 +80,11 @@ vctr_del(
     // never call put_chunk. Typically for intermediate vectors
     // Makes me wonder how this interplays with memo_len
     // TODO P2 Think about this.
-    g_vctr_hmap[tbsp].bkt_full[where_found] = false; 
-    memset(&(g_vctr_hmap[tbsp].bkts[where_found]), 0, 
-        sizeof(vctr_rs_hmap_bkt_t));
+    bool is_found;
+    vctr_rs_hmap_key_t key = uqid; 
+    status = g_vctr_hmap[0].del(&g_vctr_hmap[tbsp], &key, &val, &is_found); 
+    cBYE(status);
+    if ( !is_found ) { go_BYE(-1); }
     goto BYE;
   }
   if ( ( val.num_elements == 0 ) && ( val.num_chnks != 0 ) ) { go_BYE(-1); }
