@@ -39,7 +39,7 @@ ${fn}(
 {
   int status = 0;
 
-// #pragma omp parallel for 
+#pragma omp parallel for 
   for ( uint32_t i  = 0; i < n_invals; i++ ) {  
     if ( status < 0 ) { continue; }
     ${ctype} inval = invals[i];
