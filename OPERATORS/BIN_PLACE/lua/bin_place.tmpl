@@ -38,16 +38,32 @@ ${fn}(
 
 {
   int status = 0;
+#ifdef DEBUG
+  if ( nb == 0 ) { go_BYE(-1); }
+  for ( uint32_t i = 0; i < nb; i++ )  {
+    if ( lb[i] >= ub[i] ) { go_BYE(-1); } 
+  }
+  int max_num_probes = 1;
+  for ( uint32_t n = nb; n > 1; n = n / 2 ) { 
+    max_num_probes++;
+  }
+#endif
 
 #pragma omp parallel for 
   for ( uint32_t i  = 0; i < n_invals; i++ ) {  
     if ( status < 0 ) { continue; }
     ${ctype} inval = invals[i];
+#ifdef DEBUG
+    if ( ( inval < lb[0] ) || ( inval > ub[nb-1] ) )  { WHEREAMI; status = -1; }
+#endif
     // find correct bin for inval
     int lb_idx = 0;
     int ub_idx = (int)nb;
     int bin_idx = -1; 
-    for ( ; ; ) { 
+    for ( int num_probes = 0; ; num_probes++ ) { 
+#ifdef DEBUG
+      if ( num_probes > max_num_probes ) { WHEREAMI; status = -1; } 
+#endif
       bin_idx = (lb_idx+ub_idx)/2;
       ${ctype} this_lb = lb[bin_idx];
       ${ctype} this_ub = ub[bin_idx];

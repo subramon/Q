@@ -26,14 +26,15 @@ return function (x, y, optargs )
     local in_ptr = get_ptr(in_chunk, subs.cast_in_as)
     local start_time = cutils.rdtsc()
     local status = qc[func_name](in_ptr, in_len, 
-      subs.lb, subs.ub, subs.lock, subs.cnt, subs.nb)
+      subs.lb, subs.ub, subs.cnt, subs.nb)
     assert(status == 0)
     record_time(start_time, func_name)
     x:unget_chunk(chunk_num)
     l_chunk_num = l_chunk_num + 1
-    return subs.count
+    return subs.rdcr_state
   end
   local args = {gen = gen, destructor = subs.destructor, 
-    func = subs.getter, value = subs.cnt}
+    func = subs.getter, name = subs.fn,
+    value = subs.rdcr_state}
   return Reducer(args)
 end

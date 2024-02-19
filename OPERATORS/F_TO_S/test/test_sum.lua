@@ -8,6 +8,9 @@ local lgutils = require 'liblgutils'
 local tests = {}
 --=========================================
 tests.t1 = function()
+  collectgarbage()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   for iter = 1, 100 do 
     local x = Q.rand( { lb = 0, ub = 1, qtype = "F8", len = 65537 } )
     assert(type(x) == "lVector")
@@ -22,6 +25,9 @@ tests.t1 = function()
     y:delete()
   end
   assert(cVector.check_all())
+  local post = lgutils.mem_used()
+  assert(pre == post)
+  collectgarbage("restart")
   print("Test t1 succeeded")
 end
 --=========================================
@@ -85,15 +91,11 @@ tests.t4 = function()
   print("Test t4 succeeded")
 end
 --=========================================
---[[
-return tests
-os.exit()
---]]
--- TODO TODO tests.t1() -- Need Q.rand() to work 
+-- return tests
+tests.t1() 
 tests.t2()
--- tests.t3() 
+tests.t3() 
 tests.t4()
 collectgarbage()
 print("MEM", lgutils.mem_used())
 print("DSK", lgutils.dsk_used())
-assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

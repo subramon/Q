@@ -46,25 +46,21 @@ local function bin_count_specialize(x, y, optargs)
   local ub_cmem = cmem.new({qtype = subs.qtype, size = sz})
   subs.ub = get_ptr(ub_cmem, subs.qtype)
 
-  local sz = ffi.sizeof("int") * subs.nb
-  local lock = cmem.new({qtype = "I4", size = sz})
-  lock:zero()
-  subs.lock = get_ptr(lock, "I4")
-
   -- currently, we require floor/ceil to be set explicitly. Relax this
   assert(type(optargs) == "table") 
 
   assert(type(optargs.floor) == "Scalar") 
   assert(optargs.floor:qtype() == subs.qtype)
-  local c = optargs.floor:to_cmem()
-  c = get_ptr(c, subs.qtype)
-  subs.lb[0] = c[0]
+  local f_sclr = optargs.floor:to_cmem()
+  f_sclr = get_ptr(f_sclr, subs.qtype)
+  subs.lb[0] = f_sclr[0]
 
   assert(type(optargs.ceil) == "Scalar") 
   assert(optargs.ceil:qtype() == subs.qtype)
-  local c = optargs.ceil:to_cmem()
-  c = get_ptr(c, subs.qtype)
-  subs.ub[subs.nb-1] = c[0]
+  local c_sclr = optargs.ceil:to_cmem()
+  c_sclr = get_ptr(c_sclr, subs.qtype)
+  subs.ub[subs.nb-1] = c_sclr[0]
+
   --======================================================
   -- Now, get access to y's data and set other lb/ub values
   y:chunks_to_lma()
@@ -99,30 +95,52 @@ local function bin_count_specialize(x, y, optargs)
   subs.srcdir = "OPERATORS/BIN_COUNT/gen_src/"
   subs.incs = { "UTILS/inc/", "OPERATORS/BIN_COUNT/gen_inc/" }
 
+  subs.rdcr_state = {
+    lb = lb_cmem, 
+    ub = ub_cmem, 
+    cnt = cnt_cmem, 
+  }
   --==============================
-  subs.getter = function (x) 
-    assert(type(cnt_cmem) == "CMEM")
+  subs.getter = function (rdcr_state) 
+    assert(type(rdcr_state) == "table")
+
+    local lb_cmem = assert(rdcr_state.lb)
+    assert(type(lb_cmem) == "CMEM")
     local lb = lVector.new( {qtype = subs.qtype, gen = true, 
       has_nulls = false, max_num_in_chunk = subs.max_num_in_chunk})
     lb:put_chunk(lb_cmem, nb)
     lb:eov()
 
+    local ub_cmem = assert(rdcr_state.ub)
+    assert(type(ub_cmem) == "CMEM")
     local ub = lVector.new( {qtype = subs.qtype, gen = true, 
       has_nulls = false, max_num_in_chunk = subs.max_num_in_chunk})
     ub:put_chunk(ub_cmem, nb)
     ub:eov()
 
+    local cnt_cmem = assert(rdcr_state.cnt)
+    assert(type(cnt_cmem) == "CMEM")
     local cnt = lVector.new( {qtype = "I8", gen = true, 
       has_nulls = false, max_num_in_chunk = subs.max_num_in_chunk})
     cnt:put_chunk(cnt_cmem, nb)
     cnt:eov()
+
     return lb, ub, cnt 
   end
-  subs.destructor = function (x) 
+  subs.destructor = function (rdcr_state) 
+    assert(type(rdcr_state) == "table")
+    local lb_cmem = assert(rdcr_state.lb)
+    assert(type(lb_cmem) == "CMEM")
     lb_cmem:delete()
+
+    local ub_cmem = assert(rdcr_state.ub)
+    assert(type(ub_cmem) == "CMEM")
     ub_cmem:delete()
-    cnt_cmem:delete() 
-    lock:delete() 
+
+    local cnt_cmem = assert(rdcr_state.cnt)
+    assert(type(cnt_cmem) == "CMEM")
+    cnt_cmem:delete()
+
   end
   return subs
 end

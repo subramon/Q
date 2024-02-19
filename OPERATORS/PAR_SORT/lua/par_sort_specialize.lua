@@ -26,15 +26,22 @@ return function(invec, bin_cnt)
   -- ==================
   local nb = bin_cnt:num_elements()
   local sz = ffi.sizeof("uint64_t") * nb
+
+  subs.cnt_cmem = cmem.new({qtype = "UI8", size = sz})
+  subs.cnt = get_ptr(subs.cnt_cmem, "UI8")
+  for i = 0, nb-1 do 
+    subs.cnt[i] = cntptr[i] 
+  end
+
   subs.off_cmem = cmem.new({qtype = "UI8", size = sz})
   subs.off = get_ptr(subs.off_cmem, "UI8")
   subs.off[0] = 0
   for i = 1, nb-1 do 
     subs.off[i] = cntptr[i-1] + subs.off[i-1]
   end
+  assert(subs.off[nb-1] < invec:num_elements())
   bin_cnt:unget_lma_read()
 
-  subs.cnt = cntptr
   subs.nb = nb
 
   subs.xqtype = invec:qtype()

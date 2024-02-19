@@ -48,6 +48,7 @@ function Reducer.new(arg)
   -- is_eor = is end of reducer
   if arg.value then 
     reducer._value = arg.value
+    -- print("Reducer: setting value")
     reducer._is_eor = true -- we have the final answer
   end
   -- Note that when you provide both a value and a generator
@@ -91,6 +92,7 @@ Reducer.__gc = function(rdcr)
     return false 
   end 
   assert(type(rdcr._destructor) == "function")
+  -- print("Invoking reducer destructor")
   rdcr._destructor(rdcr._value)
 end
 
@@ -105,6 +107,7 @@ function Reducer:delete()
     -- print("WARNING! You are a deleting a Reducer that has no destructor")
     return false 
   end 
+  -- print("Delete called on reducer. destructor invoked")
   assert(self._destructor(self._value))
   local post_mem = lgutils.mem_used()
   if ( pre_mem ~= post_mem ) then 
@@ -133,7 +136,7 @@ function Reducer:next()
     self._gen = nil -- destroy the generator once generation done
     return false
   end
-  record_time(start_time, "Reducer.next")
+  if ( arg.name ) then record_time(start_time, arg.name) end 
 end
 
 function Reducer:get_name()
@@ -153,7 +156,6 @@ function Reducer:value()
 end
 
 function Reducer:eval()
-  local start_time = cutils.rdtsc()
   local status = self._gen ~= nil
   if ( self._is_eor ) then 
     return self._func(self._value)
@@ -161,7 +163,6 @@ function Reducer:eval()
   while status == true do
     status = self:next()
   end
-  record_time(start_time, "Reducer.eval")
   return self:value()
 end
 

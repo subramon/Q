@@ -32,13 +32,15 @@ local function expander_par_sort(x, bin_cnt, optargs)
   local xcmem, _, nx = x:get_lma_write()
   local xptr = get_ptr(xcmem, subs.cast_x_as)
 
+  local t_start = cutils.rdtsc()
   local status = qc[func_name](xptr, subs.off, subs.cnt, subs.nb)
   assert(status == 0)
 
   x:unget_lma_write() -- Indicate write is over 
   subs.off_cmem:delete()
+  subs.cnt_cmem:delete()
   x:set_meta("sort_order",  "asc") -- only asc is supported
-  record_time(t_start, "par_sort")
+  record_time(t_start, subs.fn)
   return x
 end
 return expander_par_sort

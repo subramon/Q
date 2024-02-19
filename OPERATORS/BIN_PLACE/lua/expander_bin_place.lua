@@ -39,6 +39,7 @@ local function expander_bin_place(x, lb, ub, cnt, optargs)
   -- notice difference: lock is writable and is cmem not vector
 
   local chunk_num = 0
+  local t_start = cutils.rdtsc()
   while true do 
     local nx, xcmem, _ = x:get_chunk(chunk_num)
     local xptr = get_ptr(xcmem, subs.cast_in_as)
@@ -57,7 +58,7 @@ local function expander_bin_place(x, lb, ub, cnt, optargs)
   assert(y:num_writers() == 0)
   subs.off_cmem:delete()
   subs.lck_cmem:delete()
-  record_time(t_start, "bin_place")
+  record_time(t_start, subs.fn)
   return y
 end
 return expander_bin_place
