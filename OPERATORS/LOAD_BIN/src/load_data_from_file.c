@@ -11,7 +11,7 @@
 int
 load_data_from_file(
     const char * const src_file,
-    uint64_t num_copied,
+    uint64_t file_offset,
     uint64_t num_to_copy,
     uint32_t width,
     char *dst
@@ -19,8 +19,8 @@ load_data_from_file(
 //STOP_FUNC_DECL
 {
   int status = 0;
-  char *X = NULL; size_t nX = 0;
-  char *bak_X = NULL; size_t bak_nX = 0;
+  char *X = NULL; uint64_t nX = 0;
+  char *bak_X = NULL; uint64_t bak_nX = 0;
   if ( src_file == NULL ) { go_BYE(-1); }
   if ( dst == NULL ) { go_BYE(-1); }
   if ( width == 0 ) { go_BYE(-1); }
@@ -28,10 +28,10 @@ load_data_from_file(
 
   status = rs_mmap(src_file, &X, &nX, 0); cBYE(status);
   bak_X = X; bak_nX = nX;
-  X += num_copied * width;
+  X += file_offset * width;
   // make sure start of copy is within bounds 
   if ( X > bak_X + bak_nX ) { go_BYE(-1); } 
-  nX -= num_copied * width;
+  nX -= file_offset * width;
 
   // make sure stop  of copy is within bounds 
   if ( num_to_copy * width > nX ) { go_BYE(-1); } 

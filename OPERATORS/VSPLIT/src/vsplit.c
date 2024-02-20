@@ -67,9 +67,9 @@ vsplit(
   memset(nn_ofps, 0,  nC * sizeof(FILE *)); 
   for ( uint32_t i = 0; i < nC; i++ ) { 
     if ( is_load[i] ) { 
-      ofps[i] = fopen(opfiles[i], "ab");
+      ofps[i] = fopen(opfiles[i], "wb");
       if ( has_nulls[i] ) { 
-        nn_ofps[i] = fopen(nn_opfiles[i], "ab");
+        nn_ofps[i] = fopen(nn_opfiles[i], "wb");
       }
     }
   }

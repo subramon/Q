@@ -8,14 +8,16 @@ local aux_for_C     = require "Q/OPERATORS/LOAD_CSV/lua/aux_for_C"
 local get_ptr       = require 'Q/UTILS/lua/get_ptr'
 local tbl_of_str_to_C_array = require 'Q/UTILS/lua/tbl_of_str_to_C_array'
 
-local function mk_op_files(M, opdir)
+local function mk_op_files(M, opdir, idx)
+  assert(type(idx) == "number")
+  assert(idx >= 0)
   local opfiles = {}
   local nn_opfiles = {}
   for k, v in ipairs(M) do 
     opfiles[k] = ""
     nn_opfiles[k] = ""
     if ( v.is_load) then 
-      opfiles[k] = "_" .. v.name .. ".bin"
+      opfiles[k] = "_" .. tostring(idx) .. "_" .. v.name .. ".bin"
       assert(cutils.mk_file(opdir, opfiles[k], 0, true))
       if ( v.has_nulls ) then 
         nn_opfiles[k] = "_nn" .. opfiles[k]
@@ -92,7 +94,6 @@ local function vsplit(
     l_is_trim, l_width, l_c_qtypes)
   --=======================================
 
-  local opfiles, nn_opfiles = mk_op_files(M, opdir)
 
   --== START Make C code 
   local subs = {}
@@ -123,6 +124,7 @@ local function vsplit(
   qc.q_add(subs); 
   --== STOP  Make C code 
   for k, infile in ipairs(infiles) do
+    local opfiles, nn_opfiles = mk_op_files(M, opdir, k)
     qc.vsplit(infile, #M, fld_sep, max_width, c_qtypes, 
     is_load, has_nulls, width, opfiles, nn_opfiles)
     print("Split ", k, infile)

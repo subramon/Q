@@ -2,7 +2,7 @@
 extern int
 load_data_from_file(
     const char * const src_file,
-    uint64_t num_copied,
+    uint64_t file_offset,
     uint64_t num_to_copy,
     uint32_t width,
     char *dst
