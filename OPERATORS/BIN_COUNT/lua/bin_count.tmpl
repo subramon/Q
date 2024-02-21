@@ -39,7 +39,10 @@ ${fn}(
   if ( nb == 0 ) { go_BYE(-1); }
   uint64_t sum_cnt = 0;
   for ( uint32_t i = 0; i < nb; i++ )  {
-    if ( lb[i] >= ub[i] ) { go_BYE(-1); } 
+    if ( lb[i] >= ub[i] ) { 
+      fprintf(stderr, "lb[%d] = ${fmt} >= ub[%d] = ${fmt}\n", i, lb[i], i, ub[i]);
+      go_BYE(-1); 
+    }
     sum_cnt += cnt[i]; 
   }
   int max_num_probes = 1;

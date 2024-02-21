@@ -1,3 +1,4 @@
+local ffi      = require 'ffi'
 local cutils   = require 'libcutils'
 local lgutils  = require 'liblgutils'
 local lVector  = require 'Q/RUNTIME/VCTRS/lua/lVector'
@@ -34,7 +35,7 @@ local function expander_bin_place(x, lb, ub, cnt, optargs)
   local cntptr = get_ptr(cnt_cmem, subs.cast_cnt_as)
 
   local offptr = get_ptr(subs.off_cmem, subs.cast_off_as)  -- offsets 
-  local lckptr = get_ptr(subs.lck_cmem, subs.cast_lck_as)  -- lock 
+  -- local lckptr = get_ptr(subs.lck_cmem, subs.cast_lck_as)  -- lock 
   -- notice difference: offset is writable and is cmem not vector
   -- notice difference: lock is writable and is cmem not vector
 
@@ -43,12 +44,18 @@ local function expander_bin_place(x, lb, ub, cnt, optargs)
   while true do 
     local nx, xcmem, _ = x:get_chunk(chunk_num)
     local xptr = get_ptr(xcmem, subs.cast_in_as)
-    qc[func_name](xptr, nx, lbptr, ubptr, lckptr, offptr, nlb, yptr)
+    local status = qc[func_name](xptr, nx, lbptr, ubptr, offptr, nlb, yptr)
     x:unget_chunk(chunk_num)
-    chunk_num = chunk_num + 1 
+    assert(status == 0)
+    if ( subs.drop_mem ) then 
+      x:drop_mem(1, chunk_num)
+    end 
+    print("bin_place ", chunk_num)
     if ( nx < x:max_num_in_chunk() ) then break end 
+    chunk_num = chunk_num + 1 
   end
-  -- Above is an unusual function: returns void instead of int status 
+  local t_stop = cutils.rdtsc()
+  print("time bin place = ", t_stop - t_start)
 
   y:unget_lma_write() -- Indicate write is over 
   lb:unget_lma_read() -- Indicate read is over 
@@ -57,7 +64,7 @@ local function expander_bin_place(x, lb, ub, cnt, optargs)
   assert(x:num_readers() == 0)
   assert(y:num_writers() == 0)
   subs.off_cmem:delete()
-  subs.lck_cmem:delete()
+  -- subs.lck_cmem:delete()
   record_time(t_start, subs.fn)
   return y
 end

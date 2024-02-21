@@ -70,6 +70,9 @@ local function bin_count_specialize(x, y, optargs)
   assert(type(nn_ycmem) == "nil")
   local yptr = get_ptr(ycmem, subs.qtype)
   -- careful of the indexing below 
+  for i = 1, ny-1 do 
+    assert( yptr[i-1] ~= yptr[i] ) 
+  end 
   for i = 1, ny do 
     subs.lb[i] = yptr[i-1] 
   end
@@ -89,6 +92,24 @@ local function bin_count_specialize(x, y, optargs)
   subs.cast_lb_as = subs.ctype .. " *"
   subs.cast_ub_as = subs.ctype .. " *"
   subs.cast_cnt_as = "int64_t *"
+
+  if  ( subs.qtype == "I1" ) or  ( subs.qtype == "I2" ) or (
+      ( subs.qtype == "I4" ) ) then
+    subs.fmt = "%d"
+  elseif  ( subs.qtype == "I8" ) then 
+    subs.fmt = "%lld"
+  elseif  ( subs.qtype == "UI1" ) or  ( subs.qtype == "UI2" ) or (
+      ( subs.qtype == "UI4" ) ) then
+    subs.fmt = "%u"
+  elseif  ( subs.qtype == "UI8" ) then 
+    subs.fmt = "%llu"
+  elseif  ( subs.qtype == "F4" ) then 
+    subs.fmt = "%f"
+  elseif  ( subs.qtype == "F8" ) then 
+    subs.fmt = "%lf"
+  else
+    error("need to figure out printing format for " .. subs.qtype)
+  end
 
   subs.tmpl   = "OPERATORS/BIN_COUNT/lua/bin_count.tmpl"
   subs.incdir = "OPERATORS/BIN_COUNT/gen_inc/"
@@ -141,6 +162,14 @@ local function bin_count_specialize(x, y, optargs)
     assert(type(cnt_cmem) == "CMEM")
     cnt_cmem:delete()
 
+  end
+  subs.drop_mem = false
+  if ( optargs ) then 
+    assert(type(optargs) == "table")
+    if (type(optargs.drop_mem) ~= "nil") then 
+      assert(type(optargs.drop_mem) == "boolean")
+      subs.drop_mem = optargs.drop_mem
+    end
   end
   return subs
 end

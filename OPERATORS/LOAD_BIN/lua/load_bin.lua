@@ -52,7 +52,6 @@ local function load_bin(
     assert(#nnfiles == #infiles)
     for k, nnfile in ipairs(nnfiles) do 
       assert(type(nnfile) == "string")
-      assert(cutils.isfile(nnfile))
       assert(nnfile ~= infile)
       assert(cutils.isfile(nnfile), "File not found " .. nnfile)
       nn_file_size = cutils.getsize(nnfile)
@@ -111,10 +110,10 @@ local function load_bin(
             ( num_copied < vargs.max_num_in_chunk ) ) do
       -- how many elements from current file to be copied
       local num_in_file = num_in_files[num_files_processed+1] - file_offset
-      print("num_in_file = ", num_in_file )
+      -- print("num_in_file = ", num_in_file )
       if ( num_in_file == 0 ) then
         num_files_processed = num_files_processed + 1 
-        print("num_files_processed = ", num_files_processed)
+        -- print("num_files_processed = ", num_files_processed)
         -- if no more files to process, break out of while loop 
         if ( num_files_processed >= #infiles ) then break end 
         file_offset = 0
@@ -128,20 +127,20 @@ local function load_bin(
       else
         num_to_copy = num_in_file
       end
-      print(num_in_file, space_in_buf, num_to_copy)
+      -- print(num_in_file, space_in_buf, num_to_copy)
       local bufptr = get_ptr(buf, "char *")
       local infile = infiles[num_files_processed+1]
       assert(type(infile) == "string")
       assert(#infile > 0)
-      print("Loading " .. num_to_copy .. " from " .. infile)
+      -- print("Loading " .. num_to_copy .. " from " .. infile)
       local status = qc.load_data_from_file(infile, file_offset, 
-        num_to_copy, width, bufptr)
+        num_to_copy, num_copied, width, bufptr)
       assert(status == 0)
       if ( nnfiles ) then 
         local nn_bufptr = get_ptr(nn_buf, "char *")
         local nnfile = nnfiles[num_files_processed+1]
         local status = qc.load_data_from_file(nnfile, file_offset,
-          num_to_copy, 1, nn_bufptr)
+          num_to_copy, num_copied, 1, nn_bufptr)
         assert(status == 0)
       end 
       num_copied = num_copied + num_to_copy

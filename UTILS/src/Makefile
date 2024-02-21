@@ -38,6 +38,7 @@ gen_inc_files : \
 	../inc/rand_file_name.h \
 	../inc/get_bit_u64.h \
 	../inc/get_file_size.h \
+	../inc/file_as_str.h \
 	../inc/mem_info.h \
 	../inc/get_time_usec.h \
 	../inc/get_bit_u64.h \
@@ -136,6 +137,9 @@ SC_to_txt.c : ../inc/SC_to_txt.h
 ../inc/get_file_size.h : 
 	luajit ../src/cli_extract_func_decl.lua get_file_size.c ${INCDIR}
 
+../inc/file_as_str.h : 
+	luajit ../src/cli_extract_func_decl.lua file_as_str.c ${INCDIR}
+
 ../inc/mem_info.h : 
 	luajit ../src/cli_extract_func_decl.lua mem_info.c ${INCDIR}
 
@@ -174,6 +178,7 @@ GEN_INC_FILES = \
 	../inc/file_exists.h  \
 	../inc/get_bit_u64.h \
 	../inc/get_file_size.h  \
+	../inc/file_as_str.h  \
 	../inc/mem_info.h  \
 	../inc/get_time_usec.h \
 	../inc/isdir.h  \
@@ -200,6 +205,7 @@ SRCS += BL_to_txt.c
 SRCS += file_exists.c 
 SRCS += get_bit_u64.c  
 SRCS += get_file_size.c 
+SRCS += file_as_str.c 
 SRCS += mem_info.c 
 SRCS += get_time_usec.c 
 SRCS += is_valid_chars_for_num.c 

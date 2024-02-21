@@ -16,6 +16,7 @@ ${EXTSO} : libcutils.so
 SRCS := cutils.c 
 SRCS += ../../../UTILS/src/qtypes.c 
 SRCS += ../../../UTILS/src/file_exists.c 
+SRCS += ../../../UTILS/src/file_as_str.c 
 SRCS += ../../../UTILS/src/get_bit_u64.c 
 SRCS += ../../../UTILS/src/get_file_size.c 
 SRCS += ../../../UTILS/src/get_time_usec.c 

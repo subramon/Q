@@ -1,6 +1,7 @@
-local cutils       = require 'libcutils'
-local qcfg        = require 'Q/UTILS/lua/qcfg'
-local exec         = require 'Q/UTILS/lua/exec_and_capture_stdout'
+local cutils   = require 'libcutils'
+local qcfg     = require 'Q/UTILS/lua/qcfg'
+local exec     = require 'Q/UTILS/lua/exec_and_capture_stdout'
+local c_exec   = require 'Q/UTILS/lua/c_exec'
 
 local qispc_flags  = assert(qcfg.qispc_flags)
 local qcflags     = assert(qcfg.qcflags)
@@ -53,7 +54,8 @@ local function compile(
     if ( lang == "C" ) then
       q_cmd = string.format("gcc -c %s %s %s -o %s",
          qcflags, str_incs, dotc, doto)
-      assert(exec(q_cmd), q_cmd)
+      -- OLD assert(exec(q_cmd), q_cmd)
+      assert(c_exec(q_cmd), q_cmd)
     end
     if ( lang == "ISPC" ) then
       -- print(" qispc_flags " ..  qispc_flags)

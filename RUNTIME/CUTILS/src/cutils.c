@@ -23,6 +23,7 @@
 #include "get_file_size.h"
 #include "isdir.h"
 #include "isfile.h"
+#include "file_as_str.h"
 #include "line_breaks.h"
 #include "mem_info.h"
 #include "mk_file.h"
@@ -35,6 +36,54 @@ extern char *strptime(const char *s, const char *format, struct tm *tm);
 int luaopen_libcutils (lua_State *L);
 
 //----------------------------------------
+static int l_cutils_exec( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  int fd = -1;
+  char * temp_file_name = NULL;
+  FILE *ifp = NULL; 
+#define BUFLEN 1024
+  char buf[BUFLEN]; 
+
+  if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
+  const char *pcmd  = luaL_checkstring(L, 1);
+  if ( ( pcmd == NULL ) ||( *pcmd == '\0' ) ) { go_BYE(-1); }
+  fprintf(stderr, "cutils.exec %s \n", pcmd); 
+
+  // create output file 
+  temp_file_name = strdup("/tmp/_cutils_XXXXXX"); 
+  fd = mkstemp(temp_file_name); 
+  if ( fd < 0 ) { go_BYE(-1); }
+
+  ifp = popen(pcmd, "r");
+  if ( ifp == NULL ) { go_BYE(-1); }
+  for ( ; ; ) { 
+    memset(buf, 0, BUFLEN);
+    ssize_t nr = fread(buf, 1, BUFLEN-1, ifp); 
+    if ( nr < 0 ) { go_BYE(-1); }
+    if ( nr == 0 ) { break; }
+    ssize_t nw = write(fd, buf, nr); 
+    if ( nw != nr ) { go_BYE(-1); }
+    if ( nr < BUFLEN-1 ) { break; }
+  }
+  pclose(ifp);  ifp = NULL; 
+  close(fd); fd = -1;
+  char *str = file_as_str(temp_file_name); 
+  if ( temp_file_name != NULL ) { unlink(temp_file_name); } 
+  free_if_non_null(temp_file_name); 
+  lua_pushstring(L, str); 
+  return 1; 
+BYE:
+  if ( fd >= 0 ) { close(fd); }
+  if ( temp_file_name != NULL ) { unlink(temp_file_name); } 
+  free_if_non_null(temp_file_name); 
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
 static int l_cutils_basename( 
     lua_State *L
     )
@@ -716,6 +765,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "get_width_qtype",   l_cutils_get_width_qtype },
     { "get_c_qtype", l_cutils_get_c_qtype },
     { "delete",      l_cutils_delete },
+    { "exec",        l_cutils_exec },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "is_qtype",    l_cutils_is_qtype },
@@ -742,6 +792,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "dirname",     l_cutils_dirname },
     { "currentdir",  l_cutils_currentdir },
     { "delete",      l_cutils_delete },
+    { "exec",        l_cutils_exec },
     { "get_bit_u64", l_cutils_get_bit_u64 },
     { "getfiles",    l_cutils_getfiles },
     { "getsize",     l_cutils_getsize },

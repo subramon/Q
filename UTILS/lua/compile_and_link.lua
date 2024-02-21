@@ -1,6 +1,7 @@
 local cutils     = require 'libcutils'
 local qcfg       = require 'Q/UTILS/lua/qcfg'
 local exec       = require 'Q/UTILS/lua/exec_and_capture_stdout'
+local c_exec     = require 'Q/UTILS/lua/c_exec'
 local is_so_file = require 'Q/UTILS/lua/is_so_file'
 
 local qcflags   = qcfg.qcflags
@@ -64,10 +65,17 @@ local function compile_and_link(
     str_libs = table.concat(libs, " ")
   end
   --===============================
-  local q_cmd = string.format("gcc -shared %s %s %s %s -o %s %s",
+  if ( cutils.isfile(sofile) ) then 
+    print("not recompiling. File exists " .. sofile)
+  else
+    local q_cmd = string.format("gcc -shared %s %s %s %s -o %s %s",
        qcflags, str_incs, dotc, str_srcs, sofile, str_libs)
-  print("q_cmd = ", q_cmd)
-  assert(exec(q_cmd), q_cmd)
+    local cmd_out = c_exec(q_cmd)
+    if ( not cmd_out ) then
+      -- TODO P1 Need to understand this better 
+      print("WARNING! Ignoring error for q_cmd = ", q_cmd)
+    end
+  end
   
   assert(cutils.isfile(sofile))
   return true

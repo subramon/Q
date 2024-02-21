@@ -13,6 +13,7 @@ load_data_from_file(
     const char * const src_file,
     uint64_t file_offset,
     uint64_t num_to_copy,
+    uint64_t num_copied,
     uint32_t width,
     char *dst
     )
@@ -36,7 +37,7 @@ load_data_from_file(
   // make sure stop  of copy is within bounds 
   if ( num_to_copy * width > nX ) { go_BYE(-1); } 
 
-  memcpy(dst, X, (num_to_copy*width));
+  memcpy(dst+(num_copied*width), X, (num_to_copy*width));
 BYE:
   mcr_rs_munmap(bak_X, bak_nX);
   return status;

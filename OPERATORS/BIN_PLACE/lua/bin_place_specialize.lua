@@ -17,6 +17,15 @@ local function bin_place_specialize(x, lb, ub, cnt, optargs)
   subs.qtype = x:qtype()
   assert(is_in(subs.qtype, qtypes))
 
+  subs.drop_mem = false
+  if ( optargs ) then 
+    assert(type(optargs) == "table")
+    if (type(optargs.drop_mem) ~= "nil") then 
+      assert(type(optargs.drop_mem) == "boolean")
+      subs.drop_mem = optargs.drop_mem
+    end
+  end
+
   assert(type(lb) == "lVector")
   assert(lb:qtype() == subs.qtype)
   assert(lb:has_nulls() == false)
@@ -62,8 +71,8 @@ local function bin_place_specialize(x, lb, ub, cnt, optargs)
   cnt:unget_lma_read()
   -- STOP : make offsets
   -- START: make locks
-  subs.lck_cmem = cmem.new({qtype = "I4", size = sz})
-  subs.lck_cmem:zero()
+  -- subs.lck_cmem = cmem.new({qtype = "I4", size = sz})
+  -- subs.lck_cmem:zero()
   -- STOP : make locks
 
   subs.fn = "bin_place_" .. subs.qtype 

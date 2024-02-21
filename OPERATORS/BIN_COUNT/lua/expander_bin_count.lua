@@ -17,6 +17,7 @@ return function (x, y, optargs )
   --==================
   local l_chunk_num = 0
   local gen = function(chunk_num)
+    -- print("bin count " .. chunk_num)
     assert(chunk_num == l_chunk_num)
     local in_len, in_chunk = x:get_chunk(chunk_num)
     if ( in_len == 0 ) then 
@@ -30,6 +31,9 @@ return function (x, y, optargs )
     assert(status == 0)
     record_time(start_time, func_name)
     x:unget_chunk(chunk_num)
+    if ( subs.drop_mem ) then 
+      x:drop_mem(1, chunk_num)
+    end 
     l_chunk_num = l_chunk_num + 1
     return subs.rdcr_state
   end

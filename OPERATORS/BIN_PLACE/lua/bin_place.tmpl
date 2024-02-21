@@ -3,6 +3,7 @@ return require 'Q/UTILS/lua/code_gen' {
    declaration = [[
 
 #include "q_incs.h"
+#include <omp.h>
 #include "q_macros.h"
 //START_FOR_CDEF
 extern int
@@ -11,7 +12,6 @@ ${fn}(
       uint32_t n_invals,
       ${ctype} *lb, // [nb]
       ${ctype} *ub, // [nb]
-      int *lock,  // [nb]
       uint64_t *cnt, // [nb]
       uint32_t nb,
       ${ctype} * restrict outvals
@@ -30,7 +30,6 @@ ${fn}(
       uint32_t n_invals,
       ${ctype} *lb, // [nb]
       ${ctype} *ub, // [nb]
-      int *lock,  // [nb]
       uint64_t *off, // [nb]
       uint32_t nb,
       ${ctype} * restrict outvals
@@ -38,6 +37,9 @@ ${fn}(
 
 {
   int status = 0;
+  uint32_t *bin_num = NULL;
+  bin_num = malloc(n_invals * sizeof(uint32_t));
+  for ( uint32_t i = 0; i < n_invals; i++ ) { bin_num[i] = -1; }
 #ifdef DEBUG
   if ( nb == 0 ) { go_BYE(-1); }
   for ( uint32_t i = 0; i < nb; i++ )  {
@@ -49,8 +51,8 @@ ${fn}(
   }
 #endif
 
-#pragma omp parallel for 
-  for ( uint32_t i  = 0; i < n_invals; i++ ) {  
+#pragma omp parallel for schedule(static, 1024)
+  for ( uint32_t i  = 0; i < n_invals; i++ ) {
     if ( status < 0 ) { continue; }
     ${ctype} inval = invals[i];
 #ifdef DEBUG
@@ -60,7 +62,7 @@ ${fn}(
     int lb_idx = 0;
     int ub_idx = (int)nb;
     int bin_idx = -1; 
-    for ( int num_probes = 0; ; num_probes++ ) { 
+    for ( int num_probes = 0; ; num_probes++ ) {
 #ifdef DEBUG
       if ( num_probes > max_num_probes ) { WHEREAMI; status = -1; } 
 #endif
@@ -83,33 +85,38 @@ ${fn}(
 #ifdef DEBUG
     if ( ( bin_idx < 0 ) || ( bin_idx >= (int)nb ) ) { status = -1; }
 #endif
-    // Having found the bin, we need to lock it so that we can write to it
-    for ( ; ; ) {
-      int l_expected = 0;
-      int l_desired  = 1; 
-      bool rslt = __atomic_compare_exchange(
-            lock+bin_idx, &l_expected, &l_desired, false,
-            __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
-      if ( rslt ) { break; }
-      // control here => you have to wait 
-      struct timespec  tmspec = { .tv_sec = 0, .tv_nsec = 10 * 1000000 };
-      nanosleep(&tmspec, NULL);
-    }
-    // place item in bin
-    uint64_t offset = off[bin_idx];
-    outvals[offset] = inval; 
-    // Indicate that you have written one more thing to the bin
-    __atomic_add_fetch(off+bin_idx, 1, 0); // one more in outQ
-    // release lock 
-    int l_expected = 1;
-    int l_desired  = 0; 
-    bool rslt = __atomic_compare_exchange(
-            lock+bin_idx, &l_expected, &l_desired, false,
-            __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
-    if ( !rslt ) { WHEREAMI; /* unrecoverable */ status = -1; }
+     bin_num[i] = bin_idx;
   }
   cBYE(status);
+
+// Having found the bin, we need to place the item. 
+  int nT = omp_get_num_procs();
+  int num_placed = 0;
+#pragma omp parallel 
+  for ( uint32_t i  = 0; i < n_invals; i++ ) {
+    int tid = omp_get_thread_num();
+    // get the i^{th} item 
+    ${ctype} inval = invals[i];
+    // determine which bin this item goes into 
+    int bin_idx = bin_num[i];
+#ifdef DEBUG
+    if ( ( bin_idx < 0 ) || ( bin_idx >= (int)nb ) ) { status = -1; }
+#endif
+    if ( ( bin_idx % nT ) == tid ) { // if this bin belongs to me 
+      // place item in bin
+      uint64_t offset = off[bin_idx];
+      outvals[offset] = inval; 
+      off[bin_idx]++;
+#ifdef DEBUG
+      __atomic_add_fetch(&num_placed, 1, 0); 
+#endif
+    }
+  }
+#ifdef DEBUG
+  if ( num_placed != (int)n_invals ) { go_BYE(-1); }
+#endif
 BYE:
+  free_if_non_null(bin_num);
   return status;
 }
    ]]

@@ -51,8 +51,7 @@ for i = 1, 4 do -- 4 fields
       assert(cutils.isfile(nnfiles[k]))
     end
   end
-  for j, v in ipairs(infiles) do print(j, v) end 
-  print("================")
+  -- for j, v in ipairs(infiles) do print(j, v) end 
   local v = Q.load_bin({
     infiles = infiles, 
     nnfiles = nnfiles,
@@ -67,8 +66,7 @@ for i = 1, 4 do -- 4 fields
     assert(v:has_nulls() == false)
   end
   v:eval()
-  v:pr()
+  -- v:pr()
   assert(v:num_elements() == 11)
-  print("=================================")
 end
 print("Test load bin completed successfully")

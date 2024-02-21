@@ -14,6 +14,7 @@
 
 local qcfg   = require 'Q/UTILS/lua/qcfg'
 local exec   = require 'Q/UTILS/lua/exec_and_capture_stdout'
+local c_exec = require 'Q/UTILS/lua/c_exec'
 local cutils = require 'libcutils'
 
 local function for_cdef(
@@ -81,7 +82,8 @@ local function for_cdef(
   --===================
   cmd = string.format(" cpp %s %s |grep -v '^#'",
       tmpfile, incs)
-  local  rslt = assert(exec(cmd))
+  -- OLD local  rslt = assert(exec(cmd), "Failed " .. cmd)
+  local  rslt = assert(c_exec(cmd), "Failed " .. cmd)
   os.remove(tmpfile)
 
   -- check that you do not get back empty string
