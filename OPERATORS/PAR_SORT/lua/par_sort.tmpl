@@ -32,7 +32,7 @@ ${fn}(
     if ( off[i] < off[i-1] ) { go_BYE(-1); }
   }
 #endif
-// #pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static)
   for ( uint32_t i = 0; i < nb; i++ ) { 
     qsort_asc_${xqtype}(X+off[i], cnt[i]);
   }

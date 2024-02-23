@@ -139,6 +139,7 @@ vsplit(
     if ( status < 0 ) { 
       fprintf(stderr, "Error for row %lu, col %d, cell [%s]\n",
           row_ctr, col_ctr, buf);
+      status = 0; // Ignoring the error
     }
     cBYE(status);
     fwrite(opbuf, width[col_ctr], 1, ofps[col_ctr]);

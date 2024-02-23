@@ -664,7 +664,9 @@ static int l_vctr_put_chunk( lua_State *L) {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
   uint32_t n = luaL_checknumber(L, 3); // num elements in chunk
 
-  status = vctr_put_chunk(ptr_v->tbsp, ptr_v->uqid, ptr_cmem, n); cBYE(status);
+  status = vctr_put_chunk(ptr_v->tbsp, ptr_v->uqid, ptr_cmem, n); 
+  if ( status != 0 ) { printf("error putting %u in chunk\n", n); }
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:

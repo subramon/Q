@@ -70,8 +70,12 @@ local function bin_count_specialize(x, y, optargs)
   assert(type(nn_ycmem) == "nil")
   local yptr = get_ptr(ycmem, subs.qtype)
   -- careful of the indexing below 
+  local is_err = false
   for i = 1, ny-1 do 
-    assert( yptr[i-1] ~= yptr[i] ) 
+    if( yptr[i-1] == yptr[i] ) then
+      print("error at position ", i)
+      is_err = true
+    end
   end 
   for i = 1, ny do 
     subs.lb[i] = yptr[i-1] 
@@ -80,6 +84,10 @@ local function bin_count_specialize(x, y, optargs)
     subs.ub[i-1] = yptr[i-1] 
   end
   y:unget_lma_write()
+  if ( is_err ) then
+    y:pr("_samples.csv")
+    error("ERROR")
+  end
   --======================================================
 
 
@@ -129,21 +137,21 @@ local function bin_count_specialize(x, y, optargs)
     assert(type(lb_cmem) == "CMEM")
     local lb = lVector.new( {qtype = subs.qtype, gen = true, 
       has_nulls = false, max_num_in_chunk = subs.max_num_in_chunk})
-    lb:put_chunk(lb_cmem, nb)
+    lb:putn(lb_cmem, nb)
     lb:eov()
 
     local ub_cmem = assert(rdcr_state.ub)
     assert(type(ub_cmem) == "CMEM")
     local ub = lVector.new( {qtype = subs.qtype, gen = true, 
       has_nulls = false, max_num_in_chunk = subs.max_num_in_chunk})
-    ub:put_chunk(ub_cmem, nb)
+    ub:putn(ub_cmem, nb)
     ub:eov()
 
     local cnt_cmem = assert(rdcr_state.cnt)
     assert(type(cnt_cmem) == "CMEM")
     local cnt = lVector.new( {qtype = "I8", gen = true, 
       has_nulls = false, max_num_in_chunk = subs.max_num_in_chunk})
-    cnt:put_chunk(cnt_cmem, nb)
+    cnt:putn(cnt_cmem, nb)
     cnt:eov()
 
     return lb, ub, cnt 

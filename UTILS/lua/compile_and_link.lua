@@ -76,7 +76,6 @@ local function compile_and_link(
       print("WARNING! Ignoring error for q_cmd = ", q_cmd)
     end
   end
-  
   assert(cutils.isfile(sofile))
   return true
 end

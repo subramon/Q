@@ -44,6 +44,7 @@ ${fn}(
   for ( uint32_t i = 0; i < n_invals; i++ ) { bin_num[i] = -1; }
   for ( uint32_t i = 0; i < n_invals; i++ ) { thread_num[i] = -1; }
   int nT = omp_get_num_procs();
+  // printf("nT = %d \n", nT);
 #ifdef DEBUG
   if ( nb == 0 ) { go_BYE(-1); }
   for ( uint32_t i = 0; i < nb; i++ )  {
@@ -97,21 +98,26 @@ ${fn}(
 // Having found the bin, we need to place the item. 
   int num_placed = 0;
 #pragma omp parallel 
-  for ( uint32_t i  = 0; i < n_invals; i++ ) {
+  {
     int tid = omp_get_thread_num();
-    // get the i^{th} item 
-    ${ctype} inval = invals[i];
-    // determine which bin this item goes into 
-    int bin_idx = bin_num[i];
+    // printf("Thread %d working \n", tid); 
+    for ( uint32_t i  = 0; i < n_invals; i++ ) {
+      int l_thread_num = thread_num[i];
+      if ( l_thread_num != tid ) { // skip if not for me to deal with
+        continue;
+      }
+      // get the i^{th} item 
+      ${ctype} inval = invals[i];
+      // determine which bin this item goes into 
+      int bin_idx = bin_num[i];
 #ifdef DEBUG
-    if ( ( bin_idx < 0 ) || ( bin_idx >= (int)nb ) ) { 
-      status = -1; continue;
-    }
-    if ( ( thread_num[tid] < 0 ) || ( thread_num ?= nT ) ) {
-      status = -1; continue; 
-    }
+      if ( ( bin_idx < 0 ) || ( bin_idx >= (int)nb ) ) { 
+        status = -1; continue;
+      }
+      if ( ( l_thread_num < 0 ) || ( l_thread_num >= nT ) ) {
+        status = -1; continue; 
+      }
 #endif
-    if ( thread_num[i] == tid ) { // if this bin belongs to me 
       // place item in bin
       uint64_t offset = off[bin_idx];
       outvals[offset] = inval; 
@@ -122,7 +128,11 @@ ${fn}(
     }
   }
 #ifdef DEBUG
-  if ( num_placed != (int)n_invals ) { go_BYE(-1); }
+  if ( num_placed != (int)n_invals ) { 
+    printf("num_placed = %d \n", num_placed);
+    printf("n_invals = %d \n", n_invals);
+    go_BYE(-1); 
+  }
 #endif
 BYE:
   free_if_non_null(bin_num);

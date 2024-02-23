@@ -23,8 +23,14 @@ local function expander_par_sort(x, bin_cnt, optargs)
 
   -- We need input vector to be fully materialized and prepped for lma
   assert(x:is_eov())
+  print("TODO JUST FOR TESTINGG") -- DELETE P0
+  local dummy = cutils.exec("ls")
+  assert(#dummy > 0)
   x:chunks_to_lma()
   assert(x:is_lma()) 
+  print("TODO JUST FOR TESTINGG") -- DELETE P0
+  dummy = cutils.exec("ls")
+  assert(#dummy > 0)
   --=============================
   local t_start = cutils.rdtsc()
   --======================================

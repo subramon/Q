@@ -18,12 +18,14 @@ echo "Q_SRC_ROOT= ${Q_SRC_ROOT}"
 #-----------------------------------
 # export Q_ROOT="/home/subramon/local/Q/"
 export Q_ROOT="/mnt/storage/local/Q/"
+# export Q_ROOT="/storeB/local/Q/"
 echo "Q_ROOT= $Q_ROOT"
 mkdir -p $Q_ROOT/
 mkdir -p $Q_ROOT/lib/
 mkdir -p $Q_ROOT/bin/
 mkdir -p $Q_ROOT/config/
 mkdir -p $Q_ROOT/csos/
+mkdir -p $Q_ROOT/cdefs/
 #-----------------------------------
 QCFLAGS=" -std=gnu99  -fPIC     "
 QCFLAGS+=" -g " # Comment for speed 

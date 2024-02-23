@@ -369,6 +369,23 @@ BYE:
   return 2;
 }
 //----------------------------------------
+static int l_cutils_file_as_str( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  const char *const file_name = luaL_checkstring(L, 1);
+  char *x  =  file_as_str(file_name);
+  if ( x == NULL ) { go_BYE(-1); }
+  lua_pushstring(L, x);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 2;
+}
+//----------------------------------------
 static int l_cutils_getsize( 
     lua_State *L
     )
@@ -766,6 +783,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "get_c_qtype", l_cutils_get_c_qtype },
     { "delete",      l_cutils_delete },
     { "exec",        l_cutils_exec },
+    { "file_as_str",        l_cutils_file_as_str },
     { "isdir",       l_cutils_isdir },
     { "isfile",      l_cutils_isfile },
     { "is_qtype",    l_cutils_is_qtype },
@@ -793,6 +811,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "currentdir",  l_cutils_currentdir },
     { "delete",      l_cutils_delete },
     { "exec",        l_cutils_exec },
+    { "file_as_str",        l_cutils_file_as_str },
     { "get_bit_u64", l_cutils_get_bit_u64 },
     { "getfiles",    l_cutils_getfiles },
     { "getsize",     l_cutils_getsize },

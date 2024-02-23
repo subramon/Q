@@ -17,13 +17,15 @@ local exec   = require 'Q/UTILS/lua/exec_and_capture_stdout'
 local c_exec = require 'Q/UTILS/lua/c_exec'
 local cutils = require 'libcutils'
 
+-- Creates file with name cdef_file which contains
+-- the function declaration for the function(s) specified in infile
+-- which are enclosed between START_FOR_CDEF and STOP_FOR_CDEF
 local function for_cdef(
   infile,
   incs,
   subs
   )
   -- Determine the input file 
-  -- print("infile = ", infile)
   local src_root = qcfg.q_src_root
   assert(type(infile) == "string")
   -- TODO P4: What if no forward slash in infile?
@@ -32,6 +34,18 @@ local function for_cdef(
     infile = src_root .. "/" .. infile
   end
   assert(cutils.isfile(infile), "File not found: " .. infile)
+  -- START: make name of cdef file 
+  local n1, n2 = string.find(infile, "/Q/")
+  assert(n1 >= 1)
+  local str = string.sub(infile, n2)
+  local cdef_file = 
+    qcfg.q_root .. "/cdefs/" .. string.gsub(str, "/", "_")
+  -- STOP : make name of cdef file 
+  if ( cutils.isfile(cdef_file) ) then
+    -- print("Using cached version", cdef_file)
+    local rslt = cutils.file_as_str(cdef_file)
+    return rslt
+  end
   --============================================
   -- Determine the incs i.e., -I....
   local cmd
@@ -89,6 +103,11 @@ local function for_cdef(
   -- check that you do not get back empty string
   local chk = string.gsub(rslt, "%s", "")
   assert(#chk > 0, "infile = " .. infile)
+  --==============
+  -- cache rslt in cdef_file
+  local fp = io.open(cdef_file, "w")
+  fp:write(rslt)
+  fp:close()
   --==============
   return rslt
 end
