@@ -13,7 +13,6 @@ return function (
   optargs
   )
   local subs = {}
-  local tmpl = q_src_root .. "/OPERATORS/F1S1OPF2/lua/is_prev.tmpl"
   assert(type(invec) == "lVector")
   assert(type(cmp) == "string")
   assert(is_in(cmp, cmps))
@@ -77,5 +76,5 @@ return function (
   subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"
   subs.incs        = { "OPERATORS/F1S1OPF2/gen_inc/", "UTILS/inc/" }
   --==============================
-  return subs, tmpl
+  return subs
 end

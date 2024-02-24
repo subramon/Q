@@ -53,17 +53,13 @@ rand_${out_qtype}(
   ptr_args->usage_counter++;
   //-----------------------------------
   register double range = ub - lb;
-#pragma omp parallel for schedule(static, 4096)
-  for ( uint64_t i = 0; i < nX; i++ ) { 
-    X[i] = lb;
-  }
-#pragma omp parallel for schedule(static, 4096)
+#pragma omp parallel for schedule(static, 1024)
   for ( uint64_t i = 0; i < nX; i++ ) { 
     int tid = omp_get_thread_num(); 
     double x;
     drand48_r(buffers+tid, &x); 
     x *= range;
-    X[i] += x;
+    X[i] = lb + x;
   }
 BYE:
   free_if_non_null(buffers);

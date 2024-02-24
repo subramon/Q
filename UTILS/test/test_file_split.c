@@ -7,14 +7,20 @@
 
 int 
 main(
-    void
+    int argc,
+    const char ** const argv
     )
 {
   int status = 0;
-  const char * const infile = "/mnt/storage/ascdata/price_cds/000000_0";
-  const char * const opdir  = "/tmp/XXX";
-  uint32_t nB = 32;
-  uint32_t split_col_idx  = 0;
+  for ( int i = 0; i < argc; i++ ) { 
+    printf("%d -> %s \n", i, argv[i]);
+  }
+  printf("argc = %d \n", argc);
+  if ( argc != 5 ) { go_BYE(-1); }
+  const char * const infile =    argv[1];
+  const char * const opdir  =    argv[2];
+  uint32_t nB = atoi(            argv[3]);
+  uint32_t split_col_idx  = atoi(argv[4]);
   status = file_split(infile, opdir, nB, split_col_idx); cBYE(status);
 BYE:
   return status;

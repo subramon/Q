@@ -42,7 +42,12 @@ file_split(
     sprintf(subdir, "%s/%d", opdir, i+1);
     if ( !isdir(subdir) ) { 
       status = mkdir(subdir, 0755); cBYE(status);
+      printf("Created %s \n", subdir);
     }
+    else {
+      printf("Existed %s \n", subdir);
+    }
+
   }
   // open a file in each subdir 
   ofps = malloc(nB * sizeof(FILE *));
@@ -88,7 +93,7 @@ file_split(
     uint32_t seps_seen = 0;
     for ( seps_seen = 0; seps_seen < split_col_idx; seps_seen++ ) {
       for ( ; lidx < line_len; lidx++ ) { 
-        if ( line[lidx] = fld_sep ) { 
+        if ( line[lidx] == fld_sep ) { 
           seps_seen++;
           break;
         }
@@ -108,7 +113,10 @@ file_split(
     uint64_t hashval = hash2(colbuf, bidx, level);
     int partition = hashval % nB;
     fwrite(line, line_len, 1, ofps[partition]);
-    if ( lno == 1000 ) { break; }
+    if ( ( lno % 1000000 ) == 0 ) {
+      printf("Processed %d lines of %s \n", lno, infile);
+    }
+
   }
   printf("Processed %d lines \n", lno);
   

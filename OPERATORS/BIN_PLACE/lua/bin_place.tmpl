@@ -46,6 +46,7 @@ ${fn}(
   int nT = omp_get_num_procs();
   // printf("nT = %d \n", nT);
 #ifdef DEBUG
+  int num_placed = 0;
   if ( nb == 0 ) { go_BYE(-1); }
   for ( uint32_t i = 0; i < nb; i++ )  {
     if ( lb[i] >= ub[i] ) { go_BYE(-1); } 
@@ -96,7 +97,6 @@ ${fn}(
   cBYE(status);
 
 // Having found the bin, we need to place the item. 
-  int num_placed = 0;
 #pragma omp parallel 
   {
     int tid = omp_get_thread_num();

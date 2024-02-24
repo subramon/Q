@@ -9,7 +9,7 @@ return require 'Q/UTILS/lua/code_gen' {
 extern int
 ${fn}(  
       const ${in_ctype} * const  in,  
-      uint64_t nR,
+      uint32_t nR,
       bool default_val,
       bool is_first,
       bool * restrict out,  
@@ -26,7 +26,7 @@ ${fn}(
 int
 ${fn}(  
       const ${in_ctype} * const in,  
-      uint64_t nR,
+      uint32_t nR,
       bool default_val,
       bool is_first,
       bool * restrict out,  
@@ -43,11 +43,14 @@ ${fn}(
   //---------------------------------
   if ( is_first ) {
     out[0] = default_val; 
+    // printf("using default value\n");
   }
   else {
     out[0] = ( *ptr_last_val_prev_chunk ${cmp_op} in[0]);
+    // printf("using previous value = %lld \n", *ptr_last_val_prev_chunk);
   }
-  for ( uint64_t i = 1; i < nR; i++ ) { 
+#pragma omp parallel for
+  for ( uint32_t i = 1; i < nR; i++ ) { 
     out[i] = (in[i-1] ${cmp_op} in[i]);
   }
   *ptr_last_val_prev_chunk = in[nR-1];

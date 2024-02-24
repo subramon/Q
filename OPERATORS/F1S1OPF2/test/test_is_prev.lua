@@ -83,7 +83,22 @@ tests.t3 = function()
 
   print("Test t3 succeeded")
 end
+tests.t4 = function()
+  local M = {}
+  M[#M+1] = { name = "foo", qtype = "I8", has_nulls = false, }
+  local O = {is_hdr = false}
+  local T = Q.load_csv("./samples.csv", M, O)
+  local w = Q.is_prev(T.foo, "neq", { default_val = true })
+  local r = Q.sum(w)
+  local n1, n2 = r:eval()
+  T.bar = Q.where(T.foo, w):eval()
+  assert(T.bar:num_elements() == 867697)
+  assert(T.foo:num_elements() == 867840)
+  print("Test t4 succeeded")
+  -- T.bar:pr("_x")
+end
 --return tests
-tests.t1()
-tests.t2()
-tests.t3()
+-- tests.t1()
+-- tests.t2()
+-- tests.t3()
+tests.t4()
