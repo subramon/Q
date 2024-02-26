@@ -1,3 +1,5 @@
+https://github.com/lemire/clhash/
+
 Test load_csv_par
 
 Consider as alternative to strict
