@@ -33,8 +33,9 @@ return function (
   subs.f2_ctype = "u" .. cutils.str_qtype_to_str_ctype(subs.f2_qtype)
   subs.cast_f2_as  = subs.f2_ctype .. " *"
 
-  subs.f2_width = cutils.get_width_qtype(subs.f2_qtype)
   subs.max_num_in_chunk = f1:max_num_in_chunk()
+  subs.f2_max_num_in_chunk = f1:max_num_in_chunk()
+  subs.f2_width = cutils.get_width_qtype(subs.f2_qtype)
   subs.f2_buf_sz = subs.max_num_in_chunk * subs.f2_width
 
   assert(type(optargs.__operator) == "string")
