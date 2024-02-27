@@ -3,11 +3,12 @@ return require 'Q/UTILS/lua/code_gen' {
 declaration = [[
 #include "q_incs.h"
 #include "q_macros.h"
-#include "qsort_asc_${xqtype}.h"
+#include "qsort_asc_val_${xqtype}_idx_${idxqtype}.h"
 
 //START_FOR_CDEF
 int
 ${fn}(
+    ${idxctype} *idx,
     ${xctype} *X,
     uint64_t *off, // [nb]
     uint64_t *cnt, // [nb]
@@ -19,6 +20,7 @@ definition = [[
 #include "${fn}.h"
 int
 ${fn}(
+    ${idxctype} *idx,
     ${xctype} *X,
     uint64_t *off, // [nb]
     uint64_t *cnt, // [nb]
@@ -34,7 +36,7 @@ ${fn}(
 #endif
 #pragma omp parallel for schedule(static)
   for ( uint32_t i = 0; i < nb; i++ ) { 
-    qsort_asc_${xqtype}(X+off[i], cnt[i]);
+    qsort_asc_val_${xqtype}_idx_${idxqtype}(idx+off[i], X+off[i], cnt[i]);
   }
 BYE:
   return status;

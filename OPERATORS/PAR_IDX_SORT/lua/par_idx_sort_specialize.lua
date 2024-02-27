@@ -3,6 +3,7 @@ local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local qc      = require 'Q/UTILS/lua/qcore'
+local is_in   = require 'Q/UTILS/lua/is_in'
 
 return function(idxvec, invec, bin_cnt)
   local subs = {}
@@ -11,9 +12,21 @@ return function(idxvec, invec, bin_cnt)
   assert(idxvec:is_eov())
   assert(idxvec:has_nulls() == false)
 
-  assert(type(invec) == "lVector")
+  -- We need input vector to be fully materialized and prepped for lma
   assert(invec:is_eov())
-  assert(invec:has_nulls() == false)
+  invec:chunks_to_lma()
+  assert(invec:is_lma()) 
+
+  assert(type(idxvec) == "lVector")
+  assert(idxvec:is_eov())
+  assert(idxvec:has_nulls() == false)
+  assert(is_in(idxvec:qtype(),
+    { "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", }))
+
+  -- We need input vector to be fully materialized and prepped for lma
+  assert(idxvec:is_eov())
+  idxvec:chunks_to_lma()
+  assert(idxvec:is_lma()) 
 
   assert(type(bin_cnt) == "lVector")
   assert(bin_cnt:is_eov())
@@ -51,28 +64,45 @@ return function(idxvec, invec, bin_cnt)
   subs.xqtype = invec:qtype()
   subs.xctype = cutils.str_qtype_to_str_ctype(subs.xqtype)
   subs.cast_x_as = subs.xctype .. " *"
+
+  subs.idxqtype = idxvec:qtype()
+  subs.idxctype = cutils.str_qtype_to_str_ctype(subs.idxqtype)
+  subs.cast_idx_as = subs.idxctype .. " *"
   -- STOP : make offsets
   --========================================
   -- START: Generate the sequential sort function that will be needed
   local xsubs = {}
-  xsubs.F_IN_PLACE_ORDER = "asc"
-  xsubs.xqtype = subs.xqtype
-  xsubs.fn = "qsort_asc_" .. xsubs.xqtype
-  xsubs.FLDTYPE = cutils.str_qtype_to_str_ctype(xsubs.xqtype)
-  xsubs.cast_y_as = xsubs.FLDTYPE .. " *"
-  xsubs.COMPARATOR = "<" 
-  xsubs.tmpl   = "OPERATORS/SORT1/lua/qsort.tmpl"
-  xsubs.incdir = "OPERATORS/SORT1/gen_inc/"
-  xsubs.srcdir = "OPERATORS/SORT1/gen_src/"
-  xsubs.incs = { "OPERATORS/SORT1/gen_inc/" }
+  local ordr = "asc" -- only thing supported currently
+  xsubs.srt_ordr = ordr
+
+  xsubs.idx_qtype = idxvec:qtype()
+  xsubs.idx_ctype = cutils.str_qtype_to_str_ctype(xsubs.idx_qtype)
+  xsubs.cast_idx_as  = xsubs.idx_ctype .. " *"
+
+  xsubs.val_qtype = invec:qtype()
+  xsubs.val_ctype = cutils.str_qtype_to_str_ctype(xsubs.val_qtype)
+  xsubs.cast_val_as  = xsubs.val_ctype .. " *"
+
+  xsubs.fn = "qsort_" .. ordr .. 
+    "_val_" .. xsubs.val_qtype .. 
+    "_idx_" .. xsubs.idx_qtype
+  -- TODO Check below is correct ordr/comparator combo
+  local c = ""
+  if ordr == "asc" then c = "<" end
+  if ordr == "dsc" then c = ">" end
+  xsubs.comparator = c
+  xsubs.tmpl   = "OPERATORS/IDX_SORT/lua/idx_qsort.tmpl"
+  xsubs.incdir = "OPERATORS/IDX_SORT/gen_inc/"
+  xsubs.srcdir = "OPERATORS/IDX_SORT/gen_src/"
+  xsubs.incs = { "OPERATORS/IDX_SORT/gen_inc/", "UTILS/inc/", }
   qc.q_add(xsubs)
   --========================================
-  subs.fn = "par_qsort_" .. subs.xqtype
-  subs.tmpl   = "OPERATORS/PAR_SORT/lua/par_sort.tmpl"
-  subs.incdir = "OPERATORS/PAR_SORT/gen_inc/"
-  subs.srcdir = "OPERATORS/PAR_SORT/gen_src/"
-  subs.srcs = { "OPERATORS/SORT1/gen_src/" .. xsubs.fn .. ".c" }
-  subs.incs = { "OPERATORS/PAR_SORT/gen_inc/", 
-    "OPERATORS/SORT1/gen_inc/", "UTILS/inc/", }
+  subs.fn = "par_idx_qsort_val_" .. subs.xqtype .. "_idx_" .. subs.idxqtype
+  subs.tmpl   = "OPERATORS/PAR_IDX_SORT/lua/par_idx_sort.tmpl"
+  subs.incdir = "OPERATORS/PAR_IDX_SORT/gen_inc/"
+  subs.srcdir = "OPERATORS/PAR_IDX_SORT/gen_src/"
+  subs.srcs = { "OPERATORS/IDX_SORT/gen_src/" .. xsubs.fn .. ".c" }
+  subs.incs = { "OPERATORS/PAR_IDX_SORT/gen_inc/", 
+    "OPERATORS/IDX_SORT/gen_inc/", "UTILS/inc/", }
   return subs
 end

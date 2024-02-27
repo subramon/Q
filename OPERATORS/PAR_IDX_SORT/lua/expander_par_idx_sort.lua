@@ -15,9 +15,9 @@ local record_time = require 'Q/UTILS/lua/record_time'
 -- In other words, x has been partially sorted i.e., sorted *across* bins
 -- But we still need to sort *within* bins
 local function expander_par_idx_sort(idx, x, bin_cnt, optargs)
-  local specializer = "Q/OPERATORS/par_idx_sort/lua/par_idx_sort_specialize"
+  local specializer = "Q/OPERATORS/PAR_IDX_SORT/lua/par_idx_sort_specialize"
   local spfn = assert(require(specializer))
-  local subs = assert(spfn(x, bin_cnt))
+  local subs = assert(spfn(idx, x, bin_cnt))
   local func_name = assert(subs.fn)
   qc.q_add(subs)
 
@@ -43,10 +43,11 @@ local function expander_par_idx_sort(idx, x, bin_cnt, optargs)
   assert(status == 0)
 
   x:unget_lma_write() -- Indicate write is over 
+  idx:unget_lma_write() -- Indicate write is over 
   subs.off_cmem:delete()
   subs.cnt_cmem:delete()
   x:set_meta("sort_order",  "asc") -- only asc is supported
   record_time(t_start, subs.fn)
-  return x
+  return idx, x
 end
 return expander_par_idx_sort
