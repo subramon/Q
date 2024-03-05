@@ -40,7 +40,7 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
     -- early exit 
     if ( f1_len == 0 ) then 
       buf:delete()
-      nn_buf:delete()
+      if ( nn_buf ) then nn_buf:delete() end
       if ( subs.cargs ) then subs.cargs:delete() end 
       --[[
       print("A " .. op .. " sending kill to Vector " .. 

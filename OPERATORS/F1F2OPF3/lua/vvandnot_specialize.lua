@@ -13,8 +13,8 @@ return function (
   optargs
   )
   local subs = {}; 
-  assert(type(f1) == "lVector"); assert(not f1:has_nulls())
-  assert(type(f2) == "lVector"); assert(not f2:has_nulls())
+  assert(type(f1) == "lVector"); 
+  assert(type(f2) == "lVector"); 
   subs.f1_qtype = f1:qtype();   
   subs.f2_qtype = f2:qtype();   
   assert(is_in(subs.f1_qtype, { "BL", "I1", "I2", "I4", "I8", }))
@@ -27,6 +27,7 @@ return function (
 
   subs.f3_qtype = subs.f1_qtype
   subs.f3_width = cutils.get_width_qtype(subs.f3_qtype)
+  subs.bufsz = subs.max_num_in_chunk * subs.f3_width
 
   subs.fn = op 
     ..  subs.f1_qtype .. "_" 
