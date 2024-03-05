@@ -33,7 +33,7 @@ local function expander_f1opf2(a, f1, optargs )
     local f1_len, f1_chunk, nn_f1_chunk = f1:get_chunk(l_chunk_num)
     if ( f1_len == 0 ) then 
       buf:delete()
-      nn_buf:delete()
+      if ( nn_buf ) then nn_buf:delete() end 
       -- print("A " .. a .. " sending kill to " .. f1:name())
       f1:kill()
       return 0, nil 

@@ -37,7 +37,11 @@ nn_SC_to_TM1(
     struct tm l_tm;
     memset(&l_tm, 0, sizeof(struct tm));
     char *rslt = strptime(cptr, format, &l_tm);
-    if ( rslt == NULL ) { WHEREAMI; status = -1; }
+    if ( rslt == NULL ) { 
+      WHEREAMI;  // TODO Shold we quit instead?
+      if ( nn_outv != NULL ) { nn_outv[i] = 0; }
+      continue; 
+    }
     tptr[i].tm_year = l_tm.tm_year;
     tptr[i].tm_mon  = l_tm.tm_mon;
     tptr[i].tm_mday = l_tm.tm_mday;

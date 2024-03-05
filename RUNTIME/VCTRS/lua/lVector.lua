@@ -37,6 +37,7 @@ function lVector:check()
   local nn_status = true
   if ( self._nn_vec ) then 
     local nn_vector = assert(self._nn_vec)
+    assert(nn_vector._chunk_num == self._chunk_num)
     assert(type(nn_vector) == "lVector")
     assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
     assert(cVector.chk(nn_vector._base_vec))
@@ -129,6 +130,7 @@ end
 
 function lVector:name()
   local name = cVector.name(self._base_vec)
+  if ( not name ) then return "anonymous", "no name" end 
   return name
 end
 
@@ -340,6 +342,7 @@ function lVector.new(args)
       assert(type(nn_uqid) == "number")
       assert(nn_uqid > 0)
       vector._nn_vec = assert(cVector.rehydrate({ uqid = nn_uqid}))
+      vector._nn_vec._parent = vector -- set your parent 
     end 
     vector:persist(false) -- IMPORTANT
     return vector 
@@ -428,6 +431,9 @@ function lVector.new(args)
     local nn_vector = setmetatable({}, lVector)
     nn_vector._base_vec = assert(cVector.add1(nn_args))
     nn_vector._qtype = nn_qtype
+    nn_vector._parent = vector -- set parent for nn vector 
+    nn_vector._chunk_num = 0
+
     vector._nn_vec = nn_vector 
   end 
   --=================================================
@@ -542,21 +548,23 @@ function lVector:put_chunk(c, n, nn_c)
   assert(type(n) == "number")
   assert(n > 0) -- cannot put empty chunk 
   assert(cVector.put_chunk(self._base_vec, c, n))
+  self._chunk_num = self._chunk_num + 1 
   if ( self._nn_vec ) then 
     assert(type(nn_c) == "CMEM")
     local nn_vector = assert(self._nn_vec)
+    nn_vector._chunk_num = nn_vector._chunk_num + 1 
     local nn_vec = nn_vector._base_vec
     assert(cVector.put_chunk(nn_vec, nn_c, n))
+    assert(self._chunk_num == nn_vector._chunk_num)
   else
     -- TODO THINK Why are we getting nn_c if vector does not have nulls?
     if ( type(nn_c) == "CMEM" ) then
-      print("STRANGE")
+      print("STRANGE. " .. self:name())
       nn_c:delete() -- not needed
     else
       assert(nn_c == nil)
     end
   end
-  self._chunk_num = self._chunk_num + 1 
 end
 
 function lVector:get1(elem_idx)
@@ -600,9 +608,21 @@ function lVector:get_chunk(chnk_idx)
       error("")
     end
   end
+  if ( to_generate and ( self._generator == nil ) and self._parent ) then 
+    -- print(" invoke the parent generator  for " .. self:name())
+    if ( not self._parent._generator ) then 
+      print("ERROR: Expected parent generator for " .. self:name())
+    end
+    self._parent:get_chunk(chnk_idx)
+    self._parent:unget_chunk(chnk_idx)
+    to_generate = false
+    -- TODO P1 Put more checks in here
+  end
   if ( to_generate ) then -- IF TO GENERATE
-    -- print(" invoke the generator  for " .. self:name(), self._chunk_num)
-    if ( type(self._generator) == "nil" ) then return 0, nil end 
+    if ( not self._generator ) then 
+      print("ERROR: Expected generator for " .. self:name())
+      return 0, nil 
+    end 
     local num_elements, buf, nn_buf = self._generator(self._chunk_num)
     assert(type(num_elements) == "number")
     -- IMPORTANT: See how error in Vector creation is indicated

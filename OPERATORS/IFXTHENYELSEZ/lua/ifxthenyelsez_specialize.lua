@@ -13,7 +13,7 @@ return function (
   local subs = {}
   assert(type(x) == "lVector")
   subs.max_num_in_chunk = x:max_num_in_chunk()
-  assert(not x:has_nulls())
+  -- TODO P1 Think assert(not x:has_nulls())
   assert(subs.max_num_in_chunk > 0)
 
   local xqtype = x:qtype()

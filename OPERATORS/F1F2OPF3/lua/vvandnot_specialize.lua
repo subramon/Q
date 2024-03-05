@@ -62,7 +62,27 @@ return function (
   subs.cst_cargs = ffi.NULL
 
   subs.code = "c = a & (!b);"
-  subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
+  if ( ( f1:has_nulls() ) or ( f2:has_nulls() ) ) then
+    subs.has_nulls = true 
+    subs.fn = "nn_BL_" .. op .. subs.f1_qtype .. "_" .. 
+      subs.f2_qtype .. "_" .. subs.f3_qtype 
+    if ( f1:has_nulls() ) then 
+      assert(f1:nn_qtype() == "BL") -- TODO current limitation
+    end
+    if ( f2:has_nulls() ) then 
+      assert(f2:nn_qtype() == "BL") -- TODO current limitation
+    end
+    subs.nn_f3_qtype = "BL"
+    subs.nn_bufsz = subs.max_num_in_chunk
+    subs.has_nulls = true
+    subs.tmpl   = "OPERATORS/F1F2OPF3/lua/nn_BL_f1f2opf3_sclr.tmpl"
+  else
+    subs.has_nulls = false 
+    subs.fn = op .. subs.f1_qtype .. "_" .. subs.f2_qtype .. 
+      "_" .. subs.f3_qtype 
+    subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
+  end
+
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
   subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}

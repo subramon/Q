@@ -95,7 +95,7 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
 
   vargs.gen = f3_gen
   vargs.qtype=subs.f3_qtype
-  vargs.has_nulls=false 
+  vargs.has_nulls = subs.has_nulls
   vargs.max_num_in_chunk = subs.max_num_in_chunk
   return lVector(vargs)
 end
