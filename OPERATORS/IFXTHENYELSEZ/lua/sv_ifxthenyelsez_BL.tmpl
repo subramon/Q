@@ -8,8 +8,11 @@ extern int
 ${fn}(  
       const bool * restrict const x, // condition field 
       const ${wctype} * const ptr_sval_y, // scalar val
+      bool * restrict const dummy, 
       const ${wctype} * restrict const z, // input field 1
+      bool * restrict const nn_z, 
       ${wctype} * restrict const w, // output field
+      bool * restrict const nn_w, 
       uint32_t n
       );
 //STOP_FOR_CDEF
@@ -22,8 +25,11 @@ int
 ${fn}(  
       const bool * restrict const x, // condition field 
       const ${wctype} * const ptr_sval_y, // scalar val
+      bool * restrict const dummy, 
       const ${wctype} * restrict const z, // input field 1
+      bool * restrict const nn_z, 
       ${wctype} * restrict const w, // output field
+      bool * restrict const nn_w, 
       uint32_t n
       )
 {
@@ -37,11 +43,15 @@ ${fn}(
 
 #pragma omp parallel for schedule(static, 256)
   for ( uint32_t i = 0; i < n; i++ ) { 
+    if ( nn_w != NULL ) { nn_w[i] = true; }
     if ( x[i] == 1 ) { 
       w[i] = sval_y;
     }
     else {
       w[i] = z[i];
+      if ( ( nn_z != NULL ) && ( nn_z[i] == false ) ) {
+        if ( nn_w != NULL ) { nn_w[i] = false; }
+      }
     }
   }
 BYE:

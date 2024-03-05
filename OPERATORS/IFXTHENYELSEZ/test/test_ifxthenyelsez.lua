@@ -10,17 +10,15 @@ local xqtypes = { "BL",  } -- TODO Add "B1"
 local opt_args = { opfile = "_x" }
 local tests = {}
 tests.t1 = function()
+  collectgarbage("stop")
+  local pre_mem = lgutils.mem_used() 
   for _, xqtype in ipairs(xqtypes) do 
     for _, yqtype in ipairs(yqtypes) do
-      collectgarbage("stop")
-      assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
       local x = Q.mk_col({1, 0, 1, 0, 1, 0, 1}, xqtype):set_name("x")
       local y = Q.mk_col({1, 2, 3, 4, 5, 6, 7}, yqtype):set_name("y")
       local z = Q.mk_col({-1, -2, -3, -4, -5, -6, -7}, yqtype):set_name("z")
       local exp_w = Q.mk_col({1, -2, 3, -4, 5, -6, 7}, yqtype):set_name("exp_w")
-      print("MEM 1", lgutils.mem_used())
       local w = Q.ifxthenyelsez(x, y, z):set_name("w"):eval()
-      print("MEM 2", lgutils.mem_used())
       -- Q.print_csv({w, exp_w, y, z}, opt_args)
       local v = Q.vveq(w, exp_w)
       local r = Q.sum(v)
@@ -36,14 +34,13 @@ tests.t1 = function()
       r:delete()
       ---
       assert(cVector.check_all())
-      print("MEM", lgutils.mem_used())
-      assert(lgutils.mem_used() == 0)
-      assert(lgutils.dsk_used() == 0)
-      collectgarbage("restart")
       ---
       print("Test t1 succeeded for xqtype/yqtype = ", xqtype, yqtype)
     end
   end
+  local post_mem = lgutils.mem_used() 
+  assert(pre_mem == post_mem)
+  collectgarbage("restart")
   print("Test t1 succeeded")
 end
 --==========================

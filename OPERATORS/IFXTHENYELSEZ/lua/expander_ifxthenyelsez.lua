@@ -36,63 +36,98 @@ local function expander_ifxthenyelsez(x, y, z)
   -- STOP  Handle some scalar conversion issues
 
   local function gen(chunk_num)
-    local cast_yptr, cast_zptr
+    local xptr, yptr, zptr, wptr 
+    local nn_yptr = ffi.NULL 
+    local nn_zptr = ffi.NULL
+    local nn_wptr = ffi.NULL
     assert(chunk_num == l_chunk_num)
+    local nn_wbuf
     local wbuf = cmem.new({ size = subs.wbufsz, qtype = subs.wqtype,
       name = 'ifxthenyelsez'})
     wbuf:stealable(true)
-    local xlen, xptr = x:get_chunk(l_chunk_num) 
-    if ( xlen == 0 )  then
+    if ( subs.has_nulls ) then 
+      nn_wbuf = cmem.new({ size = subs.nn_wbufsz, qtype = subs.nn_wqtype,
+        name = 'nn_ifxthenyelsez'})
+      nn_wbuf:stealable(true)
+    end
+    local xlen, xchunk, nn_xchunk = x:get_chunk(l_chunk_num) 
+    local xptr = ffi.cast(subs.cast_x_as, get_ptr(xchunk))
+    assert(nn_xchunk == nil)
+
+    if ( xlen == 0 ) then
       wbuf:delete()
       if ( sclr_ymem ) then sclr_ymem:delete() end 
       if ( sclr_zmem ) then sclr_zmem:delete() end 
       return 0
     end
     if ( subs.variation == "vv" ) then 
-      local ylen, yptr = y:get_chunk(l_chunk_num) 
-      local zlen, zptr = z:get_chunk(l_chunk_num) 
+      local ylen, ychunk, nn_ychunk = y:get_chunk(l_chunk_num) 
+      local zlen, zchunk, nn_zchunk = z:get_chunk(l_chunk_num) 
       assert(xlen == ylen)
       assert(xlen == zlen)
-      cast_yptr = ffi.cast(subs.cast_y_as, get_ptr(yptr))
-      cast_zptr = ffi.cast(subs.cast_z_as, get_ptr(zptr))
+      yptr = ffi.cast(subs.cast_y_as, get_ptr(ychunk))
+      zptr = ffi.cast(subs.cast_z_as, get_ptr(zchunk))
+      if ( nn_ychunk ) then 
+        nn_yptr = ffi.cast("bool *", get_ptr(nn_ychunk))
+      end
+      if ( nn_zchunk ) then 
+        nn_zptr = ffi.cast("bool *", get_ptr(nn_zchunk))
+      end
     elseif ( subs.variation == "vs" ) then 
-      local ylen, yptr = y:get_chunk(l_chunk_num) 
-      assert(ylen == xlen)
-      cast_yptr = ffi.cast(subs.cast_y_as, get_ptr(yptr))
+      if ( type(z) == "number" ) then 
+        z = assert(Scalar.new(z, y:qtype()))
+        z:set_name("z_ifxthenyelsez")
+      end
+      zptr = get_ptr(sclr_zmem, subs.wqtype)
 
-      cast_zptr = get_ptr(sclr_zmem, subs.wqtype)
+      local ylen, ychunk, nn_ychunk = y:get_chunk(l_chunk_num) 
+      assert(ylen == xlen)
+      yptr = ffi.cast(subs.cast_y_as, get_ptr(ychunk))
+      if ( nn_ychunk ) then 
+        nn_yptr = ffi.cast("bool *", get_ptr(nn_ychunk))
+      end
+
     elseif ( subs.variation == "sv" ) then 
       if ( type(y) == "number" ) then 
         y = assert(Scalar.new(y, z:qtype()))
         y:set_name("y_ifxthenyelsez")
       end
-      cast_yptr = get_ptr(sclr_ymem, subs.wqtype)
+      yptr = get_ptr(sclr_ymem, subs.wqtype)
 
-      local zlen, zptr = z:get_chunk(l_chunk_num) 
+      local zlen, zchunk, nn_zchunk = z:get_chunk(l_chunk_num) 
       assert(zlen == xlen)
-      cast_zptr = ffi.cast(subs.cast_z_as, get_ptr(zptr))
+      zptr = ffi.cast(subs.cast_z_as, get_ptr(zchunk))
+      if ( nn_zchunk ) then 
+        nn_zptr = ffi.cast("bool *", get_ptr(nn_zchunk))
+      end
     elseif ( subs.variation == "ss" ) then 
+      --[[
       if ( type(y) == "number" ) then 
         y = assert(Scalar.new(y, subs.wqtype))
         y:set_name("y_ifxthenyelsez")
       end
-      cast_yptr = get_ptr(sclr_ymem, subs.wqtype)
+      --]]
+      yptr = get_ptr(sclr_ymem, subs.wqtype)
 
+      --[[
       if ( type(z) == "number" ) then 
         z = assert(Scalar.new(z, subs.wqtype))
         z:set_name("z_ifxthenyelsez")
       end
-      cast_zptr = get_ptr(sclr_zmem, subs.wqtype)
+      ==]]
+      zptr = get_ptr(sclr_zmem, subs.wqtype)
     else
       error("bad variation in ifxthenyelsez")
     end
     --=============================================
-    local cast_xptr = ffi.cast(subs.cast_x_as, get_ptr(xptr))
-    local cast_wbuf = ffi.cast(subs.cast_w_as, get_ptr(wbuf))    
+    local wptr = ffi.cast(subs.cast_w_as, get_ptr(wbuf))    
+    if ( subs.has_nulls ) then 
+      nn_wptr = ffi.cast(subs.cast_nn_w_as, get_ptr(nn_wbuf))    
+    end
     --=============================================
     local start_time = cutils.rdtsc()
-    local status = qc[func_name](cast_xptr, cast_yptr, cast_zptr, 
-      cast_wbuf, xlen)
+    local status = qc[func_name](xptr, yptr, nn_yptr, zptr, nn_zptr,
+      wptr, nn_wptr, xlen)
     record_time(start_time, func_name)
     assert(status == 0)
     -- START release resources acquired 
