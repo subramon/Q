@@ -210,7 +210,7 @@ end
 
 function lVector:nop()
   local status = cVector.nop(self._base_vec)
-  assert(type(status) == "boolean")
+  -- TODO P1 THINK assert(type(status) == "boolean")
   return status
 end
 
@@ -717,7 +717,14 @@ function lVector:get_chunk(chnk_idx)
     if ( x == nil ) then return 0, nil, nil end 
     if ( self._nn_vec ) then 
       local nn_vector = self._nn_vec
+      if ( n == 29316 ) then
+        self:nop()
+        nn_vector:nop()
+      end
+      print("A getting for ", self:name(), n)
+      print("B getting for ", nn_vector:name())
       nn_x, nn_n = cVector.get_chunk(nn_vector._base_vec, chnk_idx)
+      print("gotten  for ", nn_vector:name())
       assert(type(nn_n) == "number")
       assert(nn_n == n)
       assert(type(nn_x) == "CMEM")
@@ -895,8 +902,15 @@ end
 function lVector:delete()
   local vname = ifxthenxelsey(self:name(), "anonymous:" .. self:uqid())
   -- print("DELETE CALLED on " .. vname)
+  if ( self:uqid() == 7 ) then
+    self:nop()
+  end
+  if ( self._parent ) then
+    print("Need to kill parent, not me") -- TODO P1 Think about this
+    return false
+  end
   if ( self._is_dead ) then
-    -- print("Vector already dead.")
+    print("Vector already dead.")
     return false
   end 
   --=========================================
@@ -1122,12 +1136,17 @@ end
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
 function lVector:kill()
   local nn_success
-  -- print("Lua received kill for " .. (self:name() or "anonymous"))
+  print("Lua received kill for " .. self:name())
   local success = cVector.kill(self._base_vec)
   if ( self._nn_vec ) then 
     local nn_vector = assert(self._nn_vec)
-    -- print("Lua received kill for " .. (nn_vector:name() or "nn_anon"))
-    nn_success = cVector.kill(nn_vector._base_vec)
+    print("Lua received kill for nn vector " .. nn_vector:name())
+    if ( nn_vector._parent ) then 
+      print("kill parent not me ") -- TODO P1 need to understand this case
+      nn_success = false
+    else
+      nn_success = cVector.kill(nn_vector._base_vec)
+    end
   end
   return success, nn_success
 end
