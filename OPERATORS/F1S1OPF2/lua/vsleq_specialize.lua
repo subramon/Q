@@ -9,7 +9,7 @@ return function (
   optargs
   )
   local subs = {}; 
-  assert(type(f1) == "lVector"); assert(not f1:has_nulls())
+  assert(type(f1) == "lVector"); 
 
   subs.f1_qtype = f1:qtype()
   assert(is_in(subs.f1_qtype, { 
@@ -38,12 +38,6 @@ return function (
   subs.f2_max_num_in_chunk = f1:max_num_in_chunk()
   subs.f2_buf_sz = subs.max_num_in_chunk * subs.f2_width
 
-  subs.fn = 'vsleq'
-    .. "_" .. subs.f1_qtype 
-    .. "_" .. subs.s1_qtype 
-    .. "_" .. subs.f2_qtype 
-  subs.fn_ispc = subs.fn .. "_ispc"
-
   subs.omp_chunk_size = 1024 -- TODO experiment with this 
 
   if ( s1 ) then 
@@ -52,14 +46,29 @@ return function (
     subs.cast_cargs = ffi.NULL
   end
 
-  subs.code = 'c = a <= b;'
-  subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
+  if ( f1:has_nulls() ) then 
+    subs.has_nulls = true 
+    subs.fn = "nn_BL_vsleq" .. "_" .. subs.f1_qtype
+    assert(f1:nn_qtype() == "BL") -- TODO B1 not implememnted
+    subs.tmpl        = "OPERATORS/F1S1OPF2/lua/nn_BL_f1s1opf2_sclr.tmpl"
+    subs.nn_f2_qtype = "BL"; -- B1 not supported yet 
+    subs.nn_f2_buf_sz   = subs.f2_max_num_in_chunk 
+    subs.code = "    out[i] = in[i] <= b; "; 
+    subs.nn_code = "    out[i] = 0; "
+  else
+    subs.fn = "vsleq" .. "_" .. subs.f1_qtype
+    subs.code = "c = a <= b; "
+    subs.has_nulls = false
+    subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
+  end
+
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"
   subs.incs        = { "OPERATORS/F1S1OPF2/gen_inc/", "UTILS/inc/" }
   subs.libs        = { "-lgomp", "-lm" }
 --[[ TODO 
   -- for ISPC
+  subs.fn_ispc = subs.fn .. "_ispc"
   subs.code_ispc = "c = a == b;"
   subs.f1_ctype_ispc = qconsts.qtypes[f1_qtype].ispctype
   subs.s1_ctype_ispc = qconsts.qtypes[s1_qtype].ispctype

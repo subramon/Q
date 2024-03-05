@@ -1,3 +1,4 @@
+// TODO, Add ls with regex pattern
 // The original inspiration for this was to replace Penlight
 // While a wonderful library, I did not want to depend on Penlight
 // for run time. For testing, it is just fine to use Penlight.

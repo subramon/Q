@@ -1,3 +1,6 @@
+Check that sort sets the sort order
+Include dump_empty in load_bin - some strange error right now
+
 https://github.com/lemire/clhash/
 
 Test load_csv_par

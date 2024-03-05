@@ -53,7 +53,23 @@ tests.t3 = function()
   assert(n2:to_num() == 8)
   print("test t3 passed")
 end
+-- testing null values for comparisons
+tests.t4 = function()
+  local v_qtype = "F4"
+  local c1 = Q.mk_col({1,2,3,4,5,6,7,8}, v_qtype, 
+    { name = "c1"}, { true, false, true, false, true, false, true, false, })
+  local s_qtype = v_qtype 
+  local c2 = Q.vsleq(c1, Scalar.new(4, s_qtype))
+  local c3 = Q.mk_col(
+    {true, true, true, true, false, false, false, false, }, "BL",
+    { name = "c3"}, { true, false, true, false, true, false, true, false, })
+  local n1, n2 = Q.sum(Q.vveq(c2, c3)):eval()
+  assert(n1:to_num() == 4)
+  assert(n2:to_num() == 8)
+  print("test t4 passed")
+end
 -- return tests
 tests.t1()
 tests.t2()
 tests.t3()
+tests.t4()

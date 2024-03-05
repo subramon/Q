@@ -50,6 +50,7 @@ return function (
   subs.f3_cast_as = subs.f3_ctype .. "*"
 
   subs.f3_width = cutils.get_width_qtype(f3_qtype)
+  subs.bufsz = subs.max_num_in_chunk * subs.f3_width
 
   -- following is to stop gcc warning about passing bool to int8
   subs.f3_for_ispctype = subs.f3_ctype

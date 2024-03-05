@@ -6,7 +6,7 @@ local cVector = require 'libvctr'
 
 local tests = {}
 tests.t1 = function()
- assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
   for _, in_qtype in ipairs({"I2", "I4", "I8", "F4", "F8", }) do 
     local start = -1 * 32768
     local len = 65535
@@ -27,11 +27,12 @@ tests.t1 = function()
     end
     x:delete()
   end
-  -- TODO assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local post_mem = lgutils.mem_used()
+  assert(pre_mem == post_mem)
   print("Test t1 succeeded")
 end
 tests.t_F2 = function()
-  -- TODO assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
   local len = 65535
   local start = 0
   local x4 = Q.seq({start = 0, by = 1, qtype = "F4", len = len})
@@ -44,9 +45,35 @@ tests.t_F2 = function()
   x4:delete()
   x2:delete()
   y4:delete()
-  -- TODO assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local post_mem = lgutils.mem_used()
+  assert(pre_mem == post_mem)
   print("Test t1 succeeded")
+end
+tests.t3 = function()
+  local pre_mem = lgutils.mem_used()
+  local len = 16 
+  local in_qtype = "UI8"
+  local x = Q.seq({start = 0, by = 1, qtype = in_qtype, len = len})
+  local y = Q.vsmul(x, 4096*1048576)
+  local z = Q.vvadd(y, x)
+  local w = Q.vconvert(z, "UI4")
+  local v = Q.vveq(w, x)
+  local r = Q.sum(v)
+  local n1, n2 = r:eval()
+  assert(n1 == n2)
+  -- Q.print_csv({x, y, z, w})
+ 
+  x:delete()
+  y:delete()
+  z:delete()
+  w:delete()
+  v:delete()
+  r:delete()
+  local post_mem = lgutils.mem_used()
+  assert(pre_mem == post_mem)
+  print("Test t3 succeeded")
 end
 tests.t1()
 tests.t_F2()
+tests.t3()
 -- return tests
