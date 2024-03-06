@@ -36,6 +36,7 @@ qjit test1.lua  # TODO NEEDS WORK
 qjit test_lma.lua  
 qjit test_gc.lua  
 qjit test_memo.lua  
+qjit test_make_drop_mem.lua 
 qjit test_ref_count.lua
 qjit test_clone.lua
 qjit test_save.lua-- TODO P2 some automation needed for q_config 

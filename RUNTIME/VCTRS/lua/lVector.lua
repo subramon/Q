@@ -503,7 +503,7 @@ end
 function lVector:put1(sclr, nn_sclr)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   assert(self:is_eov() == false) -- cannot put into complete vector 
-  assert(self._parent ~= nil) -- cannot put into nn vector 
+  assert(self._parent == nil) -- cannot put into nn vector 
   --========================
   assert(type(sclr) == "Scalar")
   --========================
@@ -540,7 +540,7 @@ end
 function lVector:putn(col, n, nn_col)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   assert(self:is_eov() == false) -- cannot put into complete vector 
-  assert(self._parent ~= nil) -- cannot put into nn vector 
+  assert(self._parent == nil) -- cannot put into nn vector 
   --========================
   assert(type(col) == "CMEM")
   --========================
@@ -569,7 +569,7 @@ end
 function lVector:put_chunk(c, n, nn_c)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   assert(self:is_eov() == false) -- cannot put into complete vector 
-  assert(self._parent ~= nil) -- cannot put into nn vector 
+  assert(self._parent == nil) -- cannot put into nn vector 
   assert(type(c) == "CMEM")
   assert(type(n) == "number")
   assert(n > 0) -- cannot put empty chunk 
