@@ -154,13 +154,14 @@ BYE:
 }
 static int l_vctr_kill( lua_State *L) {
   int status = 0;
+  bool kill_success;
   int num_args =  lua_gettop(L);
   if ( num_args != 1 ) { go_BYE(-1); } 
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   //------------------------------
-  status = vctr_kill(ptr_v->tbsp, ptr_v->uqid ); 
+  status = vctr_kill(ptr_v->tbsp, ptr_v->uqid, &kill_success);
   if ( status != 0 ) { goto BYE; } // silent error 
-  lua_pushboolean(L, true);
+  lua_pushboolean(L, kill_success);
   return 1;
 BYE:
   lua_pushnil(L);

@@ -63,10 +63,12 @@ BYE:
 int
 vctr_kill(
     uint32_t tbsp,
-    uint32_t vctr_uqid
+    uint32_t vctr_uqid,
+    bool *ptr_kill_success
     )
 {
   int status = 0;
+  *ptr_kill_success = false;
   if ( tbsp != 0 ) { go_BYE(-1); } 
   bool is_found; uint32_t where_found = ~0;
   vctr_rs_hmap_key_t key = vctr_uqid;
@@ -93,6 +95,7 @@ vctr_kill(
     */
   status = vctr_del(tbsp, vctr_uqid, &is_found); 
   if ( !is_found ) { go_BYE(-1); } 
+  *ptr_kill_success = true;
 BYE:
   return status;
 }
