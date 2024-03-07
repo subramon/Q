@@ -6,15 +6,18 @@ local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local qc       = require 'Q/UTILS/lua/qcore'
 local record_time = require 'Q/UTILS/lua/record_time'
 
-local function expander_bin_place(x, lb, ub, cnt, optargs)
+local function expander_bin_place(x, aux, lb, ub, cnt, optargs)
   local specializer = "Q/OPERATORS/BIN_PLACE/lua/bin_place_specialize"
   local spfn = assert(require(specializer))
-  local subs = assert(spfn(x, lb, ub, cnt, optargs))
+  local subs = assert(spfn(x, aux, lb, ub, cnt, optargs))
   local func_name = assert(subs.fn)
   qc.q_add(subs)
 
-  y = x:clone()
-  local nx = y:num_elements()
+  local auxy = nil
+  local auxycmem = nil
+  local auxyptr = ffi.NULL
+  local y = x:clone()
+  if ( subs.has_aux ) then auxy = aux:clone() end
   --=============================
   local t_start = cutils.rdtsc()
   -- Now, get access to pointers 
@@ -23,6 +26,14 @@ local function expander_bin_place(x, lb, ub, cnt, optargs)
   local ycmem, _, ny = y:get_lma_write()
   local yptr = get_ptr(ycmem, subs.cast_in_as)
   assert(y:num_writers() == 1)
+
+  if ( subs.has_aux ) then 
+    auxy:chunks_to_lma()
+    auxycmem, _, nauxy = auxy:get_lma_write()
+    auxyptr = get_ptr(auxycmem, subs.cast_aux_as)
+    assert(auxy:num_writers() == 1)
+    assert(nauxy == ny)
+  end 
 
   local lb_cmem, _, _ = lb:get_lma_read()
   local lbptr = get_ptr(lb_cmem, subs.cast_lb_as)
@@ -35,37 +46,47 @@ local function expander_bin_place(x, lb, ub, cnt, optargs)
   local cntptr = get_ptr(cnt_cmem, subs.cast_cnt_as)
 
   local offptr = get_ptr(subs.off_cmem, subs.cast_off_as)  -- offsets 
-  -- local lckptr = get_ptr(subs.lck_cmem, subs.cast_lck_as)  -- lock 
-  -- notice difference: offset is writable and is cmem not vector
-  -- notice difference: lock is writable and is cmem not vector
 
   local chunk_num = 0
   local t_start = cutils.rdtsc()
   while true do 
+    local naux, auxxcmem
     local nx, xcmem, _ = x:get_chunk(chunk_num)
     local xptr = get_ptr(xcmem, subs.cast_in_as)
-    local status = qc[func_name](xptr, nx, lbptr, ubptr, offptr, nlb, yptr)
+    local auxxptr = ffi.NULL
+    if ( subs.has_aux ) then 
+      naux, auxxcmem, _ = aux:get_chunk(chunk_num)
+      auxxptr = get_ptr(auxxcmem, subs.cast_aux_as)
+      assert(naux == nx) 
+    end 
+    local status = qc[func_name](xptr, nx, auxxptr, subs.aux_width,
+      lbptr, ubptr, offptr, nlb, yptr, auxyptr)
     x:unget_chunk(chunk_num)
+    if ( subs.has_aux ) then aux:unget_chunk(chunk_num) end 
     assert(status == 0)
     if ( subs.drop_mem ) then 
       x:drop_mem(1, chunk_num)
+      aux:drop_mem(1, chunk_num)
     end 
     print("bin_place ", chunk_num)
     if ( nx < x:max_num_in_chunk() ) then break end 
     chunk_num = chunk_num + 1 
   end
   local t_stop = cutils.rdtsc()
-  print("time bin place = ", t_stop - t_start)
 
-  y:unget_lma_write() -- Indicate write is over 
-  lb:unget_lma_read() -- Indicate read is over 
-  ub:unget_lma_read() -- Indicate read is over 
-  cnt:unget_lma_read() -- Indicate read is over 
+  -- Indicate write is over 
+  y:unget_lma_write() 
+  if ( subs.has_aux ) then auxy:unget_lma_write() end
+  -- Indicate read is over 
+  lb:unget_lma_read() 
+  ub:unget_lma_read() 
+  cnt:unget_lma_read() 
+  -- check all good 
   assert(x:num_readers() == 0)
   assert(y:num_writers() == 0)
+  if ( subs.has_aux ) then assert(auxy:num_writers() == 0 ) end 
   subs.off_cmem:delete()
-  -- subs.lck_cmem:delete()
   record_time(t_start, subs.fn)
-  return y
+  return y, auxy
 end
 return expander_bin_place

@@ -8,13 +8,16 @@ return require 'Q/UTILS/lua/code_gen' {
 //START_FOR_CDEF
 extern int
 ${fn}(  
-      const ${ctype} * restrict invals,  
+      const ${ctype} * restrict invals,  // [n_invals]
       uint32_t n_invals,
+      const char * restrict aux_invals, // [n_invals*aux_width] 
+      uint32_t aux_width,
       ${ctype} *lb, // [nb]
       ${ctype} *ub, // [nb]
       uint64_t *cnt, // [nb]
       uint32_t nb,
-      ${ctype} * restrict outvals
+      ${ctype} * restrict outvals,// [n_invals]
+      char * restrict aux_outvals  // [n_invals*aux_width]
       )
 ;
 //STOP_FOR_CDEF
@@ -26,19 +29,31 @@ ${fn}(
 
 int
 ${fn}(  
-      const ${ctype} * restrict invals,  
+      const ${ctype} * restrict invals,   // [n_invals]
       uint32_t n_invals,
+      const char * restrict aux_invals,  // [n_invals*aux_width]
+      uint32_t aux_width,
       ${ctype} *lb, // [nb]
       ${ctype} *ub, // [nb]
       uint64_t *off, // [nb]
       uint32_t nb,
-      ${ctype} * restrict outvals
+      ${ctype} * restrict outvals, // [n_invals]
+      char * restrict aux_outvals  // [n_invals*aux_width]
       )
 
 {
   int status = 0;
   int *bin_num = NULL;
   int *thread_num = NULL;
+
+  if ( aux_width == 0 ) { 
+    if ( aux_invals  != NULL ) { go_BYE(-1); }
+    if ( aux_outvals != NULL ) { go_BYE(-1); }
+  }
+  else {
+    if ( aux_invals  == NULL ) { go_BYE(-1); }
+    if ( aux_outvals == NULL ) { go_BYE(-1); }
+  }
   bin_num = malloc(n_invals * sizeof(uint32_t));
   thread_num = malloc(n_invals * sizeof(int));
   for ( uint32_t i = 0; i < n_invals; i++ ) { bin_num[i] = -1; }
@@ -91,12 +106,12 @@ ${fn}(
 #ifdef DEBUG
     if ( ( bin_idx < 0 ) || ( bin_idx >= (int)nb ) ) { status = -1; }
 #endif
-     bin_num[i] = bin_idx;
-     thread_num[i] = bin_idx % nT;
+    bin_num[i] = bin_idx;
+    thread_num[i] = bin_idx % nT;
   }
   cBYE(status);
 
-// Having found the bin, we need to place the item. 
+  // Having found the bin, we need to place the item. 
 #pragma omp parallel 
   {
     int tid = omp_get_thread_num();
@@ -121,6 +136,11 @@ ${fn}(
       // place item in bin
       uint64_t offset = off[bin_idx];
       outvals[offset] = inval; 
+      // place auxiliary item in bin
+      if ( aux_width > 0 ) { 
+        memcpy(aux_outvals+(offset*aux_width), aux_invals+(i*aux_width),
+        aux_width);
+      }
       off[bin_idx]++;
 #ifdef DEBUG
       __atomic_add_fetch(&num_placed, 1, 0); 

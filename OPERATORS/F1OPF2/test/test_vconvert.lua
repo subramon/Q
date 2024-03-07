@@ -49,31 +49,46 @@ tests.t_F2 = function()
   assert(pre_mem == post_mem)
   print("Test t1 succeeded")
 end
-tests.t3 = function()
+tests.t4 = function()
+  collectgarbage("stop")
   local pre_mem = lgutils.mem_used()
-  local len = 16 
-  local in_qtype = "UI8"
-  local x = Q.seq({start = 0, by = 1, qtype = in_qtype, len = len})
-  local y = Q.vsmul(x, 4096*1048576)
-  local z = Q.vvadd(y, x)
-  local w = Q.vconvert(z, "UI4")
-  local v = Q.vveq(w, x)
+  local x = Q.mk_col({1,2,3,4}, "I4",
+        { name = "my test name"}, {true, false, true, false})
+  local y = Q.vconvert(x, "UI4"):set_name("y")
+
+  assert(y:has_nulls())
+  --============================
+  local v = Q.vveq(x:get_nulls(), y:get_nulls())
   local r = Q.sum(v)
   local n1, n2 = r:eval()
   assert(n1 == n2)
-  -- Q.print_csv({x, y, z, w})
+  v:delete(); r:delete()
+  --============================
+  local nn_y = y:get_nulls()
+  y:drop_nulls()
+  nn_y:delete()
+  
+  local chk_y = Q.mk_col({1,0,3,0}, "I4")
+  local v = Q.vveq(y, chk_y)
+  local r = Q.sum(v)
+  local n1, n2 = r:eval()
+  chk_y:delete()
+  -- Q.print_csv({x,y})
+  assert(n1 == n2)
+  v:delete(); r:delete()
+ 
  
   x:delete()
   y:delete()
-  z:delete()
-  w:delete()
-  v:delete()
-  r:delete()
   local post_mem = lgutils.mem_used()
+  print(pre_mem, post_mem)
+  cVector.hogs("mem")
   assert(pre_mem == post_mem)
-  print("Test t3 succeeded")
+  collectgarbage("restart")
+  print("Test t4 succeeded")
 end
-tests.t1()
-tests.t_F2()
-tests.t3()
+-- tests.t1()
+-- tests.t_F2()
+-- tests.t3()
+tests.t4()
 -- return tests

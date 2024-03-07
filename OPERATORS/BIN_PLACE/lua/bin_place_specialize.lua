@@ -7,15 +7,36 @@ local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local is_in     = require 'Q/UTILS/lua/is_in'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 
-local function bin_place_specialize(x, lb, ub, cnt, optargs)
+local function bin_place_specialize(x, aux, lb, ub, cnt, optargs)
   local subs = {}
-  assert(type(x) == "lVector")
-  assert(x:has_nulls() == false)
-  -- x does not have to be eov 
+
+  local aux_qtypes = { 
+    "SC", "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8",  "F4", "F8", }
   local qtypes = { 
     "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8",  "F4", "F8", }
+
+  assert(type(x) == "lVector")
+  assert(x:has_nulls() == false)
   subs.qtype = x:qtype()
   assert(is_in(subs.qtype, qtypes))
+
+  subs.has_aux = false
+  subs.aux_width = 0
+  if ( aux ~= nil ) then 
+    assert(type(aux) == "lVector")
+    assert(aux:has_nulls() == false)
+    subs.aux_qtype = aux:qtype()
+    assert(is_in(subs.aux_qtype, aux_qtypes))
+    subs.has_aux = true 
+    subs.aux_width = aux:width() 
+    subs.aux_ctype = assert(cutils.str_qtype_to_str_ctype(subs.aux_qtype))
+    subs.cast_aux_as = subs.aux_ctype .. " *"
+  end
+  --=========================================================
+  -- we need to clone x and possibly aux as well
+  if ( x:is_eov() == false ) then x:eval() end 
+  if ( aux ) then if ( aux:is_eov() == false ) then aux:eval() end end
+  --=========================================================
 
   subs.drop_mem = false
   if ( optargs ) then 
@@ -33,6 +54,7 @@ local function bin_place_specialize(x, lb, ub, cnt, optargs)
   assert(lb:chunks_to_lma())
 
   assert(type(ub) == "lVector")
+  print("XXX", ub:qtype(), subs.qtype)
   assert(ub:qtype() == subs.qtype)
   assert(ub:has_nulls() == false)
   assert(ub:is_eov())
@@ -70,10 +92,6 @@ local function bin_place_specialize(x, lb, ub, cnt, optargs)
   end
   cnt:unget_lma_read()
   -- STOP : make offsets
-  -- START: make locks
-  -- subs.lck_cmem = cmem.new({qtype = "I4", size = sz})
-  -- subs.lck_cmem:zero()
-  -- STOP : make locks
 
   subs.fn = "bin_place_" .. subs.qtype 
   subs.tmpl   = "OPERATORS/BIN_PLACE/lua/bin_place.tmpl"

@@ -47,16 +47,24 @@ return function (
   end
   --==============================================
   if ( ( subs.f1_qtype == "F2" ) and ( subs.f2_qtype == "F4" ) ) then 
-    assert(f1:has_nulls() == false ) -- TODO relax this limitation
     subs.tmpl = nil
-    subs.dotc = "OPERATORS/F1OPF2/src/convert_F2_F4.c"
-    subs.doth = "OPERATORS/F1OPF2/inc/convert_F2_F4.h"
+    if ( f1:has_nulls() ) then
+      subs.dotc = "OPERATORS/F1OPF2/src/nn_BL_convert_F2_F4.c"
+      subs.doth = "OPERATORS/F1OPF2/inc/nn_BL_convert_F2_F4.h"
+    else
+      subs.dotc = "OPERATORS/F1OPF2/src/convert_F2_F4.c"
+      subs.doth = "OPERATORS/F1OPF2/inc/convert_F2_F4.h"
+    end
     subs.incs = { "OPERATORS/F1OPF2/inc/", "UTILS/inc/" }
   elseif ( ( subs.f1_qtype == "F4" ) and ( subs.f2_qtype == "F2" ) ) then 
-    assert(f1:has_nulls() == false ) -- TODO relax this limitation
     subs.tmpl = nil
-    subs.dotc = "OPERATORS/F1OPF2/src/convert_F4_F2.c"
-    subs.doth = "OPERATORS/F1OPF2/inc/convert_F4_F2.h"
+    if ( f1:has_nulls() ) then
+      subs.dotc = "OPERATORS/F1OPF2/src/nn_BL_convert_F4_F2.c"
+      subs.doth = "OPERATORS/F1OPF2/inc/nn_BL_convert_F4_F2.h"
+    else
+      subs.dotc = "OPERATORS/F1OPF2/src/convert_F4_F2.c"
+      subs.doth = "OPERATORS/F1OPF2/inc/convert_F4_F2.h"
+    end
     subs.incs = { "OPERATORS/F1OPF2/inc/", "UTILS/inc/" }
   else
     subs.incs = { "OPERATORS/F1OPF2/gen_inc/", 

@@ -148,7 +148,7 @@ local function expander_ifxthenyelsez(x, y, z)
     end 
     return xlen, wbuf
   end
-  local vargs = {gen = gen, has_nulls = false, 
+  local vargs = {gen = gen, has_nulls = subs.has_nulls, 
     max_num_in_chunk = subs.max_num_in_chunk, qtype = subs.wqtype}
   return lVector(vargs)
 end

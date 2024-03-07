@@ -63,11 +63,7 @@ local function expander_f1opf2(a, f1, optargs )
   end
   local vargs = optargs 
   vargs.gen = f2_gen
-  if ( subs.has_nulls ) then 
-    vargs.has_nulls = true
-  else
-    vargs.has_nulls = false
-  end
+  vargs.has_nulls = subs.has_nulls
   vargs.max_num_in_chunk = subs.max_num_in_chunk
   vargs.qtype = subs.f2_qtype
   return lVector(vargs)

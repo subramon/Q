@@ -1,5 +1,5 @@
 local T = {}
-local function bin_place(x, lb, ub, cnt, optargs)
+local function bin_place(x, aux, lb, ub, cnt, optargs)
   -- Q.place(x, b)
   -- x is a set of values. Output is y that is permuyed values of x
   -- Bin(x[i]) = b => lb[b] <= x[i] < ub[b]
@@ -20,10 +20,10 @@ local function bin_place(x, lb, ub, cnt, optargs)
   -- z is of type I8 (which is overkill)
   -- y needs to be fully materialized
   local expander = assert(require 'Q/OPERATORS/BIN_PLACE/lua/expander_bin_place')
-  local status, z = pcall(expander, x, lb, ub, cnt, optargs)
+  local status, z, w = pcall(expander, x, aux, lb, ub, cnt, optargs)
   if ( not status ) then print(z) end
   assert(status, "Could not execute bin_place")
-  return z
+  return z, w
 end
 T.bin_place = bin_place
 require('Q/q_export').export('bin_place', bin_place)

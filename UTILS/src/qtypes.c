@@ -186,6 +186,7 @@ str_qtype_to_str_ctype(
 
   if ( strcmp(str_qtype, "TM1") == 0 ) { return "tm_t"; } 
   if ( strcmp(str_qtype, "TM") == 0 ) { return "struct tm"; } 
+  if ( strcmp(str_qtype, "SC") == 0 ) { return "char"; } 
 
   return NULL; 
 }

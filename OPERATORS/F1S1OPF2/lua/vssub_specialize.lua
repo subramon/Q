@@ -9,7 +9,7 @@ return function (
   optargs
   )
   local subs = {}; 
-  assert(type(f1) == "lVector"); assert(not f1:has_nulls())
+  assert(type(f1) == "lVector"); 
 
   assert(type(s1) == "Scalar")
   local s1_qtype = s1:qtype()
@@ -17,8 +17,6 @@ return function (
   local f1_qtype = f1:qtype()
   assert(is_base_qtype(f1_qtype))
  
-  local fn = "vssub" .. "_" .. f1_qtype
-  subs.fn = fn 
 
   subs.f1_qtype   = f1_qtype
   subs.f1_ctype   = cutils.str_qtype_to_str_ctype(f1_qtype)
@@ -27,22 +25,35 @@ return function (
   -- Forcing output type  == input type
   -- Use additional call to vconvert() if you want to change outut type 
   subs.f2_qtype    = f1_qtype
-  subs.f2_ctype    = cutils.str_qtype_to_str_ctype(subs.f2_qtype)
-  subs.cast_f2_as  = subs.f2_ctype .. " *"
-  subs.f2_width    = cutils.get_width_qtype(subs.f2_qtype)
+  subs.f2_ctype    = cutils.str_qtype_to_str_ctype(f1_qtype)
+  subs.cast_f2_as  = subs.f1_ctype .. " *"
+  subs.f2_width    = cutils.get_width_qtype(f1_qtype)
   subs.f2_max_num_in_chunk   = f1:max_num_in_chunk() 
   subs.f2_buf_sz   = subs.f2_max_num_in_chunk * subs.f2_width
 
-  subs.cargs      = s1:to_data()
-  subs.s1_qtype   = subs.f1_qtype
-  subs.s1_ctype   = subs.f1_ctype
-  subs.cast_s1_as = subs.f1_ctype .. " *"
-  subs.cast_cargs = ffi.cast(subs.s1_ctype .. " *", subs.cargs)
+  subs.cargs       = s1:to_data()
+  subs.s1_qtype    = subs.f1_qtype
+  subs.s1_ctype    = subs.f1_ctype
+  subs.cast_s1_as  = subs.f1_ctype .. " *"
+  subs.cast_cargs  = ffi.cast(subs.s1_ctype .. " *", subs.cargs)
 
   subs.omp_chunk_size = 1024 -- TODO experiment with this
 
-  subs.code = "c = a - b; "
-  subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
+  if ( f1:has_nulls() ) then 
+    subs.has_nulls = true 
+    subs.fn = "nn_BL_vsdiv" .. "_" .. f1_qtype
+    assert(f1:nn_qtype() == "BL") -- TODO B1 not implememnted
+    subs.tmpl        = "OPERATORS/F1S1OPF2/lua/nn_BL_f1s1opf2_sclr.tmpl"
+    subs.nn_f2_qtype = "BL"; -- B1 not supported yet 
+    subs.nn_f2_buf_sz   = subs.f2_max_num_in_chunk 
+    subs.code = "    out[i] = in[i] - b; "; 
+    subs.nn_code = "    out[i] = 0; "
+  else
+    subs.fn = "vsdiv" .. "_" .. f1_qtype
+    subs.code = "c = a - b; "
+    subs.has_nulls = false
+    subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
+  end
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"
   subs.incs        = { "OPERATORS/F1S1OPF2/gen_inc/", "UTILS/inc/" }

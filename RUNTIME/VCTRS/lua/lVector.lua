@@ -192,6 +192,8 @@ function lVector:drop_nulls()
   -- Following is Too aggressive. 
   -- Somebody else may be using it using get_nulls()
   -- local nn_vector = self._nn_vec; nn_vector:delete() 
+  -- However, we need to break link from  nn_vector to self
+  local nn_vector = self._nn_vec; nn_vector._parent = nil
   self._nn_vec = nil
   return self
 end
@@ -1191,11 +1193,11 @@ end
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
 function lVector:kill()
   local nn_success
-  print("Lua received kill for " .. self:name())
+  -- print("Lua received kill for " .. self:name())
   local success = cVector.kill(self._base_vec)
   if ( self._nn_vec ) then 
     local nn_vector = assert(self._nn_vec)
-    print("Lua received kill for nn vector " .. nn_vector:name())
+    -- print("Lua received kill for nn vector " .. nn_vector:name())
     if ( nn_vector._parent ) then 
       print("kill parent not me ") -- TODO P1 need to understand this case
       nn_success = false
