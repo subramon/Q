@@ -11,42 +11,43 @@ local qcfg    = require 'Q/UTILS/lua/qcfg'
 qc.q_cdef("OPERATORS/F1F2OPF3/inc/f1f2opf3_concat.h") 
 
 local function set_defaults(f1_qtype, f2_qtype)
+  local w1 = cutils.get_width_qtype(f1_qtype)
+  local w2 = cutils.get_width_qtype(f2_qtype)
+  assert(( w1 <= 4 ) and ( w2 <= 4 ))
   local shift_by, f3_qtype
-  if ( f1_qtype == "I1" ) then 
-    if ( f2_qtype == "I1" ) then 
-      f3_qtype = "I2"
+  if ( w1 == 1 ) then
+    if ( w2 == 1 ) then 
       shift_by = 8
-    elseif ( f2_qtype == "I2" ) then 
-      f3_qtype = "I4"
+      f3_qtype = "UI16"
+    elseif ( w2 == 2 ) then 
+      f3_qtype = "UI4"
       shift_by = 16
-    elseif ( f2_qtype == "I4" ) then 
-      f3_qtype = "I8"
+    elseif ( w2 == 4 ) then 
+      f3_qtype = "UI8"
       shift_by = 32
     else 
       error("Cannot concat " ..  f1_qtype .. " and " ..  f2_qtype)
     end
-  elseif ( f1_qtype == "I2" ) then 
-    if ( f2_qtype == "I1" ) then 
-      f3_qtype = "I4"
+  elseif ( w1 == 2 ) then 
+    if ( w2 == 1 ) then 
+      f3_qtype = U"I4"
       shift_by = 8
-    elseif ( f2_qtype == "I2" ) then 
-      f3_qtype = "I4"
+    elseif ( w2 == 2 ) then 
+      f3_qtype = "UI4"
       shift_by = 16
-    elseif ( f2_qtype == "I4" ) then 
-      f3_qtype = "I8"
+    elseif ( w2 == 4 ) then 
+      f3_qtype = "UI8"
       shift_by = 32
     else 
       error("Cannot concat " ..  f1_qtype .. " and " ..  f2_qtype)
     end
-  elseif ( f1_qtype == "I4" ) then 
-    if ( f2_qtype == "I1" ) then 
-      f3_qtype = "I8"
+  elseif ( w1 == 4 ) then 
+    f3_qtype = "UI8"
+    if ( w2 == 1 ) then 
       shift_by = 8
-    elseif ( f2_qtype == "I2" ) then 
-      f3_qtype = "I8"
+    elseif ( w2 == 2 ) then
       shift_by = 16
-    elseif ( f2_qtype == "I4" ) then 
-      f3_qtype = "I8"
+    elseif ( w2 == 4 ) then 
       shift_by = 32
     else 
       error("Cannot concat " ..  f1_qtype .. " and " ..  f2_qtype)
@@ -64,12 +65,16 @@ return function (
   optargs
   )
   local subs = {}; 
-  assert(type(f1) == "lVector"); assert(not f1:has_nulls())
-  assert(type(f2) == "lVector"); assert(not f2:has_nulls())
+  assert(type(f1) == "lVector"); 
+  assert(not f1:has_nulls())
+  assert(type(f2) == "lVector"); 
+  assert(not f2:has_nulls())
   local f1_qtype = f1:qtype();   
-  assert(is_in(f1_qtype, { "I1", "I2", "I4", "I8", }))
+  assert(is_in(f1_qtype, 
+    { "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", }))
   local f2_qtype = f2:qtype();   
-  assert(is_in(f2_qtype, { "I1", "I2", "I4", "I8", }))
+  assert(is_in(f2_qtype, 
+    { "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", }))
   assert(f1:max_num_in_chunk() == f2:max_num_in_chunk())
   subs.max_num_in_chunk = f1:max_num_in_chunk()
 
@@ -85,15 +90,28 @@ return function (
       shift_by = optargs.shift_by
     end
   end
-  assert(is_in(f3_qtype, { "I2", "I4", "I8", }))
+  assert(is_in(f3_qtype, { "I2", "I4", "I8", "UI2", "UI4", "UI8", }))
   assert( (shift_by >= 0 )  and ( shift_by < 63 ))
   
-  subs.fn = op .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
+  subs.fn = op .. "_" .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
-  subs.f1_ctype = "u" .. cutils.str_qtype_to_str_ctype(f1_qtype)
-  subs.f2_ctype = "u" .. cutils.str_qtype_to_str_ctype(f2_qtype)
+  if ( is_in(f1_qtype, { "I1", "I2", "I4", "I8", }) ) then 
+    subs.f1_ctype = "u" .. cutils.str_qtype_to_str_ctype(f1_qtype)
+  else
+    subs.f1_ctype = cutils.str_qtype_to_str_ctype(f1_qtype)
+  end
+  if ( is_in(f2_qtype, { "I1", "I2", "I4", "I8", }) ) then 
+    subs.f2_ctype = "u" .. cutils.str_qtype_to_str_ctype(f2_qtype)
+  else
+    subs.f2_ctype = cutils.str_qtype_to_str_ctype(f2_qtype)
+  end
   subs.f3_qtype = f3_qtype
-  subs.f3_ctype = "u" .. cutils.str_qtype_to_str_ctype(f3_qtype)
+  if ( is_in(f3_qtype, { "I1", "I2", "I4", "I8", }) ) then 
+    subs.f3_ctype = "u" .. cutils.str_qtype_to_str_ctype(f3_qtype)
+  else
+    subs.f3_ctype = cutils.str_qtype_to_str_ctype(f3_qtype)
+  end
+
   subs.f3_width = cutils.get_width_qtype(subs.f3_qtype)
   subs.bufsz  = subs.f3_width * subs.max_num_in_chunk
 

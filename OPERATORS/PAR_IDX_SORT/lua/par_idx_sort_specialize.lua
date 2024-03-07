@@ -55,8 +55,8 @@ return function(idxvec, invec, bin_cnt)
   subs.off[0] = 0
   for i = 1, nb-1 do 
     subs.off[i] = cntptr[i-1] + subs.off[i-1]
+    assert(subs.off[i] + cntptr[i] <= invec:num_elements())
   end
-  assert(subs.off[nb-1] < invec:num_elements())
   bin_cnt:unget_lma_read()
 
   subs.nb = nb

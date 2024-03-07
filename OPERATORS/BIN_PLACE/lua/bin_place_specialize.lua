@@ -29,8 +29,7 @@ local function bin_place_specialize(x, aux, lb, ub, cnt, optargs)
     assert(is_in(subs.aux_qtype, aux_qtypes))
     subs.has_aux = true 
     subs.aux_width = aux:width() 
-    subs.aux_ctype = assert(cutils.str_qtype_to_str_ctype(subs.aux_qtype))
-    subs.cast_aux_as = subs.aux_ctype .. " *"
+    subs.cast_aux_as = "char *"
   end
   --=========================================================
   -- we need to clone x and possibly aux as well

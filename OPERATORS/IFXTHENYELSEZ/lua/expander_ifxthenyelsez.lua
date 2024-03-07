@@ -146,7 +146,7 @@ local function expander_ifxthenyelsez(x, y, z)
       if ( sclr_ymem ) then sclr_ymem:delete() end 
       if ( sclr_zmem ) then sclr_zmem:delete() end 
     end 
-    return xlen, wbuf
+    return xlen, wbuf, nn_wbuf
   end
   local vargs = {gen = gen, has_nulls = subs.has_nulls, 
     max_num_in_chunk = subs.max_num_in_chunk, qtype = subs.wqtype}

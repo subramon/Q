@@ -10,6 +10,7 @@ tests.t1 = function()
   local pre = lgutils.mem_used()
   local O = { is_hdr = false}
   local M = {}
+  M[#M+1] = { name = "alt_val", qtype = "UI8", has_nulls = false, }
   M[#M+1] = { name = "val", qtype = "F8", has_nulls = false, }
   M[#M+1] = { name = "chk_srt_idx", qtype = "I4", has_nulls = false, }
   local Tx = Q.load_csv("./val.csv", M, O)
@@ -74,11 +75,53 @@ tests.t1 = function()
   r:delete()
   local post = lgutils.mem_used()
   -- TODO Check srt_idx 
-  -- TODO assert(pre == post)
+  -- TODO assert(pre == post) print(pre, post)
   collectgarbage("restart")
 
   print("Test par idx sort 1 completed successfully")
 end
+tests.t2 = function()
+  collectgarbage()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
+  local O = { is_hdr = false}
+  local M = {}
+  -- load data 
+  M[#M+1] = { name = "alt_val", qtype = "UI8", has_nulls = false, }
+  M[#M+1] = { name = "val", qtype = "F8", has_nulls = false, }
+  M[#M+1] = { name = "chk_srt_idx", qtype = "I4", has_nulls = false, }
+  local Tx = Q.load_csv("./val.csv", M, O)
+  Tx.alt_val:eval()
+  -- load counts
+  local M = {}
+  M[#M+1] = { name = "cnt", qtype = "I8", has_nulls = false, }
+  local Tc = Q.load_csv("./cnt.csv", M, O)
+  Tc.cnt:eval()
+
+  local srt_alt_val, y = Q.par_idx_sort(Tx.alt_val, Tx.val, Tc.cnt)
+
+  assert(y:is_eov())
+  assert(y:has_nulls() == false)
+  assert(y:get_meta("sort_order") == "asc")
+
+  assert(type(srt_alt_val) == "lVector")
+  assert(srt_alt_val:qtype() == Tx.alt_val:qtype())
+  assert(srt_alt_val:is_eov())
+  assert(srt_alt_val:has_nulls() == false)
+
+  Q.print_csv({y, srt_alt_val})
+  -- TODO Check srt_alt_val
+
+  -- cleanup
+  for k, v in pairs(Tx) do v:delete() end 
+  for k, v in pairs(Tc) do v:delete() end 
+  local post = lgutils.mem_used()
+  assert(pre == post) 
+  collectgarbage("restart")
+
+  print("Test par idx sort 2 completed successfully")
+end
 -- return tests
-tests.t1()
+-- tests.t1()
+tests.t2()
 

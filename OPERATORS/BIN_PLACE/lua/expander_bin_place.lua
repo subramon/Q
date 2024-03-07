@@ -66,7 +66,9 @@ local function expander_bin_place(x, aux, lb, ub, cnt, optargs)
     assert(status == 0)
     if ( subs.drop_mem ) then 
       x:drop_mem(1, chunk_num)
-      aux:drop_mem(1, chunk_num)
+      if ( aux ) then 
+        aux:drop_mem(1, chunk_num)
+      end 
     end 
     print("bin_place ", chunk_num)
     if ( nx < x:max_num_in_chunk() ) then break end 
