@@ -1,14 +1,45 @@
+
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
 #include "q_incs.h"
 #include "q_macros.h"
-
+//START_FOR_CDEF
 int 
 SC_to_lkp_C_${out_qtype}( 
     char * const in_strs, // [n * width]
+    bool *nn_in_strs, // [n]
     uint32_t n,
     uint32_t width,
     const char ** const lkp,
     ${out_ctype} n_lkp,
     int32_t *outvals // [n]  
+    bool *nn_outvals // [n]  
+    );
+//STOP_FOR_CDEF
+]],
+definition = [[
+#include "${fn}.h"
+
+/* Important point to note about null values
+
+If in[i] == NULL, then out[i] := NULL i.e., out[i] = 0, nn_out[i] = false
+If in[i] contains a value that is NOT in lkp_tbl, then 
+out[i] = 0, nn_out[i] = true
+For all others, 
+out[i] != 0, nn_out[i] = true
+*/
+
+int 
+SC_to_lkp_C_${out_qtype}( 
+    char * const in_strs, // [n * width]
+    bool *nn_in_strs, // [n]
+    uint32_t n,
+    uint32_t width,
+    const char ** const lkp,
+    ${out_ctype} n_lkp,
+    int32_t *outvals // [n]  
+    bool *nn_outvals // [n]  
     )
 {
   int status = 0;
@@ -21,18 +52,31 @@ SC_to_lkp_C_${out_qtype}(
       if ( strcmp(lkp[i], lkp[j]) == 0 ) { go_BYE(-1); }
     }
   }
+  // nulls on input and output must be in sync 
+  if ( ( nn_in_strs == NULL ) { if ( nn_out_vals != NULL ) ) { go_BYE(-1); }
+  if ( ( nn_in_strs != NULL ) { if ( nn_out_vals == NULL ) ) { go_BYE(-1); }
 #endif
 // TODO #pragma omp parallel for schedule(static, 1024)
   for ( uint32_t i = 0; i < n; i++ ) { 
+   outvals[i] = 0;
+   nn_outvals[i] = false;
+   if ( ( nn_in_strs != NULL ) && ( nn_in_strs[i] == false ) ) { 
+     continue;
+   }
+   nn_outvals[i] = true;
+     
     bool found = false;
     ${out_ctype} l_outval = 0; // 0 => not found 
-    for ( uint32_t i = 0; i < n_lkp; i++ ) {
-      if ( strcmp(in_strs, lkp[i]) == 0 ) { 
-        l_outval = i+1; break;
+    for ( uint32_t j = 0; j < n_lkp; j++ ) {
+      if ( strcmp(in_strs, lkp[j]) == 0 ) { 
+        l_outval = j+1; break;
       }
     }
     outvals[i] = l_outval; 
   }
 BYE:
   return status;
+}
+
+]],
 }

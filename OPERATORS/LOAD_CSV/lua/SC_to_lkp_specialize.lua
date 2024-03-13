@@ -4,6 +4,8 @@ local is_int_qtype = require 'Q/UTILS/lua/is_int_qtype'
 local promote = require 'Q/UTILS/lua/promote'
 
 local function SC_to_lkp_specialize(invec, lkp_tbl, optargs)
+  if ( not optargs ) then optargs = {} end
+  assert(type(optargs) == "table")
   local subs = {}
   assert(type(invec) == "lVector")
   assert(invec:qtype() == "SC")
@@ -15,7 +17,6 @@ local function SC_to_lkp_specialize(invec, lkp_tbl, optargs)
   assert(type(lkp_tbl) == "table")
   -- check if over-rides required 
   local out_qtype 
-  assert(type(optargs) == "table")
   if ( optargs.out_qtype ) then 
     out_qtype = optargs.out_qtype 
     assert(is_int_qtype(out_qtype))
@@ -48,7 +49,15 @@ local function SC_to_lkp_specialize(invec, lkp_tbl, optargs)
     assert(not tmp[v])
     tmp[v] = true 
   end
-  if ( optargs.impl == "C" ) then
+  subs.impl = "C" -- default 
+  if ( optargs.impl ) then 
+    assert(type(optargs.impl) == "string")
+    assert((optargs.impl == "C" ) or (optargs.impl == "Lua" ))
+    subs.impl = optargs.impl 
+    subs.fn = "SC_to_lkp_C_" .. subs.out_qtype 
+    subs.tmpl   = "OPERATORS/LOAD_CSV/lua/SC_to_lkp_C.tmpl"
+    subs.srcdir = "OPERATORS/LOAD_CSV/gen_src/"
+    subs.incdir = "OPERATORS/LOAD_CSV/gen_inc/"
   end
   --======================
   subs.out_ctype = cutils.str_qtype_to_str_ctype(subs.out_qtype)

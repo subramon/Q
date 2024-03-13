@@ -54,8 +54,12 @@ return function (
   subs.code = "c = a == b;"
   if ( ( f1:has_nulls() ) or ( f2:has_nulls() ) ) then
     subs.fn = "nn_BL_" .. op .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
-    assert(f1:nn_qtype() == "BL") -- TODO current limitation
-    assert(f2:nn_qtype() == "BL") -- TODO current limitation
+    if ( f1:has_nulls() ) then 
+      assert(f1:nn_qtype() == "BL") -- TODO current limitation
+    end
+    if ( f2:has_nulls() ) then 
+      assert(f2:nn_qtype() == "BL") -- TODO current limitation
+    end
     subs.nn_f3_qtype = "BL"
     subs.nn_bufsz = subs.max_num_in_chunk
     subs.has_nulls = true
