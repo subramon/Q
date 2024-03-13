@@ -15,14 +15,12 @@ local function SC_to_lkp_specialize(invec, lkp_tbl, optargs)
   assert(type(lkp_tbl) == "table")
   -- check if over-rides required 
   local out_qtype 
-  if ( optargs ) then 
-    assert(type(optargs) == "table")
-    if ( optargs.out_qtype ) then 
-      out_qtype = optargs.out_qtype 
-      assert(is_int_qtype(out_qtype))
-      assert(out_qtype ~= "BL")
-    end 
-  end
+  assert(type(optargs) == "table")
+  if ( optargs.out_qtype ) then 
+    out_qtype = optargs.out_qtype 
+    assert(is_int_qtype(out_qtype))
+    assert(out_qtype ~= "BL")
+  end 
   assert(#lkp_tbl > 0)
   -- TODO P3 Consider using UI1 and UI2 instead 
   if ( #lkp_tbl < 127 ) then
@@ -42,7 +40,17 @@ local function SC_to_lkp_specialize(invec, lkp_tbl, optargs)
   end
   for k, v in ipairs(lkp_tbl) do 
     assert(type(v) == "string")
+    assert(#v > 0) -- no null strings
   end
+  -- make sure strings are unique
+  local tmp = {}
+  for k, v in ipairs(lkp_tbl) do 
+    assert(not tmp[v])
+    tmp[v] = true 
+  end
+  if ( optargs.impl == "C" ) then
+  end
+  --======================
   subs.out_ctype = cutils.str_qtype_to_str_ctype(subs.out_qtype)
   subs.cast_buf_as = subs.out_ctype .. " *"
   subs.max_num_in_chunk = invec:max_num_in_chunk()

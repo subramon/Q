@@ -15,6 +15,7 @@ qjit test_cmem.lua
 cd ~/Q/UTILS/test/
 bash test_copy_file.sh
 bash test_line_breaks.sh
+qjit test_tbl_of_num_to_C_array.lua
 
 cd ~/Q/RUNTIME/CUTILS/test/
 qjit test_cutils.lua
