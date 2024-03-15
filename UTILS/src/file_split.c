@@ -69,7 +69,7 @@ file_split(
   status = rs_mmap(infile, &X, &nX, 0); cBYE(status);
   bak_X = X;
   bak_nX = nX;
-  int lno = 0;
+  uint64_t lno = 0;
   for ( ; nX > 0; lno++ ) { 
     // copy a line into buffer
     memset(line, 0, MAXLINE+1);
@@ -114,11 +114,11 @@ file_split(
     int partition = hashval % nB;
     fwrite(line, line_len, 1, ofps[partition]);
     if ( ( lno % 1000000 ) == 0 ) {
-      printf("Processed %d lines of %s \n", lno, infile);
+      printf("Processed %" PRIu64 " lines of %s \n", lno, infile);
     }
 
   }
-  printf("Processed %d lines \n", lno);
+  printf("Processed %" PRIu64 " lines \n", lno);
   
 
 
