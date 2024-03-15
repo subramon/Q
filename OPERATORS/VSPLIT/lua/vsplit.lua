@@ -16,6 +16,16 @@ local function mk_op_files(M, opdir, idx)
   for k, v in ipairs(M) do 
     opfiles[k] = ""
     nn_opfiles[k] = ""
+    --- set defaults 
+    if ( type(v.is_load) == "nil" ) then
+      v.is_load = true -- default is to load 
+    end
+    assert(type(v.is_load) == "boolean")
+    if ( type(v.has_nulls) == "nil" ) then
+      v.has_nulls = true -- default is to load 
+    end
+    assert(type(v.has_nulls) == "boolean")
+    --===================================================
     if ( v.is_load) then 
       opfiles[k] = "_" .. tostring(idx) .. "_" .. v.name .. ".bin"
       assert(cutils.mk_file(opdir, opfiles[k], 0, true))

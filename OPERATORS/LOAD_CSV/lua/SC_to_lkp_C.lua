@@ -3,6 +3,7 @@ local ffi           = require 'ffi'
 local cmem          = require 'libcmem'
 local cutils        = require 'libcutils'
 local get_ptr       = require 'Q/UTILS/lua/get_ptr'
+local qc            = require 'Q/UTILS/lua/qcore'
 local tbl_of_str_to_C_array = require 'Q/UTILS/lua/tbl_of_str_to_C_array'
 local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local function SC_to_lkp_C(
@@ -31,11 +32,10 @@ local function SC_to_lkp_C(
         size = subs.nn_bufsz, qtype = subs.nn_out_qtype})
       nn_buf:zero()
       nn_buf:stealable(true)
-      nn_out_ptr = get_ptr(nn_buf, subs.cast_nn_buf_as)
+      nn_out_ptr = get_ptr(nn_buf, subs.nn_cast_buf_as)
     end
     -- STOP  Allocate output 
     -- START Gather input 
-    local cast_buf = get_ptr(buf, subs.cast_buf_as)
     local in_len, in_chunk, nn_in_chunk = invec:get_chunk(l_chunk_num)
     if ( in_len == 0 ) then 
       buf:delete()
@@ -50,30 +50,11 @@ local function SC_to_lkp_C(
       nn_in_ptr  = get_ptr(nn_in_chunk, "bool *")
     end
     local status = qc[subs.fn](in_ptr, nn_in_ptr, in_len, subs.width, 
-      in_len, subs.width, lkp, n_lkp, out_ptr, nn_out_ptr)
-    -- STOP  Gather input 
-    for i = 1, in_len do
-      -- Below: note -1 for C/Lua indexing
-      if ( subs.has_nulls ) then
-        if ( nn_in_ptr[i-1] == false ) then
-        -- nothing to do 
-        else
-          local in_str = ffi.string(in_ptr) -- , subs.in_width)
-          local lkp_val = assert(rev_lkp_tbl[in_str], in_str)
-          out_ptr[i-1] = lkp_val 
-          nn_out_ptr[i-1] = true 
-        end
-      else
-        local in_str = ffi.string(in_ptr) -- , subs.in_width)
-        local lkp_val = assert(rev_lkp_tbl[in_str])
-        out_ptr[i-1] = lkp_val -- note -1 for C/Lua indexing
-      end
-      in_ptr = in_ptr + subs.in_width
-    end
+      lkp, n_lkp, out_ptr, nn_out_ptr)
+    assert(status == 0)
     invec:unget_chunk(l_chunk_num)
     l_chunk_num = l_chunk_num + 1
-    return in_len, buf, nn_buf
-  end
+    return in_len, buf, nn_buf end
   local vargs = {}
   vargs.qtype = subs.out_qtype
   vargs.gen = gen

@@ -31,14 +31,16 @@ tests.t1 = function()
     optargs.impl = impl
     for _, qtype in ipairs({"I1", "I2", "I4", }) do 
       optargs.out_qtype = qtype 
-      local lkp = Q.SC_to_lkp(T.txt, lkp_tbl, optargs)
+      local lkp = Q.SC_to_lkp(T.txt, lkp_tbl, optargs):set_name("lkp_out")
       assert(type(lkp) == "lVector")
       assert(lkp:qtype() == qtype)
       assert(lkp:has_nulls())
       lkp:eval()
       -- lkp:pr()
+      local nn = lkp:get_nulls()
       lkp:drop_nulls() -- sum() needs to accept nulls 
-      local tmp = Q.vveq(lkp, T.idx)
+      nn:delete()
+      local tmp = Q.vveq(lkp, T.idx):set_name("tmp")
       local r = Q.sum(tmp)
       local n1, n2 = r:eval()
       assert(n1 == n2)

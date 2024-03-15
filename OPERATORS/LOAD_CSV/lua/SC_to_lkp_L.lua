@@ -32,11 +32,10 @@ local function SC_to_lkp_L(
         size = subs.nn_bufsz, qtype = subs.nn_out_qtype})
       nn_buf:zero()
       nn_buf:stealable(true)
-      nn_out_ptr = get_ptr(nn_buf, subs.cast_nn_buf_as)
+      nn_out_ptr = get_ptr(nn_buf, subs.nn_cast_buf_as)
     end
     -- STOP  Allocate output 
     -- START Gather input 
-    local cast_buf = get_ptr(buf, subs.cast_buf_as)
     local in_len, in_chunk, nn_in_chunk = invec:get_chunk(l_chunk_num)
     if ( in_len == 0 ) then 
       buf:delete()

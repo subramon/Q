@@ -10,6 +10,7 @@ local function SC_to_lkp_specialize(invec, lkp_tbl, optargs)
   assert(type(invec) == "lVector")
   assert(invec:qtype() == "SC")
   subs.has_nulls = false
+  subs.width = invec:width()
   if ( invec:has_nulls() ) then 
     assert(invec:nn_qtype() == "BL") -- TODO P3 Support B1
     subs.has_nulls = true
@@ -58,6 +59,7 @@ local function SC_to_lkp_specialize(invec, lkp_tbl, optargs)
     subs.tmpl   = "OPERATORS/LOAD_CSV/lua/SC_to_lkp_C.tmpl"
     subs.srcdir = "OPERATORS/LOAD_CSV/gen_src/"
     subs.incdir = "OPERATORS/LOAD_CSV/gen_inc/"
+    subs.incs   = { "OPERATORS/LOAD_CSV/gen_inc/", "UTILS/inc/", }
   end
   --======================
   subs.out_ctype = cutils.str_qtype_to_str_ctype(subs.out_qtype)
