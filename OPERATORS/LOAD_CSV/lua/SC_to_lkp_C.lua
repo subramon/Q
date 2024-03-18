@@ -16,11 +16,20 @@ local function SC_to_lkp_C(
   assert(type(subs) == "table")
   
   qc.q_add(subs)
-  local lkp, n_lkp = tbl_of_str_to_C_array(lkp_tbl)
+  --[[ There is a serious bug in LuaJIT's gc or in my understanding of it
+  I would have liked to create lkp here, outside the function gen()
+    However, if I do, then it gets gc'd not right away but on the nth call
+    where n varies. So I had to create it within the function gen()
+    which is inefficient 
+    local lkp, n_lkp = tbl_of_str_to_C_array(lkp_tbl)
+    TODO P1 This needs to be fixed one way or another.
+    --]]
+
 
   local l_chunk_num = 0
   local function gen(chunk_num)
     assert(chunk_num == l_chunk_num)
+    local lkp, n_lkp = tbl_of_str_to_C_array(lkp_tbl)
     -- START ALlocate output 
     local buf = cmem.new({ size = subs.bufsz, qtype = subs.out_qtype})
     buf:zero()
@@ -33,6 +42,7 @@ local function SC_to_lkp_C(
       nn_buf:zero()
       nn_buf:stealable(true)
       nn_out_ptr = get_ptr(nn_buf, subs.nn_cast_buf_as)
+      print("nn_out_ptr = ", nn_out_ptr)
     end
     -- STOP  Allocate output 
     -- START Gather input 

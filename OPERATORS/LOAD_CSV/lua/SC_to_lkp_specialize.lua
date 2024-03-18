@@ -55,6 +55,8 @@ local function SC_to_lkp_specialize(invec, lkp_tbl, optargs)
     assert(type(optargs.impl) == "string")
     assert((optargs.impl == "C" ) or (optargs.impl == "Lua" ))
     subs.impl = optargs.impl 
+  end
+  if ( subs.impl == "C" ) then 
     subs.fn = "SC_to_lkp_C_" .. subs.out_qtype 
     subs.tmpl   = "OPERATORS/LOAD_CSV/lua/SC_to_lkp_C.tmpl"
     subs.srcdir = "OPERATORS/LOAD_CSV/gen_src/"
