@@ -22,14 +22,14 @@ local function expander_f1s1opf2(op, f1, sclrs, optargs )
     -- is needed. Has to do with LuaJIT garbage collecting early
     local ptr_to_sclrs = get_ptr(subs.sclr_array, subs.qtype)
     local buf = assert(cmem.new(
-      {size = subs.f2_buf_sz, qtype = subs.f2_qtype}))
+      {size = subs.f2_bufsz, qtype = subs.f2_qtype}))
     assert(type(buf) == "CMEM")
     buf:stealable(true)
     local nn_buf
     if ( subs.has_nulls ) then 
       error("TO BE TESTED")
       nn_buf = assert(cmem.new(
-        {size = subs.nn_f2_buf_sz, qtype = subs.nn_f2_qtype}))
+        {size = subs.nn_f2_bufsz, qtype = subs.nn_f2_qtype}))
       nn_buf:stealable(true)
     end
     --========================================
@@ -53,7 +53,7 @@ local function expander_f1s1opf2(op, f1, sclrs, optargs )
       status = qc[func_name](chunk1, nn_chunk1, f1_len, ptr_to_sclrs,
         chunk2, nn_chunk2)
     else
-      status = qc[func_name](chunk1, f1_len, subs.ptr_to_sclrs, 
+      status = qc[func_name](chunk1, f1_len, ptr_to_sclrs, 
         subs.num_sclrs, chunk2)
     end
     assert(status == 0)
@@ -67,7 +67,7 @@ local function expander_f1s1opf2(op, f1, sclrs, optargs )
     end
     return f1_len, buf, nn_buf
   end
-  local vargs = optargs 
+  local vargs = {}
   vargs.gen = f2_gen
   if ( subs.has_nulls ) then 
     vargs.has_nulls = true 

@@ -1,3 +1,4 @@
+local ffi     = require 'ffi'
 local Scalar  = require 'libsclr'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local is_in   = require 'Q/UTILS/lua/is_in'
@@ -33,12 +34,13 @@ local function vS_specialize(op, invec, in_sclrs, optargs)
     end
     if ( sclr_type == "number" ) then 
       for k, v in ipairs(in_sclrs) do 
-        in_sclr[#in_sclr+1] = assert(Scalar.new(v, subs.qtype))
+        sclrs[k] = assert(Scalar.new(v, subs.qtype))
       end
     else
       for k, v in ipairs(in_sclrs) do 
         assert(v:qtype() == subs.qtype)
       end
+      sclrs = in_sclrs
     end
   else
     error("bad scalars type " .. type(in_sclrs))
@@ -51,13 +53,13 @@ local function vS_specialize(op, invec, in_sclrs, optargs)
   subs.sclr_array = cmem.new({size = size, qtype = subs.qtype})
   local cptr = get_ptr(subs.sclr_array, subs.qtype)
   for k, v in ipairs(sclrs) do 
-    cptr[k-1] = sclrs
-
+    local sclr_ptr = ffi.cast(subs.ctype .. " *", v:to_data())
+    cptr[k-1] = sclr_ptr[0]
   end
   --====================
-  subs.f2_qtpe = "BL" -- B1 not supported
+  subs.f2_qtype = "BL" -- B1 not supported
   subs.f2_width = 1  
-  subs.max_num_in_chunk = f1:max_num_in_chunk()
+  subs.max_num_in_chunk = invec:max_num_in_chunk()
   subs.f2_bufsz = subs.max_num_in_chunk * subs.f2_width
   --====================
   subs.fn = op .. "_" .. subs.qtype

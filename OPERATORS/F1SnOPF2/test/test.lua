@@ -1,4 +1,5 @@
 local Q = require 'Q'
+local Scalar = require 'libsclr'
 local tests = {}
 tests.t1 = function()
   local qtypes = 
@@ -20,8 +21,9 @@ tests.t1 = function()
       else
         error("XXX")
       end
-      print("test type(sclrs) = ", type(sclrs))
       local y = Q.vSeq(x, sclrs)
+      assert(type(y) == "lVector")
+      assert(y:qtype() == "BL")
       local r = Q.sum(y)
       local n1, n2 = r:eval()
       if ( iter == 1 ) then
@@ -31,6 +33,17 @@ tests.t1 = function()
       end
       y:delete()
       r:delete()
+      local msg = {}; 
+      msg[#msg+1] =  "Test succeeded for qtype " 
+      msg[#msg+1] = qtype
+      if ( iter == 1 ) then
+        msg[#msg+1] = " case of single number "
+      elseif ( iter == 2 ) then
+        msg[#msg+1] = " case of table of numbers "
+      elseif ( iter == 3 ) then
+        msg[#msg+1] = " case of table of Scalars "
+      end
+      print(table.concat(msg, " "))
     end
     x:delete()
   end

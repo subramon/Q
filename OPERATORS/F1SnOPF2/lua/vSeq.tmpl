@@ -4,14 +4,16 @@ return require 'Q/UTILS/lua/code_gen' {
 #include "q_incs.h"
 #include "q_macros.h"
 
+//START_FOR_CDEF
     extern int
     ${fn}(
         ${ctype} *in,
         uint32_t n_in,
         ${ctype} *sclrs,
-        uint32_t n_sclrs
+        uint32_t n_sclrs,
         bool *out
         );
+//STOP_FOR_CDEF
   ]],
     definition = [[
 #include "${fn}.h"
@@ -20,7 +22,7 @@ return require 'Q/UTILS/lua/code_gen' {
           ${ctype} *in,
           uint32_t n_in,
           ${ctype} *sclrs,
-          uint32_t n_sclrs
+          uint32_t n_sclrs,
           bool *out
           )
       {
