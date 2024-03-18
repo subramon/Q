@@ -22,8 +22,8 @@ export QX_ROOT="${HOME}/QX/"
 echo "QX_ROOT= ${QX_ROOT}"
 #-----------------------------------
 # export Q_ROOT="/home/subramon/local/Q/"
-# export Q_ROOT="/mnt/storage/local/Q/"
-export Q_ROOT="/storeB/local/Q/"
+export Q_ROOT="/mnt/storage/local/Q/"
+# export Q_ROOT="/storeB/local/Q/"
 echo "Q_ROOT= $Q_ROOT"
 mkdir -p $Q_ROOT/
 mkdir -p $Q_ROOT/lib/

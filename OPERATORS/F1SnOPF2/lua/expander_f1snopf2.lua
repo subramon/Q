@@ -7,10 +7,10 @@ local cmem     = require 'libcmem'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
-local function expander_f1s1opf2(a, f1, sclrs, optargs )
-  local sp_fn_name = "Q/OPERATORS/F1SnOPF2/lua/" .. a .. "_specialize"
+local function expander_f1s1opf2(op, f1, sclrs, optargs )
+  local sp_fn_name = "Q/OPERATORS/F1SnOPF2/lua/" .. op .. "_specialize"
   local spfn = assert(require(sp_fn_name))
-  local subs = assert(spfn(f1, sclr, optargs))
+  local subs = assert(spfn(op, f1, sclrs, optargs))
   local func_name = assert(subs.fn)
   qc.q_add(subs); 
 
@@ -20,13 +20,14 @@ local function expander_f1s1opf2(a, f1, sclrs, optargs )
     assert(chunk_num == l_chunk_num)
     -- IMPORTANT: I still don't fully understand why the following
     -- is needed. Has to do with LuaJIT garbage collecting early
-    subs.ptr_to_sclrs = get_ptr(subs.sclr_array, subs.qtype)
+    local ptr_to_sclrs = get_ptr(subs.sclr_array, subs.qtype)
     local buf = assert(cmem.new(
       {size = subs.f2_buf_sz, qtype = subs.f2_qtype}))
     assert(type(buf) == "CMEM")
     buf:stealable(true)
     local nn_buf
     if ( subs.has_nulls ) then 
+      error("TO BE TESTED")
       nn_buf = assert(cmem.new(
         {size = subs.nn_f2_buf_sz, qtype = subs.nn_f2_qtype}))
       nn_buf:stealable(true)
@@ -35,20 +36,21 @@ local function expander_f1s1opf2(a, f1, sclrs, optargs )
     local f1_len, f1_chunk, nn_f1_chunk = f1:get_chunk(l_chunk_num)
     if ( f1_len == 0 ) then 
       buf:delete()
-      nn_buf:delete()
+      if ( nn_buf ) then nn_buf:delete() end 
+      subs.sclr_array:delete()
       f1:kill()
       return 0
     end
     --========================================
-    local chunk1 = get_ptr(f1_chunk, subs.cast_f1_as)
-    local chunk2 = get_ptr(buf,      subs.cast_f2_as)
+    local chunk1 = get_ptr(f1_chunk, subs.qtype)
+    local chunk2 = get_ptr(buf,      subs.f2_qtype)
     local start_time = cutils.rdtsc()
     local status 
     if ( subs.has_nulls ) then 
       error("TO BE TESTED")
       local nn_chunk1 = get_ptr(nn_f1_chunk, "bool *") -- TODO handle B1
       local nn_chunk2 = get_ptr(nn_buf, "bool *") -- TODO handle B1
-      status = qc[func_name](chunk1, nn_chunk1, f1_len, subs.ptr_to_sclr,
+      status = qc[func_name](chunk1, nn_chunk1, f1_len, ptr_to_sclrs,
         chunk2, nn_chunk2)
     else
       status = qc[func_name](chunk1, f1_len, subs.ptr_to_sclrs, 
@@ -59,7 +61,8 @@ local function expander_f1s1opf2(a, f1, sclrs, optargs )
     f1:unget_chunk(l_chunk_num)
     --==================================
     l_chunk_num = l_chunk_num + 1
-    if ( f1_len < subs.f2_max_num_in_chunk ) then 
+    if ( f1_len < subs.max_num_in_chunk ) then 
+      subs.sclr_array:delete()
       f1:kill()
     end
     return f1_len, buf, nn_buf

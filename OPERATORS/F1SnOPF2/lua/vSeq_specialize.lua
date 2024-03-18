@@ -1,6 +1,9 @@
 local Scalar  = require 'libsclr'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local is_in   = require 'Q/UTILS/lua/is_in'
+local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local cutils  = require 'libcutils'
+local cmem    = require 'libcmem'
 
 local function vS_specialize(op, invec, in_sclrs, optargs)
   assert(type(op) == "string")
@@ -11,6 +14,7 @@ local function vS_specialize(op, invec, in_sclrs, optargs)
   subs.qtype = invec:qtype()
   assert(is_in(subs.qtype, 
    { "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8", }))
+  subs.ctype = cutils.str_qtype_to_str_ctype(subs.qtype)
 
   assert(invec:has_nulls() == false, "TO BE IMPLEMENTED")
   subs.has_nulls = false
@@ -18,7 +22,7 @@ local function vS_specialize(op, invec, in_sclrs, optargs)
   -- START check in_sclrs 
   local sclrs = {}
   if ( type(in_sclrs) == "number" ) then
-    in_sclr[#in_sclr+1] = assert(Scalar.new(in_sclrs, subs.qtype))
+    sclrs[#sclrs+1] = assert(Scalar.new(in_sclrs, subs.qtype))
   elseif ( type(in_sclrs) == "table" ) then
     -- all must be scalars or all must be numbers
     assert(#in_sclrs > 0)
@@ -37,21 +41,30 @@ local function vS_specialize(op, invec, in_sclrs, optargs)
       end
     end
   else
-    error("bad scalars type")
+    error("bad scalars type " .. type(in_sclrs))
   end
   -- STOP  sclrs is a table of Scalars of the the right type
   -- Now we convert sclrs into a CMEM
   subs.num_sclrs = #sclrs
   subs.width = invec:width()
   local size = subs.width * #sclrs
-  local sclr_array = cmem.new({size = size, qtype = subs.qtype})
-  local cptr = get_ptr(sclr_array, subs.qtype)
-  for k, v in ipairs(#sclrs) do 
-    cptr[k-1] = XXXX
+  subs.sclr_array = cmem.new({size = size, qtype = subs.qtype})
+  local cptr = get_ptr(subs.sclr_array, subs.qtype)
+  for k, v in ipairs(sclrs) do 
+    cptr[k-1] = sclrs
+
   end
+  --====================
+  subs.f2_qtpe = "BL" -- B1 not supported
+  subs.f2_width = 1  
+  subs.max_num_in_chunk = f1:max_num_in_chunk()
+  subs.f2_bufsz = subs.max_num_in_chunk * subs.f2_width
+  --====================
   subs.fn = op .. "_" .. subs.qtype
   subs.tmpl   = "OPERATORS/F1SnOPF2/lua/" .. op .. ".tmpl"
   subs.incdir = "OPERATORS/F1SnOPF2/gen_inc/"
   subs.srcdir = "OPERATORS/F1SnOPF2/gen_src/"
   subs.incs = { "OPERATORS/F1SnOPF2/gen_inc/", "UTILS/inc/" }
-
+  return subs
+end
+return vS_specialize

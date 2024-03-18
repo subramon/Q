@@ -49,7 +49,7 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
     if ( f1_len == 0 ) then 
       -- print("XX Returning 0 for chunk ", l_chunk_num)
       buf:delete()
-      nn_buf:delete()
+      if ( nn_buf ) then nn_buf:delete() end 
       -- print("A " .. a .. " sending kill to " .. (f1:name() or "anon"))
       f1:kill()
       return 0
