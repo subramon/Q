@@ -41,7 +41,7 @@ return function (
 
   if ( f1:has_nulls() ) then 
     subs.has_nulls = true 
-    subs.fn = "nn_BL_vsdiv" .. "_" .. f1_qtype
+    subs.fn = "nn_BL_vsadd" .. "_" .. f1_qtype
     assert(f1:nn_qtype() == "BL") -- TODO B1 not implememnted
     subs.tmpl        = "OPERATORS/F1S1OPF2/lua/nn_BL_f1s1opf2_sclr.tmpl"
     subs.nn_f2_qtype = "BL"; -- B1 not supported yet 
@@ -49,7 +49,7 @@ return function (
     subs.code = "    out[i] = in[i] + b; "; 
     subs.nn_code = "    out[i] = 0; "
   else
-    subs.fn = "vsdiv" .. "_" .. f1_qtype
+    subs.fn = "vsadd" .. "_" .. f1_qtype
     subs.code = "c = a + b; "
     subs.has_nulls = false
     subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"

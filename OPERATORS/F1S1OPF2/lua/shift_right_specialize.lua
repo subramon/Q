@@ -12,13 +12,13 @@ return function (
   assert(type(f1) == "lVector"); assert(not f1:has_nulls())
 
   subs.f1_qtype = f1:qtype()
-  assert(is_in(subs.f1_qtype, { 
-    "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8" }))
+  assert(is_in(subs.f1_qtype, 
+    {"I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8" }))
  
   assert(type(s1) == "Scalar")
   subs.s1_qtype = s1:qtype()
   assert(is_in(subs.s1_qtype, 
-    "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8" }))
+  {"I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8" }))
   local snum = s1:to_num()
 
   local max_shift = 8 * cutils.get_width_qtype(subs.f1_qtype)

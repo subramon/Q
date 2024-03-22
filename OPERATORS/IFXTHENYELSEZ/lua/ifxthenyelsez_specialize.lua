@@ -47,12 +47,13 @@ return function (
       subs.has_nulls = true
     end
   elseif ( ( type(y) == "lVector" ) and 
-    ( ( type(z) == "Scalar" ) or ( type(z) == "number" ) ) ) then 
+    ( ( type(z) == "Scalar" ) or ( type(z) == "number" ) 
+      or (type(z) == "boolean" ) ) ) then 
     subs.variation = "vs"
     subs.yctype = cutils.str_qtype_to_str_ctype(y:qtype())
     subs.cast_y_as = subs.yctype .. "  *"
 
-    if ( type(z) == "number" ) then 
+    if ( ( type(z) == "number" ) or ( type(z) == "boolean" ) ) then 
       z = assert(Scalar.new(z, y:qtype()))
     end
     assert(y:qtype() == z:qtype())
@@ -60,13 +61,14 @@ return function (
     if ( y:has_nulls() ) then 
       subs.has_nulls = true
     end
-  elseif ( ( ( type(y) == "Scalar" ) or ( type(y) == "number") ) 
+  elseif ( ( ( type(y) == "Scalar" ) or ( type(y) == "number") 
+    or ( type(y) == "boolean") ) 
     and ( type(z) == "lVector" ) ) then 
     subs.variation = "sv"
     subs.zctype = cutils.str_qtype_to_str_ctype(z:qtype())
     subs.cast_z_as = subs.zctype .. "  *"
 
-    if ( type(y) == "number" ) then 
+    if ( ( type(y) == "number" ) or ( type(y) == "boolean") ) then 
       y = assert(Scalar.new(y, z:qtype()))
     end
     assert(y:qtype() == z:qtype())
@@ -75,19 +77,24 @@ return function (
       subs.has_nulls = true
     end
 
-  elseif ( ( ( type(y) == "Scalar" ) or ( type(y) == "number") ) and
-           ( ( type(z) == "Scalar" ) or ( type(z) == "number") ) ) then
+  elseif ( ( ( type(y) == "Scalar" ) or ( type(y) == "number") 
+    or ( type(y) == "boolean") ) and
+           ( ( type(z) == "Scalar" ) or ( type(z) == "number") 
+           or ( type(z) == "boolean" ) ) ) then
     subs.variation = "ss"
     if     ( ( type(y) == "Scalar" ) and ( type(z) == "Scalar" ) ) then 
       assert(y:qtype() == z:qtype())
       subs.wqtype = y:qtype()
-    elseif ( ( type(y) == "Scalar" ) and ( type(z) == "number" ) ) then 
+    elseif ( ( type(y) == "Scalar" ) and 
+      ( ( type(z) == "number" ) or ( type(z) == "boolean" ) ) ) then 
       z = assert(Scalar.new(z, y:qtype()))
       subs.wqtype = y:qtype()
-    elseif ( ( type(y) == "number" ) and ( type(z) == "Scalar" ) ) then 
+    elseif ( (( type(y) == "boolean") or ( type(y) == "number" ) ) and 
+        ( type(z) == "Scalar" ) ) then 
       y = assert(Scalar.new(y, z:qtype()))
       subs.wqtype = z:qtype()
-    elseif ( ( type(y) == "number" ) and ( type(z) == "number" ) ) then
+    elseif ( ( ( type(y) == "boolean") or ( type(y) == "number" ) ) and 
+       ( ( type(z) == "boolean") or ( type(z) == "number" ) ) ) then
       y = assert(Scalar.new(y, "F8"))
       z = assert(Scalar.new(z, "F8"))
       subs.wqtype = "F8"
@@ -95,6 +102,7 @@ return function (
       error("")
     end
   else
+    print("type(y) = ", type(y), "type(z) = ", type(z))
     error("bad types for ifxthenyelsez")
   end
   --==================================================

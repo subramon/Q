@@ -13,7 +13,8 @@ qc.q_cdef("OPERATORS/F1F2OPF3/inc/f1f2opf3_concat.h")
 local function set_defaults(f1_qtype, f2_qtype)
   local w1 = cutils.get_width_qtype(f1_qtype)
   local w2 = cutils.get_width_qtype(f2_qtype)
-  assert(( w1 <= 4 ) and ( w2 <= 4 ))
+  assert(w1 <= 8)
+  assert(w2 <= 4)
   local shift_by, f3_qtype
   if ( w1 == 1 ) then
     if ( w2 == 1 ) then 
@@ -30,7 +31,7 @@ local function set_defaults(f1_qtype, f2_qtype)
     end
   elseif ( w1 == 2 ) then 
     if ( w2 == 1 ) then 
-      f3_qtype = U"I4"
+      f3_qtype = "UI4"
       shift_by = 8
     elseif ( w2 == 2 ) then 
       f3_qtype = "UI4"
@@ -52,10 +53,25 @@ local function set_defaults(f1_qtype, f2_qtype)
     else 
       error("Cannot concat " ..  f1_qtype .. " and " ..  f2_qtype)
     end
+  elseif ( w1 == 8 ) then 
+    f3_qtype = "UI8"
+    if ( w2 == 1 ) then 
+      shift_by = 8
+      print("WARNING! Potential loss of top 1 byte")
+    elseif ( w2 == 2 ) then
+      print("WARNING! Potential loss of top 2 bytes")
+      shift_by = 16
+    elseif ( w2 == 4 ) then 
+      print("WARNING! Potential loss of top 4 bytes")
+      shift_by = 32
+    else 
+      error("Cannot concat " ..  f1_qtype .. " and " ..  f2_qtype)
+    end
+  else
+    error("")
   end
   return f3_qtype, shift_by
 end
-
 
 
 return function (

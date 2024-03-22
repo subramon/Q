@@ -1,44 +1,52 @@
 
 return require 'Q/UTILS/lua/code_gen' {
-  declaration = [[
+declaration = [[
 #include "q_incs.h"
 #include "q_macros.h"
 
 //START_FOR_CDEF
-    extern int
-    ${fn}(
-        ${ctype} *in,
-        uint32_t n_in,
-        ${ctype} *sclrs,
-        uint32_t n_sclrs,
-        bool *out
-        );
+extern int
+${fn}(
+      ${ctype} *in,
+      uint32_t n_in,
+      ${ctype} *sclrs,
+      uint32_t n_sclrs,
+      bool *out
+      );
 //STOP_FOR_CDEF
   ]],
-    definition = [[
+definition = [[
 #include "${fn}.h"
-      int
-      ${fn}(
-          ${ctype} *in,
-          uint32_t n_in,
-          ${ctype} *sclrs,
-          uint32_t n_sclrs,
-          bool *out
-          )
-      {
-        int status = 0;
-        // TODO #pragma omp parallel for 
-        for ( uint32_t i = 0; i < n_in; i++ ) { 
-          out[i] = false;
-          for ( uint32_t j = 0; j < n_sclrs; j++ ) { 
-            if ( in[i] == sclrs[j] ) { 
-              out[i] = true;
-              break;
-            }
-          }
-        }
-BYE:
-        return status;
+int
+${fn}(
+      ${ctype} *in,
+      uint32_t n_in,
+      ${ctype} *sclrs,
+      uint32_t n_sclrs,
+      bool *out
+      )
+{
+  int status = 0;
+#ifdef DEBUG
+  // scalars must be unique 
+  for ( uint32_t i = 0; i < n_sclrs; i++ ) { 
+    for ( uint32_t j = j+1; j < n_sclrs; j++ ) { 
+      if ( sclrs[i] == sclrs[j] ) { go_BYE(-1); }
+    }
+  }
+#endif
+#pragma omp parallel for 
+  for ( uint32_t i = 0; i < n_in; i++ ) { 
+    out[i] = false;
+    for ( uint32_t j = 0; j < n_sclrs; j++ ) { 
+      if ( in[i] == sclrs[j] ) { 
+        out[i] = true;
+        break;
       }
+    }
+  }
+BYE:
+  return status;
+}
   ]],
 }

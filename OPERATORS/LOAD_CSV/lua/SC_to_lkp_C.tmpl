@@ -60,15 +60,15 @@ SC_to_lkp_C_${out_qtype}(
   if ( nn_in_strs == NULL ) { if ( nn_outvals != NULL ) { go_BYE(-1); } }
   if ( nn_in_strs != NULL ) { if ( nn_outvals == NULL ) { go_BYE(-1); } }
 #endif
-#pragma omp parallel for schedule(static, 1024)
+// TODO #pragma omp parallel for schedule(static, 1024)
   for ( uint32_t i = 0; i < n; i++ ) { 
     char *cptr = in_strs + (i*width);
     outvals[i] = 0;
-    nn_outvals[i] = false;
+    if ( nn_outvals != NULL ) { nn_outvals[i] = false; } 
     if ( ( nn_in_strs != NULL ) && ( nn_in_strs[i] == false ) ) { 
       continue;
     }
-    nn_outvals[i] = true;
+    if ( nn_outvals != NULL ) { nn_outvals[i] = true; } 
      
     ${out_ctype} l_outval = 0; // 0 => not found 
     // This is an extremely dumbu sequential search. 

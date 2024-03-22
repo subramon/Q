@@ -5,7 +5,6 @@ PREV_DIR="`cd -`"
 
 unset Q_SRC_ROOT
 unset Q_ROOT
-unset QX_ROOT # TODO should not be here
 unset QCFLAGS
 unset QLDFLAGS
 unset Q_DATA_DIR
@@ -18,12 +17,10 @@ Q_SRC_ROOT="$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
 export Q_SRC_ROOT="${Q_SRC_ROOT}"
 echo "Q_SRC_ROOT= ${Q_SRC_ROOT}"
 
-export QX_ROOT="${HOME}/QX/"
-echo "QX_ROOT= ${QX_ROOT}"
 #-----------------------------------
 # export Q_ROOT="/home/subramon/local/Q/"
-export Q_ROOT="/mnt/storage/local/Q/"
-# export Q_ROOT="/storeB/local/Q/"
+# export Q_ROOT="/mnt/storage/local/Q/"
+export Q_ROOT="/storeB/local/Q/"
 echo "Q_ROOT= $Q_ROOT"
 mkdir -p $Q_ROOT/
 mkdir -p $Q_ROOT/lib/
@@ -108,7 +105,7 @@ CURR_PATH=`pwd`
 cd $Q_SRC_ROOT
 cd ../
 #- meta directory to LUA_PATH is for q_meta used to restore sessions
-export LUA_PATH="${QX_ROOT}/UTILS/lua/?.lua;${Q_ROOT}/meta/?.lua;${Q_ROOT}/config/?.lua;`pwd`/?.lua;`pwd`/?/init.lua;;"
+export LUA_PATH="${Q_ROOT}/meta/?.lua;${Q_ROOT}/config/?.lua;`pwd`/?.lua;`pwd`/?/init.lua;;"
 export LUA_CPATH="${Q_ROOT}/lib/?.so;;"
 cd $CURR_PATH
 echo "LUA_PATH= $LUA_PATH"
@@ -120,5 +117,3 @@ export PATH=$PATH:$Q_ROOT/bin/
 echo "Environment variables for Q good to go"
 set +e
 
-# TODO TODO TODO P0
-# export LD_PRELOAD=/usr/lib/gcc/arm-linux-gnueabihf/8/libasan.so
