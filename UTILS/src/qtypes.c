@@ -64,13 +64,13 @@ get_width_c_qtype(
     case I2 : return sizeof(int16_t); break;
     case I4 : return sizeof(int32_t); break;
     case I8 : return sizeof(int64_t); break;
-    case I16 : return sizeof(__int128_t); break;
+    case I16 : return sizeof(__int128); break;
 
     case UI1 : return sizeof(uint8_t); break;
     case UI2 : return sizeof(uint16_t); break;
     case UI4 : return sizeof(uint32_t); break;
     case UI8 : return sizeof(uint64_t); break;
-    case UI16 : return sizeof(__uint128_t); break;
+    case UI16 : return sizeof(unsigned __int128); break;
 
     case F2 : return sizeof(bfloat16); break;
     case F4 : return sizeof(float); break;
@@ -180,13 +180,13 @@ str_qtype_to_str_ctype(
   if ( strcmp(str_qtype, "I2") == 0 ) { return "int16_t"; } 
   if ( strcmp(str_qtype, "I4") == 0 ) { return "int32_t"; } 
   if ( strcmp(str_qtype, "I8") == 0 ) { return "int64_t"; } 
-  if ( strcmp(str_qtype, "I16") == 0 ) { return "__int128_t"; } 
+  if ( strcmp(str_qtype, "I16") == 0 ) { return "__int128"; } 
 
   if ( strcmp(str_qtype, "UI1") == 0 ) { return "uint8_t"; } 
   if ( strcmp(str_qtype, "UI2") == 0 ) { return "uint16_t"; } 
   if ( strcmp(str_qtype, "UI4") == 0 ) { return "uint32_t"; } 
   if ( strcmp(str_qtype, "UI8") == 0 ) { return "uint64_t"; } 
-  if ( strcmp(str_qtype, "UI16") == 0 ) { return "__uint128_t"; } 
+  if ( strcmp(str_qtype, "UI16") == 0 ) { return "unsigned __int128"; } 
 
   if ( strcmp(str_qtype, "F2") == 0 ) { return "bfloat16"; } 
   if ( strcmp(str_qtype, "F4") == 0 ) { return "float"; } 

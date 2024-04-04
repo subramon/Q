@@ -15,8 +15,8 @@ require "Q/OPERATORS/MK_COL/lua/mk_tbl"
 require "Q/OPERATORS/S_TO_F/lua/s_to_f"
 require "Q/OPERATORS/F_TO_S/lua/f_to_s"
 
-require "Q/UTILS/lua/pack" -- TODO P3 consider deprecating
-require "Q/UTILS/lua/unpack" -- TODO P3 consider deprecating
+require "Q/UTILS/lua/tbl_to_vec" 
+require "Q/UTILS/lua/vec_to_tbl" 
 require "Q/UTILS/lua/set_memo"
 
 require 'Q/OPERATORS/WHERE/lua/where'
@@ -55,6 +55,9 @@ require "Q/OPERATORS/VSPLIT/lua/vsplit"
 require "Q/OPERATORS/LOAD_BIN/lua/load_bin" 
 require "Q/OPERATORS/PAR_SORT/lua/par_sort"
 require "Q/OPERATORS/PAR_IDX_SORT/lua/par_idx_sort"
+
+require "Q/OPERATORS/PACK/lua/pack"
+require "Q/OPERATORS/UNPACK/lua/unpack"
 
 --== These are from QTILS 
 require 'Q/QTILS/lua/fold'

@@ -1,14 +1,14 @@
 local T = {}
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 
--- Q.unpack(x) : gives table of scalars
+-- Q.vec_to_tbl(x) : gives table of scalars
             -- Return value:
               -- table of scalar values
 
--- Convention: Q.unpack(vector)
+-- Convention: Q.vec_to_tbl(vector)
 -- 1) vector : a vector
 
-local function unpack(x)
+local function vec_to_tbl(x)
   assert(x and type(x) == "lVector", "input must be of type lVector")
   -- Check the vector for eval(), if not then call eval()
   if not x:is_eov() then
@@ -25,7 +25,7 @@ local function unpack(x)
   return tbl_of_sclr
 end
 
-T.unpack = unpack
-require('Q/q_export').export('unpack', unpack)
+T.vec_to_tbl = vec_to_tbl
+require('Q/q_export').export('vec_to_tbl', vec_to_tbl)
 
 return T

@@ -1,7 +1,9 @@
+local ffi     = require 'ffi'
 local cutils  = require 'libcutils'
+local cmem    = require 'libcmem'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local is_in   = require 'Q/UTILS/lua/is_in'
-local get_ptr   = require 'Q/UTILS/lua/get_ptr'
+local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
 local function pack_specialize(vec_tbl, out_qtype)
   local subs = {}
@@ -44,7 +46,7 @@ local function pack_specialize(vec_tbl, out_qtype)
   subs.tmpl   = "OPERATORS/PACK/lua/pack.tmpl"
   subs.incdir = "OPERATORS/PACK/gen_inc/"
   subs.srcdir = "OPERATORS/PACK/gen_src/"
-  subs.incs = { "OPERATORS/PACK/gen_inc/" }
+  subs.incs = { "OPERATORS/PACK/gen_inc/", "UTILS/inc/",  }
 
   return subs
 end

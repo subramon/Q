@@ -17,6 +17,7 @@ local function expander_pack(invecs, y, optargs)
 
   local l_chunk_num = 0
   local gen = function(chunk_num)
+    local start_time = cutils.rdtsc()
     assert(chunk_num == l_chunk_num)
     local buf = assert(cmem.new(
       {size = subs.bufsz, qtype = subs.out_qtype}))
@@ -27,7 +28,7 @@ local function expander_pack(invecs, y, optargs)
     local lens    = {}
     local chunks  = {}
     for k, v in ipairs(invecs) do 
-      local lens[k], chunks[k] = v:get_chunk(chunk_num)
+      lens[k], chunks[k] = v:get_chunk(chunk_num)
       if ( chunks[k] ) then
         in_ptrs[k-1] = get_ptr(chunks[k], "char *")
       else
@@ -43,18 +44,18 @@ local function expander_pack(invecs, y, optargs)
       for k, v in ipairs(invecs) do v:kill() end
       return 0 
     end
-    local out_ptr = get_ptr(buf, subs.out_qtype)
+    local out_ptr = get_ptr(buf, "char *")
     status = qc[func_name](in_ptrs, subs.n_vals, out_len, widths, out_ptr)
     assert(status == 0)
     record_time(start_time, func_name)
     for k, v in ipairs(invecs) do v:unget_chunk(l_chunk_num) end 
-    if ( f1_len < subs.max_num_in_chunk ) then 
+    if ( out_len < subs.max_num_in_chunk ) then 
       if ( subs.cols  ) then subs.cols:delete()  end 
       if ( subs.width ) then subs.width:delete() end 
       for k, v in ipairs(invecs) do v:kill() end
     end
     l_chunk_num = l_chunk_num + 1
-    return f1_len, buf, nn_buf
+    return out_len, buf, nn_buf
   end
 
   local vargs = {}

@@ -2,6 +2,7 @@ local ffi     = require 'ffi'
 local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local qc      = require 'Q/UTILS/lua/qcore'
 local cmem    = require 'libcmem'
+local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
 local function expander_unpack(invec, out_qtypes, optargs)
@@ -22,8 +23,10 @@ local function expander_unpack(invec, out_qtypes, optargs)
     -- between vector for which gen is being called and other vectors
     -- created in this operator 
     local function gen(chunk_num)
+      local start_time = cutils.rdtsc()
       assert(chunk_num == l_chunk_num)
       local in_len, in_chunk = invec:get_chunk(l_chunk_num)
+      local c_cols = get_ptr(subs.c_cols, "char **")
       if ( in_len == 0 ) then
         for k = 1, subs.n_vals do 
           if ( k ~= my_k ) then 
@@ -38,16 +41,16 @@ local function expander_unpack(invec, out_qtypes, optargs)
       -- allocate buffers for output 
       local out_bufs = {}
       for k, out_qtype in ipairs(subs.out_qtypes) do
-        out_bufs[k] = cmem.new({ subs.bufszs[k], subs.out_qtypes[k]})
+        out_bufs[k] = cmem.new(
+          { size = subs.bufszs[k], qtype = subs.out_qtypes[k]})
         out_bufs[k]:zero() 
         out_bufs[k]:stealable(true)
-        subs.c_cols[k-1] = get_ptr(out_bufs[k], subs.out_qtypes[k])
+        c_cols[k-1] = get_ptr(out_bufs[k], "char *")
       end
       --==========================================================
-      local in_ptr = get_ptr(in_chunk, subs.in_qtype)
-      local widths = get_ptr(subs.c_width, subs.in_qtype)
-      local c_cols = get_ptr(subs.c_cols, "char **")
-      local status = qc[fn](in_ptr, in_len, c_cols, subs.n_vals, widths)
+      local in_ptr = get_ptr(in_chunk, "char *")
+      local widths = get_ptr(subs.c_width, "uint32_t *")
+      local status = qc[func_name](in_ptr, in_len, c_cols, subs.n_vals, widths)
       assert(status == 0)
       -- put chunk for everybody other than me. 
       for k = 1, subs.n_vals do 
@@ -73,7 +76,6 @@ local function expander_unpack(invec, out_qtypes, optargs)
     gens[k] = gen
   end
   for k, out_qtype in ipairs(out_qtypes) do 
-    local subs = multi_subs[join_type]
     local vargs = {}
     vargs.has_nulls        = false
     vargs.gen              = gens[k]

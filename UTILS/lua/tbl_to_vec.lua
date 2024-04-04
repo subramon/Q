@@ -3,15 +3,15 @@ local base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 
 local T = {}
 
--- Q.pack(tbl, qtype) : creates vector of given qtype from input table
+-- Q.tbl_to_vec(tbl, qtype) : creates vector of given qtype from input table
           -- Return value:
             -- vector
 
--- Convention: Q.pack(tbl, qtype)
+-- Convention: Q.tbl_to_vec(tbl, qtype)
 -- 1) tbl   : table_of_scalars/numbers
 -- 2) qtype : qtype of required vector
 
-local function pack(tbl, qtype)
+local function tbl_to_vec(tbl, qtype)
   assert(tbl and type(tbl) == "table", "input must be a table")
   assert(#tbl > 0, "Input table has no entries")
   -- CAUTION: This is a slow operator. Useful for quick testing
@@ -21,6 +21,6 @@ local function pack(tbl, qtype)
   local col = assert(mk_col(tbl, qtype)) -- internally calling mk_col
   return col
 end
-T.pack = pack
-require('Q/q_export').export('pack', pack)
+T.tbl_to_vec = tbl_to_vec
+require('Q/q_export').export('tbl_to_vec', tbl_to_vec)
 return T

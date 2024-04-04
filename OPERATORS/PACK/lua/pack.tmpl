@@ -9,25 +9,33 @@ ${fn}(
     uint32_t n_vals,
     uint32_t n,
     uint32_t *width, // [n_vals]
-    ${out_ctype} *out_val // [n]
+    // should have been 
+    // ${out_ctype} *out_val, // [n]
+    // but ffi does not handle 128 bits
+    char *tmp_out_val // [n]
     );
 //STOP_FOR_CDEF
 ]],
 definition = [[
+#include "${fn}.h"
 int
 ${fn}(
     char **in_vals,  // [n_vals][n]
     uint32_t n_vals,
     uint32_t n,
     uint32_t *width, // [n_vals]
-    ${out_ctype} *out_val // [n]
+    char *tmp_out_val // [n]
     )
 {
   int status = 0;
   uint32_t *shift_by = NULL;
 
+  shift_by = malloc(n_vals * sizeof(uint32_t));
+  return_if_malloc_failed(shift_by);
+  ${out_ctype} *out_val = (${out_ctype} *)tmp_out_val;
+
   uint32_t l_shift_by = 0;
-  for ( uint32_t i = n_vals; i >= 0; i-- ) { 
+  for ( int i = (int)n_vals-1; i >= 0; i-- ) { 
     shift_by[i] = l_shift_by;
     l_shift_by += width[i];
   }
