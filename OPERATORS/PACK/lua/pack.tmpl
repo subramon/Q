@@ -37,7 +37,7 @@ ${fn}(
   uint32_t l_shift_by = 0;
   for ( int i = (int)n_vals-1; i >= 0; i-- ) { 
     shift_by[i] = l_shift_by;
-    l_shift_by += width[i];
+    l_shift_by += (8*width[i]); // width is in bytes, convert to bits
   }
   // Initialize out_val to 0 
 #pragma omp parallel for 

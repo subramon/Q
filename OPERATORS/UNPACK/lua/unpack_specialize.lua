@@ -8,6 +8,7 @@ local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local function unpack_specialize(invec, out_qtypes)
   local subs = {}
   assert(type(invec) == "lVector")
+  assert(type(out_qtypes) == "table")
   subs.in_qtype = invec:qtype()
   assert(is_in(subs.in_qtype, { "UI2", "UI4", "UI8", "UI16", }))
   subs.in_ctype = cutils.str_qtype_to_str_ctype(subs.in_qtype)

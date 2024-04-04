@@ -37,7 +37,7 @@ ${fn}(
   uint32_t l_shift_by = 0;
   for ( int i = (int)n_vals; i >= 0; i-- ) { 
     shift_by[i] = l_shift_by;
-    l_shift_by += width[i];
+    l_shift_by += (8*width[i]); // width in bytes, need to convert to bits
   }
   //-----------------------------------------------
   for ( uint32_t i = 0; i < n_vals; i++ ) { 
@@ -53,10 +53,11 @@ ${fn}(
         }
         break;
         case 2 : 
+        {
         ${in_ctype} mask = 0xFFFF;
         ${in_ctype} tmp1 = (inval >> shift_by[i]);
         ((uint16_t *)out_vals[i])[j] = tmp1 & mask;
-        {
+        }
         break;
         case 4 : 
         {

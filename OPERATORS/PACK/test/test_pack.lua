@@ -2,6 +2,7 @@ local Q       = require 'Q'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local lgutils = require 'liblgutils'
 local cutils  = require 'libcutils'
+local cVector = require 'libvctr'
 local tests = {}
 -- The test is repeated 3 times.
 -- iter == 1 creates UI2
@@ -12,7 +13,7 @@ tests.t1 = function()
   collectgarbage(); collectgarbage("stop")
   local pre = lgutils.mem_used()
   local n = 2 * qcfg.max_num_in_chunk + 17 
-  local niter = 3
+  local niter = 4
   local unpack_qtypes 
   for iter = 1, niter do 
     local out_qtype
@@ -32,6 +33,7 @@ tests.t1 = function()
     else
       error("")
     end
+    assert(type(unpack_qtypes) == "table")
 
     local T1 = {}
     if ( iter >= 4 ) then 
@@ -52,25 +54,29 @@ tests.t1 = function()
     x:eval()
     assert(x:num_elements() == n)
     assert(x:width() == cutils.get_width_qtype(out_qtype))
+    -- Q.print_csv(T1, { opfile = "_T1.csv" })
+    -- Q.print_csv({x}, { opfile = "_x.csv" })
   
     -- test that x is correct. Use unpack for this 
-    local T2 = Q.unpack(x, unpack_qytpes)
+    local T2 = Q.unpack(x, unpack_qtypes)
     assert(type(T2) == "table")
     for k, _ in ipairs(T2) do 
       assert(type(T2[k]) == "lVector")
       assert(T2[k]:qtype() == T1[k]:qtype())
     end
     for k, _ in ipairs(T2) do 
+      print("Checking " .. k .. " of qtype = ", T1[k]:qtype())
       local tmp = Q.vveq(T1[k], T2[k])
       local r = Q.sum(tmp)
       local n1, n2 = r:eval()
-      -- Q.print_csv({T1[k], T2[k]}, { opfile = "_x.csv"})
+      -- Q.print_csv({T1[k], T2[k]}, { opfile = "_t1t2_" .. k .. ".csv"})
       assert(n1 == n2)
       r:delete()
       tmp:delete()
       T1[k]:delete()
       T2[k]:delete()
     end 
+    x:delete()
     local post = lgutils.mem_used()
     assert(pre == post)
     collectgarbage("restart")
