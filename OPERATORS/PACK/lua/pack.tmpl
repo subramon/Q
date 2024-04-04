@@ -49,7 +49,7 @@ ${fn}(
   if ( status < 0 ) { go_BYE(-1); } // cannot break out of omp loop 
 #pragma omp parallel for 
     for ( uint32_t j = 0; j < n; j++ ) { 
-      uint64_t tmp;
+      ${out_ctype} tmp = 0;
       switch ( width[i] ) { 
         case 1 : tmp = ((uint8_t *)in_vals[i])[j]; break; 
         case 2 : tmp = ((uint16_t *)in_vals[i])[j]; break; 

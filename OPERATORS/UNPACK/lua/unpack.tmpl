@@ -48,19 +48,21 @@ ${fn}(
       case 1 : 
       {
         ${in_ctype} mask = 0xFF;
-        ((uint8_t  *)out_vals[i])[j] = (inval >> shift_by[i]) & mask ;
+        ${in_ctype} tmp1 = (inval >> shift_by[i]);
+        ((uint8_t *)out_vals[i])[j] = tmp1 & mask;
         }
         break;
         case 2 : 
-        {
         ${in_ctype} mask = 0xFFFF;
-        ((uint16_t *)out_vals[i])[j] = (inval >> shift_by[i]) & mask ;
-        }
+        ${in_ctype} tmp1 = (inval >> shift_by[i]);
+        ((uint16_t *)out_vals[i])[j] = tmp1 & mask;
+        {
         break;
         case 4 : 
         {
         ${in_ctype} mask = 0xFFFFFFFF;
-        ((uint32_t *)out_vals[i])[j] = (inval >> shift_by[i]) & mask ;
+        ${in_ctype} tmp1 = (inval >> shift_by[i]);
+        ((uint32_t *)out_vals[i])[j] = tmp1 & mask;
         }
         break;
         case 8 : 
