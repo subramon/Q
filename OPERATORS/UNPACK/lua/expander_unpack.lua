@@ -13,11 +13,10 @@ local function expander_unpack(invec, out_qtypes, optargs)
   assert(qc[func_name], "Symbol not defined " .. func_name)
   
   local l_chunk_num = 0
-  -- this is tricky part where we create multiple generators,
-  -- one for each out_qtypes 
+  -- we create multiple generators, one for each out_qtypes 
   local vectors = {}
   local gens    = {}
-  for k, out_qtype in ipairs(out_qtypes) do 
+  for k, out_qtype in ipairs(subs.out_qtypes) do 
     local my_k = k 
     -- presence of my_k in closure of gen() allows us to distinguish 
     -- between vector for which gen is being called and other vectors
@@ -38,8 +37,8 @@ local function expander_unpack(invec, out_qtypes, optargs)
       --==========================================================
       -- allocate buffers for output 
       local out_bufs = {}
-      for k, out_qtype in ipairs(out_qtypes) do
-        out_bufs[k] = cmem.new({ subs.bufszs[k], out_qtype})
+      for k, out_qtype in ipairs(subs.out_qtypes) do
+        out_bufs[k] = cmem.new({ subs.bufszs[k], subs.out_qtypes[k]})
         out_bufs[k]:zero() 
         out_bufs[k]:stealable(true)
         subs.c_cols[k-1] = get_ptr(out_bufs[k], subs.out_qtypes[k])
@@ -47,8 +46,8 @@ local function expander_unpack(invec, out_qtypes, optargs)
       --==========================================================
       local in_ptr = get_ptr(in_chunk, subs.in_qtype)
       local widths = get_ptr(subs.c_width, subs.in_qtype)
-      local status = qc[fn](in_ptr, in_len, subs.c_cols, subs.n_vals, 
-        widths)
+      local c_cols = get_ptr(subs.c_cols, "char **")
+      local status = qc[fn](in_ptr, in_len, c_cols, subs.n_vals, widths)
       assert(status == 0)
       -- put chunk for everybody other than me. 
       for k = 1, subs.n_vals do 
