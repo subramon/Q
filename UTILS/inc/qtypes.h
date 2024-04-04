@@ -2,6 +2,8 @@
 #define __QTYPES_H
 //START_FOR_CDEF
 typedef uint16_t bfloat16; 
+// TODO P3: At some stage, names should refer to to bits instead of bytes
+// In other words, instead of I8 it should be I64
 typedef enum { 
   Q0, // mixed  must be first one 
 
@@ -12,6 +14,7 @@ typedef enum {
   I2,
   I4,
   I8,
+  I16,
 
   F2,
   F4,
@@ -21,6 +24,7 @@ typedef enum {
   UI2,
   UI4,
   UI8,
+  UI16,
 
   SC,  // constant length strings
   SV,  // variable length strings

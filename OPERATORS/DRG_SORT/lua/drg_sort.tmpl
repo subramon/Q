@@ -31,17 +31,18 @@ return require 'Q/UTILS/lua/code_gen' {
 #include <stdio.h>
 #include <limits.h>
 #include "q_macros.h"
+// drg is abbreviaton for drag along 
 //START_FOR_CDEF
 extern int
-qsort_${srt_ordr}_val_${val_qtype}_idx_${idx_qtype} (
-		${idx_ctype} *srt_ordr,
+qsort_${srt_ordr}_val_${val_qtype}_drg_${drg_qtype} (
+		${drg_ctype} *srt_ordr,
 		void *const pbase, 
 		size_t total_elems
     );
 //STOP_FOR_CDEF
     ]],
 definition = [[
-#include "qsort_${srt_ordr}_val_${val_qtype}_idx_${idx_qtype}.h"
+#include "qsort_${srt_ordr}_val_${val_qtype}_drg_${drg_qtype}.h"
 
 #define WHEREAMI { fprintf(stderr, "Line %3d of File %s \n", __LINE__, __FILE__); }
 
@@ -49,12 +50,12 @@ definition = [[
 /* Byte-wise swap two items of size SIZE. */
 /*
 #define SWAP(a, b, size)						\
-  aidx = ((char *)a - (char *)pbase) / size;				\
-  bidx = ((char *)b - (char *)pbase) / size;				\
-  aval = srt_ordr[aidx];						\
-  bval = srt_ordr[bidx];						\
-  srt_ordr[aidx] = bval;						\
-  srt_ordr[bidx] = aval;						\
+  adrg = ((char *)a - (char *)pbase) / size;				\
+  bdrg = ((char *)b - (char *)pbase) / size;				\
+  aval = srt_ordr[adrg];						\
+  bval = srt_ordr[bdrg];						\
+  srt_ordr[adrg] = bval;						\
+  srt_ordr[bdrg] = aval;						\
   do									\
     {									\
       register size_t __size = (size);					\
@@ -74,14 +75,14 @@ definition = [[
   ${val_ctype} *ia = (${val_ctype} *)a; \
   ${val_ctype} *ib = (${val_ctype} *)b; \
   ${val_ctype} itmp = *ia; \
-  aidx = ((char *)a - (char *)pbase) / size;				\
-  bidx = ((char *)b - (char *)pbase) / size;				\
-  if ( aidx >= total_elems ) { WHEREAMI; return -1;  } \
-  if ( bidx >= total_elems ) { WHEREAMI; return -1;  } \
-  aval = srt_ordr[aidx];						\
-  bval = srt_ordr[bidx];						\
-  srt_ordr[aidx] = bval;						\
-  srt_ordr[bidx] = aval;						\
+  adrg = ((char *)a - (char *)pbase) / size;				\
+  bdrg = ((char *)b - (char *)pbase) / size;				\
+  if ( adrg >= total_elems ) { WHEREAMI; return -1;  } \
+  if ( bdrg >= total_elems ) { WHEREAMI; return -1;  } \
+  aval = srt_ordr[adrg];						\
+  bval = srt_ordr[bdrg];						\
+  srt_ordr[adrg] = bval;						\
+  srt_ordr[bdrg] = aval;						\
   *ia = *ib; \
   *ib = itmp; \
 }
@@ -134,16 +135,16 @@ typedef struct
 
 // START FUNC DECL
 int
-qsort_${srt_ordr}_val_${val_qtype}_idx_${idx_qtype} (
-		${idx_ctype} *srt_ordr,
+qsort_${srt_ordr}_val_${val_qtype}_drg_${drg_qtype} (
+		${drg_ctype} *srt_ordr,
 		void *const pbase, 
 		size_t total_elems
 		)
 // STOP FUNC DECL
 {
   register char *base_ptr = (char *) pbase;
-  size_t aidx, bidx;
-  ${idx_ctype} aval, bval;
+  size_t adrg, bdrg;
+  ${drg_ctype} aval, bval;
 #ifdef VERBOSE
   ${val_ctype} *X = (${val_ctype} *)pbase; // for debugging 
 #endif
@@ -307,10 +308,10 @@ qsort_${srt_ordr}_val_${val_qtype}_idx_${idx_qtype} (
     run_ptr = base_ptr + size; /* this is element, X, to compare */
     while ((run_ptr += size) <= end_ptr) {
       /* above while loop iterates over values of X is compared */
-      ${idx_ctype} pos, pos_hi, pos_lo, sve_idx;
+      ${drg_ctype} pos, pos_hi, pos_lo, sve_drg;
       tmp_ptr = run_ptr - size;
       pos = ( ( (char *)tmp_ptr - (char *)base_ptr) / size ) + 1;
-      sve_idx = srt_ordr[pos];
+      sve_drg = srt_ordr[pos];
 
       // while ((*cmp) ((void *) run_ptr, (void *) tmp_ptr) < 0) {
       while ( *((${val_ctype} *)run_ptr) ${comparator} *((${val_ctype} *)tmp_ptr) ) {
@@ -340,7 +341,7 @@ qsort_${srt_ordr}_val_${val_qtype}_idx_${idx_qtype} (
 	  *hi = c;
 	  if ( pass == 1 ) { 
 	    pos = ( ( (char *)hi - (char *)base_ptr) / size );
-	    srt_ordr[pos] = sve_idx;
+	    srt_ordr[pos] = sve_drg;
 	  }
 	  pass++;
 	}

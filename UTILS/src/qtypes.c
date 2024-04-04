@@ -64,11 +64,13 @@ get_width_c_qtype(
     case I2 : return sizeof(int16_t); break;
     case I4 : return sizeof(int32_t); break;
     case I8 : return sizeof(int64_t); break;
+    case I16 : return sizeof(__int128_t); break;
 
     case UI1 : return sizeof(uint8_t); break;
     case UI2 : return sizeof(uint16_t); break;
     case UI4 : return sizeof(uint32_t); break;
     case UI8 : return sizeof(uint64_t); break;
+    case UI16 : return sizeof(__uint128_t); break;
 
     case F2 : return sizeof(bfloat16); break;
     case F4 : return sizeof(float); break;
@@ -108,11 +110,13 @@ get_c_qtype(
   if ( strcmp("I2", str_qtype) == 0 ) { return I2; }
   if ( strcmp("I4", str_qtype) == 0 ) { return I4; }
   if ( strcmp("I8", str_qtype) == 0 ) { return I8; }
+  if ( strcmp("I16", str_qtype) == 0 ) { return I16; }
 
   if ( strcmp("UI1", str_qtype) == 0 ) { return UI1; }
   if ( strcmp("UI2", str_qtype) == 0 ) { return UI2; }
   if ( strcmp("UI4", str_qtype) == 0 ) { return UI4; }
   if ( strcmp("UI8", str_qtype) == 0 ) { return UI8; }
+  if ( strcmp("UI16", str_qtype) == 0 ) { return UI16; }
 
   if ( strcmp("F2", str_qtype) == 0 ) { return F2; }
   if ( strcmp("F4", str_qtype) == 0 ) { return F4; }
@@ -142,11 +146,13 @@ get_str_qtype(
   if ( qtype == I2 ) { return "I2"; }
   if ( qtype == I4 ) { return "I4"; }
   if ( qtype == I8 ) { return "I8"; }
+  if ( qtype == I8 ) { return "U16"; }
 
   if ( qtype == UI1 ) { return "UI1"; }
   if ( qtype == UI2 ) { return "UI2"; }
   if ( qtype == UI4 ) { return "UI4"; }
   if ( qtype == UI8 ) { return "UI8"; }
+  if ( qtype == UI16 ) { return "UI16"; }
 
   if ( qtype == F2 ) { return "F2"; }
   if ( qtype == F4 ) { return "F4"; }
@@ -174,11 +180,13 @@ str_qtype_to_str_ctype(
   if ( strcmp(str_qtype, "I2") == 0 ) { return "int16_t"; } 
   if ( strcmp(str_qtype, "I4") == 0 ) { return "int32_t"; } 
   if ( strcmp(str_qtype, "I8") == 0 ) { return "int64_t"; } 
+  if ( strcmp(str_qtype, "I16") == 0 ) { return "__int128_t"; } 
 
   if ( strcmp(str_qtype, "UI1") == 0 ) { return "uint8_t"; } 
   if ( strcmp(str_qtype, "UI2") == 0 ) { return "uint16_t"; } 
   if ( strcmp(str_qtype, "UI4") == 0 ) { return "uint32_t"; } 
   if ( strcmp(str_qtype, "UI8") == 0 ) { return "uint64_t"; } 
+  if ( strcmp(str_qtype, "UI16") == 0 ) { return "__uint128_t"; } 
 
   if ( strcmp(str_qtype, "F2") == 0 ) { return "bfloat16"; } 
   if ( strcmp(str_qtype, "F4") == 0 ) { return "float"; } 
@@ -197,6 +205,7 @@ str_qtype_to_str_ispctype(
     const char * const str_qtype
     )
 {
+  // Assumption is that ispc does not support I16/UI16
   if ( strcmp(str_qtype, "Q0") == 0 ) { return NULL; } 
 
   if ( strcmp(str_qtype, "B1") == 0 ) { return NULL; } 
@@ -206,11 +215,13 @@ str_qtype_to_str_ispctype(
   if ( strcmp(str_qtype, "I2") == 0 ) { return "int16"; } 
   if ( strcmp(str_qtype, "I4") == 0 ) { return "int32"; } 
   if ( strcmp(str_qtype, "I8") == 0 ) { return "int64"; } 
+  if ( strcmp(str_qtype, "I16") == 0 ) { return NULL; } 
 
   if ( strcmp(str_qtype, "UI1") == 0 ) { return "uint8"; } 
   if ( strcmp(str_qtype, "UI2") == 0 ) { return "uint16"; } 
   if ( strcmp(str_qtype, "UI4") == 0 ) { return "uint32"; } 
   if ( strcmp(str_qtype, "UI8") == 0 ) { return "uint64"; } 
+  if ( strcmp(str_qtype, "UI16") == 0 ) { return NULL; } 
 
   if ( strcmp(str_qtype, "F2") == 0 ) { return NULL; }
   if ( strcmp(str_qtype, "F4") == 0 ) { return "float"; } 

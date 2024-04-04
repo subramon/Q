@@ -15,7 +15,7 @@ tests.t1 = function()
         max_num_in_chunk = max_num_in_chunk}):eval()
       local val = Q.rand({ lb = -65537, ub = 65537, qtype = qtype, len = len, 
         max_num_in_chunk = max_num_in_chunk}):eval()
-      local srt_idx, srt_val = Q.idx_sort(idx, val, ordr)
+      local srt_idx, srt_val = Q.drg_sort(idx, val, ordr)
       assert(type(srt_idx) == "lVector")
       assert(type(srt_val) == "lVector")
       assert(srt_idx:is_lma())
@@ -52,11 +52,11 @@ tests.t2 = function()
   local O = { is_hdr = true }
   M[#M+1] = { name = "val", qtype = "I8", has_nulls = false}
   M[#M+1] = { name = "idx", qtype = "I4", has_nulls = false}
-  local datafile = qcfg.q_src_root .. "/OPERATORS/IDX_SORT/test/test1.csv"
+  local datafile = qcfg.q_src_root .. "/OPERATORS/DRG_SORT/test/test1.csv"
   assert(plpath.isfile(datafile))
   local T = Q.load_csv(datafile, M, O)
   T.val:eval()
-  local srt_idx, srt_val = Q.idx_sort(T.idx, T.val, "asc")
+  local srt_idx, srt_val = Q.drg_sort(T.idx, T.val, "asc")
   srt_idx = srt_idx:lma_to_chunks()
   srt_val = srt_val:lma_to_chunks()
   local tcin = Q.shift_right(srt_val, 33):eval()

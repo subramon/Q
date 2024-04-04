@@ -5,9 +5,9 @@ make -C ../lua/
 gcc -g ${QC_FLAGS}  \
   -I../gen_inc \
   -I../../../UTILS/inc \
-  test_idx_sort.c \
-  ../gen_src/_qsort_asc_val_F8_idx_I4.c \
-  ../gen_src/_qsort_dsc_val_I8_idx_I2.c \
+  test_drg_sort.c \
+  ../gen_src/_qsort_asc_val_F8_drg_I4.c \
+  ../gen_src/_qsort_dsc_val_I8_drg_I2.c \
   -o a.out
 VG="valgrind --leak-check=full " 
 $VG --leak-check=full ./a.out 1>_out  2>_err

@@ -15,8 +15,8 @@ require "Q/OPERATORS/MK_COL/lua/mk_tbl"
 require "Q/OPERATORS/S_TO_F/lua/s_to_f"
 require "Q/OPERATORS/F_TO_S/lua/f_to_s"
 
-require "Q/UTILS/lua/pack"
-require "Q/UTILS/lua/unpack"
+require "Q/UTILS/lua/pack" -- TODO P3 consider deprecating
+require "Q/UTILS/lua/unpack" -- TODO P3 consider deprecating
 require "Q/UTILS/lua/set_memo"
 
 require 'Q/OPERATORS/WHERE/lua/where'
@@ -39,7 +39,7 @@ require "Q/OPERATORS/PERMUTE/lua/permute_to"
 require "Q/OPERATORS/PERMUTE/lua/permute_from"
 require 'Q/OPERATORS/UNIQUE/lua/unique'
 require 'Q/OPERATORS/JOIN/lua/join'
-require "Q/OPERATORS/IDX_SORT/lua/idx_sort"
+require "Q/OPERATORS/DRG_SORT/lua/drg_sort"
 require "Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez"
 require "Q/OPERATORS/AINB/lua/get_idx_by_val"
 require "Q/OPERATORS/GET/lua/get_val_by_idx"
