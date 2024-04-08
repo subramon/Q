@@ -56,8 +56,9 @@ return function (
     subs.code = "    out[i] = in[i] > b; "; 
     subs.nn_code = "    out[i] = 0; "
   else
-    subs.code = "c = a > b; "
     subs.has_nulls = false
+    subs.fn = "vsgt" .. "_" .. subs.f1_qtype
+    subs.code = "c = a > b; "
     subs.tmpl        = "OPERATORS/F1S1OPF2/lua/f1s1opf2_sclr.tmpl"
   end
 

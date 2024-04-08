@@ -994,7 +994,6 @@ function lVector:add_sibling(v)
 end
 
 function lVector.conjoin(T)
-  if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   assert(type(T) == "table")
   assert(#T > 1)
   for k1, v1 in ipairs(T) do

@@ -19,14 +19,14 @@ local function expander_ifxthenyelsez(x, y, z)
 
   -- START Handle some scalar conversion issues
   local sclr_yval, sclr_zval, sclr_ymem, sclr_zmem
-  if ( type(y) == "number" ) then 
+  if ( ( type(y) == "number" ) or ( type(y) == "boolean" ) ) then 
     y = assert(Scalar.new(y, subs.wqtype))
     y:set_name("y_ifxthenyelsez")
   end
   if ( type(y) == "Scalar") then 
     sclr_ymem = y:to_cmem()
   end
-  if ( type(z) == "number" ) then 
+  if ( ( type(z) == "number" ) or ( type(z) == "boolean" ) ) then 
     z = assert(Scalar.new(z, subs.wqtype))
     z:set_name("z_ifxthenyelsez")
   end
@@ -74,9 +74,12 @@ local function expander_ifxthenyelsez(x, y, z)
         nn_zptr = ffi.cast("bool *", get_ptr(nn_zchunk))
       end
     elseif ( subs.variation == "vs" ) then 
-      if ( type(z) == "number" ) then 
+      if ( ( type(z) == "number" ) or ( type(z) == "boolean" ) ) then 
+        error("Should have been converted to Scalar by now")
+        --[[
         z = assert(Scalar.new(z, y:qtype()))
         z:set_name("z_ifxthenyelsez")
+        --]]
       end
       zptr = get_ptr(sclr_zmem, subs.wqtype)
 
@@ -88,9 +91,12 @@ local function expander_ifxthenyelsez(x, y, z)
       end
 
     elseif ( subs.variation == "sv" ) then 
-      if ( type(y) == "number" ) then 
+      if ( ( type(y) == "number" ) or ( type(y) == "boolean" ) ) then 
+        error("Should have been converted to Scalar by now")
+        --[[
         y = assert(Scalar.new(y, z:qtype()))
         y:set_name("y_ifxthenyelsez")
+        --]]
       end
       yptr = get_ptr(sclr_ymem, subs.wqtype)
 

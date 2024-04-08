@@ -20,8 +20,6 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
   assert(type(sclr) == "Scalar")
   sclr:set_name("f1s1opf2")
   local subs = assert(spfn(f1, sclr, optargs))
-
-
   local func_name = assert(subs.fn)
   qc.q_add(subs); 
 

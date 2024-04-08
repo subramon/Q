@@ -67,13 +67,13 @@ vctr_cast(
   qtype_t old_qtype = val.qtype;
   qtype_t new_qtype = get_c_qtype(str_qtype);
   switch ( old_qtype ) { 
-    case I1 : 
+    case BL: case I1 : case UI1 :  
       switch ( new_qtype ) { 
-        case I1 : case UI1 : break;
+        case BL : case I1 : case UI1 : break;
         default : go_BYE(-1); break;
       }
       break;
-    case I2 : 
+    case I2 : case UI2 : case F2 : 
       switch ( new_qtype ) { 
         case I2 : case UI2 : case F2 : break;
         default : go_BYE(-1); break;
@@ -92,6 +92,8 @@ vctr_cast(
       }
       break;
     default :
+      fprintf(stderr, "Cannot cast from %s to %s \n", 
+          get_str_qtype(old_qtype), str_qtype);
       go_BYE(-1);
       break;
   }
