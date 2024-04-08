@@ -1,5 +1,7 @@
 #ifndef __QTYPES_H
 #define __QTYPES_H
+typedef uint32_t holiday_bmask_t; // this comes from RBC. Should not be here
+                                  // RBC code needs to be cleaned up
 //START_FOR_CDEF
 typedef uint16_t bfloat16; 
 // TODO P3: At some stage, names should refer to to bits instead of bytes
