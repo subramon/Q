@@ -23,6 +23,7 @@
 #include "chnk_rs_hmap_instantiate.h"
 
 #include "import_tbsp.h"
+#include "vctr_name_to_uqid.h"
 
 
 #undef MAIN_PGMN
@@ -44,6 +45,27 @@ static int l_lgutils_save_session(
   cBYE(status);
   lua_pushboolean(L, true); 
   return 1; 
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3; 
+}
+
+static int l_lgutils_name_to_uqid(
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 2 ) { go_BYE(-1); }
+  uint32_t tbsp = luaL_checknumber(L, 1); 
+  const char * const name = luaL_checkstring(L, 2); 
+  uint32_t vctr_uqid = 0;
+  bool found = false; 
+  status = vctr_name_to_uqid(tbsp, name, &vctr_uqid, &found); cBYE(status);
+  lua_pushnumber(L, vctr_uqid);
+  lua_pushnumber(L, found);
+  return 2; 
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
@@ -234,6 +256,7 @@ static const struct luaL_Reg lgutils_methods[] = {
     { "data_dir",           l_lgutils_data_dir },
     { "meta_dir",           l_lgutils_meta_dir },
     { "save_session",       l_lgutils_save_session },
+    { "vctr_name_to_uqid", l_lgutils_name_to_uqid },
     { NULL,  NULL         }
 };
  
@@ -248,6 +271,7 @@ static const struct luaL_Reg lgutils_functions[] = {
     { "data_dir",           l_lgutils_data_dir },
     { "meta_dir",           l_lgutils_meta_dir },
     { "save_session",       l_lgutils_save_session },
+    { "vctr_name_to_uqid", l_lgutils_name_to_uqid },
     { NULL,  NULL         }
 };
  
