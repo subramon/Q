@@ -31,6 +31,7 @@
 #include "qtypes.h"
 #include "rdtsc.h"
 #include "rs_mmap.h"
+#include "shard_file.h"
 #include "tm2time.h"
 extern char *strptime(const char *s, const char *format, struct tm *tm);
 
@@ -367,6 +368,26 @@ static int l_cutils_mem_info(
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
+static int l_cutils_shard_file( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 4 ) { go_BYE(-1); }
+  const char *const ipfile = luaL_checkstring(L, 1);
+  const char *const opdir  = luaL_checkstring(L, 2);
+  int               nB     = luaL_checknumber(L, 3);
+  int               split_col_idx = luaL_checknumber(L, 4);
+  status = shard_file(ipfile, opdir, nB, split_col_idx); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
   return 2;
 }
 //----------------------------------------
@@ -797,6 +818,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
+    { "shard_file",  l_cutils_shard_file },
     { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
     { "str_qtype_to_str_ispctype", l_cutils_str_qtype_to_str_ispctype },
     { "unlink",     l_cutils_unlink },
@@ -832,6 +854,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
+    { "shard_file",  l_cutils_shard_file },
     { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
     { "str_qtype_to_str_ispctype", l_cutils_str_qtype_to_str_ispctype },
     { "unlink",     l_cutils_unlink },

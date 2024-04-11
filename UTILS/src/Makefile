@@ -8,7 +8,7 @@ MYSO = libutils.so
 
 EXTSO=${Q_ROOT}/lib/${MYSO}
 
-all : ${MYSO} ${EXTSO}
+all : ${MYSO} ${EXTSO} shard_file
 
 gen_inc_files : \
 	../inc/txt_to_BL.h \
@@ -248,6 +248,8 @@ GEN_SRCS += ../src/txt_to_F8.c
 GEN_OBJS = $(GEN_SRCS:.c=.o)
 #----------------------------------
 
+shard_file : shard_file.o lookup8.o
+	gcc ${QCFLAGS} shard_file.o $ lookup8.o ${MYSO} -o shard_file
 
 ${EXTSO} : ${MYSO}
 	cp ${MYSO} ${EXTSO}

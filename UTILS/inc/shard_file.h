@@ -1,5 +1,5 @@
 extern int 
-file_split(
+shard_file(
     const char * const infile,
     const char * const opdir,
     uint32_t nB, // number of subdirs in opdir

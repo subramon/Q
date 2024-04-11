@@ -5,12 +5,33 @@
 #include "hash.h"
 #include "isdir.h"
 #include <libgen.h>
-#include "file_split.h"
+#include "shard_file.h"
+// Input: 
+// (1) nB > 1 partitions. 
+// (2) an input file F
+// (3) an output directory D
+// Output:
+// (1) Create nB sub-directories in D called 1, 2, ... nB
+// (2) In each sub-directory, create a file with name F
+// Procedure:
+// Each row of the input file F is placed in exactly one of the 
+// sub-directory files. How do we decide in which sub-directory a line goes?
+// We take the cell in the column specified by split_col_idx. Call this s
+// sub-directory is (hash(s) % nB)+1
+// It is entirely possible that a sub-directory can contain an empty file
+// Limitations: 
+// (1) Currently, we assume that the file is a CSV file
+// (2) We don't deal with dquotes and escaping and all that stuff
+// (3) We don't deal with dquotes and escaping and all that stuff
+// (4) Restrictions on max length of line, max length of cell 
+// (5) Restrictions on number of columns in line 
+// Notes
+// (1) If file exists in sub-directory, it is over-written
 
 #define AB_SEED_1 961748941 // large prime number
 #define AB_SEED_2 982451653 // some other large primenumber
 int 
-file_split(
+shard_file(
     const char * const infile,
     const char * const opdir,
     uint32_t nB, // number of subdirs in opdir
@@ -20,6 +41,7 @@ file_split(
   int status = 0;
 #define MAXLINE 2047
 #define MAXFIELD 1023
+#define MAXCOLS 64
   char line[MAXLINE+1];
   char colbuf[MAXFIELD+1];
   char *X = NULL; size_t nX = 0;
@@ -29,12 +51,14 @@ file_split(
   char *tmp = NULL;
   char *filename = NULL;
 
+  //--------------------------------------------------
   if ( ( infile == NULL ) || ( *infile == '\0' ) )  { go_BYE(-1); }
   if ( !isfile(infile) ) { go_BYE(-1); }
-  if ( !isdir(opdir) ) { go_BYE(-1); }
   if ( ( opdir == NULL ) || ( *opdir == '\0' ) )  { go_BYE(-1); }
+  if ( !isdir(opdir) ) { go_BYE(-1); }
   if ( nB == 0 ) { go_BYE(-1); } 
-  if ( nB > 1024 ) { go_BYE(-1); } // sanity test, relax later
+  if ( nB > MAXCOLS ) { go_BYE(-1); } 
+  //--------------------------------------------------
   subdir = malloc(strlen(opdir) + 16);
   return_if_malloc_failed(subdir);
   memset(subdir, 0, strlen(opdir) + 16);
@@ -85,7 +109,7 @@ file_split(
       if ( nX == 0 ) { break; }
     }
     if ( is_eoln == false ) { go_BYE(-1); }
-    // now we have the line we are interest in 
+    // now we have the line we are interested in 
     // TODO P2 Must be smarter about separating columns
     char fld_sep = ',';
     int lidx = 0;
