@@ -68,6 +68,7 @@ free_globals(
   free_if_non_null(g_data_dir_root);
   free_if_non_null(g_tbsp_name);
 
+  free_if_non_null(g_q_config);
 BYE:
   return status;
 }

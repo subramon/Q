@@ -30,8 +30,10 @@
 #include "mk_file.h"
 #include "qtypes.h"
 #include "rdtsc.h"
+#include "rmtree.h"
 #include "rs_mmap.h"
 #include "shard_file.h"
+#include "str_as_file.h"
 #include "tm2time.h"
 extern char *strptime(const char *s, const char *format, struct tm *tm);
 
@@ -242,6 +244,7 @@ static int l_cutils_mkstemp(
     )
 {
   int status = 0;
+  if ( lua_gettop(L) != 1 ) { go_BYE(-1); }
   const char *const template = luaL_checkstring(L, 1);
   if ( template == NULL ) { go_BYE(-1); } 
   char * temp_file_name = strdup(template); 
@@ -277,12 +280,33 @@ BYE:
   return 2;
 }
 //----------------------------------------
+static int l_cutils_rmdir( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  const char *const dir_name = luaL_checkstring(L, 1);
+  if ( ( dir_name == NULL ) || ( *dir_name == '\0' ) ) { go_BYE(-1); }
+  if ( isdir(dir_name) ) { 
+    status = rmtree(dir_name); cBYE(status);
+  }
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//----------------------------------------
 static int l_cutils_makepath( 
     lua_State *L
     )
 {
   int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   const char *const dir_name = luaL_checkstring(L, 1);
+  if ( ( dir_name == NULL ) || ( *dir_name == '\0' ) ) { go_BYE(-1); }
   if ( !isdir(dir_name) ) { 
     status = mkdir(dir_name, 0777); 
     if ( status < 0 ) { 
@@ -296,6 +320,13 @@ BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
   return 2;
+}
+//----------------------------------------
+static int l_cutils_mkdir( // just an alias 
+    lua_State *L
+    )
+{
+  return l_cutils_makepath(L);
 }
 //----------------------------------------
 static int l_cutils_mk_file( 
@@ -382,6 +413,24 @@ static int l_cutils_shard_file(
   int               nB     = luaL_checknumber(L, 3);
   int               split_col_idx = luaL_checknumber(L, 4);
   status = shard_file(ipfile, opdir, nB, split_col_idx); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 2;
+}
+//----------------------------------------
+static int l_cutils_str_as_file( 
+    lua_State *L
+    )
+{
+  int status = 0;
+  if ( lua_gettop(L) != 2 ) { go_BYE(-1); }
+  const char *const str       = luaL_checkstring(L, 1);
+  const char *const file_name = luaL_checkstring(L, 2);
+  status = str_as_file(str, file_name); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -811,6 +860,7 @@ static const struct luaL_Reg cutils_methods[] = {
     { "is_qtype",    l_cutils_is_qtype },
     { "line_breaks", l_cutils_line_breaks },
     { "makepath",    l_cutils_makepath },
+    { "mkdir",       l_cutils_mkdir },
     { "mem_info",    l_cutils_mem_info },
     { "mk_file",     l_cutils_mk_file },
     { "mkstemp",     l_cutils_mkstemp },
@@ -818,7 +868,9 @@ static const struct luaL_Reg cutils_methods[] = {
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
+    { "rmdir",       l_cutils_rmdir },
     { "shard_file",  l_cutils_shard_file },
+    { "str_as_file",        l_cutils_str_as_file },
     { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
     { "str_qtype_to_str_ispctype", l_cutils_str_qtype_to_str_ispctype },
     { "unlink",     l_cutils_unlink },
@@ -846,6 +898,7 @@ static const struct luaL_Reg cutils_functions[] = {
     { "isfile",      l_cutils_isfile },
     { "line_breaks", l_cutils_line_breaks },
     { "makepath",    l_cutils_makepath },
+    { "mkdir",       l_cutils_mkdir },
     { "mem_info",     l_cutils_mem_info },
     { "mk_file",     l_cutils_mk_file },
     { "mkstemp",     l_cutils_mkstemp },
@@ -854,7 +907,9 @@ static const struct luaL_Reg cutils_functions[] = {
     { "quote_str",   l_cutils_quote_str },
     { "read",        l_cutils_read },
     { "rdtsc",       l_cutils_rdtsc },
+    { "rmdir",       l_cutils_rmdir },
     { "shard_file",  l_cutils_shard_file },
+    { "str_as_file",        l_cutils_str_as_file },
     { "str_qtype_to_str_ctype", l_cutils_str_qtype_to_str_ctype },
     { "str_qtype_to_str_ispctype", l_cutils_str_qtype_to_str_ispctype },
     { "unlink",     l_cutils_unlink },

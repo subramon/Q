@@ -1,4 +1,5 @@
 extern int
 init_globals(
-    void
+    int argc,
+    char **argv
     );

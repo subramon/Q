@@ -623,7 +623,7 @@ int main(int argc, char **argv)
 {
   int status;
   // START: RAMESH 
-  status = init_globals(); cBYE(status);
+  status = init_globals(argc, argv); cBYE(status);
   status = read_configs(); cBYE(status);
   status = init_session(); cBYE(status);
   // STOP: RAMESH 

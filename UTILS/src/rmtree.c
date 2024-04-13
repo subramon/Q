@@ -88,7 +88,7 @@ BYE:
   return status;
 }
 
-#define UNIT_TEST
+#undef UNIT_TEST
 #ifdef UNIT_TEST
 int
 main(

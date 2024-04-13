@@ -16,6 +16,6 @@ file_as_str(
   memcpy(Y, X, nX);
   Y[nX] = '\0';
 BYE:
-  mcr_rs_munmap(X, nX);
+  if ( X != NULL ) { munmap(X, nX); } 
   if ( status < 0 ) { WHEREAMI; return NULL; } else { return Y; }
 }

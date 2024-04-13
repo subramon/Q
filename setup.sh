@@ -7,7 +7,6 @@ unset Q_SRC_ROOT
 unset Q_ROOT
 unset QCFLAGS
 unset QLDFLAGS
-unset Q_DATA_DIR
 unset ASAN_FLAGS
 
 export QISPC="false" # TODO P1 Should not be hard coded here
@@ -32,7 +31,7 @@ mkdir -p $Q_ROOT/cdefs/
 QCFLAGS=" -std=gnu99  -fPIC     "
 QCFLAGS+=" -g " # Comment for speed 
 QCFLAGS+=" -DDEBUG " # Comment for speed 
-# QCFLAGS+=" -O3 " 
+# `QCFLAGS+=" -O3 " 
 # QCFLAGS+=" -Ofast " # UnComment for speed 
 
 # O3 covers most of the optimisations. The remaining options come 
@@ -91,11 +90,6 @@ echo "Q_IS_ARM= $Q_IS_ARM"
 QISPC_FLAGS=' --pic  ' #- TODO to be set  P2
 echo "QISPC_FLAGS= $QISPC_FLAGS"
 echo "QISPC= $QISPC"
-#-----------------------------------
-# Default data directory
-mkdir -p $Q_ROOT/data
-export Q_DATA_DIR="${Q_DATA_DIR:=${Q_ROOT}/data}"
-echo "Q_DATA_DIR= $Q_DATA_DIR"
 #-----------------------------------
 export LD_LIBRARY_PATH="${Q_ROOT}/lib:/usr/local/lib64:${LD_LIBRARY_PATH}"
 echo "LD_LIBRARY_PATH= $LD_LIBRARY_PATH"

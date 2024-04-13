@@ -66,3 +66,5 @@ my_extern mem_mgr_info_t g_mem_mgr_info;
 // configs for hash tables 
 my_extern rs_hmap_config_t g_vctr_hmap_config; 
 my_extern rs_hmap_config_t g_chnk_hmap_config; 
+// to allow q_config.lua to be provided from command line 
+my_extern char *g_q_config; 

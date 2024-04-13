@@ -8,7 +8,7 @@ MYSO = libutils.so
 
 EXTSO=${Q_ROOT}/lib/${MYSO}
 
-all : ${MYSO} ${EXTSO} shard_file
+all : ${MYSO} ${EXTSO} cli_shard_file
 
 gen_inc_files : \
 	../inc/txt_to_BL.h \
@@ -206,6 +206,7 @@ SRCS += file_exists.c
 SRCS += get_bit_u64.c  
 SRCS += get_file_size.c 
 SRCS += file_as_str.c 
+SRCS += lookup8.c 
 SRCS += mem_info.c 
 SRCS += get_time_usec.c 
 SRCS += is_valid_chars_for_num.c 
@@ -222,6 +223,8 @@ SRCS += SC_to_txt.c
 SRCS += set_bit_u64.c  
 SRCS += spooky_hash.c 
 SRCS += tm2time.c 
+SRCS += shard_file.c 
+SRCS += str_as_file.c 
 SRCS += trim.c 
 SRCS += txt_to_BL.c 
 SRCS += txt_to_SC.c 
@@ -248,8 +251,8 @@ GEN_SRCS += ../src/txt_to_F8.c
 GEN_OBJS = $(GEN_SRCS:.c=.o)
 #----------------------------------
 
-shard_file : shard_file.o lookup8.o
-	gcc ${QCFLAGS} shard_file.o $ lookup8.o ${MYSO} -o shard_file
+cli_shard_file : cli_shard_file.o lookup8.o
+	gcc ${QCFLAGS} cli_shard_file.o $ lookup8.o ${MYSO} -o cli_shard_file
 
 ${EXTSO} : ${MYSO}
 	cp ${MYSO} ${EXTSO}

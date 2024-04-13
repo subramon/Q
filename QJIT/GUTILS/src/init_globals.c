@@ -2,6 +2,7 @@
 #include "q_incs.h"
 #include "q_macros.h"
 #include "rmtree.h"
+#include "isfile.h"
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
@@ -22,7 +23,8 @@
 
 int
 init_globals(
-    void
+    int argc,
+    char **argv
     )
 {
   int status = 0;
@@ -97,7 +99,25 @@ init_globals(
 
   g_chnk_hmap_config.min_size = 32;
   g_chnk_hmap_config.max_size = 0;
+
+  g_q_config = NULL; 
   // STOP: Some default values  to be over-ridden by read_configs
+  // Now see if we any over-rides from command-line need to be processed
+  bool config_found = false; 
+  for ( int i = 1; i < argc-1; i++ ) { 
+    if ( strcmp(argv[i], "--config" ) == 0 ) { 
+      if ( config_found ) { 
+        fprintf(stderr, "Cannot specify config twice\n"); go_BYE(-1);
+      }
+      config_found = true;
+      char *cptr = argv[i+1]; 
+      if ( !isfile(cptr) ) {
+        fprintf(stderr, "Argument to --config is not a file [%s]\n", cptr);
+        go_BYE(-1);
+      }
+      g_q_config = realpath(cptr, NULL);
+    }
+  }
 BYE:
   return status;
 }
