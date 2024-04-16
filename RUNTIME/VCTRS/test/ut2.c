@@ -60,7 +60,7 @@ main(
 
   if ( argc != 1 ) { go_BYE(-1); }
   //-------------------------------------------------------
-  status = init_globals(0, NULL); cBYE(status); 
+  status = init_globals(0, NULL, 0, NULL); cBYE(status); 
   // START: Fake configs. we do not read_configs()
   char *q_root = getenv("Q_ROOT");
   if ( q_root == NULL ) { go_BYE(-1); } 
