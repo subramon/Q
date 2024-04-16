@@ -123,7 +123,12 @@ _G['g_ctr']  = {}
 
 if ( lgutils.is_restore_session() ) then
   print("restoring session")
-  require "q_meta"
+  -- OLD require "q_meta"
+  local meta_file =  lgutils.meta_dir() .. "/q_meta.lua"
+  print("Loading file " .. meta_file)
+  local x = loadfile(meta_file)
+  assert(type(x) == "function")
+  x()
 else
   print("NOT restoring session")
 end
