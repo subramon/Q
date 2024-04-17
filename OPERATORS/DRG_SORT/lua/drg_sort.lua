@@ -5,7 +5,7 @@ local qc      = require 'Q/UTILS/lua/qcore'
 local record_time      = require 'Q/UTILS/lua/record_time'
 
 local function drg_sort(drg, val, ordr, optargs)
-  local specializer = "Q/OPERATORS/drg_sort/lua/drg_sort_specialize"
+  local specializer = "Q/OPERATORS/DRG_SORT/lua/drg_sort_specialize"
   local spfn = assert(require(specializer))
   local subs = assert(spfn(drg, val, ordr))
   assert(type(subs) == "table")

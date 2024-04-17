@@ -13,7 +13,7 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
   optargs = optargs or {}
   optargs.__operator = a -- for use in specializer if needed
   if ( type(sclr) == "number" ) then 
-    print("Converting number to scalar ", sclr)
+    -- print("Converting number to scalar ", sclr)
     assert(type(f1) == "lVector")
     sclr = assert(Scalar.new(sclr, f1:qtype()) )
   end

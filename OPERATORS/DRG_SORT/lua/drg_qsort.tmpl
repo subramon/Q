@@ -308,7 +308,8 @@ qsort_${srt_ordr}_val_${val_qtype}_drg_${drg_qtype} (
     run_ptr = base_ptr + size; /* this is element, X, to compare */
     while ((run_ptr += size) <= end_ptr) {
       /* above while loop iterates over values of X is compared */
-      ${drg_ctype} pos, pos_hi, pos_lo, sve_drg;
+      uint64_t     pos, pos_hi, pos_lo;
+      ${drg_ctype} sve_drg;
       tmp_ptr = run_ptr - size;
       pos = ( ( (char *)tmp_ptr - (char *)base_ptr) / size ) + 1;
       sve_drg = srt_ordr[pos];

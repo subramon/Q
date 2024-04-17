@@ -1,7 +1,7 @@
 local is_in = require 'Q/UTILS/lua/is_in'
 local cutils = require 'libcutils'
 local good_drg_types = { "I1", "I2", "I4", "I8", "I16",
-  "UI1", "UI2", "UI4", "UI8", "UI16", }
+  "UI1", "UI2", "UI4", "UI8", "UI16", "F4", "F8", }
 local good_val_types = { "I1", "I2", "I4", "I8", "I16",
   "UI1", "UI2", "UI4", "UI8",  "UI16", "F4", "F8", }
 
@@ -12,7 +12,8 @@ return function(drg, val, ordr)
   assert(( ( ordr == "asc") or ( ordr == "dsc") ))
   --======================
   assert(type(drg) == "lVector")
-  assert(is_in(drg:qtype(), good_drg_types))
+  assert(is_in(drg:qtype(), good_drg_types), 
+    "Bad qtype for drag along field  = " .. drg:qtype())
   assert(drg:memo_len() < 0) -- cannot memo, need full Vector 
   drg:eval() -- force an eval 
   assert(drg:is_eov())
@@ -46,9 +47,9 @@ return function(drg, val, ordr)
   if ordr == "asc" then c = "<" end
   if ordr == "dsc" then c = ">" end
   subs.comparator = c
-  subs.tmpl   = "OPERATORS/drg_SORT/lua/drg_qsort.tmpl"
-  subs.incdir = "OPERATORS/drg_SORT/gen_inc/"
-  subs.srcdir = "OPERATORS/drg_SORT/gen_src/"
-  subs.incs = { "UTILS/inc/", "OPERATORS/drg_SORT/gen_inc/" }
+  subs.tmpl   = "OPERATORS/DRG_SORT/lua/drg_qsort.tmpl"
+  subs.incdir = "OPERATORS/DRG_SORT/gen_inc/"
+  subs.srcdir = "OPERATORS/DRG_SORT/gen_src/"
+  subs.incs = { "UTILS/inc/", "OPERATORS/DRG_SORT/gen_inc/" }
   return subs
 end
