@@ -2,6 +2,7 @@
 #include "q_incs.h"
 #include "q_macros.h"
 #include "rmtree.h"
+#include "is_file_in_dir.h"
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
@@ -59,7 +60,25 @@ init_session(
   int tbsp = 0;  // init_session() only for primary tablespace
 
   // START For hashmaps  for vector, ...
-  if ( g_restore_session ) { 
+  // If we are asked to restore a session but we don't have the 
+  // relevant files, then we assume that a new session needs
+  // to be created
+  if ( g_restore_session ) {
+    bool mk_new_session = false;
+    if ( !is_file_in_dir("_vctr_meta.csv", g_meta_dir_root) ) {
+      mk_new_session = true;
+    }
+    if ( !is_file_in_dir("_vctr_bkts.bin", g_meta_dir_root) ) {
+      mk_new_session = true;
+    }
+    if ( !is_file_in_dir("_vctr_full.bin", g_meta_dir_root) ) {
+      mk_new_session = true;
+    }
+    if ( mk_new_session ) {
+      g_restore_session = false;
+    }
+  }
+  if ( g_restore_session ) {
     printf(">>>>>>>>>>>> RESTORING SESSION ============\n");
     status = vctr_rs_hmap_unfreeze(&g_vctr_hmap[tbsp], 
         g_meta_dir_root,

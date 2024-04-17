@@ -33,8 +33,9 @@ gen_inc_files : \
 	../inc/F8_to_txt.h \
 	../inc/copy_file.h \
 	../inc/file_exists.h \
-	../inc/isfile.h \
 	../inc/isdir.h \
+	../inc/isfile.h \
+	../inc/is_file_in_dir.h \
 	../inc/rand_file_name.h \
 	../inc/get_bit_u64.h \
 	../inc/get_file_size.h \
@@ -210,8 +211,9 @@ SRCS += lookup8.c
 SRCS += mem_info.c 
 SRCS += get_time_usec.c 
 SRCS += is_valid_chars_for_num.c 
-SRCS += isfile.c 
 SRCS += isdir.c 
+SRCS += isfile.c 
+SRCS += is_file_in_dir.c 
 SRCS += mk_file.c 
 SRCS += q_omp_get_num_procs.c  
 SRCS += qtypes.c 
