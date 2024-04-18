@@ -52,12 +52,6 @@ return function (
   --===============================================
   for k, join_type in ipairs(join_types) do 
     local subs = {}
-    local T = {}
-    T[#T+1] = "join"
-    T[#T+1] = join_type
-    T[#T+1] = sv_qtype
-    T[#T+1] = sl_qtype
-    subs.fn = table.concat(T, "_")
 
     --=========================================================
     local dv_qtype
@@ -81,6 +75,32 @@ return function (
     else
       error("bad join_type")
     end
+    --=== See if we want to over-write out_qtype
+    --=== NOTE: You are skating on thin ice if you use this option
+    --=== You have been warned :-)!
+    if ( optargs ) then
+      if ( optargs.out_qtypes ) then
+        assert(type(optargs.out_qtypes) == "table")
+        assert(#optargs.out_qtypes == #join_types)
+        over_ride_dv_qtype = optargs.out_qtypes[k]
+        if ( over_ride_dv_qtype == "" ) then
+          -- no over-ride for this join_type
+        else
+          print("over-ride " .. dv_qtype .. " with " ..  over_ride_dv_qtype)
+          dv_qtype = over_ride_dv_qtype
+          -- NOTE: No error checking being done
+
+        end
+      end
+    end
+
+    local T = {}
+    T[#T+1] = "join"
+    T[#T+1] = join_type
+    T[#T+1] = sv_qtype
+    T[#T+1] = sl_qtype
+    T[#T+1] = dv_qtype
+    subs.fn = table.concat(T, "_")
 
     subs.max_num_in_chunk = src_val:max_num_in_chunk()
 

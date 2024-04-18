@@ -76,7 +76,7 @@ local function SC_to_TM(
     local len, base_data, nn_data  = invec:get_chunk(l_chunk_num)
     if ( len == 0 ) then 
       buf:delete()
-      nn_buf:delete()
+      if ( has_nulls ) then nn_buf:delete() end 
       -- print("A SC_to_TM killing Vector " .. (invec:name() or "anon"))
       invec:kill()
       return 0, nil 
