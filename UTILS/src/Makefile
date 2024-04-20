@@ -231,6 +231,7 @@ SRCS += str_as_file.c
 SRCS += trim.c 
 SRCS += txt_to_BL.c 
 SRCS += txt_to_SC.c 
+SRCS += update_lua_path.c 
 
 OBJS = $(SRCS:.c=.o)
 

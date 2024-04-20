@@ -3,6 +3,7 @@
 #include "q_macros.h"
 #include "rmtree.h"
 #include "isfile.h"
+#include "get_cli_arg.h"
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
@@ -32,6 +33,7 @@ init_globals(
   int status = 0;
   int mod_argc = 0;
   char **mod_argv = NULL;
+  char *config_file = NULL;
   // Initialize global variables
   g_mem_lock = 0;
 
@@ -107,26 +109,13 @@ init_globals(
   g_q_config = NULL; 
   // STOP: Some default values  to be over-ridden by read_configs
   // Now see if we any over-rides from command-line need to be processed
-  if ( argc > 1 ) { 
-    bool config_found = false;  int where_found = -1;
-    // --config cannot be last because file name needed after that
-    if ( strcmp(argv[argc-1], "--config") == 0 ) { go_BYE(-1); }
-    for ( int i = 1; i < argc-1; i++ ) { 
-      if ( strcmp(argv[i], "--config" ) == 0 ) { 
-        if ( config_found ) { 
-          fprintf(stderr, "Cannot specify config twice\n"); go_BYE(-1);
-        }
-        config_found = true;
-        where_found = i;
-        char *cptr = argv[i+1]; 
-        if ( !isfile(cptr) ) {
-          fprintf(stderr, "Argument to --config is not a file [%s]\n", cptr);
-          go_BYE(-1);
-        }
-        g_q_config = realpath(cptr, NULL);
-      }
-    }
-    if ( config_found ) {
+  if ( argc > 1 ) {
+    int where_found;
+    status = get_cli_arg(argc, argv, "--config", &config_file, &where_found);
+    cBYE(status);
+    if ( config_file != NULL ) { // we found --config in the args 
+      g_q_config = realpath(config_file, NULL);
+      if ( g_q_config == NULL ) { go_BYE(-1); }
       if ( mod_argv != NULL ) { 
         // When luajit.c is the caller, we need modified configs
         // Else, we don't. By sending a NULL pointer as mod_argv
@@ -155,5 +144,6 @@ init_globals(
     }
   }
 BYE:
+  free_if_non_null(config_file);
   return status;
 }
