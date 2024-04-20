@@ -126,27 +126,32 @@ init_globals(
         g_q_config = realpath(cptr, NULL);
       }
     }
-    if ( config_found ) { 
-      mod_argc = argc - 2; if ( mod_argc == 0 ) { go_BYE(-1); }
-      /* Note the +1 This is super-important because of 
-       * the following where he doesn't seem to be using argn
-       static int collectargs(char **argv, int *flags)
-       int i;
-       for (i = 1; argv[i] != NULL; i++) 
-       */
-      mod_argv = malloc(mod_argc+1 * sizeof(char *));
-      memset(mod_argv, 0,  (mod_argc+1 * sizeof(char *))); 
-      int j = 0;
-      for (  int i = 0; i < where_found; ) { 
-        if ( j >= mod_argc ) { go_BYE(-1); }
-        mod_argv[j++] = strdup(argv[i++]);
+    if ( config_found ) {
+      if ( mod_argv != NULL ) { 
+        // When luajit.c is the caller, we need modified configs
+        // Else, we don't. By sending a NULL pointer as mod_argv
+        // we can distinguish between the 2 call types.
+        mod_argc = argc - 2; if ( mod_argc == 0 ) { go_BYE(-1); }
+        /* Note the +1 This is super-important because of 
+         * the following where he doesn't seem to be using argn
+         static int collectargs(char **argv, int *flags)
+         int i;
+         for (i = 1; argv[i] != NULL; i++) 
+         */
+        mod_argv = malloc(mod_argc+1 * sizeof(char *));
+        memset(mod_argv, 0,  (mod_argc+1 * sizeof(char *))); 
+        int j = 0;
+        for (  int i = 0; i < where_found; ) { 
+          if ( j >= mod_argc ) { go_BYE(-1); }
+          mod_argv[j++] = strdup(argv[i++]);
+        }
+        for (  int i = where_found+2; i < argc; ) { 
+          if ( j >= mod_argc ) { go_BYE(-1); }
+          mod_argv[j++] = strdup(argv[i++]);
+        }
+        *ptr_mod_argc = mod_argc;
+        *ptr_mod_argv = mod_argv;
       }
-      for (  int i = where_found+2; i < argc; ) { 
-        if ( j >= mod_argc ) { go_BYE(-1); }
-        mod_argv[j++] = strdup(argv[i++]);
-      }
-      *ptr_mod_argc = mod_argc;
-      *ptr_mod_argv = mod_argv;
     }
   }
 BYE:
