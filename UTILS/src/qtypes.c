@@ -229,7 +229,6 @@ str_qtype_to_str_ispctype(
 
   if ( strcmp(str_qtype, "TM1") == 0 ) { return NULL; } 
   if ( strcmp(str_qtype, "TM") == 0 ) { return NULL; } 
-  if ( strcmp(str_qtype, "CUSTOM1") == 0 ) { return NULL; } 
   return NULL; 
 }
 

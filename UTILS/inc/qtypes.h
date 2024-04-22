@@ -6,38 +6,7 @@ typedef uint32_t holiday_bmask_t; // this comes from RBC. Should not be here
 typedef uint16_t bfloat16; 
 // TODO P3: At some stage, names should refer to to bits instead of bytes
 // In other words, instead of I8 it should be I64
-typedef enum { 
-  Q0, // mixed  must be first one 
-
-  B1, // boolean as a bit
-  BL, // boolean as a bool
-
-  I1,
-  I2,
-  I4,
-  I8,
-  I16,
-
-  F2,
-  F4,
-  F8,
-
-  UI1,
-  UI2,
-  UI4,
-  UI8,
-  UI16,
-
-  SC,  // constant length strings
-  SV,  // variable length strings
-  TM,  // time struct  tm_t
-  TM1, // time struct  tm_t
-
-  CUSTOM1, // for MG experiment 
-
-  NUM_QTYPES // must be last one 
-} qtype_t;
-// STOP extract_for_qtypes.tex
+#include "qtype_enums.h"
 typedef struct _tm_t {
   int16_t tm_year;	/* Year	- 1900. */
   int8_t tm_mon;	/* Month.	[0-11] */

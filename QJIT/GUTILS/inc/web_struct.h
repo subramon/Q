@@ -7,6 +7,7 @@
 // just text (which is returned in opbuf and/or errbuf)
 typedef struct _web_response_t {
   char *file_name;
+  char *suffix;
   // example of a header is Content-Type: image/foo.png
   // example of a header is Content-Type: application/json; charset=UTF-8
   // above is default header 
