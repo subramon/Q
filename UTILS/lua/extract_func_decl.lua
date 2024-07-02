@@ -1,5 +1,6 @@
 local plpath = require 'pl.path'
 local plstr  = require 'pl.stringx'
+-- Assumption that only one function declared in "infile"
 local function extract_func_decl(
   infile,
   opdir
@@ -16,7 +17,14 @@ local function extract_func_decl(
   end
   --=========================================
   local z = string.match(code, "//START_FUNC_DECL.*//STOP_FUNC_DECL")
+  assert(type(z) == "string", "Could not find decl marker in " .. infile)
   assert(z ~= "", "Could not find stuff in START_FUNC_DECL .. STOP_FUNC_DECL")
+  -- Currently, we do not allow more than one decl, hence following 
+  local n1, n2 = string.find(z, "START_FUNC_DECL")
+  assert(n1 >= 1)
+  local m1, m2 = string.find(string.sub(z, n1+n2), "START_FUNC_DECL")
+  assert(m1 == nil)
+  --======
   z = string.gsub(z, "//START_FUNC_DECL", "")
   z = string.gsub(z, "//STOP_FUNC_DECL", "")
   z = plstr.strip(z)
