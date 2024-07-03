@@ -1,6 +1,6 @@
 local ffi     = require 'ffi'
 local cutils  = require 'libcutils'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local get_max_num_in_chunk   = require 'Q/UTILS/lua/get_max_num_in_chunk'

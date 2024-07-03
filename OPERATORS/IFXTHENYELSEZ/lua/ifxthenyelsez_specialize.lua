@@ -1,5 +1,5 @@
 local cutils  = require 'libcutils'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local Scalar  = require 'libsclr'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'

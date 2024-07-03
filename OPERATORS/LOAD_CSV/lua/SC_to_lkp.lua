@@ -4,7 +4,7 @@ local cmem          = require 'libcmem'
 local cutils        = require 'libcutils'
 local get_ptr       = require 'Q/UTILS/lua/get_ptr'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
 local SC_to_lkp_specialize = 
   require 'Q/OPERATORS/LOAD_CSV/lua/SC_to_lkp_specialize'
 local function SC_to_lkp(

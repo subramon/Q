@@ -1,7 +1,7 @@
 -- FUNCTIONAL
 require 'Q/UTILS/lua/strict'
 local Q = require 'Q'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local Scalar  = require 'libsclr'
 local cVector = require 'libvctr'

@@ -1,6 +1,6 @@
 local cutils        = require 'libcutils'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
 local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
 
 return function (a, b, optargs)

@@ -1,5 +1,5 @@
 local cutils = require 'libcutils'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local is_int_qtype = require 'Q/UTILS/lua/is_int_qtype'
 local promote = require 'Q/UTILS/lua/promote'
 

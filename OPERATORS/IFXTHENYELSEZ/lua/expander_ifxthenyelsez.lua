@@ -3,7 +3,7 @@ local ffi     = require 'ffi'
 local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
 local Scalar  = require 'libsclr'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 

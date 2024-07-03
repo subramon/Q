@@ -1,4 +1,4 @@
-local lVector   = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector   = require 'Q/RUNTIME/VCTR/lua/lVector'
 local Scalar    = require 'libsclr'
 local cmem      = require 'libcmem'
 local cutils    = require 'libcutils'

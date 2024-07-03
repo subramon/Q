@@ -3,7 +3,7 @@ require 'Q/UTILS/lua/strict'
 local Q        = require 'Q'
 local Scalar   = require 'libsclr'
 local cVector  = require 'libvctr'
-local lVector  = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector  = require 'Q/RUNTIME/VCTR/lua/lVector'
 local qcfg     = require 'Q/UTILS/lua/qcfg'
 local max_num_in_chunk = qcfg.max_num_in_chunk 
 local lgutils = require 'liblgutils'
