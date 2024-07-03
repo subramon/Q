@@ -2,6 +2,7 @@
 #include "q_incs.h"
 #include "q_macros.h"
 #include "rmtree.h"
+#include "isfile.h"
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
@@ -22,10 +23,15 @@
 
 int
 init_globals(
-    void
+    int argc,
+    char **argv,
+    int *ptr_mod_argc,
+    char ***ptr_mod_argv
     )
 {
   int status = 0;
+  int mod_argc = 0;
+  char **mod_argv = NULL;
   // Initialize global variables
   g_mem_lock = 0;
 
@@ -97,7 +103,57 @@ init_globals(
 
   g_chnk_hmap_config.min_size = 32;
   g_chnk_hmap_config.max_size = 0;
+
+  g_q_config = NULL; 
   // STOP: Some default values  to be over-ridden by read_configs
+  // Now see if we any over-rides from command-line need to be processed
+  if ( argc > 1 ) { 
+    bool config_found = false;  int where_found = -1;
+    // --config cannot be last because file name needed after that
+    if ( strcmp(argv[argc-1], "--config") == 0 ) { go_BYE(-1); }
+    for ( int i = 1; i < argc-1; i++ ) { 
+      if ( strcmp(argv[i], "--config" ) == 0 ) { 
+        if ( config_found ) { 
+          fprintf(stderr, "Cannot specify config twice\n"); go_BYE(-1);
+        }
+        config_found = true;
+        where_found = i;
+        char *cptr = argv[i+1]; 
+        if ( !isfile(cptr) ) {
+          fprintf(stderr, "Argument to --config is not a file [%s]\n", cptr);
+          go_BYE(-1);
+        }
+        g_q_config = realpath(cptr, NULL);
+      }
+    }
+    if ( config_found ) {
+      if ( mod_argv != NULL ) { 
+        // When luajit.c is the caller, we need modified configs
+        // Else, we don't. By sending a NULL pointer as mod_argv
+        // we can distinguish between the 2 call types.
+        mod_argc = argc - 2; if ( mod_argc == 0 ) { go_BYE(-1); }
+        /* Note the +1 This is super-important because of 
+         * the following where he doesn't seem to be using argn
+         static int collectargs(char **argv, int *flags)
+         int i;
+         for (i = 1; argv[i] != NULL; i++) 
+         */
+        mod_argv = malloc(mod_argc+1 * sizeof(char *));
+        memset(mod_argv, 0,  (mod_argc+1 * sizeof(char *))); 
+        int j = 0;
+        for (  int i = 0; i < where_found; ) { 
+          if ( j >= mod_argc ) { go_BYE(-1); }
+          mod_argv[j++] = strdup(argv[i++]);
+        }
+        for (  int i = where_found+2; i < argc; ) { 
+          if ( j >= mod_argc ) { go_BYE(-1); }
+          mod_argv[j++] = strdup(argv[i++]);
+        }
+        *ptr_mod_argc = mod_argc;
+        *ptr_mod_argv = mod_argv;
+      }
+    }
+  }
 BYE:
   return status;
 }

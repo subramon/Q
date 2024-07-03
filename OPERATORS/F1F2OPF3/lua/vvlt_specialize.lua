@@ -28,6 +28,7 @@ return function (
 
   subs.f3_qtype = f3_qtype
   subs.f3_width = cutils.get_width_qtype(subs.f3_qtype)
+  subs.bufsz = subs.max_num_in_chunk * subs.f3_width
 
   subs.fn = op .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
   subs.fn_ispc = subs.fn .. "_ispc"
@@ -50,7 +51,7 @@ return function (
   subs.cargs = nil
   subs.cst_cargs = ffi.NULL
 
-  subs.code = "c = a == b;"
+  subs.code = "c = a < b;"
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"

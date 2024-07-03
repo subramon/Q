@@ -9,7 +9,6 @@ return function (
   )
   local subs = {}; 
   assert(type(f1) == "lVector"); 
-  assert(not f1:has_nulls())
 
   subs.f1_qtype = f1:qtype()
   assert(subs.f1_qtype == "TM1") -- TODO P4 extend to TM 
@@ -24,19 +23,39 @@ return function (
   subs.max_num_in_chunk = f1:max_num_in_chunk()
   subs.f2_buf_sz = subs.max_num_in_chunk * subs.f2_width
 
-  subs.fn = 'tm_to_epoch'
-
-  subs.chunk_size = 1024 -- for OpenMP  (experiment with this)
-
-  subs.code = [[
+  if ( f1:has_nulls() ) then 
+    subs.has_nulls = true
+    subs.nn_f2_buf_sz = subs.max_num_in_chunk 
+    subs.nn_f2_qtype = "BL"
+    if ( f1:nn_qtype() == "BL" ) then
+      subs.fn = 'nn_BL_tm_to_epoch'
+      subs.tmpl        = "OPERATORS/F1OPF2/lua/nn_BL_f1opf2.tmpl"
+      subs.code = [[
+    struct tm t1; memset(&t1, 0, sizeof(struct tm));
+    t_assign(&t1, in+i); 
+    time_t tempt = tm2time(&t1); 
+    // if ( tempt > INT_MAX ) { status = -1; }
+    out[i] = (uint32_t)tempt;
+    ]]
+    subs.nn_code = "    out[i] = 0;"
+    else
+      error("TODO")
+    end
+  else
+    subs.has_nulls = false
+    subs.fn = 'tm_to_epoch'
+    subs.code = [[
   struct tm t1; memset(&t1, 0, sizeof(struct tm));
   t_assign(&t1, &a); 
   time_t tempt = tm2time(&t1); 
   // if ( tempt > INT_MAX ) { status = -1; }
   c = (uint32_t)tempt;
   ]]
+    subs.tmpl        = "OPERATORS/F1OPF2/lua/f1opf2.tmpl"
+  end
 
-  subs.tmpl        = "OPERATORS/F1OPF2/lua/f1opf2.tmpl"
+  subs.chunk_size = 1024 -- for OpenMP  (experiment with this)
+
   subs.srcdir      = "OPERATORS/F1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1OPF2/gen_inc/"
   subs.incs        = { "OPERATORS/F1OPF2/gen_inc/", "UTILS/inc/" }

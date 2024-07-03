@@ -51,7 +51,9 @@ local function process_opt_args(
       lenV = v:num_elements()
       max_num_in_chunk = v:max_num_in_chunk()
     else
-      assert(lenV == v:num_elements())
+      assert(lenV == v:num_elements(),
+        "length of first vector is " .. lenV .. 
+        "length of " .. i .. "th vector is " .. v:num_elements())
       assert(max_num_in_chunk == v:max_num_in_chunk())
     end
   end

@@ -74,6 +74,7 @@ AUX_OBJS = $(AUX_SRCS:.c=.o)
 
 SRCS := ./src/l2_file_name.c 
 SRCS += ./src/mod_mem_used.c 
+SRCS += ./src/vctr_name_to_uqid.c 
 
 
 SRCS += ./../../UTILS/src/rs_mmap.c 

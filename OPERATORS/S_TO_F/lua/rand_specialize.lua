@@ -80,7 +80,7 @@ return function (
     cargs[0]["ub"] = sub[0].val[string.lower(qtype)]
   
     assert(ub > lb)
-    -- Check  lb, ub in range for type dony b to_scalar()
+    -- Check  lb, ub in range for type done by to_scalar()
   else
     -- set probability
     local probability  = assert(largs.probability)

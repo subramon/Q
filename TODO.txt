@@ -1,3 +1,16 @@
+Make sure that nop does not cause error unless it should. See below
+Chunk 0 not found
+Line  27 of File chnk_nop.c
+Line  32 of File vctr_nop.c
+Line 287 of File cVector.c
+ERROR Freeing resources of chunk 24:2
+======
+make sure ss is working in ifxthenyelsez
+
+Check that sort sets the sort order
+Include dump_empty in load_bin - some strange error right now
+
+https://github.com/lemire/clhash/
 
 Test load_csv_par
 

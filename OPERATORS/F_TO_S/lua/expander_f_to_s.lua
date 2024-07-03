@@ -30,12 +30,9 @@ return function (a, x, optargs)
   local max_num_in_chunk = assert(subs.max_num_in_chunk)
   -- subs must return (1) args (2) getter ..... TODO P3 finish doc
   local func_name = assert(subs.fn)
-  -- accumulator contains partial results 
-  local accumulator = assert(subs.accumulator)
-  assert(type(accumulator) == "CMEM")
-
   qc.q_add(subs)
 
+  -- accumulator contains partial results 
   local accumulator      = assert(subs.accumulator)
   local cast_accumulator_as = assert(subs.cast_accumulator_as)
   local c_accumulator    = assert(get_ptr(accumulator, cast_accumulator_as))

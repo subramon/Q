@@ -5,6 +5,8 @@ return require 'Q/UTILS/lua/code_gen' {
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <omp.h>
 #include "q_macros.h"
 #include "rand_struct.h"
 //START_FOR_CDEF
@@ -31,28 +33,36 @@ rand_${out_qtype}(
 //STOP_FUNC_DECL
 {
   int status = 0;
+  struct drand48_data *buffers = NULL;
 
-  uint64_t seed      = ptr_args->seed;
   register double lb = ptr_args->lb;
            double ub = ptr_args->ub;
   if ( ub <= lb ) { go_BYE(-1); }
   if ( nX == 0 ) { go_BYE(-1); }
   if ( X == NULL ) { go_BYE(-1); }
-  if ( idx == 0 ) { //seed has not yet been set
-    srand48_r(seed, &(ptr_args->buffer));
+  int nT = omp_get_num_procs();
+  // create rand buffers for each thread 
+  buffers = malloc(nT * sizeof(struct drand48_data));
+  return_if_malloc_failed(buffers);
+  memset(buffers, 0,  nT * sizeof(struct drand48_data));
+  // initialize buffers for each thread 
+  for ( int i = 0; i < nT; i++ ) { 
+    uint64_t seed = ((i+1)*ptr_args->seed * (ptr_args->usage_counter+1));
+    srand48_r(seed, buffers+i);
   }
+  ptr_args->usage_counter++;
+  //-----------------------------------
   register double range = ub - lb;
-#pragma omp parallel for schedule(static, 4096)
+#pragma omp parallel for schedule(static, 1024)
   for ( uint64_t i = 0; i < nX; i++ ) { 
-    X[i] = lb;
-  }
-  for ( uint64_t i = 0; i < nX; i++ ) { 
+    int tid = omp_get_thread_num(); 
     double x;
-    drand48_r(&(ptr_args->buffer), &x);
+    drand48_r(buffers+tid, &x); 
     x *= range;
-    X[i] += x;
+    X[i] = lb + x;
   }
 BYE:
+  free_if_non_null(buffers);
   return status;
 }
    ]]

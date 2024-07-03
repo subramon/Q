@@ -14,7 +14,7 @@ local lgutils  = require 'liblgutils'
 local tests = {}
 tests.t1 = function()
   collectgarbage("stop")
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre = lgutils.mem_used()
   local M = {}
   local O = { is_hdr = true }
   -- TODO P1 Test with different memo_len values 
@@ -26,21 +26,40 @@ tests.t1 = function()
   local T = Q.load_csv(datafile, M, O)
   --==================
   local lkp_tbl = { "A", "AB", "ABC", "ABCD", "ABCDE", }
-  local lkp = Q.SC_to_lkp(T.txt, lkp_tbl)
-  assert(type(lkp) == "lVector")
-  assert(lkp:qtype() == "I1")
-  assert(lkp:has_nulls())
-  lkp:eval()
-  lkp:pr()
+  local optargs = {}
+  for _, impl in ipairs({"Lua", "C"}) do 
+    optargs.impl = impl
+    for _, qtype in ipairs({"I1", "I2", "I4", }) do 
+      optargs.out_qtype = qtype 
+      local lkp = Q.SC_to_lkp(T.txt, lkp_tbl, optargs):set_name("lkp_out")
+      assert(type(lkp) == "lVector")
+      assert(lkp:qtype() == qtype)
+      assert(lkp:has_nulls())
+      lkp:eval()
+      -- lkp:pr()
+      local nn = lkp:get_nulls()
+      lkp:drop_nulls() -- sum() needs to accept nulls 
+      nn:delete()
+      local tmp = Q.vveq(lkp, T.idx):set_name("tmp")
+      local r = Q.sum(tmp)
+      local n1, n2 = r:eval()
+      assert(n1 == n2)
+      -- clenup
+      tmp:delete()
+      lkp:delete()
+      r:delete()
+      print("Success for impl/qtype = ", impl, qtype)
+    end
+  end
   print("Automate checking of results")
   --==================
-  T.txt:eval()
+  -- T.txt:eval()
   cVector.check_all()
   T.txt:delete()
   T.idx:delete()
-  lkp:delete()
   --==================
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local post = lgutils.mem_used()
+  assert(pre == post)
   collectgarbage("restart")
   print("Successfully completed test t1 ")
 end

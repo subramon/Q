@@ -637,6 +637,8 @@ static int l_sclr_new( lua_State *L) {
 
   // TESTING GC problems lua_gc(L, LUA_GCCOLLECT, 0);  
 
+  int x_lua_type = lua_type(L, 1);  // debugging 
+  const char *str_lua_type = lua_typename(L, x_lua_type); // debugging 
   if ( ( lua_gettop(L) != 1) && ( lua_gettop(L) != 2 ) ) { go_BYE(-1); }
   if ( lua_isstring(L, 1) ) { 
     str_val = luaL_checkstring(L, 1);

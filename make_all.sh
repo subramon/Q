@@ -16,6 +16,7 @@ find $Q_SRC_ROOT -name "*.o" -print | xargs rm  -f
 find $Q_SRC_ROOT -name "*.so" -print | xargs rm  -f
 
 # Quick and dirty way of compiling. Need to improve this
+cd $Q_SRC_ROOT/RUNTIME/CUTILS/src/; make clean && make
 cd $Q_SRC_ROOT/TMPL_FIX_HASHMAP/src/; make clean && make
 cp libhmap.so $Q_ROOT/lib/
 cd $Q_SRC_ROOT/TMPL_FIX_HASHMAP/VCTR_HMAP/; make clean && make
@@ -23,7 +24,6 @@ cp libhmap_vctr.so $Q_ROOT/lib/
 cd $Q_SRC_ROOT/TMPL_FIX_HASHMAP/CHNK_HMAP/; make clean && make
 cp libhmap_chnk.so $Q_ROOT/lib/
 cd $Q_SRC_ROOT/QJIT/GUTILS/; make clean && make
-cd $Q_SRC_ROOT/RUNTIME/CUTILS/src/; make clean && make
 cd $Q_SRC_ROOT/RUNTIME/CMEM/src/; make clean && make
 cd $Q_SRC_ROOT/RUNTIME/SCLR/src/; make clean && make
 cd $Q_SRC_ROOT/RUNTIME/VCTRS/src/; make clean && make

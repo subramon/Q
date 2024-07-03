@@ -23,7 +23,12 @@ webserver(
   httpd = evhttp_new(base);
   evhttp_set_max_headers_size(httpd, 4096); // TODO P4 FIX 
   evhttp_set_max_body_size(httpd, 4096); // TODO P4 FIX 
-  fprintf(stdout, "Web Server starting up\n");
+  if ( web_info->is_out_of_band ) { 
+    fprintf(stdout, "Out-of-band Server starting up\n");
+  }
+  else {
+    fprintf(stdout, "Web Server starting up\n");
+  }
 
   /* 
    *  Services will only receive packets from interfaces they listen to. You can commonly specify 0.0.0.0 as listen address in the service, to make it listen on all interfaces.

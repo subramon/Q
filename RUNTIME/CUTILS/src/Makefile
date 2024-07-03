@@ -15,16 +15,24 @@ ${EXTSO} : libcutils.so
 
 SRCS := cutils.c 
 SRCS += ../../../UTILS/src/qtypes.c 
+SRCS += ../../../UTILS/src/lookup8.c 
 SRCS += ../../../UTILS/src/file_exists.c 
+SRCS += ../../../UTILS/src/file_as_str.c 
 SRCS += ../../../UTILS/src/get_bit_u64.c 
 SRCS += ../../../UTILS/src/get_file_size.c 
 SRCS += ../../../UTILS/src/get_time_usec.c 
 SRCS += ../../../UTILS/src/isdir.c 
+SRCS += ../../../UTILS/src/is_file_in_dir.c 
 SRCS += ../../../UTILS/src/isfile.c 
 SRCS += ../../../UTILS/src/line_breaks.c 
+SRCS += ../../../UTILS/src/mem_info.c 
 SRCS += ../../../UTILS/src/mk_file.c 
 SRCS += ../../../UTILS/src/rdtsc.c 
+SRCS += ../../../UTILS/src/rmtree.c 
 SRCS += ../../../UTILS/src/rs_mmap.c 
+SRCS += ../../../UTILS/src/shard_file.c 
+SRCS += ../../../UTILS/src/str_as_file.c 
+SRCS += ../../../UTILS/src/tm2time.c 
 
 OBJS = $(SRCS:.c=.o)
 

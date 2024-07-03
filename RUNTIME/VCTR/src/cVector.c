@@ -154,13 +154,14 @@ BYE:
 }
 static int l_vctr_kill( lua_State *L) {
   int status = 0;
+  bool kill_success;
   int num_args =  lua_gettop(L);
   if ( num_args != 1 ) { go_BYE(-1); } 
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   //------------------------------
-  status = vctr_kill(ptr_v->tbsp, ptr_v->uqid ); 
+  status = vctr_kill(ptr_v->tbsp, ptr_v->uqid, &kill_success);
   if ( status != 0 ) { goto BYE; } // silent error 
-  lua_pushboolean(L, true);
+  lua_pushboolean(L, kill_success);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -225,7 +226,7 @@ static int l_vctr_get_name( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   char * name = vctr_get_name(ptr_v->tbsp, ptr_v->uqid); 
-  if ( name == NULL ) { go_BYE(-1); } 
+  if ( name == NULL ) { goto BYE; } // silent failure
   lua_pushstring(L, name); // 99% sure that no strdup needed
   return 1;
 BYE:
@@ -664,7 +665,9 @@ static int l_vctr_put_chunk( lua_State *L) {
   CMEM_REC_TYPE *ptr_cmem = (CMEM_REC_TYPE *)luaL_checkudata(L, 2, "CMEM");
   uint32_t n = luaL_checknumber(L, 3); // num elements in chunk
 
-  status = vctr_put_chunk(ptr_v->tbsp, ptr_v->uqid, ptr_cmem, n); cBYE(status);
+  status = vctr_put_chunk(ptr_v->tbsp, ptr_v->uqid, ptr_cmem, n); 
+  if ( status != 0 ) { printf("error putting %u in chunk\n", n); }
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -1070,7 +1073,8 @@ static int l_vctr_rehydrate( lua_State *L)
 
   bool  is_found; uint32_t where_found = ~0;
   status = vctr_is(tbsp, uqid, &is_found, &where_found); cBYE(status);
-  if ( !is_found ) { go_BYE(-1); } 
+  if ( !is_found ) { 
+    go_BYE(-1); } 
   status = vctr_incr_ref_count(tbsp, where_found); cBYE(status);
   ptr_v->uqid = uqid; 
   ptr_v->tbsp = tbsp; 

@@ -7,11 +7,18 @@ local register_type  = require 'Q/UTILS/lua/register_type'
 local Reducer = {}
 Reducer.__index = Reducer
 
-setmetatable(Reducer, {
+--====================================
+local function ifxthenxelsey(x, y)
+  if ( x ) then return x else return y end
+end
+local setmetatable = require 'Q/UTILS/lua/rs_gc'
+local mt = {
   __call = function (cls, ...)
     return cls.new(...)
   end,
-})
+  __gc = true
+}
+setmetatable(Reducer, mt)
 
 register_type(Reducer, "Reducer")
 
@@ -24,6 +31,11 @@ function Reducer.new(arg)
   assert(type(arg.func) == "function")
   -- func is a function which does XXXX 
   reducer._func = arg.func
+  if ( arg.name ) then
+    reducer.name = arg.name
+  else
+    reducer.name = "anonymous"
+  end
   --[[ I liked this test but there are cases where we want a default
   -- value even before we have generated anything
   -- TODO P4 Think about a smart way of handling it 
@@ -36,6 +48,7 @@ function Reducer.new(arg)
   -- is_eor = is end of reducer
   if arg.value then 
     reducer._value = arg.value
+    -- print("Reducer: setting value")
     reducer._is_eor = true -- we have the final answer
   end
   -- Note that when you provide both a value and a generator
@@ -61,17 +74,40 @@ function Reducer.new(arg)
   return reducer
 end
 
+Reducer.__gc = function(rdcr)
+  -- print("GC on Reducer")
+  assert(type(rdcr) == "Reducer")
+  local rname = ifxthenxelsey(rdcr:get_name(), "anonymous")
+  -- print("GC called on Reducer " .. rname)  
+  if ( rdcr._is_dead ) then 
+    -- print("Reducer already dead")
+    return false
+  end
+  rdcr._is_dead = true
+  if ( rdcr._is_eor == false ) then 
+    -- print("WARNING! You are a deleting a nascent Reducer")
+  end
+  if ( not rdcr._destructor ) then 
+    -- print("WARNING! You are a deleting a Reducer that has no destructor")
+    return false 
+  end 
+  assert(type(rdcr._destructor) == "function")
+  -- print("Invoking reducer destructor")
+  rdcr._destructor(rdcr._value)
+end
+
 function Reducer:delete()
   local pre_mem = lgutils.mem_used()
   -- print("Destructor called on " .. self._name)
   -- See change below if ( self._is_eor == false ) then return false end 
   if ( self._is_eor == false ) then 
-    print("WARNING! You are a deleting a nascent Reducer")
+    -- print("WARNING! You are a deleting a nascent Reducer")
   end
   if ( not self._destructor ) then 
-    print("WARNING! You are a deleting a Reducer that has no destructor")
+    -- print("WARNING! You are a deleting a Reducer that has no destructor")
     return false 
   end 
+  -- print("Delete called on reducer. destructor invoked")
   assert(self._destructor(self._value))
   local post_mem = lgutils.mem_used()
   if ( pre_mem ~= post_mem ) then 
@@ -100,7 +136,7 @@ function Reducer:next()
     self._gen = nil -- destroy the generator once generation done
     return false
   end
-  record_time(start_time, "Reducer.next")
+  if ( arg.name ) then record_time(start_time, arg.name) end 
 end
 
 function Reducer:get_name()
@@ -120,7 +156,6 @@ function Reducer:value()
 end
 
 function Reducer:eval()
-  local start_time = cutils.rdtsc()
   local status = self._gen ~= nil
   if ( self._is_eor ) then 
     return self._func(self._value)
@@ -128,7 +163,6 @@ function Reducer:eval()
   while status == true do
     status = self:next()
   end
-  record_time(start_time, "Reducer.eval")
   return self:value()
 end
 

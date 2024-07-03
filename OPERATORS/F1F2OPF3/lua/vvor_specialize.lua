@@ -13,10 +13,9 @@ return function (
   optargs
   )
   local subs = {}; 
+  subs.has_nulls = false
   assert(type(f1) == "lVector"); 
-  assert(not f1:has_nulls())
   assert(type(f2) == "lVector"); 
-  assert(not f2:has_nulls())
   subs.f1_qtype = f1:qtype();   
   subs.f2_qtype = f2:qtype();   
   assert(is_in(subs.f1_qtype, { "BL", "I1", "I2", "I4", "I8", }))
@@ -29,6 +28,7 @@ return function (
 
   subs.f3_qtype = subs.f1_qtype
   subs.f3_width = cutils.get_width_qtype(subs.f3_qtype)
+  subs.bufsz = subs.max_num_in_chunk * subs.f3_width
 
   subs.fn = op .. "_" 
     ..  subs.f1_qtype .. "_" 
@@ -78,7 +78,28 @@ return function (
   subs.code = "c = " ..
     "(" .. common_ctype .. "a) | " .. 
     "(" .. common_ctype .. "b);"
-  subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
+
+  if ( ( f1:has_nulls() ) or ( f2:has_nulls() ) ) then
+    subs.has_nulls = true 
+    subs.fn = "nn_BL_" .. op .. subs.f1_qtype .. "_" .. 
+      subs.f2_qtype .. "_" .. subs.f3_qtype 
+    if ( f1:has_nulls() ) then 
+      assert(f1:nn_qtype() == "BL") -- TODO current limitation
+    end
+    if ( f2:has_nulls() ) then 
+      assert(f2:nn_qtype() == "BL") -- TODO current limitation
+    end
+    subs.nn_f3_qtype = "BL"
+    subs.nn_bufsz = subs.max_num_in_chunk
+    subs.has_nulls = true
+    subs.tmpl   = "OPERATORS/F1F2OPF3/lua/nn_BL_f1f2opf3_sclr.tmpl"
+  else
+    subs.has_nulls = false 
+    subs.fn = op .. subs.f1_qtype .. "_" .. subs.f2_qtype .. 
+      "_" .. subs.f3_qtype 
+    subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
+  end
+
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
   subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}
@@ -87,7 +108,7 @@ return function (
   if ( qcfg.use_ispc ) then
     subs.f1_ctype_ispc = cutils.str_qtype_to_str_ispctype(subs.f1_qtype)
     subs.f2_ctype_ispc = cutils.str_qtype_to_str_ispctype(subs.f2_qtype)
-    subs.f3_ctype_ispc = cutils.str_qtype_to_str_ispctype(f3_qtype)
+    subs.f3_ctype_ispc = cutils.str_qtype_to_str_ispctype(subs.f3_qtype)
 
     subs.tmpl_ispc   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_ispc.tmpl"
     subs.comment_ispc = ""

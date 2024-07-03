@@ -15,8 +15,8 @@ return function (
   optargs
   )
   local subs = {}; 
-  assert(type(f1) == "lVector"); assert(not f1:has_nulls())
-  assert(type(f2) == "lVector"); assert(not f2:has_nulls())
+  assert(type(f1) == "lVector"); 
+  assert(type(f2) == "lVector"); 
   local f1_qtype = f1:qtype();   
   local f2_qtype = f2:qtype();   
   assert(is_in(f1_qtype, ok_qtypes))
@@ -30,9 +30,8 @@ return function (
 
   subs.f3_qtype = f3_qtype
   subs.f3_width = cutils.get_width_qtype(subs.f3_qtype)
+  subs.bufsz = subs.max_num_in_chunk * subs.f3_width
 
-  subs.fn = op .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
-  subs.fn_ispc = subs.fn .. "_ispc"
 
   subs.f1_ctype = cutils.str_qtype_to_str_ctype(f1_qtype)
   subs.f1_cast_as = subs.f1_ctype .. "*"
@@ -53,7 +52,24 @@ return function (
   subs.cst_cargs = ffi.NULL
 
   subs.code = "c = a == b;"
-  subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
+  if ( ( f1:has_nulls() ) or ( f2:has_nulls() ) ) then
+    subs.fn = "nn_BL_" .. op .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
+    if ( f1:has_nulls() ) then 
+      assert(f1:nn_qtype() == "BL") -- TODO current limitation
+    end
+    if ( f2:has_nulls() ) then 
+      assert(f2:nn_qtype() == "BL") -- TODO current limitation
+    end
+    subs.nn_f3_qtype = "BL"
+    subs.nn_bufsz = subs.max_num_in_chunk
+    subs.has_nulls = true
+    subs.tmpl   = "OPERATORS/F1F2OPF3/lua/nn_BL_f1f2opf3_sclr.tmpl"
+  else
+    subs.fn = op .. f1_qtype .. "_" .. f2_qtype .. "_" .. f3_qtype 
+    subs.has_nulls = false
+    subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
+    subs.fn_ispc = subs.fn .. "_ispc"
+  end
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
   subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}

@@ -4,6 +4,8 @@
 #include "q_incs.h"
 #include "web_struct.h"
 #include "get_req_type.h"
+#include "get_file_size.h"
+#include "rs_mmap.h"
 #include "extract_api_args.h"
 #include "process_req.h"
 #include "get_body.h"
@@ -15,6 +17,7 @@ handler(
     )
 {
   int status = 0;
+  char *X = NULL; size_t nX = 0;
   char *decoded_uri = NULL;
   char  api[MAX_LEN_API+1];
   char args[MAX_LEN_ARGS+1]; memset(args, 0, MAX_LEN_ARGS+1);
@@ -62,11 +65,16 @@ handler(
       evhttp_add_header(evhttp_request_get_output_headers(req),
           web_response.header_key[i], web_response.header_val[i]);
     }
+    // Running into trouble with add_file 
     // open file for reading 
-    int wfd = open(web_response.file_name, O_RDONLY); 
-    if ( wfd < 0 ) { go_BYE(-1); } 
+    // int wfd = open(web_response.file_name, O_RDONLY); 
+    // if ( wfd < 0 ) { go_BYE(-1); } 
     // send data in file 
-    status = evbuffer_add_file(opbuf, wfd, 0, -1); cBYE(status); 
+    // status = evbuffer_add_file(opbuf, wfd, 0, -1); cBYE(status); 
+    // close(wfd); 
+    status = rs_mmap(web_response.file_name, &X, &nX, 0); cBYE(status);
+    status = evbuffer_add(opbuf, X, nX); cBYE(status);
+    mcr_rs_munmap(X, nX);
 
     if ( web_response.is_err ) { 
       evhttp_send_reply(req, HTTP_BADREQUEST, "ERROR", opbuf);
@@ -74,7 +82,6 @@ handler(
     else {
       evhttp_send_reply(req, HTTP_OK, "OK", opbuf);
     }
-    close(wfd); 
     goto BYE; 
   }
   //------------------------------
@@ -92,6 +99,7 @@ handler(
     evhttp_send_reply(req, HTTP_BADREQUEST, "ERROR", opbuf);
   }
 BYE:
+  mcr_rs_munmap(X, nX);
   if ( opbuf != NULL ) { evbuffer_free(opbuf); opbuf = NULL; }
   free_if_non_null(decoded_uri);
   // free resources in web response

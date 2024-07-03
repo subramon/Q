@@ -1,0 +1,162 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include <omp.h>
+#include "q_macros.h"
+//START_FOR_CDEF
+extern int
+${fn}(  
+      const ${ctype} * restrict invals,  // [n_invals]
+      uint32_t n_invals,
+      const char * restrict aux_invals, // [n_invals*aux_width] 
+      uint32_t aux_width,
+      ${ctype} *lb, // [nb]
+      ${ctype} *ub, // [nb]
+      uint64_t *cnt, // [nb]
+      uint32_t nb,
+      ${ctype} * restrict outvals,// [n_invals]
+      char * restrict aux_outvals  // [n_invals*aux_width]
+      )
+;
+//STOP_FOR_CDEF
+
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+
+int
+${fn}(  
+      const ${ctype} * restrict invals,   // [n_invals]
+      uint32_t n_invals,
+      const char * restrict aux_invals,  // [n_invals*aux_width]
+      uint32_t aux_width,
+      ${ctype} *lb, // [nb]
+      ${ctype} *ub, // [nb]
+      uint64_t *off, // [nb]
+      uint32_t nb,
+      ${ctype} * restrict outvals, // [n_invals]
+      char * restrict aux_outvals  // [n_invals*aux_width]
+      )
+
+{
+  int status = 0;
+  int *bin_num = NULL;
+  int *thread_num = NULL;
+
+  if ( aux_width == 0 ) { 
+    if ( aux_invals  != NULL ) { go_BYE(-1); }
+    if ( aux_outvals != NULL ) { go_BYE(-1); }
+  }
+  else {
+    if ( aux_invals  == NULL ) { go_BYE(-1); }
+    if ( aux_outvals == NULL ) { go_BYE(-1); }
+  }
+  bin_num = malloc(n_invals * sizeof(uint32_t));
+  thread_num = malloc(n_invals * sizeof(int));
+  for ( uint32_t i = 0; i < n_invals; i++ ) { bin_num[i] = -1; }
+  for ( uint32_t i = 0; i < n_invals; i++ ) { thread_num[i] = -1; }
+  int nT = omp_get_num_procs();
+  // printf("nT = %d \n", nT);
+#ifdef DEBUG
+  int num_placed = 0;
+  if ( nb == 0 ) { go_BYE(-1); }
+  for ( uint32_t i = 0; i < nb; i++ )  {
+    if ( lb[i] >= ub[i] ) { go_BYE(-1); } 
+  }
+  int max_num_probes = 1;
+  for ( uint32_t n = nb; n > 1; n = n / 2 ) { 
+    max_num_probes++;
+  }
+#endif
+
+#pragma omp parallel for schedule(static, 1024)
+  for ( uint32_t i  = 0; i < n_invals; i++ ) {
+    if ( status < 0 ) { continue; }
+    ${ctype} inval = invals[i];
+#ifdef DEBUG
+    if ( ( inval < lb[0] ) || ( inval > ub[nb-1] ) )  { WHEREAMI; status = -1; }
+#endif
+    // find correct bin for inval
+    int lb_idx = 0;
+    int ub_idx = (int)nb;
+    int bin_idx = -1; 
+    for ( int num_probes = 0; ; num_probes++ ) {
+#ifdef DEBUG
+      if ( num_probes > max_num_probes ) { WHEREAMI; status = -1; } 
+#endif
+      bin_idx = (lb_idx+ub_idx)/2;
+      ${ctype} this_lb = lb[bin_idx];
+      ${ctype} this_ub = ub[bin_idx];
+      if ( ( inval >= this_lb ) && ( inval < this_ub ) ) {
+        break;
+      }
+      else if ( inval < this_lb ) { 
+        ub_idx = bin_idx;
+      }
+      else if ( inval >= this_ub ) { 
+        lb_idx = bin_idx;
+      }
+      else {
+        WHEREAMI; status = -1;
+      }
+    }
+#ifdef DEBUG
+    if ( ( bin_idx < 0 ) || ( bin_idx >= (int)nb ) ) { status = -1; }
+#endif
+    bin_num[i] = bin_idx;
+    thread_num[i] = bin_idx % nT;
+  }
+  cBYE(status);
+
+  // Having found the bin, we need to place the item. 
+#pragma omp parallel 
+  {
+    int tid = omp_get_thread_num();
+    // printf("Thread %d working \n", tid); 
+    for ( uint32_t i  = 0; i < n_invals; i++ ) {
+      int l_thread_num = thread_num[i];
+      if ( l_thread_num != tid ) { // skip if not for me to deal with
+        continue;
+      }
+      // get the i^{th} item 
+      ${ctype} inval = invals[i];
+      // determine which bin this item goes into 
+      int bin_idx = bin_num[i];
+#ifdef DEBUG
+      if ( ( bin_idx < 0 ) || ( bin_idx >= (int)nb ) ) { 
+        status = -1; continue;
+      }
+      if ( ( l_thread_num < 0 ) || ( l_thread_num >= nT ) ) {
+        status = -1; continue; 
+      }
+#endif
+      // place item in bin
+      uint64_t offset = off[bin_idx];
+      outvals[offset] = inval; 
+      // place auxiliary item in bin
+      if ( aux_width > 0 ) { 
+        memcpy(aux_outvals+(offset*aux_width), aux_invals+(i*aux_width),
+        aux_width);
+      }
+      off[bin_idx]++;
+#ifdef DEBUG
+      __atomic_add_fetch(&num_placed, 1, 0); 
+#endif
+    }
+  }
+#ifdef DEBUG
+  if ( num_placed != (int)n_invals ) { 
+    printf("num_placed = %d \n", num_placed);
+    printf("n_invals = %d \n", n_invals);
+    go_BYE(-1); 
+  }
+#endif
+BYE:
+  free_if_non_null(bin_num);
+  return status;
+}
+   ]]
+}

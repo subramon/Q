@@ -31,8 +31,7 @@ vctr_usage(
 
   status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &vctr_key, 
       &vctr_val, &vctr_is_found, &vctr_where_found);
-  if ( !vctr_is_found ) { 
-    go_BYE(-1); }
+  if ( !vctr_is_found ) {  /* silent failure */ return 1; }
   // how much mem/dsk used at vector level 
   if ( vctr_val.is_lma ) { 
     lma_file = l2_file_name(tbsp, vctr_uqid, ((uint32_t)~0));
@@ -81,7 +80,22 @@ vctr_hogs(
     )
 {
   int status = 0;
-  printf("uqid,name,mem_usage,dsk_usage\n");
+  printf("uqid,name");
+  if ( ( mode == NULL ) || ( *mode == '\0' ) ) { 
+    printf(",mem_usage,dsk_usage\n");
+  }
+  else { 
+    if ( strcasecmp(mode, "mem") == 0 ) {
+      printf(",mem_usage\n");
+    }
+    else if ( strcasecmp(mode, "dsk") == 0 ) {
+      printf(",dsk_usage\n");
+    }
+    else {
+      go_BYE(-1);
+    }
+  }
+
   uint32_t tbsp = 0; // only for your own tablespace 
   for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) {
     if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
@@ -91,16 +105,26 @@ vctr_hogs(
     uint64_t mem, dsk; 
     status = vctr_usage(tbsp, vctr_uqid, &mem, &dsk); cBYE(status);
     char * name = vctr_get_name(tbsp, vctr_uqid); 
-    bool skip = false;
-    if ( ( mode != NULL ) && ( strcmp(mode, "mem") == 0 ) ) {
-      if ( mem == 0 ) { skip = true; }
-    }
-    if ( ( mode != NULL ) && ( strcmp(mode, "dsk") == 0 ) ) {
-      if ( dsk == 0 ) { skip = true; }
-    }
-    if ( skip == false ) { 
+    if ( ( mode == NULL ) || ( *mode == '\0' ) ) { 
       printf("%u:[%s]%" PRIu64",%"PRIu64"\n",
           vctr_uqid, name == NULL ? "anonymous" : name, mem, dsk);
+    }
+    else { 
+      if ( strcasecmp(mode, "mem") == 0 ) {
+        if ( mem != 0 ) { 
+        printf("%u:[%s]%" PRIu64"\n", 
+            vctr_uqid, name == NULL ? "anonymous" : name, mem); 
+        }
+      }
+      else if ( strcasecmp(mode, "dsk") == 0 ) {
+        if ( dsk != 0 ) { 
+        printf("%u:[%s]%" PRIu64"\n", 
+            vctr_uqid, name == NULL ? "anonymous" : name, dsk); 
+        }
+      }
+      else {
+        go_BYE(-1);
+      }
     }
   }
 BYE:

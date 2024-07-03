@@ -13,14 +13,13 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
   optargs = optargs or {}
   optargs.__operator = a -- for use in specializer if needed
   if ( type(sclr) == "number" ) then 
+    -- print("Converting number to scalar ", sclr)
     assert(type(f1) == "lVector")
     sclr = assert(Scalar.new(sclr, f1:qtype()) )
   end
   assert(type(sclr) == "Scalar")
   sclr:set_name("f1s1opf2")
   local subs = assert(spfn(f1, sclr, optargs))
-
-
   local func_name = assert(subs.fn)
   qc.q_add(subs); 
 
@@ -37,29 +36,54 @@ local function expander_f1s1opf2(a, f1, sclr, optargs )
       {size = subs.f2_buf_sz, qtype = subs.f2_qtype}))
     assert(type(buf) == "CMEM")
     buf:stealable(true)
+    local nn_buf
+    if ( subs.has_nulls ) then 
+      nn_buf = assert(cmem.new(
+        {size = subs.nn_f2_buf_sz, qtype = subs.nn_f2_qtype}))
+      nn_buf:stealable(true)
+    end
     --========================================
-    local f1_len, f1_chunk, _ = f1:get_chunk(l_chunk_num)
+    local f1_len, f1_chunk, nn_f1_chunk = f1:get_chunk(l_chunk_num)
     if ( f1_len == 0 ) then 
       -- print("XX Returning 0 for chunk ", l_chunk_num)
+      buf:delete()
+      if ( nn_buf ) then nn_buf:delete() end 
+      -- print("A " .. a .. " sending kill to " .. (f1:name() or "anon"))
+      f1:kill()
       return 0
     end
     --========================================
     local chunk1 = get_ptr(f1_chunk, subs.cast_f1_as)
     local chunk2 = get_ptr(buf,      subs.cast_f2_as)
     local start_time = cutils.rdtsc()
-    local status = 
-    qc[func_name](chunk1, f1_len, subs.ptr_to_sclr, chunk2)
-      assert(status == 0)
+    local status 
+    if ( subs.has_nulls ) then 
+      local nn_chunk1 = get_ptr(nn_f1_chunk, "bool *") -- TODO handle B1
+      local nn_chunk2 = get_ptr(nn_buf, "bool *") -- TODO handle B1
+      status = qc[func_name](chunk1, nn_chunk1, f1_len, subs.ptr_to_sclr,
+        chunk2, nn_chunk2)
+    else
+      status = qc[func_name](chunk1, f1_len, subs.ptr_to_sclr, chunk2)
+    end
+    assert(status == 0)
     record_time(start_time, func_name)
     f1:unget_chunk(l_chunk_num)
     --==================================
     l_chunk_num = l_chunk_num + 1
     -- print("XX Returning ", f1_len, "  for chunk ", l_chunk_num)
-    return f1_len, buf
+    if ( f1_len < subs.f2_max_num_in_chunk ) then 
+      -- print("B " .. a .. " sending kill to " .. (f1:name() or "anon"))
+      f1:kill()
+    end
+    return f1_len, buf, nn_buf
   end
   local vargs = optargs 
   vargs.gen = f2_gen
-  vargs.has_nulls = false
+  if ( subs.has_nulls ) then 
+    vargs.has_nulls = true 
+  else
+    vargs.has_nulls = false
+  end
   vargs.qtype = subs.f2_qtype
   vargs.max_num_in_chunk = subs.max_num_in_chunk
   return  lVector(vargs)

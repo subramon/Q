@@ -1,0 +1,85 @@
+return require 'Q/UTILS/lua/code_gen' {
+   declaration = [[
+#include "q_incs.h"
+#include "q_macros.h"
+//START_FOR_CDEF
+extern int
+${fn}(
+    char *tmp_val,
+    // should be this 
+    // ${in_ctype} *tmp_in_val, // [n]
+    // LuajIT doesn't handle 128bit in FFI 
+    uint32_t n,
+    char **out_vals, // [n_vals][n]
+    uint32_t n_vals,
+    uint32_t *width // [n_vals]
+    );
+//STOP_FOR_CDEF
+]],
+definition = [[
+#include "${fn}.h"
+int
+${fn}(
+    char *tmp_in_val,// [n]
+    uint32_t n,
+    char **out_vals, // [n_vals][n]
+    uint32_t n_vals,
+    uint32_t *width // [n_vals]
+    )
+{
+  int status = 0;
+  uint32_t *shift_by = NULL;
+
+  shift_by = malloc(n_vals * sizeof(uint32_t));
+  return_if_malloc_failed(shift_by);
+
+  ${in_ctype} * in_val = (${in_ctype} *) tmp_in_val;
+  uint32_t l_shift_by = 0;
+  for ( int i = (int)n_vals; i >= 0; i-- ) { 
+    shift_by[i] = l_shift_by;
+    l_shift_by += (8*width[i]); // width in bytes, need to convert to bits
+  }
+  //-----------------------------------------------
+  for ( uint32_t i = 0; i < n_vals; i++ ) { 
+// TODO #pragma omp parallel for 
+    for ( uint32_t j = 0; j < n; j++ ) { 
+      ${in_ctype} inval = in_val[j];
+      switch ( width[i] ) { 
+      case 1 : 
+      {
+        ${in_ctype} mask = 0xFF;
+        ${in_ctype} tmp1 = (inval >> shift_by[i]);
+        ((uint8_t *)out_vals[i])[j] = tmp1 & mask;
+        }
+        break;
+        case 2 : 
+        {
+        ${in_ctype} mask = 0xFFFF;
+        ${in_ctype} tmp1 = (inval >> shift_by[i]);
+        ((uint16_t *)out_vals[i])[j] = tmp1 & mask;
+        }
+        break;
+        case 4 : 
+        {
+        ${in_ctype} mask = 0xFFFFFFFF;
+        ${in_ctype} tmp1 = (inval >> shift_by[i]);
+        ((uint32_t *)out_vals[i])[j] = tmp1 & mask;
+        }
+        break;
+        case 8 : 
+        {
+        ${in_ctype} mask = 0xFFFFFFFFFFFFFFFF;
+        ${in_ctype} tmp1 = (inval >> shift_by[i]);
+        ((uint64_t *)out_vals[i])[j] = tmp1 & mask;
+        }
+        break;
+        default : status = -1; break; 
+      }
+    }
+  }
+BYE:
+  free_if_non_null(shift_by);
+  return status;
+}
+]],
+}

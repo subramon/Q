@@ -1,0 +1,88 @@
+
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+#include "q_incs.h"
+#include "q_macros.h"
+//START_FOR_CDEF
+int 
+SC_to_lkp_C_${out_qtype}( 
+    char * const in_strs, // [n * width]
+    bool *nn_in_strs, // [n]
+    uint32_t n,
+    uint32_t width,
+    const char ** const lkp,
+    uint32_t n_lkp,
+    ${out_ctype} *outvals, // [n]  
+    bool *nn_outvals // [n]  
+    );
+//STOP_FOR_CDEF
+]],
+definition = [[
+#include "${fn}.h"
+
+/* Important point to note about null values
+
+If in[i] == NULL, then out[i] := NULL i.e., out[i] = 0, nn_out[i] = false
+If in[i] contains a value that is NOT in lkp_tbl, then 
+out[i] = 0, nn_out[i] = true
+For all others, 
+out[i] != 0, nn_out[i] = true
+*/
+
+int 
+SC_to_lkp_C_${out_qtype}( 
+    char * const in_strs, // [n * width]
+    bool *nn_in_strs, // [n]
+    uint32_t n,
+    uint32_t width,
+    const char ** const lkp,
+    uint32_t n_lkp,
+    ${out_ctype} *outvals, // [n]  
+    bool *nn_outvals // [n]  
+    )
+{
+  int status = 0;
+#ifdef DEBUG
+  if ( n_lkp == 0 ) { go_BYE(-1); }
+  if ( lkp == NULL ) { go_BYE(-1); }
+  for ( uint32_t i = 0; i < n_lkp; i++ ) {
+    if ( ( lkp[i] == NULL ) || ( lkp[i][0] == '\0' ) ) { go_BYE(-1); }
+    for ( uint32_t j = i+1; j < n_lkp; j++ ) {
+      if ( strcmp(lkp[i], lkp[j]) == 0 ) { 
+        fprintf(stderr, "Duplicate strings in position %u, %u = %s\n",
+            i, j, lkp[i]);
+        go_BYE(-1); 
+      }
+    }
+  }
+  // nulls on input and output must be in sync 
+  if ( nn_in_strs == NULL ) { if ( nn_outvals != NULL ) { go_BYE(-1); } }
+  if ( nn_in_strs != NULL ) { if ( nn_outvals == NULL ) { go_BYE(-1); } }
+#endif
+// TODO #pragma omp parallel for schedule(static, 1024)
+  for ( uint32_t i = 0; i < n; i++ ) { 
+    char *cptr = in_strs + (i*width);
+    outvals[i] = 0;
+    if ( nn_outvals != NULL ) { nn_outvals[i] = false; } 
+    if ( ( nn_in_strs != NULL ) && ( nn_in_strs[i] == false ) ) { 
+      continue;
+    }
+    if ( nn_outvals != NULL ) { nn_outvals[i] = true; } 
+     
+    ${out_ctype} l_outval = 0; // 0 => not found 
+    // This is an extremely dumbu sequential search. 
+    // Optimize when time permits
+    for ( uint32_t j = 0; j < n_lkp; j++ ) {
+      if ( strcmp(cptr, lkp[j]) == 0 ) { 
+        l_outval = j+1; break;
+      }
+    }
+    outvals[i] = l_outval; 
+  }
+BYE:
+  return status;
+}
+
+]],
+}

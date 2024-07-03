@@ -1,0 +1,4 @@
+  -- We need input vector to be fully materialized and prepped for lma
+  assert(x:is_eov())
+  x:chunks_to_lma()
+  assert(x:is_lma()) 

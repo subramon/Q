@@ -14,5 +14,6 @@ vctr_get_num_lives_kill(
 extern int
 vctr_kill(
     uint32_t tbsp,
-    uint32_t vctr_uqid
+    uint32_t vctr_uqid,
+    bool *ptr_kill_success
     );

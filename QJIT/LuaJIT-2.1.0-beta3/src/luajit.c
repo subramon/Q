@@ -452,6 +452,7 @@ static int dobytecode(lua_State *L, char **argv)
 static int collectargs(char **argv, int *flags)
 {
   int i;
+
   for (i = 1; argv[i] != NULL; i++) {
     if (argv[i][0] != '-')  /* Not an option? */
       return i;
@@ -623,7 +624,8 @@ int main(int argc, char **argv)
 {
   int status;
   // START: RAMESH 
-  status = init_globals(); cBYE(status);
+  int mod_argc = 0; char **mod_argv = NULL; 
+  status = init_globals(argc, argv, &mod_argc, &mod_argv); cBYE(status);
   status = read_configs(); cBYE(status);
   status = init_session(); cBYE(status);
   // STOP: RAMESH 
@@ -633,9 +635,15 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  smain.argc = argc;
-  smain.argv = argv;
-  printf("QJIT Starting\n"); 
+  if ( mod_argc == 0 ) { 
+    smain.argc = argc;
+    smain.argv = argv;
+  }
+  else {
+    smain.argc = mod_argc; // RAMESH
+    smain.argv = mod_argv; // RAMESH
+  }
+  printf("QJIT Starting\n");  // RAMESH
   status = lua_cpcall(L, pmain, NULL);
   report(L, status);
   lua_close(L);
@@ -659,6 +667,14 @@ int main(int argc, char **argv)
     printf("g_mem_mgr joined\n"); 
   }
 BYE:
+  if ( mod_argc != 0 ) { 
+    if ( mod_argv != NULL ) { 
+      for ( int i = 0; i < mod_argc; i++ ) { 
+        free_if_non_null(mod_argv[i]);
+      }
+      free_if_non_null(mod_argv);
+    }
+  }
   status = free_globals(); if ( status < 0 ) { WHEREAMI; } 
   // STOP : RAMESH
   return (status || smain.status > 0) ? EXIT_FAILURE : EXIT_SUCCESS;

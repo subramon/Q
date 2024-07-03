@@ -6,32 +6,42 @@ local should_save = require 'Q/UTILS/lua/should_save'
 
 -- skip_save() tells us whether saving of this vector should be skipped
 local function skip_save(vec)
+  local is_dead = false
+  local is_skip = false
   -- TODO P4 At some point, we might want to relax following
   local num_elements = vec:num_elements()
+  if ( num_elements == nil ) then
+    print("Being asked to save a vecytor that does not exist. Skipping...")
+    is_dead = true
+    return true, is_dead
+  end
   local has_gen      = vec:has_gen() 
   local is_eov       = vec:is_eov() 
   local is_error     = vec:is_error() 
   local memo_len     = vec:memo_len() 
-  local num_lives_free     = vec:get_num_lives_free() 
-  local num_lives_kill     = vec:get_num_lives_kill() 
+  local is_early_freeable, _ = vec:is_early_freeable() 
+  local is_killable, _       = vec:is_killable() 
 
-  assert(type(num_elements)   == "number")
-  assert(type(has_gen)        == "boolean")
-  assert(type(is_eov)         == "boolean")
-  assert(type(is_error)       == "boolean")
-  assert(type(memo_len)       == "number")
-  assert(type(num_lives_free) == "number")
-  assert(type(num_lives_kill) == "number")
+  assert(type(num_elements)      == "number")
+  assert(type(has_gen)           == "boolean")
+  assert(type(is_eov)            == "boolean")
+  assert(type(is_error)          == "boolean")
+  assert(type(memo_len)          == "number")
+  assert(type(is_early_freeable) == "boolean")
+  assert(type(is_killable)       == "boolean")
 
   if ( 
     ( num_elements == 0 ) or ( memo_len >= 0 ) or 
     ( has_gen ) or ( not is_eov ) or ( is_error ) or
-    ( num_lives_free > 0 ) or ( num_lives_kill > 0 ) 
+    ( is_early_freeable ) or ( is_killable ) 
     ) then
-    return true
+    print("Not saving Vector " .. (vec:name() or "anonymous"))
+    is_skip = true 
   else
-    return false
+    print("Saving Vector     " .. (vec:name() or "anonymous"))
+    is_skip = false 
   end
+  return is_skip, is_dead
 end
 
 -- TODO Indrajeet make 2 args, one is name of table, other is filename
@@ -71,15 +81,19 @@ local function internal_save(
     end
   elseif ( type(value) == "lVector" ) then
     local vec = value
-    local is_skip = skip_save(vec) 
+    local is_skip, is_dead = skip_save(vec) 
      if ( is_skip ) then -- skip ths vector
-      print("Not saving lVector: " .. vec:name())
-      print(vec:num_elements())
-      print(vec:has_gen() ) 
-      print(vec:is_eov() )
-      print(vec:memo_len() )
-      -- TODO P2 Think. Is following delete() needed?
-      vec:delete() -- Delete this vector from hashmaps
+       if ( is_dead ) then
+         print("Problem with dead vector")
+       else
+        print("Not saving lVector: " .. vec:name())
+        print(vec:num_elements())
+        print(vec:has_gen() ) 
+        print(vec:is_eov() )
+        print(vec:memo_len() )
+        -- TODO P2 Think. Is following delete() needed?
+        vec:delete() -- Delete this vector from hashmaps
+      end
     else
       -- flush vector to disk and mark for persistence
       if ( not vec:is_lma() ) then 
@@ -113,6 +127,7 @@ local function internal_save(
 end
 
 local function save()
+  collectgarbage()
   local meta_dir = lgutils.meta_dir()
   assert(type(meta_dir) == "string")
   assert(cutils.isdir(meta_dir))

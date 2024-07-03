@@ -17,6 +17,11 @@
 extern vctr_rs_hmap_t *g_vctr_hmap;
 extern chnk_rs_hmap_t *g_chnk_hmap;
 
+/* TODO P1
+ * Ensure consistency between vector and nn vector
+ * How to do this? Lua knows about relationship between the 2
+ * but C does not */
+
 int
 vctrs_chk(
     uint32_t tbsp

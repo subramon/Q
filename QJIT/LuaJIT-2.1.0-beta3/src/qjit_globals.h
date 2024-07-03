@@ -50,19 +50,21 @@ my_extern char *g_meta_dir_root; // [Q_MAX_LEN_DIR_NAME+1];
 // following is used to help debugging by giving logical names to tbsp
 my_extern char **g_tbsp_name; // [Q_MAX_NUM_TABLESPACES][Q_MAX_LEN_DIR_NAME+1];
 // restore
-bool g_restore_session;
+my_extern bool g_restore_session;
 // for webserver
-bool       g_is_webserver;
-pthread_t  g_webserver;
-web_info_t g_web_info;
+my_extern bool       g_is_webserver;
+my_extern pthread_t  g_webserver;
+my_extern web_info_t g_web_info;
 // for out of band communication
-bool       g_is_out_of_band;
-pthread_t  g_out_of_band;
-web_info_t g_out_of_band_info; 
+my_extern bool       g_is_out_of_band;
+my_extern pthread_t  g_out_of_band;
+my_extern web_info_t g_out_of_band_info; 
 // for memory manager
-bool           g_is_mem_mgr;
-pthread_t      g_mem_mgr;
-mem_mgr_info_t g_mem_mgr_info; 
+my_extern bool           g_is_mem_mgr;
+my_extern pthread_t      g_mem_mgr;
+my_extern mem_mgr_info_t g_mem_mgr_info; 
 // configs for hash tables 
-rs_hmap_config_t g_vctr_hmap_config; 
-rs_hmap_config_t g_chnk_hmap_config; 
+my_extern rs_hmap_config_t g_vctr_hmap_config; 
+my_extern rs_hmap_config_t g_chnk_hmap_config; 
+// to allow q_config.lua to be provided from command line 
+my_extern char *g_q_config; 

@@ -1,7 +1,11 @@
 #ifndef __QTYPES_H
 #define __QTYPES_H
+typedef uint32_t holiday_bmask_t; // this comes from RBC. Should not be here
+                                  // RBC code needs to be cleaned up
 //START_FOR_CDEF
 typedef uint16_t bfloat16; 
+// TODO P3: At some stage, names should refer to to bits instead of bytes
+// In other words, instead of I8 it should be I64
 typedef enum { 
   Q0, // mixed  must be first one 
 
@@ -12,6 +16,7 @@ typedef enum {
   I2,
   I4,
   I8,
+  I16,
 
   F2,
   F4,
@@ -21,6 +26,7 @@ typedef enum {
   UI2,
   UI4,
   UI8,
+  UI16,
 
   SC,  // constant length strings
   SV,  // variable length strings

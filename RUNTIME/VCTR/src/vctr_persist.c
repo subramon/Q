@@ -26,7 +26,7 @@ vctr_persist(
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
   if ( val.is_err ) { go_BYE(-1); }
-  if ( val.is_persist ) { go_BYE(-1); }
+  // TODO P2 Think if this is okay; if ( val.is_persist ) { go_BYE(-1); }
   if ( val.num_lives_free > 0 ) { go_BYE(-1); }
   if ( val.num_lives_kill > 0 ) { go_BYE(-1); }
   if ( val.memo_len >= 0 ) { go_BYE(-1); }

@@ -12,11 +12,13 @@ return function (
   assert(type(f1) == "lVector"); assert(not f1:has_nulls())
 
   subs.f1_qtype = f1:qtype()
-  assert(is_in(subs.f1_qtype, { "I1", "I2", "I4", "I8", "F4", "F8" }))
+  assert(is_in(subs.f1_qtype, 
+  {"I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8" }))
  
   assert(type(s1) == "Scalar")
   subs.s1_qtype = s1:qtype()
-  assert(is_in(subs.s1_qtype, { "I1", "I2", "I4", "I8", }))
+  assert(is_in(subs.s1_qtype, 
+  {"I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8" }))
   local snum = s1:to_num()
 
   local max_shift = 8 * cutils.get_width_qtype(subs.f1_qtype)
@@ -33,8 +35,9 @@ return function (
   subs.f2_ctype = "u" .. cutils.str_qtype_to_str_ctype(subs.f2_qtype)
   subs.cast_f2_as  = subs.f2_ctype .. " *"
 
-  subs.f2_width = cutils.get_width_qtype(subs.f2_qtype)
   subs.max_num_in_chunk = f1:max_num_in_chunk()
+  subs.f2_max_num_in_chunk = f1:max_num_in_chunk()
+  subs.f2_width = cutils.get_width_qtype(subs.f2_qtype)
   subs.f2_buf_sz = subs.max_num_in_chunk * subs.f2_width
 
   assert(type(optargs.__operator) == "string")

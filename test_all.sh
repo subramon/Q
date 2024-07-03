@@ -15,6 +15,7 @@ qjit test_cmem.lua
 cd ~/Q/UTILS/test/
 bash test_copy_file.sh
 bash test_line_breaks.sh
+qjit test_tbl_of_num_to_C_array.lua
 
 cd ~/Q/RUNTIME/CUTILS/test/
 qjit test_cutils.lua
@@ -34,7 +35,9 @@ cd ~/Q/RUNTIME/VCTRS/src/
 cd ~/Q/RUNTIME/VCTRS/test/
 qjit test1.lua  # TODO NEEDS WORK 
 qjit test_lma.lua  
+qjit test_gc.lua  
 qjit test_memo.lua  
+qjit test_make_drop_mem.lua 
 qjit test_ref_count.lua
 qjit test_clone.lua
 qjit test_save.lua-- TODO P2 some automation needed for q_config 

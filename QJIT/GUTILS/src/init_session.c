@@ -2,6 +2,7 @@
 #include "q_incs.h"
 #include "q_macros.h"
 #include "rmtree.h"
+#include "is_file_in_dir.h"
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
@@ -29,14 +30,17 @@ init_session(
     )
 {
   int status = 0;
+  uint32_t *uqids_to_del = NULL;
   // For webserver 
   if ( g_is_webserver ) {  
+    printf("Spawned webserver\n");
     g_web_info.is_out_of_band = false;
     status = pthread_create(&g_webserver, NULL, &webserver, &g_web_info);
     cBYE(status);
   }
   // For out of band 
   if ( g_is_out_of_band ) {  
+    printf("Spawned out-of-band server\n");
     g_out_of_band_info.is_out_of_band = true;
     status = pthread_create(&g_out_of_band, NULL, &webserver, 
         &g_out_of_band_info);
@@ -56,7 +60,25 @@ init_session(
   int tbsp = 0;  // init_session() only for primary tablespace
 
   // START For hashmaps  for vector, ...
-  if ( g_restore_session ) { 
+  // If we are asked to restore a session but we don't have the 
+  // relevant files, then we assume that a new session needs
+  // to be created
+  if ( g_restore_session ) {
+    bool mk_new_session = false;
+    if ( !is_file_in_dir("_vctr_meta.csv", g_meta_dir_root) ) {
+      mk_new_session = true;
+    }
+    if ( !is_file_in_dir("_vctr_bkts.bin", g_meta_dir_root) ) {
+      mk_new_session = true;
+    }
+    if ( !is_file_in_dir("_vctr_full.bin", g_meta_dir_root) ) {
+      mk_new_session = true;
+    }
+    if ( mk_new_session ) {
+      g_restore_session = false;
+    }
+  }
+  if ( g_restore_session ) {
     printf(">>>>>>>>>>>> RESTORING SESSION ============\n");
     status = vctr_rs_hmap_unfreeze(&g_vctr_hmap[tbsp], 
         g_meta_dir_root,
@@ -80,17 +102,34 @@ init_session(
     // We need to delete any vectors that had *NOT* been persisted
     // Cannot do this in the loop below. Must be done before
     // Reason is that when you delete, things move around
-    int num_deletes = 0;
+    // STEP 1: Count how many to be deleted 
+    int num_to_delete = 0;
     for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) { 
       if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
       if ( g_vctr_hmap[tbsp].bkts[i].val.is_persist == true ) { continue; }
-      vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
-      uint32_t vctr_uqid = key;
-      bool is_found = false;
-      status = vctr_del(tbsp, vctr_uqid, &is_found); cBYE(status);
-      if ( !is_found ) { go_BYE(-1); } 
-      printf("Deleted vector %u \n", vctr_uqid);
-      num_deletes++;
+      num_to_delete++;
+    }
+    // STEP 2: Assemble vctr_uqid's of those to be deleted
+    if ( num_to_delete > 0 )  {
+      printf("Ready to delete %u vectors\n", num_to_delete);
+      uqids_to_del = malloc(num_to_delete * sizeof(uint32_t));
+      return_if_malloc_failed(uqids_to_del); 
+      num_to_delete = 0;
+      for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) { 
+        if ( !g_vctr_hmap[tbsp].bkt_full[i] ) { continue; } 
+        if ( g_vctr_hmap[tbsp].bkts[i].val.is_persist == true ) { continue; }
+        vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
+        uint32_t vctr_uqid = key;
+        uqids_to_del[num_to_delete++] = vctr_uqid; 
+      }
+      // STEP 3: now go ahead and delete them 
+      for ( int i = 0; i < num_to_delete; i++ ) { 
+        uint32_t vctr_uqid = uqids_to_del[i];
+        bool is_found = false;
+        status = vctr_del(tbsp, vctr_uqid, &is_found); cBYE(status);
+        if ( !is_found ) { go_BYE(-1); } 
+        printf("Deleted vector %u \n", vctr_uqid);
+      }
     }
     //-------------------
     for ( uint32_t i = 0; i < g_vctr_hmap[tbsp].size; i++ ) { 
@@ -111,7 +150,7 @@ init_session(
       if ( dsk == 0 ) { go_BYE(-1); } // must have   dsk at this stage
       status = incr_dsk_used(dsk); cBYE(status);
     }
-    if ( num_deletes == 0 ) { 
+    if ( num_to_delete == 0 ) { 
       // Can't do following if we delete vectors in above loop
       if ( g_vctr_hmap[tbsp].nitems == 0 ) {
         if ( g_vctr_uqid != 0 ) { go_BYE(-1); }
@@ -121,7 +160,7 @@ init_session(
       }
     }
     else {
-      printf("Deleted %d vectors that were not persisted\n", num_deletes);
+      printf("Deleted %d vectors that were not persisted\n", num_to_delete);
     }
     //-----------------------------------
     printf("<<<<<<<<<<<< RESTORING SESSION ============\n");
@@ -150,5 +189,6 @@ init_session(
 
   // STOP  For hashmaps  for vector, ...
 BYE:
+  free_if_non_null(uqids_to_del);
   return status;
 }

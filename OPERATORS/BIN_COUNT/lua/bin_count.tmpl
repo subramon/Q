@@ -1,0 +1,100 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include "q_incs.h"
+#include "q_macros.h"
+//START_FOR_CDEF
+extern int
+${fn}(  
+      const ${ctype} * restrict invals,  
+      uint32_t n_invals,
+      ${ctype} *lb, // [nb]
+      ${ctype} *ub, // [nb]
+      int64_t *cnt, // [nb]
+      uint32_t nb
+      )
+;
+//STOP_FOR_CDEF
+
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+
+int
+${fn}(  
+      const ${ctype} * restrict invals,  
+      uint32_t n_invals,
+      ${ctype} *lb, // [nb]
+      ${ctype} *ub, // [nb]
+      int64_t *cnt, // [nb]
+      uint32_t nb
+      )
+
+{
+  int status = 0;
+
+#ifdef DEBUG
+  if ( nb == 0 ) { go_BYE(-1); }
+  uint64_t sum_cnt = 0;
+  for ( uint32_t i = 0; i < nb; i++ )  {
+    if ( lb[i] >= ub[i] ) { 
+      printf("Error at position %u \n", i); go_BYE(-1); 
+    }
+    sum_cnt += cnt[i]; 
+  }
+  int max_num_probes = 1;
+  for ( uint32_t n = nb; n > 1; n = n / 2 ) { 
+    max_num_probes++;
+  }
+#endif
+#pragma omp parallel for 
+  for ( uint32_t i  = 0; i < n_invals; i++ ) {  
+    if ( status < 0 ) { continue; }
+    ${ctype} inv = invals[i];
+#ifdef DEBUG
+    if ( ( inv < lb[0] ) || ( inv > ub[nb-1] ) )  { WHEREAMI; status = -1; }
+#endif
+    // find correct bin for inv
+    int lb_idx = 0;
+    int ub_idx = (int)nb;
+    int bin_idx = -1; 
+    for ( int num_probes = 0; ; num_probes++ ) { 
+#ifdef DEBUG
+      if ( num_probes > max_num_probes ) { WHEREAMI; status = -1; } 
+#endif
+      bin_idx = (lb_idx+ub_idx)/2;
+      ${ctype} this_lb = lb[bin_idx];
+      ${ctype} this_ub = ub[bin_idx];
+      if ( ( inv >= this_lb ) && ( inv < this_ub ) ) {
+        break;
+      }
+      else if ( inv < this_lb ) { 
+        ub_idx = bin_idx;
+      }
+      else if ( inv >= this_ub ) { 
+        lb_idx = bin_idx;
+      }
+      else {
+        WHEREAMI; status = -1;
+      }
+    }
+#ifdef DEBUG
+    if ( ( bin_idx < 0 ) || ( bin_idx >= (int)nb ) ) { status = -1; }
+#endif
+    __atomic_add_fetch(cnt+bin_idx, 1, 0); // one more in outQ
+  }
+  cBYE(status);
+#ifdef DEBUG
+  uint64_t chk_sum_cnt = 0;
+  for ( uint32_t i = 0; i < nb; i++ )  {
+    chk_sum_cnt += cnt[i]; 
+  }
+  if ( chk_sum_cnt != (sum_cnt + n_invals) )  { go_BYE(-1); }
+#endif
+BYE:
+  return status;
+}
+   ]]
+}

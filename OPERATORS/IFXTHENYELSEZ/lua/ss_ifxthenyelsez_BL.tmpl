@@ -8,8 +8,11 @@ extern int
 ${fn}(  
       const bool * restrict const x, // condition field 
       const ${wctype} * const ptr_sval_y, // scalar val
+      const bool * const nn_y,
       const ${wctype} * const ptr_sval_z, // scalar val
+      const bool * const nn_z,
       ${wctype} * restrict const w, // output field
+      const bool * const nn_w,
       uint32_t n
       );
 //STOP_FOR_CDEF
@@ -22,8 +25,11 @@ int
 ${fn}(  
       const bool * restrict const x, // condition field 
       const ${wctype} * const ptr_sval_y, // scalar val
+      const bool * const nn_y,
       const ${wctype} * const ptr_sval_z, // scalar val
+      const bool * const nn_z,
       ${wctype} * restrict const w, // output field
+      const bool * const nn_w,
       uint32_t n
       )
 {
@@ -33,6 +39,9 @@ ${fn}(
   if ( ptr_sval_y == NULL ) { go_BYE(-1); }
   if ( ptr_sval_z == NULL ) { go_BYE(-1); }
   if ( w == NULL ) { go_BYE(-1); }
+  if ( nn_y != NULL ) { go_BYE(-1); } 
+  if ( nn_z != NULL ) { go_BYE(-1); } 
+  if ( nn_w != NULL ) { go_BYE(-1); } 
   ${wctype} sval_y = *ptr_sval_y;
   ${wctype} sval_z = *ptr_sval_z;
 

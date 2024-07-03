@@ -70,7 +70,7 @@ vctr_early_free(
     }
     // free resources for the chunk. Note that we do NOT free the chunk
     ptr_vctr_val->num_early_freed++;
-    printf("Deleting chunk for early free\n");
+    // printf("Deleting chunk for early free\n");
     status = chnk_free_resources(tbsp, ptr_chnk_key, ptr_chnk_val,
         ptr_vctr_val->is_persist); 
     cBYE(status); 

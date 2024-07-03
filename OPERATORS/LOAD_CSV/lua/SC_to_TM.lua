@@ -76,7 +76,9 @@ local function SC_to_TM(
     local len, base_data, nn_data  = invec:get_chunk(l_chunk_num)
     if ( len == 0 ) then 
       buf:delete()
-      nn_buf:delete()
+      if ( has_nulls ) then nn_buf:delete() end 
+      -- print("A SC_to_TM killing Vector " .. (invec:name() or "anon"))
+      invec:kill()
       return 0, nil 
     end 
     assert(type(base_data) == "CMEM")
@@ -100,6 +102,10 @@ local function SC_to_TM(
     assert(status == 0)
     invec:unget_chunk(l_chunk_num)
     l_chunk_num = l_chunk_num + 1
+    if ( len < subs.max_num_in_chunk ) then 
+      -- print("B SC_to_TM killing Vector " .. (invec:name() or "anon"))
+      invec:kill()
+    end
     if ( has_nulls ) then 
       return len, buf, nn_buf
     else

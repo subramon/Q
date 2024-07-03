@@ -8,7 +8,7 @@ MYSO = libutils.so
 
 EXTSO=${Q_ROOT}/lib/${MYSO}
 
-all : ${MYSO} ${EXTSO}
+all : ${MYSO} ${EXTSO} cli_shard_file
 
 gen_inc_files : \
 	../inc/txt_to_BL.h \
@@ -33,11 +33,13 @@ gen_inc_files : \
 	../inc/F8_to_txt.h \
 	../inc/copy_file.h \
 	../inc/file_exists.h \
-	../inc/isfile.h \
 	../inc/isdir.h \
+	../inc/isfile.h \
+	../inc/is_file_in_dir.h \
 	../inc/rand_file_name.h \
 	../inc/get_bit_u64.h \
 	../inc/get_file_size.h \
+	../inc/file_as_str.h \
 	../inc/mem_info.h \
 	../inc/get_time_usec.h \
 	../inc/get_bit_u64.h \
@@ -136,6 +138,9 @@ SC_to_txt.c : ../inc/SC_to_txt.h
 ../inc/get_file_size.h : 
 	luajit ../src/cli_extract_func_decl.lua get_file_size.c ${INCDIR}
 
+../inc/file_as_str.h : 
+	luajit ../src/cli_extract_func_decl.lua file_as_str.c ${INCDIR}
+
 ../inc/mem_info.h : 
 	luajit ../src/cli_extract_func_decl.lua mem_info.c ${INCDIR}
 
@@ -174,6 +179,7 @@ GEN_INC_FILES = \
 	../inc/file_exists.h  \
 	../inc/get_bit_u64.h \
 	../inc/get_file_size.h  \
+	../inc/file_as_str.h  \
 	../inc/mem_info.h  \
 	../inc/get_time_usec.h \
 	../inc/isdir.h  \
@@ -200,11 +206,15 @@ SRCS += BL_to_txt.c
 SRCS += file_exists.c 
 SRCS += get_bit_u64.c  
 SRCS += get_file_size.c 
-SRCS += mem_info.c 
+SRCS += file_as_str.c 
+SRCS += get_cli_arg.c 
 SRCS += get_time_usec.c 
 SRCS += is_valid_chars_for_num.c 
-SRCS += isfile.c 
 SRCS += isdir.c 
+SRCS += is_file_in_dir.c 
+SRCS += isfile.c 
+SRCS += lookup8.c 
+SRCS += mem_info.c 
 SRCS += mk_file.c 
 SRCS += q_omp_get_num_procs.c  
 SRCS += qtypes.c 
@@ -216,6 +226,8 @@ SRCS += SC_to_txt.c
 SRCS += set_bit_u64.c  
 SRCS += spooky_hash.c 
 SRCS += tm2time.c 
+SRCS += shard_file.c 
+SRCS += str_as_file.c 
 SRCS += trim.c 
 SRCS += txt_to_BL.c 
 SRCS += txt_to_SC.c 
@@ -242,6 +254,8 @@ GEN_SRCS += ../src/txt_to_F8.c
 GEN_OBJS = $(GEN_SRCS:.c=.o)
 #----------------------------------
 
+cli_shard_file : cli_shard_file.o lookup8.o
+	gcc ${QCFLAGS} cli_shard_file.o $ lookup8.o ${MYSO} -o cli_shard_file
 
 ${EXTSO} : ${MYSO}
 	cp ${MYSO} ${EXTSO}

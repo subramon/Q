@@ -15,12 +15,13 @@ require "Q/OPERATORS/MK_COL/lua/mk_tbl"
 require "Q/OPERATORS/S_TO_F/lua/s_to_f"
 require "Q/OPERATORS/F_TO_S/lua/f_to_s"
 
-require "Q/UTILS/lua/pack"
-require "Q/UTILS/lua/unpack"
+require "Q/UTILS/lua/tbl_to_vec" 
+require "Q/UTILS/lua/vec_to_tbl" 
 require "Q/UTILS/lua/set_memo"
 
 require 'Q/OPERATORS/WHERE/lua/where'
 require "Q/OPERATORS/WHERE/lua/select_ranges"
+require "Q/OPERATORS/F1SnOPF2/lua/f1snopf2"
 require "Q/OPERATORS/F1S1OPF2/lua/is_prev"
 require "Q/OPERATORS/F1S1OPF2/lua/vshift"
 require "Q/OPERATORS/F1S1OPF2/lua/vstrcmp"
@@ -38,15 +39,25 @@ require "Q/OPERATORS/PERMUTE/lua/permute_to"
 require "Q/OPERATORS/PERMUTE/lua/permute_from"
 require 'Q/OPERATORS/UNIQUE/lua/unique'
 require 'Q/OPERATORS/JOIN/lua/join'
-require "Q/OPERATORS/IDX_SORT/lua/idx_sort"
+require "Q/OPERATORS/DRG_SORT/lua/drg_sort"
 require "Q/OPERATORS/IFXTHENYELSEZ/lua/ifxthenyelsez"
 require "Q/OPERATORS/AINB/lua/get_idx_by_val"
 require "Q/OPERATORS/GET/lua/get_val_by_idx"
 
 require "Q/OPERATORS/COUNT/lua/count"
+require "Q/OPERATORS/BIN_COUNT/lua/bin_count"
+require "Q/OPERATORS/BIN_PLACE/lua/bin_place"
 
 require "Q/UTILS/lua/import"
 require "Q/UTILS/lua/register_qop" 
+
+require "Q/OPERATORS/VSPLIT/lua/vsplit" 
+require "Q/OPERATORS/LOAD_BIN/lua/load_bin" 
+require "Q/OPERATORS/PAR_SORT/lua/par_sort"
+require "Q/OPERATORS/PAR_IDX_SORT/lua/par_idx_sort"
+
+require "Q/OPERATORS/PACK/lua/pack"
+require "Q/OPERATORS/UNPACK/lua/unpack"
 
 --== These are from QTILS 
 require 'Q/QTILS/lua/fold'
@@ -112,7 +123,12 @@ _G['g_ctr']  = {}
 
 if ( lgutils.is_restore_session() ) then
   print("restoring session")
-  require "q_meta"
+  -- OLD require "q_meta"
+  local meta_file =  lgutils.meta_dir() .. "/q_meta.lua"
+  print("Loading file " .. meta_file)
+  local x = loadfile(meta_file)
+  assert(type(x) == "function")
+  x()
 else
   print("NOT restoring session")
 end

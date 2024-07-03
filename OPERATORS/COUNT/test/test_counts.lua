@@ -16,7 +16,8 @@ tests.t1 = function()
   local vec = Q.mk_col(tbl, qtype)
   local rdcr = Q.count(vec, value)
   assert(type(rdcr) == "Reducer")
-  local count = rdcr:eval()
+  local n1 = rdcr:eval()
+  assert(n1:to_num() == 1)
   print("Successfully completed test t1")
 end
 

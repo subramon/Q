@@ -76,8 +76,12 @@ local function expander_where(a, b, optargs)
         local num_in_out = tonumber(c_n_out[0])
         aidx:delete()
         n_out:delete()
-        a:early_free() -- EXPERIMENTAL Jan 8 2024
-        b:early_free() -- EXPERIMENTAL Jan 8 2024
+        -- print("WHERE early freeing " .. (a:name() or "anonymous"))
+        a:early_free() 
+        -- print("WHERE early freeing " .. (b:name() or "anonymous"))
+        b:early_free() 
+        a:kill() -- EXPERIMENTAL March 2024
+        b:kill() -- EXPERIMENTAL March 2024
         return num_in_out, out_buf
       end
       --================================================
@@ -98,10 +102,6 @@ local function expander_where(a, b, optargs)
       a:unget_chunk(ab_chunk_num)
       b:unget_chunk(ab_chunk_num)
       -- print("XXX",  tonumber(c_aidx[0]), ab_len)
-      if ( tonumber(c_aidx[0]) >= ab_len ) then
-        ab_chunk_num = ab_chunk_num + 1
-        c_aidx[0] = 0
-      end
       if ( ( tonumber(c_aidx[0]) >= ab_len ) and 
            ( ab_len < a:max_num_in_chunk() ) ) then 
         -- no more input, flush whatever is in output buffer
@@ -110,15 +110,27 @@ local function expander_where(a, b, optargs)
         -- print("num_in_out = ", num_in_out)
         aidx:delete()
         n_out:delete()
-        a:early_free() -- EXPERIMENTAL Jan 8 2024
-        b:early_free() -- EXPERIMENTAL Jan 8 2024
+        print("WHERE early freeing " .. (a:name() or "anonymous"))
+        a:early_free() 
+        print("WHERE early freeing " .. (b:name() or "anonymous"))
+        b:early_free() 
+        a:kill() -- EXPERIMENTAL March 2024
+        b:kill() -- EXPERIMENTAL March 2024
         -- print("No more input: returning from WHERE")
         return num_in_out, out_buf
       end
+      if ( tonumber(c_aidx[0]) >= ab_len ) then
+        ab_chunk_num = ab_chunk_num + 1
+        c_aidx[0] = 0
+      end
     until ( num_in_out == subs.max_num_in_chunk )
     l_chunk_num = l_chunk_num + 1 
-    a:early_free() -- EXPERIMENTAL Jan 8 2024
-    b:early_free() -- EXPERIMENTAL Jan 8 2024
+    a:early_free() 
+    b:early_free() 
+    if ( num_in_out < subs.max_num_in_chunk ) then
+      a:kill() -- EXPERIMENTAL March 2024
+      b:kill() -- EXPERIMENTAL March 2024
+    end
     return num_in_out, out_buf
   end
   local vargs = {}

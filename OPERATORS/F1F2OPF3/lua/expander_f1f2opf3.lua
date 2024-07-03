@@ -19,30 +19,35 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
   local func_name = assert(subs.fn)
   qc.q_add(subs)
 
-  local buf_sz = subs.max_num_in_chunk * subs.f3_width
   local l_chunk_num = 0
   local f3_gen = function(chunk_num)
     assert(chunk_num == l_chunk_num)
-    local buf = assert(cmem.new({size = buf_sz, qtype = subs.f3_qtype}))
+    local buf = assert(cmem.new(
+      {size = subs.bufsz, qtype = subs.f3_qtype}))
     buf:stealable(true)
+    local nn_buf
+    if ( subs.has_nulls ) then 
+      nn_buf = assert(cmem.new(
+        {size = subs.nn_bufsz, qtype = subs.nn_f3_qtype}))
+      nn_buf:stealable(true)
+    end
     --=============================
     local f1_len, f1_chunk, nn_f1_chunk
     local f2_len, f2_chunk, nn_f2_chunk
     f1_len, f1_chunk, nn_f1_chunk = f1:get_chunk(l_chunk_num)
     f2_len, f2_chunk, nn_f2_chunk = f2:get_chunk(l_chunk_num)
-    if ( f1_len ~= f2_len) then
-      print(f1:name())
-      print(f2:name())
-      print(f1_len)
-      print(f2_len)
-      print(l_chunk_num)
-      print("op = ", op)
-    end
     assert(f1_len == f2_len)
     -- early exit 
     if ( f1_len == 0 ) then 
       buf:delete()
+      if ( nn_buf ) then nn_buf:delete() end
       if ( subs.cargs ) then subs.cargs:delete() end 
+      --[[
+      print("A " .. op .. " sending kill to Vector " .. 
+        (f1:name() or "anonymous"))
+      print("A " .. op .. " sending kill to Vector " .. 
+        (f2:name() or "anonymous"))
+        --]]
       f1:kill() 
       f2:kill()
       return 0 
@@ -55,8 +60,17 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
     local chunk2 = get_ptr(f2_chunk, subs.f2_cast_as)
     local chunk3 = get_ptr(buf,      subs.f3_cast_as)
     local start_time = cutils.rdtsc()
-    local status = 
-    qc[func_name](chunk1, chunk2, f1_len, subs.cst_cargs, chunk3)
+    local status 
+    if ( subs.has_nulls ) then 
+      local nn_chunk1 = get_ptr(nn_f1_chunk, "bool *")
+      local nn_chunk2 = get_ptr(nn_f2_chunk, "bool *")
+      local nn_chunk3 = get_ptr(nn_buf, "bool *")
+      status = qc[func_name](chunk1, nn_chunk1, chunk2, nn_chunk2, f1_len, 
+        subs.cst_cargs, chunk3, nn_chunk3)
+    else
+      buf:nop()
+      status = qc[func_name](chunk1, chunk2, f1_len, subs.cst_cargs, chunk3)
+    end
     assert(status == 0)
     record_time(start_time, func_name)
 
@@ -66,17 +80,22 @@ local function expander_f1f2opf3(op, f1, f2, optargs )
       assert(f1:is_eov())
       assert(f2:is_eov())
       if ( subs.cargs ) then subs.cargs:delete() end 
+      --[[
+      print("B " .. op .. " sending kill to Vector " ..  (f1:name() or "anynonymous"))
+      print("B " .. op .. " sending kill to Vector " .. 
+        (f2:name() or "anonymous"))
+        --]]
       f1:kill(); 
       f2:kill();
     end
     l_chunk_num = l_chunk_num + 1
-    return f1_len, buf
+    return f1_len, buf, nn_buf
   end
   local vargs = copy_optargs_to_vctr_args(optargs)
 
   vargs.gen = f3_gen
   vargs.qtype=subs.f3_qtype
-  vargs.has_nulls=false 
+  vargs.has_nulls = subs.has_nulls
   vargs.max_num_in_chunk = subs.max_num_in_chunk
   return lVector(vargs)
 end

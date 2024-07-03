@@ -1,32 +1,52 @@
 -- FUNCTIONAL
-local Q = require 'Q'
 require 'Q/UTILS/lua/strict'
-local qcfg = require 'Q/UTILS/lua/qcfg'
+local Q       = require 'Q'
+local qcfg    = require 'Q/UTILS/lua/qcfg'
+local lgutils = require 'liblgutils'
 
 local tests = {}
 tests.t1 = function()
+  collectgarbage()
+  collectgarbage("stop")
+  local pre = lgutils.mem_used()
   local c1 = Q.mk_col( {1,2,3,4,5,6,7,8}, "I4")
   local c2 = Q.is_prev(c1, "eq", { default_val = false } )
   c2:eval()
-  c2:pr()
-  print("=====")
-  -- TODO local n1, n2 = Q.sum(c2):eval()
-  -- TODO assert(n1:to_num() == 0)
-  -- TODO Q.print_csv({c1, c2})
+  local r = Q.sum(c2)
+  local n1, n2 = r:eval()
+  assert(n1:to_num() == 0)
+  -- Q.print_csv({c1, c2})
+  r:delete()
+  c2:delete()
 
-  local c2 = Q.is_prev(c1, "eq", { default_val = true } )
+  local c2 = Q.is_prev(c1, "neq", { default_val = true } )
   c2:eval()
-  c2:pr()
   print("=====")
-  -- TODO local n1, n2 = Q.sum(c2):eval()
-  -- TODO Q.print_csv({c1, c2})
-  -- TODO assert(n1:to_num() == 1)
+  local r = Q.sum(c2)
+  local n1, n2 = r:eval()
+  assert(n1 == n2)
+  -- Q.print_csv({c1, c2})
+  c2:delete()
+  r:delete()
+
+  c1:delete()
   local c1 = Q.mk_col( {1,1,1,1,1,1,1,1}, "F8")
   local c2 = Q.is_prev(c1, "eq", { default_val = false } )
   c2:eval()
-  c2:pr()
-  print("=====")
+  local r = Q.sum(c2)
+  local n1, n2 = r:eval()
+  assert(n1:to_num() == c1:num_elements() -1)
+  -- Q.print_csv({c1, c2})
+  c2:delete()
+  r:delete()
+  c2:delete()
+  -- cleanup
+  c1:delete()
 
+  local post = lgutils.mem_used()
+  print(pre,  post)
+  assert(pre == post)
+  collectgarbage("restart")
   print("Test t1 succeeded")
 end
 tests.t2 = function()
@@ -63,7 +83,22 @@ tests.t3 = function()
 
   print("Test t3 succeeded")
 end
+tests.t4 = function()
+  local M = {}
+  M[#M+1] = { name = "foo", qtype = "I8", has_nulls = false, }
+  local O = {is_hdr = false}
+  local T = Q.load_csv("./samples.csv", M, O)
+  local w = Q.is_prev(T.foo, "neq", { default_val = true })
+  local r = Q.sum(w)
+  local n1, n2 = r:eval()
+  T.bar = Q.where(T.foo, w):eval()
+  assert(T.bar:num_elements() == 867697)
+  assert(T.foo:num_elements() == 867840)
+  print("Test t4 succeeded")
+  -- T.bar:pr("_x")
+end
 --return tests
-tests.t1()
-tests.t2()
-tests.t3()
+-- tests.t1()
+-- tests.t2()
+-- tests.t3()
+tests.t4()

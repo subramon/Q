@@ -29,7 +29,7 @@ vctr_set_num_lives_kill(
   if ( !is_found ) { go_BYE(-1); }
   if ( val.num_elements > 0 ) { go_BYE(-1); }
   if ( val.is_persist ) { go_BYE(-1); }
-  if ( val.is_early_freeable ) { go_BYE(-1); }
+  // TODO THINK P3 if ( val.is_early_freeable ) { go_BYE(-1); }
   // I used to have the is_eov check but I think it is not necessary
   // if ( val.is_eov ) { go_BYE(-1); }
   // This is okay: if ( val.is_early_freeable ) { go_BYE(-1); }
@@ -63,10 +63,12 @@ BYE:
 int
 vctr_kill(
     uint32_t tbsp,
-    uint32_t vctr_uqid
+    uint32_t vctr_uqid,
+    bool *ptr_kill_success
     )
 {
   int status = 0;
+  *ptr_kill_success = false;
   if ( tbsp != 0 ) { go_BYE(-1); } 
   bool is_found; uint32_t where_found = ~0;
   vctr_rs_hmap_key_t key = vctr_uqid;
@@ -78,10 +80,22 @@ vctr_kill(
   // fprintf(stderr, "Vector [%u:%s] killed \n", vctr_uqid, val.name);
   if ( val.num_lives_kill > 0 ) {
     g_vctr_hmap[tbsp].bkts[where_found].val.num_lives_kill--;
+  }
+  if ( g_vctr_hmap[tbsp].bkts[where_found].val.num_lives_kill > 0 ) { 
+    /*
+    printf("Vector %s lives to fight another day %d \n",
+      g_vctr_hmap[tbsp].bkts[where_found].val.name, 
+      g_vctr_hmap[tbsp].bkts[where_found].val.num_lives_kill);
+      */
     goto BYE;  // lost one life but not ready to die
   }
+  /*
+  printf("Vector %s dying because of kill \n", 
+    g_vctr_hmap[tbsp].bkts[where_found].val.name);
+    */
   status = vctr_del(tbsp, vctr_uqid, &is_found); 
   if ( !is_found ) { go_BYE(-1); } 
+  *ptr_kill_success = true;
 BYE:
   return status;
 }

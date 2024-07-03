@@ -16,7 +16,7 @@ read_configs(
   lua_State *L = NULL;
   q_config_t C; memset(&C, 0, sizeof(q_config_t));
   const char * const lua_fn = "rdfn";
-  char cmd[128]; int sz = sizeof(cmd); memset(cmd, 0, sz);
+  char cmd[128]; uint32_t sz = sizeof(cmd); memset(cmd, 0, sz);
   int tbsp = 0; // we read configs only for default table space
   char *real_data_dir_root = NULL;
 
@@ -24,9 +24,27 @@ read_configs(
   if ( L == NULL ) { go_BYE(-1); }
   luaL_openlibs(L);
 
-  status = luaL_dostring(L, "T = require 'q_config'");
-  if ( status != 0 ) { 
-    fprintf(stderr, "Error luaL_string=%s\n", lua_tostring(L,-1));
+  // Note that T is a global in the Lua state 
+  if ( ( g_q_config != NULL ) && ( *g_q_config != '\0' ) ) { 
+    if ( (strlen(g_q_config) + 24 ) > sz ) { go_BYE(-1); }
+    sprintf(cmd, "tmp = loadfile(\"%s\")", g_q_config); 
+    status = luaL_dostring(L, cmd); 
+    if ( status != 0 ) { 
+      fprintf(stderr, "Error executing [%s]: luaL_string=%s\n", 
+          cmd, lua_tostring(L,-1));
+    }
+    sprintf(cmd, "T = tmp()"); 
+    status = luaL_dostring(L, cmd); 
+    if ( status != 0 ) { 
+      fprintf(stderr, "Error executing [%s]: luaL_string=%s\n", 
+          cmd, lua_tostring(L,-1));
+    }
+  }
+  else {
+    status = luaL_dostring(L, "T = require 'q_config'");
+    if ( status != 0 ) { 
+      fprintf(stderr, "Error luaL_string=%s\n", lua_tostring(L,-1));
+    }
   }
   status = luaL_dostring(L, "assert(type(T) == 'table')");
   if ( status != 0 ) { 
@@ -76,6 +94,11 @@ read_configs(
   // clean up lua stack 
   lua_pop(L, 1);
   chk = lua_gettop(L); if ( chk != 0 ) { go_BYE(-1); }
+  // clean up globals 
+  status = luaL_dostring(L, "T = nil"); 
+  if ( status != 0 ) { 
+    fprintf(stderr, "Error luaL_string=%s\n", lua_tostring(L,-1));
+  }
   //-----------------------------------------------------
   // START: This is ugly to have to copy out of struct TODO P4
   g_restore_session = C.restore_session;
