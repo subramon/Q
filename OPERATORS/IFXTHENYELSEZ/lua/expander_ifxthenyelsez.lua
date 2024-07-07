@@ -52,7 +52,7 @@ local function expander_ifxthenyelsez(x, y, z)
     end
     local xlen, xchunk, nn_xchunk = x:get_chunk(l_chunk_num) 
     local xptr = ffi.cast(subs.cast_x_as, get_ptr(xchunk))
-    assert(nn_xchunk == nil)
+    -- can happen if we have dropped nulls for x: assert(nn_xchunk == nil)
 
     if ( xlen == 0 ) then
       wbuf:delete()

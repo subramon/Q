@@ -114,8 +114,7 @@ local function expander_where(a, b, optargs)
         a:early_free() 
         print("WHERE early freeing " .. (b:name() or "anonymous"))
         b:early_free() 
-        a:kill() -- EXPERIMENTAL March 2024
-        b:kill() -- EXPERIMENTAL March 2024
+        -- ?? TODO okay to kill?? a:kill() ; b:kill() 
         -- print("No more input: returning from WHERE")
         return num_in_out, out_buf
       end

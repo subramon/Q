@@ -11,7 +11,7 @@ local function skip_save(vec)
   -- TODO P4 At some point, we might want to relax following
   local num_elements = vec:num_elements()
   if ( num_elements == nil ) then
-    print("Being asked to save a vecytor that does not exist. Skipping...")
+    print("Being asked to save a Vector that does not exist. Skipping...")
     is_dead = true
     return true, is_dead
   end
@@ -36,6 +36,7 @@ local function skip_save(vec)
     ( is_early_freeable ) or ( is_killable ) 
     ) then
     print("Not saving Vector " .. (vec:name() or "anonymous"))
+
     is_skip = true 
   else
     print("Saving Vector     " .. (vec:name() or "anonymous"))
@@ -54,7 +55,7 @@ local function internal_save(
   fp
   )
   if not should_save(name, value) then return end
-  print("Internal save of " .. name .. " at depth " .. depth)
+  -- print("Internal save of " .. name .. " at depth " .. depth)
   assert(type(Tsaved) == "table")
   assert(type(depth) == "number")
   assert(depth >= 0)
@@ -86,11 +87,7 @@ local function internal_save(
        if ( is_dead ) then
          print("Problem with dead vector")
        else
-        print("Not saving lVector: " .. vec:name())
-        print(vec:num_elements())
-        print(vec:has_gen() ) 
-        print(vec:is_eov() )
-        print(vec:memo_len() )
+        -- print("Not saving lVector: " .. vec:name())
         -- TODO P2 Think. Is following delete() needed?
         vec:delete() -- Delete this vector from hashmaps
       end
@@ -99,7 +96,7 @@ local function internal_save(
       if ( not vec:is_lma() ) then 
         vec:make_mem(2) -- copy from level 1 to level 2 
       end
-      print("Saving [" .. vec:name() .. "]")
+      -- print("Saving [" .. vec:name() .. "]")
       vec:persist()  -- indicate not to free level 2 upon delete
       fp:write(name, " = lVector ( { uqid = ", vec:uqid(), " } )\n" )
       -- repeat above for nn vector assuming it exists

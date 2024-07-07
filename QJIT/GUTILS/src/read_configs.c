@@ -109,7 +109,10 @@ read_configs(
   printf("g_restore_session = %s \n", g_restore_session ? "true" : "false");
   
   real_data_dir_root = realpath(C.data_dir_root, NULL);
-  if ( real_data_dir_root == NULL ) { go_BYE(-1); } 
+  if ( real_data_dir_root == NULL ) { 
+    fprintf(stderr, "C.data_dir_root = %s \n", C.data_dir_root);
+    go_BYE(-1); 
+  } 
   g_data_dir_root[tbsp] = strdup(real_data_dir_root);
 
   if ( strlen(C.meta_dir_root) >= Q_MAX_LEN_DIR_NAME ) { go_BYE(-1); } 

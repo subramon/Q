@@ -116,9 +116,9 @@ init_globals(
     if ( config_file != NULL ) { // we found --config in the args 
       g_q_config = realpath(config_file, NULL);
       if ( g_q_config == NULL ) { go_BYE(-1); }
-      if ( mod_argv != NULL ) { 
+      if ( ptr_mod_argv != NULL ) { 
         // When luajit.c is the caller, we need modified configs
-        // Else, we don't. By sending a NULL pointer as mod_argv
+        // Else, we don't. By sending a NULL pointer as ptr_mod_argv
         // we can distinguish between the 2 call types.
         mod_argc = argc - 2; if ( mod_argc == 0 ) { go_BYE(-1); }
         /* Note the +1 This is super-important because of 

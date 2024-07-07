@@ -587,7 +587,11 @@ function lVector:put_chunk(c, n, nn_c)
   else
     -- TODO THINK Why are we getting nn_c if vector does not have nulls?
     if ( type(nn_c) == "CMEM" ) then
-      print("STRANGE. " .. self:name())
+      --[[ this can happen if we have dropped_nulls for this vector.
+      Suppose we did x = Q.vvor(y, z) where y and z have nulls
+      and then we did x:drop_nulls()
+      but the vvor will return a nn_chunk for x 
+      --]]
       nn_c:delete() -- not needed
     else
       assert(nn_c == nil)
@@ -937,16 +941,16 @@ end
 -- x:delete()
 -- y is left hanging to an empty vector -- dangerous situation
 function lVector:delete()
+  if ( self._is_dead ) then
+    print("Vector already dead.")
+    return false
+  end 
   local vname = ifxthenxelsey(self:name(), "anonymous:" .. self:uqid())
   -- print("DELETE CALLED on " .. vname)
   if ( self._parent ) then
     print("Need to kill parent, not me") -- TODO P1 Think about this
     return false
   end
-  if ( self._is_dead ) then
-    print("Vector already dead.")
-    return false
-  end 
   --=========================================
   if ( self:has_nulls() ) then 
     local nn_vector = self._nn_vec
