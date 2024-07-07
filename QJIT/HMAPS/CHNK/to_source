@@ -1,0 +1,1 @@
+export LUA_CPATH="$HOME/RSUTILS/binding/src/?.so;;"
