@@ -1,122 +1,92 @@
-require 'Q/UTILS/lua/strict'
-local cutils = require 'libcutils'
 local plpath = require 'pl.path'
-local ffi     = require 'ffi'
-local cVector = require 'libvctr'
+local pldir  = require 'pl.dir'
+require 'Q/UTILS/lua/strict'
+local Q = require 'Q'
+local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
 local Scalar  = require 'libsclr'
-local cmem    = require 'libcmem'
-local qconsts = require 'Q/UTILS/lua/qconsts'
-local qmem    = require 'Q/UTILS/lua/qmem'
-qmem.init()
-local chunk_size = qmem.chunk_size
+local cVector = require 'libvctr'
+local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local pldir   = require 'pl.dir'
+local lgutils = require 'liblgutils'
 
+local qtype = "I4"
+local max_num_in_chunk = 64
+local len = 3 * max_num_in_chunk + 7
 local tests = {}
-lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
---=================================
---=================================
--- testing put1 and get1 and clone 
-tests.t1 = function()
-  for _, qtype in ipairs({"I1","I2", "I4","I8", "F4", "F8"}) do 
-    local v = lVector.new({ qtype = qtype})
-    local n = chunk_size + 3
-    local val = 0
-    for i = 1, n do 
-      local s = Scalar.new(val, qtype)
-      v:put1(s)
-      val = val + 1
-      if ( val == 127 ) then val = 0 end 
+tests.t_clone = function()
+  collectgarbage("stop")
+  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
+    name = "x", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+  x:eval()
+  x:chunks_to_lma()
+  x:nop()
+  local nC = x:num_chunks() 
+  for k = 1, nC do 
+    assert(x:num_readers(k-1) == 0) 
+  end 
+  x:nop()
+  local nx, cx = x:get_chunk(3); assert(nx == 7)
+  x:unget_chunk(3)
+  assert(x:num_elements() == len)
+  local y = x:clone()
+  y:lma_to_chunks()
+  y:check()
+  assert(x:num_chunks() == y:num_chunks())
+  assert(nC == 4)
+  x:nop()
+  for k = 1, nC do 
+    print("Checking " .. k)
+    assert(x:num_readers(k-1) == 0) 
+  end 
+  for i = 1, nC do 
+    -- print("Iteration i = ", i)
+    local nx, cx = x:get_chunk(3); assert(nx == 7)
+    x:unget_chunk(3)
+
+    local nx, cx = x:get_chunk(i-1)
+    assert(type(cx) == "CMEM")
+    assert(type(nx) == "number")
+    x:unget_chunk(i-1)
+
+    local ny, cy = y:get_chunk(i-1)
+    assert(type(cy) == "CMEM")
+    assert(type(ny) == "number")
+    y:unget_chunk(i-1)
+
+    local xptr = get_ptr(cx, "int32_t *")
+    local yptr = get_ptr(cy, "int32_t *")
+    for j = 1, nx do
+      assert(xptr[j-1] == yptr[j-1])
     end
-    -- cannot clone until eov tru 
-    print(">>> start deliberate error")
-    local vprime = v:clone()
-    assert(not vprime)
-    print(">>> stop deliberate error")
-    ----
-    v:eov()
-    local w = v:clone()
-    assert(type(w) == "Vector")
-    assert(w:is_eov())
-    assert(w:is_memo())
-    assert(w:check())
-    print(v:length())
-    print(w:length())
-    assert(w:length() == v:length())
-    assert(w:qtype()  == v:qtype())
-    for i = 1, n do 
-      local wval = w:get1(i-1)
-      local vval = v:get1(i-1)
-      
-      assert(wval == vval)
-    end
-    -- Now modify the w vector by doubling every element 
-    local chk_n, cmem, nn_cmem = w:start_write()
-    assert(n == chk_n)
-    local cptr = get_ptr(cmem, qtype)
-    for i = 1, n do 
-      cptr[i-1] = 2 * cptr[i-1]
-    end
-    w:end_write()
-    -- Now confirm that w vector is twice the v vector 
-    for i = 1, n do 
-      local wval = w:get1(i-1)
-      local vval = v:get1(i-1)
-      vval = Scalar.new(2) * vval
-      assert(wval == vval)
+
+    assert(nx == ny)
+    if ( i == nC ) then 
+      assert(nx == 7)
+    else
+      assert(nx == x:max_num_in_chunk())
     end
   end
-  print("Test t1 completed")
+
+  for k = 1, nC do assert(x:num_readers(k-1) == 0) end 
+  assert(x:num_readers() == 0)
+
+  local z = Q.vveq(x, y):eval()
+  Q.print_csv({x, y, z}, { opfile = "_x"})
+  local r = Q.sum(z)
+  local n1, n2 = r:eval()
+  assert(n1 == n2)
+  for k = 1, nC do assert(x:num_readers(k-1) == 0) end 
+  assert(x:num_readers() == 0)
+
+  x:delete()
+  y:delete()
+  z:delete()
+  r:delete()
+  assert(lgutils.mem_used() == 0)
+  assert(lgutils.dsk_used() == 0)
+  collectgarbage("restart")
+  print("Test t_clone completed successfully")
 end
--- testing shutdown before eov => deletion of vector
-tests.t2 = function()
-  for _, qtype in ipairs({"I1","I2", "I4","I8", "F4", "F8"}) do 
-    local width = qconsts.qtypes[qtype].width
-    local v = lVector.new( { qtype = qtype, width = width} )
-    local n = chunk_size + 3
-    for i = 1, n do 
-      local s = Scalar.new(1, qtype)
-      v:put1(s)
-    end
-    local x = v:shutdown()
-    assert(not x)
-  end
-  print("Test t2 completed")
-end
--- testing shutdown after eov but no persist => deletion of vector 
-tests.t3 = function()
-  for _, qtype in ipairs({"I1","I2", "I4","I8", "F4", "F8"}) do 
-    local width = qconsts.qtypes[qtype].width
-    local v = lVector.new( { qtype = qtype, width = width} ):persist(false)
-    local n = chunk_size + 3
-    for i = 1, n do 
-      local s = Scalar.new(1, qtype)
-      v:put1(s)
-    end
-    v:eov()
-    local x = v:shutdown()
-    assert(not x)
-  end
-  print("Test t3 completed")
-end
--- testing shutdown after eov but no persist => reincarnate string returned
-tests.t4 = function()
-  for _, qtype in ipairs({"I1","I2", "I4","I8", "F4", "F8"}) do 
-    local width = qconsts.qtypes[qtype].width
-    local v = lVector.new( { qtype = qtype, width = width} ):persist(true)
-    local n = chunk_size + 3
-    for i = 1, n do 
-      local s = Scalar.new(1, qtype)
-      v:put1(s)
-    end
-    v:eov()
-    local x = v:shutdown()
-    assert(type(x) == "string")
-    local y = loadstring(x)()
-    local w = lVector(y)
-    assert(type(w) == "lVector")
-  end
-  print("Test t4 completed")
-end
-tests.t1()
 -- return tests
+tests.t_clone()

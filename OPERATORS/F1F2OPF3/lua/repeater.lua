@@ -3,7 +3,7 @@ local cmem    = require 'libcmem'
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
 local cutils  = require 'libcutils'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
 local function lmin(x, y) if x < y then return x else return y end end 

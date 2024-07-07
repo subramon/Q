@@ -1,1 +1,0 @@
-Quit early if is_err == true

@@ -1,4 +1,4 @@
-local lVector     = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
 local ffi         = require 'ffi' 
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local qc          = require 'Q/UTILS/lua/qcore'

@@ -1,5 +1,5 @@
 -- This is inverse of mk_col 
-local lVector   = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector   = require 'Q/RUNTIME/VCTR/lua/lVector'
 local rev_lkp   =  require 'Q/UTILS/lua/rev_lkp'
 
 local good_qtypes = rev_lkp({ 

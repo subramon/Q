@@ -5,7 +5,7 @@
 local ffi     = require 'ffi'
 local cutils  = require 'libcutils'
 local cVector = require 'libvctr'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
 local is_in   = require 'Q/UTILS/lua/is_in'
 local qcfg    = require 'Q/UTILS/lua/qcfg'

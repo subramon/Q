@@ -7,7 +7,7 @@ local select_ranges = T.select_ranges
 assert(type(select_ranges) == "function")
 local cVector = require 'libvctr'
 local Scalar  = require 'libsclr'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local lgutils = require 'liblgutils'
 
 local tests = {}

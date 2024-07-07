@@ -1,6 +1,6 @@
 local cutils        = require 'libcutils'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
-local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
 
 return function (invec, ranges, optargs)
   local subs = {}; 

@@ -2,7 +2,7 @@
 local ffi           = require 'ffi'
 local cutils        = require 'libcutils'
 local lgutils       = require 'liblgutils'
-local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
 local validate_meta = require "Q/OPERATORS/LOAD_CSV/lua/validate_meta"
 local process_opt_args = 
   require "Q/OPERATORS/LOAD_CSV/lua/process_opt_args"
