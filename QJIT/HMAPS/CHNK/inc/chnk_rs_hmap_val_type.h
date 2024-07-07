@@ -1,14 +1,10 @@
-#ifndef __CHNK_RS_HMAP_TYPES_H
-#define __CHNK_RS_HMAP_TYPES_H
+#ifndef __CHNK_RS_HMAP_VAL_TYPE_H
+#define __CHNK_RS_HMAP_VAL_TYPE_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <inttypes.h>
 #include "qtypes.h"
-typedef struct _chnk_rs_hmap_key_t {
-  uint32_t vctr_uqid;
-  uint32_t chnk_idx;
-} chnk_rs_hmap_key_t;
 
 typedef struct _chnk_rs_hmap_val_t {
   uint16_t num_readers;
@@ -29,7 +25,7 @@ typedef struct _chnk_rs_hmap_val_t {
   char *l1_mem;
   uint64_t touch_time; // most recent time when chunk was accessed
 } chnk_rs_hmap_val_t;
-#endif //  __CHNK_RS_HMAP_TYPES_H
+#endif //  __CHNK_RS_HMAP_VAL_TYPE_H
 
 /*
  * L1 refers to RAM

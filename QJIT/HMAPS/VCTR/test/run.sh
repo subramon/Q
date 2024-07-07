@@ -3,7 +3,7 @@ set -e
 #  START -- Following are what you need to provide
 hmap_root="$HOME"
 util_root="$HOME"
-prefix="chnk"
+prefix="vctr"
 test_files="./test1.c "
 test_exec="test1"
 #  STOP -- Above are what you need to provide

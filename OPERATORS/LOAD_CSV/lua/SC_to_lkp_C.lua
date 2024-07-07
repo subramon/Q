@@ -5,7 +5,7 @@ local cutils        = require 'libcutils'
 local get_ptr       = require 'Q/UTILS/lua/get_ptr'
 local qc            = require 'Q/UTILS/lua/qcore'
 local tbl_of_str_to_C_array = require 'Q/UTILS/lua/tbl_of_str_to_C_array'
-local lVector       = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
 local function SC_to_lkp_C(
   invec, 
   lkp_tbl,

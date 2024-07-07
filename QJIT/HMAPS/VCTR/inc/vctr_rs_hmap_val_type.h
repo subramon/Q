@@ -1,11 +1,8 @@
-#ifndef __RSX_TYPES_H
-#define __RSX_TYPES_H
-#include <stdio.h>
-#include <stdint.h>
 #include <stdbool.h>
-#include <inttypes.h>
 #include "qtypes.h"
-typedef uint32_t vctr_rs_hmap_key_t; // a vector is identified by a number
+
+#ifndef __VCTR_RS_HMAP_VAL_TYPE_H
+#define __VCTR_RS_HMAP_VAL_TYPE_H
 
 #define MAX_LEN_VCTR_NAME 31 // for debugging 
 
@@ -45,4 +42,4 @@ typedef struct _vctr_meta_t {
   size_t nX; // for lma 
 } vctr_meta_t;
 typedef vctr_meta_t vctr_rs_hmap_val_t;
-#endif //  __HMAP_INT_TYPES_H
+#endif //  __VCTR_RS_HMAP_VAL_TYPE_H

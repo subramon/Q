@@ -2,7 +2,7 @@
 #include "chnk_rs_hmap_key_cmp.h"
 //START_FUNC_DECL
 bool
-rsx_key_cmp(
+chnk_rs_hmap_key_cmp(
     const chnk_rs_hmap_key_t *const ptr_k1,
     const chnk_rs_hmap_key_t *const ptr_k2
     )

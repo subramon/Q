@@ -1,5 +1,5 @@
 local ffi     = require 'ffi'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local qc      = require 'Q/UTILS/lua/qcore'
 local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
