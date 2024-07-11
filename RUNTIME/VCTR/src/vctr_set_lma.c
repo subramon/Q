@@ -1,7 +1,6 @@
 #include "q_incs.h"
 #include "qtypes.h"
 #include "cmem_struct.h"
-#include "qjit_consts.h"
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_is.h"
 #include "l2_file_name.h"

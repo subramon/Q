@@ -13,8 +13,8 @@
 -- 4) Return a string with the above
 
 local qcfg   = require 'Q/UTILS/lua/qcfg'
-local exec   = require 'Q/UTILS/lua/exec_and_capture_stdout'
-local c_exec = require 'Q/UTILS/lua/c_exec'
+local exec   = require 'RSUTILS/lua/exec_and_capture_stdout'
+local c_exec = require 'RSUTILS/lua/c_exec'
 local cutils = require 'libcutils'
 
 -- Creates file with name cdef_file which contains
@@ -35,7 +35,11 @@ local function for_cdef(
   end
   assert(cutils.isfile(infile), "File not found: " .. infile)
   -- START: make name of cdef file 
+  -- Bit ugly but we assume that file to be cdef'd is either in Q or RSUTILS
   local n1, n2 = string.find(infile, "/Q/")
+  if ( not n1 ) then 
+    n1, n2 = string.find(infile, "/RSUTILS/")
+  end
   assert(n1 >= 1)
   local str = string.sub(infile, n2)
   local cdef_file = 

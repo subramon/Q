@@ -1,6 +1,8 @@
 #include "q_incs.h"
-#include "vctr_rs_hmap_struct.h"
-#include "chnk_rs_hmap_struct.h"
+#include "vctr_rs_hmap_key_type.h"
+#include "vctr_rs_hmap_val_type.h"
+#include "chnk_rs_hmap_key_type.h"
+#include "chnk_rs_hmap_val_type.h"
 #include "vctr_name_to_uqid.h"
 
 #undef MAIN_PGMN

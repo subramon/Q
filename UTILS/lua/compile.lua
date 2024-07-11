@@ -1,7 +1,7 @@
 local cutils   = require 'libcutils'
 local qcfg     = require 'Q/UTILS/lua/qcfg'
-local exec     = require 'Q/UTILS/lua/exec_and_capture_stdout'
-local c_exec   = require 'Q/UTILS/lua/c_exec'
+local exec     = require 'RSUTILS/lua/exec_and_capture_stdout'
+local c_exec   = require 'RSUTILS/lua/c_exec'
 
 local qispc_flags  = assert(qcfg.qispc_flags)
 local qcflags     = assert(qcfg.qcflags)

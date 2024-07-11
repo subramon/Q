@@ -2,7 +2,7 @@
 #include "q_incs.h"
 #include "q_macros.h"
 #include "rmtree.h"
-#include "is_file_in_dir.h"
+#include "isfile_in_dir.h"
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
@@ -65,13 +65,13 @@ init_session(
   // to be created
   if ( g_restore_session ) {
     bool mk_new_session = false;
-    if ( !is_file_in_dir("_vctr_meta.csv", g_meta_dir_root) ) {
+    if ( !isfile_in_dir("_vctr_meta.csv", g_meta_dir_root) ) {
       mk_new_session = true;
     }
-    if ( !is_file_in_dir("_vctr_bkts.bin", g_meta_dir_root) ) {
+    if ( !isfile_in_dir("_vctr_bkts.bin", g_meta_dir_root) ) {
       mk_new_session = true;
     }
-    if ( !is_file_in_dir("_vctr_full.bin", g_meta_dir_root) ) {
+    if ( !isfile_in_dir("_vctr_full.bin", g_meta_dir_root) ) {
       mk_new_session = true;
     }
     if ( mk_new_session ) {
@@ -167,17 +167,13 @@ init_session(
   }
   else { 
     printf("<<<<<<<<<<<< STARTING NEW SESSION ============\n");
-    g_vctr_hmap_config.so_file = strdup("libhmap_vctr.so");
     status = vctr_rs_hmap_instantiate(&g_vctr_hmap[tbsp], 
         &g_vctr_hmap_config); 
     cBYE(status);
-    free_if_non_null(g_vctr_hmap_config.so_file);
 
-    g_chnk_hmap_config.so_file = strdup("libhmap_chnk.so"); 
     status = chnk_rs_hmap_instantiate(&g_chnk_hmap[tbsp], 
         &g_chnk_hmap_config); 
     cBYE(status);
-    free_if_non_null(g_chnk_hmap_config.so_file);
 
     rmtree(g_data_dir_root[tbsp]);
     rmtree(g_meta_dir_root);

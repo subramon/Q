@@ -1,6 +1,5 @@
 #include "q_incs.h"
 #include "q_macros.h"
-#include "qjit_consts.h"
 #include "rmtree.h"
 
 #include "vctr_rs_hmap_struct.h"

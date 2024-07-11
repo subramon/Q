@@ -1,9 +1,10 @@
 #include "q_incs.h"
 #include "qtypes.h"
-#include "qjit_consts.h"
 #include "vctr_consts.h"
 #include "cmem_struct.h"
 #include "vctr_rs_hmap_struct.h"
+#include "vctr_rs_hmap_get.h"
+#include "vctr_rs_hmap_put.h"
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_cnt.h"
 #include "chnk_is.h"
@@ -43,7 +44,7 @@ vctr_put_chunk(
 
   vctr_rs_hmap_key_t vctr_key = vctr_uqid;
   vctr_rs_hmap_val_t vctr_val; 
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &vctr_key, 
+  status = bvctr_rs_hmap_get(&g_vctr_hmap[tbsp], &vctr_key, 
       &vctr_val, &is_found, &vctr_where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); } // vector exists 
@@ -103,7 +104,7 @@ vctr_put_chunk(
     chnk_val.num_lives_left = vctr_val.num_lives_free;
   }
   //-------------------------------
-  status = g_chnk_hmap[tbsp].put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
+  status = vctr_rs_hmap_put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
   cBYE(status);
   bool chnk_is_found; uint32_t chnk_where_found;
   status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where_found);

@@ -5,9 +5,11 @@
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
+#include "vctr_rs_hmap_destroy.h"
 
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_rs_hmap_instantiate.h"
+#include "chnk_rs_hmap_destroy.h"
 
 #include "web_struct.h"
 #include "mem_mgr_struct.h"
@@ -33,9 +35,9 @@ free_globals(
     for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
       if ( g_vctr_hmap[i].bkts != NULL ) {
 #ifdef VERBOSE
-        if ( i > 0 ) { printf("V: Destroying imported tablespace %d \n", i); }
+        if (i > 0) { printf("V: Destroying imported tablespace %d\n", i); }
 #endif
-        g_vctr_hmap[i].destroy(&g_vctr_hmap[i]);
+        vctr_rs_hmap_destroy((&g_vctr_hmap[i]));
       }
     }
   }
@@ -44,9 +46,9 @@ free_globals(
     for ( int i = 0; i <  Q_MAX_NUM_TABLESPACES; i++ ) { 
       if ( g_chnk_hmap[i].bkts != NULL ) {
 #ifdef VERBOSE
-        if ( i > 0 ) { printf("C: Destroying imported tablespace %d \n", i); }
+        if (i > 0) { printf("C: Destroying imported tablespace %d\n", i);}
 #endif
-        g_chnk_hmap[i].destroy(&g_chnk_hmap[i]);
+        chnk_rs_hmap_destroy((&g_chnk_hmap[i]));
       }
     }
   }

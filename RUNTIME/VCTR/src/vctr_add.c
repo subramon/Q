@@ -1,6 +1,5 @@
 #include "q_incs.h"
 #include "qtypes.h"
-#include "qjit_consts.h"
 #include "vctr_consts.h"
 #include "vctr_new_uqid.h"
 #include "vctr_is.h"
@@ -64,7 +63,7 @@ vctr_add1(
       .num_lives_kill = num_lives_kill, .is_killable = is_killable, 
       .num_lives_free = num_lives_free, .is_early_freeable = is_early_freeable, 
       .ref_count = 0 } ; // TODO P1 MAKE SURE THIS IS OK. Used to be 1
-  status = g_vctr_hmap[tbsp].put(&g_vctr_hmap[tbsp], &key, &val); cBYE(status);
+  status = vctr_rs_hmap_put(&(g_vctr_hmap[tbsp]), &key, &val); cBYE(status);
 #ifdef DEBUG
   new_vctr_cnt = vctr_cnt(tbsp);
   if ( new_vctr_cnt != old_vctr_cnt + 1 ) { go_BYE(-1); }

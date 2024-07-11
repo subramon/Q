@@ -1,17 +1,16 @@
 CC=gcc
 
 INCS := -I../inc/ 
-INCS += -I../../../UTILS/inc/
+INCS += -I${RSUTILS_SRC_ROOT}/RSUTILS/inc/
+INCS += -I${RSHMAP_SRC_ROOT}/RSHMAP/fixed_len_kv/common/inc/
+INCS += -I../../../QJIT/HMAPS/VCTR/gen_inc/
+INCS += -I../../../QJIT/HMAPS/VCTR/inc/
+INCS += -I../../../QJIT/HMAPS/CHNK/gen_inc/
+INCS += -I../../../QJIT/HMAPS/CHNK/inc/
 INCS += -I../../CMEM/inc/
 INCS += -I../../SCLR/inc/
-INCS += -I../../../TMPL_FIX_HASHMAP/inc/
-INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
-INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
 INCS += -I../../../QJIT/GUTILS/inc
 INCS += -I../../../QJIT/LuaJIT-2.1.0-beta3/src/
-
-TMPL=CASE1
-
 
 all: core_libvctr.so  ut1 ut2 ut_memo libvctr.so 
 
@@ -95,46 +94,17 @@ TEST3_OBJS = $(TEST3_SRCS:.c=.o)
 	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
 #-------------------------------------------
-TMPL_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/src/
-TMPL_HMAP_SO  = ${Q_ROOT}/lib/libhmap.so
+RSHMAP_SO  = ${RHMAP_SRC_ROOT}/librs_hmap_core.so
+RSUTILS_SO = ${RUTILS_SRC_ROOT}/librsutils.so
+GUTILS_SO  = ${Q_SRC_ROOT}/QJIT/GUTILS/libcgutils.so
+VCTR_SO    = ${Q_SRC_ROOT}/QJIT/HMAPS/VCTR/libvctr_rs_hmap.so
+CHNK_SO    = ${Q_SRC_ROOT}/QJIT/HMAPS/CHNK/libchnk_rs_hmap.so
 
-${TMPL_HMAP_SO} : 
-	make -C ${TMPL_HMAP_LOC} ${TMPL_HMAP_SO}
 #-------------------------------------------
-UTILS_LOC = ../../../UTILS/src/
-UTILS_SO  = ${Q_ROOT}/lib/libutils.so
-
-${UTILS_SO} : 
-	make -C ${UTILS_LOC} ${UTILS_SO}
-#-------------------------------------------
-GUTILS_LOC = ../../../QJIT/GUTILS/
-GUTILS_SO  = ${Q_ROOT}/lib/libcgutils.so
-
-${GUTILS_SO} : 
-	make -C ${GUTILS_LOC} ${GUTILS_SO}
-#-------------------------------------------
-VCTR_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/VCTR_HMAP
-VCTR_HMAP_SO  = ${Q_ROOT}/lib/libhmap_vctr.so
-
-${VCTR_HMAP_SO} : 
-	make -C ${VCTR_HMAP_LOC} ${VCTR_HMAP_SO}
-#-------------------------------------------
-CHNK_HMAP_LOC = ../../../TMPL_FIX_HASHMAP/CHNK_HMAP
-CHNK_HMAP_SO  = ${Q_ROOT}/lib/libhmap_chnk.so
-
-${CHNK_HMAP_SO} : 
-	make -C ${CHNK_HMAP_LOC} ${CHNK_HMAP_SO}
-#-------------------------------------------
-core_libvctr.so :  ${OBJS} \
-	${TMPL_HMAP_SO} \
-	${VCTR_HMAP_SO} \
-	${CHNK_HMAP_SO} \
-	${GUTILS_SO}  \
-	${UTILS_SO} 
-	gcc ${OBJS}  \
-	-shared -o core_libvctr.so ${LDFLAGS} \
-	${VCTR_HMAP_SO} ${CHNK_HMAP_SO} ${GUTILS_SO} ${UTILS_SO} 
-	cp core_libvctr.so ${Q_ROOT}/lib/
+core_libvctr.so :  ${OBJS} 
+	gcc ${OBJS} -shared \
+	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
+		-o core_libvctr.so 
 #-------------------------------------------
 EXT_SRCS := cVector.c
 EXT_SRCS += ../../CMEM/src/aux_lua_to_c.c
@@ -154,43 +124,25 @@ ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so
 	gcc ${TEST1_OBJS} \
 	${QCFLAGS} ${INCS} \
 	core_libvctr.so \
-	${VCTR_HMAP_SO} \
-	${CHNK_HMAP_SO} \
-	${TMPL_HMAP_SO} \
-	${UTILS_SO} \
-	${GUTILS_SO} \
+	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
 	-o ut1  -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
 ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST2_OBJS} \
 	${QCFLAGS} ${INCS} \
 	core_libvctr.so \
-	${VCTR_HMAP_SO} \
-	${CHNK_HMAP_SO} \
-	${TMPL_HMAP_SO} \
-	${UTILS_SO} \
-	${GUTILS_SO} \
+	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
 	-o ut2 -lm -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
 ut_memo : ${TEST3_OBJS} ${Q_ROOT}/lib/libutils.so 
 	gcc ${TEST3_OBJS} \
 	${QCFLAGS} ${INCS} \
 	core_libvctr.so \
-	${VCTR_HMAP_SO} \
-	${CHNK_HMAP_SO} \
-	${TMPL_HMAP_SO} \
-	${UTILS_SO} \
-	${GUTILS_SO} \
+	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
 	-o ut_memo -lm -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
 
 
 clean:
 	rm -f *.o *.so ut1 ut2 ../test/*.o
-	rm -f  ${Q_ROOT}/lib/core_libvctr.so 
-	rm -f  ${Q_ROOT}/lib/libvctr.so 
-	rm -f ${TMPL_HMAP_SO}
-	rm -f ${VCTR_HMAP_SO}
-	rm -f ${CHNK_HMAP_SO}
-	rm -f ${GUTILS_SO} 
-	rm -f ${UTILS_SO} 
+	rm -f ${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} 

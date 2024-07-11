@@ -1,7 +1,7 @@
 #include "q_incs.h"
 #include "qtypes.h"
-#include "qjit_consts.h"
 #include "vctr_rs_hmap_struct.h"
+#include "vctr_rs_hmap_get.h"
 #include "vctr_is.h"
 #include "rs_mmap.h"
 #include "l2_file_name.h"
@@ -30,7 +30,7 @@ vctr_append(
   vctr_rs_hmap_key_t dst_key = dst_vctr_uqid;
   vctr_rs_hmap_val_t dst_val; 
   memset(&dst_val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = g_vctr_hmap[dst_tbsp].get(&g_vctr_hmap[dst_tbsp], 
+  status = vctr_rs_hmap_get(&g_vctr_hmap[dst_tbsp], 
       &dst_key, &dst_val, &dst_is_found, &dst_where_found);
   if ( !dst_is_found ) { go_BYE(-1); }
   if ( !dst_val.is_eov ) { go_BYE(-1); }
@@ -44,7 +44,7 @@ vctr_append(
   vctr_rs_hmap_key_t src_key = src_vctr_uqid;
   vctr_rs_hmap_val_t src_val; 
   memset(&src_val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = g_vctr_hmap[src_tbsp].get(&g_vctr_hmap[src_tbsp], 
+  status = vctr_rs_hmap_get(&g_vctr_hmap[src_tbsp], 
       &src_key, &src_val, &src_is_found, &src_where_found);
   if ( !src_is_found ) { go_BYE(-1); }
   if ( !src_val.is_eov ) { go_BYE(-1); }

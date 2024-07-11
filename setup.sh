@@ -7,7 +7,6 @@ unset Q_SRC_ROOT
 unset Q_ROOT
 unset QCFLAGS
 unset QLDFLAGS
-unset ASAN_FLAGS
 
 export QISPC="false" # TODO P1 Should not be hard coded here
 
@@ -16,17 +15,13 @@ Q_SRC_ROOT="$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
 export Q_SRC_ROOT="${Q_SRC_ROOT}"
 echo "Q_SRC_ROOT= ${Q_SRC_ROOT}"
 
+export RSUTILS_SRC_ROOT=$HOME/ # Where RSUTILS has been checked out
+export RSHMAP_SRC_ROOT=$HOME/  # Where  RSHMAP has been checked out
 #-----------------------------------
 export Q_ROOT="/home/subramon/local/Q/"
 # export Q_ROOT="/mnt/storage/local/Q/"
 # export Q_ROOT="/storeB/local/Q/"
 echo "Q_ROOT= $Q_ROOT"
-mkdir -p $Q_ROOT/
-mkdir -p $Q_ROOT/lib/
-mkdir -p $Q_ROOT/bin/
-mkdir -p $Q_ROOT/config/
-mkdir -p $Q_ROOT/csos/
-mkdir -p $Q_ROOT/cdefs/
 #-----------------------------------
 QCFLAGS=" -std=gnu99  -fPIC     "
 QCFLAGS+=" -g " # Comment for speed 
@@ -48,25 +43,12 @@ QCFLAGS+=" -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith "
 QCFLAGS+=" -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings "
 QCFLAGS+=" -Wold-style-definition -Wsuggest-attribute=noreturn "
 
-# Following should be commented/uncommented depending on 
-# desire to use address sanitizer
-# ASAN_FLAGS=" -fsanitize=address "
-# ASAN_FLAGS+=" -fno-omit-frame-pointer "
-# ASAN_FLAGS+=" -fsanitize=undefined "
-
-
-export ASAN_FLAGS="${ASAN_FLAGS}"
-echo "ASAN_FLAGS= $ASAN_FLAGS"
-
-QCFLAGS+=$ASAN_FLAGS 
-# QLDFLAGS=" $ASAN_FLAGS -static-libasan "
 # TODO P1 QLDFLAGS not being set correctly
 export QLDFLAGS="${QLDFLAGS}"
 echo "QLDFLAGS= $QLDFLAGS"
 
 # TODO Consider whether to add the following
 # Under Linux, when using GNU GCC, I have found it necessary to use the gold linker to get good results (-fuse-ld=gold): the default link frequently gives me errors when I try to use sanitizers.
-
 #
 # https://lemire.me/blog/2016/04/20/no-more-leaks-with-sanitize-flags-in-gcc-and-clang/
 # NOT DOING THIS BECUASE WILL HAVE TO REWRITE TOO MUCH -Wjump-misses-init
@@ -99,7 +81,7 @@ CURR_PATH=`pwd`
 cd $Q_SRC_ROOT
 cd ../
 #- meta directory to LUA_PATH is for q_meta used to restore sessions
-export LUA_PATH="${Q_ROOT}/meta/?.lua;${Q_ROOT}/config/?.lua;`pwd`/?.lua;`pwd`/?/init.lua;;"
+export LUA_PATH="${RSUTILS_SRC_ROOOT}/RSUTILS/lua/?.lua;${Q_ROOT}/meta/?.lua;${Q_ROOT}/config/?.lua;`pwd`/?.lua;`pwd`/?/init.lua;;"
 export LUA_CPATH="${Q_ROOT}/lib/?.so;;"
 cd $CURR_PATH
 echo "LUA_PATH= $LUA_PATH"

@@ -1,9 +1,9 @@
 require 'Q/UTILS/lua/strict'
-cmem   = require 'libcmem' ; 
-Scalar = require 'libsclr' ; 
-num_trials = 32 -- 1024
-tbl_size = 4096 -- 1048576
-cmem   = require 'libcmem' ; 
+local cmem   = require 'libcmem'
+local Scalar = require 'libsclr'
+local num_trials = 32 -- 1024
+local tbl_size = 4096 -- 1048576
+
 local status, x, s1, s2, s3, r1, r2
 local tests = {}
 tests.t1 = function()
@@ -393,7 +393,6 @@ tests.t_bad_bitwise = function()
   print("Test t_bad_bitwise completed successfully")
 end
 -- return tests
---[[
 tests.t1()
 tests.t2()
 tests.t3()
@@ -413,6 +412,5 @@ tests.t14()
 tests.t15()
 tests.t_abs()
 tests.t_shift()
---]]
 tests.t_bitwise()
--- tests.t_bad_bitwise()
+tests.t_bad_bitwise()

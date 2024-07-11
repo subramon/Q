@@ -1,7 +1,7 @@
 #include "q_incs.h"
 #include "qtypes.h"
-#include "qjit_consts.h"
 #include "vctr_rs_hmap_struct.h"
+#include "vctr_rs_hmap_get.h"
 #include "chnk_rs_hmap_struct.h"
 #include "l2_file_name.h"
 #include "chnk_is.h"
@@ -29,7 +29,7 @@ vctr_usage(
   memset(&vctr_val, 0, sizeof(vctr_rs_hmap_val_t));
   vctr_rs_hmap_key_t vctr_key = vctr_uqid;
 
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &vctr_key, 
+  status = vctr_rs_hmap_get(&g_vctr_hmap[tbsp], &vctr_key, 
       &vctr_val, &vctr_is_found, &vctr_where_found);
   if ( !vctr_is_found ) {  /* silent failure */ return 1; }
   // how much mem/dsk used at vector level 

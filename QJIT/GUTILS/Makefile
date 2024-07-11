@@ -2,50 +2,25 @@
 CC = gcc
 
 INCS := -I./inc/
-INCS += -I../../UTILS/inc/
-INCS += -I../../RUNTIME/VCTRS/inc/
+INCS += -I${RSUTILS_SRC_ROOT}/RSUTILS/inc/
+#-- for hashmaps for chnk and vector 
+INCS += -I${RSHMAP_SRC_ROOT}/RSHMAP/fixed_len_kv/common/inc/
+INCS += -I../HMAPS/VCTR/inc/
+INCS += -I../HMAPS/VCTR/gen_inc/
+INCS += -I../HMAPS/CHNK/inc/
+INCS += -I../HMAPS/CHNK/gen_inc/
+#----------------------
+INCS += -I../../RUNTIME/VCTR/inc/
 INCS += -I../LuaJIT-2.1.0-beta3/src/
 INCS += -I../LuaJIT-2.1.0-beta3/src/inc/
-INCS += -I../../TMPL_FIX_HASHMAP/inc/
-INCS += -I../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
-INCS += -I../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
 
 QJIT_AUX_SO  = libqjitaux.so
-EXT_QJIT_AUX_SO = ${Q_ROOT}/lib/${QJIT_AUX_SO}
-
 MYSO  = libcgutils.so
-EXTMYSO = ${Q_ROOT}/lib/${MYSO}
-
 ALTSO = liblgutils.so 
-EXTALTSO = ${Q_ROOT}/lib/${ALTSO}
 
 
-all : ${MYSO} ${EXTMYSO} ${ALTSO} ${EXTALTSO} ${QJIT_AUX_SO} ${EXT_QJIT_AUX_SO}
+all : ${MYSO} ${ALTSO} ${QJIT_AUX_SO}
 
-UTILS_LOC = ../../UTILS/src/
-UTILS_SO = ${Q_ROOT}/lib/libutils.so
-${UTILS_SO} : 
-	make -C ${UTILS_LOC} 
-
-VCTRS_LOC = ../../RUNTIME/VCTRS/src/
-INT_VCTRS_SO  = core_libvctr.so
-VCTRS_SO  = ${Q_ROOT}/lib/${INT_VCTRS_SO}
-${VCTRS_SO} : 
-	make -C ${VCTRS_LOC} ${INT_VCTRS_SO}
-#-------------------------------------------
-VCTR_HMAP_LOC = ../../TMPL_FIX_HASHMAP/VCTR_HMAP
-INT_VCTR_HMAP_SO  = libhmap_vctr.so
-VCTR_HMAP_SO  = ${Q_ROOT}/lib/${INT_VCTR_HMAP_SO}
-
-${VCTR_HMAP_SO} : 
-	make -C ${VCTR_HMAP_LOC} ${INT_VCTR_HMAP_SO}
-#-------------------------------------------
-CHNK_HMAP_LOC = ../../TMPL_FIX_HASHMAP/CHNK_HMAP
-INT_CHNK_HMAP_SO  = libhmap_chnk.so
-CHNK_HMAP_SO  = ${Q_ROOT}/lib/${INT_CHNK_HMAP_SO}
-
-${CHNK_HMAP_SO} : 
-	make -C ${CHNK_HMAP_LOC} ${INT_CHNK_HMAP_SO}
 #-------------------------------------------
 RS_LIBS := -lpthread
 RS_LIBS += -levent
@@ -68,16 +43,10 @@ AUX_SRCS += ./src/read_configs.c
 AUX_SRCS += ./src/process_req.c 
 AUX_SRCS += ./src/webserver.c 
 
-AUX_SRCS += ./../../UTILS/src/rmtree.c 
-AUX_SRCS += ./../../UTILS/src/isdir.c 
-AUX_OBJS = $(AUX_SRCS:.c=.o)
-
 SRCS := ./src/l2_file_name.c 
 SRCS += ./src/mod_mem_used.c 
 SRCS += ./src/vctr_name_to_uqid.c 
 
-
-SRCS += ./../../UTILS/src/rs_mmap.c 
 OBJS = $(SRCS:.c=.o)
 #----------------------------------
 
@@ -96,29 +65,17 @@ src/process_req.o : QC_FLAGS += -Wunused-parameter
 ${MYSO} : ${OBJS}
 	gcc -shared ${OBJS} -o ${MYSO} ${RS_LIBS} ${QLDFLAGS}
 
-${EXTMYSO} : ${MYSO}
-	cp ${MYSO} ${EXTMYSO}
-
 ${QJIT_AUX_SO} : ${AUX_OBJS} ${VCTRS_SO} 
 	gcc -shared ${AUX_OBJS} \
-		${VCTRS_SO} \
-		${VCTR_HAMP_SO} \
-		${CHNK_HAMP_SO} \
 		-o ${QJIT_AUX_SO} ${RS_LIBS} ${QLDFLAGS}
-
-${EXT_QJIT_AUX_SO} : ${QJIT_AUX_SO}
-	cp ${QJIT_AUX_SO} ${EXT_QJIT_AUX_SO}
 
 ${ALTSO} : ${ALTOBJS} ${UTILS_SO}
 	gcc -shared ${ALTOBJS}  ${UTILS_SO} -o ${ALTSO} \
 		${RS_LIBS} ${QLDFLAGS}
 
-${EXTALTSO} : ${ALTSO}
-	cp ${ALTSO} ${EXTALTSO}
-
 clean :
 	rm -f ${OBJS} *.so src/*.o
-	rm -f ${QJIT_AUX_SO} ${EXT_QJIT_AUX_SO}
-	rm -f ${MYSO} ${EXTMYSO}
-	rm -f ${ALTSO} ${EXTALTSO}
+	rm -f ${QJIT_AUX_SO} 
+	rm -f ${MYSO} 
+	rm -f ${ALTSO} 
 

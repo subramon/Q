@@ -1,7 +1,7 @@
 #include "q_incs.h"
 #include "qtypes.h"
-#include "qjit_consts.h"
 #include "vctr_rs_hmap_struct.h"
+#include "vctr_rs_hmap_del.h"
 #include "chnk_rs_hmap_struct.h"
 #include "l2_file_name.h"
 #include "file_exists.h"
@@ -82,7 +82,7 @@ vctr_del(
     // TODO P2 Think about this.
     bool is_found;
     vctr_rs_hmap_key_t key = uqid; 
-    status = g_vctr_hmap[0].del(&g_vctr_hmap[tbsp], &key, &val, &is_found); 
+    status = vctr_rs_hmap_del(&(g_vctr_hmap[tbsp]), &key, &val, &is_found); 
     cBYE(status);
     if ( !is_found ) { go_BYE(-1); }
     goto BYE;
@@ -141,7 +141,7 @@ vctr_del(
   }
   bool is_found;
   vctr_rs_hmap_key_t key = uqid; 
-  status = g_vctr_hmap[0].del(&g_vctr_hmap[tbsp], &key, &val, &is_found); 
+  status = vctr_rs_hmap_del(&(g_vctr_hmap[tbsp]), &key, &val, &is_found); 
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
   uint64_t mem_used, dsk_used;
