@@ -7,7 +7,7 @@ local cutils  = require 'libcutils'
 local cVector = require 'libvctr'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 
 return function (
@@ -62,7 +62,7 @@ return function (
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/f1f2opf3_sclr.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
-  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}
+  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", }
   subs.libs = { "-lgomp", "-lm", } 
   subs.chunk_size = 1024 -- TODO P4 experiment
   if ( qcfg.use_ispc ) then 

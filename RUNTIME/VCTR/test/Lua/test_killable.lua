@@ -22,7 +22,6 @@ tests.t1 = function()
   -- set good value and see if it is reflected
   local status = pcall(qcfg._modify, "num_lives_kill", 0)
   assert(status)
-  print("XXXXXXX")
   local y = Q.seq({start = 1, by = 1, len = len, qtype = "I4"}):set_name("y")
   local b_is_killable, num_lives_kill = y:is_killable()
   assert(b_is_killable == false)

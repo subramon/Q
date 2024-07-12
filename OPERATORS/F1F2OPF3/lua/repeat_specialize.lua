@@ -1,4 +1,4 @@
-local is_in = require 'Q/UTILS/lua/is_in'
+local is_in = require 'RSUTILS/lua/is_in'
 local cutils = require 'libcutils'
 
 local function repeat_specialize(

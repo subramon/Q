@@ -5,7 +5,7 @@ local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local qc      = require 'Q/UTILS/lua/qcore'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 
 qc.q_cdef("OPERATORS/F1F2OPF3/inc/f1f2opf3_concat.h") 
@@ -149,7 +149,7 @@ return function (
   subs.tmpl   = "OPERATORS/F1F2OPF3/lua/concat.tmpl"
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
-  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/", 
+  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", 
     "OPERATORS/F1F2OPF3/inc/" }
 
   subs.libs = { "-lgomp", "-lm" } 

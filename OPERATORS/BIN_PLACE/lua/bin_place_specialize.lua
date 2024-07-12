@@ -4,7 +4,7 @@ local cutils    = require 'libcutils'
 local Scalar    = require 'libsclr'
 local lVector   = require 'Q/RUNTIME/VCTR/lua/lVector'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
-local is_in     = require 'Q/UTILS/lua/is_in'
+local is_in     = require 'RSUTILS/lua/is_in'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 
 local function bin_place_specialize(x, aux, lb, ub, cnt, optargs)

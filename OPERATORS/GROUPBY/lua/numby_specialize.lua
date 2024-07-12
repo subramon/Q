@@ -1,5 +1,5 @@
 local cutils = require 'libcutils'
-local is_in     = require 'Q/UTILS/lua/is_in'
+local is_in     = require 'RSUTILS/lua/is_in'
 local in_qtypes = { 'I1', 'I2', 'I4', 'I8', 'UI1', 'UI2', 'UI4', 'UI8', }
 local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
 local lcl_chunk_size = require 'Q/OPERATORS/GROUPBY/lua/lcl_chunk_size'

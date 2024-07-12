@@ -1,6 +1,6 @@
 local Q       = require 'Q'
 local ffi     = require 'ffi'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 local from_scalar   = require 'Q/UTILS/lua/from_scalar'
 local cutils  = require 'libcutils'
 

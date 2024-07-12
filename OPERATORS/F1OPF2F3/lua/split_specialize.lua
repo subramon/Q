@@ -1,5 +1,5 @@
 local qcfg    = require 'Q/UTILS/lua/qcfg'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 local cutils  = require 'libcutils'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local tmpl    = qcfg.q_src_root .. "/OPERATORS/F1OPF2F3/lua/split.tmpl"

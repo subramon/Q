@@ -1,7 +1,7 @@
 local cutils  = require 'libcutils'
 local qc      = require 'Q/UTILS/lua/q_core'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 local record_time = require 'Q/UTILS/lua/record_time'
 
 local function expander_f_in_place(a, x, y)

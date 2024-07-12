@@ -3,7 +3,7 @@ local Scalar    = require 'libsclr'
 local cmem      = require 'libcmem'
 local cutils    = require 'libcutils'
 local qcfg      = require 'Q/UTILS/lua/qcfg'
-local rev_lkp   =  require 'Q/UTILS/lua/rev_lkp'
+local rev_lkp   = require 'RSUTILS/lua/rev_lkp'
 
 local good_qtypes = rev_lkp({ 
   "I1",  "I2",  "I4", "I8",  "UI1",  "UI2",  "UI4", "UI8",  

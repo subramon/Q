@@ -12,7 +12,7 @@ require('Q/q_export').export('const', const)
 local function seq(x)
   local expander = require 'Q/OPERATORS/S_TO_F/lua/expander_s_to_f'
   local status, col = pcall(expander, "seq", x)
-  if ( not status ) then if ( col ) then print(col) end end
+  if ( not status ) then print("ERROR = ", col) end 
   assert(status, "Could not execute seq")
   return col
 end

@@ -3,7 +3,7 @@ local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 local qc      = require 'Q/UTILS/lua/qcore'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 
 return function(idxvec, invec, bin_cnt)
   local subs = {}

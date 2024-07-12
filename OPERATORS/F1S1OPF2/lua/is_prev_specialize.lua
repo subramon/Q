@@ -2,7 +2,7 @@ local ffi     = require 'ffi'
 local is_base_qtype = require('Q/UTILS/lua/is_base_qtype')
 local Scalar  = require 'libsclr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 local cutils  = require 'libcutils'
 local q_src_root       = qcfg.q_src_root
 

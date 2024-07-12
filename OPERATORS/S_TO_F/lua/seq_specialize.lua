@@ -1,8 +1,8 @@
 local ffi       = require 'ffi'
 local cmem      = require 'libcmem'
 local cutils    = require 'libcutils'
+local is_in     = require 'RSUTILS/lua/is_in'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
-local is_in     = require 'Q/UTILS/lua/is_in'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local qc        = require 'Q/UTILS/lua/qcore'
 local qcfg      = require 'Q/UTILS/lua/qcfg'
@@ -11,9 +11,8 @@ local is_int_qtype = require 'Q/UTILS/lua/is_int_qtype'
 local is_base_qtype = require 'Q/UTILS/lua/is_base_qtype'
 
 -- cdef the necessary struct within pcall to prevent error on second call
-local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
-qc.q_cdef("OPERATORS/S_TO_F/inc/seq_struct.h", incs)
-qc.q_cdef("RUNTIME/SCLR/inc/sclr_struct.h", incs)
+
+qc.q_cdef("OPERATORS/S_TO_F/inc/seq_struct.h")
 return function (
   largs
   )
@@ -59,7 +58,7 @@ return function (
   subs.tmpl   = "OPERATORS/S_TO_F/lua/seq.tmpl"
   subs.incdir = "OPERATORS/S_TO_F/gen_inc/"
   subs.srcdir = "OPERATORS/S_TO_F/gen_src/"
-  subs.incs   = { "UTILS/inc", "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
+  subs.incs   = {  "OPERATORS/S_TO_F/inc/", "OPERATORS/S_TO_F/gen_inc/", }
   subs.structs = { "OPERATORS/S_TO_F/inc/seq_struct.h" }
   return subs
 end

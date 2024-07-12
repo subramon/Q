@@ -1,4 +1,4 @@
-local is_in = require 'Q/UTILS/lua/is_in'
+local is_in = require 'RSUTILS/lua/is_in'
 local cutils = require 'libcutils'
 local good_drg_types = { "I1", "I2", "I4", "I8", "I16",
   "UI1", "UI2", "UI4", "UI8", "UI16", "F4", "F8", }

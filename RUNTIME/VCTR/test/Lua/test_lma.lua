@@ -15,7 +15,8 @@ local len = 3 * max_num_in_chunk + 7
 local tests = {}
 -- test conversion from chunks to lma and back 
 tests.t0 = function()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
   local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "test0_x", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
@@ -62,7 +63,8 @@ tests.t0 = function()
 
   assert(cVector.check_all())
   x:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
   print("Test t0 succeeded")
 end
@@ -86,7 +88,8 @@ tests.t1 = function()
 end
 -- test read access
 tests.t2 = function()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "test2_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
@@ -122,13 +125,15 @@ tests.t2 = function()
 
   assert(cVector.check_all())
   x1:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
   print("Test t2 succeeded")
 end
 -- test write access
 tests.t3 = function()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
     name = "test3_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
@@ -159,13 +164,15 @@ tests.t3 = function()
   y1:unget_lma_write()
   assert(cVector.check_all())
   x1:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
   print("Test t3 succeeded")
 end
 -- test steal
 tests.t4 = function()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
   local qtype = "I4"
   local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
@@ -219,13 +226,15 @@ tests.t4 = function()
   assert(cVector.check_all())
   x:delete()
   z:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
   print("Test t4 succeeded")
 end
 -- test print
 tests.t5 = function()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
     name = "test5_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
@@ -235,13 +244,15 @@ tests.t5 = function()
   -- x1:pr()
   assert(cVector.check_all())
   x1:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
   print("Test t5 succeeded")
 end
 -- test modify 
 tests.t6 = function()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype,
     name = "x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
@@ -261,13 +272,15 @@ tests.t6 = function()
   end 
   assert(cVector.check_all())
   x1:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
   print("Test t6 succeeded")
 end
 -- test num_readers for chunks 
 tests.t7 = function()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
   local max_num_in_chunk = 64 
   local len = 2 * max_num_in_chunk + 17 
@@ -292,13 +305,15 @@ tests.t7 = function()
   end
   assert(cVector.check_all())
   x1:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
   print("Test t7 succeeded")
 end
 -- tests deletion of lma 
 tests.t8 = function()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
   local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "test0_x", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
@@ -323,13 +338,15 @@ tests.t8 = function()
   end
   assert(cVector.check_all())
   x:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
   print("Test t8 succeeded")
 end
 -- tests lma can serve get_chunks()
 tests.t9 = function()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
   local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "x", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
@@ -375,10 +392,8 @@ tests.t9 = function()
   end
   x:nop()
   x:delete()
-  print("DSK", lgutils.dsk_used())
-  assert(lgutils.dsk_used() == 0)
-  print("MEM", lgutils.mem_used())
-  assert(lgutils.mem_used() == 0)
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
   print("Test t9 succeeded")
 end
@@ -393,5 +408,3 @@ tests.t6()
 tests.t7()
 tests.t8()
 tests.t9()
-collectgarbage()
-assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))

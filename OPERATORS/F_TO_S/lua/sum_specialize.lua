@@ -4,10 +4,10 @@ local cutils    = require 'libcutils'
 local Scalar    = require 'libsclr'
 local lVector   = require 'Q/RUNTIME/VCTR/lua/lVector'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
-local rev_lkp   = require 'Q/UTILS/lua/rev_lkp'
+local rev_lkp   = require 'RSUTILS/lua/rev_lkp'
 local qcfg      = require 'Q/UTILS/lua/qcfg'
 local qc        = require 'Q/UTILS/lua/qcore'
-local is_in     = require 'Q/UTILS/lua/is_in'
+local is_in     = require 'RSUTILS/lua/is_in'
 
 local i_qtypes = {"BL", "B1", "I1", "I2", "I4", "I8"}
 local f_qtypes = { "F2", "F4", "F8"}

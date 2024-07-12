@@ -4,7 +4,7 @@ local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local promote = require 'Q/UTILS/lua/promote'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local get_max_num_in_chunk   = require 'Q/UTILS/lua/get_max_num_in_chunk'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 
 return function (
   op,
@@ -102,7 +102,7 @@ return function (
 
   subs.incdir = "OPERATORS/F1F2OPF3/gen_inc/"
   subs.srcdir = "OPERATORS/F1F2OPF3/gen_src/"
-  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", "UTILS/inc/"}
+  subs.incs = { "OPERATORS/F1F2OPF3/gen_inc/", }
   subs.libs = { "-lgomp", "-lm", } 
   --=========================
   if ( qcfg.use_ispc ) then

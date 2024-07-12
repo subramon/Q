@@ -70,6 +70,7 @@ local function compile_and_link(
   else
     local q_cmd = string.format("gcc -shared %s %s %s %s -o %s %s",
        qcflags, str_incs, dotc, str_srcs, sofile, str_libs)
+       print("q_cmd = ", q_cmd)
     local cmd_out = c_exec(q_cmd)
     if ( not cmd_out ) then
       -- TODO P1 Need to understand this better 

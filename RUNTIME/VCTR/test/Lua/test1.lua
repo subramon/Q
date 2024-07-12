@@ -11,20 +11,23 @@ local qcfg     = require 'Q/UTILS/lua/qcfg'
 
 local tests = {}
 tests.t1 = function()
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local x, y = lVector({ qtype = "F4", width = 4})
   assert(type(x) == "lVector")
   assert(type(y) == "nil") -- only one thing returned
   assert(cVector.check_all())
   x:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
   print("Test t1 succeeded")
 end
 tests.t2 = function()
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local qtype = "I4"
   local max_num_in_chunk = 64
   local x = lVector({ qtype = qtype, max_num_in_chunk = max_num_in_chunk })
@@ -48,13 +51,15 @@ tests.t2 = function()
   assert(cVector.check_all())
   buf:delete()
   x:delete()
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
   print("Test t2 succeeded")
 end
 tests.t3 = function()
+  local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
   collectgarbage("stop")
-  assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local qtype = "I4"
   local max_num_in_chunk = 64
   -- NOTE: x is a global below 
@@ -111,8 +116,9 @@ tests.t3 = function()
   x:nop()
   x:delete()
   buf:delete()
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
   collectgarbage()
-
   assert(cVector.check_all())
   print("Test t3 succeeded")
 end

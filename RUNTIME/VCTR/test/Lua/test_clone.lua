@@ -40,7 +40,7 @@ tests.t_clone = function()
     assert(x:num_readers(k-1) == 0) 
   end 
   for i = 1, nC do 
-    -- print("Iteration i = ", i)
+    print("START Iteration i = ", i)
     local nx, cx = x:get_chunk(3); assert(nx == 7)
     x:unget_chunk(3)
 
@@ -54,6 +54,7 @@ tests.t_clone = function()
     assert(type(ny) == "number")
     y:unget_chunk(i-1)
 
+    -- TODO Bug below: pointer is wrong 
     local xptr = get_ptr(cx, "int32_t *")
     local yptr = get_ptr(cy, "int32_t *")
     for j = 1, nx do

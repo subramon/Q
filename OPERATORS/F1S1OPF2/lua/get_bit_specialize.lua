@@ -1,7 +1,7 @@
 local ffi    = require 'ffi'
 local cutils = require 'libcutils'
 local Scalar = require 'libsclr'
-local is_in  = require 'Q/UTILS/lua/is_in'
+local is_in  = require 'RSUTILS/lua/is_in'
 local to_scalar  = require 'Q/UTILS/lua/to_scalar'
 local from_scalar  = require 'Q/UTILS/lua/from_scalar'
 

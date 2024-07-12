@@ -5,7 +5,7 @@ local cutils  = require 'libcutils'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local qc      = require 'Q/UTILS/lua/qcore'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 local record_time = require 'Q/UTILS/lua/record_time'
 local copy_optargs_to_vctr_args = require 'Q/UTILS/lua/copy_optargs_to_vctr_args'
 

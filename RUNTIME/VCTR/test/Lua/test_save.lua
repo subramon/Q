@@ -3,7 +3,7 @@ require 'Q/UTILS/lua/strict'
 local lgutils = require 'liblgutils'
 local Q = require 'Q'
 local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
-local is_in = require 'Q/UTILS/lua/is_in'
+local is_in = require 'RSUTILS/lua/is_in'
 local max_num_in_chunk = get_max_num_in_chunk()
 local len = 2 * max_num_in_chunk + 3 
 x = Q.const({ val = 1, qtype = "I4", len = len}):set_name("XX"):eval()

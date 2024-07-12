@@ -1,6 +1,6 @@
 -- This is inverse of mk_col 
 local lVector   = require 'Q/RUNTIME/VCTR/lua/lVector'
-local rev_lkp   =  require 'Q/UTILS/lua/rev_lkp'
+local rev_lkp   = require 'RSUTILS/lua/rev_lkp'
 
 local good_qtypes = rev_lkp({ 
   "I1",  "I2",  "I4", "I8",  "UI1",  "UI2",  "UI4", "UI8",  

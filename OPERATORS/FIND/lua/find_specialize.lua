@@ -1,5 +1,5 @@
-local cutils = require 'libcutils'
-local is_in = require 'Q/UTILS/lua/is_in'
+local cutils  = require 'libcutils'
+local is_in   = require 'RSUTILS/lua/is_in'
 local to_scalar = require 'Q/UTILS/lua/to_scalar'
 
 local qtypes = { "I1", "I2", "I4", "I8", "F4", "F8", }

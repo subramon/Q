@@ -1,6 +1,6 @@
 local cutils  = require 'libcutils'
 local lgutils = require 'liblgutils'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 
 local function permute_to_specialize(invec, p, optargs)
   local subs = {}

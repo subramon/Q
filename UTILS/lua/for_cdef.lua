@@ -46,7 +46,7 @@ local function for_cdef(
     qcfg.q_root .. "/cdefs/" .. string.gsub(str, "/", "_")
   -- STOP : make name of cdef file 
   if ( cutils.isfile(cdef_file) ) then
-    print("Using cached version", cdef_file)
+    -- print("Using cached version", cdef_file)
     local rslt = cutils.file_as_str(cdef_file)
     return rslt, true, nil
   end

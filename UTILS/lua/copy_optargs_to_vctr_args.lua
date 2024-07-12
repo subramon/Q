@@ -1,4 +1,4 @@
-local is_in = require 'Q/UTILS/lua/is_in'
+local is_in = require 'RSUTILS/lua/is_in'
 local good_args = { "name", "max_num_in_chunk", } -- WHAT ELSE? TODO P2 
 local function copy_optargs_to_vctr_args(optargs)
   local vargs = {}

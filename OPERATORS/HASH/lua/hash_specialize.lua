@@ -1,4 +1,4 @@
-local is_in    = require 'Q/UTILS/lua/is_in'
+local is_in    = require 'RSUTILS/lua/is_in'
 local qconsts  = require 'Q/UTILS/lua/q_consts'
 local cmem    = require 'libcmem'
 local ffi = require 'ffi'

@@ -2,7 +2,7 @@ local ffi     = require 'ffi'
 local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
 local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
 
 local function unpack_specialize(invec, out_qtypes)

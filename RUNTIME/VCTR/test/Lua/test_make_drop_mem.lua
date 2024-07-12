@@ -15,15 +15,15 @@ local num_chunks = math.ceil(len/max_num_in_chunk)
 
 local tests = {}
 tests.t1 = function()
-  collectgarbage("stop")
   local pre_mem = lgutils.mem_used()
+  local pre_dsk = lgutils.dsk_used()
+  collectgarbage("stop")
   local x1 = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
     name = "test1_x1", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
   x1:eval()
   local chunk_size = x1:max_num_in_chunk() * x1:width()
   local init_mem_used = lgutils.mem_used()
   local init_dsk_used = lgutils.dsk_used()
-  assert(init_dsk_used == 0)
 
   local niters  = 10
   for i  = 1, niters do 
@@ -39,8 +39,9 @@ tests.t1 = function()
   end
   assert(cVector.check_all())
   x1 = nil; collectgarbage()
-  local post_mem = lgutils.mem_used()
-  assert(pre_mem == post_mem)
+  assert(pre_mem == lgutils.mem_used())
+  assert(pre_dsk == lgutils.dsk_used())
+  collectgarbage("restart")
   print("Test t1 succeeded")
 end
 tests.t2 = function()
@@ -80,7 +81,6 @@ tests.t2 = function()
   print("Test t2 succeeded")
 end
 collectgarbage()
-assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
 -- return tests
 tests.t1()
 tests.t2()

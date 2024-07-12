@@ -1,18 +1,16 @@
-local ffi       = require 'ffi'
-local cmem      = require 'libcmem'
-local cutils    = require 'libcutils'
-local Scalar    = require 'libsclr'
-local is_in     = require 'Q/UTILS/lua/is_in'
-local get_ptr   = require 'Q/UTILS/lua/get_ptr'
-local qc        = require 'Q/UTILS/lua/qcore'
-local qcfg    =  require 'Q/UTILS/lua/qcfg'
+local ffi      = require 'ffi'
+local cmem     = require 'libcmem'
+local cutils   = require 'libcutils'
+local Scalar   = require 'libsclr'
+local is_in    = require 'RSUTILS/lua/is_in'
+local get_ptr  = require 'Q/UTILS/lua/get_ptr'
+local qc       = require 'Q/UTILS/lua/qcore'
+local qcfg     =  require 'Q/UTILS/lua/qcfg'
 local get_max_num_in_chunk = require 'Q/UTILS/lua/get_max_num_in_chunk'
 
 -- cdef the necessary struct within pcall to prevent error on second call
-local incs = { "RUNTIME/CMEM/inc/", "UTILS/inc/" }
-qc.q_cdef("OPERATORS/S_TO_F/inc/const_struct.h", incs)
-qc.q_cdef("OPERATORS/S_TO_F/inc/const_B1.h", incs)
-qc.q_cdef("RUNTIME/SCLR/inc/sclr_struct.h", incs)
+qc.q_cdef("OPERATORS/S_TO_F/inc/const_struct.h")
+qc.q_cdef("OPERATORS/S_TO_F/inc/const_B1.h")
 
 local function const_specialize(
   largs

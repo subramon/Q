@@ -1,7 +1,7 @@
 -- logical negation
 local ffi     = require 'ffi'
 local cutils  = require 'libcutils'
-local is_in   = require 'Q/UTILS/lua/is_in'
+local is_in   = require 'RSUTILS/lua/is_in'
 
 return function (
   f1,
