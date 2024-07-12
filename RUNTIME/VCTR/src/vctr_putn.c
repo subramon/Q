@@ -1,10 +1,14 @@
 #include "q_incs.h"
 #include "qtypes.h"
 #include "vctr_consts.h"
+
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_get.h"
+
 #include "vctr_rs_hmap_put.h"
 #include "chnk_rs_hmap_struct.h"
+#include "chnk_rs_hmap_put.h"
+
 #include "chnk_cnt.h"
 #include "chnk_is.h"
 #include "chnk_first.h"
@@ -78,7 +82,7 @@ vctr_putn(
       chnk_val.num_lives_left = vctr_val.num_lives_free;
     }
     //-------------------------------
-    status = vctr_rs_hmap_put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
+    status = chnk_rs_hmap_put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
     cBYE(status);
     g_vctr_hmap[tbsp].bkts[vctr_where].val.num_chnks++;
     g_vctr_hmap[tbsp].bkts[vctr_where].val.max_chnk_idx = chnk_idx; 

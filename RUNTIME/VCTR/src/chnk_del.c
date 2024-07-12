@@ -3,6 +3,8 @@
 #include "qjit_consts.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
+#include "chnk_rs_hmap_get.h"
+#include "chnk_rs_hmap_del.h"
 #include "chnk_is.h"
 #include "vctr_is.h"
 #include "chnk_free_resources.h"
@@ -29,7 +31,7 @@ chnk_del(
 
   chnk_rs_hmap_key_t key = { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
   chnk_rs_hmap_val_t val; memset(&val, 0, sizeof(chnk_rs_hmap_val_t));
-  status = g_chnk_hmap[tbsp].get(&g_chnk_hmap[tbsp], &key, &val, 
+  status = chnk_rs_hmap_get(&g_chnk_hmap[tbsp], &key, &val, 
       &chnk_is_found, &chnk_where_found);
   if ( chnk_is_found == false ) { return -3; } // NOTE 
   if ( g_chnk_hmap[tbsp].nitems == 0 ) { go_BYE(-1); }
@@ -40,7 +42,7 @@ chnk_del(
   cBYE(status);
   //-- delete entry in hash table 
   bool is_found;
-  status = g_chnk_hmap[tbsp].del(&g_chnk_hmap[tbsp], &key, &val, &is_found); 
+  status = chnk_rs_hmap_del(&g_chnk_hmap[tbsp], &key, &val, &is_found); 
   cBYE(status);
   //-- reduce number of chunks in this vector
   if ( g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_chnks == 0 ) { go_BYE(-1); }

@@ -1,6 +1,7 @@
 #include "q_incs.h"
 #include "qtypes.h"
 #include "vctr_rs_hmap_struct.h"
+#include "vctr_rs_hmap_get.h"
 #include "vctr_is.h"
 #include "vctr_memo.h"
 
@@ -17,7 +18,7 @@ vctr_set_memo(
   bool is_found; uint32_t where_found = ~0;
   vctr_rs_hmap_key_t key = vctr_uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
+  status = vctr_rs_hmap_get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
   // once vector has elements in it, cannot modify its memo len 
@@ -40,7 +41,7 @@ vctr_get_memo_len(
   bool is_found; uint32_t where;
   vctr_rs_hmap_key_t key = uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
+  status = vctr_rs_hmap_get(&g_vctr_hmap[tbsp], &key, &val, &is_found, &where);
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
   vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap[tbsp].bkts;
@@ -60,7 +61,7 @@ vctr_cast(
   bool is_found; uint32_t where_found = ~0;
   vctr_rs_hmap_key_t key = vctr_uqid;
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = g_vctr_hmap[tbsp].get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
+  status = vctr_rs_hmap_get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
   qtype_t old_qtype = val.qtype;

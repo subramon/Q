@@ -108,7 +108,8 @@ chnk_rs_hmap_custom_chk(
         }
       }
       // qtype must be legit 
-      if ( val.qtype > NUM_QTYPES ) { go_BYE(-1); }
+      if ( val.qtype == Q0 ) { go_BYE(-1); }
+      if ( val.qtype >= QF ) { go_BYE(-1); }
       if ( val.qtype != SC ) { 
         uint32_t width = get_width_c_qtype(val.qtype);
         if ((( val.num_elements / width ) * width ) != val.num_elements ) {
@@ -146,7 +147,6 @@ chnk_rs_hmap_custom_chk(
     uint32_t l_size         = kv[lb].size;
     uint32_t l_chnk_idx     = kv[lb].chnk_idx;
     uint32_t l_num_elements = kv[lb].num_elements;
-    if ( l_chnk_idx != 0 ) { go_BYE(-1); }
     uint32_t exp_chnk_idx  = l_chnk_idx + 1; 
 
     lb++; // move on to second chunk in vector 

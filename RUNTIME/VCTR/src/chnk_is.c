@@ -2,6 +2,7 @@
 #include "qtypes.h"
 #include "qjit_consts.h"
 #include "chnk_rs_hmap_struct.h"
+#include "chnk_rs_hmap_get.h"
 #include "chnk_is.h"
 
 
@@ -19,7 +20,7 @@ chnk_is(
   int status = 0;
   chnk_rs_hmap_key_t key = { .vctr_uqid = vctr_uqid, .chnk_idx = chnk_idx };
   chnk_rs_hmap_val_t val; memset(&val, 0, sizeof(chnk_rs_hmap_val_t));
-  status = g_chnk_hmap[tbsp].get(&g_chnk_hmap[tbsp], &key, &val, ptr_is_found, 
+  status = chnk_rs_hmap_get(&g_chnk_hmap[tbsp], &key, &val, ptr_is_found, 
       ptr_where_found);
   /*
   if ( *ptr_is_found ) { 

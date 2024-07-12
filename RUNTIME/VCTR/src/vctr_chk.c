@@ -80,7 +80,7 @@ vctr_chk(
 
   vctr_val = g_vctr_hmap[tbsp].bkts[vctr_where_found].val;
   uint32_t qtype           = vctr_val.qtype;
-  if ( qtype >= NUM_QTYPES ) { go_BYE(-1); } 
+  if ( qtype >= QF ) { go_BYE(-1); } 
   if ( qtype <= Q0 ) { go_BYE(-1); } 
   uint32_t width           = vctr_val.width;
   // Unfortunately, we have some special casing to do here

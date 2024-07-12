@@ -6,9 +6,11 @@
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
+#include "vctr_rs_hmap_custom_chk.h"
 
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_rs_hmap_instantiate.h"
+#include "chnk_rs_hmap_custom_chk.h"
 
 #include "rmtree.h"
 #include "isdir.h"
@@ -164,7 +166,11 @@ main(
   // flush to disk 
   strcpy(g_data_dir_root[tbsp], "/tmp/_ut2_data"); 
   printf(">>> START Acceptable error\n");
-  status = rmtree(g_data_dir_root[tbsp]); 
+  status = rmtree(g_data_dir_root[tbsp]);  
+  if ( status == -2 ) { // => directory didn't exist. This is okay 
+    status = 0;
+  }
+  cBYE(status);
   printf(">>> STOP  Acceptable error\n");
   status = mkdir(g_data_dir_root[tbsp], 0744);
   if ( g_dsk_used != 0 ) { go_BYE(-1); } 
@@ -217,6 +223,8 @@ main(
   fprintf(stderr, "Successfully completed %s \n", argv[0]); 
   // cleanup
   status = rmtree(g_data_dir_root[tbsp]); 
+  status = vctr_rs_hmap_custom_chk(&g_vctr_hmap[0]); cBYE(status);
+  status = chnk_rs_hmap_custom_chk(&g_chnk_hmap[0]); cBYE(status);
 BYE:
   status = free_globals(); if ( status < 0 ) { WHEREAMI; } 
   free_if_non_null(buf);

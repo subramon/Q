@@ -6,9 +6,11 @@
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
+#include "vctr_rs_hmap_custom_chk.h"
 
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_rs_hmap_instantiate.h"
+#include "chnk_rs_hmap_custom_chk.h"
 
 #include "cmem_struct.h"
 #include "aux_cmem.h"
@@ -101,6 +103,8 @@ main(
     // we have created exactly one vector 
     if ( g_vctr_hmap[0].nitems != 1 ) { go_BYE(-1); } 
   }
+  status = vctr_rs_hmap_custom_chk(&g_vctr_hmap[0]); cBYE(status);
+  status = chnk_rs_hmap_custom_chk(&g_chnk_hmap[0]); cBYE(status);
   printf("Succesfully completed %s \n", argv[0]);
 BYE:
   free_if_non_null(buf);

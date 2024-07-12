@@ -51,6 +51,7 @@ a.out
 
 # Temporary files
 *.*~
+_*
 
 # generated files
 gen_inc

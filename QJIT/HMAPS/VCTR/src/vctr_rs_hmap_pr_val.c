@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include "macros.h"
+#include "qtypes.h"
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_pr_val.h"
 
@@ -15,9 +16,9 @@ vctr_rs_hmap_pr_val(
 {
   int status = 0;
   if ( ptr_val == NULL ) { go_BYE(-1); } 
-  fprintf(fp, "(name=%s;qtype=%u,num_elements=%" PRIu64 ",nC=%u)", 
+  fprintf(fp, "(name=%s;qtype=%s,num_elements=%" PRIu64 ",nC=%u)", 
       ptr_val->name, 
-      ptr_val->qtype, // TODO Make this a string using utils
+      get_str_qtype(ptr_val->qtype),
       ptr_val->num_elements,
       ptr_val->max_num_in_chnk);
 BYE:

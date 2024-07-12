@@ -5,10 +5,10 @@
 #include "sclr_struct.h"
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
+#include "chnk_rs_hmap_put.h"
 #include "chnk_is.h"
 #include "mod_mem_used.h"
 #include "chnk_first.h"
-
 
 extern vctr_rs_hmap_t *g_vctr_hmap;
 extern chnk_rs_hmap_t *g_chnk_hmap;
@@ -50,7 +50,7 @@ chnk_first(
     chnk_val.num_lives_left = ptr_vctr_val->num_lives_free;
   }
   //-------------------------------
-  status = g_chnk_hmap[tbsp].put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
+  status = chnk_rs_hmap_put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
   cBYE(status);
   g_vctr_hmap[tbsp].bkts[vctr_where].val.num_chnks++;
 #ifdef DEBUG

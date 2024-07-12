@@ -7,9 +7,13 @@
 
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_instantiate.h"
+#include "vctr_rs_hmap_freeze.h"
+#include "vctr_rs_hmap_custom_chk.h"
 
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_rs_hmap_instantiate.h"
+#include "chnk_rs_hmap_freeze.h"
+#include "chnk_rs_hmap_custom_chk.h"
 
 #include "rs_hmap_config.h"
 #include "vctr_add.h" 
@@ -96,7 +100,7 @@ main(
       go_BYE(-1); 
     }
   }
-  status = g_vctr_hmap[0].freeze(&g_vctr_hmap[0],
+  status = vctr_rs_hmap_freeze(&g_vctr_hmap[0],
       "/tmp/", "_meta.csv", "_bkts.bin","_full.bin");
   cBYE(status);
   //-- bogus delete -----------------
@@ -141,6 +145,8 @@ main(
   //----------------------------------
 
   if ( g_mem_used != 0 ) { go_BYE(-1); }
+  status = vctr_rs_hmap_custom_chk(&g_vctr_hmap[0]); cBYE(status);
+  status = chnk_rs_hmap_custom_chk(&g_chnk_hmap[0]); cBYE(status);
   fprintf(stderr, "Successfully completed %s \n", argv[0]);
 BYE:
   status = free_globals(); if ( status < 0 ) { WHEREAMI; } 

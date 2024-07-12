@@ -22,6 +22,12 @@ cd $DIR && make clean && make
 cp libcutils.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
+test -d $RSUTILS_SRC_ROOT
+DIR=$RSUTILS_SRC_ROOT/RSUTILS/src/
+cd $DIR && make clean && make 
+cp librsutils.so $Q_ROOT/lib/
+cd -
+#------------------------------------------------
 test -d $RSHMAP_SRC_ROOT
 DIR=$RSHMAP_SRC_ROOT/RSHMAP/fixed_len_kv/common/
 cd $DIR && make clean && make
@@ -46,17 +52,24 @@ cp liblgutils.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
 DIR=$Q_SRC_ROOT/RUNTIME/CMEM/src/
-cd $DIR && ; make clean && make -f qMakefile
+cd $DIR && make clean && make -f qMakefile
 cp libcmem.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
 DIR=$Q_SRC_ROOT/RUNTIME/SCLR/src/
-cd $DIR && ; make clean && make 
+cd $DIR && make clean && make 
 cp libsclr.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
-cd $Q_SRC_ROOT/RUNTIME/SCLR/src/; make clean && make
-cd $Q_SRC_ROOT/RUNTIME/VCTRS/src/; make clean && make
-cd $Q_SRC_ROOT/QJIT/LuaJIT-2.1.0-beta3/src; rm -f ./luajit; make
+DIR=$Q_SRC_ROOT/RUNTIME/VCTR/src/
+cd $DIR && make clean && make 
+cp libvctr.so $Q_ROOT/lib/
+cp libvctr_core.so $Q_ROOT/lib/
+cd - #------------------------------------------------
+DIR=$Q_SRC_ROOT/QJIT/LuaJIT-2.1.0-beta3/src; 
+cd $DIR && rm -f ./luajit && make
+cp luajit $Q_ROOT/bin/qjit
+cd -
+#------------------------------------------------
 
 echo "Q is good to go"

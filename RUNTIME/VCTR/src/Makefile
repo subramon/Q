@@ -12,7 +12,7 @@ INCS += -I../../SCLR/inc/
 INCS += -I../../../QJIT/GUTILS/inc
 INCS += -I../../../QJIT/LuaJIT-2.1.0-beta3/src/
 
-all: core_libvctr.so  ut1 ut2 ut_memo libvctr.so 
+all: libvctr_core.so  ut1 ut2 ut_memo libvctr.so 
 
 SRCS :=	vctr_add.c  
 SRCS +=	vctr_cnt.c  
@@ -65,14 +65,14 @@ SRCS +=	chnk_l1_to_l2.c
 
 OBJS = $(SRCS:.c=.o)
 
-TEST1_SRCS := ../test/ut1.c
+TEST1_SRCS := ../test/C/ut1.c
 TEST1_SRCS += ../../../QJIT/GUTILS/src/init_globals.c
 TEST1_SRCS += ../../../QJIT/GUTILS/src/init_session.c
 TEST1_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
 TEST1_SRCS += ../../../QJIT/GUTILS/src/lua_state.c
 TEST1_OBJS = $(TEST1_SRCS:.c=.o)
 
-TEST2_SRCS := ../test/ut2.c
+TEST2_SRCS := ../test/C/ut2.c
 TEST2_SRCS += ../../CMEM/src/aux_cmem.c 
 TEST2_SRCS += ../../../QJIT/GUTILS/src/init_globals.c
 TEST2_SRCS += ../../../QJIT/GUTILS/src/init_session.c
@@ -80,7 +80,7 @@ TEST2_SRCS += ../../../QJIT/GUTILS/src/free_globals.c
 TEST2_SRCS += ../../../QJIT/GUTILS/src/lua_state.c
 TEST2_OBJS = $(TEST2_SRCS:.c=.o)
 
-TEST3_SRCS := ../test/ut_memo.c
+TEST3_SRCS := ../test/C/ut_memo.c
 TEST3_SRCS += ../../CMEM/src/aux_cmem.c 
 TEST3_SRCS += ../../../QJIT/GUTILS/src/init_globals.c
 TEST3_SRCS += ../../../QJIT/GUTILS/src/init_session.c
@@ -94,50 +94,61 @@ TEST3_OBJS = $(TEST3_SRCS:.c=.o)
 	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
 #-------------------------------------------
-RSHMAP_SO  = ${RHMAP_SRC_ROOT}/librs_hmap_core.so
-RSUTILS_SO = ${RUTILS_SRC_ROOT}/librsutils.so
+RSHMAP_SO  = ${RSHMAP_SRC_ROOT}/RSHMAP/fixed_len_kv/common/librs_hmap_core.so
+RSUTILS_SO = ${RSUTILS_SRC_ROOT}/RSUTILS/src/librsutils.so
 GUTILS_SO  = ${Q_SRC_ROOT}/QJIT/GUTILS/libcgutils.so
 VCTR_SO    = ${Q_SRC_ROOT}/QJIT/HMAPS/VCTR/libvctr_rs_hmap.so
 CHNK_SO    = ${Q_SRC_ROOT}/QJIT/HMAPS/CHNK/libchnk_rs_hmap.so
 
+${VCTR_SO} : 
+	make -C ${Q_SRC_ROOT}/QJIT/HMAPS/VCTR/
+${CHNK_SO} : 
+	make -C ${Q_SRC_ROOT}/QJIT/HMAPS/CHNK/
+${GUTILS_SO} : 
+	make -C ${Q_SRC_ROOT}/QJIT/GUTILS/
+${RSUTILS_SO} : 
+	make -C ${RSUTILS_SRC_ROOT}/RSUTILS/src/
+${RSHMAP_SO} : 
+	make -C ${RSHMAP_SRC_ROOT}/RSHMAP/fixed_len_kv/common/
 #-------------------------------------------
-core_libvctr.so :  ${OBJS} 
+libvctr_core.so :  ${OBJS} \
+  	${RSHMAP_SO} ${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO}
 	gcc ${OBJS} -shared \
 	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
-		-o core_libvctr.so 
+		-o libvctr_core.so 
 #-------------------------------------------
 EXT_SRCS := cVector.c
 EXT_SRCS += ../../CMEM/src/aux_lua_to_c.c
 EXT_SRCS += ../../CMEM/src/aux_cmem.c
-EXT_SRCS += ../../../UTILS/src/qtypes.c
 
 EXT_OBJS = $(EXT_SRCS:.c=.o)
 
-libvctr.so: ${EXT_OBJS} core_libvctr.so cVector.o 
+libvctr.so: ${EXT_OBJS} libvctr_core.so cVector.o 
 	gcc ${EXT_OBJS} \
-	core_libvctr.so \
+	libvctr_core.so \
 	-shared -o libvctr.so 
 	cp libvctr.so ${Q_ROOT}/lib/
 
 #-------------------------------------------
-ut1 : ${TEST1_OBJS} ${Q_ROOT}/lib/libutils.so 
+ut1 : ${TEST1_OBJS} ${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} libvctr.so 
 	gcc ${TEST1_OBJS} \
 	${QCFLAGS} ${INCS} \
-	core_libvctr.so \
+	libvctr_core.so \
+	libvctr.so \
 	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
 	-o ut1  -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
-ut2 : ${TEST2_OBJS} ${Q_ROOT}/lib/libutils.so 
+ut2 : ${TEST2_OBJS} ${RSUTILS_SO} 
 	gcc ${TEST2_OBJS} \
 	${QCFLAGS} ${INCS} \
-	core_libvctr.so \
+	libvctr_core.so \
 	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
 	-o ut2 -lm -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
-ut_memo : ${TEST3_OBJS} ${Q_ROOT}/lib/libutils.so 
+ut_memo : ${TEST3_OBJS}  ${RSUTILS_SO} 
 	gcc ${TEST3_OBJS} \
 	${QCFLAGS} ${INCS} \
-	core_libvctr.so \
+	libvctr_core.so \
 	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
 	-o ut_memo -lm -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------

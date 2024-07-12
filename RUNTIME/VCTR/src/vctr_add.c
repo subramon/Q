@@ -1,5 +1,7 @@
 #include "q_incs.h"
 #include "qtypes.h"
+#include "vctr_rs_hmap_struct.h"
+#include "vctr_rs_hmap_put.h"
 #include "vctr_consts.h"
 #include "vctr_new_uqid.h"
 #include "vctr_is.h"
@@ -27,7 +29,7 @@ vctr_add1(
   uint32_t old_vctr_cnt, new_vctr_cnt;
   old_vctr_cnt = vctr_cnt(tbsp);
 #endif
-  if ( ( qtype == Q0 ) || ( qtype >= NUM_QTYPES ) ) { go_BYE(-1); }
+  if ( ( qtype == Q0 ) || ( qtype >= QF ) ) { go_BYE(-1); }
   *ptr_uqid = vctr_new_uqid();
   vctr_rs_hmap_key_t key = *ptr_uqid; 
   if ( width == 0 ) { 

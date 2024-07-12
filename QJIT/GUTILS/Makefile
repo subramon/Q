@@ -42,10 +42,14 @@ AUX_SRCS += ./src/mem_mgr.c
 AUX_SRCS += ./src/read_configs.c 
 AUX_SRCS += ./src/process_req.c 
 AUX_SRCS += ./src/webserver.c 
+AUX_SRCS += ./src/get_cli_arg.c 
+
+AUX_OBJS = $(AUX_SRCS:.c=.o)
 
 SRCS := ./src/l2_file_name.c 
 SRCS += ./src/mod_mem_used.c 
 SRCS += ./src/vctr_name_to_uqid.c 
+SRCS += ./src/get_cli_arg.c 
 
 OBJS = $(SRCS:.c=.o)
 #----------------------------------

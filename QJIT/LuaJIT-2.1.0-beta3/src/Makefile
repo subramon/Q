@@ -675,12 +675,16 @@ lj_folddef.h: $(BUILDVM_T) lj_opt_fold.c
 
 INCS := -I.
 INCS += -I./inc/
-INCS += -I../../../TMPL_FIX_HASHMAP/inc/
-INCS += -I../../../TMPL_FIX_HASHMAP/VCTR_HMAP/inc/
-INCS += -I../../../TMPL_FIX_HASHMAP/CHNK_HMAP/inc/
-INCS += -I../../../RUNTIME/VCTRS/inc/
-INCS += -I../../../UTILS/inc/
+#-- for hash tables 
+INCS += -I${RSHMAP_SRC_ROOT}/RSHMAP/fixed_len_kv/common/inc/ 
+INCS += -I../../HMAPS/VCTR/inc/
+INCS += -I../../HMAPS/VCTR/gen_inc/
+INCS += -I../../HMAPS/CHNK/inc/
+INCS += -I../../HMAPS/CHNK/gen_inc/
+#------
+INCS += -I${RSUTILS_SRC_ROOT}/RSUTILS/inc/
 INCS += -I../../GUTILS/inc/
+# INCS += -I../../../RUNTIME/VCTR/inc/
 
 %.o: %.c
 	$(E) "CC1       $@"
@@ -715,9 +719,11 @@ include Makefile.dep
 RS_LIBS := -lpthread
 RS_LIBS += -levent
 RS_LIBS += ${Q_ROOT}/lib/libqjitaux.so 
-RS_LIBS += ${Q_ROOT}/lib/libhmap_vctr.so 
-RS_LIBS += ${Q_ROOT}/lib/libhmap_chnk.so 
-RS_LIBS += ${Q_ROOT}/lib/libhmap.so 
+RS_LIBS += ${Q_ROOT}/lib/libvctr_rs_hmap.so
+RS_LIBS += ${Q_ROOT}/lib/libchnk_rs_hmap.so
+RS_LIBS += ${Q_ROOT}/lib/librs_hmap_core.so 
+RS_LIBS += ${Q_ROOT}/lib/librsutils.so 
+RS_LIBS += ${Q_ROOT}/lib/libvctr_core.so 
 
 $(LUAJIT_A): $(LJVMCORE_O)
 	$(E) "AR        $@"
