@@ -4,7 +4,7 @@ local cmem    = require 'libcmem'
 local cutils  = require 'libcutils'
 local qcfg = require 'Q/UTILS/lua/qcfg'
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local lgutils = require 'liblgutils'
 
 local max_num_in_chunk = 64 

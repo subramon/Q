@@ -1,4 +1,5 @@
 local lgutils = require 'liblgutils'
+local qc      = require 'Q/UTILS/lua/qcore'
 
 require "Q/OPERATORS/PRINT/lua/print_csv"
 require "Q/UTILS/lua/save"

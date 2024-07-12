@@ -35,12 +35,24 @@ local function q_cdef( infile, incs)
   if ( cdefd[infile] ) then
     -- print("Skipping cdef of " .. infile)
   else
-    -- print("cdef'ing " .. infile)
-    local y = for_cdef(infile, incs)
-    ffi.cdef(y)
+    local to_cdef, pre_cdef, cdef_file = for_cdef(infile, incs)
+    assert(type(to_cdef) == "string")
+    assert(type(pre_cdef) == "boolean")
+    ffi.cdef(to_cdef)
     cdefd[infile] = true
+    if ( pre_cdef == false ) then 
+      -- cache rslt in cdef_file
+      assert(cutils.str_as_file(to_cdef, cdef_file))
+    end
    end
 end
+
+-- Place stuff here that Lua needs to know about C 
+local incdir = assert(os.getenv("RSUTILS_SRC_ROOT"))
+assert(cutils.isdir(incdir))
+local qtypes_file = incdir .. "/RSUTILS/inc/qtypes.h"
+q_cdef(qtypes_file)
+q_cdef("RUNTIME/SCLR/inc/sclr_struct.h")
 
 local function load_lib(
   fn,

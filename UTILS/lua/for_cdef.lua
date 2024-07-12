@@ -46,9 +46,9 @@ local function for_cdef(
     qcfg.q_root .. "/cdefs/" .. string.gsub(str, "/", "_")
   -- STOP : make name of cdef file 
   if ( cutils.isfile(cdef_file) ) then
-    -- print("Using cached version", cdef_file)
+    print("Using cached version", cdef_file)
     local rslt = cutils.file_as_str(cdef_file)
-    return rslt
+    return rslt, true, nil
   end
   --============================================
   -- Determine the incs i.e., -I....
@@ -108,12 +108,7 @@ local function for_cdef(
   local chk = string.gsub(rslt, "%s", "")
   assert(#chk > 0, "infile = " .. infile)
   --==============
-  -- cache rslt in cdef_file
-  local fp = io.open(cdef_file, "w")
-  fp:write(rslt)
-  fp:close()
-  --==============
-  return rslt
+  return rslt, false, cdef_file
 end
 return for_cdef
 -- x = for_cdef("RUNTIME/VCTR/inc/vctr_struct.h", { "UTILS/inc/" })

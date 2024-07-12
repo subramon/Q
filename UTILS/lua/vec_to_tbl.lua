@@ -1,5 +1,5 @@
 local T = {}
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 
 -- Q.vec_to_tbl(x) : gives table of scalars
             -- Return value:

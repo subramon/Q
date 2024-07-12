@@ -4,7 +4,7 @@
 double > uint64 > int64 > float > uint32 > int32 >
     uint16 > int16 > uint8 > int8 > bool
 --]]
-local is_in = require 'Q/UTILS/lua/is_in'
+local is_in = require 'RSUTILS/lua/is_in'
 return function(
   ftype1,
   ftype2

@@ -1,9 +1,9 @@
-local ffi     = require 'ffi'
-local qc      = require 'Q/UTILS/lua/qcore'
-local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
-local cmem    = require 'libcmem'
-local cutils  = require 'libcutils'
-local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local ffi         = require 'ffi'
+local cmem        = require 'libcmem'
+local cutils      = require 'libcutils'
+local qc          = require 'Q/UTILS/lua/qcore'
+local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
+local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
 qc.q_cdef("RUNTIME/SCLR/inc/sclr_struct.h", { "UTILS/inc/" })

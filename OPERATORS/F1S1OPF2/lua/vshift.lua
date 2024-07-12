@@ -1,10 +1,10 @@
-local ffi     = require 'ffi'
-local qc      = require 'Q/UTILS/lua/qcore'
-local is_in   = require 'Q/UTILS/lua/is_in'
-local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
-local cmem    = require 'libcmem'
-local cutils  = require 'libcutils'
-local get_ptr = require 'Q/UTILS/lua/get_ptr'
+local ffi         = require 'ffi'
+local cmem        = require 'libcmem'
+local cutils      = require 'libcutils'
+local is_in       = require 'RSUTILS/lua/is_in'
+local qc          = require 'Q/UTILS/lua/qcore'
+local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
+local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
 local function lmin(x, y) if ( x < y ) then return x else return y end end

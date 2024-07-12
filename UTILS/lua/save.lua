@@ -146,7 +146,7 @@ local function save()
   fp:close()
   --================================================
   fp = assert(io.open(meta_file, "w+"))
-  fp:write("local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'\n")
+  fp:write("local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'\n")
   fp:write("local cVector = require 'libvctr'\n")
   fp:write("local Scalar  = require 'libsclr'\n")
   -- NEEDED ?? fp:write("local cmem    = require 'libcmem'\n")

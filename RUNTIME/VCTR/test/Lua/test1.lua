@@ -5,7 +5,7 @@ local cmem     = require 'libcmem'
 local cutils   = require 'libcutils'
 local lgutils  = require 'liblgutils'
 local cVector  = require 'libvctr'
-local lVector  = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector  = require 'Q/RUNTIME/VCTR/lua/lVector'
 local get_ptr  = require 'Q/UTILS/lua/get_ptr'
 local qcfg     = require 'Q/UTILS/lua/qcfg'
 
