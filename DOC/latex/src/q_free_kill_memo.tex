@@ -1,0 +1,234 @@
+\documentclass[letterpaper,12pt]{article}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ right=20mm,
+ bottom=20mm,
+ }
+\usepackage{courier}
+\usepackage{fancyheadings}
+\pagestyle{fancy}
+\usepackage{graphicx}
+\setlength\textwidth{6.5in}
+\setlength\textheight{8.5in}
+\newtheorem{problem_statement}{Problem Statement}
+\newtheorem{invariant}{Invariant}
+\newcommand{\TBC}{\framebox{\textbf{TO BE COMPLETED}}}
+\newtheorem{assumption}{Assumption}
+\newcommand{\be}{\begin{enumerate}}
+\newcommand{\ee}{\end{enumerate}}
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\bd}{\begin{description}}
+\newcommand{\ed}{\end{description}}
+\newtheorem{notation}{Notation}
+\begin{document}
+\title{Resource Reduction in Q}
+% \author{ Ramesh Subramonian }
+\maketitle
+\thispagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{}
+% \lfoot{{\small Decision Sciences Team}}
+\cfoot{}
+\rfoot{{\small \thepage}}
+
+\abstract{This document lists various techniques used to reduce Q's resource
+consumption (in terms of memory and disk usage).
+}
+
+\section{Introduction}
+
+\subsection{Motivation}
+Since Q is an extension of Lua (LuaJIT to be precise), it performs garbage
+collection. This allows it to free resources that are no longer needed.
+
+However, there are two weaknesses with this approach. 
+\be
+\item Lua is unable to look inside a Vector to assess how much 
+memory/disk it is using and therefore whether garbage collection should 
+be triggered. 
+\item Even if it could, there are many  situations where the Q programmer can
+use their knowledge of the computation to free resources earlier than they would
+have been freed had one relied solely on garbage collection. This is consistent
+with Q's overall design philosophy of creating hooks that allow the 
+advanced programmer to gain efficiency at the cost of thinking harder.
+\ee
+
+\subsection{Organization}
+We provide the Q programmer with three mechanisms to inform the Q runtime 
+that a vector can be freed in total or in part. When using these 
+mechanisms, we impose some constraints on how they can be used not for 
+any intrinsic reason but because of my general belief that one should 
+provide the system with as few degrees of freedom without 
+hamstringing the Q programmer. 
+
+\be
+\item memo --- Section~\ref{memo}
+\item kill --- Section~\ref{kill}
+\item early free --- Section~\ref{early_free}
+\ee
+
+\subsection{Data Structures}
+See Table~\ref{tbl_data_structures}
+
+\begin{table}
+  \centering
+  \begin{tabular}{|l|l|l|l|l|} \hline \hline 
+    {\bf Name in \LaTeX} & {\bf In} {\tt q\_cfg.lua} & {\bf C Type} & {\bf C variable} & {\bf Default} \\ \hline \hline 
+    \(n_E\) & & uint64\_t & num\_elements & \\ \hline 
+    \(p\) & & bool & is\_persist & false \\ \hline
+     \(c_{\mathrm{min}}\) & & uint32\_t & min\_chnk\_idx & \\ \hline 
+     \(c_{\mathrm{max}}\) & & uint32\_t & max\_chnk\_idx & \\ \hline 
+    \(m\) & Y & bool & is\_memo & false \\ \hline
+    \(n_M\) & Y & uint32\_t & memo\_len & 0 \\ \hline 
+    \(k\) & Y & bool & is\_killable & false \\ \hline
+    \(n_K\) & Y & uint32\_t & num\_kill\_ignore & 0 \\ \hline 
+    \(f\) & Y & bool & is\_freeable & false \\ \hline
+    \(n_F\) & Y & uint32\_t & num\_free\_ignore & 0 \\ \hline 
+    \hline
+  \end{tabular}
+  \caption{Data Structures for Early Resource Allocation}
+  \label{tbl_data_structures}
+\end{table}
+
+\subsection{Default Values}
+Default values for properties marked with a Y in Table~\ref{tbl_data_structures}
+are set in \verb+~/Q/UTILS/lua/qcfg.lua+
+They can be changed using \verb+qcfg._modify()+ 
+\subsection{Persistence}
+A vector will {\bf not} be persisted unless \(m = k = f = \mathrm{false}\).
+
+\subsection{When can changes be made}
+\subsubsection{memo}
+\label{memo_change}
+\(m\) can be set to true only if 
+\be
+\item \(n_E = 0\)
+\item \(f = \mathrm{false}\)
+\item \(p = \mathrm{false}\)
+\ee
+\subsubsection{kill}
+\label{kill_change}
+\(k\) can be set to true only if 
+\be
+\item \(n_E = 0\)
+\item \(p = \mathrm{false}\)
+\ee
+
+\subsubsection{free}
+\label{free_change}
+
+\(f\) can be set to true only if 
+\be
+\item \(n_E = 0\)
+\item \(p = \mathrm{false}\)
+\item \(m = \mathrm{false}\)
+\ee
+%-------------------------------------------------------------
+\section{Memo}
+\label{memo}
+
+If we do not ``memo'' the vector, then it holds on to all chunks created.
+We use memo to indicate the maximum number of chunks the vector should hold on
+to. For example, say we set the memo len to 2. 
+When we create the first chunk, the vector holds on to chunk \(\{0\}\). 
+When we create the second chunk, the vector holds on to chunks \(\{0, 1\}\).
+When we create the third chunk, the vector discards the \(0^{th}\) chunk and
+holds on to chunks \(\{1, 2\}\)
+
+
+\subsection{Invariants}
+\begin{invariant}
+\label{m_1}
+\(m = \mathrm{false} \Rightarrow n_M = 0\)
+\end{invariant}
+
+\begin{invariant}
+\label{m_2}
+\(m = \mathrm{true} \Rightarrow n_M > 0\)
+\end{invariant}
+
+For a Vector that has been memo'd, the number of chunks cannot exceed \(n_M\).
+Hence, Invariant~\ref{m_3}
+\begin{invariant}
+\label{m_3}
+  \(m = \mathrm{true} \Rightarrow c_{\mathrm{max}} - c_{\mathrm{min}} + 1 \leq n_M\)
+\end{invariant}
+
+\section{Kill-able}
+\label{kill}
+
+Killable was invented to handle the case when we know that a vector will no
+longer be needed. For example, assume \(x \leftarrow y + z\) and we know that
+once \(x\) has been computed, there is no further need for \(y\). In that
+case, the creator of \(x\) will issue a kill signal to \(y\). If \(y\) was
+marked killable, then it is deleted and all its resources freed. 
+
+To complicate matters, when we set a vector as killable, we set the number of
+lives that it has. In the above example, assume that \(y\) was needed not just
+for the creation of \(x\) but also for the creation of \(w \leftarrow \sum y\).
+In that case, we would set \(n_K(y) \leftarrow 1\). Note that the creator of \(x\) and
+the creator of \(w\) both issue kill signals to \(y\). 
+
+When \(y\) receives the first kill signal, 
+it is ignored because \(n_K(y) \neq 0\). However, we decrement
+\(n_K(y)\) by 1 , setting it to 0 in this example.
+When \(y\) receives the second kill signal, 
+it is not ignored because now \(n_K(y) = 0\) and \(y\) is deleted.
+
+As usual, if \(k(y) = \mathrm{false}\), then kill signals received by \(y\) are ignored.
+
+\subsection{Invariants}
+\begin{invariant}
+\(k = \mathrm{false} \Rightarrow n_K = 0\)
+\end{invariant}
+
+Questions
+\be
+\item Can you kill a vector that is not yet eov?
+\ee
+
+\section{Free-able}
+\label{early_free}
+
+There are situations (e.g., the {\tt where} operator) where we do not 
+in advance how many chunks we need to remember. However, we do know 
+that if the vector receives a ``free'' signal, then it can delete all but the
+most recent chunk. We require the {\tt early\_free()} call to provide a chunk index.
+So, {\tt early\_free(\(i\))} means that chunks \(\{0, 1, 2 \ldots i-1\}\) 
+will be deleted.  
+
+Unfortunately, the situation gets more complicated, akin to Section~\ref{kill},
+because a vector may have more than one consumer. Setting \(f \leftarrow
+\mathrm{true}\) requires us to set \(n_F \geq 0\). Assume \(n_F > 1\). When a
+chunk is created, we assign it a ``free-life'' of \(n_F\). When,
+\(x:\mathrm{early\_free}(i)\) is invoked, each chunk of \(x\) whose index is \(< i\) is
+examined. If its free life is 0, it is deleted. If its free life is \(> 0\),
+then its free life is decremented by 1.
+
+As usual, if \(f(y) = \mathrm{false}\), then early free signals received by \(y\) are ignored.
+
+You cannot use memo and freeable at the same time. 
+Hence, Invariants~\ref{f_3}, ~\ref{f_4}.
+
+\begin{invariant}
+\label{f_3}
+  \(m = \mathrm{true} \Rightarrow f = \mathrm{false}\)
+\end{invariant}
+
+\begin{invariant}
+\label{f_4}
+  \(f = \mathrm{true} \Rightarrow m = \mathrm{false}\)
+\end{invariant}
+
+%%%__ TODO BELOW 
+
+\end{document}
+
+% TODO COnsider lma_to_chunks() and other lma interactions with above
+\end{document}
