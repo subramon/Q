@@ -41,8 +41,8 @@ vctr_usage(
     free_if_non_null(lma_file);
   }
   // how much mem/dsk used at chunk level
-  for ( uint32_t chnk_idx = 0; chnk_idx <= vctr_val.max_chnk_idx; 
-      chnk_idx++ ) {
+  for ( uint32_t chnk_idx = vctr_val.min_chnk_idx; 
+      chnk_idx <= vctr_val.max_chnk_idx; chnk_idx++ ) {
     bool chnk_is_found; uint32_t chnk_where_found = ~0;
     status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, 
         &chnk_where_found);

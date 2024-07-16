@@ -4,16 +4,15 @@ vctr_early_free(
     uint32_t vctr_uqid
     );
 extern int
-vctr_set_num_lives_free(
+vctr_set_num_free_ignore(
     uint32_t tbsp,
     uint32_t vctr_uqid,
-    int num_lives_free
+    int num_free_ignore
     );
 extern int 
-vctr_get_num_lives_free(
+vctr_get_num_free_ignore(
     uint32_t tbsp,
     uint32_t vctr_uqid,
     bool *ptr_is_early_freeable,
-    int *ptr_num_lives_free,
-    int *ptr_num_early_freed
+    int *ptr_num_free_ignore
     );

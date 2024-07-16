@@ -1,1 +1,3 @@
 Quit early if is_err == true
+Re-understand ref_count and write defensive code
+Implement nn_vctr_id on both Lua and C 

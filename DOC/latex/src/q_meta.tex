@@ -1,0 +1,97 @@
+\documentclass[letterpaper,12pt]{article}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ right=20mm,
+ bottom=20mm,
+ }
+\usepackage{courier}
+\usepackage{fancyheadings}
+\pagestyle{fancy}
+\usepackage{graphicx}
+\setlength\textwidth{6.5in}
+\setlength\textheight{8.5in}
+\newtheorem{problem_statement}{Problem Statement}
+\newtheorem{invariant}{Invariant}
+\newcommand{\TBC}{\framebox{\textbf{TO BE COMPLETED}}}
+\newtheorem{assumption}{Assumption}
+\newcommand{\be}{\begin{enumerate}}
+\newcommand{\ee}{\end{enumerate}}
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\bd}{\begin{description}}
+\newcommand{\ed}{\end{description}}
+\newtheorem{notation}{Notation}
+\begin{document}
+\title{All about Vectors}
+% \author{ Ramesh Subramonian }
+\maketitle
+\thispagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{}
+% \lfoot{{\small Decision Sciences Team}}
+\cfoot{}
+\rfoot{{\small \thepage}}
+
+\abstract{This document lists various aspects of vectors}
+
+\section{Meta Data}
+\subsection{Type}
+\label{qtype}
+
+\bi
+\item Every vector must have a valid qtype. 
+\ei
+
+\subsection{width}
+\label{width}
+\bi
+\item The width of a vector can be determined from the qtype. There is one
+exception, as noted below
+\item When qtype is SC, the width must be provided by the creator. It must be at
+least 2. The reason being that this qtype is used for constant length strings
+where the length must be at least 1 and 1 character is used for null
+termination. 
+\ei
+
+\subsection{Nulls Vector}
+\label{nn_vector}
+
+The way we identify null values in a vector is to create an auxiliary 
+vector, called the nn vector. 
+
+Therefore, with each vector, we store 2 fields
+\be
+\item nn\_vctr\_key
+\item parent\_vctr\_key
+  \ee
+
+\bi
+\item Assume \(a\) has no nulls. In that case, these fields will be -1 
+\item If \(a\) has a null vector \(b\), then 
+  \be
+\item \(a\)'s nn\_vctr\_key will point to \(b\) 
+\item \(b\)'s parent\_vctr\_key will point to \(a\) 
+  \ee
+
+Constraints on nn vectors
+\be
+\item same length as parent
+\item qtype is BL or B1
+\item properties like memo\_len, \ldots same as parent
+\item an nn vector cannot be shared. So, a vector \(c\) cannot also have \(b\)
+  as its nn vector
+\item an nn vector cannot have a nn vector
+  \ee
+
+\subsection{Reference Count}
+\label{ref_count}
+
+
+
+
+\end{document}

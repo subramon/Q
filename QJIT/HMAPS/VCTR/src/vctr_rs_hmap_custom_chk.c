@@ -55,14 +55,27 @@ vctr_rs_hmap_custom_chk(
       // name must be null terminated 
       if (val.name[MAX_LEN_VCTR_NAME] != '\0' ) { go_BYE(-1); }
       if ( val.num_elements == 0       ) { go_BYE(-1); }
-      if ( val.num_chnks == 0       ) { go_BYE(-1); }
-      // max_chnk_idx == num_chnks-1 except (possibly) when memo_len >= 1
-      if ( val.memo_len < 0 ) {
-        if ( val.max_chnk_idx != val.num_chnks-1 ) { go_BYE(-1); }
+      if ( val.min_chnk_idx > val.max_chnk_idx ) { go_BYE(-1); }
+      // tests on memo 
+      if ( val.is_memo ) { if ( val.memo_len == 0 ) { go_BYE(-1); } }
+      if ( !val.is_memo ) { if ( val.memo_len != 0 ) { go_BYE(-1); } }
+      if ( val.memo_len == 0 ) { 
+        int nC = val.max_chnk_idx - val.min_chnk_idx + 1;
+        if ( nC > (int)val.memo_len ) { go_BYE(-1); }
       }
-      else {
-        // TODO Place assertion here
-      }
+      // tests on kill
+      if ( !val.is_killable ) { 
+        if ( val.num_kill_ignore > 0 ) { go_BYE(-1); } 
+      } 
+      // tests on free
+      if ( !val.is_early_freeable ) { 
+        if ( val.num_free_ignore > 0 ) { go_BYE(-1); } 
+      } 
+      // tests on free and memo 
+      if ( val.is_early_freeable ) { if ( val.is_memo ) { go_BYE(-1); } } 
+      if ( val.is_memo ) { if ( val.is_early_freeable ) { go_BYE(-1); } } 
+      // ---------------------
+      
       if ( val.qtype == QF ) { go_BYE(-1); }
       if ( val.qtype == Q0 ) { go_BYE(-1); }
       // Unfortunately, we have some special casing to do here

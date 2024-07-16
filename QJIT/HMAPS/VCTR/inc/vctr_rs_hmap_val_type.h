@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include "qtypes.h"
+#include "vctr_rs_hmap_key_type.h"
 
 #ifndef __VCTR_RS_HMAP_VAL_TYPE_H
 #define __VCTR_RS_HMAP_VAL_TYPE_H
@@ -11,21 +12,24 @@
 typedef struct _vctr_meta_t {
   char name[MAX_LEN_VCTR_NAME+1];
   uint64_t num_elements;
-  uint32_t num_chnks;
+  // num_chnks == (max_chnk_idx - min_chnk_idx +1), except
+  // when num_elements == 0 in which case it is 0 
+  uint32_t min_chnk_idx;
   uint32_t max_chnk_idx;
-  // max_chnk_idx == num_chnks-1 except (possibly) when memo_len >= 1
   uint32_t max_num_in_chnk; // WRITE-ONCE
   uint32_t width; // WRITE-ONCE
   uint32_t ref_count; // reference count 
-  // Note that chunk size = max_num_in_chnk * width 
+
+  bool has_nn; vctr_rs_hmap_key_t nn_key; // identifies nn vector if any
+  bool has_parent; vctr_rs_hmap_key_t parent_key; 
+  // identifies parent vector if this is a nn vector 
+  //
+  // TODO ref_count needs proper documentation/testing
+  // chunk size = max_num_in_chnk * width 
   // START: Following for early deallocation of resources
-  int memo_len; // -1 => memo all  // WRITE-ONCE
-  int num_lives_kill; // useful to delete temporary vectors
-  int num_lives_free; // WRITE-ONCE
-  // useful to free chunks when we don;t know memo_len
-  int num_early_freed; // number of chunks which *were* early freed
-  bool is_early_freeable;  // WRITE-ONCE
-  bool is_killable;  // WRITE-ONCE
+  bool is_memo; uint32_t memo_len; 
+  bool is_killable; uint16_t num_kill_ignore;
+  bool is_early_freeable; uint16_t num_free_ignore; 
   // STOP : Following for early deallocation of resources
 
   qtype_t qtype; // WRITE-ONCE

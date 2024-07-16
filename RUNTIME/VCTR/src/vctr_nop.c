@@ -24,9 +24,13 @@ vctr_nop(
   status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
   if ( !vctr_is_found ) { go_BYE(-1); }
-  uint32_t num_chnks=g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_chnks;
+  uint32_t min_chnk_idx = 
+    g_vctr_hmap[tbsp].bkts[vctr_where_found].val.min_chnk_idx;
+  uint32_t max_chnk_idx = 
+    g_vctr_hmap[tbsp].bkts[vctr_where_found].val.max_chnk_idx;
 
-  for ( uint32_t chnk_idx = 0; chnk_idx < num_chnks; chnk_idx++ ) { 
+  for ( uint32_t chnk_idx = min_chnk_idx; chnk_idx <= max_chnk_idx; 
+      chnk_idx++ ) { 
     status = chnk_nop(tbsp, vctr_uqid, chnk_idx); 
     cBYE(status);
   }

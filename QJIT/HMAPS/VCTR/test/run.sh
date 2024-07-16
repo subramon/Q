@@ -10,7 +10,7 @@ test_exec="test1"
 
 cd ..
 source to_source
-lua ${hmap_root}/RSHMAP/utils/make_project.lua "$hmap_root" "$util_root" "$prefix"
+lua ${hmap_root}/RSHMAP/fixed_len_kv/utils/make_project.lua "$hmap_root" "$util_root" "$prefix"
 cd - 
 
 echo "PREMATURE"
