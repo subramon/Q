@@ -14,6 +14,7 @@
 #include "chnk_del.h"
 
 #include "vctr_add.h"
+#include "vctr_cast.h"
 #include "vctr_chk.h"
 #include "vctr_cnt.h"
 #include "vctr_del.h"
@@ -35,6 +36,7 @@
 
 #include "vctr_early_free.h" // equivalent of kill()
 
+#include "vctr_meta.h"
 #include "vctr_eov.h"
 #include "vctr_incr_ref_count.h"
 #include "vctr_is.h"
@@ -187,14 +189,14 @@ BYE:
   return 2;
 }
 //----------------------------------------------
-static int l_vctr_set_num_lives_kill( lua_State *L) {
+static int l_vctr_set_num_kill_ignore( lua_State *L) {
   int status = 0;
   int num_args =  lua_gettop(L);
   if ( num_args != 2 ) { go_BYE(-1); } 
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int val = lua_tonumber(L, 2); 
   //------------------------------
-  status = vctr_set_num_lives_kill(ptr_v->tbsp, ptr_v->uqid, val ); 
+  status = vctr_set_num_kill_ignore(ptr_v->tbsp, ptr_v->uqid, val ); 
   cBYE(status);
   lua_pushboolean(L, true);
   return 1;
@@ -436,12 +438,12 @@ BYE:
   return 3;
 }
 //----------------------------------------
-static int l_vctr_get_num_lives_kill( lua_State *L) {
+static int l_vctr_get_num_kill_ignore( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int num_lives; bool is_killable;
-  status = vctr_get_num_lives_kill(ptr_v->tbsp, ptr_v->uqid, 
+  status = vctr_get_num_kill_ignore(ptr_v->tbsp, ptr_v->uqid, 
       &is_killable, &num_lives);
   lua_pushboolean(L, is_killable);
   lua_pushnumber(L, num_lives);
@@ -457,8 +459,9 @@ static int l_vctr_is_persist( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  bool b_is_persist; 
-  status = vctr_is_persist(ptr_v->tbsp, ptr_v->uqid, &b_is_persist);
+  bool b_is_persist;  
+  status = vctr_meta(ptr_v->tbsp, ptr_v->uqid, "is_persist",
+      &b_is_persist, NULL, NULL);
   lua_pushboolean(L, b_is_persist);
   return 1;
 BYE:
@@ -533,7 +536,7 @@ BYE:
 }
 
 //----------------------------------------
-static int l_vctr_set_num_lives_free( lua_State *L) {
+static int l_vctr_set_num_free_ignore( lua_State *L) {
   int status = 0;
   int num_lives = 1;
   int num_args = lua_gettop(L); 
@@ -542,7 +545,7 @@ static int l_vctr_set_num_lives_free( lua_State *L) {
   if ( num_args == 2 ) { 
     num_lives = lua_tonumber(L, 2); 
   }
-  status = vctr_set_num_lives_free(ptr_v->tbsp, ptr_v->uqid, num_lives); 
+  status = vctr_set_num_free_ignore(ptr_v->tbsp, ptr_v->uqid, num_lives); 
   cBYE(status);
   lua_pushboolean(L, true);
   return 1;
@@ -555,9 +558,11 @@ BYE:
 //----------------------------------------
 static int l_vctr_early_free( lua_State *L) {
   int status = 0;
-  int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
+  int num_args = lua_gettop(L); if ( num_args != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vctr_early_free(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
+  uint32_t ub_chnk_idx = lua_tonumber(L, 2); 
+  status = vctr_early_free(ptr_v->tbsp, ptr_v->uqid, ub_chnk_idx); 
+  cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -567,17 +572,16 @@ BYE:
   return 3;
 }
 //----------------------------------------
-static int l_vctr_get_num_lives_free( lua_State *L) {
+static int l_vctr_get_num_free_ignore( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int num_lives, num_early_freed; bool b_is_early_free;
-  status = vctr_get_num_lives_free(ptr_v->tbsp, ptr_v->uqid, 
-      &b_is_early_free, &num_lives, &num_early_freed);
+  int num_free_ignore; bool b_is_early_free;
+  status = vctr_get_num_free_ignore(ptr_v->tbsp, ptr_v->uqid, 
+      &b_is_early_free, &num_free_ignore);
   lua_pushboolean(L, b_is_early_free);
-  lua_pushnumber(L, num_lives);
-  lua_pushnumber(L, num_early_freed);
-  return 3;
+  lua_pushnumber(L, num_free_ignore);
+  return 2;
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
@@ -1027,7 +1031,8 @@ static int l_chnk_delete( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t chnk_idx = luaL_checknumber(L, 2);
   bool is_found = true, b_is_persist;
-  status = vctr_is_persist(ptr_v->tbsp, ptr_v->uqid, &b_is_persist); cBYE(status);
+  status = vctr_meta(ptr_v->tbsp, ptr_v->uqid, "is_persist",
+      &b_is_persist, NULL, NULL); cBYE(status);
   status = chnk_del(ptr_v->tbsp, ptr_v->uqid, chnk_idx, b_is_persist);
   if ( ( status == -2 ) || ( status == -3 ) ) {
     is_found = false; status = 0; 
@@ -1086,26 +1091,24 @@ BYE:
   lua_pushnumber(L, status);
   return 3;
 }
-static int l_vctr_add1( lua_State *L) 
+static int l_vctr_add( lua_State *L) 
 {
   int status = 0;
   VCTR_REC_TYPE *ptr_v = NULL;
-  bool is_key; int64_t itmp; int64_t num_lives_kill, num_lives_free;
+  bool is_memo = false;           int64_t memo_len = 0; 
+  bool is_early_freeable = false; int64_t num_free_ignore = 0;
+  bool is_killable = false;       int64_t num_kill_ignore = 0;
+  bool is_key; int64_t itmp; 
   const char * str_qtype = NULL, *str_name = NULL, *file_name = NULL;
   uint32_t width = 0; 
   uint32_t max_num_in_chnk;
-  int memo_len;
   // width needed only for SC; all other qtypes have known fixed widths
   //--- get args passed from Lua 
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   if ( !lua_istable(L, 1) ) { go_BYE(-1); }
   luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
   // CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
-  //------------------- get num_lives_kill
-  status = get_int_from_tbl(L, 1, "num_lives_kill", &is_key, &num_lives_kill);  
-  cBYE(status);
-  //------------------- get num_lives_free
-  status = get_int_from_tbl(L, 1, "num_lives_free", &is_key, &num_lives_free);  
+  status = get_int_from_tbl(L, 1, "num_free_ignore", &is_key, &num_free_ignore);  
   cBYE(status);
   //------------------- get name
   status = get_str_from_tbl(L, 1, "name", &is_key, &str_name);  
@@ -1139,11 +1142,32 @@ static int l_vctr_add1( lua_State *L)
   if ( itmp <= 0 ) { go_BYE(-1); }
   max_num_in_chnk = (uint32_t)itmp;
   //-------------------------------------------
-  status = get_int_from_tbl(L, 1, "memo_len", &is_key, &itmp); 
+  status = get_bool_from_tbl(L, 1, "is_memo", &is_key, &is_memo);
   cBYE(status);
-  if ( !is_key )  { go_BYE(-1); }
-  memo_len = itmp;
+  if ( is_key )  { 
+    status = get_int_from_tbl(L, 1, "memo_len", &is_key, &itmp); 
+    cBYE(status);
+    if ( !is_key )  { go_BYE(-1); }
+    memo_len = itmp;
+  }
   //-------------------------------------------
+  status = get_bool_from_tbl(L, 1, "is_early_freeable", &is_key, 
+      &is_early_freeable);
+  cBYE(status);
+  if ( is_key )  { 
+    status = get_int_from_tbl(L, 1, "num_free_ignore", &is_key, 
+        &num_free_ignore);  
+    cBYE(status);
+  }
+  //-------------------------------------------
+  status = get_bool_from_tbl(L, 1, "is_killable", &is_key, 
+      &is_killable);
+  cBYE(status);
+  if ( is_key )  { 
+  status = get_int_from_tbl(L, 1, "num_kill_ignore", &is_key, 
+      &num_kill_ignore);  
+  cBYE(status);
+  }
 
   ptr_v = (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
   return_if_malloc_failed(ptr_v);
@@ -1151,8 +1175,11 @@ static int l_vctr_add1( lua_State *L)
   luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
-  status = vctr_add1(qtype, width, max_num_in_chnk, memo_len,
-      num_lives_kill, num_lives_free, &ptr_v->uqid); 
+  status = vctr_add(qtype, width, max_num_in_chnk, 
+      is_memo, memo_len,
+      is_killable, num_kill_ignore, 
+      is_early_freeable, num_free_ignore, 
+      &ptr_v->uqid); 
   cBYE(status);
   if ( ( str_name != NULL ) && ( * str_name != '\0' ) ) {
     status = vctr_set_name(ptr_v->tbsp, ptr_v->uqid, str_name); cBYE(status);
@@ -1389,12 +1416,12 @@ static const struct luaL_Reg vector_methods[] = {
     { "lma_to_chnks", l_vctr_lma_to_chnks },
     //--------------------------------
     { "kill", l_vctr_kill },
-    { "set_num_lives_kill", l_vctr_set_num_lives_kill },
-    { "get_num_lives_kill", l_vctr_get_num_lives_kill },
+    { "set_num_kill_ignore", l_vctr_set_num_kill_ignore },
+    { "get_num_kill_ignore", l_vctr_get_num_kill_ignore },
     //--------------------------------
     { "early_free",    l_vctr_early_free },
-    { "set_num_lives_free", l_vctr_set_num_lives_free },
-    { "get_num_lives_free", l_vctr_get_num_lives_free },
+    { "set_num_free_ignore", l_vctr_set_num_free_ignore },
+    { "get_num_free_ignore", l_vctr_get_num_free_ignore },
     //--------------------------------
     { "is_eov", l_vctr_is_eov },
     { "is_lma", l_vctr_is_lma },
@@ -1434,7 +1461,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "width", l_vctr_width },
     { "pr", l_vctr_print },
     // creation, new, ...
-    { "add1", l_vctr_add1 },
+    { "add", l_vctr_add },
     { "drop_mem",    l_vctr_drop_mem },
     { "drop_mem",    l_vctr_drop_mem },
     { "make_mem",    l_vctr_make_mem },
@@ -1465,12 +1492,12 @@ static const struct luaL_Reg vector_functions[] = {
     { "chunk_delete", l_chnk_delete },
     //--------------------------------
     { "early_free",    l_vctr_early_free },
-    { "set_num_lives_free",    l_vctr_set_num_lives_free },
-    { "get_num_lives_free",    l_vctr_get_num_lives_free },
+    { "set_num_free_ignore",    l_vctr_set_num_free_ignore },
+    { "get_num_free_ignore",    l_vctr_get_num_free_ignore },
     //--------------------------------
     { "kill", l_vctr_kill },
-    { "set_num_lives_kill", l_vctr_set_num_lives_kill },
-    { "get_num_lives_kill", l_vctr_get_num_lives_kill },
+    { "set_num_kill_ignore", l_vctr_set_num_kill_ignore },
+    { "get_num_kill_ignore", l_vctr_get_num_kill_ignore },
     //--------------------------------
     { "is_eov", l_vctr_is_eov },
     { "is_lma", l_vctr_is_lma },
@@ -1518,7 +1545,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "width", l_vctr_width },
     { "pr", l_vctr_print },
     // creation, new, ...
-    { "add1", l_vctr_add1 },
+    { "add", l_vctr_add },
     { "drop_mem",    l_vctr_drop_mem },
     { "make_mem",    l_vctr_make_mem },
     { "rehydrate", l_vctr_rehydrate },

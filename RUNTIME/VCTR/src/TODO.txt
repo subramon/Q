@@ -1,3 +1,12 @@
+Table spaces need to be thought through properly
+
 Quit early if is_err == true
-Re-understand ref_count and write defensive code
+
+Save and restore need to be thought through properly
+  Re-understand ref_count and write defensive code
+
+What about is_lma and memo_len. See comment in early_free()
+I think is_lna == true => is_eov == true. As a consequence, memo/free/kill are
+irrelevant.
+
 Implement nn_vctr_id on both Lua and C 

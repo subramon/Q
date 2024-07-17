@@ -5,6 +5,7 @@
 
 extern vctr_rs_hmap_t *g_vctr_hmap;
 
+// Returns number of vectors in this tablespace 
 uint32_t
 vctr_cnt(
     uint32_t tbsp

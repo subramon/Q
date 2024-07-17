@@ -44,9 +44,6 @@ chnk_del(
   bool is_found;
   status = chnk_rs_hmap_del(&g_chnk_hmap[tbsp], &key, &val, &is_found); 
   cBYE(status);
-  //-- reduce number of chunks in this vector
-  if ( g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_chnks == 0 ) { go_BYE(-1); }
-  g_vctr_hmap[tbsp].bkts[vctr_where_found].val.num_chnks--;
   if ( is_found == false ) { go_BYE(-1); }
 BYE:
   return status;

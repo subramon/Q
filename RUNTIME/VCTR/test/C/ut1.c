@@ -68,7 +68,8 @@ main(
   status = init_session(); cBYE(status); 
   //----------------------------------
   uint32_t vctr_chnk_size = 32; // for easy testing 
-  uint32_t uqid; status = vctr_add1(F4, 0, vctr_chnk_size, -1, 0, 0, &uqid); 
+  uint32_t uqid; status = vctr_add(F4, 0, vctr_chnk_size, 
+      false, 0, false, 0, false, 0, &uqid); 
   cBYE(status);
   if ( uqid != 1 ) { go_BYE(-1); }
   //----------------------------------
@@ -97,6 +98,7 @@ main(
     if ( num_elements != (i+1) ) { go_BYE(-1); }
     status = vctr_num_chunks(tbsp, uqid, &num_chunks); cBYE(status);
     if ( num_chunks != ((i / vctr_chnk_size)+1) ) { 
+    status = vctr_num_chunks(tbsp, uqid, &num_chunks); cBYE(status);
       go_BYE(-1); 
     }
   }
@@ -119,7 +121,8 @@ main(
 
   // Test putting of Scalars
   vctr_chnk_size = 32; // for easy testing 
-  status = vctr_add1(I4, 0, vctr_chnk_size, -1, 0, 0, &uqid); 
+  status = vctr_add(I4, 0, vctr_chnk_size, 
+      false, 0, false, 0, false, 0, &uqid); 
   cBYE(status);
   if ( uqid != 2 ) { go_BYE(-1); }
   SCLR_REC_TYPE sclr; memset(&sclr, 0, sizeof(SCLR_REC_TYPE));
@@ -136,6 +139,7 @@ main(
     sclr.val.i4++;
   }
   //----------------------------------
+  status = vctr_chk(0, uqid); cBYE(status);
   status = vctr_del(0, uqid, &b); cBYE(status);
   if ( !b ) { go_BYE(-1); }
   l_vctr_cnt = vctr_cnt(tbsp); 

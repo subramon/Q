@@ -31,7 +31,9 @@ vctr_l1_to_l2(
   if ( !vctr_is_found ) { go_BYE(-1); }
   vctr_rs_hmap_val_t *ptr_v = &(g_vctr_hmap[tbsp].bkts[vctr_where_found].val); 
 
-  for ( uint32_t chnk_idx = 0; chnk_idx < ptr_v->num_chnks; chnk_idx++ ) { 
+  uint32_t min_chnk_idx = ptr_v->min_chnk_idx;
+  uint32_t max_chnk_idx = ptr_v->max_chnk_idx;
+  for ( uint32_t chnk_idx = min_chnk_idx; chnk_idx <= max_chnk_idx; chnk_idx++ ) { 
     status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found,&chnk_where_found);
     cBYE(status);
     if ( !chnk_is_found ) { go_BYE(-1); }

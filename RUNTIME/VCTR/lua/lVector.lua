@@ -52,16 +52,15 @@ function lVector:check()
     assert(nn_vector:num_readers()   == self:num_readers())
     assert(nn_vector:num_writers()   == self:num_writers())
 
-    local b1, n1 = nn_vector:is_killable()
-    local b2, n2 = self:is_killable()
+    local b1, n1 = nn_vector:get_killable()
+    local b2, n2 = self:get_killable()
     assert(b1 == b2)
     assert(n1 == n2)
 
-    local b1, n1, m1 = nn_vector:is_early_freeable()
-    local b2, n2, m2 = self:is_early_freeable()
+    local b1, n1 = nn_vector:get_early_freeable()
+    local b2, n2 = self:get_early_freeable()
     assert(b1 == b2)
     assert(n1 == n2)
-    assert(m1 == m2)
   end 
   -- check congruence between base vector and siblings
   if ( self._siblings ) then 
@@ -85,10 +84,11 @@ function lVector:ref_count()
   return ref_count
 end
 
-function lVector:memo_len()
+function lVector:get_memo()
   local memo_len = cVector.memo_len(self._base_vec)
   return memo_len
 end
+--=================================================
 
 function lVector:max_num_in_chunk()
   local max_num_in_chunk = cVector.max_num_in_chunk(self._base_vec)
@@ -176,14 +176,15 @@ function lVector:persist()
 end
 function lVector:eov()
   local status = cVector.eov(self._base_vec)
+  assert(status)
   local nn_vector = self._nn_vec
   if ( nn_vector ) then
     assert(type(nn_vector) == "lVector")
     if ( nn_vector ) then 
       status = cVector.eov(nn_vector._base_vec) 
+      assert(status)
     end 
   end
-  -- TODO P1 Should we get rid of chunk_num now ?
   self._generator = nil -- IMPORTANT, we no longer have a generator 
   return self
 end
@@ -230,13 +231,13 @@ local function chnk_clone(v) -- for case when no lma
   vargs.max_num_in_chunk = v:max_num_in_chunk() 
   vargs.has_nulls        = v:has_nulls() 
 
-  vargs.memo_len = v:memo_len()
+  vargs.memo_len = v:get_memo()
   assert(vargs.memo_len == -1)
 
-  local b, n = v:is_killable(); assert(b == false); assert(n == 0)
+  local b, n = v:get_killable(); assert(b == false); assert(n == 0)
   vargs.num_lives_kill = 0
 
-  local b, n = v:is_early_freeable(); assert(b == false); assert(n == 0)
+  local b, n = v:get_early_freeable(); assert(b == false); assert(n == 0)
   vargs.num_lives_free = 0
 
   local w = lVector(vargs)
@@ -302,10 +303,6 @@ function lVector:tbsp()
   return tbsp
 end
 --=================================================
-function lVector:memo_len()
-  return self._memo_len
-end
---=================================================
 function lVector:qtype()
   return self._qtype
 end
@@ -339,6 +336,8 @@ function lVector.new(args)
     -- get following from cVector
     -- max_num_in_chunk
     -- memo_len
+    -- TODO P1 Why do we store this on Lua side? Why not on C side?
+    -- TODO In fact why store *anything* on Lua side that can be in C?
     vector._max_num_in_chunk = cVector.max_num_in_chunk(vector._base_vec)
     vector._memo_len        = cVector.memo_len(vector._base_vec)
     vector._qtype           = cVector.qtype(vector._base_vec)
@@ -445,7 +444,7 @@ function lVector.new(args)
   --=================================================
   return vector
 end
-function lVector:memo(memo_len)
+function lVector:set_memo(memo_len)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   if ( type(memo_len) == "nil" ) then 
     memo_len = qcfg.memo_len
@@ -722,7 +721,7 @@ function lVector:get_chunk(chnk_idx)
         if ( qcfg.debug ) then 
           -- Checks if chunks that should have been deleted because of
           -- memo_len, have in fact been deleted 
-          if ( ( v:memo_len() >= 0 ) and ( v:num_elements() > 0 ) ) then
+          if ( ( v:get_memo() >= 0 ) and ( v:num_elements() > 0 ) ) then
             local chunk_to_release = chunk_idx - self._memo_len
             if ( chunk_to_release >= 0 ) then 
               -- print("Sibling: Deleting chunk " .. chunk_to_release)
@@ -1047,27 +1046,27 @@ end
 -- Say you do z := x where y.
 -- since we produce z in full chunks, we might consume n >1 chunks of x, y
 -- before we produce a full chunk of z. 
--- So, we cannot x:memo(n) since we don't know what n would be 
--- When early_free() is called on a vector which is early_freeable()
+-- So, we cannot x:set_memo(n) since we don't know what n would be 
+-- When early_free() is called on a vector which is earlyii_freeable()
 -- we delete all but the last chunk
 --==================================================
 function lVector:early_free() -- equivalent of kill() 
+  -- TODO What about calling early_free on nn vector?
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   assert(cVector.early_free(self._base_vec))
   return self
 end
 --==================================================
-function lVector:is_early_freeable() 
+function lVector:get_early_freeable() 
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  local b_is_early_free, num_lives_free, num_early_freed = 
+  local b_is_early_free, num_lives_free = 
     cVector.get_num_lives_free(self._base_vec)
   assert(type(b_is_early_free) == "boolean")
   assert(type(num_lives_free) == "number")
-  assert(type(num_early_freed) == "number")
-  return b_is_early_free, num_lives_free, num_early_freed
+  return b_is_early_free, num_lives_free
 end
 --==================================================
-function lVector:early_freeable(num_lives) -- equivalent of killable()
+function lVector:set_early_freeable(num_lives) -- equivalent of killable()
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   assert(type(num_lives) == "number")
   assert(cVector.set_num_lives_free(self._base_vec, num_lives))
@@ -1168,14 +1167,15 @@ function lVector:unget_lma_write()
 end
 --==================================================
 -- use this function to set kill-ability of vector 
-function lVector:killable(val)
+function lVector:set_killable(val)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   assert(self._parent == nil ) -- cannot set killable on nn vector 
   assert(type(val) == "number")
   assert(val > 0)
-  assert(cVector.set_num_lives_kill(self._base_vec, val))
+  assert(cVector.set_num_kill_ignore(self._base_vec, val))
   --[[ Commented out following because should not set killable
   -- on the nn vector of a vector
+  -- TODO P1 WHY?????? 
   if ( self._nn_vec ) then 
     local nn_vector = self._nn_vec
     assert(cVector.set_num_lives_kill(nn_vector._base_vec, val))
@@ -1184,7 +1184,7 @@ function lVector:killable(val)
   return self
 end
 --==================================================
-function lVector:is_killable()
+function lVector:get_killable()
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   local b_is_killable, num_lives_kill = 
     cVector.get_num_lives_kill(self._base_vec)

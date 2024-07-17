@@ -12,7 +12,6 @@
 #include "get_file_size.h"
 #include "l2_file_name.h"
 #include "mod_mem_used.h"
-#include "vctr_add.h"
 #include "vctr_chnks_to_lma.h"
 
 
@@ -40,10 +39,13 @@ vctr_chnks_to_lma(
   //-----------------------------------------------
   if ( v->is_lma ) { goto BYE; } // Nothing to do 
   if ( v->is_eov == false ) { go_BYE(-1); }
-  if ( v->memo_len >= 0 ) { go_BYE(-1); }
+  // Once eov == true, next fwe checks are redudant
+  if ( v->is_memo ) { go_BYE(-1); }
+  if ( v->is_early_freeable ) { go_BYE(-1); }
+  if ( v->is_killable ) { go_BYE(-1); }
   if ( v->num_elements == 0 ) { go_BYE(-1); }
+  //-------------------------
   if ( v->width == 0 ) { go_BYE(-1); }
-  // I don't think this is needed: if ( v->is_killable ) { go_BYE(-1); }
   // Control comes here => is_lma == false => 
   // num_readers, num_witers, X, nX are all NULL 
   if ( v->num_readers != 0 ) { go_BYE(-1); }

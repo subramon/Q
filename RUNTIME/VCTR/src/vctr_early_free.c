@@ -22,27 +22,32 @@ extern chnk_rs_hmap_t *g_chnk_hmap;
 int
 vctr_early_free(
     uint32_t tbsp,
-    uint32_t vctr_uqid
+    uint32_t vctr_uqid,
+    uint32_t ub_chnk_idx // => free all chunks upto but excluding this
     )
 {
   int status = 0;
   bool vctr_is_found; uint32_t vctr_where;
+  chnk_rs_hmap_val_t *ptr_chnk_val = NULL;
+  vctr_rs_hmap_val_t *ptr_vctr_val = NULL;
 
   status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where); 
   cBYE(status);
   if ( vctr_is_found == false ) { goto BYE; }
-  vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[vctr_where].val);
+  ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[vctr_where].val);
+  uint32_t min_chnk_idx = ptr_vctr_val->min_chnk_idx; 
   // conditions under which early free ignored
   if ( ptr_vctr_val->is_persist ) { goto BYE; }
+  if ( ptr_vctr_val->is_eov ) { goto BYE; }
   if ( ptr_vctr_val->num_elements == 0 ) { goto BYE; }
   if ( ptr_vctr_val->is_early_freeable    == false ) { goto BYE; }
   // We do not delete most recent chunk
-  for ( uint32_t chnk_idx = ptr_vctr_val->min_chnk_idx; 
-      chnk_idx <= ptr_vctr_val->max_chnk_idx; chnk_idx++ ){
+  for ( uint32_t chnk_idx = min_chnk_idx; chnk_idx <= ub_chnk_idx; 
+      chnk_idx++ ){
     bool chnk_is_found; uint32_t chnk_where; 
     status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where);
     if ( chnk_is_found == false ) { go_BYE(-1); }
-    chnk_rs_hmap_val_t *ptr_chnk_val = &(g_chnk_hmap[tbsp].bkts[chnk_where].val);
+    ptr_chnk_val = &(g_chnk_hmap[tbsp].bkts[chnk_where].val);
     if ( ptr_chnk_val->num_free_ignore > 0 ) { 
       ptr_chnk_val->num_free_ignore--;
       continue;

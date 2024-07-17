@@ -47,12 +47,11 @@ chnk_first(
   chnk_val.size  = chnk_size;
   status = incr_mem_used(chnk_size);  cBYE(status);
   if ( ptr_vctr_val->is_early_freeable ) { 
-    chnk_val.num_lives_left = ptr_vctr_val->num_lives_free;
+    chnk_val.num_free_ignore = ptr_vctr_val->num_free_ignore;
   }
   //-------------------------------
   status = chnk_rs_hmap_put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
   cBYE(status);
-  g_vctr_hmap[tbsp].bkts[vctr_where].val.num_chnks++;
 #ifdef DEBUG
   bool is_found; uint32_t chnk_where;
   status = chnk_is(tbsp, vctr_uqid, chnk_idx, &is_found, &chnk_where); 

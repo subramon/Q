@@ -12,7 +12,6 @@
 #include "qtypes.h"
 #include "vctr_chk.h"
 
-
 extern vctr_rs_hmap_t *g_vctr_hmap;
 extern chnk_rs_hmap_t *g_chnk_hmap;
 
@@ -32,6 +31,8 @@ sortcompare(
   }
 }
 
+// This function deals with checks made across vectors as oppposed
+// to vctr_chk() which focuses on a single vector 
 int
 vctrs_chk(
     uint32_t tbsp
@@ -102,8 +103,9 @@ vctrs_chk(
   }
   // parent_keys and nn_keys must match 
   if ( num_parent_keys != num_nn_keys ) { go_BYE(-1); } 
-  // Collect all id's of nn vectors (might not be any)
   if ( num_nn_keys > 0 ) { 
+    // The same vector cannot be the nn vector for 2 different parents
+    // The same vector cannot be the parent vector for 2 different nn vecs
     qsort(nn_keys, num_nn_keys, sizeof(vctr_rs_hmap_key_t), sortcompare);
     for ( uint32_t i = 1; i < num_nn_keys; i++ ) { 
       if ( nn_keys[i] == nn_keys[i-1] ) { go_BYE(-1); }
@@ -112,8 +114,8 @@ vctrs_chk(
       if ( parent_keys[i] == parent_keys[i-1] ) { go_BYE(-1); }
     }
   }
-  // TODO Check that nn_keys and parent_keys are valid keys 
-  for ( uint32_t i = 1; i < num_parent_keys; i++ ) { 
+  // Check that nn_keys and parent_keys are valid keys 
+  for ( uint32_t i = 0; i < num_parent_keys; i++ ) { 
     bool vctr_is_found; uint32_t vctr_where_found; 
     status = vctr_is(tbsp, nn_keys[i], &vctr_is_found, &vctr_where_found);
     cBYE(status);

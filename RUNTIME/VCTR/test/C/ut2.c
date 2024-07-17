@@ -78,8 +78,8 @@ main(
   //----------------------------------
   uint32_t max_num_in_chunk = 32; // for easy testing 
   qtype_t qtype = F4;
-  uint32_t uqid; status = vctr_add1(qtype, 0, max_num_in_chunk, -1,
-      0, 0, &uqid); 
+  uint32_t uqid; status = vctr_add(qtype, 0, max_num_in_chunk, 
+      false, 0, false, 0, false, 0, &uqid); 
   cBYE(status);
   uint32_t num_chunks = 4;
   CMEM_REC_TYPE cmem; 
@@ -209,6 +209,9 @@ main(
   cBYE(status);
   // l1 memory should be back as was before 
   if ( g_mem_used != bak_mem_used ) { go_BYE(-1); } 
+  status = vctr_chk(0, uqid); cBYE(status);
+  status = vctr_rs_hmap_custom_chk(&g_vctr_hmap[0]); cBYE(status);
+  status = chnk_rs_hmap_custom_chk(&g_chnk_hmap[0]); cBYE(status);
 
   //-- delete -----------------
   status = vctr_del(tbsp, uqid, &b); cBYE(status);
@@ -223,8 +226,6 @@ main(
   fprintf(stderr, "Successfully completed %s \n", argv[0]); 
   // cleanup
   status = rmtree(g_data_dir_root[tbsp]); 
-  status = vctr_rs_hmap_custom_chk(&g_vctr_hmap[0]); cBYE(status);
-  status = chnk_rs_hmap_custom_chk(&g_chnk_hmap[0]); cBYE(status);
 BYE:
   status = free_globals(); if ( status < 0 ) { WHEREAMI; } 
   free_if_non_null(buf);

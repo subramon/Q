@@ -13,10 +13,10 @@
 extern vctr_rs_hmap_t *g_vctr_hmap;
 
 int
-vctr_add1(
+vctr_add(
     qtype_t qtype,
     uint32_t width,
-    uint32_t in_max_num_in_chnk,
+    uint32_t max_num_in_chnk,
     bool is_memo,
     int memo_len,
     bool is_killable,
@@ -62,26 +62,35 @@ vctr_add1(
   //----------------------------------------------
   if ( is_memo && is_early_freeable  ) { go_BYE(-1); } 
   //----------------------------------------------
-  uint32_t max_num_in_chnk = in_max_num_in_chnk;
   if  ( max_num_in_chnk == 0 ) { 
     max_num_in_chnk = Q_VCTR_MAX_NUM_IN_CHNK;
   }
-  // Unfortunate special case for B1 
-  if ( qtype != B1 ) {
+  // Unfortunate special case for B1, SC
+  if ( qtype == SC ) { 
+    if ( width < 2 ) { go_BYE(-1); }
+  }
+  else if ( qtype == B1 ) {
+    // no check 
+  }
+  else {
     if ( width == 0 ) { go_BYE(-1); }
   }
   //-------------------------------------------
-  vctr_rs_hmap_val_t val = 
-    { .qtype = qtype, .max_num_in_chnk = max_num_in_chnk, 
-      .is_memo = is_memo, .memo_len = memo_len, 
-      .is_killable = is_killable, .num_kill_ignore = num_kill_ignore, 
-      .is_early_freeable = is_early_freeable, .num_free_ignore = num_free_ignore, 
-      .width = width, .ref_count = 0 } ; 
+  vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(val));
+  val.qtype = qtype;
+  val.max_num_in_chnk = max_num_in_chnk;
+  val.is_memo = is_memo; 
+  val.memo_len = memo_len;
+  val.is_killable = is_killable; 
+  val.num_kill_ignore = num_kill_ignore;
+  val.is_early_freeable = is_early_freeable; 
+  val.num_free_ignore = num_free_ignore;
+  val.width = width;
+
   status = vctr_rs_hmap_put(&(g_vctr_hmap[tbsp]), &key, &val); cBYE(status);
 #ifdef DEBUG
   new_vctr_cnt = vctr_cnt(tbsp);
   if ( new_vctr_cnt != old_vctr_cnt + 1 ) { go_BYE(-1); }
-  // initializations below for debugging. Not needed
   bool is_found = true; uint32_t where_found = ~0;
   status = vctr_is(tbsp, *ptr_uqid, &is_found, &where_found); 
   cBYE(status);

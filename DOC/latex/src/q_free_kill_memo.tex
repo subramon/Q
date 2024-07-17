@@ -82,6 +82,7 @@ See Table~\ref{tbl_data_structures}
     {\bf Name in \LaTeX} & {\bf In} {\tt q\_cfg.lua} & {\bf C Type} & {\bf C variable} & {\bf Default} \\ \hline \hline 
     \(n_E\) & & uint64\_t & num\_elements & \\ \hline 
     \(p\) & & bool & is\_persist & false \\ \hline
+    \(e\) & & bool & is\_eov & false \\ \hline
      \(c_{\mathrm{min}}\) & & uint32\_t & min\_chnk\_idx & \\ \hline 
      \(c_{\mathrm{max}}\) & & uint32\_t & max\_chnk\_idx & \\ \hline 
     \(m\) & Y & bool & is\_memo & false \\ \hline
@@ -226,7 +227,59 @@ Hence, Invariants~\ref{f_3}, ~\ref{f_4}.
   \(f = \mathrm{true} \Rightarrow m = \mathrm{false}\)
 \end{invariant}
 
-%%%__ TODO BELOW 
+\section{Actions}
+
+There are three kinds of actions, classified as 
+\be
+\item do  --- performs the action.
+  \be
+\item {\tt kill} e.g., \(x:\mathrm{kill}\) where \(x\) is a vector 
+\item {\tt early\_free} e.g., 
+  \(x:\mathrm{early\_free}(i)\) where \(x\) is a vector and \(i\) is a chunk index
+  \ee
+\item get --- gets the specified property
+  \be
+\item {\tt get\_early\_free}
+\item {\tt get\_memo\_len}
+\item {\tt get\_killable}
+  \ee
+\item set --- sets the specified property
+  \be
+\item {\tt set\_early\_free}
+\item {\tt set\_memo\_len}
+\item {\tt set\_killable}
+
+  TODO: If we set \(x\) as killable and \(x\) has an nn vector \(y\), does \(y\)
+  also become killable? \TBC
+  
+  \ee
+\ee
+
+It is always possible to perform a {\tt get} action. However, {\tt set} actions
+and {\tt do} actions are limited. 
+
+A set action can only be performed if 
+\be
+\item \(n_E = 0\)
+\item \(e = \) false. Once a vector has been fully materialized, 
+  these properties don't make sense.
+\item Since we cannot have empty vectors, from the above, we can assert that set
+  actions cannot be performed on fully materialized vectors where 
+  \(e = \mathrm{true}\)
+\item it has not already been performed e.g., once \(x:set\_memo(n)\) 
+  has been performed, we cannot do \(x:set\_memo(m)\)
+\ee
+
+A do action can only be performed if 
+\be
+\item \(e = \mathrm{false}\) --- the vector has not been fully materialized
+\item the appropriate {\tt set} action was performed earlier. By this we mean
+  that
+  \be
+\item {\tt kill} action ignore if \(k = \mathrm{false}\)
+\item {\tt early\_free} action ignore if \(f = \mathrm{false}\)
+  \ee
+  \ee
 
 \end{document}
 

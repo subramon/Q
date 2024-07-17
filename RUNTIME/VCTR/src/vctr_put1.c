@@ -14,6 +14,7 @@
 #include "chnk_is.h"
 #include "chnk_first.h"
 #include "vctr_put1.h"
+#include "vctr_memo.h"
 #include "mod_mem_used.h"
 
 extern vctr_rs_hmap_t *g_vctr_hmap;
@@ -73,7 +74,7 @@ vctr_put1(
     chnk_val.size  = chnk_size;
     status = incr_mem_used(chnk_size);
   if ( vctr_val.is_early_freeable ) { 
-    chnk_val.num_lives_left = vctr_val.num_lives_free;
+    chnk_val.num_free_ignore = vctr_val.num_free_ignore;
   }
 #ifdef VERBOSE
         printf("%s Allocated %u for %s \n", __FILE__, chnk_size, 
@@ -82,7 +83,6 @@ vctr_put1(
     //-------------------------------
     status = chnk_rs_hmap_put(&g_chnk_hmap[tbsp], &chnk_key, &chnk_val); 
     cBYE(status);
-    g_vctr_hmap[tbsp].bkts[vctr_where].val.num_chnks++;
     g_vctr_hmap[tbsp].bkts[vctr_where].val.max_chnk_idx = chnk_idx;
     //--------------------------
     status = chnk_is(tbsp, vctr_uqid, chnk_idx, &is_found, &chnk_where); 
@@ -103,6 +103,8 @@ vctr_put1(
   // update chunk and vector meta data base on above copy
   g_vctr_hmap[tbsp].bkts[vctr_where].val.num_elements++;
   g_chnk_hmap[tbsp].bkts[chnk_where].val.num_elements++;
+  // Delete extra chunks if necessary
+  status = vctr_memo(vctr_where, vctr_uqid); cBYE(status); 
 BYE:
   return status;
 }

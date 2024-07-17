@@ -11,8 +11,7 @@ vctr_get_memo_len(
     int *ptr_memo_len
     );
 extern int
-vctr_cast(
-    uint32_t tbsp,
-    uint32_t vctr_uqid,
-    const char * const str_qtype
+vctr_memo(
+    uint32_t vctr_loc,
+    uint32_t vctr_uqid
     );

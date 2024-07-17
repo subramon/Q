@@ -1,6 +1,6 @@
 extern int
-vctr_persist(
+vctr_cast(
     uint32_t tbsp,
     uint32_t vctr_uqid,
-    bool bval
+    const char * const str_qtype
     );

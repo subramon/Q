@@ -15,6 +15,7 @@ INCS += -I../../../QJIT/LuaJIT-2.1.0-beta3/src/
 all: libvctr_core.so  ut1 ut2 ut_memo libvctr.so 
 
 SRCS :=	vctr_add.c  
+SRCS +=	vctr_cast.c  
 SRCS +=	vctr_cnt.c  
 SRCS +=	vctr_chk.c
 SRCS +=	vctr_del.c  
@@ -26,7 +27,8 @@ SRCS +=	vctr_get1.c
 SRCS +=	vctr_get_chunk.c  
 SRCS +=	vctr_incr_ref_count.c  
 SRCS +=	vctr_is.c  
-SRCS +=	vctr_is_eov.c  
+SRCS +=	vctr_meta.c  
+SRCS +=	vctr_is_eov.c  # TO DELETE 
 SRCS +=	vctr_nop.c  
 
 SRCS +=	vctr_chnks_to_lma.c  
@@ -130,11 +132,13 @@ libvctr.so: ${EXT_OBJS} libvctr_core.so cVector.o
 	cp libvctr.so ${Q_ROOT}/lib/
 
 #-------------------------------------------
-ut1 : ${TEST1_OBJS} ${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} libvctr.so 
+ut1 : ${TEST1_OBJS} \
+  	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
+	libvctr.so libvctr_core.so 
 	gcc ${TEST1_OBJS} \
 	${QCFLAGS} ${INCS} \
-	libvctr_core.so \
 	libvctr.so \
+	libvctr_core.so \
 	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
 	-o ut1  -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------

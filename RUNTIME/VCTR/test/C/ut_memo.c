@@ -66,20 +66,27 @@ main(
   //----------------------------------
   uint32_t max_num_in_chunk = 32; // for easy testing 
   qtype_t qtype = F4;
-  uint32_t uqid; status = vctr_add1(qtype, 0, max_num_in_chunk, -1,
-      0, 0, &uqid); 
+  uint32_t uqid; status = vctr_add(qtype, 0, max_num_in_chunk, 
+      false, 0, false, 0, false, 0, &uqid); 
   cBYE(status);
   uint32_t num_chunks = 100; 
   uint32_t tbsp = 0; 
   uint32_t width;
   status = vctr_width(tbsp, uqid, &width);
-  // can change our mind about memo len while vector is dormant
-  for ( int i = 0; i < 10; i++ ) { 
-    status = vctr_set_memo(tbsp, uqid, i); cBYE(status); 
-  }
   // set memo len to what you want to test at 
   int memo_len = 2; 
-  status = vctr_set_memo(tbsp, uqid, memo_len); cBYE(status); 
+  // can set memo_len only once 
+  printf(">>>> START Deliberate error\n"); 
+  for ( int i = 0; i < 10; i++ ) { 
+    status = vctr_set_memo(tbsp, uqid, memo_len); 
+    if ( i == 0 ) { 
+      if ( status != 0 ) { go_BYE(-1); }
+    }
+    else {
+      if ( status == 0 ) { go_BYE(-1); } status = 0;
+    }
+  }
+  printf("<<<< STOP Deliberate error\n"); 
   for ( uint32_t i = 0; i < num_chunks; i++ ) {
     // Initialize CMEM
     uint32_t vctr_chnk_size = max_num_in_chunk * width;
@@ -95,14 +102,14 @@ main(
     status = vctr_put_chunk(tbsp, uqid, &cmem, max_num_in_chunk);
     cBYE(status);
     status = cmem_free(&cmem); cBYE(status); // no more need for cmem
-    // printf("chunk index, mem_used = %u, %u\n", i, g_mem_used);
     uint32_t l_num_chunks;
     status =  vctr_num_chunks(tbsp, uqid, &l_num_chunks); cBYE(status);
-    if ( g_mem_used > (memo_len+1)*vctr_chnk_size ) { go_BYE(-1); }
+    if ( g_mem_used > memo_len*vctr_chnk_size ) { go_BYE(-1); }
 
     // we have created exactly one vector 
     if ( g_vctr_hmap[0].nitems != 1 ) { go_BYE(-1); } 
   }
+  status = vctr_chk(0, uqid); cBYE(status);
   status = vctr_rs_hmap_custom_chk(&g_vctr_hmap[0]); cBYE(status);
   status = chnk_rs_hmap_custom_chk(&g_chnk_hmap[0]); cBYE(status);
   printf("Succesfully completed %s \n", argv[0]);

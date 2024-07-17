@@ -5,7 +5,6 @@
 #include "vctr_rs_hmap_struct.h"
 #include "chnk_rs_hmap_struct.h"
 #include "vctr_is.h"
-#include "vctr_add.h"
 #include "vctr_put_chunk.h"
 #include "rs_mmap.h"
 #include "l2_file_name.h"
@@ -42,6 +41,10 @@ vctr_lma_to_chnks(
   //--------------------------
   if ( v.is_lma == false ) { go_BYE(-1); }
   if ( v.is_eov == false ) { go_BYE(-1); } 
+  // following follow from is_eov == true 
+  if ( v.is_killable ) { go_BYE(-1); } 
+  if ( v.is_early_freeable ) { go_BYE(-1); } 
+  if ( v.is_memo ) { go_BYE(-1); } 
   // cannot convert to chunks if in use 
   if ( v.num_readers != 0 ) { go_BYE(-1); }
   if ( v.num_writers != 0 ) { go_BYE(-1); }
@@ -61,12 +64,12 @@ vctr_lma_to_chnks(
   // vector is not from your table space
   // Determine number of chunks 
   if ( v.max_num_in_chnk == 0 ) { go_BYE(-1); }
-  v.num_chnks = v.num_elements / v.max_num_in_chnk;
-  if ( (v.num_chnks *  v.max_num_in_chnk) != v.num_elements ) {
-    v.num_chnks++;
+  uint32_t num_chnks = v.num_elements / v.max_num_in_chnk;
+  if ( (num_chnks *  v.max_num_in_chnk) != v.num_elements ) {
+    num_chnks++;
   }
   // Create chunks from X, nX
-  for ( uint32_t chnk_idx = 0; chnk_idx < v.num_chnks; chnk_idx++ ) {
+  for ( uint32_t chnk_idx = 0; chnk_idx < num_chnks; chnk_idx++ ) {
     bool chnk_is_found; uint32_t chnk_where; 
     status = chnk_is(tbsp, uqid, chnk_idx, &chnk_is_found,
         &chnk_where);

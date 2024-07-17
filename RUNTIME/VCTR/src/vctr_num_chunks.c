@@ -20,7 +20,7 @@ vctr_num_chunks(
   status = vctr_rs_hmap_get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
-  *ptr_num_chnks = val.num_chnks;
+  *ptr_num_chnks = val.max_chnk_idx - val.min_chnk_idx + 1;
 BYE:
   return status;
 }

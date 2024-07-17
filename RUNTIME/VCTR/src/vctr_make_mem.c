@@ -34,7 +34,8 @@ vctr_make_mem(
   uint32_t max_chnk_idx = 
     g_vctr_hmap[tbsp].bkts[vctr_where_found].val.max_chnk_idx;
 
-  for ( int chnk_idx = min_chnk_idx; chnk_idx <= max_chnk_idx; chnk_idx++ ) { 
+  for ( uint32_t chnk_idx = min_chnk_idx; chnk_idx <= max_chnk_idx; 
+      chnk_idx++ ) { 
     status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found,
         &chnk_where_found);
     cBYE(status);

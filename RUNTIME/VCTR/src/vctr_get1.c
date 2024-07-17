@@ -13,6 +13,7 @@
 extern vctr_rs_hmap_t *g_vctr_hmap;
 extern chnk_rs_hmap_t *g_chnk_hmap;
 
+// Getting a single element is intrisically slow. Use with caution
 static int
 vctr_get1_lma(
     vctr_rs_hmap_val_t *ptr_val,
@@ -32,10 +33,12 @@ vctr_get1_lma(
   cBYE(status);
   //---------------------------------------------------
   if ( ptr_val->qtype == SC ) { 
-    go_BYE(-1); // TODO P2 
+    fprintf(stderr, "TODO: TO BE IMPLEMENTED\n");
+    go_BYE(-1); 
   }
   else if ( ptr_val->qtype == B1 ) { 
-    go_BYE(-1); // TODO P2 
+    fprintf(stderr, "TODO: TO BE IMPLEMENTED\n");
+    go_BYE(-1); 
   }
   else { 
     size_t offset = (ptr_val->width * elem_idx);
@@ -63,17 +66,20 @@ vctr_get1(
   qtype_t qtype; bool is_lma;
   uint32_t vctr_where_found, chnk_where_found;
   uint32_t width, max_num_in_chnk;
+  vctr_rs_hmap_val_t *ptr_vctr_val = NULL; 
 
   status = vctr_is(tbsp, vctr_uqid, &vctr_is_found, &vctr_where_found);
   cBYE(status);
   if ( !vctr_is_found ) { go_BYE(-1); }
+  ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[vctr_where_found].val);
+  if ( elem_idx >= ptr_vctr_val->num_elements ) { go_BYE(-1); }
 
-  is_lma  = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.is_lma;
-  qtype  = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.qtype;
-  width  = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.width;
-  max_num_in_chnk = g_vctr_hmap[tbsp].bkts[vctr_where_found].val.max_num_in_chnk;
+  is_lma  = ptr_vctr_val->is_lma;
+  qtype  = ptr_vctr_val->qtype;
+  width  = ptr_vctr_val->width;
+  max_num_in_chnk = ptr_vctr_val->max_num_in_chnk;
+
   ptr_sclr->qtype = qtype;
-
   if ( is_lma ) {
     status = vctr_get1_lma(&(g_vctr_hmap[tbsp].bkts[vctr_where_found].val),
         tbsp, vctr_uqid, elem_idx, ptr_sclr); 
@@ -103,7 +109,8 @@ vctr_get1(
       if ( data[k] == '\0' ) { found = true; break; }
     }
     if ( !found ) { go_BYE(-1); } 
-    // THIS CHECK ASSUMES INITIALIZATION TO 0 if ( data[width-1] != '\0' ) { go_BYE(-1); } 
+    // Following CHECK ASSUMES INITIALIZATION TO 0 
+    if ( data[width-1] != '\0' ) { go_BYE(-1); } 
 #endif
     ptr_sclr->val.str = malloc(width * sizeof(char));
     return_if_malloc_failed(ptr_sclr->val.str);
@@ -120,8 +127,8 @@ vctr_get1(
   }
 BYE:
   if ( got_chunk ) { 
-  // Following is needed because chnk_get_data increments num_readers
-  g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers--; 
+    // Following is needed because chnk_get_data increments num_readers
+    g_chnk_hmap[tbsp].bkts[chnk_where_found].val.num_readers--; 
   }
   return status;
 }
