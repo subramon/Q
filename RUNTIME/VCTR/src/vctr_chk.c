@@ -176,10 +176,14 @@ vctr_chk(
   // cannot have an empty vector, TODO Consider this carefully 
   if ( num_elements == 0 ) { go_BYE(-1); } 
   if ( min_chnk_idx > max_chnk_idx ) { go_BYE(-1); } 
-  uint32_t num_chnks = max_chnk_idx - max_chnk_idx + 1;
+  uint32_t num_chnks = max_chnk_idx - min_chnk_idx + 1;
   // last chunk can be partly empty; hence following checks 
-  if ( num_elements < ( num_chnks * max_num_in_chnk ) ) { go_BYE(-1); }
-  if ( num_elements > ( (num_chnks+1) * max_num_in_chnk ) ) { go_BYE(-1); }
+  if ( num_elements < ( (num_chnks-1) * max_num_in_chnk ) ) { go_BYE(-1); }
+  if ( vctr_val.is_memo == false ) { 
+    if ( num_elements > ( num_chnks * max_num_in_chnk ) ) { 
+      go_BYE(-1); 
+    }
+  }
   //----------------------------------------------
   if ( vctr_val.is_persist ) { 
     if ( vctr_val.is_early_freeable ) { go_BYE(-1); }

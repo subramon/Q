@@ -65,6 +65,7 @@ vctr_add(
   if  ( max_num_in_chnk == 0 ) { 
     max_num_in_chnk = Q_VCTR_MAX_NUM_IN_CHNK;
   }
+  if (((max_num_in_chnk/64)*64) != max_num_in_chnk ) { go_BYE(-1); }
   // Unfortunate special case for B1, SC
   if ( qtype == SC ) { 
     if ( width < 2 ) { go_BYE(-1); }

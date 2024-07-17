@@ -17,6 +17,7 @@
 
 #include "rs_hmap_config.h"
 #include "vctr_add.h" 
+#include "vctr_chk.h" 
 #include "vctr_is.h" 
 #include "vctr_del.h" 
 #include "vctr_cnt.h" 
@@ -67,7 +68,7 @@ main(
 
   status = init_session(); cBYE(status); 
   //----------------------------------
-  uint32_t vctr_chnk_size = 32; // for easy testing 
+  uint32_t vctr_chnk_size = 64; // for easy testing 
   uint32_t uqid; status = vctr_add(F4, 0, vctr_chnk_size, 
       false, 0, false, 0, false, 0, &uqid); 
   cBYE(status);
@@ -120,7 +121,7 @@ main(
   //----------------------------------
 
   // Test putting of Scalars
-  vctr_chnk_size = 32; // for easy testing 
+  vctr_chnk_size = 64; // for easy testing 
   status = vctr_add(I4, 0, vctr_chnk_size, 
       false, 0, false, 0, false, 0, &uqid); 
   cBYE(status);

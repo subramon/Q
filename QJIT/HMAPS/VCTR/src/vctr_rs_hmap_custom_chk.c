@@ -61,7 +61,9 @@ vctr_rs_hmap_custom_chk(
       if ( !val.is_memo ) { if ( val.memo_len != 0 ) { go_BYE(-1); } }
       if ( val.memo_len == 0 ) { 
         int nC = val.max_chnk_idx - val.min_chnk_idx + 1;
-        if ( nC > (int)val.memo_len ) { go_BYE(-1); }
+        if ( val.is_memo ) { 
+          if ( nC > (int)val.memo_len ) { go_BYE(-1); }
+        }
       }
       // tests on kill
       if ( !val.is_killable ) { 

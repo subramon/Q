@@ -67,11 +67,12 @@ vctr_memo(
   uint32_t nC = ptr_vctr_val->max_chnk_idx + 1 - ptr_vctr_val->min_chnk_idx;
   if ( nC > ptr_vctr_val->memo_len ) { 
     uint32_t new_min_chnk_idx = 
-      ptr_vctr_val->max_chnk_idx + 1 - ptr_vctr_val->min_chnk_idx;
+      ptr_vctr_val->max_chnk_idx + 1 - ptr_vctr_val->memo_len;
     for ( uint32_t chnk_idx = ptr_vctr_val->min_chnk_idx; 
         chnk_idx < new_min_chnk_idx; chnk_idx++ ) { 
       status = chnk_del(0, vctr_uqid, chnk_idx, ptr_vctr_val->is_persist);
     }
+    ptr_vctr_val->min_chnk_idx = new_min_chnk_idx;
   }
 BYE:
   return status;

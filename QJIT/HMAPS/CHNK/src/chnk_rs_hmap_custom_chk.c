@@ -110,12 +110,6 @@ chnk_rs_hmap_custom_chk(
       // qtype must be legit 
       if ( val.qtype == Q0 ) { go_BYE(-1); }
       if ( val.qtype >= QF ) { go_BYE(-1); }
-      if ( val.qtype != SC ) { 
-        uint32_t width = get_width_c_qtype(val.qtype);
-        if ((( val.num_elements / width ) * width ) != val.num_elements ) {
-          go_BYE(-1);
-        }
-      }
 
       // ---------------------------
       if ( kv_idx >= n ) { go_BYE(-1); }

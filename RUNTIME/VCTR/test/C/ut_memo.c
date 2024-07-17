@@ -16,6 +16,7 @@
 #include "aux_cmem.h"
 #include "rs_hmap_config.h"
 #include "vctr_add.h" 
+#include "vctr_chk.h" 
 #include "vctr_put_chunk.h" 
 #include "vctr_get_chunk.h" 
 #include "vctr_memo.h"
@@ -64,7 +65,7 @@ main(
 
   status = init_session(); cBYE(status); 
   //----------------------------------
-  uint32_t max_num_in_chunk = 32; // for easy testing 
+  uint32_t max_num_in_chunk = 64; // for easy testing 
   qtype_t qtype = F4;
   uint32_t uqid; status = vctr_add(qtype, 0, max_num_in_chunk, 
       false, 0, false, 0, false, 0, &uqid); 
@@ -104,7 +105,15 @@ main(
     status = cmem_free(&cmem); cBYE(status); // no more need for cmem
     uint32_t l_num_chunks;
     status =  vctr_num_chunks(tbsp, uqid, &l_num_chunks); cBYE(status);
-    if ( g_mem_used > memo_len*vctr_chnk_size ) { go_BYE(-1); }
+    if ( i < (uint32_t)memo_len ) { 
+      if ( l_num_chunks != i+1 ) { go_BYE(-1); }
+    }
+    else {
+      if ( l_num_chunks != (uint32_t)memo_len ) { go_BYE(-1); }
+    }
+    if ( g_mem_used > memo_len*vctr_chnk_size ) { 
+      go_BYE(-1); 
+    }
 
     // we have created exactly one vector 
     if ( g_vctr_hmap[0].nitems != 1 ) { go_BYE(-1); } 

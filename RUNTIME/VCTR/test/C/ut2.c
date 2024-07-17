@@ -23,6 +23,7 @@
 #include "rs_hmap_config.h"
 #include "vctr_new_uqid.h" 
 #include "vctr_add.h" 
+#include "vctr_chk.h" 
 #include "vctr_del.h" 
 #include "vctr_cnt.h" 
 #include "vctr_put_chunk.h" 
@@ -76,7 +77,7 @@ main(
 
   status = init_session(); cBYE(status); 
   //----------------------------------
-  uint32_t max_num_in_chunk = 32; // for easy testing 
+  uint32_t max_num_in_chunk = 64; // for easy testing 
   qtype_t qtype = F4;
   uint32_t uqid; status = vctr_add(qtype, 0, max_num_in_chunk, 
       false, 0, false, 0, false, 0, &uqid); 
