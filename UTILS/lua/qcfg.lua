@@ -40,10 +40,9 @@ local y = math.floor(qcfg.max_num_in_chunk/64.0)
 assert(x == y) -- MUST Be a multiple o 64
 
 qcfg.debug = false -- set to TRUE only if you want debugging
--- Leave this as -1 unless you *REALLY* know what you are doing
-qcfg.memo_len = -1 --  Vector code uses this default value
--- -1 means infinite memo, 0 means no memoization 
--- 1 means 1 previous chunk kept, 2 means 2 previous chunks and so on
+qcfg.is_memo = false; qcfg.memo_len = 0;
+qcfg.is_killable = false; qcfg.num_kill_ignore = 0;
+qcfg.is_early_freeable = false; qcfg.num_free_ignore = 0;
 -- TODO THINK qcfg.has_nulls = false -- Vector code uses this default value
 
 qcfg.num_lives_kill = 0 -- default

@@ -373,40 +373,43 @@ function lVector.new(args)
   assert( math.floor(vector._max_num_in_chunk / 64 ) == 
           math.ceil(vector._max_num_in_chunk / 64 ) )
   --=================================================
-  if ( args.memo_len ) then 
+  if ( type(args.is_memo) == "boolean" ) then 
+    assert(type(args.memo_len) == "number")
+    vector._is_memo  = args.is_memo
     vector._memo_len = args.memo_len
   else
+    vector._is_memo  = qcfg.is_memo
     vector._memo_len = qcfg.memo_len
     -- NOTE: Following needed for cVector.add*
-    args.memo_len = vector._memo_len 
-  end
-  assert(type(vector._memo_len) == "number")
-  --=================================================
-  if ( args.num_lives_kill ) then 
-    assert(type(args.num_lives_kill) == "number" )
-    assert(args.num_lives_kill >= 0)
-  else
-    args.num_lives_kill = qcfg.num_lives_kill
-  end
-  if ( args.num_lives_kill == 0 ) then 
-    args.is_killable = false
-  else
-    args.is_killable = true
+    args.is_memo  = qcfg.is_memo
+    args.memo_len = qcfg.memo_len
   end
   --=================================================
-  if ( args.num_lives_free ) then 
-    assert(type(args.num_lives_free) == "number" )
-    assert(args.num_lives_free >= 0)
+  if ( type(args.is_killable) == "boolean" ) then 
+    assert(type(args.num_kill_ignore) == "number")
+    vector._is_killable  = args.is_killable
+    vector._num_kill_ignore = args.num_kill_ignore
   else
-    args.num_lives_free = qcfg.num_lives_free
-  end
-  if ( args.num_lives_free == 0 ) then 
-    args.is_early_freeable = false
-  else
-    args.is_early_freeable = true
+    vector._is_killable  = qcfg.is_killable
+    vector._num_kill_ignore = qcfg.num_kill_ignore
+    -- NOTE: Following needed for cVector.add*
+    args.is_killable  = qcfg.is_killable
+    args.num_kill_ignore = qcfg.num_kill_ignore
   end
   --=================================================
-  vector._base_vec = assert(cVector.add1(args))
+  if ( type(args.is_early_freeable) == "boolean" ) then 
+    assert(type(args.num_free_ignore) == "number")
+    vector._is_early_freeable  = args.is_early_freeable
+    vector._num_free_ignore = args.num_free_ignore
+  else
+    vector._is_early_freeable  = qcfg.is_early_freeable
+    vector._num_free_ignore = qcfg.num_free_ignore
+    -- NOTE: Following needed for cVector.add*
+    args.is_early_freeable  = qcfg.is_early_freeable
+    args.num_free_ignore = qcfg.num_free_ignore
+  end
+  --=================================================
+  vector._base_vec = assert(cVector.add(args))
   if ( args.has_nulls ) then 
     -- assemble args for nn Vector 
     local nn_args = {}
