@@ -25,10 +25,8 @@ SRCS +=	vctr_early_free.c
 SRCS +=	vctr_eov.c  
 SRCS +=	vctr_get1.c  
 SRCS +=	vctr_get_chunk.c  
-SRCS +=	vctr_incr_ref_count.c  
 SRCS +=	vctr_is.c  
-SRCS +=	vctr_meta.c  
-SRCS +=	vctr_is_eov.c  # TO DELETE 
+SRCS +=	vctr_get_set.c  
 SRCS +=	vctr_nop.c  
 
 SRCS +=	vctr_chnks_to_lma.c  
@@ -50,7 +48,6 @@ SRCS +=	vctr_putn.c
 SRCS +=	vctr_put1.c 
 SRCS +=	vctr_put_chunk.c  
 SRCS +=	vctr_memo.c  
-SRCS +=	vctr_width.c  
 SRCS +=	vctr_l1_to_l2.c  
 SRCS +=	num_read_write.c  
 

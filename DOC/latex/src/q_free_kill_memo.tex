@@ -236,6 +236,15 @@ There are three kinds of actions, classified as
 \item {\tt kill} e.g., \(x:\mathrm{kill}\) where \(x\) is a vector 
 \item {\tt early\_free} e.g., 
   \(x:\mathrm{early\_free}(i)\) where \(x\) is a vector and \(i\) is a chunk index
+\item {\tt memo} --- we have chosen to {\bf not} expose this ability 
+  from Lua. It is available from C. It is not meant to be invoked by the Q
+  programmer. 
+  \ee
+\item is --- checks the specified property
+  \be
+\item {\tt is\_early\_free}
+\item {\tt is\_memo\_len}
+\item {\tt is\_killable}
   \ee
 \item get --- gets the specified property
   \be

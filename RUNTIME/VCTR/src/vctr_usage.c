@@ -5,7 +5,7 @@
 #include "chnk_rs_hmap_struct.h"
 #include "l2_file_name.h"
 #include "chnk_is.h"
-#include "vctr_name.h"
+#include "vctr_get_set.h"
 #include "get_file_size.h"
 #include "vctr_usage.h"
 
@@ -80,6 +80,7 @@ vctr_hogs(
     )
 {
   int status = 0;
+  char *name = NULL;
   printf("uqid,name");
   if ( ( mode == NULL ) || ( *mode == '\0' ) ) { 
     printf(",mem_usage,dsk_usage\n");
@@ -104,7 +105,9 @@ vctr_hogs(
     //--- Check usage statistics
     uint64_t mem, dsk; 
     status = vctr_usage(tbsp, vctr_uqid, &mem, &dsk); cBYE(status);
-    char * name = vctr_get_name(tbsp, vctr_uqid); 
+    status = vctr_get_set(tbsp, vctr_uqid, "name", "get", NULL, 
+        NULL, &name); 
+    cBYE(status);
     if ( ( mode == NULL ) || ( *mode == '\0' ) ) { 
       printf("%u:[%s]%" PRIu64",%"PRIu64"\n",
           vctr_uqid, name == NULL ? "anonymous" : name, mem, dsk);
@@ -112,21 +115,23 @@ vctr_hogs(
     else { 
       if ( strcasecmp(mode, "mem") == 0 ) {
         if ( mem != 0 ) { 
-        printf("%u:[%s]%" PRIu64"\n", 
-            vctr_uqid, name == NULL ? "anonymous" : name, mem); 
+          printf("%u:[%s]%" PRIu64"\n", 
+              vctr_uqid, name == NULL ? "anonymous" : name, mem); 
         }
       }
       else if ( strcasecmp(mode, "dsk") == 0 ) {
         if ( dsk != 0 ) { 
-        printf("%u:[%s]%" PRIu64"\n", 
-            vctr_uqid, name == NULL ? "anonymous" : name, dsk); 
+          printf("%u:[%s]%" PRIu64"\n", 
+              vctr_uqid, name == NULL ? "anonymous" : name, dsk); 
         }
       }
       else {
         go_BYE(-1);
       }
     }
+    free_if_non_null(name);
   }
 BYE:
+  free_if_non_null(name);
   return status;
 }

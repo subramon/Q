@@ -2,6 +2,21 @@
 -- So, we have lVector.width but we have self._base_vec or self._chunk_num
 -- All meta data, by convention, is in _meta.* e.g.,
 -- self._meta.meaning or self._meta.max
+-- Most details of an lVector are stored in C with the exception of 
+-- 1) self._base_vec
+-- 2) self._is_dead
+-- 3) self._meta
+-- 4) self._siblings
+-- 4) self._generator
+-- TODO >> self._chunk_num
+-- When resurrecting an lVector using Q.restore(), we don't care
+-- about 
+-- _is_dead  --- because all restored vectors are not dead
+-- _siblings() --- because all restored vectors are fully eval'd
+-- _generator() --- because all restored vectors are fully eval'd
+-- _chunk_num() --- because all restored vectors are fully eval'd
+-- and chunk_num only matters for lVectors that are not fully eval'd
+
 local ffi     = require 'ffi'
 local cVector = require 'libvctr'
 local cutils  = require 'libcutils'
@@ -39,11 +54,10 @@ register_type(lVector, "lVector")
 function lVector:check()
   assert(cVector.chk(self._base_vec))
   local nn_status = true
-  if ( self._nn_vec ) then 
-    local nn_vector = assert(self._nn_vec)
+  if ( cVector.has_null_vec(self._base_vec) ) then 
+    local nn_vec = assert(cVector.get_null_vec(self._base_vec))
     assert(nn_vector._chunk_num == self._chunk_num)
-    assert(type(nn_vector) == "lVector")
-    assert(( nn_vector:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    assert(nn_vec:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
     assert(cVector.chk(nn_vector._base_vec))
     -- check congruence between base vector and nn vector
     assert(nn_vector:num_elements()  == self:num_elements())
@@ -75,20 +89,10 @@ function lVector:check()
 end
 
 function lVector:width()
-  local width = cVector.width(self._base_vec)
+  local width = assert(cVector.width(self._base_vec))
+  assert(width > 0)
   return width
 end
-
-function lVector:ref_count()
-  local ref_count = cVector.ref_count(self._base_vec)
-  return ref_count
-end
-
-function lVector:get_memo()
-  local memo_len = cVector.memo_len(self._base_vec)
-  return memo_len
-end
---=================================================
 
 function lVector:max_num_in_chunk()
   local max_num_in_chunk = cVector.max_num_in_chunk(self._base_vec)
@@ -293,23 +297,25 @@ end
 --=================================================
 function lVector:uqid()
   local uqid = cVector.uqid(self._base_vec)
-  assert(type(uqid) == "number")
+  assert(type(uqid) == "number"); assert(tbsp >= 0)
   return uqid
 end
 --=================================================
 function lVector:tbsp()
   local tbsp = cVector.tbsp(self._base_vec)
-  assert(type(tbsp) == "number")
+  assert(type(tbsp) == "number"); assert(tbsp > 0)
   return tbsp
 end
 --=================================================
 function lVector:qtype()
-  return self._qtype
+  return cVector.get_qtype(self._base_vec)
 end
 --=================================================
 function lVector:nn_qtype()
-  if ( not self._nn_vec ) then return nil end 
-  return self._nn_vec:qtype()
+  if ( not cVector.has_nn_vec(self._base_vec) ) then return nil end 
+  local nn_vec = assert(cVector.get_nn_vec(self._base_vec))
+  local nn_qtype = assert(cVector.get_qtype(nn_vec))
+  return  nn_qtype
 end
 --=================================================
 function lVector.new(args)
@@ -447,157 +453,148 @@ function lVector.new(args)
   --=================================================
   return vector
 end
-function lVector:set_memo(memo_len)
-  if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  if ( type(memo_len) == "nil" ) then 
-    memo_len = qcfg.memo_len
-  end
-  assert(type(memo_len == "number"))
-  -- cannot memo once vector has elements in it 
-  if ( self:num_elements() > 0 ) then return nil end 
-  assert(cVector.set_memo(self._base_vec, memo_len))
-  self._memo_len = memo_len
-  if ( self._nn_vec ) then 
-    local nn_vector = assert(self._nn_vec)
-    assert(cVector.set_memo(nn_vector._base_vec, memo_len))
-    nn_vector._memo_len = memo_len
-  end
-  return self
-end
-
 -- In first implementation, get_nulls() would also drop_nulls()
 -- Now, you have to drop_nulls() explicitly if you want to
 function lVector:get_nulls() 
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  -- must have an nn_vec currently
-  if ( not self._nn_vec ) then 
-    print("No nn vector, returning nil") 
-    return nil 
-  end 
-  local x = assert(self._nn_vec) 
-  -- This was old behavior self._nn_vec = nil
-  return x
+  if ( cVector.has_nn_vec(self._base_vec )) then 
+    local nn_vec = cVector.get_nn_vec(self._base_vec )
+    return nn_vec
+  else
+    return nil
+  end
 end
 
 function lVector:nn_qtype() 
-  if ( not self._nn_vec ) then 
-    print("No nn vector, returning nil"); return nil 
-  end 
-  local x = assert(self._nn_vec) 
-  return x:qtype()
+  if ( cVector.has_nn_vec(self._base_vec )) then 
+    local nn_vec = cVector.get_nn_vec(self._base_vec )
+    return nn_vec:qtype()
+  else
+    return nil
+  end
 end
 
-function lVector:set_nulls(nn_vec)
+function lVector:set_nn_vec(nn_vec)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  assert(not self._nn_vec) -- must not have an nn_vec currently
-  assert(self:is_eov()) -- Limitation of current implementation
+  -- must not have an nn_vec currently
+  assert(not cVector.has_nn_vec(self._base_vec))
+  -- cannot set nn_vec to an nn_vec
+  assert(not cVector.is_nn_vec(self._base_vec))
+  -- Limitation of current implementation
+  assert(self:is_eov()) 
+  -- input nn_vec cannot be the nn vec for another vector
+  assert(not cVector.is_nn_vec(nn_vec))
   --===============
   assert(type(nn_vec) == "lVector")
   assert(nn_vec:has_nulls() == false) -- nn cannot have nulls
   assert(nn_vec:is_eov()) -- Limitation of current implementation
   assert(nn_vec:num_elements() == self:num_elements()) -- sizes must match
   assert(nn_vec:qtype() == "BL") -- Limitation, B1 not supported
-  assert(nn_vec._parent == nil) -- nn_vec does not have parent 
-  nn_vec._parent = self 
 
-  self._nn_vec = nn_vec
+  -- after all checks have passed, we can do the real work 
+  assert(cVector.set_nn_vec(self._base_vec, nn_vec._base_vec))
   return self 
 end
-
+--=======================================================
 function lVector:put1(sclr, nn_sclr)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  assert(self:is_eov() == false) -- cannot put into complete vector 
-  assert(self._parent == nil) -- cannot put into nn vector 
-  --========================
+  -- cannot put into complete vector 
+  assert(self:is_eov() == false) 
+  -- cannot put into nn vector 
+  assert(not cVector.is_nn_vec(self._base_vec))
   assert(type(sclr) == "Scalar")
   --========================
+  local nn_vec
+  local has_nn_vec = cVector.has_nn_vec(self._base_vec)
   -- nn_sclr can be provided only if vector has nulls
-  if ( type(nn_sclr) ~= "nil" ) then assert(self._nn_vec) end
+  if ( type(nn_sclr) ~= "nil" ) then 
+    assert(has_nn_vec == true)
+  end
   -- if vector has nulls, must be of type BL -- Limitation
   -- if vector has nulls, nn_sclr must be provided
-  if ( self._nn_vec ) then 
+  if ( has_nn_vec ) then 
+    nn_vec = assert(cVector.get_nn_vec(self._base_vec))
+    assert(nn_vec:qtype() == "BL") -- current limitation
     assert(type(nn_sclr) == "Scalar") 
-    assert(self._nn_vec:qtype() == "BL")
-  end
-  -- if nn_sclr is provided it must be BL Scalar
-  -- if nn_sclr is provided, vector must have associated nn vector 
-  if ( type(nn_sclr) ~= "nil" ) then
-    assert(type(nn_sclr) == "Scalar")
-    assert(nn_sclr:qtype() == "BL") -- Limitation of current impl
-    assert(self:has_nulls())
+    assert(nn_sclr:qtype() == "BL")
   end
   --========================
-  -- TODO P3 Take out debugging checks belo
-  local n1 = self:num_elements() 
   assert(cVector.put1(self._base_vec, sclr))
-  local n2 = self:num_elements() 
-  assert(n1+1 == n2)
-  local nn_vector = self._nn_vec
-  if ( nn_vector ) then 
-    local nn_n1 = nn_vector:num_elements() 
-    assert(cVector.put1(nn_vector._base_vec, nn_sclr))
-    local nn_n2 = nn_vector:num_elements() 
-    assert(nn_n1+1 == nn_n2)
+  if ( has_nn_vec ) then 
+    assert(cVector.put1(nn_vec, nn_sclr))
   end
+  return self
 end
-
+--=======================================================
 function lVector:putn(col, n, nn_col)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  assert(self:is_eov() == false) -- cannot put into complete vector 
-  assert(self._parent == nil) -- cannot put into nn vector 
-  --========================
+  -- cannot put into complete vector 
+  assert(self:is_eov() == false) 
+  -- cannot put into nn vector 
+  assert(not cVector.is_nn_vec(self._base_vec))
+  --===========
   assert(type(col) == "CMEM")
-  --========================
   if ( type(n) == "nil" ) then n = 1 end
   assert(type(n) == "number"); assert(n > 0)
   --========================
+  local nn_vec
+  local has_nn_vec = cVector.has_nn_vec(self._base_vec)
   -- nn_col can be provided only of vector has nulls
-  if ( type(nn_col) ~= "nil" ) then assert(self._nn_vec) end
+  if ( type(nn_col) ~= "nil" ) then 
+    assert(has_nn_vec == true)
+  end
   -- if vector has nulls, nn_col must be provided 
   -- if vector has nulls, nn vector must be of type BL
-  if ( self._nn_vec ) then 
-    assert(nn_col) 
-    assert(self:nn_qtype() == "BL")
+  if ( has_nn_vec ) then 
+    nn_vec = assert(cVector.get_nn_vec(self._base_vec))
+    assert(nn_vec:qtype() == "BL") -- current limitation
   end 
   -- if nn_col, then it must be CMEM 
   if ( nn_col ) then assert(type(nn_col) == "CMEM") end
   --========================
   assert(cVector.putn(self._base_vec, col, n))
-  if ( self._nn_vec ) then 
-    local nn_vector = assert(self._nn_vec)
-    local nn_vec = nn_vector._base_vec
+  if ( has_nn_vec ) then 
     assert(cVector.putn(nn_vec, nn_col, n))
   end
+  return self
 end
-
-function lVector:put_chunk(c, n, nn_c)
+--=======================================================
+function lVector:put_chunk(chnk, n, nn_chnk)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  assert(self:is_eov() == false) -- cannot put into complete vector 
-  assert(self._parent == nil) -- cannot put into nn vector 
-  assert(type(c) == "CMEM")
+  -- cannot put into complete vector 
+  assert(self:is_eov() == false) 
+  -- cannot put into nn vector 
+  assert(not cVector.is_nn_vec(self._base_vec))
+  --============
+  assert(type(chnk) == "CMEM")
   assert(type(n) == "number")
   assert(n > 0) -- cannot put empty chunk 
-  assert(cVector.put_chunk(self._base_vec, c, n))
-  self._chunk_num = self._chunk_num + 1 
-  if ( self._nn_vec ) then 
-    assert(type(nn_c) == "CMEM")
-    local nn_vector = assert(self._nn_vec)
-    nn_vector._chunk_num = nn_vector._chunk_num + 1 
-    local nn_vec = nn_vector._base_vec
-    assert(cVector.put_chunk(nn_vec, nn_c, n))
-    assert(self._chunk_num == nn_vector._chunk_num)
+  if ( nn_chnk ) then assert(type(nn_chnk) == "CMEM") end 
+  --============
+  local nn_vec
+  local has_nn_vec = cVector.has_nn_vec(self._base_vec)
+  -- nn_col can be provided only of vector has nulls
+  if ( nn_chnk ) then 
+    assert(has_nn_vec == true)
+  end
+  -- if vector has nulls, nn_chnk must be provided 
+  -- if vector has nulls, nn vector must be of type BL
+  if ( has_nn_vec ) then 
+    nn_vec = assert(cVector.get_nn_vec(self._base_vec))
+    assert(nn_vec:qtype() == "BL") -- current limitation
+  end 
+  --=== Checks complete, ready to do work
+  assert(cVector.put_chunk(self._base_vec, chnk, n))
+  if ( has_nn_vec ) then  
+    assert(cVector.put_chunk(nn_vec, nn_chnk, n))
   else
-    -- TODO THINK Why are we getting nn_c if vector does not have nulls?
-    if ( type(nn_c) == "CMEM" ) then
+    if ( type(nn_chnk) == "CMEM" ) then
       --[[ this can happen if we have dropped_nulls for this vector.
       Suppose we did x = Q.vvor(y, z) where y and z have nulls
       and then we did x:drop_nulls()
       but the vvor will return a nn_chunk for x 
       --]]
-      nn_c:delete() -- not needed
-    else
-      assert(nn_c == nil)
-    end
+      nn_chnk:delete() -- not needed
   end
 end
 
@@ -607,11 +604,10 @@ function lVector:get1(elem_idx)
   assert(type(elem_idx) == "number")
   if (elem_idx < 0) then return nil end
   local sclr = cVector.get1(self._base_vec, elem_idx)
-  if ( type(sclr) ~= "nil" ) then assert(type(sclr) == "Scalar") end
-  local nn_vector = self._nn_vec
-  if ( nn_vector and sclr ) then
-    assert(type(nn_vector) == "lVector")
-    nn_sclr = cVector.get1(nn_vector._base_vec, elem_idx)
+  if ( sclr ) then assert(type(sclr) == "Scalar") end
+  if ( cVector.has_nn_vec(self._base_vec) and sclr ) then 
+    local nn_vec = cVector.get_nn_vec(self._base_vec)
+    nn_sclr = cVector.get1(nn_vec, elem_idx)
     assert(type(nn_sclr) == "Scalar") 
     assert(nn_sclr:qtype() == "BL") 
   end
@@ -621,11 +617,9 @@ end
 function lVector:unget_chunk(chnk_idx)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   assert(cVector.unget_chunk(self._base_vec, chnk_idx))
-  if ( self._nn_vec ) then 
-    local nn_vector = self._nn_vec
-    assert(type(nn_vector) == "lVector")
-    assert((nn_vector:qtype() == "B1") or (nn_vector:qtype() == "BL"))
-    assert(cVector.unget_chunk(nn_vector._base_vec, chnk_idx))
+  if ( cVector.has_nn_vec(self._base_vec) ) then 
+    local nn_vec = cVector.get_nn_vec(self._base_vec)
+    assert(cVector.unget_chunk(nn_vec, chnk_idx))
   end
 end
 
@@ -1289,4 +1283,28 @@ if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   return file_name, sz
 end
 --==================================================
+function lVector:is_memo()
+  local is_memo = assert(cVector.is_memo(self._base_vec))
+  assert(type(is_memo) == "boolean")
+  return is_memo
+end
+function lVector:get_memo_len()
+  local memo_len = assert(cVector.memo_len(self._base_vec))
+  assert(memo_len > 0)
+  return memo_len
+end
+function lVector:set_memo(memo_len)
+  if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
+  if ( type(memo_len) == "nil" ) then 
+    memo_len = qcfg.memo_len
+  end
+  assert(type(memo_len == "number"))
+  assert(cVector.set_memo(self._base_vec, memo_len))
+  if ( cVector.has_nn_vec(self._base_vec )) then 
+    local nn_vec = cVector.get_nn_vec(self._base_vec )
+    assert(cVector.set_memo(nn_vec, memo_len))
+  end
+  return self
+end
+--=================================================
 return lVector

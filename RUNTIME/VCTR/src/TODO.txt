@@ -10,3 +10,17 @@ I think is_lna == true => is_eov == true. As a consequence, memo/free/kill are
 irrelevant.
 
 Implement nn_vctr_id on both Lua and C 
+
+In cVector.c
+has_nn_vec
+get_nn_vec
+set_nn_vec
+is_nn_vec
+
+
+IMPORTANT In lVector.lua
+Delete everything with self._ except for
+self._base_vec
+self._is_dead
+self._meta
+

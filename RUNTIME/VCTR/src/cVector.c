@@ -38,11 +38,9 @@
 
 #include "vctr_meta.h"
 #include "vctr_eov.h"
-#include "vctr_incr_ref_count.h"
 #include "vctr_is.h"
 #include "chnk_is.h"
 #include "chnk_get_data.h"
-#include "vctr_is_eov.h"
 #include "vctr_get_chunk.h"
 #include "vctr_get1.h"
 #include "vctr_name.h"
@@ -54,7 +52,7 @@
 #include "vctr_put1.h"
 #include "vctr_put_chunk.h"
 #include "vctr_memo.h"
-#include "vctr_width.h"
+#include "vctr_get_set.h"
 #include "num_read_write.h"
 
 #include "vctr_append.h"
@@ -144,8 +142,10 @@ static int l_vctr_get_qtype( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  qtype_t qtype;
-  status = vctr_get_qtype(ptr_v->tbsp, ptr_v->uqid, &qtype); cBYE(status);
+  int64_t qtype;
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "qtype", "get",
+      NULL, &qtype, NULL); 
+  cBYE(status);
   lua_pushstring(L, get_str_qtype(qtype)); 
   return 1;
 BYE:
@@ -383,8 +383,10 @@ static int l_vctr_width( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  uint32_t width;
-  status = vctr_width(ptr_v->tbsp, ptr_v->uqid, &width); cBYE(status);
+  int64_t width;
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "width", "get",
+      NULL, &width, NULL); 
+  cBYE(status);
   lua_pushnumber(L, width);
   return 1;
 BYE:
@@ -476,7 +478,8 @@ static int l_vctr_is_lma( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool b_is_lma; 
-  status = vctr_is_lma(ptr_v->tbsp, ptr_v->uqid, &b_is_lma);
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "is_lma", "get",
+      &b_is_lma, NULL, NULL);
   lua_pushboolean(L, b_is_lma);
   return 1;
 BYE:
@@ -491,7 +494,8 @@ static int l_vctr_is_eov( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool b_is_eov; 
-  status = vctr_is_eov(ptr_v->tbsp, ptr_v->uqid, &b_is_eov);
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "is_eov", "get",
+      &b_is_eov, NULL, NULL);
   lua_pushboolean(L, b_is_eov);
   return 1;
 BYE:
@@ -740,30 +744,13 @@ static int l_vctr_max_num_in_chunk( lua_State *L) {
   int num_args = lua_gettop(L); 
   if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  uint32_t max_num_in_chunk;;
+  int64_t max_num_in_chunk;;
 
-  status = vctr_get_max_num_in_chunk(ptr_v->tbsp, ptr_v->uqid, &max_num_in_chunk);
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "max_num_in_chunk",
+      "get", NULL, &max_num_in_chunk, NULL);
   cBYE(status);
 
   lua_pushnumber(L, max_num_in_chunk);
-  return 1;
-BYE:
-  lua_pushnil(L);
-  lua_pushstring(L, __func__);
-  lua_pushnumber(L, status);
-  return 3;
-}
-//----------------------------------------
-static int l_vctr_ref_count( lua_State *L) {
-  int status = 0;
-  // get args from Lua 
-  int num_args = lua_gettop(L); 
-  if ( num_args != 1 ) { go_BYE(-1); }
-  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  uint32_t ref_count;
-  status = vctr_get_ref_count(ptr_v->tbsp, ptr_v->uqid, &ref_count);
-  cBYE(status);
-  lua_pushnumber(L, ref_count);
   return 1;
 BYE:
   lua_pushnil(L);
@@ -1080,7 +1067,6 @@ static int l_vctr_rehydrate( lua_State *L)
   status = vctr_is(tbsp, uqid, &is_found, &where_found); cBYE(status);
   if ( !is_found ) { 
     go_BYE(-1); } 
-  status = vctr_incr_ref_count(tbsp, where_found); cBYE(status);
   ptr_v->uqid = uqid; 
   ptr_v->tbsp = tbsp; 
 
@@ -1455,7 +1441,6 @@ static const struct luaL_Reg vector_methods[] = {
     //--------------------------------
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },
     { "memo_len", l_vctr_memo_len },
-    { "ref_count", l_vctr_ref_count },
     { "tbsp", l_vctr_tbsp },
     { "uqid", l_vctr_uqid },
     { "width", l_vctr_width },
@@ -1541,7 +1526,6 @@ static const struct luaL_Reg vector_functions[] = {
     { "tbsp", l_vctr_tbsp },
     { "uqid", l_vctr_uqid },
     { "memo_len", l_vctr_memo_len },
-    { "ref_count", l_vctr_ref_count },
     { "width", l_vctr_width },
     { "pr", l_vctr_print },
     // creation, new, ...
