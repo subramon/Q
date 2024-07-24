@@ -30,8 +30,7 @@
 #include "vctr_get_chunk.h" 
 #include "vctr_num_elements.h"
 #include "vctr_num_chunks.h"
-#include "vctr_width.h"
-#include "vctr_is_eov.h"
+#include "vctr_get_set.h"
 #include "vctr_make_mem.h"
 #include "vctr_drop_mem.h"
 #include "vctr_print.h"
@@ -84,8 +83,10 @@ main(
   cBYE(status);
   uint32_t num_chunks = 4;
   CMEM_REC_TYPE cmem; 
-  uint32_t width;
-  status = vctr_width(tbsp, uqid, &width); cBYE(status);
+  int64_t  width;
+  status = vctr_get_set(tbsp, uqid, "width", "get", NULL,
+      &width, NULL, NULL); 
+  cBYE(status);
   if ( width != sizeof(float) ) { go_BYE(-1); }
   uint32_t vctr_chnk_size = max_num_in_chunk * width;
   for ( uint32_t i = 0; i < num_chunks; i++ ) {
@@ -129,7 +130,9 @@ main(
     status = vctr_unget_chunk(tbsp, uqid, i); cBYE(status);
   }
   // vector should NOT be eov 
-  status = vctr_is_eov(tbsp, uqid, &b); cBYE(status);
+  status = vctr_get_set(tbsp, uqid, "eov", "get", &b,
+      NULL, NULL, NULL); 
+  cBYE(status);
   if ( b ) { go_BYE(-1); }
   // now for last chunk (smaller than a full chunk)
   memset(&cmem, 0, sizeof(CMEM_REC_TYPE));
@@ -153,7 +156,9 @@ main(
   if ( l_num_chunks != (num_chunks+1) ) { go_BYE(-1); }
   if ( num_elements != (((num_chunks+1)*max_num_in_chunk)-1) ) { go_BYE(-1); }
   // vector should be eov 
-  status = vctr_is_eov(tbsp, uqid, &b); cBYE(status);
+  status = vctr_get_set(tbsp, uqid, "eov", "get", &b,
+      NULL, NULL, NULL); 
+  cBYE(status);
   if ( !b ) { go_BYE(-1); }
   //-- cannot put stuff after vector is eov 
   memset(&cmem, 0, sizeof(CMEM_REC_TYPE));

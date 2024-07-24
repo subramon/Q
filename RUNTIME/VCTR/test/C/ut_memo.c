@@ -17,10 +17,11 @@
 #include "rs_hmap_config.h"
 #include "vctr_add.h" 
 #include "vctr_chk.h" 
+#include "vctr_del.h" 
+#include "vctr_get_set.h" 
 #include "vctr_put_chunk.h" 
 #include "vctr_get_chunk.h" 
 #include "vctr_memo.h"
-#include "vctr_width.h"
 #include "vctr_num_chunks.h"
 
 #include "aux_cmem.h" 
@@ -72,8 +73,10 @@ main(
   cBYE(status);
   uint32_t num_chunks = 100; 
   uint32_t tbsp = 0; 
-  uint32_t width;
-  status = vctr_width(tbsp, uqid, &width);
+  int64_t  width;
+  status = vctr_get_set(tbsp, uqid, "width", "get", NULL,
+      &width, NULL, NULL); 
+  cBYE(status);
   // set memo len to what you want to test at 
   int memo_len = 2; 
   // can set memo_len only once 
@@ -121,6 +124,17 @@ main(
   status = vctr_chk(0, uqid); cBYE(status);
   status = vctr_rs_hmap_custom_chk(&g_vctr_hmap[0]); cBYE(status);
   status = chnk_rs_hmap_custom_chk(&g_chnk_hmap[0]); cBYE(status);
+  // delete vector and check again
+  bool is_found;
+  status = vctr_del(0, uqid, &is_found); cBYE(status);
+  if ( !is_found ) { go_BYE(-1); }
+  status = vctr_rs_hmap_custom_chk(&g_vctr_hmap[0]); cBYE(status);
+  status = chnk_rs_hmap_custom_chk(&g_chnk_hmap[0]); cBYE(status);
+  // delete vector one more time. should fail 
+  printf("START >>>> Deliberate error\n");
+  status = vctr_del(0, uqid, &is_found); cBYE(status);
+  if ( is_found ) { go_BYE(-1); }
+  printf(" STOP <<<< Deliberate error\n");
   printf("Succesfully completed %s \n", argv[0]);
 BYE:
   free_if_non_null(buf);

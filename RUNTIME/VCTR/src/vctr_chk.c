@@ -66,9 +66,11 @@ vctrs_chk(
     }
     status = vctr_chk(tbsp, g_vctr_hmap[tbsp].bkts[i].key);
     cBYE(status); 
-    total_num_chnks += 
-      g_vctr_hmap[tbsp].bkts[i].val.max_chnk_idx - 
-      g_vctr_hmap[tbsp].bkts[i].val.max_chnk_idx + 1; 
+    if ( g_vctr_hmap[tbsp].bkts[i].val.num_elements > 0 ) {
+      total_num_chnks += 
+        g_vctr_hmap[tbsp].bkts[i].val.max_chnk_idx - 
+        g_vctr_hmap[tbsp].bkts[i].val.max_chnk_idx + 1; 
+    }
   }
   if ( total_num_chnks != g_chnk_hmap[tbsp].nitems ) { 
     go_BYE(-1); 
@@ -173,17 +175,26 @@ vctr_chk(
   uint32_t min_chnk_idx    = vctr_val.min_chnk_idx;
   uint32_t max_num_in_chnk = vctr_val.max_num_in_chnk;
 
-  // cannot have an empty vector, TODO Consider this carefully 
-  if ( num_elements == 0 ) { go_BYE(-1); } 
-  if ( min_chnk_idx > max_chnk_idx ) { go_BYE(-1); } 
-  uint32_t num_chnks = max_chnk_idx - min_chnk_idx + 1;
-  // last chunk can be partly empty; hence following checks 
-  if ( num_elements < ( (num_chnks-1) * max_num_in_chnk ) ) { go_BYE(-1); }
-  if ( vctr_val.is_memo == false ) { 
-    if ( num_elements > ( num_chnks * max_num_in_chnk ) ) { 
-      go_BYE(-1); 
-    }
+  // cannot have an empty vector, except when under construction
+  if ( num_elements == 0 ) { 
+    if ( min_chnk_idx != 0 ) { go_BYE(-1); }
+    if ( max_chnk_idx != 0 ) { go_BYE(-1); }
+    if ( vctr_val.is_eov ) { go_BYE(-1); }
+    if ( vctr_val.is_persist ) { go_BYE(-1); }
+    if ( vctr_val.is_lma ) { go_BYE(-1); }
+    if ( vctr_val.X != NULL ) { go_BYE(-1); }
+    if ( vctr_val.nX != 0 ) { go_BYE(-1); }
+    return status;
   }
+    if ( min_chnk_idx > max_chnk_idx ) { go_BYE(-1); } 
+    uint32_t num_chnks = max_chnk_idx - min_chnk_idx + 1;
+    // last chunk can be partly empty; hence following checks 
+    if ( num_elements < ( (num_chnks-1) * max_num_in_chnk ) ) { go_BYE(-1); }
+    if ( vctr_val.is_memo == false ) { 
+      if ( num_elements > ( num_chnks * max_num_in_chnk ) ) { 
+        go_BYE(-1); 
+      }
+    }
   //----------------------------------------------
   if ( vctr_val.is_persist ) { 
     if ( vctr_val.is_early_freeable ) { go_BYE(-1); }

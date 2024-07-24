@@ -6,6 +6,6 @@ vctr_get_set(
     const char  * const get_or_set,
     bool *ptr_bl,
     int64_t *ptr_i8,
-    const char ** const ptr_in_str,
+    const char * in_str,
     char **ptr_out_str
     );

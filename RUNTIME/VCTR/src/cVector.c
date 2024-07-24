@@ -36,7 +36,6 @@
 
 #include "vctr_early_free.h" // equivalent of kill()
 
-#include "vctr_meta.h"
 #include "vctr_eov.h"
 #include "vctr_is.h"
 #include "chnk_is.h"
@@ -132,7 +131,7 @@ static int l_vctr_set_name( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   const char * name  = luaL_checkstring(L, 2);
   status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "set", "name",
-      NULL, NULL, &name, NULL); cBYE(status);
+      NULL, NULL, name, NULL); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -255,15 +254,11 @@ static int l_vctr_print( lua_State *L) {
   uqid = ptr_v->uqid;
   tbsp = ptr_v->tbsp;
 
-  if ( lua_isnumber(L, 2) ) { 
-    nn_uqid = 0; // indicating null 
-  }
-  else {
-    VCTR_REC_TYPE *ptr_nn_v = (VCTR_REC_TYPE*)luaL_checkudata(L, 2, "Vector");
-    nn_uqid = ptr_nn_v->uqid;
-    nn_tbsp = ptr_nn_v->tbsp;
-    if ( tbsp != nn_tbsp ) { go_BYE(-1); } 
-  }
+  VCTR_REC_TYPE *ptr_nn_v = (VCTR_REC_TYPE*)luaL_checkudata(L, 2, "Vector");
+  nn_uqid = ptr_nn_v->uqid;
+  nn_tbsp = ptr_nn_v->tbsp;
+
+  if ( tbsp != nn_tbsp ) { go_BYE(-1); } 
 
   if ( lua_isstring(L, 3) ) { 
     opfile = luaL_checkstring(L, 3);
@@ -468,8 +463,8 @@ static int l_vctr_is_persist( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool b_is_persist;  
-  status = vctr_meta(ptr_v->tbsp, ptr_v->uqid, "is_persist",
-      &b_is_persist, NULL, NULL);
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "persist", "get",
+      &b_is_persist, NULL, NULL, NULL);
   lua_pushboolean(L, b_is_persist);
   return 1;
 BYE:
@@ -485,7 +480,7 @@ static int l_vctr_is_lma( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool b_is_lma; 
   status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "lma", "get",
-      &b_is_lma, NULL, NULL);
+      &b_is_lma, NULL, NULL, NULL);
   lua_pushboolean(L, b_is_lma);
   return 1;
 BYE:
@@ -1027,8 +1022,8 @@ static int l_chnk_delete( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   uint32_t chnk_idx = luaL_checknumber(L, 2);
   bool is_found = true, b_is_persist;
-  status = vctr_meta(ptr_v->tbsp, ptr_v->uqid, "is_persist",
-      &b_is_persist, NULL, NULL); cBYE(status);
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "persist", "get", 
+      &b_is_persist, NULL, NULL, NULL); cBYE(status);
   status = chnk_del(ptr_v->tbsp, ptr_v->uqid, chnk_idx, b_is_persist);
   if ( ( status == -2 ) || ( status == -3 ) ) {
     is_found = false; status = 0; 

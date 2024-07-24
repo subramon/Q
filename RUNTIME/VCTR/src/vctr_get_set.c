@@ -22,7 +22,7 @@ vctr_get_set(
     const char  * const get_or_set,
     bool *ptr_bl,
     int64_t *ptr_i8,
-    const char ** const ptr_in_str,
+    const char * in_str,
     char **ptr_out_str
     )
 {
@@ -120,9 +120,9 @@ vctr_get_set(
         *ptr_out_str = strdup(val.name);
         break;
       case set : 
-        if ( ptr_in_str == NULL ) { go_BYE(-1); }
-        if ( strlen(*ptr_in_str) > MAX_LEN_VCTR_NAME ) { go_BYE(-1); }
-        strcpy(ptr_val->name, *ptr_in_str);
+        if ( in_str == NULL ) { go_BYE(-1); }
+        if ( strlen(in_str) > MAX_LEN_VCTR_NAME ) { go_BYE(-1); }
+        strcpy(ptr_val->name, in_str);
 
         // TODO 
         break;

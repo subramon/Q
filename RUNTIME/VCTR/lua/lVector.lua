@@ -24,7 +24,7 @@ local Scalar  = require 'libsclr'
 local register_type = require 'Q/UTILS/lua/register_type'
 local qcfg = require'Q/UTILS/lua/qcfg'
 --====================================
-local function ifxthenxelsey(x, y)
+local function ifxthenyelsez(x, y)
   if ( x and ( type(x) == "string") and ( #x > 0 ) ) then 
     return x 
   else 
@@ -61,7 +61,7 @@ function lVector:check()
   if ( cVector.has_null_vec(self._base_vec) ) then 
     local nn_vec = assert(cVector.get_null_vec(self._base_vec))
     assert(nn_vector._chunk_num == self._chunk_num)
-    assert(nn_vec:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    assert((nn_vec:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
     assert(cVector.chk(nn_vector._base_vec))
     -- check congruence between base vector and nn vector
     assert(nn_vector:num_elements()  == self:num_elements())
@@ -153,6 +153,7 @@ function lVector:set_name(name, nn_name)
 end
 -- STOP : Following about name 
 
+-- START : Following about is_error 
 function lVector:is_error()
   local x, y = cVector.is_error(self._base_vec)
   if ( type(x) == "boolean" ) then return x else return nil end 
@@ -162,12 +163,13 @@ function lVector:set_error()
   local status = cVector.set_error(self._base_vec)
   return self
 end
+-- STOP : Above about is_error 
 
 function lVector:drop(level)
   assert(type(level) == "number")
   assert(cVector.drop_l1_l2(self._base_vec, level))
   if ( self._nn_vec ) then 
-    assert(self:has_nulls())
+    assert(self:has_nn_vec())
     local nn_vector = self._nn_vec
     assert(type(nn_vector) == "lVector")
     assert((nn_vector:qtype() == "BL") or (nn_vector:qtype() == "B1"))
@@ -175,10 +177,17 @@ function lVector:drop(level)
   end
   return self
 end
+-- START: Following about persist
 function lVector:persist()
   local status = cVector.persist(self._base_vec)
   return self
 end
+function lVector:is_persist()
+  local b_is_persist = cVector.is_persist(self._base_vec)
+  assert(type(b_is_persist) == "boolean")
+  return b_is_persist
+end
+-- STOP: Above about persist
 
 function lVector:is_lma()
   local b_is_lma = cVector.is_lma(self._base_vec)
@@ -187,9 +196,8 @@ function lVector:is_lma()
 end
 
 function lVector:nop()
-  local status = cVector.nop(self._base_vec)
-  -- TODO P1 THINK assert(type(status) == "boolean")
-  return status
+  cVector.nop(self._base_vec)
+  return self
 end
 
 local function chnk_clone(v) -- for case when no lma
@@ -200,7 +208,7 @@ local function chnk_clone(v) -- for case when no lma
   vargs.qtype            = v:qtype() 
   vargs.width            = v:width() 
   vargs.max_num_in_chunk = v:max_num_in_chunk() 
-  vargs.has_nulls        = v:has_nulls() 
+  vargs.has_nulls        = v:has_nn_vec() 
 
   vargs.memo_len = v:get_memo()
   assert(vargs.memo_len == -1)
@@ -243,7 +251,7 @@ function lVector:clone()
   local z = lVector(vargs)
 
   -- clone the nn vector if there is one 
-  if ( self:has_nulls() ) then 
+  if ( self:has_nn_vec() ) then 
     local nn_vector = assert(self._nn_vec)
     local nn_z = lVector.clone(nn_vector) -- TODO P1 Check if this works
     z:set_nulls(nn_z)
@@ -251,39 +259,6 @@ function lVector:clone()
   return z
 end
 
-function lVector:is_persist()
-  local b_is_persist = cVector.is_persist(self._base_vec)
-  assert(type(b_is_persist) == "boolean")
-  return b_is_persist
-end
-
-function lVector:has_gen()
-  if ( self._generator ) then return true  else return false end 
-end
-
---=================================================
-function lVector:uqid()
-  local uqid = cVector.uqid(self._base_vec)
-  assert(type(uqid) == "number"); assert(tbsp >= 0)
-  return uqid
-end
---=================================================
-function lVector:tbsp()
-  local tbsp = cVector.tbsp(self._base_vec)
-  assert(type(tbsp) == "number"); assert(tbsp > 0)
-  return tbsp
-end
---=================================================
-function lVector:qtype()
-  return cVector.get_qtype(self._base_vec)
-end
---=================================================
-function lVector:nn_qtype()
-  if ( not cVector.has_nn_vec(self._base_vec) ) then return nil end 
-  local nn_vec = assert(cVector.get_nn_vec(self._base_vec))
-  local nn_qtype = assert(cVector.get_qtype(nn_vec))
-  return  nn_qtype
-end
 --=================================================
 function lVector.new(args)
   local vector = setmetatable({}, lVector)
@@ -420,27 +395,6 @@ function lVector.new(args)
   --=================================================
   return vector
 end
--- In first implementation, get_nn_vec() would also drop_nn_vec()
--- Now, you have to drop_nn_vec() explicitly if you want to
-function lVector:get_nn_vec() 
-  if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  if ( cVector.has_nn_vec(self._base_vec )) then 
-    local nn_vec = cVector.get_nn_vec(self._base_vec )
-    return nn_vec
-  else
-    return nil
-  end
-end
-
-function lVector:nn_qtype() 
-  if ( cVector.has_nn_vec(self._base_vec )) then 
-    local nn_vec = cVector.get_nn_vec(self._base_vec )
-    return nn_vec:qtype()
-  else
-    return nil
-  end
-end
-
 --=======================================================
 function lVector:put1(sclr, nn_sclr)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
@@ -541,6 +495,7 @@ function lVector:put_chunk(chnk, n, nn_chnk)
       but the vvor will return a nn_chunk for x 
       --]]
       nn_chnk:delete() -- not needed
+    end
   end
 end
 
@@ -562,6 +517,9 @@ end
 
 function lVector:unget_chunk(chnk_idx)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
+  -- cannot get/unget chunk on nn vec, only on primary vec
+  assert(not cVector.is_nn_vec(self._base_vec))
+
   assert(cVector.unget_chunk(self._base_vec, chnk_idx))
   if ( cVector.has_nn_vec(self._base_vec) ) then 
     local nn_vec = cVector.get_nn_vec(self._base_vec)
@@ -571,8 +529,12 @@ end
 
 function lVector:get_chunk(chnk_idx)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
+  -- cannot get/unget chunk on nn vec, only on primary vec
+  assert(not cVector.is_nn_vec(self._base_vec))
+
   assert(type(chnk_idx) == "number")
   assert(chnk_idx >= 0)
+
   local to_generate 
   if ( self:is_eov() ) then
     to_generate = false
@@ -585,6 +547,8 @@ function lVector:get_chunk(chnk_idx)
       error("")
     end
   end
+  --[[ TODO Should we allow get_chunk on nn_vec?
+  -- Current assumption is NO
   if ( to_generate and ( self._generator == nil ) and self._parent ) then 
     -- print(" invoke the parent generator  for " .. self:name())
     if ( not self._parent._generator ) then 
@@ -595,6 +559,7 @@ function lVector:get_chunk(chnk_idx)
     to_generate = false
     -- TODO P1 Put more checks in here
   end
+  --]]
   if ( to_generate ) then -- IF TO GENERATE
     if ( not self._generator ) then 
       print("ERROR: Expected generator for " .. self:name())
@@ -627,22 +592,6 @@ function lVector:get_chunk(chnk_idx)
       if ( nn_buf ) then assert(type(nn_buf) == "CMEM"); nn_buf:delete() end 
       return 0 
     end 
-    --===========================
-    -- release old chunks
-    -- NOTE that memo_len == 0 is meanignless 
-    -- because we always keep the last chunk generated
-    if ( qcfg.debug ) then 
-      if ( ( self._memo_len >= 0 ) and ( num_elements > 0 ) ) then
-        -- Note the extra -1 below. This is to account for
-        -- the put_chunk above which would have incremented self._chunk_num
-        local chunk_to_release = self._chunk_num - 1 - self._memo_len - 1 
-        if ( chunk_to_release >= 0 ) then 
-          local is_found = 
-            cVector.chunk_delete(self._base_vec, chunk_to_release)
-          assert(is_found == false)
-        end
-      end
-    end
     --===========================
     if ( ( self._siblings ) and ( #self._siblings > 0 ) ) then 
       assert(type(self._siblings) == "table")
@@ -762,13 +711,9 @@ end
 
 function lVector:pr(opfile, lb, ub, format)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  -- Note that nn_vec can be number or Vector
-  local nn_vector = self._nn_vec
-  local nn_vec = 0 -- => no null vector
-  if ( nn_vector ~= nil ) then
-    assert(type(nn_vector) == "lVector")
-    nn_vec = nn_vector._base_vec
-    assert(type(nn_vec) == "Vector")
+  local nn_vec;
+  if ( cVector.has_nn_vec(self._base_vec) ) then
+    nn_vec = cVector.get_nn_vec(self._base_vec)
   end
   --=================================
   if ( ( opfile )  and ( #opfile > 0 ) ) then
@@ -798,11 +743,11 @@ function lVector:pr(opfile, lb, ub, format)
     format = ""
   end
   --=================================
-  -- assert(cVector.pr(self._base_vec, self._nn_vec, opfile, lb, ub))
   assert(cVector.pr(self._base_vec, nn_vec, opfile, lb, ub, format))
   return true
 end
 --========================================================
+-- START: Following about meta data 
 function lVector:get_meta(key)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   assert(type(key) == "string")
@@ -839,23 +784,24 @@ function lVector:set_meta(key, value)
   self._meta[key] = value
   return self
 end
+-- STOP : Above about meta data 
 --========================================================
 
--- TODO P2 Why do I have this function????
+-- TODO P2 Do I still need this function?
 function lVector.null()
   return cVector.null()
 end
-
 
 lVector.__gc = function (vec)
   if ( vec._is_dead ) then
     -- print("Vector already dead.")
     return false
   end 
-  local vname = ifxthenxelsey(vec:name(), "anonymous_" .. vec:uqid())
+  local vname = ifxthenyelsez(vec:name(), "anonymous_" .. vec:uqid())
   -- print("GC CALLED on " .. vname)
   --=========================================
-  if ( vec:has_nulls() ) then 
+  if ( vec:has_nn_vec() ) then 
+    -- TODO P1 Needs work 
     local nn_vector = vec._nn_vec
     assert(type(nn_vector) == "lVector")
     if ( nn_vector._is_dead ) then 
@@ -889,31 +835,16 @@ function lVector:delete()
   end 
   local vname = ifxthenxelsey(self:name(), "anonymous:" .. self:uqid())
   -- print("DELETE CALLED on " .. vname)
-  if ( self._parent ) then
-    print("Need to kill parent, not me") -- TODO P1 Think about this
+  -- cannot delete nn_vec, need to delete primary vec
+  if ( cVector.is_nn_vec(self._base_vec) ) then 
+    print("Need to kill parent, not me") 
     return false
   end
-  --=========================================
-  if ( self:has_nulls() ) then 
-    local nn_vector = self._nn_vec
-    assert(type(nn_vector) == "lVector")
-    local vname = ifxthenxelsey(nn_vector:name(), "anonymous:" .. nn_vector:uqid())
-    -- print("DELETE CALLED on nn of " .. vname)
-    if ( nn_vector._is_dead ) then 
-      -- print("nn Vector already dead.")
-    else
-      -- local x = cVector.delete(nn_vector._base_vec)
-      -- TODO Why is x == false?
-      local x = cVector.delete(nn_vector._base_vec)
-      nn_vector._is_dead = true
-      nn_vector._parent = nil
-    end
-  end
-  self._is_dead = true
+  -- delete of primary vector will trigger delete of nn vector if exists
   return  cVector.delete(self._base_vec)
 end
 
-
+-- START: Following for siblings
 function lVector:siblings()
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   if ( not self._siblings ) then return nil end
@@ -928,15 +859,25 @@ function lVector:siblings()
   return T
 end
 
-function lVector:add_sibling(v)
+-- add_sibling is not invoked from outside 
+-- we add v2 to siblings of v1 
+local function add_sibling(v1, v2)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  assert(type(v) == "lVector")
-  if ( not self._siblings ) then 
-    self._siblings = {}
+  -- can add a sibling only when both vectors are empty
+  assert(type(v1) == "lVector")
+  assert(type(v2) == "lVector")
+  assert(v1:num_elements() == 0)
+  assert(v2:num_elements() == 0)
+  --=======================================
+  if ( not v1._siblings ) then 
+    v1._siblings = {}
   end
-  assert(type(self._siblings) == "table")
-  self._siblings[#self._siblings+1] = v
-  return self
+  assert(type(v1._siblings) == "table")
+  -- Cannot add v2 to siblings of v1 if it is already a sibling of v1
+  for k,  v in ipairs(v1._siblings) do 
+    assert(v ~= v2)
+  end 
+  v1._siblings[#v1._siblings+1] = v
 end
 
 function lVector.conjoin(T)
@@ -949,12 +890,13 @@ function lVector.conjoin(T)
     for k2, v2 in ipairs(T) do
       if ( k1 ~= k2 ) then
         assert(v1:max_num_in_chunk() == v2:max_num_in_chunk())
-        v1:add_sibling(v2)
+        add_sibling(v1, v2)
         -- print("Adding " .. v2:name() .. " as sibling of " .. v1:name())
       end
     end
   end
 end
+-- STOP: Above for siblings
 --==================================================
 function lVector:append(x)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
@@ -972,12 +914,12 @@ function lVector:append(x)
   end
   assert(self:is_lma())
   --=================
-  if ( self:has_nulls() ) then assert(x:has_nulls()) end 
-  if ( not self:has_nulls() ) then assert(not x:has_nulls()) end 
+  if ( self:has_nn_vec() ) then assert(x:has_nn_vec()) end 
+  if ( not self:has_nn_vec() ) then assert(not x:has_nn_vec()) end 
   --=================
 
   assert(cVector.append(self._base_vec, x._base_vec))
-  if ( self:has_nulls() ) then 
+  if ( self:has_nn_vec() ) then 
     local nn_vector = self._nn_vec
     local nn_x = x._nn_vec
     assert(cVector.append(nn_vector._base_vec, nn_x._base_vec))
@@ -985,6 +927,7 @@ function lVector:append(x)
   return  true -- TODO P0 MAJOR HACK 
   -- WHY NOT THIS? return self
 end
+-- START: Following for early_free
 -- REGARDING early free. This was motivated by the following case
 -- Say you do z := x where y.
 -- since we produce z in full chunks, we might consume n >1 chunks of x, y
@@ -1015,6 +958,7 @@ function lVector:set_early_freeable(num_lives) -- equivalent of killable()
   assert(cVector.set_num_lives_free(self._base_vec, num_lives))
   return self
 end
+-- STOP: Above for early_free
 --==================================================
 function lVector:self()
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
@@ -1196,12 +1140,6 @@ function lVector:cast(qtype) -- DANGEROUS, USE WITH CAUTION
   return self
 end
 --==================================================
-function lVector:file_info() 
-if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  local file_name, sz = cVector.file_info(self._base_vec)
-  if ( file_name == ffi.NULL ) then return nil, 0 end 
-  return file_name, sz
-end
 --==================================================
 -- START: about memo_len
 -- is_memo()
@@ -1285,7 +1223,7 @@ function lVector:set_nn_vec(nn_vec)
   assert(self:uqid() ~= nn_vec:uqid())
   --===============
   assert(type(nn_vec) == "lVector")
-  assert(nn_vec:has_nulls() == false) -- nn cannot have nulls
+  assert(nn_vec:has_nn_vec() == false) -- nn cannot have nulls
   -- Limitation of current implementation
   assert(nn_vec:is_eov()) 
   assert(self:is_eov()) 
@@ -1301,8 +1239,21 @@ end
 --=========================================================
 -- Following fetch meta data about lVector
 -- These meta data items are not set directly.
--- 1) max_num_in_chunk()
--- 2) width()
+-- o file_info()
+-- o max_num_in_chunk()
+-- o has_gen()
+-- o num_elements()
+-- o width()
+-- o uqid()
+-- o tbsp()
+-- o qtype()
+-- o nn_qtype()
+function lVector:file_info() 
+if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
+  local file_name, sz = cVector.file_info(self._base_vec)
+  if ( file_name == ffi.NULL ) then return nil, 0 end 
+  return file_name, sz
+end
 function lVector:max_num_in_chunk()
   local max_num_in_chunk = cVector.max_num_in_chunk(self._base_vec)
   assert(max_num_in_chunk > 0)
@@ -1322,5 +1273,30 @@ function lVector:num_elements()
   return num_elements
 end
 
+function lVector:has_gen()
+  if ( self._generator ) then return true  else return false end 
+end
+function lVector:uqid()
+  local uqid = cVector.uqid(self._base_vec)
+  assert(type(uqid) == "number"); assert(uqid > 0)
+  return uqid
+end
+--=================================================
+function lVector:tbsp()
+  local tbsp = cVector.tbsp(self._base_vec)
+  assert(type(tbsp) == "number"); assert(tbsp >= 0)
+  return tbsp
+end
+--=================================================
+function lVector:qtype()
+  return cVector.get_qtype(self._base_vec)
+end
+--=================================================
+function lVector:nn_qtype()
+  if ( not cVector.has_nn_vec(self._base_vec) ) then return nil end 
+  local nn_vec = assert(cVector.get_nn_vec(self._base_vec))
+  local nn_qtype = assert(cVector.get_qtype(nn_vec))
+  return  nn_qtype
+end
 --=========================================================
 return lVector

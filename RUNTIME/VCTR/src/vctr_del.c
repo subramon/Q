@@ -27,10 +27,13 @@ vctr_del(
   uint32_t where_found = ~0;
   char *lma_file = NULL;
   char *val_name = NULL;
+  vctr_rs_hmap_key_t nn_key; memset(&nn_key, 0, sizeof(nn_key));
 
   status = vctr_is(tbsp, uqid, ptr_is_found, &where_found); cBYE(status);
   if ( !*ptr_is_found ) { goto BYE; }
   vctr_rs_hmap_val_t vctr_val = g_vctr_hmap[tbsp].bkts[where_found].val;
+  vctr_rs_hmap_val_t *ptr_vctr_val = 
+    &(g_vctr_hmap[tbsp].bkts[where_found].val);
   if ( vctr_val.name[0] != '\0' ) { 
     val_name = strdup(vctr_val.name);
   }
@@ -39,18 +42,23 @@ vctr_del(
   }
   bool is_persist = vctr_val.is_persist;
   bool is_lma     = vctr_val.is_lma;
-  // Following is okay but happens rarely. Happens when you create a
-  // vector but do not eval() it or get_chunk() it 
-  // if ( vctr_val.ref_count == 0 ) { go_BYE(-1); }
-  // TODO Need to understand ref_count better 
-  if ( g_vctr_hmap[tbsp].bkts[where_found].val.ref_count > 0 ) {
-    g_vctr_hmap[tbsp].bkts[where_found].val.ref_count--;
-#ifdef VERBOSE
-    if ( vctr_val.name[0] != '\0' ) { 
-      printf("Not Deleting Vctr: %s because ref count = %u \n", 
-          vctr_val.name); }
-#endif
-    goto BYE;
+  bool has_nn     = vctr_val.has_nn;
+  if ( has_nn ) { 
+    uint32_t nn_uqid = vctr_val.nn_key; 
+    // break connection from primary to nn
+    ptr_vctr_val->has_nn = false; 
+    ptr_vctr_val->nn_key = 0; 
+    // break connection from nn to parent 
+    bool nn_is_found; uint32_t nn_where_found;
+    status = vctr_is(tbsp, nn_uqid, &nn_is_found, &nn_where_found); 
+    cBYE(status);
+    if ( !nn_is_found ) { goto BYE; }
+    vctr_rs_hmap_val_t *ptr_nn_vctr_val = 
+      &(g_vctr_hmap[tbsp].bkts[nn_where_found].val);
+    if ( !ptr_nn_vctr_val->has_parent ) { go_BYE(-1); } 
+    ptr_nn_vctr_val->has_parent = false; 
+    if ( ptr_nn_vctr_val->parent_key == 0 ) { go_BYE(-1); }
+    ptr_nn_vctr_val->parent_key = 0;
   }
 #ifdef VERBOSE
   if ( vctr_val.name[0] != '\0' ) { printf("Deleting Vctr: %s \n", vctr_val.name); }
@@ -73,7 +81,7 @@ vctr_del(
     if ( ( X != NULL ) && ( nX != 0 ) ) { munmap(X, nX); }
     g_vctr_hmap[tbsp].bkts[where_found].val.is_lma = false;
   }
-  if ( ( is_lma ) && ( is_persist ) ) { 
+  if ( ( is_lma ) && ( is_persist ) ) {
     printf("Not deleting file baclup for Vctr: %s \n", vctr_val.name); 
   }
   //-------------------------------------------
@@ -117,6 +125,11 @@ vctr_del(
   status = vctr_usage(tbsp, uqid, &mem_used, &dsk_used); cBYE(status);
   if ( mem_used != 0 ) { go_BYE(-1); } 
   if ( dsk_used != 0 ) { go_BYE(-1); } 
+  // Delete nn vector if one exists
+  if ( has_nn ) { 
+    status = vctr_del(tbsp, nn_key, &is_found); cBYE(status);
+    if ( !is_found ) { go_BYE(-1); }
+  }
 BYE:
   if ( status < 0 ) { 
     printf("Error in deleting Vector %s \n", vctr_val.name);

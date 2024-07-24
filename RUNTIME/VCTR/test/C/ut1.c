@@ -83,18 +83,18 @@ main(
   l_chnk_cnt = chnk_cnt(tbsp); 
   if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
   // check empty name  -----------------------------
-  status = vctr_get_set(tbsp, uqid, "name", "get", NULL, NULL, &name); 
+  status = vctr_get_set(tbsp, uqid, "name", "get", NULL, NULL, NULL, &name); 
   cBYE(status);
   if ( name == NULL ) { go_BYE(-1); }
   if ( *name != '\0' ) { go_BYE(-1); }
   free_if_non_null(name);
   // set name  -----------------------------
   status = vctr_get_set(tbsp, uqid, "name", "set", 
-      NULL, NULL, "test name");  
+      NULL, NULL, "test name", NULL); 
   cBYE(status);
   // check good name  -----------------------------
   status = vctr_get_set(tbsp, uqid, "name", "get", 
-      NULL, NULL, &name);
+      NULL, NULL, NULL, &name);
   cBYE(status);
   if ( name == NULL ) { go_BYE(-1); }
   if ( strcmp(name, "test name") != 0 ) { go_BYE(-1); }
