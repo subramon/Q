@@ -102,7 +102,8 @@ static int l_vctr_is_error( lua_State *L) {
   bool brslt; 
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vctr_is_error(ptr_v->tbsp, ptr_v->uqid, &brslt); cBYE(status);
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "error", "get",
+      &brslt, NULL, NULL, NULL); cBYE(status);
   lua_pushboolean(L, brslt);
   return 1;
 BYE:
@@ -115,7 +116,8 @@ static int l_vctr_set_error( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vctr_set_error(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "error", "set",
+      NULL, NULL, NULL, NULL); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -128,8 +130,9 @@ static int l_vctr_set_name( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  const char * const name  = luaL_checkstring(L, 2);
-  status = vctr_set_name(ptr_v->tbsp, ptr_v->uqid, name); cBYE(status);
+  const char * name  = luaL_checkstring(L, 2);
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "set", "name",
+      NULL, NULL, &name, NULL); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -144,7 +147,7 @@ static int l_vctr_get_qtype( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int64_t qtype;
   status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "qtype", "get",
-      NULL, &qtype, NULL); 
+      NULL, &qtype, NULL, NULL); 
   cBYE(status);
   lua_pushstring(L, get_str_qtype(qtype)); 
   return 1;
@@ -227,9 +230,12 @@ static int l_vctr_get_name( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  char * name = vctr_get_name(ptr_v->tbsp, ptr_v->uqid); 
-  if ( name == NULL ) { goto BYE; } // silent failure
+  char *name = NULL;
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "name", "get",
+      NULL, NULL, NULL, &name);
+  cBYE(status); 
   lua_pushstring(L, name); // 99% sure that no strdup needed
+  free_if_non_null(name); // 99% sure that name needs to be freed :-)
   return 1;
 BYE:
   lua_pushnil(L);
@@ -385,7 +391,7 @@ static int l_vctr_width( lua_State *L) {
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   int64_t width;
   status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "width", "get",
-      NULL, &width, NULL); 
+      NULL, &width, NULL, NULL); 
   cBYE(status);
   lua_pushnumber(L, width);
   return 1;
@@ -478,7 +484,7 @@ static int l_vctr_is_lma( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool b_is_lma; 
-  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "is_lma", "get",
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "lma", "get",
       &b_is_lma, NULL, NULL);
   lua_pushboolean(L, b_is_lma);
   return 1;
@@ -494,8 +500,8 @@ static int l_vctr_is_eov( lua_State *L) {
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool b_is_eov; 
-  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "is_eov", "get",
-      &b_is_eov, NULL, NULL);
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "eov", "get",
+      &b_is_eov, NULL, NULL, NULL);
   lua_pushboolean(L, b_is_eov);
   return 1;
 BYE:
@@ -747,7 +753,7 @@ static int l_vctr_max_num_in_chunk( lua_State *L) {
   int64_t max_num_in_chunk;;
 
   status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "max_num_in_chunk",
-      "get", NULL, &max_num_in_chunk, NULL);
+      "get", NULL, &max_num_in_chunk, NULL, NULL);
   cBYE(status);
 
   lua_pushnumber(L, max_num_in_chunk);
@@ -946,9 +952,12 @@ static int l_vctr_free( lua_State *L) {
   }
   status = vctr_del(ptr_v->tbsp, ptr_v->uqid, &is_found); 
   if ( status < 0 ) { 
-    char * name = vctr_get_name(ptr_v->tbsp, ptr_v->uqid); 
-    if ( name == NULL ) { go_BYE(-1); } 
+    char * name = NULL;
+    status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "name", NULL, 
+        NULL, NULL, NULL, &name); 
+    cBYE(status);
     printf("Error deleting vector [%s]\n", name);
+    free_if_non_null(name);
   }
   cBYE(status); 
   lua_pushboolean(L, is_found);
@@ -1167,8 +1176,9 @@ static int l_vctr_add( lua_State *L)
       is_early_freeable, num_free_ignore, 
       &ptr_v->uqid); 
   cBYE(status);
-  if ( ( str_name != NULL ) && ( * str_name != '\0' ) ) {
-    status = vctr_set_name(ptr_v->tbsp, ptr_v->uqid, str_name); cBYE(status);
+  if ( str_name != NULL ) {
+    status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "name", "set",
+        NULL, NULL, str_name, NULL); cBYE(status);
   }
   if ( ( file_name != NULL ) && ( *file_name != '\0' ) ) {
     uint64_t num_elements = 0;

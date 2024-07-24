@@ -101,7 +101,7 @@ vctr_del(
         &chnk_where_found);
     cBYE(status);
     // chunk must exist unless vector is in error state 
-    if ( !vctr_val.is_err ) { if ( !chnk_is_found ) { go_BYE(-1); } }
+    if ( !vctr_val.is_error ) { if ( !chnk_is_found ) { go_BYE(-1); } }
     status = chnk_del(tbsp, uqid, chnk_idx, is_persist); 
     cBYE(status);
     uint32_t new_nitems = g_chnk_hmap[tbsp].nitems;

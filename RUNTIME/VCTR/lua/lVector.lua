@@ -54,6 +54,10 @@ register_type(lVector, "lVector")
 function lVector:check()
   assert(cVector.chk(self._base_vec))
   local nn_status = true
+  -- nn vector cannot have a generator 
+  if ( cVector.is_null_vec(self._base_vec) ) then 
+    assert(self._generator == nil)
+  end
   if ( cVector.has_null_vec(self._base_vec) ) then 
     local nn_vec = assert(cVector.get_null_vec(self._base_vec))
     assert(nn_vector._chunk_num == self._chunk_num)
@@ -88,16 +92,6 @@ function lVector:check()
   return true
 end
 
-function lVector:width()
-  local width = assert(cVector.width(self._base_vec))
-  assert(width > 0)
-  return width
-end
-
-function lVector:max_num_in_chunk()
-  local max_num_in_chunk = cVector.max_num_in_chunk(self._base_vec)
-  return max_num_in_chunk
-end
 
 function lVector:chnk_incr_num_readers(chnk_idx)
   local num_readers = cVector.chnk_incr_num_readers(self._base_vec, chnk_idx)
@@ -128,19 +122,36 @@ end
 
 function lVector:num_chunks()
   local num_chunks = cVector.num_chunks(self._base_vec)
+  assert(type(num_chunks) == "number")
+  assert(num_chunks >= 0)
   return num_chunks
 end
 
-function lVector:num_elements()
-  local num_elements = cVector.num_elements(self._base_vec)
-  return num_elements
-end
-
+-- START: Following about name 
 function lVector:name()
   local name = cVector.name(self._base_vec)
-  if ( not name ) then return "anonymous", "no name" end 
   return name
 end
+
+function lVector:set_name(name, nn_name)
+  if ( name == nil ) then name = "" end 
+  assert(type(name) == "string")
+  if ( nn_name == nil ) then 
+    if ( name == "" ) then 
+      nn_name = ""
+    else
+      nn_name = "nn_" .. name
+    end 
+  end
+  assert(type(nn_name) == "string")
+  assert(cVector.set_name(self._base_vec, name))
+  if ( cVector.has_nn_vec(self._base_vec) ) then 
+    local nn_vec = cVector.get_nn_vec(self._base_vec)
+    assert(cVector.set_name(nn_vec, nn_name))
+  end
+  return self
+end
+-- STOP : Following about name 
 
 function lVector:is_error()
   local x, y = cVector.is_error(self._base_vec)
@@ -152,16 +163,6 @@ function lVector:set_error()
   return self
 end
 
-function lVector:set_name(name)
-  if ( type(name) == "nil" ) then name = "" end 
-  assert(type(name) == "string")
-  local status = cVector.set_name(self._base_vec, name)
-  if ( self._nn_vec ) then 
-    local nn_vector = self._nn_vec
-    local status = cVector.set_name(nn_vector._base_vec, "nn_" .. name)
-  end
-  return self
-end
 function lVector:drop(level)
   assert(type(level) == "number")
   assert(cVector.drop_l1_l2(self._base_vec, level))
@@ -178,45 +179,11 @@ function lVector:persist()
   local status = cVector.persist(self._base_vec)
   return self
 end
-function lVector:eov()
-  local status = cVector.eov(self._base_vec)
-  assert(status)
-  local nn_vector = self._nn_vec
-  if ( nn_vector ) then
-    assert(type(nn_vector) == "lVector")
-    if ( nn_vector ) then 
-      status = cVector.eov(nn_vector._base_vec) 
-      assert(status)
-    end 
-  end
-  self._generator = nil -- IMPORTANT, we no longer have a generator 
-  return self
-end
-function lVector:drop_nulls()
-  if ( not self._nn_vec ) then return self end -- quiet quick return
-  -- Following is Too aggressive. 
-  -- Somebody else may be using it using get_nulls()
-  -- local nn_vector = self._nn_vec; nn_vector:delete() 
-  -- However, we need to break link from  nn_vector to self
-  local nn_vector = self._nn_vec; nn_vector._parent = nil
-  self._nn_vec = nil
-  return self
-end
-
-function lVector:has_nulls()
-  if ( self._nn_vec ) then return true else return false end 
-end
 
 function lVector:is_lma()
   local b_is_lma = cVector.is_lma(self._base_vec)
   assert(type(b_is_lma) == "boolean")
   return b_is_lma
-end
-
-function lVector:is_eov()
-  local b_is_eov = cVector.is_eov(self._base_vec)
-  assert(type(b_is_eov) == "boolean")
-  return b_is_eov
 end
 
 function lVector:nop()
@@ -453,9 +420,9 @@ function lVector.new(args)
   --=================================================
   return vector
 end
--- In first implementation, get_nulls() would also drop_nulls()
--- Now, you have to drop_nulls() explicitly if you want to
-function lVector:get_nulls() 
+-- In first implementation, get_nn_vec() would also drop_nn_vec()
+-- Now, you have to drop_nn_vec() explicitly if you want to
+function lVector:get_nn_vec() 
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   if ( cVector.has_nn_vec(self._base_vec )) then 
     local nn_vec = cVector.get_nn_vec(self._base_vec )
@@ -474,27 +441,6 @@ function lVector:nn_qtype()
   end
 end
 
-function lVector:set_nn_vec(nn_vec)
-  if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  -- must not have an nn_vec currently
-  assert(not cVector.has_nn_vec(self._base_vec))
-  -- cannot set nn_vec to an nn_vec
-  assert(not cVector.is_nn_vec(self._base_vec))
-  -- Limitation of current implementation
-  assert(self:is_eov()) 
-  -- input nn_vec cannot be the nn vec for another vector
-  assert(not cVector.is_nn_vec(nn_vec))
-  --===============
-  assert(type(nn_vec) == "lVector")
-  assert(nn_vec:has_nulls() == false) -- nn cannot have nulls
-  assert(nn_vec:is_eov()) -- Limitation of current implementation
-  assert(nn_vec:num_elements() == self:num_elements()) -- sizes must match
-  assert(nn_vec:qtype() == "BL") -- Limitation, B1 not supported
-
-  -- after all checks have passed, we can do the real work 
-  assert(cVector.set_nn_vec(self._base_vec, nn_vec._base_vec))
-  return self 
-end
 --=======================================================
 function lVector:put1(sclr, nn_sclr)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
@@ -591,7 +537,7 @@ function lVector:put_chunk(chnk, n, nn_chnk)
     if ( type(nn_chnk) == "CMEM" ) then
       --[[ this can happen if we have dropped_nulls for this vector.
       Suppose we did x = Q.vvor(y, z) where y and z have nulls
-      and then we did x:drop_nulls()
+      and then we did x:drop_nn_vec()
       but the vvor will return a nn_chunk for x 
       --]]
       nn_chnk:delete() -- not needed
@@ -1163,6 +1109,10 @@ function lVector:unget_lma_write()
   return self
 end
 --==================================================
+-- START: Following about killable
+-- (a) get_killable()
+-- (b) kill()
+-- (c) set_killable
 -- use this function to set kill-ability of vector 
 function lVector:set_killable(val)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
@@ -1207,38 +1157,8 @@ function lVector:kill()
   end
   return success, nn_success
 end
+-- STOP: Above about killable
 --==================================================
---[[ We are not reay for prefetch. Needs to be done in a separate
---thread so as to not block the main thread 
-function lVector:prefetch(chnk_idx)
-  assert(type(chnk_idx) == "number")
-  local nn_x, nn_n
-  local exists, status = cVector.prefetch(self._base_vec, chnk_idx)
-  
-  if ( exists and self._nn_vec ) then 
-    local nn_vector = self._nn_vec
-    local nn_exists, status=cVector.prefetch(nn_vector._base_vec, chnk_idx)
-    assert(status == 0)
-    assert(nn_exists) -- if chunk exists for base, must exist for nn 
-  end
-  return exists
-  -- exists tells us whether such a chunk existed 
-  -- Ideally, we want prefetch to be just an advisory i.e.,
-  -- if there is not enough memory, then it should fail silently
-  -- TODO P3: We have not implemented those smarts. 
-  -- So, if the chunk exists, it will be loaded into memory 
-end
---==================================================
-function lVector:unprefetch(chnk_idx)
-  assert(type(chnk_idx) == "number")
-  local nn_x, nn_n
-  cVector.unprefetch(self._base_vec, chnk_idx)
-  if ( self._nn_vec ) then 
-    local nn_vector = self._nn_vec
-    cVector.prefetch(nn_vector._base_vec, chnk_idx)
-  end
-end
---]]
 --==================================================
 function lVector:drop_mem(level, chnk_idx)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
@@ -1283,6 +1203,10 @@ if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   return file_name, sz
 end
 --==================================================
+-- START: about memo_len
+-- is_memo()
+-- get_memo_len()
+-- set_memo()
 function lVector:is_memo()
   local is_memo = assert(cVector.is_memo(self._base_vec))
   assert(type(is_memo) == "boolean")
@@ -1295,7 +1219,7 @@ function lVector:get_memo_len()
 end
 function lVector:set_memo(memo_len)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  if ( type(memo_len) == "nil" ) then 
+  if ( memo_len == nil ) then 
     memo_len = qcfg.memo_len
   end
   assert(type(memo_len == "number"))
@@ -1306,5 +1230,97 @@ function lVector:set_memo(memo_len)
   end
   return self
 end
+-- STOP : about memo_len
 --=================================================
+-- START : about eov()
+function lVector:eov()
+  -- cannot call eov on nn_vec, only on primary vec
+  assert(not  cVector.is_nn_vec(self._base_vec )) 
+  assert(cVector.eov(self._base_vec))
+  self._generator = nil -- IMPORTANT, we no longer have a generator 
+
+  if ( cVector.has_nn_vec(self._base_vec )) then 
+    local nn_vec = cVector.get_nn_vec(self._base_vec )
+    assert(cVector.eov(nn_vec))
+  end
+  return self
+end
+function lVector:is_eov()
+  local b_is_eov = cVector.is_eov(self._base_vec)
+  assert(type(b_is_eov) == "boolean")
+  return b_is_eov
+end
+-- STOP : about eov()
+
+--====================================================================
+-- These functions deal with nn vec
+-- brk_nn_vec
+-- get_nn_vec
+-- has_nn_vec
+-- is_nn_vec
+-- set_nn_vec
+function lVector:brk_nn_vec()
+  assert(cVector.brk_nn_vec(self._base_vec))
+  return self
+end
+function lVector:get_nn_vec()
+  return cVector.get_nn_vec(self._base_vec)
+end
+function lVector:has_nn_vec()
+  return cVector.has_nn_vec(self._base_vec)
+end
+function lVector:is_nn_vec()
+  return cVector.is_nn_vec(self._base_vec)
+end
+function lVector:set_nn_vec(nn_vec)
+  if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
+  -- must not have an nn_vec currently
+  assert(not cVector.has_nn_vec(self._base_vec))
+  -- cannot set nn_vec to an nn_vec
+  assert(not cVector.is_nn_vec(self._base_vec))
+  -- Limitation of current implementation
+  -- input nn_vec cannot be the nn vec for another vector
+  assert(not cVector.is_nn_vec(nn_vec))
+  -- cannot be your own nn_vec 
+  assert(self:uqid() ~= nn_vec:uqid())
+  --===============
+  assert(type(nn_vec) == "lVector")
+  assert(nn_vec:has_nulls() == false) -- nn cannot have nulls
+  -- Limitation of current implementation
+  assert(nn_vec:is_eov()) 
+  assert(self:is_eov()) 
+  --================
+  assert(nn_vec:num_elements() == self:num_elements()) -- sizes must match
+  assert(nn_vec:qtype() == "BL") -- Limitation, B1 not supported
+
+  -- after all checks have passed, we can do the real work 
+  assert(cVector.set_nn_vec(self._base_vec, nn_vec._base_vec))
+  return self 
+end
+
+--=========================================================
+-- Following fetch meta data about lVector
+-- These meta data items are not set directly.
+-- 1) max_num_in_chunk()
+-- 2) width()
+function lVector:max_num_in_chunk()
+  local max_num_in_chunk = cVector.max_num_in_chunk(self._base_vec)
+  assert(max_num_in_chunk > 0)
+  return max_num_in_chunk
+end
+
+function lVector:width()
+  local width = assert(cVector.width(self._base_vec))
+  assert(width > 0)
+  return width
+end
+
+function lVector:num_elements()
+  local num_elements = cVector.num_elements(self._base_vec)
+  assert(type(num_elements) == "number")
+  assert(num_elements >= 0)
+  return num_elements
+end
+
+--=========================================================
 return lVector

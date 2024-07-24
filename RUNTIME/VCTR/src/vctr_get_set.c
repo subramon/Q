@@ -22,7 +22,8 @@ vctr_get_set(
     const char  * const get_or_set,
     bool *ptr_bl,
     int64_t *ptr_i8,
-    char **ptr_str
+    const char ** const ptr_in_str,
+    char **ptr_out_str
     )
 {
   int status = 0;
@@ -30,8 +31,14 @@ vctr_get_set(
   get_set_t mode;
   if ( meta == NULL ) { go_BYE(-1); }
   if ( get_or_set == NULL ) { go_BYE(-1); }
-  if ( strcmp(get_or_set, "get") == 0 ) { mode = get; }
-  else if ( strcmp(get_or_set, "set") == 0 ) { mode = set; }
+
+  if ( strcmp(get_or_set, "get") == 0 ) { 
+    mode = get; 
+  }
+  else if ( strcmp(get_or_set, "set") == 0 ) { 
+    if ( tbsp != 0 ) { go_BYE(-1); } 
+    mode = set; 
+  }
   else { go_BYE(-1); }
 
   vctr_rs_hmap_key_t key = vctr_uqid;
@@ -40,7 +47,10 @@ vctr_get_set(
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
   vctr_rs_hmap_val_t *ptr_val = &(g_vctr_hmap[tbsp].bkts[where_found].val);
-  if ( strcmp(meta, "is_eov") == 0 ) { 
+  // do not access/modify vector in error state 
+  if ( val.is_error ) { go_BYE(-1); } 
+
+  if ( strcmp(meta, "eov") == 0 ) { 
     switch ( mode ) { 
       case get : *ptr_bl = val.is_eov; break;
                  // Note that you never set is_eov := false
@@ -48,7 +58,22 @@ vctr_get_set(
       default : go_BYE(-1); break;
     }
   }
-  else if ( strcmp(meta, "is_persist") == 0 ) { 
+  else if ( strcmp(meta, "error") == 0 ) { 
+    switch ( mode ) { 
+      case get : *ptr_bl = val.is_error; break;
+                 // Note that you never set is_error := false
+      case set : ptr_val->is_error = true; break; 
+      default : go_BYE(-1); break;
+    }
+  }
+  else if ( strcmp(meta, "lma") == 0 ) { 
+    switch ( mode ) { 
+      case get : *ptr_bl = val.is_lma; break;
+      // NOT HERE case set : ptr_val->is_error = *ptr_bl; break; 
+      default : go_BYE(-1); break;
+    }
+  }
+  else if ( strcmp(meta, "persist") == 0 ) { 
     switch ( mode ) { 
       case get : *ptr_bl = val.is_persist; break;
       case set : ptr_val->is_persist = *ptr_bl; break;
@@ -92,9 +117,13 @@ vctr_get_set(
   else if ( strcmp(meta, "name") == 0 ) { 
     switch ( mode ) { 
       case get : 
-        *ptr_str = strdup(val.name);
+        *ptr_out_str = strdup(val.name);
         break;
       case set : 
+        if ( ptr_in_str == NULL ) { go_BYE(-1); }
+        if ( strlen(*ptr_in_str) > MAX_LEN_VCTR_NAME ) { go_BYE(-1); }
+        strcpy(ptr_val->name, *ptr_in_str);
+
         // TODO 
         break;
       default : go_BYE(-1); break;

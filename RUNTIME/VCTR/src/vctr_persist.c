@@ -25,7 +25,7 @@ vctr_persist(
   status = vctr_rs_hmap_get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
-  if ( val.is_err ) { go_BYE(-1); }
+  if ( val.is_error ) { go_BYE(-1); }
   // idempontent if ( val.is_persist ) { go_BYE(-1); }
   if ( val.is_killable ) { go_BYE(-1); } 
   if ( val.is_early_freeable ) { go_BYE(-1); } 

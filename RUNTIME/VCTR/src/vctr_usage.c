@@ -106,7 +106,7 @@ vctr_hogs(
     uint64_t mem, dsk; 
     status = vctr_usage(tbsp, vctr_uqid, &mem, &dsk); cBYE(status);
     status = vctr_get_set(tbsp, vctr_uqid, "name", "get", NULL, 
-        NULL, &name); 
+        NULL, NULL, &name); 
     cBYE(status);
     if ( ( mode == NULL ) || ( *mode == '\0' ) ) { 
       printf("%u:[%s]%" PRIu64",%"PRIu64"\n",

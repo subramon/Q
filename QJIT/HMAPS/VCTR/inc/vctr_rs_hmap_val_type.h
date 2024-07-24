@@ -37,7 +37,7 @@ typedef struct _vctr_meta_t {
   bool is_persist;   // l2 should not be deleted on vector delete
 
   bool is_writable;   // false => no changes allowed
-  bool is_err; // true => error in creating vector => all the normal checks will not apply.
+  bool is_error; // true => error in creating vector => all the normal checks will not apply.
   bool is_lma; // true => there exists a file that allows Linear Memory Access (lma) 
 
   int num_readers; // for lma 

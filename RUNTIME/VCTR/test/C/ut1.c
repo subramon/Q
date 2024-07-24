@@ -19,6 +19,7 @@
 #include "vctr_add.h" 
 #include "vctr_chk.h" 
 #include "vctr_is.h" 
+#include "vctr_get_set.h" 
 #include "vctr_del.h" 
 #include "vctr_cnt.h" 
 #include "vctr_name.h" 
@@ -50,7 +51,8 @@ main(
 {
   int status;
   char *buf = NULL; int tbsp = 0;
-  bool b; uint32_t where; int l_vctr_cnt, l_chnk_cnt; char *name = NULL;
+  bool b; uint32_t where; int l_vctr_cnt, l_chnk_cnt; 
+  char *name = NULL;
 
   if ( argc != 1 ) { go_BYE(-1); }
 
@@ -81,15 +83,22 @@ main(
   l_chnk_cnt = chnk_cnt(tbsp); 
   if ( l_chnk_cnt != 0 ) { go_BYE(-1); }
   // check empty name  -----------------------------
-  name = vctr_get_name(tbsp, uqid); 
+  status = vctr_get_set(tbsp, uqid, "name", "get", NULL, NULL, &name); 
+  cBYE(status);
   if ( name == NULL ) { go_BYE(-1); }
   if ( *name != '\0' ) { go_BYE(-1); }
+  free_if_non_null(name);
   // set name  -----------------------------
-  status = vctr_set_name(tbsp, uqid, "test name");  cBYE(status);
+  status = vctr_get_set(tbsp, uqid, "name", "set", 
+      NULL, NULL, "test name");  
+  cBYE(status);
   // check good name  -----------------------------
-  name = vctr_get_name(tbsp, uqid); 
+  status = vctr_get_set(tbsp, uqid, "name", "get", 
+      NULL, NULL, &name);
+  cBYE(status);
   if ( name == NULL ) { go_BYE(-1); }
   if ( strcmp(name, "test name") != 0 ) { go_BYE(-1); }
+  free_if_non_null(name);
   // add a few elements to the vector
   for ( uint32_t i = 0; i < 2*vctr_chnk_size+1; i++ ) { 
     float f4 = i+1;
@@ -156,5 +165,6 @@ main(
 BYE:
   status = free_globals(); if ( status < 0 ) { WHEREAMI; } 
   free_if_non_null(buf); 
+  free_if_non_null(name); 
   return status;
 }
