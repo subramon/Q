@@ -17,7 +17,8 @@ tests.t_clone = function()
   collectgarbage("stop")
   assert((lgutils.mem_used() == 0) and (lgutils.dsk_used() == 0))
   local x = Q.seq({ len = len, start = 1, by = 1, qtype = qtype, 
-    name = "x", max_num_in_chunk = max_num_in_chunk, memo_len = -1 })
+    name = "x", max_num_in_chunk = max_num_in_chunk, 
+    is_memo = false, memo_len = 0  })
   x:eval()
   x:chunks_to_lma()
   x:nop()
@@ -47,14 +48,11 @@ tests.t_clone = function()
     local nx, cx = x:get_chunk(i-1)
     assert(type(cx) == "CMEM")
     assert(type(nx) == "number")
-    x:unget_chunk(i-1)
 
     local ny, cy = y:get_chunk(i-1)
     assert(type(cy) == "CMEM")
     assert(type(ny) == "number")
-    y:unget_chunk(i-1)
 
-    -- TODO Bug below: pointer is wrong 
     local xptr = get_ptr(cx, "int32_t *")
     local yptr = get_ptr(cy, "int32_t *")
     for j = 1, nx do
@@ -67,6 +65,9 @@ tests.t_clone = function()
     else
       assert(nx == x:max_num_in_chunk())
     end
+    -- release chunks acquired
+    x:unget_chunk(i-1)
+    y:unget_chunk(i-1)
   end
 
   for k = 1, nC do assert(x:num_readers(k-1) == 0) end 

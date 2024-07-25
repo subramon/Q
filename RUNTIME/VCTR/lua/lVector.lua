@@ -63,7 +63,6 @@ function lVector:check()
   end
   if ( cVector.has_nn_vec(self._base_vec) ) then 
     local nn_vec = assert(cVector.get_null_vec(self._base_vec))
-    assert(nn_vector._chunk_num == self._chunk_num)
     assert(cVector.min_chnk_idx(self._base_vec) == 
       cVector.min_chnk_idx(nn_vec))
     assert(cVector.max_chnk_idx(self._base_vec) == 
@@ -241,10 +240,10 @@ local function chnk_clone(v) -- for case when no lma
   return w
 end
 function lVector:clone()
-  -- current limitation, clone needs lma, cannot handle chunks 
   if ( not self:is_lma() ) then
     return chnk_clone(self)
   end
+  assert(self:is_eov())
   local vargs = {}
   local file_name, _ = self:file_info()
   -- make a unique name 
@@ -253,11 +252,20 @@ function lVector:clone()
   vargs.file_name = file_name .. tostring(t)
   assert(cutils.copyfile(file_name, vargs.file_name))
   --=================
-  vargs.name = "clone_" 
-  if ( self:name() ) then vargs.name = vargs.name .. self:name() end 
+  vargs.name = "clone_"
+  if ( self:name() ) then 
+    vargs.name = vargs.name .. self:name() 
+  else 
+    vargs.name = vargs.name .. self:uqid()
+  end 
   vargs.qtype = self:qtype()
   vargs.max_num_in_chunk = self:max_num_in_chunk()
   vargs.num_elements = self:num_elements()
+  -- following because is_eov == trye
+  vargs.is_memo = false; vargs.memo_len = 0
+  vargs.is_killable = false; vargs.num_kill_ignore = 0
+  vargs.is_early_freeable = false; vargs.num_free_ignore = 0
+  -- for k, v in pairs(vargs) do print(k, v) end 
   local z = lVector(vargs)
 
   -- clone the nn vector if there is one 
@@ -312,62 +320,62 @@ function lVector.new(args)
   end
   --=================================================
 
-  vector._siblings = {} -- no conjoined vectors
-  vector._chunk_num = 0 -- next chunk to ask for 
   if ( args.gen ) then vector._generator = args.gen end 
   --=================================================
   assert(type(args.qtype) == "string")
-  vector._qtype = args.qtype
   --=================================================
   if ( args.max_num_in_chunk ) then 
-    vector._max_num_in_chunk = args.max_num_in_chunk
+    assert(type(args.max_num_in_chunk) == "number")
+    assert(args.max_num_in_chunk > 0)
+    assert( math.floor(args.max_num_in_chunk / 64 ) == 
+            math.ceil(args.max_num_in_chunk / 64 ) )
   else
-    vector._max_num_in_chunk = qcfg.max_num_in_chunk
-    -- NOTE: Following needed for cVector.add*
-    args.max_num_in_chunk = vector._max_num_in_chunk 
+    args.max_num_in_chunk = qcfg.max_num_in_chunk
   end
-  assert(type(vector._max_num_in_chunk) == "number")
-  assert(vector._max_num_in_chunk > 0)
-  assert( math.floor(vector._max_num_in_chunk / 64 ) == 
-          math.ceil(vector._max_num_in_chunk / 64 ) )
   --=================================================
-  if ( type(args.is_memo) == "boolean" ) then 
+  if ( args.is_memo ~= nil ) then 
+    assert(type(args.is_memo) == "boolean")
+  end
+  if ( args.memo_len ~= nil ) then 
     assert(type(args.memo_len) == "number")
-    vector._is_memo  = args.is_memo
-    vector._memo_len = args.memo_len
+  end
+  if ( type(args.memo_len) == "number" ) then 
+    if ( args.memo_len <= 0 ) then 
+      if ( args.is_memo == nil ) then 
+        args.is_memo = false
+      else
+        assert( args.is_memo == false)
+      end
+    else
+      if ( args.is_memo == nil ) then 
+        args.is_memo = true
+      else
+        assert( args.is_memo == true)
+      end
+    end
   else
-    vector._is_memo  = qcfg.is_memo
-    vector._memo_len = qcfg.memo_len
-    -- NOTE: Following needed for cVector.add*
     args.is_memo  = qcfg.is_memo
     args.memo_len = qcfg.memo_len
   end
   --=================================================
   if ( type(args.is_killable) == "boolean" ) then 
     assert(type(args.num_kill_ignore) == "number")
-    vector._is_killable  = args.is_killable
-    vector._num_kill_ignore = args.num_kill_ignore
+    assert(args.num_kill_ignore >= 0)
   else
-    vector._is_killable  = qcfg.is_killable
-    vector._num_kill_ignore = qcfg.num_kill_ignore
-    -- NOTE: Following needed for cVector.add*
     args.is_killable  = qcfg.is_killable
     args.num_kill_ignore = qcfg.num_kill_ignore
   end
   --=================================================
   if ( type(args.is_early_freeable) == "boolean" ) then 
     assert(type(args.num_free_ignore) == "number")
-    vector._is_early_freeable  = args.is_early_freeable
-    vector._num_free_ignore = args.num_free_ignore
+    assert(args.num_free_ignore >= 0)
   else
-    vector._is_early_freeable  = qcfg.is_early_freeable
-    vector._num_free_ignore = qcfg.num_free_ignore
-    -- NOTE: Following needed for cVector.add*
     args.is_early_freeable  = qcfg.is_early_freeable
     args.num_free_ignore = qcfg.num_free_ignore
   end
   --=================================================
   vector._base_vec = assert(cVector.add(args))
+  local nn_vector
   if ( args.has_nulls ) then 
     -- assemble args for nn Vector 
     local nn_args = {}
@@ -375,32 +383,28 @@ function lVector.new(args)
     if ( args.nn_qtype ) then 
       assert(type(args.nn_qtype) == "string")
       nn_qtype = args.nn_qtype
-      assert((nn_qtype == "B1") or (nn_qtype == "BL"))
     end
     nn_args.qtype = nn_qtype
+    assert((nn_qtype == "B1") or (nn_qtype == "BL"))
     if ( args.name ) then 
       nn_args.name = "nn_" .. args.name 
     end
-    if ( args.max_num_in_chunk ) then 
-      nn_args.max_num_in_chunk  = args.max_num_in_chunk 
-    end
-    if ( args.memo_len ) then 
-      nn_args.memo_len  = args.memo_len 
-    end
+    -- following must be in sync with primary vector 
+    nn_args.max_num_in_chunk  = args.max_num_in_chunk 
+    nn_args.is_memo   = args.is_memo 
+    nn_args.memo_len  = args.memo_len 
 
     nn_args.is_killable  = args.is_killable 
-    nn_args.num_lives_kill  = args.num_lives_kill 
+    nn_args.num_kill_ignore  = args.num_kill_ignore 
 
     nn_args.is_early_freeable  = args.is_early_freeable 
-    nn_args.num_lives_free  = args.num_lives_free 
+    nn_args.num_free_ignore  = args.num_free_ignore 
+    -- above must be in sync with primary vector 
     ----------------------------------- 
-    local nn_vector = setmetatable({}, lVector)
-    nn_vector._base_vec = assert(cVector.add1(nn_args))
-    nn_vector._qtype = nn_qtype
-    nn_vector._parent = vector -- set parent for nn vector 
-    nn_vector._chunk_num = 0
-
-    vector._nn_vec = nn_vector 
+    nn_vector = setmetatable({}, lVector)
+    -- for k, v in pairs(nn_args) do print(k, v) end 
+    nn_vector._base_vec = assert(cVector.add(nn_args))
+    assert(cVector.set_nn_vec(vector._base_vec, nn_vector._base_vec))
   end 
   --=================================================
   return vector
@@ -485,7 +489,16 @@ function lVector:put_chunk(chnk, n, nn_chnk)
   local has_nn_vec = cVector.has_nn_vec(self._base_vec)
   -- nn_col can be provided only of vector has nulls
   if ( nn_chnk ) then 
-    assert(has_nn_vec == true)
+    -- assert(has_nn_vec == true)
+    -- Above assert is too agressive. This situation happens
+    -- when the vector is created with nulls but we decide 
+    -- to drop the nulls after that e.g.
+    -- w = Q.vveq(x, y) -- w will have nulls if x or y do
+    -- But say we now do
+    -- w:drop_nn_vec()
+    -- when we do 
+    -- v = Q.sum(w)
+    -- we will get nn_chnks for w but we won't put it 
   end
   -- if vector has nulls, nn_chnk must be provided 
   -- if vector has nulls, nn vector must be of type BL
@@ -527,8 +540,6 @@ end
 
 function lVector:unget_chunk(chnk_idx)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  -- cannot get/unget chunk on nn vec, only on primary vec
-  assert(not cVector.is_nn_vec(self._base_vec))
 
   assert(cVector.unget_chunk(self._base_vec, chnk_idx))
   if ( cVector.has_nn_vec(self._base_vec) ) then 
@@ -539,8 +550,8 @@ end
 
 function lVector:get_chunk(chnk_idx)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  -- cannot get/unget chunk on nn vec, only on primary vec
-  assert(not cVector.is_nn_vec(self._base_vec))
+  local vname = ifxthenyelsez(self:name(), "anonymous_" .. self:uqid())
+  -- print("getting chunk " .. chnk_idx .. " for " .. vname)
 
   assert(type(chnk_idx) == "number")
   assert(chnk_idx >= 0)
@@ -553,6 +564,8 @@ function lVector:get_chunk(chnk_idx)
   else
     if ( ( num_elements == 0 ) or ( chnk_idx == (max_chnk_idx+1) ) ) then 
       to_generate = true
+      -- cannot have generator on on nn vec, only on primary vec
+      assert(not cVector.is_nn_vec(self._base_vec))
     else
       to_generate = false
     end
@@ -589,7 +602,7 @@ function lVector:get_chunk(chnk_idx)
       self:put_chunk(buf, num_elements, nn_buf)
     end
     --==============================, NUmber of elements
-    if ( num_elements < self._max_num_in_chunk ) then 
+    if ( num_elements < self:max_num_in_chunk() ) then 
       -- print("EOV for " .. self:name() .. ". num_elements = ", num_elements)
       -- nothing more to generate
       self:eov()  -- vector is at an end 
@@ -604,8 +617,10 @@ function lVector:get_chunk(chnk_idx)
       return 0 
     end 
     --===========================
-    if ( ( self._siblings ) and ( #self._siblings > 0 ) ) then 
+    if ( self._siblings ) then
+      -- print("Processing siblings of " .. self:name())
       assert(type(self._siblings) == "table")
+      assert(#self._siblings > 0)
       for _, v in ipairs(self._siblings) do
         assert(type(v) == "lVector") assert(type(v) == "lVector")
 --[[
@@ -614,7 +629,7 @@ function lVector:get_chunk(chnk_idx)
 --]]
         local x, y, z = v:get_chunk(chnk_idx)
         assert(x == num_elements)
-        if ( x < self._max_num_in_chunk ) then 
+        if ( x < self:max_num_in_chunk() ) then 
           -- print("Sibling EOV for " .. v:name())
           v:eov()  -- vector is at an end 
         end
@@ -638,9 +653,9 @@ function lVector:get_chunk(chnk_idx)
     end
     -- TODO P2 Why is incr_num_readers is being done in Lua and not in C???
     assert(self:chnk_incr_num_readers(chnk_idx))
-    if ( self._nn_vec ) then 
-      local nn_vector = self._nn_vec
-      assert(nn_vector:chnk_incr_num_readers(chnk_idx))
+    if ( cVector.has_nn_vec(self._base_vec) ) then 
+      local nn_vec = cVector.get_nn_vec(self._base_vec)
+      assert(cVector.chnk_incr_num_readers(nn_vec, chnk_idx))
     end
     -- print("Returning " .. num_elements .. " for " .. self:name())
     -- TODO print("XXX", chnk_idx, self:num_readers(chnk_idx), self:name())
@@ -692,8 +707,7 @@ function lVector:eval()
     assert(type(num_elements) == "number")
     -- this unget needed because get_chunk increments num readers 
     -- and the eval doesn't actually get the chunk for itself
-    -- TODO THINK. I added ( self._chunk_num > 0 ) 
-    -- to handle the zero element array case. Consider this caefully
+    -- Consider zero element array case caefully
     local chunk_to_unget = chunk_to_get
     if ( num_elements == 0 ) then
       -- nothing to unget
@@ -811,8 +825,8 @@ lVector.__gc = function (vec)
     -- print("Vector already dead.")
     return false
   end 
-  local vname = ifxthenyelsez(vec:name(), "anonymous_" .. vec:uqid())
-  print("GC CALLED on " .. vname)
+  -- local vname = ifxthenyelsez(vec:name(), "anonymous_" .. vec:uqid())
+  -- print("GC CALLED on " .. tostring(vec:uqid()) .. " -> " .. vname)
   --=========================================
   if ( vec:has_nn_vec() ) then 
     -- TODO P1 Needs work 
@@ -847,7 +861,7 @@ function lVector:delete()
     print("Vector already dead.")
     return false
   end 
-  local vname = ifxthenyelsez(self:name(), "anonymous:" .. self:uqid())
+  -- local vname = ifxthenyelsez(self:name(), "anonymous:" .. self:uqid())
   -- print("DELETE CALLED on " .. vname)
   -- cannot delete nn_vec, need to delete primary vec
   if ( cVector.is_nn_vec(self._base_vec) ) then 
@@ -877,7 +891,8 @@ end
 -- add_sibling is not invoked from outside 
 -- we add v2 to siblings of v1 
 local function add_sibling(v1, v2)
-  if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
+  if ( v1.is_dead ~= nil ) then assert(v1._is_dead == false) end
+  if ( v2.is_dead ~= nil ) then assert(v2._is_dead == false) end
   -- can add a sibling only when both vectors are empty
   assert(type(v1) == "lVector")
   assert(type(v2) == "lVector")
@@ -892,7 +907,7 @@ local function add_sibling(v1, v2)
   for k,  v in ipairs(v1._siblings) do 
     assert(v ~= v2)
   end 
-  v1._siblings[#v1._siblings+1] = v
+  v1._siblings[#v1._siblings+1] = v2
 end
 
 function lVector.conjoin(T)
@@ -905,8 +920,8 @@ function lVector.conjoin(T)
     for k2, v2 in ipairs(T) do
       if ( k1 ~= k2 ) then
         assert(v1:max_num_in_chunk() == v2:max_num_in_chunk())
-        add_sibling(v1, v2)
         -- print("Adding " .. v2:name() .. " as sibling of " .. v1:name())
+        add_sibling(v1, v2)
       end
     end
   end
@@ -1083,7 +1098,7 @@ function lVector:set_killable(val)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   assert(self._parent == nil ) -- cannot set killable on nn vector 
   assert(type(val) == "number")
-  assert(val > 0)
+  assert(val >= 0)
   assert(cVector.set_num_kill_ignore(self._base_vec, val))
   --[[ Commented out following because should not set killable
   -- on the nn vector of a vector
@@ -1098,11 +1113,11 @@ end
 --==================================================
 function lVector:get_killable()
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  local b_is_killable, num_lives_kill = 
-    cVector.get_num_lives_kill(self._base_vec)
+  local b_is_killable, num_kill_ignore = 
+    cVector.get_num_kill_ignore(self._base_vec)
   assert(type(b_is_killable) == "boolean")
-  assert(type(num_lives_kill) == "number")
-  return b_is_killable, num_lives_kill
+  assert(type(num_kill_ignore) == "number")
+  return b_is_killable, num_kill_ignore
 end
 --==================================================
 -- will delete the vector *ONLY* if marked as is_killable; else, NOP
@@ -1173,7 +1188,7 @@ function lVector:is_memo()
 end
 function lVector:get_memo_len()
   local memo_len = assert(cVector.memo_len(self._base_vec))
-  assert(memo_len > 0)
+  assert(memo_len >= 0)
   return memo_len
 end
 function lVector:set_memo(memo_len)
@@ -1223,7 +1238,13 @@ function lVector:brk_nn_vec()
   return self
 end
 function lVector:get_nn_vec()
-  return cVector.get_nn_vec(self._base_vec)
+  -- print("Getting nn_vec for ", self:name())
+  local nn_vector = setmetatable({}, lVector)
+  nn_vector._base_vec = cVector.get_nn_vec(self._base_vec)
+  return nn_vector
+end
+function lVector:has_nulls() -- for backward compatibility, deprecate
+  return cVector.has_nn_vec(self._base_vec)
 end
 function lVector:has_nn_vec()
   return cVector.has_nn_vec(self._base_vec)
@@ -1324,13 +1345,13 @@ function lVector:tbsp()
 end
 --=================================================
 function lVector:qtype()
-  return cVector.get_qtype(self._base_vec)
+  return cVector.qtype(self._base_vec)
 end
 --=================================================
 function lVector:nn_qtype()
   if ( not cVector.has_nn_vec(self._base_vec) ) then return nil end 
   local nn_vec = assert(cVector.get_nn_vec(self._base_vec))
-  local nn_qtype = assert(cVector.get_qtype(nn_vec))
+  local nn_qtype = assert(cVector.qtype(nn_vec))
   return  nn_qtype
 end
 --=========================================================

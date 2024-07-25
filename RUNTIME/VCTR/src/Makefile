@@ -27,6 +27,7 @@ SRCS +=	vctr_get1.c
 SRCS +=	vctr_get_chunk.c  
 SRCS +=	vctr_is.c  
 SRCS +=	vctr_get_set.c  
+SRCS +=	vctr_nn_get_set.c  
 SRCS +=	vctr_nop.c  
 
 SRCS +=	vctr_chnks_to_lma.c  

@@ -52,6 +52,7 @@
 #include "vctr_put_chunk.h"
 #include "vctr_memo.h"
 #include "vctr_get_set.h"
+#include "vctr_nn_get_set.h"
 #include "num_read_write.h"
 
 #include "vctr_append.h"
@@ -273,12 +274,64 @@ BYE:
   return 3;
 }
 //----------------------------------------------
+static int l_vctr_set_nn_vec( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_u = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 2, "Vector");
+  status = vctr_set_nn_vec(ptr_u->tbsp, ptr_u->uqid, 
+      ptr_v->tbsp, ptr_v->uqid); 
+  cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------------------
+static int l_vctr_brk_nn_vec( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_brk_nn_vec(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+static int l_vctr_get_nn_vec( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  uint32_t nn_uqid; bool has_nn;
+  status = vctr_get_nn_vec(ptr_v->tbsp, ptr_v->uqid, &has_nn, &nn_uqid); 
+  cBYE(status);
+  if ( !has_nn ) { go_BYE(-1); }
+
+  VCTR_REC_TYPE *ptr_nn = 
+    (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
+  return_if_malloc_failed(ptr_nn);
+  memset(ptr_nn, '\0', sizeof(VCTR_REC_TYPE));
+  luaL_getmetatable(L, "Vector"); /* Add the metatable to the stack. */
+  lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
+  ptr_nn->tbsp = ptr_v->tbsp;
+  ptr_nn->uqid = nn_uqid;
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------------------
 static int l_vctr_is_nn_vec( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool is_nn_vec; 
-  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "has_nn", "get",
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "is_nn", "get",
       &is_nn_vec, NULL, NULL, NULL);
   cBYE(status); 
   lua_pushboolean(L, is_nn_vec); 
@@ -1197,13 +1250,31 @@ static int l_vctr_add( lua_State *L)
   if ( itmp <= 0 ) { go_BYE(-1); }
   max_num_in_chnk = (uint32_t)itmp;
   //-------------------------------------------
-  status = get_bool_from_tbl(L, 1, "is_memo", &is_key, &is_memo);
+  // logic here is a bit awkward because of needing to support
+  // historical usage when only memo_len was provided 
+  bool memo_len_key;;
+  status = get_int_from_tbl(L, 1, "memo_len", &memo_len_key, &itmp); 
   cBYE(status);
-  if ( is_key )  { 
-    status = get_int_from_tbl(L, 1, "memo_len", &is_key, &itmp); 
-    cBYE(status);
-    if ( !is_key )  { go_BYE(-1); }
+  bool is_memo_key;
+  status = get_bool_from_tbl(L, 1, "is_memo", &is_memo_key, &is_memo);
+  cBYE(status);
+  if ( memo_len_key ) { 
     memo_len = itmp;
+    if ( memo_len <= 0 ) { 
+      memo_len = 0; 
+      if ( is_memo_key ) {
+        if ( is_memo == true ) { go_BYE(-1); }
+      }
+    }
+    else {
+      if ( is_memo_key ) {
+        if ( is_memo == false ) { go_BYE(-1); }
+      }
+      is_memo = true;
+    }
+  }
+  else {
+    if ( is_memo_key ) { go_BYE(-1); }
   }
   //-------------------------------------------
   status = get_bool_from_tbl(L, 1, "is_early_freeable", &is_key, 
@@ -1593,10 +1664,11 @@ static const struct luaL_Reg vector_functions[] = {
     { "vctr_num_readers", l_vctr_get_num_readers },
     { "vctr_num_writers", l_vctr_get_num_writers },
     //--------------------------------
+    { "set_nn_vec", l_vctr_set_nn_vec },
+    { "get_nn_vec", l_vctr_get_nn_vec },
+    { "brk_nn_vec", l_vctr_brk_nn_vec },
     { "has_nn_vec", l_vctr_has_nn_vec },
     { "is_nn_vec", l_vctr_is_nn_vec },
-    // TODO { "vctr_get_nn_vec", l_vctr_get_nn_vec },
-    // TODO { "vctr_set_nn_vec", l_vctr_set_nn_vec },
     //--------------------------------
     { "chnk_incr_num_readers", l_chnk_incr_num_readers },
     { "chnk_num_readers", l_chnk_get_num_readers },

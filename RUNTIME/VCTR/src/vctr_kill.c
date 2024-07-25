@@ -75,6 +75,7 @@ vctr_kill(
       &where_found);
   if ( !is_found ) { go_BYE(-1); } 
   if ( !val.is_killable ) { goto BYE; } // silent exit
+  if ( val.is_eov ) { goto BYE; } // silent exit
   // fprintf(stderr, "Vector [%u:%s] killed \n", vctr_uqid, val.name);
   if ( val.num_kill_ignore > 0 ) {
     g_vctr_hmap[tbsp].bkts[where_found].val.num_kill_ignore--;

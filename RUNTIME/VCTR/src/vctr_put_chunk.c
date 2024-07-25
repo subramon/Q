@@ -39,7 +39,7 @@ vctr_put_chunk(
     )
 {
   int status = 0;
-  bool is_found; uint32_t vctr_where;
+  bool is_found; bool is_eov = false; uint32_t vctr_where;
 
   if ( vctr_uqid == 0 ) { go_BYE(-1); }
   // Had to allow data == NULL when vector is created from file using 
@@ -73,7 +73,9 @@ vctr_put_chunk(
   }
   // vector is implicitly at an end if insufficient elements sent
   if ( n < vctr_val.max_num_in_chnk ) { 
-    g_vctr_hmap[tbsp].bkts[vctr_where].val.is_eov = true; 
+    // clean up any unnecessary chunks
+    status = vctr_memo(vctr_where, vctr_uqid); cBYE(status);
+    is_eov = true; 
   }
   // handle special case for empty vector 
   if ( vctr_val.num_elements == 0 ) { 
@@ -119,6 +121,8 @@ vctr_put_chunk(
   g_vctr_hmap[tbsp].bkts[vctr_where].val.max_chnk_idx = chnk_idx; 
   // Delete extra chunks if necessary
   status = vctr_memo(vctr_where, vctr_uqid); cBYE(status); 
+  // set is_eov at end (after vctr_memo())
+  g_vctr_hmap[tbsp].bkts[vctr_where].val.is_eov = is_eov;
 
 BYE:
   return status;

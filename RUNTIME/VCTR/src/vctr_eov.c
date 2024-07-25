@@ -3,6 +3,7 @@
 #include "vctr_rs_hmap_struct.h"
 #include "vctr_rs_hmap_get.h"
 #include "vctr_is.h"
+#include "vctr_memo.h"
 #include "vctr_eov.h"
 
 extern vctr_rs_hmap_t *g_vctr_hmap;
@@ -21,10 +22,11 @@ vctr_eov(
   status = vctr_rs_hmap_get(&(g_vctr_hmap[tbsp]), &key, &val, &is_found, 
       &where_found);
   if ( !is_found ) { go_BYE(-1); }
-  // vctr_eoc() is idempotent operator. Hence, following has been commented
-  // if ( val.is_eov ) { go_BYE(-1); }
   ptr_vctr_val = &(g_vctr_hmap[tbsp].bkts[where_found].val);
+  if ( ptr_vctr_val->is_eov ) { return status; } // idempotent
   if ( ptr_vctr_val->num_elements == 0 ) { go_BYE(-1); }
+  // Call vctr_memo() to clean up any old stuff 
+  status = vctr_memo(where_found, vctr_uqid); cBYE(status);
   ptr_vctr_val->is_eov = true; 
 BYE:
   return status;

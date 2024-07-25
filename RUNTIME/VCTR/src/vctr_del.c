@@ -45,6 +45,7 @@ vctr_del(
   bool has_nn     = vctr_val.has_nn;
   if ( has_nn ) { 
     uint32_t nn_uqid = vctr_val.nn_key; 
+    if ( nn_uqid == 0 ) { go_BYE(-1); }
     // break connection from primary to nn
     ptr_vctr_val->has_nn = false; 
     ptr_vctr_val->nn_key = 0; 

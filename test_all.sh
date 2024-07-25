@@ -13,9 +13,10 @@ qjit test_cmem.lua
 # qjit stress_test_cmem.lua
 
 cd ~/Q/UTILS/test/
-bash test_copy_file.sh
-bash test_line_breaks.sh
-qjit test_tbl_of_num_to_C_array.lua
+# TODO *MOST* of these need to move to RSUTILS
+# bash test_copy_file.sh
+# bash test_line_breaks.sh
+# qjit test_tbl_of_num_to_C_array.lua
 
 cd ~/Q/RUNTIME/CUTILS/test/
 qjit test_cutils.lua
@@ -28,26 +29,20 @@ qjit test_sclr_eq.lua
 qjit test_sclr_I8.lua
 qjit test_sclr.lua
 
-cd ~/Q/RUNTIME/VCTRS/src/
+cd ~/Q/RUNTIME/VCTR/src/
 ./ut1
 ./ut2
 ./ut_memo
-cd ~/Q/RUNTIME/VCTRS/test/
-qjit test1.lua  # TODO NEEDS WORK 
-qjit test_lma.lua  
-qjit test_gc.lua  
-qjit test_memo.lua  
-qjit test_make_drop_mem.lua 
-qjit test_ref_count.lua
-qjit test_clone.lua
-qjit test_save.lua-- TODO P2 some automation needed for q_config 
-# qjit test_restore.lua -- TODO P2 some automation needed for q_config 
-cd ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/
-bash make_data.sh
-cd ~/Q/RUNTIME/VCTRS/test/
-qjit test_import.lua
-rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/data/
-rm -r -f  ~/Q/RUNTIME/VCTRS/test/TEST_IMPORT/meta/
+cd ~/Q/RUNTIME/VCTR/test/
+bash run.sh
+
+# IMPORT needs more testing 
+# cd ~/Q/RUNTIME/VCTR/test/TEST_IMPORT/
+# bash make_data.sh
+# cd ~/Q/RUNTIME/VCTR/test/
+# qjit test_import.lua
+# rm -r -f  ~/Q/RUNTIME/VCTR/test/TEST_IMPORT/data/
+# rm -r -f  ~/Q/RUNTIME/VCTR/test/TEST_IMPORT/meta/
 #--------------------------------------------------------
 
 cd ~/Q/OPERATORS/AINB/test/

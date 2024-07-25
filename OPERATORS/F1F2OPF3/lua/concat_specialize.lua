@@ -82,9 +82,9 @@ return function (
   )
   local subs = {}; 
   assert(type(f1) == "lVector"); 
-  assert(not f1:has_nulls())
+  assert(not f1:has_nn_vec())
   assert(type(f2) == "lVector"); 
-  assert(not f2:has_nulls())
+  assert(not f2:has_nn_vec())
   local f1_qtype = f1:qtype();   
   assert(is_in(f1_qtype, 
     { "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", }))

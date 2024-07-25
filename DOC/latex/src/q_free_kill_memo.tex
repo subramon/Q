@@ -232,6 +232,8 @@ Hence, Invariants~\ref{f_3}, ~\ref{f_4}.
 There are three kinds of actions, classified as 
 \be
 \item do  --- performs the action.
+  None of the {\tt do} actions have any effect once the vctor has been fully
+  materialized i.e., \(e = \) true. 
   \be
 \item {\tt kill} e.g., \(x:\mathrm{kill}\) where \(x\) is a vector 
 \item {\tt early\_free} e.g., 

@@ -211,6 +211,7 @@ main(
   // Now check that no RAM is in use 
   if ( g_mem_used != 0 ) { go_BYE(-1); } 
   // Now print the vector (this should cause stuff to be retsored to l1 
+  status = rmtree("/tmp/_xxxx"); // ignore error if any
   status = vctr_print(tbsp, uqid, 0, "/tmp/_xxxx", "", 0, num_elements);
   cBYE(status);
   // l1 memory should be back as was before 

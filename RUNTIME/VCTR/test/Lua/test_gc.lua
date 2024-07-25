@@ -58,3 +58,14 @@ tests.t1 = function()
 end
 -- return tests
 tests.t1()
+--[[ TODO Why am I getting these error messages?
+--If I replace y= nil by y:delete(), they go away
+--Also, I notice that vctr_del() is called before "GC CALLED ON"
+--
+--Line  48 of File vctr_get_set.c
+Line 265 of File cVector.c
+GC CALLED on 1 -> anonymous_1
+Line  48 of File vctr_get_set.c
+Line 300 of File cVector.c
+
+--]]

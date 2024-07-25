@@ -45,27 +45,55 @@ qcfg.is_killable = false; qcfg.num_kill_ignore = 0;
 qcfg.is_early_freeable = false; qcfg.num_free_ignore = 0;
 -- TODO THINK qcfg.has_nulls = false -- Vector code uses this default value
 
-qcfg.num_lives_kill = 0 -- default
-qcfg.num_lives_free = 0 -- default
 -- Following function used to modify qcfg at run time 
 local function modify(key, val)
-  if ( key == "num_lives_kill" ) then
-    assert(type(val) == "number")
-    assert(val >= 0)
-    assert(val <= 16) -- some reasonable limit 
-  elseif ( key == "num_lives_free" ) then
-    assert(type(val) == "number")
-    assert(val >= 0)
-    assert(val <= 16) -- some reasonable limit 
-  elseif ( key == "memo_len" ) then
-    assert(type(val) == "number")
-    if ( val < 0 ) then 
-      assert(val == -1)
+  if ( key == "memoable" ) then
+    assert(type(val) == "table")
+    assert(#val == 2)
+    local is_memo = val[1]
+    local memo_len = val[2]
+    assert(type(is_memo ) == "boolean")
+    assert(type(memo_len ) == "number")
+    assert(#memo_len > 0)
+    if ( not is_memo ) then 
+      assert(memo_len == 0)
     end
+    qcfg.is_memo = is_memo
+    qcfg.memo_len = memo_len 
+  elseif ( key == "killable" ) then
+    assert(type(val) == "table")
+    assert(#val == 2)
+    local is_killable = val[1]
+    local num_kill_ignore = val[2]
+    assert(type(is_killable ) == "boolean")
+    assert(type(num_kill_ignore ) == "number")
+    assert(num_kill_ignore >= 0)
+    if ( not is_killable ) then 
+      assert(num_kill_ignore == 0)
+    else
+      assert(num_kill_ignore <= 16) -- some reasonable limit 
+    end
+    qcfg.is_killable = is_killable
+    qcfg.num_kill_ignore = num_kill_ignore 
+  elseif ( key == "early_freeable" ) then
+    assert(type(val) == "table")
+    assert(#val == 2)
+    local is_early_freeable = val[1]
+    local num_free_ignore = val[2]
+    assert(type(is_early_freeable ) == "boolean")
+    assert(type(num_free_ignore ) == "number")
+    assert(num_free_ignore >= 0)
+    if ( not is_early_freeable ) then 
+      assert(num_free_ignore == 0)
+    else
+      assert(num_free_ignore <= 16) -- some reasonable limit 
+    end
+    qcfg.is_early_freeable = is_early_freeable
+    qcfg.num_free_ignore = num_free_ignore 
   else
     assert("Unknown key " .. key)
   end
-  qcfg[key] = val
+  return true
 end
 qcfg._modify = modify 
 

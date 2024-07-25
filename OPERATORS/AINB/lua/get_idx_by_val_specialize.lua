@@ -76,7 +76,6 @@ local function get_idx_by_val_specialize(x, y, optargs)
   subs.srcdir = "OPERATORS/AINB/gen_src/"
   subs.incs = { "OPERATORS/AINB/gen_inc/", }
   subs.libs = { "-lgomp", }
-  print("RETURNING ", type(subs))
   return subs
 end
 return get_idx_by_val_specialize

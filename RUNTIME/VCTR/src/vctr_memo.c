@@ -63,6 +63,7 @@ vctr_memo(
 
   vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap[0].bkts[vctr_loc].val);
   if ( ptr_vctr_val->is_memo == false ) { return status; }
+  if ( ptr_vctr_val->is_eov ) { return status; }
 
   uint32_t nC = ptr_vctr_val->max_chnk_idx + 1 - ptr_vctr_val->min_chnk_idx;
   if ( nC > ptr_vctr_val->memo_len ) { 
@@ -71,6 +72,7 @@ vctr_memo(
     for ( uint32_t chnk_idx = ptr_vctr_val->min_chnk_idx; 
         chnk_idx < new_min_chnk_idx; chnk_idx++ ) { 
       status = chnk_del(0, vctr_uqid, chnk_idx, ptr_vctr_val->is_persist);
+      // printf("Deleting chnk %u for vctr %u \n", chnk_idx, vctr_uqid);
     }
     ptr_vctr_val->min_chnk_idx = new_min_chnk_idx;
   }

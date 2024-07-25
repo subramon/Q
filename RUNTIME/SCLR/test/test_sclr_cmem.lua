@@ -5,12 +5,7 @@ local ffi    = require 'ffi'
 local Scalar = require 'libsclr' 
 local tests = {}
 local get_ptr = require 'Q/UTILS/lua/get_ptr'
--- cdef the scalar struct 
-local for_cdef = require 'Q/UTILS/lua/for_cdef'
-local infile = "RUNTIME/SCLR/inc/sclr_struct.h"
-local incs = { "UTILS/inc/" }
-local x = for_cdef(infile, incs)
-ffi.cdef(x)
+-- scalar struct has been cdef'd in qc
 --=========================================
 
 tests.t1 = function()

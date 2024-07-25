@@ -6,6 +6,12 @@ local qcfg      = require 'Q/UTILS/lua/qcfg'
 local get_ptr   = require 'Q/UTILS/lua/get_ptr'
 local stringify = require 'Q/UTILS/lua/stringify'
 
+-- =======================
+local function min(x, y) if x < y then return x else return y end end
+local function max(x, y) if x > y then return x else return y end end
+-- =======================
+
+
 local function cprint( 
   opfile, -- file for destination fo print
   is_html, -- whether to format for HTML 
@@ -16,21 +22,25 @@ local function cprint(
   V, -- table of lVectors to be printed
   max_num_in_chunk
   )
-  local func_name = "cprint"
+  -- TODO P3: Avoid having all this compilation every time
   local subs = {}
+  local func_name = "cprint"
   subs.fn = func_name
   -- IMPORTANT: In specifying files, Do not start with a backslash
   subs.dotc = "OPERATORS/PRINT/src/cprint.c"
   subs.doth = "OPERATORS/PRINT/inc/cprint.h"
   subs.srcs = { "UTILS/src/get_bit_u64.c" }
-  subs.incs = { "OPERATORS/PRINT/inc/", "UTILS/inc/", }
+  local rsutils_src_root = assert(os.getenv("RSUTILS_SRC_ROOT"))
+  subs.incs = { "OPERATORS/PRINT/inc/", "UTILS/inc/", 
+    rsutils_src_root ..  "/RSUTILS/inc/", }
   subs.structs = nil -- no structs need to be cdef'd
   subs.libs = nil -- no libaries need to be linked
+  -- changed to following because of core re-org
+  subs.srcs = nil
+  local q_root = os.getenv("Q_ROOT")
+  subs.libs = { q_root .. "/lib/librsutils.so", }
   qc.q_add(subs); 
-
-  -- =======================
-  local function min(x, y) if x < y then return x else return y end end
-  local function max(x, y) if x > y then return x else return y end end
+-- =======================
   local nC = #V -- determine number of columns to be printed
   assert(nC > 0)
   local chunk_num = math.floor(lb / max_num_in_chunk) -- first usable chunk

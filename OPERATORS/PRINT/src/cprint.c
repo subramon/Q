@@ -32,7 +32,7 @@ cprint(
   if ( ub <= lb ) { go_BYE(-1); }
 
   for ( int i = 0; i < nC; i++ ) { 
-    if ( ( qtypes[i] <= 0 ) || ( qtypes[i] >= NUM_QTYPES ) ) { go_BYE(-1); }
+    if ( ( qtypes[i] <= Q0 ) || ( qtypes[i] >= QF ) ) { go_BYE(-1); }
     // 32 is just a sanity check, could be tighter
     if ( qtypes[i] != SC ) {
     if ( ( widths[i] <= 0 ) || ( widths[i] >= 32 ) ) { go_BYE(-1); }
