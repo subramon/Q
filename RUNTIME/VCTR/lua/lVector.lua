@@ -1,5 +1,5 @@
 -- All attributes of vector start with _ to distinguish it from methods
--- So, we have lVector.width but we have self._base_vec or self._chunk_num
+-- So, we have lVector.width but we have self._base_vec 
 -- All meta data, by convention, is in _meta.* e.g.,
 -- self._meta.meaning or self._meta.max
 -- Most details of an lVector are stored in C with the exception of 
@@ -8,7 +8,6 @@
 -- 3) self._meta
 -- 4) self._siblings
 -- 4) self._generator
--- TODO >> self._chunk_num
 -- When resurrecting an lVector using Q.restore(), we don't care
 -- about 
 -- _is_dead  --- because all restored vectors are not dead
@@ -51,17 +50,27 @@ setmetatable(lVector, mt)
 
 register_type(lVector, "lVector")
 
+local function make_null_vec()
+  return cVector.null()
+end
+
 function lVector:check()
   assert(cVector.chk(self._base_vec))
   local nn_status = true
   -- nn vector cannot have a generator 
-  if ( cVector.is_null_vec(self._base_vec) ) then 
+  if ( cVector.is_nn_vec(self._base_vec) ) then 
     assert(self._generator == nil)
   end
-  if ( cVector.has_null_vec(self._base_vec) ) then 
+  if ( cVector.has_nn_vec(self._base_vec) ) then 
     local nn_vec = assert(cVector.get_null_vec(self._base_vec))
     assert(nn_vector._chunk_num == self._chunk_num)
-    assert((nn_vec:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
+    assert(cVector.min_chnk_idx(self._base_vec) == 
+      cVector.min_chnk_idx(nn_vec))
+    assert(cVector.max_chnk_idx(self._base_vec) == 
+      cVector.max_chnk_idx(nn_vec))
+
+    --[==[ TODO COnvert to cVector.foo from foo:()
+    assert(cVector.(nn_vec:qtype() == "B1" ) or ( nn_vector:qtype() == "BL" ))
     assert(cVector.chk(nn_vector._base_vec))
     -- check congruence between base vector and nn vector
     assert(nn_vector:num_elements()  == self:num_elements())
@@ -79,6 +88,7 @@ function lVector:check()
     local b2, n2 = self:get_early_freeable()
     assert(b1 == b2)
     assert(n1 == n2)
+    --]==]
   end 
   -- check congruence between base vector and siblings
   if ( self._siblings ) then 
@@ -535,17 +545,18 @@ function lVector:get_chunk(chnk_idx)
   assert(type(chnk_idx) == "number")
   assert(chnk_idx >= 0)
 
+  local max_chnk_idx = self:max_chnk_idx()
+  local num_elements = self:num_elements()
   local to_generate 
   if ( self:is_eov() ) then
     to_generate = false
   else
-    if ( chnk_idx < self._chunk_num ) then 
-      to_generate = false
-    elseif ( chnk_idx == self._chunk_num ) then 
+    if ( ( num_elements == 0 ) or ( chnk_idx == (max_chnk_idx+1) ) ) then 
       to_generate = true
     else
-      error("")
+      to_generate = false
     end
+    assert(chnk_idx <= (max_chnk_idx+1), "Asking for chunk too far out")
   end
   --[[ TODO Should we allow get_chunk on nn_vec?
   -- Current assumption is NO
@@ -565,7 +576,7 @@ function lVector:get_chunk(chnk_idx)
       print("ERROR: Expected generator for " .. self:name())
       return 0, nil 
     end 
-    local num_elements, buf, nn_buf = self._generator(self._chunk_num)
+    local num_elements, buf, nn_buf = self._generator(chnk_idx)
     assert(type(num_elements) == "number")
     -- IMPORTANT: See how error in Vector creation is indicated
     if ( ( num_elements == 0 ) and 
@@ -636,7 +647,7 @@ function lVector:get_chunk(chnk_idx)
     -- TODO assert(self:num_readers(chnk_idx) == 1)
     return num_elements, buf, nn_buf
   else -- ELSE OF IF TO GENERATE
-    -- print(" Archival chunk for " .. self:name(), self._chunk_num)
+    -- print(" Archival chunk for " .. self:name(), chnk_idx)
     if ( qcfg.debug ) then self:check(false) end 
     local nn_x, nn_n
     local x, n = cVector.get_chunk(self._base_vec, chnk_idx)
@@ -666,29 +677,35 @@ end
 function lVector:eval()
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   if ( self:is_eov() ) then return self end 
+  local max_num_in_chunk = cVector.max_num_in_chunk(self._base_vec)
   repeat
-    local num_elements, buf, nn_buf = self:get_chunk(self._chunk_num)
+    local chunk_to_get
+    local max_chnk_idx = self:max_chnk_idx()
+    if ( self:num_elements() == 0 ) then 
+      chunk_to_get = 0
+    else
+      chunk_to_get = max_chnk_idx + 1
+    end
+    local num_elements, buf, nn_buf = self:get_chunk(chunk_to_get)
     if ( nn_buf ) then assert(type(nn_buf) == "CMEM") end 
     if (    buf ) then assert(type(   buf) == "CMEM") end 
     assert(type(num_elements) == "number")
     -- this unget needed because get_chunk increments num readers 
     -- and the eval doesn't actually get the chunk for itself
-    -- The -1 below is important. This is because get_chunk would have 
-    -- called put_chunk which would have incremented chunk_num
     -- TODO THINK. I added ( self._chunk_num > 0 ) 
     -- to handle the zero element array case. Consider this caefully
-    local chunk_to_unget = self._chunk_num - 1
+    local chunk_to_unget = chunk_to_get
     if ( num_elements == 0 ) then
       -- nothing to unget
     else
-      -- print("Ungetting " .. self._chunk_num .. " for " .. self:name())
+      -- print("Ungetting " .. chunk_to_unget .. " for " .. self:name())
       assert(cVector.unget_chunk(self._base_vec, chunk_to_unget))
       if ( self._nn_vec ) then 
         local nn_vector = self._nn_vec
         assert(cVector.unget_chunk(nn_vector._base_vec, chunk_to_unget))
       end
     end
-  until ( num_elements ~= self._max_num_in_chunk ) 
+  until ( num_elements ~= max_num_in_chunk ) 
   assert(self:is_eov())
   --[[ TODO THINK P1 
   -- cannot have Vector with 0 elements
@@ -711,9 +728,11 @@ end
 
 function lVector:pr(opfile, lb, ub, format)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  local nn_vec;
+  local nn_vec
   if ( cVector.has_nn_vec(self._base_vec) ) then
     nn_vec = cVector.get_nn_vec(self._base_vec)
+  else
+    nn_vec = make_null_vec()
   end
   --=================================
   if ( ( opfile )  and ( #opfile > 0 ) ) then
@@ -787,18 +806,13 @@ end
 -- STOP : Above about meta data 
 --========================================================
 
--- TODO P2 Do I still need this function?
-function lVector.null()
-  return cVector.null()
-end
-
 lVector.__gc = function (vec)
   if ( vec._is_dead ) then
     -- print("Vector already dead.")
     return false
   end 
   local vname = ifxthenyelsez(vec:name(), "anonymous_" .. vec:uqid())
-  -- print("GC CALLED on " .. vname)
+  print("GC CALLED on " .. vname)
   --=========================================
   if ( vec:has_nn_vec() ) then 
     -- TODO P1 Needs work 
@@ -833,7 +847,7 @@ function lVector:delete()
     print("Vector already dead.")
     return false
   end 
-  local vname = ifxthenxelsey(self:name(), "anonymous:" .. self:uqid())
+  local vname = ifxthenyelsez(self:name(), "anonymous:" .. self:uqid())
   -- print("DELETE CALLED on " .. vname)
   -- cannot delete nn_vec, need to delete primary vec
   if ( cVector.is_nn_vec(self._base_vec) ) then 
@@ -841,6 +855,7 @@ function lVector:delete()
     return false
   end
   -- delete of primary vector will trigger delete of nn vector if exists
+  self._is_dead = true
   return  cVector.delete(self._base_vec)
 end
 
@@ -936,17 +951,22 @@ end
 -- When early_free() is called on a vector which is earlyii_freeable()
 -- we delete all but the last chunk
 --==================================================
-function lVector:early_free() -- equivalent of kill() 
-  -- TODO What about calling early_free on nn vector?
+function lVector:early_free(chnk_idx)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
-  assert(cVector.early_free(self._base_vec))
+  assert(type(chnk_idx) == "number")
+  assert(cVector.early_free(self._base_vec, chnk_idx))
+  -- call early_free on nn vector if one exists
+  if ( cVector.has_nn_vec(self._base_vec) ) then 
+    local nn_vec = assert(cVector.get_null_vec(self._base_vec))
+    assert(cVector.early_free(nn_vec, chnk_idx))
+  end
   return self
 end
 --==================================================
 function lVector:get_early_freeable() 
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   local b_is_early_free, num_lives_free = 
-    cVector.get_num_lives_free(self._base_vec)
+    cVector.get_early_freeable(self._base_vec)
   assert(type(b_is_early_free) == "boolean")
   assert(type(num_lives_free) == "number")
   return b_is_early_free, num_lives_free
@@ -954,8 +974,9 @@ end
 --==================================================
 function lVector:set_early_freeable(num_lives) -- equivalent of killable()
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
+  if ( num_lives == nil ) then num_lives = 0 end -- set default 
   assert(type(num_lives) == "number")
-  assert(cVector.set_num_lives_free(self._base_vec, num_lives))
+  assert(cVector.set_early_freeable(self._base_vec, num_lives))
   return self
 end
 -- STOP: Above for early_free
@@ -1248,6 +1269,8 @@ end
 -- o tbsp()
 -- o qtype()
 -- o nn_qtype()
+-- o max_chnk_idx()
+-- o min_chnk_idx()
 function lVector:file_info() 
 if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   local file_name, sz = cVector.file_info(self._base_vec)
@@ -1280,6 +1303,18 @@ function lVector:uqid()
   local uqid = cVector.uqid(self._base_vec)
   assert(type(uqid) == "number"); assert(uqid > 0)
   return uqid
+end
+--=================================================
+function lVector:max_chnk_idx()
+  local max_chnk_idx = cVector.max_chnk_idx(self._base_vec)
+  assert(type(max_chnk_idx) == "number"); assert(max_chnk_idx >= 0)
+  return max_chnk_idx
+end
+--=================================================
+function lVector:min_chnk_idx()
+  local min_chnk_idx = cVector.min_chnk_idx(self._base_vec)
+  assert(type(min_chnk_idx) == "number"); assert(min_chnk_idx >= 0)
+  return min_chnk_idx
 end
 --=================================================
 function lVector:tbsp()

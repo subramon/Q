@@ -46,13 +46,14 @@ vctr_early_free(
       chnk_idx++ ){
     bool chnk_is_found; uint32_t chnk_where; 
     status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found, &chnk_where);
-    if ( chnk_is_found == false ) { go_BYE(-1); }
+    if ( chnk_is_found == false ) { continue; } // IMPORTANT: not an error
     ptr_chnk_val = &(g_chnk_hmap[tbsp].bkts[chnk_where].val);
     if ( ptr_chnk_val->num_free_ignore > 0 ) { 
       ptr_chnk_val->num_free_ignore--;
       continue;
     }
     //---------------------------------------------------
+    printf("Early free deleting chunk_idx %u \n", chnk_idx); 
     if ( ptr_chnk_val->num_readers != 0 ) { go_BYE(-1); } // unsure
     if ( ptr_chnk_val->num_writers != 0 ) { go_BYE(-1); } // unsure
     //---------------------------------------------------
@@ -64,60 +65,9 @@ vctr_early_free(
     }
     // printf("Deleting chunk for early free\n");
     status = chnk_del(tbsp, vctr_uqid, chnk_idx, false); cBYE(status); 
+    ptr_vctr_val->min_chnk_idx = chnk_idx + 1;
     //------------------------
   }
-BYE:
-  return status;
-}
-// once a vector has been marked early_freeable, you can undo it 
-// only if it has zero elements in it 
-int
-vctr_set_num_free_ignore(
-    uint32_t tbsp,
-    uint32_t vctr_uqid,
-    int num_free_ignore
-    )
-{
-  int status = 0;
-  // nothing to do for vectors in other tablespaces
-  if ( tbsp != 0 ) { goto BYE; } 
-  if ( num_free_ignore < 0 ) { go_BYE(-1); }
-  if ( num_free_ignore == 0 ) { goto BYE; }
-  if ( num_free_ignore >= 16 ) { go_BYE(-1); } // some reasonable limit 
-
-  bool is_found; uint32_t where_found = ~0;
-  vctr_rs_hmap_key_t key = vctr_uqid;
-  vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = vctr_rs_hmap_get(&(g_vctr_hmap[tbsp]), &key, &val, &is_found, 
-      &where_found);
-  if ( !is_found ) { go_BYE(-1); }
-  if ( val.is_persist ) { go_BYE(-1); }
-  if ( val.num_elements > 0 ) { go_BYE(-1); }
-  if ( val.is_memo ) { go_BYE(-1); }
-
-  g_vctr_hmap[tbsp].bkts[where_found].val.is_early_freeable = true; 
-  g_vctr_hmap[tbsp].bkts[where_found].val.num_free_ignore = num_free_ignore; 
-BYE:
-  return status;
-}
-int 
-vctr_get_num_free_ignore(
-    uint32_t tbsp,
-    uint32_t vctr_uqid,
-    bool *ptr_is_early_freeable,
-    int *ptr_num_free_ignore
-    )
-{
-  int status = 0;
-  if ( tbsp != 0 ) { goto BYE; } 
-  bool is_found; uint32_t where_found = ~0;
-  vctr_rs_hmap_key_t key = vctr_uqid;
-  vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
-  status = vctr_rs_hmap_get(&(g_vctr_hmap[tbsp]), &key, &val, &is_found, 
-      &where_found);
-  if ( !is_found ) { goto BYE; } 
-  *ptr_is_early_freeable = val.is_early_freeable;
-  *ptr_num_free_ignore = val.num_free_ignore;
 BYE:
   return status;
 }

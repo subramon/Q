@@ -95,6 +95,20 @@ vctr_get_set(
       default : go_BYE(-1); break;
     }
   }
+  else if ( strcmp(meta, "max_chnk_idx") == 0 ) { 
+    switch ( mode ) { 
+      case get : *ptr_i8 = val.max_chnk_idx; break;
+      case set : /* not needed */ break;
+      default : go_BYE(-1); break;
+    }
+  }
+  else if ( strcmp(meta, "min_chnk_idx") == 0 ) { 
+    switch ( mode ) { 
+      case get : *ptr_i8 = val.min_chnk_idx; break;
+      case set : /* not needed */ break;
+      default : go_BYE(-1); break;
+    }
+  }
   else if ( strcmp(meta, "width") == 0 ) { 
     switch ( mode ) { 
       case get : *ptr_i8 = val.width; break;
@@ -129,7 +143,50 @@ vctr_get_set(
       default : go_BYE(-1); break;
     }
   }
+  else if ( strcmp(meta, "has_nn") == 0 ) { 
+    switch ( mode ) { 
+      case get : 
+        *ptr_bl = val.has_nn;
+        break;
+        /* Set needs to be done elswehere
+      case set : 
+        break;
+        */
+      default : go_BYE(-1); break;
+    }
+  }
+  else if ( strcmp(meta, "is_nn") == 0 ) { 
+    switch ( mode ) { 
+      case get : 
+        *ptr_bl = val.has_parent;
+        break;
+        /* Set needs to be done elswehere
+      case set : 
+        break;
+        */
+      default : go_BYE(-1); break;
+    }
+  }
+  else if ( strcmp(meta, "early_freeable") == 0 ) { 
+    switch ( mode ) { 
+      case get : 
+        *ptr_bl = val.is_early_freeable;
+        *ptr_i8 = val.num_free_ignore; 
+        break;
+      case set : 
+        {
+          // cannot set once set 
+          if ( val.is_early_freeable ) { go_BYE(-1); } 
+          ptr_val->is_early_freeable = true;
+          if ( *ptr_i8 < 0 ) { go_BYE(-1); }
+          ptr_val->num_free_ignore = *ptr_i8;
+        }
+        break;
+      default : go_BYE(-1); break;
+    }
+  }
   else {
+    fprintf(stderr, "Don't know hwo to get/set for %s \n", meta);
     go_BYE(-1);
   }
 BYE:

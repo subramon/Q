@@ -69,7 +69,7 @@ vctrs_chk(
     if ( g_vctr_hmap[tbsp].bkts[i].val.num_elements > 0 ) {
       total_num_chnks += 
         g_vctr_hmap[tbsp].bkts[i].val.max_chnk_idx - 
-        g_vctr_hmap[tbsp].bkts[i].val.max_chnk_idx + 1; 
+        g_vctr_hmap[tbsp].bkts[i].val.min_chnk_idx + 1; 
     }
   }
   if ( total_num_chnks != g_chnk_hmap[tbsp].nitems ) { 

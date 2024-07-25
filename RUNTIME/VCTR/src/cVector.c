@@ -96,6 +96,36 @@ LUALIB_API void *luaL_testudata (
 
 int luaopen_libvctr (lua_State *L);
 //-----------------------------------
+static int l_vctr_min_chnk_idx( lua_State *L) {
+  int status = 0;
+  int64_t min_chnk_idx;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "min_chnk_idx", "get",
+      NULL, &min_chnk_idx, NULL, NULL); cBYE(status);
+  lua_pushnumber(L, min_chnk_idx);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------------------
+static int l_vctr_max_chnk_idx( lua_State *L) {
+  int status = 0;
+  int64_t max_chnk_idx;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "max_chnk_idx", "get",
+      NULL, &max_chnk_idx, NULL, NULL); cBYE(status);
+  lua_pushnumber(L, max_chnk_idx);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------------------
 static int l_vctr_is_error( lua_State *L) {
   int status = 0;
   bool brslt; 
@@ -130,7 +160,7 @@ static int l_vctr_set_name( lua_State *L) {
   if (  lua_gettop(L) != 2 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   const char * name  = luaL_checkstring(L, 2);
-  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "set", "name",
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "name", "set",
       NULL, NULL, name, NULL); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
@@ -235,6 +265,40 @@ static int l_vctr_get_name( lua_State *L) {
   cBYE(status); 
   lua_pushstring(L, name); // 99% sure that no strdup needed
   free_if_non_null(name); // 99% sure that name needs to be freed :-)
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------------
+static int l_vctr_is_nn_vec( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  bool is_nn_vec; 
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "has_nn", "get",
+      &is_nn_vec, NULL, NULL, NULL);
+  cBYE(status); 
+  lua_pushboolean(L, is_nn_vec); 
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------------
+static int l_vctr_has_nn_vec( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  bool has_nn_vec; 
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "has_nn", "get",
+      &has_nn_vec, NULL, NULL, NULL);
+  cBYE(status); 
+  lua_pushboolean(L, has_nn_vec); 
   return 1;
 BYE:
   lua_pushnil(L);
@@ -541,17 +605,18 @@ BYE:
 }
 
 //----------------------------------------
-static int l_vctr_set_num_free_ignore( lua_State *L) {
+static int l_vctr_set_early_freeable( lua_State *L) {
   int status = 0;
-  int num_lives = 1;
+  int64_t num_free_ignore = 0; // default 
   int num_args = lua_gettop(L); 
   if ( ( num_args != 1 ) && ( num_args != 2 ) ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   if ( num_args == 2 ) { 
-    num_lives = lua_tonumber(L, 2); 
+    num_free_ignore = lua_tonumber(L, 2); 
   }
-  status = vctr_set_num_free_ignore(ptr_v->tbsp, ptr_v->uqid, num_lives); 
-  cBYE(status);
+  bool b_is_early_freeable = true;
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "early_freeable", "set",
+      &b_is_early_freeable, &num_free_ignore, NULL, NULL);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -577,13 +642,13 @@ BYE:
   return 3;
 }
 //----------------------------------------
-static int l_vctr_get_num_free_ignore( lua_State *L) {
+static int l_vctr_get_early_freeable( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int num_free_ignore; bool b_is_early_free;
-  status = vctr_get_num_free_ignore(ptr_v->tbsp, ptr_v->uqid, 
-      &b_is_early_free, &num_free_ignore);
+  int64_t num_free_ignore; bool b_is_early_free;
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "early_freeable", "get",
+      &b_is_early_free, &num_free_ignore, NULL, NULL);
   lua_pushboolean(L, b_is_early_free);
   lua_pushnumber(L, num_free_ignore);
   return 2;
@@ -1411,8 +1476,8 @@ static const struct luaL_Reg vector_methods[] = {
     { "get_num_kill_ignore", l_vctr_get_num_kill_ignore },
     //--------------------------------
     { "early_free",    l_vctr_early_free },
-    { "set_num_free_ignore", l_vctr_set_num_free_ignore },
-    { "get_num_free_ignore", l_vctr_get_num_free_ignore },
+    { "set_early_freeable", l_vctr_set_early_freeable },
+    { "get_early_freeable", l_vctr_get_early_freeable },
     //--------------------------------
     { "is_eov", l_vctr_is_eov },
     { "is_lma", l_vctr_is_lma },
@@ -1429,6 +1494,9 @@ static const struct luaL_Reg vector_methods[] = {
     { "set_name", l_vctr_set_name },
     { "set_error", l_vctr_set_error },
     { "is_error", l_vctr_is_error },
+    //--------------------------------
+    { "max_chnk_idx", l_vctr_max_chnk_idx },
+    { "min_chnk_idx", l_vctr_min_chnk_idx },
     //--------------------------------
     { "count", l_vctr_count },
     { "name", l_vctr_get_name },
@@ -1482,12 +1550,15 @@ static const struct luaL_Reg vector_functions[] = {
     { "chunk_delete", l_chnk_delete },
     //--------------------------------
     { "early_free",    l_vctr_early_free },
-    { "set_num_free_ignore",    l_vctr_set_num_free_ignore },
-    { "get_num_free_ignore",    l_vctr_get_num_free_ignore },
+    { "set_early_freeable",    l_vctr_set_early_freeable },
+    { "get_early_freeable",    l_vctr_get_early_freeable },
     //--------------------------------
     { "kill", l_vctr_kill },
     { "set_num_kill_ignore", l_vctr_set_num_kill_ignore },
     { "get_num_kill_ignore", l_vctr_get_num_kill_ignore },
+    //--------------------------------
+    { "max_chnk_idx", l_vctr_max_chnk_idx },
+    { "min_chnk_idx", l_vctr_min_chnk_idx },
     //--------------------------------
     { "is_eov", l_vctr_is_eov },
     { "is_lma", l_vctr_is_lma },
@@ -1521,6 +1592,11 @@ static const struct luaL_Reg vector_functions[] = {
     //--------------------------------
     { "vctr_num_readers", l_vctr_get_num_readers },
     { "vctr_num_writers", l_vctr_get_num_writers },
+    //--------------------------------
+    { "has_nn_vec", l_vctr_has_nn_vec },
+    { "is_nn_vec", l_vctr_is_nn_vec },
+    // TODO { "vctr_get_nn_vec", l_vctr_get_nn_vec },
+    // TODO { "vctr_set_nn_vec", l_vctr_set_nn_vec },
     //--------------------------------
     { "chnk_incr_num_readers", l_chnk_incr_num_readers },
     { "chnk_num_readers", l_chnk_get_num_readers },

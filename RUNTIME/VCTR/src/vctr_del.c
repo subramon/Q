@@ -86,8 +86,6 @@ vctr_del(
   }
   //-------------------------------------------
   if ( vctr_val.num_elements == 0 ) {
-    fprintf(stderr, "TODO Need to understand this case better \n");
-    go_BYE(-1);
     // This can happen when we call get_chunk on a vector but
     // never call put_chunk. Typically for intermediate vectors
     // Makes me wonder how this interplays with memo_len
@@ -109,7 +107,9 @@ vctr_del(
         &chnk_where_found);
     cBYE(status);
     // chunk must exist unless vector is in error state 
-    if ( !vctr_val.is_error ) { if ( !chnk_is_found ) { go_BYE(-1); } }
+    if ( !vctr_val.is_error ) { 
+      if ( !chnk_is_found ) { go_BYE(-1); } 
+    }
     status = chnk_del(tbsp, uqid, chnk_idx, is_persist); 
     cBYE(status);
     uint32_t new_nitems = g_chnk_hmap[tbsp].nitems;

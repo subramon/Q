@@ -19,6 +19,7 @@ tests.t1 = function()
   assert(type(y) == "nil") -- only one thing returned
   assert(cVector.check_all())
   x:delete()
+  assert(cVector.check_all())
   assert(pre_mem == lgutils.mem_used())
   assert(pre_dsk == lgutils.dsk_used())
   collectgarbage("restart")
@@ -106,10 +107,8 @@ tests.t3 = function()
   assert(type(n) == "number")
   assert(n == max_num_in_chunk-1)
   -- cannot put once eov 
-  print(">>> START Deliberate error")
   local status = pcall(lVector.put_chunk, x, buf, max_num_in_chunk-1)
   assert(status == false)
-  print(">>> STOP  Deliberate error")
   assert(x:check())
   -- test printing
   assert(x:pr("_x", 0, 10))
@@ -136,6 +135,7 @@ tests.t4 = function()
   x = lVector({ name = "xvec", qtype = qtype, max_num_in_chunk = max_num_in_chunk })
   assert(cVector.check_all())
   assert(x:name() == "xvec")
+  assert(x:has_gen() == false)
   -- print("Created vector " .. x:name() .. " with uqid = " .. x:uqid())
   -- create a buffer for data to put into vector 
   local size = max_num_in_chunk * width
