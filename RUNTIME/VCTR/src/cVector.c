@@ -878,17 +878,18 @@ BYE:
   return 3;
 }
 //----------------------------------------
-static int l_vctr_memo_len( lua_State *L) {
+static int l_vctr_get_memo( lua_State *L) {
   int status = 0;
   // get args from Lua 
   int num_args = lua_gettop(L); 
   if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  int memo_len;
-  status = vctr_get_memo_len(ptr_v->tbsp, ptr_v->uqid, &memo_len);
+  bool is_memo; int memo_len;
+  status = vctr_get_memo_len(ptr_v->tbsp, ptr_v->uqid, &is_memo, &memo_len);
   cBYE(status);
+  lua_pushboolean(L, is_memo);
   lua_pushnumber(L, memo_len);
-  return 1;
+  return 2;
 BYE:
   lua_pushnil(L);
   lua_pushstring(L, __func__);
@@ -1561,7 +1562,6 @@ static const struct luaL_Reg vector_methods[] = {
     { "unget_lma_write",  l_unget_lma_write },
     //--------------------------------
     { "cast", l_vctr_cast },
-    { "set_memo", l_vctr_set_memo },
     { "set_name", l_vctr_set_name },
     { "set_error", l_vctr_set_error },
     { "is_error", l_vctr_is_error },
@@ -1583,8 +1583,10 @@ static const struct luaL_Reg vector_methods[] = {
     { "chnk_num_readers", l_chnk_get_num_readers },
     { "chnk_num_writers", l_chnk_get_num_writers },
     //--------------------------------
+    { "set_memo", l_vctr_set_memo},
+    { "get_memo", l_vctr_get_memo },
+    //--------------------------------
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },
-    { "memo_len", l_vctr_memo_len },
     { "tbsp", l_vctr_tbsp },
     { "uqid", l_vctr_uqid },
     { "width", l_vctr_width },
@@ -1649,7 +1651,6 @@ static const struct luaL_Reg vector_functions[] = {
     { "unget_lma_write",  l_unget_lma_write },
     //--------------------------------
     { "cast", l_vctr_cast },
-    { "set_memo", l_vctr_set_memo},
     { "set_name", l_vctr_set_name },
     { "set_error", l_vctr_set_error },
     { "is_error", l_vctr_is_error },
@@ -1678,7 +1679,10 @@ static const struct luaL_Reg vector_functions[] = {
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },
     { "tbsp", l_vctr_tbsp },
     { "uqid", l_vctr_uqid },
-    { "memo_len", l_vctr_memo_len },
+    //--------------------------------
+    { "set_memo", l_vctr_set_memo},
+    { "get_memo", l_vctr_get_memo },
+    //--------------------------------
     { "width", l_vctr_width },
     { "pr", l_vctr_print },
     // creation, new, ...

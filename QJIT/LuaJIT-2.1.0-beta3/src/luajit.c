@@ -660,12 +660,6 @@ int main(int argc, char **argv)
     pthread_join(g_out_of_band, NULL); 
     printf("out_of_band joined\n"); 
   }
-  if ( g_is_mem_mgr     ) { 
-    WHEREAMI;
-    pthread_cond_signal(&g_mem_cond);
-    pthread_join(g_mem_mgr,    NULL); 
-    printf("g_mem_mgr joined\n"); 
-  }
 BYE:
   if ( mod_argc != 0 ) { 
     if ( mod_argv != NULL ) { 

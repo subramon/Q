@@ -1,7 +1,6 @@
 #include <pthread.h>
 #include "qjit_consts.h"
 #include "web_struct.h"
-#include "mem_mgr_struct.h"
 #ifdef MAIN_PGM
 #define my_extern 
 #else
@@ -30,10 +29,6 @@ my_extern vctr_rs_hmap_t *g_vctr_hmap; // [Q_MAX_NUM_TABLESPACES];
 // and you cannot add vectors to any tablespace other than yor own (0)
 my_extern uint32_t g_vctr_uqid; 
 my_extern chnk_rs_hmap_t *g_chnk_hmap; // [Q_MAX_NUM_TABLESPACES];
-// For master and memory manager
-my_extern bool g_mutex_created;
-my_extern pthread_cond_t  g_mem_cond;
-my_extern pthread_mutex_t g_mem_mutex;
 // for protecting concurrent access to usage counters, both
 my_extern int g_mem_lock; 
 // memrory stuff and disk stuff
@@ -59,10 +54,6 @@ my_extern web_info_t g_web_info;
 my_extern bool       g_is_out_of_band;
 my_extern pthread_t  g_out_of_band;
 my_extern web_info_t g_out_of_band_info; 
-// for memory manager
-my_extern bool           g_is_mem_mgr;
-my_extern pthread_t      g_mem_mgr;
-my_extern mem_mgr_info_t g_mem_mgr_info; 
 // configs for hash tables 
 my_extern rs_hmap_config_t g_vctr_hmap_config; 
 my_extern rs_hmap_config_t g_chnk_hmap_config; 

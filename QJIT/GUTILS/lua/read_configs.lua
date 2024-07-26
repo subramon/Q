@@ -16,7 +16,6 @@ typedef struct  _q_config_t {
   //-----------------------
   bool is_webserver;
   bool is_out_of_band;
-  bool is_mem_mgr;
   //-----------------------
   char *data_dir_root;
   char *meta_dir_root;
@@ -52,11 +51,6 @@ local function read_configs(C)
   end
   assert(type(T.is_out_of_band) == "boolean")
   --===============================================
-  if (type(T.is_mem_mgr) == "nil") then
-    T.is_mem_mgr = false
-  end
-  assert(type(T.is_mem_mgr) == "boolean")
-  --===============================================
 
   assert(type(T.data_dir_root) == "string")
   assert(type(T.meta_dir_root) == "string")
@@ -79,9 +73,6 @@ local function read_configs(C)
     assert(T.out_of_band_port > 0)
   else
     T.out_of_band_port  = 0
-  end
-  if ( T.is_webserver ) and ( T.is_out_of_band ) then
-    assert(type(T.web_port) ~= T.mem_mgr_port)
   end
 
   local vctr = assert(T.vctr_hmap)
@@ -142,7 +133,6 @@ local function read_configs(C)
   -----------------------
   C[0].is_webserver   = T.is_webserver
   C[0].is_out_of_band = T.is_out_of_band
-  C[0].is_mem_mgr     = T.is_mem_mgr
   -----------------------
   C[0].data_dir_root = stringify(T.data_dir_root)
   C[0].meta_dir_root = stringify(T.meta_dir_root)

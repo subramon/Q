@@ -5,7 +5,6 @@ typedef struct  _q_config_t {
   //-----------------------
   bool is_webserver;
   bool is_out_of_band;
-  bool is_mem_mgr;
   //-----------------------
   char *data_dir_root;
   char *meta_dir_root;

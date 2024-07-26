@@ -15,11 +15,9 @@
 #include "vctr_usage.h"
 #include "vctr_del.h"
 #include "web_struct.h"
-#include "mem_mgr_struct.h"
 
 #include "mod_mem_used.h"
 #include "webserver.h"
-#include "mem_mgr.h"
 #undef MAIN_PGM
 #include "qjit_globals.h"
 #include "init_session.h"
@@ -45,17 +43,6 @@ init_session(
     status = pthread_create(&g_out_of_band, NULL, &webserver, 
         &g_out_of_band_info);
     cBYE(status);
-  }
-  // For memory manager
-  if ( g_is_mem_mgr ) { 
-    pthread_cond_init(&g_mem_cond, NULL);
-    pthread_mutex_init(&g_mem_mutex, NULL);
-    g_mutex_created = true;
-
-    g_mem_mgr_info.dummy = 123456789;
-    status = pthread_create(&g_mem_mgr, NULL, &mem_mgr, &g_mem_mgr_info);
-    cBYE(status);
-    pthread_cond_signal(&g_mem_cond);
   }
   int tbsp = 0;  // init_session() only for primary tablespace
 

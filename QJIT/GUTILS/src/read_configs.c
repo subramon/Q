@@ -104,7 +104,6 @@ read_configs(
   g_restore_session = C.restore_session;
   g_is_webserver    = C.is_webserver;
   g_is_out_of_band  = C.is_out_of_band;
-  g_is_mem_mgr      = C.is_mem_mgr;
 
   printf("g_restore_session = %s \n", g_restore_session ? "true" : "false");
   

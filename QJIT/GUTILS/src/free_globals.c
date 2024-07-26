@@ -12,10 +12,8 @@
 #include "chnk_rs_hmap_destroy.h"
 
 #include "web_struct.h"
-#include "mem_mgr_struct.h"
 
 #include "webserver.h"
-#include "mem_mgr.h"
 #undef MAIN_PGM
 #include "qjit_globals.h"
 #include "free_globals.h"
@@ -25,10 +23,6 @@ free_globals(
     )
 {
   int status = 0;
-  if ( g_mutex_created ) { 
-    pthread_cond_destroy(&g_mem_cond);
-    pthread_mutex_destroy(&g_mem_mutex);
-  }
   g_vctr_uqid = 0; // nothing to free
   //---------------------------------
   if ( g_vctr_hmap != NULL ) {

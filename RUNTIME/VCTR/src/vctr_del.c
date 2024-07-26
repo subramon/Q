@@ -83,7 +83,7 @@ vctr_del(
     g_vctr_hmap[tbsp].bkts[where_found].val.is_lma = false;
   }
   if ( ( is_lma ) && ( is_persist ) ) {
-    printf("Not deleting file baclup for Vctr: %s \n", vctr_val.name); 
+    // printf("Not deleting file baclup for Vctr: %s \n", vctr_val.name); 
   }
   //-------------------------------------------
   if ( vctr_val.num_elements == 0 ) {

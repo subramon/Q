@@ -8,6 +8,7 @@ extern int
 vctr_get_memo_len(
     uint32_t tbsp,
     uint32_t uqid,
+    bool *ptr_is_memo,
     int *ptr_memo_len
     );
 extern int

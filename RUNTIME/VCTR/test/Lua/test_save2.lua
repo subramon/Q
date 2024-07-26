@@ -14,9 +14,6 @@ assert(Q.save())
 local ddir = lgutils.data_dir()
 local data_files = pldir.getfiles(ddir)
 local exp_files = {
-"/home/subramon/local/Q/data/_100000_000000", 
-"/home/subramon/local/Q/data/_100000_100000", 
-"/home/subramon/local/Q/data/_100000_200000", 
 "/home/subramon/local/Q/data/_100000_FFFFFF", -- this is the lma file 
 }
 

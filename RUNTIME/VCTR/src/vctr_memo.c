@@ -37,6 +37,7 @@ int
 vctr_get_memo_len(
     uint32_t tbsp,
     uint32_t uqid,
+    bool *ptr_is_memo,
     int *ptr_memo_len
     )
 {
@@ -48,6 +49,7 @@ vctr_get_memo_len(
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
   vctr_rs_hmap_bkt_t *bkts = (vctr_rs_hmap_bkt_t *)g_vctr_hmap[tbsp].bkts;
+  *ptr_is_memo  = bkts[where].val.is_memo;
   *ptr_memo_len = bkts[where].val.memo_len;
 BYE:
   return status;

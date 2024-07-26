@@ -1,15 +1,15 @@
 local T = {}
 
-T.restore_session  = false
+T.restore_session  = true
 
-T.is_webserver     =  true
+T.is_webserver     =  false
 T.web_port         = 8004
 
-T.is_out_of_band   = true
+T.is_out_of_band   = false
 T.out_of_band_port = 8008
 
-T.meta_dir_root = "/home/subramon/local/Q/meta/"
-T.data_dir_root = "/home/subramon/local/Q/data/"
+T.meta_dir_root = os.getenv("Q_SRC_ROOT") .. "/RUNTIME/VCTR/test/Lua/meta"
+T.data_dir_root = os.getenv("Q_SRC_ROOT") .. "/RUNTIME/VCTR/test/Lua/data"
 
 T.mem_allowed = 4   -- in GBytes
 T.dsk_allowed = 16  -- in GBytes

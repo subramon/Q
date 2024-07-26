@@ -14,10 +14,8 @@
 #include "chnk_rs_hmap_unfreeze.h"
 
 #include "web_struct.h"
-#include "mem_mgr_struct.h"
 
 #include "webserver.h"
-#include "mem_mgr.h"
 #undef MAIN_PGM
 #include "qjit_globals.h"
 #include "init_globals.h"
@@ -69,15 +67,12 @@ init_globals(
   // multiple tbsp_name data_dir_root, one for each tablespace
   g_tbsp_name[0] = strdup("original writable tablespace");
   //------------------------
-  g_mutex_created = false;
-
   g_mem_used    = 0;
   g_dsk_used    = 0;
 
   //------------------------
   memset(&g_web_info,         0, sizeof(web_info_t));
   memset(&g_out_of_band_info, 0, sizeof(web_info_t));
-  memset(&g_mem_mgr_info,     0, sizeof(mem_mgr_info_t));
 
   memset(&g_vctr_hmap_config, 0, sizeof(rs_hmap_config_t));
   memset(&g_chnk_hmap_config, 0, sizeof(rs_hmap_config_t));
@@ -88,14 +83,12 @@ init_globals(
   //-----------------------
   g_is_webserver   = false;
   g_is_out_of_band = false;
-  g_is_mem_mgr     = false;
   //-----------------------
   g_mem_allowed = 4 * 1024 * (uint64_t)1048576 ; // in Bytes
   g_dsk_allowed = 32 * 1024 * (uint64_t)1048576 ; // in Bytes
 
   g_is_webserver   = false;
   g_is_out_of_band = false; 
-  g_is_mem_mgr     = false; 
 
   g_web_info.port         = 0; 
   g_out_of_band_info.port = 0; 

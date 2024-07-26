@@ -38,7 +38,6 @@ AUX_SRCS += ./src/handler.c
 AUX_SRCS += ./src/import_tbsp.c 
 AUX_SRCS += ./src/init_globals.c 
 AUX_SRCS += ./src/init_session.c 
-AUX_SRCS += ./src/mem_mgr.c 
 AUX_SRCS += ./src/read_configs.c 
 AUX_SRCS += ./src/process_req.c 
 AUX_SRCS += ./src/webserver.c 
