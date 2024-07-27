@@ -129,7 +129,6 @@ init_session(
       vctr_rs_hmap_key_t key = g_vctr_hmap[tbsp].bkts[i].key;
       uint32_t vctr_uqid = key;
       if ( vctr_uqid > g_vctr_uqid ) { g_vctr_uqid = vctr_uqid; } 
-      g_vctr_hmap[tbsp].bkts[i].val.ref_count   = 0;
       //--- Set usage statistics
       uint64_t mem, dsk; 
       status = vctr_usage(tbsp, vctr_uqid, &mem, &dsk); cBYE(status);

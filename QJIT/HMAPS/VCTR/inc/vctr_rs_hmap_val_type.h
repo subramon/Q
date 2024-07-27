@@ -18,13 +18,11 @@ typedef struct _vctr_meta_t {
   uint32_t max_chnk_idx;
   uint32_t max_num_in_chnk; // WRITE-ONCE
   uint32_t width; // WRITE-ONCE
-  uint32_t ref_count; // reference count 
 
   bool has_nn; vctr_rs_hmap_key_t nn_key; // identifies nn vector if any
   bool has_parent; vctr_rs_hmap_key_t parent_key; 
   // identifies parent vector if this is a nn vector 
   //
-  // TODO ref_count needs proper documentation/testing
   // chunk size = max_num_in_chnk * width 
   // START: Following for early deallocation of resources
   bool is_memo; uint32_t memo_len; 

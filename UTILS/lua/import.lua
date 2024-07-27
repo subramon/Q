@@ -16,6 +16,7 @@ local function import(tbsp_name, new_meta_dir, new_data_dir)
 
   local tbsp = lgutils.import_tbsp(tbsp_name, new_meta_dir, new_data_dir)
   assert(type(tbsp) == "number")
+  assert(tbsp > 0)
 
   -- Before we  execute the meta file, we make a copy of it 
   -- and modify it to include the tbsp 
@@ -28,30 +29,22 @@ local function import(tbsp_name, new_meta_dir, new_data_dir)
   local fpr = io.open(orig_meta_file, "r")
   local fpw = io.open(temp_meta_file, "w")
   local inlines = fpr:lines()
-  local replace = "{ tbsp = " .. tostring(tbsp)  .. ", uqid = " 
+  local from_str = "tbsp = 0"
+  local to_str   = " tbsp = " .. tostring(tbsp) 
   for inline in inlines do 
     -- print("inline = [[",  inline .. " ]] ")
-    local outline = string.gsub(inline, "{ uqid = ", replace)
+    local outline = string.gsub(inline, from_str, to_str)
     fpw:write(outline .. "\n")
   end
   fpr:close()
   fpw:close()
-
-  -- to execute the modified meta file, we need to set the Lua path 
-  -- to include the /tmp/ directory where the temp_meta_file is 
-  -- Notice that /tmp/ comes as the first entry in the LUA_PATH
-  local oldpath = os.getenv("LUA_PATH")
-  local T = mysplit(oldpath, ";")
-  local newpath = "/tmp/?.lua;" .. table.concat(T, ";") .. ";;"
-  package.path = newpath
-  -- delete the prefix directory and .lua suffix 
-  local bak_temp_meta_file = temp_meta_file
-  temp_meta_file = string.gsub(temp_meta_file, "/tmp/", "")
-  temp_meta_file = string.gsub(temp_meta_file, ".lua", "")
-  require(temp_meta_file)
-  cutils.unlink(bak_temp_meta_file)
+  --== Load the modified meta file 
+  print("Loading file " .. temp_meta_file)
+  local x = loadfile(temp_meta_file)
+  assert(type(x) == "function")
+  x()
+  -- TODO P0 cutils.unlink(temp_meta_file) --- no longer needed 
   -- reset the lua path to what it was 
-  package.path = oldpath
 
 end
 T.import = import

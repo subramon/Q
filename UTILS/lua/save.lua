@@ -122,7 +122,12 @@ local function internal_save(
         rand_name = cutils.rand_file_name()
         rand_name = string.gsub(rand_name, ".bin", "")
         fp:write("local ", rand_name, 
-          " = lVector ( { uqid = ", vec:uqid(), " } )\n" )
+          " = lVector ( { tbsp = 0, uqid = ", vec:uqid(), " } )\n" )
+        -- Note the tbsp = 0. One may wonder why this is here given
+        -- that that is the default value. The reason is that it makes
+        -- it easy for us to modify the meta file to change 
+        -- tbsp = 0 to tbsp = 23 
+        -- when somebody else is importing the vectors being saved here
         fp:write(name, " =  ", rand_name, "\n")
         uqid_to_vecs[uqid] = rand_name
       end

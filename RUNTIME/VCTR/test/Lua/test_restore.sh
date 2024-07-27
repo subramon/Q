@@ -2,7 +2,7 @@
 set -e 
 mkdir -p $PWD/data/
 mkdir -p $PWD/meta/
-qjit --config $PWD/conf1.lua  make_stuff.lua 
+qjit --config $PWD/conf1.lua  make_some_vecs.lua 
 echo "Create a vector x"
 qjit --config $PWD/conf2.lua  restore_stuff.lua 
 echo "Restored a vector x"

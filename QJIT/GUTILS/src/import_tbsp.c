@@ -99,20 +99,29 @@ import_tbsp(
         q_meta_dir_root,
         "_chnk_meta.csv", "_chnk_bkts.bin", "_chnk_full.bin");
   cBYE(status);
-  // For importer, we need to reset some of the counters that were
-  // valid for the creator
+  // IMPORTANT: The imported tablespace must be quiescent -- not in use
+  // We assume that the creator of the executed tablespace has 
+  // performed Q.save() and then exited their Q session.
+  // There is no way for Q to verify that. We can make a few checks
+  // at the time of import but no way to know that they will continue
+  // to be the same.
   vctr_rs_hmap_t H = g_vctr_hmap[tbsp];
   vctr_rs_hmap_bkt_t *B = H.bkts;
   bool *in_use = H.bkt_full; 
   for ( uint32_t i = 0; i < H.size; i++ ) { 
     if ( in_use[i] == false ) { continue; } 
-    B[i].val.ref_count = 0;
-    B[i].val.num_readers = 0;
-    B[i].val.num_writers = 0;
-    B[i].val.is_writable = false;  
-    if ( B[i].val.is_eov == false ) { go_BYE(-1); } 
+    if ( B[i].val.num_readers > 0 ) { go_BYE(-1); }
+    if ( B[i].val.num_writers > 0 )  { go_BYE(-1); }
+    if ( B[i].val.X != NULL )  { go_BYE(-1); }
+    if ( B[i].val.nX != 0 )  { go_BYE(-1); }
+
+    if ( B[i].val.is_writable ) { go_BYE(-1); }
+    if ( B[i].val.is_memo ) { go_BYE(-1); }
+    if ( B[i].val.is_early_freeable ) { go_BYE(-1); }
+    if ( B[i].val.is_killable ) { go_BYE(-1); }
+
+    if ( !B[i].val.is_eov ) { go_BYE(-1); } // notice the negation
   }
-  // TODO P2 Anything else to reset above???
   //-----------------------------------
   // Note that since we cannot add to an imported tablespace,
   // we do not set g_vctr_uqid 
