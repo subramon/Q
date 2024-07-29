@@ -1,8 +1,8 @@
 CC=gcc
 
 INCS := -I../inc/ 
-INCS += -I${RSUTILS_SRC_ROOT}/RSUTILS/inc/
-INCS += -I${RSHMAP_SRC_ROOT}/RSHMAP/fixed_len_kv/common/inc/
+INCS += -I${RSUTILS_SRC_ROOT}/inc/
+INCS += -I${RSHMAP_SRC_ROOT}/fixed_len_kv/common/inc/
 INCS += -I../../../QJIT/HMAPS/VCTR/gen_inc/
 INCS += -I../../../QJIT/HMAPS/VCTR/inc/
 INCS += -I../../../QJIT/HMAPS/CHNK/gen_inc/
@@ -94,8 +94,8 @@ TEST3_OBJS = $(TEST3_SRCS:.c=.o)
 	$(CC) -c -o $@ $< ${QCFLAGS} $(INCS) 
 
 #-------------------------------------------
-RSHMAP_SO  = ${RSHMAP_SRC_ROOT}/RSHMAP/fixed_len_kv/common/librs_hmap_core.so
-RSUTILS_SO = ${RSUTILS_SRC_ROOT}/RSUTILS/src/librsutils.so
+RSHMAP_SO  = ${RSHMAP_SRC_ROOT}/fixed_len_kv/common/librs_hmap_core.so
+RSUTILS_SO = ${RSUTILS_SRC_ROOT}/src/librsutils.so
 GUTILS_SO  = ${Q_SRC_ROOT}/QJIT/GUTILS/libcgutils.so
 VCTR_SO    = ${Q_SRC_ROOT}/QJIT/HMAPS/VCTR/libvctr_rs_hmap.so
 CHNK_SO    = ${Q_SRC_ROOT}/QJIT/HMAPS/CHNK/libchnk_rs_hmap.so
@@ -107,9 +107,9 @@ ${CHNK_SO} :
 ${GUTILS_SO} : 
 	make -C ${Q_SRC_ROOT}/QJIT/GUTILS/
 ${RSUTILS_SO} : 
-	make -C ${RSUTILS_SRC_ROOT}/RSUTILS/src/
+	make -C ${RSUTILS_SRC_ROOT}/src/
 ${RSHMAP_SO} : 
-	make -C ${RSHMAP_SRC_ROOT}/RSHMAP/fixed_len_kv/common/
+	make -C ${RSHMAP_SRC_ROOT}/fixed_len_kv/common/
 #-------------------------------------------
 libvctr_core.so :  ${OBJS} \
   	${RSHMAP_SO} ${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO}

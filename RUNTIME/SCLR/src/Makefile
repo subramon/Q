@@ -2,8 +2,8 @@
 CC = gcc
 
 INCS := -I../inc/ 
-INCS += -I${RSUTILS_SRC_ROOT}/RSUTILS/inc/
-INCS += -I${RSUTILS_SRC_ROOT}/RSUTILS/gen_inc/
+INCS += -I${RSUTILS_SRC_ROOT}/inc/
+INCS += -I${RSUTILS_SRC_ROOT}/gen_inc/
 INCS += -I../../CMEM/inc 
 INCS += -I/usr/include/lua5.1 
 
@@ -31,7 +31,7 @@ CGUTILS_SO = ${Q_ROOT}/lib/libcgutils.so
 ${CGUTILS_SO} :
 	make -C ../../../QJIT/GUTILS/
 
-RSUTILS_SO = ${RSUTILS_SRC_ROOT}/RSUTILS/src/librsutils.so 
+RSUTILS_SO = ${RSUTILS_SRC_ROOT}/src/librsutils.so 
 #---------------------------------------------
 CMEM_SO = ${Q_SRC_ROOT}/RUNTIME/CMEM/src/libcmem.so
 CMEM_SO :

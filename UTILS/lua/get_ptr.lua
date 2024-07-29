@@ -2,7 +2,7 @@ local ffi = require 'ffi'
 local cutils = require 'libcutils'
 local qc      = require 'Q/UTILS/lua/qcore'
 local rsutils_src_root = assert(os.getenv("RSUTILS_SRC_ROOT"))
-qc.q_cdef(rsutils_src_root .. "/RSUTILS/inc/qtypes.h")
+qc.q_cdef(rsutils_src_root .. "/inc/qtypes.h")
 
 local function ends_with(str, ending)
    return ending == "" or str:sub(-#ending) == ending

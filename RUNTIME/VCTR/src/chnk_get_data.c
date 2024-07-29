@@ -27,11 +27,6 @@ chnk_get_data(
   chnk_rs_hmap_val_t *ptr_val = &(g_chnk_hmap[tbsp].bkts[chnk_where].val);
 
   if ( is_write ) { go_BYE(-1); } // NOT IMPLEMENTED YET 
-  if ( ptr_val->was_early_freed ) { 
-    if ( ptr_val->num_readers > 0 ) { go_BYE(-1); }
-    if ( ptr_val->num_writers > 0 ) { go_BYE(-1); }
-    return NULL;
-  }
   //-----------------------------------------
   if ( ptr_val->num_writers > 0 ) { go_BYE(-1); }
   ptr_val->num_readers++;

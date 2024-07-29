@@ -17,19 +17,19 @@ find $Q_SRC_ROOT -name "*.so" -print | xargs rm  -f
 
 # Quick and dirty way of compiling. Need to improve this
 test -d $RSUTILS_SRC_ROOT
-DIR=$RSUTILS_SRC_ROOT/RSUTILS/binding/src/
+DIR=$RSUTILS_SRC_ROOT/binding/src/
 cd $DIR && make clean && make 
 cp libcutils.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
 test -d $RSUTILS_SRC_ROOT
-DIR=$RSUTILS_SRC_ROOT/RSUTILS/src/
+DIR=$RSUTILS_SRC_ROOT/src/
 cd $DIR && make clean && make 
 cp librsutils.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
 test -d $RSHMAP_SRC_ROOT
-DIR=$RSHMAP_SRC_ROOT/RSHMAP/fixed_len_kv/common/
+DIR=$RSHMAP_SRC_ROOT/fixed_len_kv/common/
 cd $DIR && make clean && make
 cp librs_hmap_core.so $Q_ROOT/lib/
 cd -

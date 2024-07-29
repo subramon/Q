@@ -2,9 +2,9 @@
 CC = gcc
 
 INCS := -I./inc/
-INCS += -I${RSUTILS_SRC_ROOT}/RSUTILS/inc/
+INCS += -I${RSUTILS_SRC_ROOT}/inc/
 #-- for hashmaps for chnk and vector 
-INCS += -I${RSHMAP_SRC_ROOT}/RSHMAP/fixed_len_kv/common/inc/
+INCS += -I${RSHMAP_SRC_ROOT}/fixed_len_kv/common/inc/
 INCS += -I../HMAPS/VCTR/inc/
 INCS += -I../HMAPS/VCTR/gen_inc/
 INCS += -I../HMAPS/CHNK/inc/

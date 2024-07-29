@@ -32,7 +32,7 @@ local function cprint(
   subs.srcs = { "UTILS/src/get_bit_u64.c" }
   local rsutils_src_root = assert(os.getenv("RSUTILS_SRC_ROOT"))
   subs.incs = { "OPERATORS/PRINT/inc/", "UTILS/inc/", 
-    rsutils_src_root ..  "/RSUTILS/inc/", }
+    rsutils_src_root ..  "/inc/", }
   subs.structs = nil -- no structs need to be cdef'd
   subs.libs = nil -- no libaries need to be linked
   -- changed to following because of core re-org

@@ -121,6 +121,17 @@ import_tbsp(
     if ( B[i].val.is_killable ) { go_BYE(-1); }
 
     if ( !B[i].val.is_eov ) { go_BYE(-1); } // notice the negation
+
+  }
+  // TODO: P0 What happens for read-only import???
+  // IMPORTANT: Importer needs to reset some elements 
+  chnk_rs_hmap_t cH = g_chnk_hmap[tbsp];
+  chnk_rs_hmap_bkt_t *cB = cH.bkts;
+  in_use = cH.bkt_full; 
+  for ( uint32_t i = 0; i < cH.size; i++ ) { 
+    if ( in_use[i] == false ) { continue; } 
+    cB[i].val.l1_mem = NULL; 
+    cB[i].val.num_readers = 0; 
   }
   //-----------------------------------
   // Note that since we cannot add to an imported tablespace,

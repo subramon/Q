@@ -3,7 +3,7 @@ CC=gcc
 
 # Why are we depending on print and load csv?
 INCS := -I../inc/ 
-INCS += -I${RSUTILS_SRC_ROOT}/RSUTILS/inc/
+INCS += -I${RSUTILS_SRC_ROOT}/inc/
 INCS += -I../../../QJIT/GUTILS/inc/
 INCS += -I/usr/include/lua5.1/ 
 
@@ -34,7 +34,7 @@ QCFLAGS += -DUSE_GLOBALS
 # GLOBALS needed for g_mem_used
 
 # CGUTILS_SO = ${Q_SRC_ROOT}/QJIT/GUTILS/libcgutils.so
-RSUTILS_SO = ${RSUTILS_SRC_ROOT}/RSUTILS/src/librsutils.so 
+RSUTILS_SO = ${RSUTILS_SRC_ROOT}/src/librsutils.so 
 	
 ${CGUTILS_SO} :
 	make -C ../../../QJIT/GUTILS/

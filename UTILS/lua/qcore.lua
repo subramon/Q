@@ -50,7 +50,7 @@ end
 -- Place stuff here that Lua needs to know about C 
 local incdir = assert(os.getenv("RSUTILS_SRC_ROOT"))
 assert(cutils.isdir(incdir))
-local qtypes_file = incdir .. "/RSUTILS/inc/qtypes.h"
+local qtypes_file = incdir .. "/inc/qtypes.h"
 q_cdef(qtypes_file)
 q_cdef("RUNTIME/SCLR/inc/sclr_struct.h")
 

@@ -676,13 +676,13 @@ lj_folddef.h: $(BUILDVM_T) lj_opt_fold.c
 INCS := -I.
 INCS += -I./inc/
 #-- for hash tables 
-INCS += -I${RSHMAP_SRC_ROOT}/RSHMAP/fixed_len_kv/common/inc/ 
+INCS += -I${RSHMAP_SRC_ROOT}/fixed_len_kv/common/inc/ 
 INCS += -I../../HMAPS/VCTR/inc/
 INCS += -I../../HMAPS/VCTR/gen_inc/
 INCS += -I../../HMAPS/CHNK/inc/
 INCS += -I../../HMAPS/CHNK/gen_inc/
 #------
-INCS += -I${RSUTILS_SRC_ROOT}/RSUTILS/inc/
+INCS += -I${RSUTILS_SRC_ROOT}/inc/
 INCS += -I../../GUTILS/inc/
 # INCS += -I../../../RUNTIME/VCTR/inc/
 

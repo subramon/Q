@@ -13,12 +13,6 @@ typedef struct _chnk_rs_hmap_val_t {
   //-----
   qtype_t qtype; // backward reference for debugging 
   bool     l2_exists;
-  // Sometimes we know that a vector is not needed before chunk n
-  // In that case, we do NOT delete the chunk but we delete its resources
-  // and mark was_early_freed = true;
-  // Cannot save a vector if any of its chunks have was_early_freed == true
-  bool was_early_freed; 
-  // TODO Make sure you are setting it properly when a chunk is created
   uint16_t num_free_ignore; // settable only if vector is_early_freeable 
   uint32_t size; // we do not expect a chunk to exceed 4G, a vector might
   //-----
