@@ -13,6 +13,7 @@
 
 extern chnk_rs_hmap_t *g_chnk_hmap;
 // It creates memory at level "level" if necessary
+// If not in your tablespace, you can create at level 1 but no higher
 int  
 chnk_make_mem(
     uint32_t tbsp,
@@ -24,8 +25,6 @@ chnk_make_mem(
   int status = 0;
   char *l2_file = NULL; FILE *fp = NULL;
   char *X = NULL; size_t nX = 0;
-  // cannot backup chunk if not in your tablespace
-  if ( tbsp != 0 ) { go_BYE(-1); } 
 
   bool chnk_is_found; uint32_t chnk_where_found;
   status = chnk_is(tbsp, vctr_uqid, chnk_idx, &chnk_is_found,
@@ -56,6 +55,8 @@ chnk_make_mem(
       break;
     case 2 : 
       if ( ptr_val->l2_exists ) { /* nothing to do  */ goto BYE; }
+      // cannot backup chunk if not in your tablespace
+      if ( tbsp != 0 ) { go_BYE(-1); } 
 
       if ( isfile(l2_file) ) { 
         printf("STRANGE\n"); WHEREAMI; 

@@ -49,6 +49,7 @@ SRCS := ./src/l2_file_name.c
 SRCS += ./src/mod_mem_used.c 
 SRCS += ./src/vctr_name_to_uqid.c 
 SRCS += ./src/get_cli_arg.c 
+SRCS += ./src/clean_hmap.c 
 
 OBJS = $(SRCS:.c=.o)
 #----------------------------------

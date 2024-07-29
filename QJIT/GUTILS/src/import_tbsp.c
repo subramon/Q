@@ -8,6 +8,7 @@
 #include "chnk_rs_hmap_struct.h"
 #include "chnk_rs_hmap_unfreeze.h"
 
+#include "clean_hmap.h"
 #include "import_tbsp.h"
 
 extern vctr_rs_hmap_t *g_vctr_hmap;
@@ -105,35 +106,11 @@ import_tbsp(
   // There is no way for Q to verify that. We can make a few checks
   // at the time of import but no way to know that they will continue
   // to be the same.
-  vctr_rs_hmap_t H = g_vctr_hmap[tbsp];
-  vctr_rs_hmap_bkt_t *B = H.bkts;
-  bool *in_use = H.bkt_full; 
-  for ( uint32_t i = 0; i < H.size; i++ ) { 
-    if ( in_use[i] == false ) { continue; } 
-    if ( B[i].val.num_readers > 0 ) { go_BYE(-1); }
-    if ( B[i].val.num_writers > 0 )  { go_BYE(-1); }
-    if ( B[i].val.X != NULL )  { go_BYE(-1); }
-    if ( B[i].val.nX != 0 )  { go_BYE(-1); }
-
-    if ( B[i].val.is_writable ) { go_BYE(-1); }
-    if ( B[i].val.is_memo ) { go_BYE(-1); }
-    if ( B[i].val.is_early_freeable ) { go_BYE(-1); }
-    if ( B[i].val.is_killable ) { go_BYE(-1); }
-
-    if ( !B[i].val.is_eov ) { go_BYE(-1); } // notice the negation
-
-  }
-  // TODO: P0 What happens for read-only import???
-  // IMPORTANT: Importer needs to reset some elements 
-  chnk_rs_hmap_t cH = g_chnk_hmap[tbsp];
-  chnk_rs_hmap_bkt_t *cB = cH.bkts;
-  in_use = cH.bkt_full; 
-  for ( uint32_t i = 0; i < cH.size; i++ ) { 
-    if ( in_use[i] == false ) { continue; } 
-    cB[i].val.l1_mem = NULL; 
-    cB[i].val.num_readers = 0; 
-  }
   //-----------------------------------
+  int num_to_delete;
+  status = clean_hmap(&(g_vctr_hmap[tbsp]), &(g_chnk_hmap[tbsp]), 
+        tbsp, &num_to_delete ); 
+  cBYE(status);
   // Note that since we cannot add to an imported tablespace,
   // we do not set g_vctr_uqid 
   *ptr_tbsp = tbsp;

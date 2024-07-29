@@ -820,10 +820,12 @@ lVector.__gc = function (vec)
   -- local vname = ifxthenyelsez(vec:name(), "anonymous_" .. vec:uqid())
   -- print("GC CALLED on " .. tostring(vec:uqid()) .. " -> " .. vname)
   --=========================================
+  --[[ Not needed because done on C side 
   if ( vec:has_nn_vec() ) then 
     local nn_vec = cVector.get_nn_vec(self._base_vec)
     cVector.delete(nn_vec)
   end
+  --]]
   vec._is_dead = true
   cVector.delete(vec._base_vec)
 end

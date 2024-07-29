@@ -135,8 +135,7 @@ ut1 : ${TEST1_OBJS} \
 	libvctr.so libvctr_core.so 
 	gcc ${TEST1_OBJS} \
 	${QCFLAGS} ${INCS} \
-	libvctr.so \
-	libvctr_core.so \
+	libvctr.so libvctr_core.so \
 	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
 	-o ut1  -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
@@ -158,4 +157,6 @@ ut_memo : ${TEST3_OBJS}  ${RSUTILS_SO}
 
 clean:
 	rm -f *.o *.so ut1 ut2 ../test/*.o
-	rm -f ${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} 
+
+steam_clean : 
+	rm -f ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} ${VCTR_SO} ${CHNK_SO}
