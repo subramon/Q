@@ -17,6 +17,8 @@ echo "Q_SRC_ROOT= ${Q_SRC_ROOT}"
 
 export RSUTILS_SRC_ROOT=$HOME/RSUTILS/ # Where RSUTILS has been checked out
 export RSHMAP_SRC_ROOT=$HOME/RSHMAP/  # Where  RSHMAP has been checked out
+export CMEM_SRC_ROOT=$HOME/CMEM/  # Where  CMEM has been checked out
+export SCLR_SRC_ROOT=$HOME/SCLR/  # Where  SCLR has been checked out
 #-----------------------------------
 export Q_ROOT="/home/subramon/local/Q/"
 # export Q_ROOT="/mnt/storage/local/Q/"

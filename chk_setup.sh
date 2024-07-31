@@ -16,6 +16,8 @@ test -d $Q_ROOT/cdefs/
 
 test -d $RSUTILS_SRC_ROOT
 test -d $RSHMAP_SRC_ROOT
+test -d $CMEM_SRC_ROOT
+test -d $SCLR_SRC_ROOT
 #-----------------------------------
 echo "Tested environment variables for Q"
 #-- TODO Put in more tests here

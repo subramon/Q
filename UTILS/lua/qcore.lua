@@ -5,7 +5,7 @@ local compile_and_link  = require 'Q/UTILS/lua/compile_and_link'
 local is_so_file  = require 'Q/UTILS/lua/is_so_file'
 local ffi      = require 'ffi'
 local gen_code = require 'Q/UTILS/lua/gen_code'
-local for_cdef = require 'Q/UTILS/lua/for_cdef'
+local for_cdef = require 'RSUTILS/lua/for_cdef'
 local qcfg     = require 'Q/UTILS/lua/qcfg'
 local cutils   = require 'libcutils'
 --==================
@@ -35,7 +35,7 @@ local function q_cdef( infile, incs)
   if ( cdefd[infile] ) then
     -- print("Skipping cdef of " .. infile)
   else
-    local to_cdef, pre_cdef, cdef_file = for_cdef(infile, incs)
+    local to_cdef, pre_cdef, cdef_file = for_cdef(infile, incs, true)
     assert(type(to_cdef) == "string")
     assert(type(pre_cdef) == "boolean")
     ffi.cdef(to_cdef)
@@ -70,7 +70,7 @@ local function load_lib(
         -- print("struct file: Skipping cdef of " .. v)
       else
         -- print("cdef'ing " .. v)
-        local y = for_cdef(v, incs)
+        local y = for_cdef(v, incs, true)
         ffi.cdef(y)
         cdefs[v] = y
         cdefd[v] = true
@@ -82,9 +82,10 @@ local function load_lib(
   if ( cdefd[doth] ) then
     -- print("doth: Skipping cdef of " .. doth)
   else
-    -- print("doth: cdef'ing " .. doth)
-    local y = for_cdef(doth, incs, subs)
-    -- print("cdefing ", y)
+    print("doth: cdef'ing " .. doth)
+    -- WAS local y = for_cdef(doth, incs, subs)
+       local y = for_cdef(doth, incs, true)
+    print("cdefing ", y)
     ffi.cdef(y)
     cdefd[doth] = true
     cdefs[doth] = y

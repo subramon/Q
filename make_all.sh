@@ -22,36 +22,39 @@ cd $DIR && make clean && make
 cp libcutils.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
-test -d $RSUTILS_SRC_ROOT
-DIR=$RSUTILS_SRC_ROOT/src/
+DIR=$RSUTILS_SRC_ROOT/src/; test -d $DIR
 cd $DIR && make clean && make 
 cp librsutils.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
-test -d $RSHMAP_SRC_ROOT
-DIR=$RSHMAP_SRC_ROOT/fixed_len_kv/common/
+DIR=$RSHMAP_SRC_ROOT/fixed_len_kv/common/; test -d $DIR
 cd $DIR && make clean && make
 cp librs_hmap_core.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
-DIR=$Q_SRC_ROOT/QJIT/HMAPS/CHNK/
+DIR=$Q_SRC_ROOT/QJIT/HMAPS/CHNK/; test -d $DIR
 cd $DIR && make clean && make
 cp libchnk_rs_hmap.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
-DIR=$Q_SRC_ROOT/QJIT/HMAPS/VCTR/
+DIR=$Q_SRC_ROOT/QJIT/HMAPS/VCTR/; test -d $DIR
 cd $DIR && make clean && make
 cp libvctr_rs_hmap.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
-DIR=$Q_SRC_ROOT/QJIT/GUTILS/
+DIR=$Q_SRC_ROOT/QJIT/GUTILS/; test -d $DIR
 cd $DIR && make clean && make
 cp libqjitaux.so $Q_ROOT/lib/
 cp libcgutils.so $Q_ROOT/lib/
 cp liblgutils.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
-DIR=$Q_SRC_ROOT/RUNTIME/CMEM/src/
+DIR=$SCLR_SRC_ROOT/src/; test -d $DIR
+cd $DIR && make clean && make -f qMakefile
+cp libsclr.so $Q_ROOT/lib/
+cd -
+#------------------------------------------------
+DIR=$CMEM_SRC_ROOT/src/; test -d $DIR
 cd $DIR && make clean && make -f qMakefile
 cp libcmem.so $Q_ROOT/lib/
 cd -
