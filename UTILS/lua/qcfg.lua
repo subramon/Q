@@ -1,5 +1,5 @@
 local cutils = require 'libcutils'
-local add_trailing_slash = require 'Q/UTILS/lua/add_trailing_slash'
+local add_trailing_slash = require 'RSUTILS/lua/add_trailing_slash'
 
 local qcfg = {}
 --===========================

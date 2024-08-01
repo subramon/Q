@@ -127,8 +127,10 @@ local function q_add(
     assert(not subs.doth) assert(not subs.dotc)
     tmpl = subs.tmpl
     assert( (type(tmpl) == "string") and  ( #tmpl > 0 ) )
-    doth = gen_code.doth(subs, subs.incdir) -- creates a .h file
-    dotc = gen_code.dotc(subs, subs.srcdir) -- creates a .c file
+    -- create the .h file
+    doth = gen_code.doth(subs, subs.incdir, qcfg.q_src_root) 
+    -- create the .c file
+    dotc = gen_code.dotc(subs, subs.srcdir, qcfg.q_src_root) 
   else
     doth = subs.doth
     assert( (type(doth) == "string") and  ( #doth > 0 ) )
@@ -140,7 +142,7 @@ local function q_add(
     if ( qcfg.use_ispc ) then
       assert(not subs.isph) assert(not subs.ispc)
         -- creates a .ispc file and corresponding .h file
-      ispc = gen_code.ispc(subs, subs.srcdir, subs.incdir)
+      ispc = gen_code.ispc(subs, subs.srcdir, subs.incdir, qcfg.q_src_root)
     end
   else
     ispc = subs.ispc -- Optional, hence no assert on it
