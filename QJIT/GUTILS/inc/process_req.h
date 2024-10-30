@@ -1,8 +1,8 @@
 #include "web_struct.h"
-#include "handler.h"
+#include "get_req_type.h"
 extern int
 process_req(
-    req_type_t req_type,
+    int req_type,
     const char *const api,
     const char *args,
     const char *body,

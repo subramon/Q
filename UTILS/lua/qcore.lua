@@ -4,7 +4,7 @@ local link     = require 'Q/UTILS/lua/link'
 local compile_and_link  = require 'Q/UTILS/lua/compile_and_link'
 local is_so_file  = require 'Q/UTILS/lua/is_so_file'
 local ffi      = require 'ffi'
-local gen_code = require 'Q/UTILS/lua/gen_code'
+local gen_code = require 'RSUTILS/lua/gen_code'
 local for_cdef = require 'RSUTILS/lua/for_cdef'
 local qcfg     = require 'Q/UTILS/lua/qcfg'
 local cutils   = require 'libcutils'
@@ -35,14 +35,16 @@ local function q_cdef( infile, incs)
   if ( cdefd[infile] ) then
     -- print("Skipping cdef of " .. infile)
   else
-    local to_cdef, pre_cdef, cdef_file = for_cdef(infile, incs, true)
-    assert(type(to_cdef) == "string")
+    local str_to_cdef, pre_cdef, cdef_file = for_cdef(infile, incs, 
+      qcfg.q_root .. "/cdefs/", qcfg.q_src_root)
+    assert(type(str_to_cdef) == "string")
     assert(type(pre_cdef) == "boolean")
-    ffi.cdef(to_cdef)
+    ffi.cdef(str_to_cdef)
     cdefd[infile] = true
     if ( pre_cdef == false ) then 
       -- cache rslt in cdef_file
-      assert(cutils.str_as_file(to_cdef, cdef_file))
+      print(cdef_file)
+      assert(cutils.str_as_file(str_to_cdef, cdef_file))
     end
    end
 end
@@ -52,8 +54,21 @@ local incdir = assert(os.getenv("RSUTILS_SRC_ROOT"))
 assert(cutils.isdir(incdir))
 local qtypes_file = incdir .. "/inc/qtypes.h"
 q_cdef(qtypes_file)
-q_cdef("RUNTIME/SCLR/inc/sclr_struct.h")
 
+local incdir = assert(os.getenv("SCLR_SRC_ROOT"))
+assert(cutils.isdir(incdir))
+local sclr_file = incdir .. "/inc/sclr_struct.h"
+q_cdef(sclr_file)
+
+--[[
+cdefs taken care of above. Delete this soon
+x = for_cdef("RSUTILS/inc/qtypes.h", 
+  { "/home/subramon/RSUTILS/inc/" }, false, "/home/subramon/" )
+ffi.cdef(x)
+x = for_cdef("SCLR/inc/sclr_struct.h", 
+  { "/home/subramon/RSUTILS/inc/" }, false, "/home/subramon/" )
+ffi.cdef(x)
+--]]
 local function load_lib(
   fn,
   doth,

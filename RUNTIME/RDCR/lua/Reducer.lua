@@ -3,7 +3,7 @@ local ffi           = require 'ffi'
 local cutils        = require 'libcutils'
 local lgutils       = require 'liblgutils'
 local record_time   = require 'Q/UTILS/lua/record_time'
-local register_type  = require 'Q/UTILS/lua/register_type'
+local register_type = require 'RSUTILS/lua/register_type'
 local Reducer = {}
 Reducer.__index = Reducer
 

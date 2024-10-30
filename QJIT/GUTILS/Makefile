@@ -27,20 +27,21 @@ RS_LIBS += -levent
 RS_LIBS += -latomic  # This was neeeded on Raspberry Pi 
 # Otherwise, some of the atomics were not found 
 
-AUX_SRCS := ./src/extract_api_args.c 
-AUX_SRCS += ./src/extract_name_value.c 
-AUX_SRCS += ./src/free_globals.c 
+AUX_SRCS := ./src/free_globals.c 
 AUX_SRCS += ./src/get_req_type.c 
-AUX_SRCS += ./src/get_body.c 
 AUX_SRCS += ./src/lua_state.c 
 AUX_SRCS += ./src/mod_mem_used.c 
-AUX_SRCS += ./src/handler.c 
 AUX_SRCS += ./src/import_tbsp.c 
 AUX_SRCS += ./src/init_globals.c 
 AUX_SRCS += ./src/init_session.c 
 AUX_SRCS += ./src/read_configs.c 
 AUX_SRCS += ./src/process_req.c 
-AUX_SRCS += ./src/webserver.c 
+
+AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/extract_api_args.c 
+AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/extract_name_value.c 
+AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/get_body.c 
+AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/handler.c 
+AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/webserver.c 
 AUX_SRCS += ./src/get_cli_arg.c 
 
 AUX_OBJS = $(AUX_SRCS:.c=.o)

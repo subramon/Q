@@ -1,7 +1,7 @@
 #include <string.h>
-#include "handler.h"
+#include <stdio.h>
 #include "get_req_type.h"
-req_type_t 
+int 
 get_req_type(
     const char *api
     )
@@ -49,6 +49,6 @@ get_req_type(
   //-----------------------------
   else {
     fprintf(stderr,  "Unknown API = %s \n", api);
-    return Undefined;
+    return WebUndefined;
   }
 }

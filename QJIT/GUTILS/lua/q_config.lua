@@ -2,7 +2,7 @@ local T = {}
 
 T.restore_session  = false
 
-T.is_webserver     =  true
+T.is_webserver     = true
 T.web_port         = 8004
 
 T.is_out_of_band   = true

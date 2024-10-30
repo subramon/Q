@@ -8,6 +8,12 @@ unset Q_ROOT
 unset QCFLAGS
 unset QLDFLAGS
 
+unset RSLUTILS_SRC_ROOT
+unset RSUTILS_SRC_ROOT
+unset RSHMAP_SRC_ROOT
+unset CMEM_SRC_ROOT
+unset SCLR_SRC_ROOT
+
 export QISPC="false" # TODO P1 Should not be hard coded here
 
 # Wont work with simlinks
@@ -15,6 +21,7 @@ Q_SRC_ROOT="$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
 export Q_SRC_ROOT="${Q_SRC_ROOT}"
 echo "Q_SRC_ROOT= ${Q_SRC_ROOT}"
 
+export RSLUTILS_SRC_ROOT=$HOME/RSLUTILS/ # Where RSLUTILS has been checked out
 export RSUTILS_SRC_ROOT=$HOME/RSUTILS/ # Where RSUTILS has been checked out
 export RSHMAP_SRC_ROOT=$HOME/RSHMAP/  # Where  RSHMAP has been checked out
 export CMEM_SRC_ROOT=$HOME/CMEM/  # Where  CMEM has been checked out

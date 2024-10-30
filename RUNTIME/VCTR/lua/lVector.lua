@@ -20,7 +20,7 @@ local ffi     = require 'ffi'
 local cVector = require 'libvctr'
 local cutils  = require 'libcutils'
 local Scalar  = require 'libsclr'
-local register_type = require 'Q/UTILS/lua/register_type'
+local register_type = require 'RSUTILS/lua/register_type'
 local qcfg = require'Q/UTILS/lua/qcfg'
 local ifxthenyelsez = require'Q/UTILS/lua/ifxthenyelsez'
 --====================================

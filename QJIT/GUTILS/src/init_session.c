@@ -32,14 +32,14 @@ init_session(
   // For webserver 
   if ( g_is_webserver ) {  
     printf("Spawned webserver\n");
-    g_web_info.is_out_of_band = false;
+    g_web_info.is_external = true;
     status = pthread_create(&g_webserver, NULL, &webserver, &g_web_info);
     cBYE(status);
   }
   // For out of band 
   if ( g_is_out_of_band ) {  
     printf("Spawned out-of-band server\n");
-    g_out_of_band_info.is_out_of_band = true;
+    g_out_of_band_info.is_external = false;
     status = pthread_create(&g_out_of_band, NULL, &webserver, 
         &g_out_of_band_info);
     cBYE(status);

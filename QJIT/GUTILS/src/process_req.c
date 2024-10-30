@@ -17,7 +17,7 @@ extern lua_State *L;  // IMPORTANT: This comes from luajit.c
 
 int
 process_req(
-    req_type_t req_type,
+    int req_type,
     const char *const api,
     const char *args,
     const char *body,
@@ -36,7 +36,7 @@ process_req(
 
   //-----------------------------------------
   switch ( req_type ) {
-    case Undefined :
+    case WebUndefined :
       go_BYE(-1);
       break;
       //--------------------------------------------------------
@@ -57,7 +57,6 @@ process_req(
       break;
       //--------------------------------------------------------
     case SetMaster :  
-      if ( W->is_out_of_band == false ) { go_BYE(-1); }
       {
         char buf[128]; memset(buf, 0, 128);
         status = extract_name_value(args, "Status=", '&', buf, 127); 

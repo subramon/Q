@@ -27,6 +27,11 @@ cd $DIR && make clean && make
 cp librsutils.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
+DIR=$RSLUTILS_SRC_ROOT/src/; test -d $DIR
+cd $DIR && make clean && make 
+cp librslutils.so $Q_ROOT/lib/
+cd -
+#------------------------------------------------
 DIR=$RSHMAP_SRC_ROOT/fixed_len_kv/common/; test -d $DIR
 cd $DIR && make clean && make
 cp librs_hmap_core.so $Q_ROOT/lib/
@@ -50,18 +55,13 @@ cp liblgutils.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
 DIR=$SCLR_SRC_ROOT/src/; test -d $DIR
-cd $DIR && make clean && make -f qMakefile
+cd $DIR && make clean && make -f Makefile
 cp libsclr.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
 DIR=$CMEM_SRC_ROOT/src/; test -d $DIR
 cd $DIR && make clean && make -f qMakefile
 cp libcmem.so $Q_ROOT/lib/
-cd -
-#------------------------------------------------
-DIR=$Q_SRC_ROOT/RUNTIME/SCLR/src/
-cd $DIR && make clean && make 
-cp libsclr.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
 DIR=$Q_SRC_ROOT/RUNTIME/VCTR/src/

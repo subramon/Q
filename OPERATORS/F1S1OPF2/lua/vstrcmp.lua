@@ -6,8 +6,6 @@ local lVector     = require 'Q/RUNTIME/VCTR/lua/lVector'
 local get_ptr     = require 'Q/UTILS/lua/get_ptr'
 local record_time = require 'Q/UTILS/lua/record_time'
 
-qc.q_cdef("RUNTIME/SCLR/inc/sclr_struct.h", { "UTILS/inc/" })
-
 local function vstrcmp(f1, s1, optargs )
   local sp_fn_name = "Q/OPERATORS/F1S1OPF2/lua/vstrcmp_specialize"
   local spfn = assert(require(sp_fn_name))

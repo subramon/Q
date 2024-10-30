@@ -11,11 +11,11 @@ require "Q/OPERATORS/LOAD_CSV/lua/TM_to_I2"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_XX"
 require "Q/OPERATORS/LOAD_CSV/lua/SC_to_lkp"
 
+
 require "Q/OPERATORS/MK_COL/lua/mk_col"
 require "Q/OPERATORS/MK_COL/lua/mk_tbl"
 require "Q/OPERATORS/S_TO_F/lua/s_to_f"
 require "Q/OPERATORS/F_TO_S/lua/f_to_s"
-
 require "Q/UTILS/lua/tbl_to_vec" 
 require "Q/UTILS/lua/vec_to_tbl" 
 require "Q/UTILS/lua/set_memo"

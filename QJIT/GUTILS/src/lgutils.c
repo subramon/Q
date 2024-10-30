@@ -301,7 +301,7 @@ int luaopen_liblgutils (lua_State *L) {
   luaL_register(L, NULL, lgutils_methods);
 
   /* Register lgutils in types table */
-  int status = luaL_dostring(L, "return require 'Q/UTILS/lua/register_type'");
+  int status = luaL_dostring(L, "return require 'RSUTILS/lua/register_type'");
   if (status != 0 ) {
     printf("Running require failed:  %s\n", lua_tostring(L, -1));
     exit(1);

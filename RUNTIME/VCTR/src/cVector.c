@@ -7,8 +7,9 @@
 #include "qtypes.h"
 #include "get_file_size.h"
 #include "cmem_struct.h"
-#include "aux_lua_to_c.h" // get_int_from_tbl()
-// #include "aux_lua_to_c.h" // get_str_from_tbl()
+#include "get_int_from_tbl.h"
+#include "get_str_from_tbl.h"
+#include "get_bool_from_tbl.h"
 #include "vctr_struct.h"
 
 #include "chnk_del.h"
@@ -1729,7 +1730,7 @@ int luaopen_libvctr (lua_State *L) {
    * object:func */
   luaL_register(L, NULL, vector_methods);
 
-  int status = luaL_dostring(L, "return require 'Q/UTILS/lua/register_type'");
+  int status = luaL_dostring(L, "return require 'RSUTILS/lua/register_type'");
   if ( status != 0 ) {
     WHEREAMI;
     fprintf(stderr, "Running require failed:  %s\n", lua_tostring(L, -1));

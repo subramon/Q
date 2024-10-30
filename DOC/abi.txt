@@ -1,0 +1,11 @@
+https://www.oracle.com/technical-resources/articles/it-infrastructure/stable-cplusplus-abi.html#c_abi
+
+The Oracle Solaris ABI is also the C ABI, because C is the standard UNIX implementation language. Among other things, the C ABI specifies:
+
+Size and layout of predefined types (char, int, float, and so on)
+Layout of compound types (arrays and structs)
+External (linker-visible) spelling of programmer-defined names
+Machine-code function-calling sequence
+Stack layout
+Register usage
+
