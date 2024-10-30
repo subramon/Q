@@ -1,0 +1,9 @@
+Dealing with include files
+https://go.dev/talks/2012/splash.article?ref=wheresyoured.at#TOC_3.
+
+In 1984, a compilation of ps.c, the source to the Unix ps command, was observed to #include <sys/stat.h> 37 times by the time all the preprocessing had been done. Even though the contents are discarded 36 times while doing so, most C implementations would open the file, read it, and scan it all 37 times. Without great cleverness, in fact, that behavior is required by the potentially complex macro semantics of the C preprocessor.
+
+The effect on software is the gradual accumulation of #include clauses in C programs. It won't break a program to add them, and it's very hard to know when they are no longer needed. Deleting a #include and compiling the program again isn't even sufficient to test that, since another #include might itself contain a #include that pulls it in anyway.
+
+Technically speaking, it does not have to be like that. Realizing the long-term problems with the use of #ifndef guards, the designers of the Plan 9 libraries took a different, non-ANSI-standard approach. In Plan 9, header files were forbidden from containing further #include clauses; all #includes were required to be in the top-level C file. This required some discipline, of course—the programmer was required to list the necessary dependencies exactly once, in the correct order—but documentation helped and in practice it worked very well. The result was that, no matter how many dependencies a C source file had, each #include file was read exactly once when compiling that file. And, of course, it was also easy to see if an #include was necessary by taking it out: the edited program would compile if and only if the dependency was unnecessary.
+
