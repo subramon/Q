@@ -27,6 +27,7 @@ local libs            = {}
 -- Keeps track of struct files that have been cdef'd
 local cdefd = {}
 
+local cdef_cache_dir = qcfg.q_root .. "/cdefs/"
 -- IMPORTANT: Document the assumption that no two files that can
 -- be sent to cdef can have the same struct in them
 -- we need q_cdef instead of just cdef because we do not want
@@ -36,7 +37,7 @@ local function q_cdef( infile, incs)
     -- print("Skipping cdef of " .. infile)
   else
     local str_to_cdef, pre_cdef, cdef_file = for_cdef(infile, incs, 
-      qcfg.q_root .. "/cdefs/", qcfg.q_src_root)
+      cdef_cache_dir, qcfg.q_src_root)
     assert(type(str_to_cdef) == "string")
     assert(type(pre_cdef) == "boolean")
     ffi.cdef(str_to_cdef)
@@ -84,8 +85,8 @@ local function load_lib(
       if ( cdefd[v] ) then
         -- print("struct file: Skipping cdef of " .. v)
       else
-        -- print("cdef'ing " .. v)
-        local y = for_cdef(v, incs, true)
+        print("cdef'ing " .. v)
+        local y = for_cdef(v, incs, cdef_cache_dir, qcfg.q_src_root)
         ffi.cdef(y)
         cdefs[v] = y
         cdefd[v] = true
@@ -95,12 +96,12 @@ local function load_lib(
   -- This needs to be done AFTER the structs have been cdef'd
   -- cdef the .h file with the function declaration
   if ( cdefd[doth] ) then
-    -- print("doth: Skipping cdef of " .. doth)
+    print("doth: Skipping cdef of " .. doth)
   else
-    print("doth: cdef'ing " .. doth)
+    -- print("doth: cdef'ing " .. doth)
     -- WAS local y = for_cdef(doth, incs, subs)
-       local y = for_cdef(doth, incs, true)
-    print("cdefing ", y)
+    local y = for_cdef(doth, incs, cdef_cache_dir, qcfg.q_src_root)
+    -- print("cdefing ", y)
     ffi.cdef(y)
     cdefd[doth] = true
     cdefs[doth] = y
@@ -166,8 +167,10 @@ local function q_add(
   -- PROCESS ISPC after this
   local is_so, sofile = is_so_file(subs.fn)
   if ( not is_so ) then
-    if ( not ispc ) then
-      assert(compile_and_link( dotc, subs.srcs, subs.incs, subs.libs, fn))
+    if ( not ispc ) then -- this is more common case
+      local chk_sofile = 
+        assert(compile_and_link(dotc, subs.srcs, subs.incs, subs.libs, fn))
+        assert(chk_sofile == sofile)
     else
       local dotos      = assert(
         compile("C", dotc, subs.srcs, subs.incs))

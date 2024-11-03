@@ -55,6 +55,7 @@
 #include "vctr_get_set.h"
 #include "vctr_nn_get_set.h"
 #include "num_read_write.h"
+#include "vctr_new_uqid.h"
 
 #include "vctr_append.h"
 #include "vctr_kill.h"
@@ -336,6 +337,23 @@ static int l_vctr_is_nn_vec( lua_State *L) {
       &is_nn_vec, NULL, NULL, NULL);
   cBYE(status); 
   lua_pushboolean(L, is_nn_vec); 
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------------
+static int l_vctr_has_parent( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  bool has_parent; 
+  status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "has_parent", "get",
+      &has_parent, NULL, NULL, NULL);
+  cBYE(status); 
+  lua_pushboolean(L, has_parent); 
   return 1;
 BYE:
   lua_pushnil(L);
@@ -830,6 +848,10 @@ static int l_vctr_uqid( lua_State *L) {
   int status = 0;
   // get args from Lua 
   int num_args = lua_gettop(L); 
+  if ( num_args == 0 ) { 
+    lua_pushnumber(L, vctr_uqid()); 
+    return 1;
+  }
   if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
 
@@ -888,8 +910,8 @@ static int l_vctr_get_memo( lua_State *L) {
   bool is_memo; int memo_len;
   status = vctr_get_memo_len(ptr_v->tbsp, ptr_v->uqid, &is_memo, &memo_len);
   cBYE(status);
-  lua_pushboolean(L, is_memo);
   lua_pushnumber(L, memo_len);
+  lua_pushboolean(L, is_memo);
   return 2;
 BYE:
   lua_pushnil(L);
@@ -897,6 +919,25 @@ BYE:
   lua_pushnumber(L, status);
   return 3;
 }
+// Following is just a convenience
+static int l_vctr_is_memo( lua_State *L) {
+  int status = 0;
+  // get args from Lua 
+  int num_args = lua_gettop(L); 
+  if ( num_args != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  bool is_memo; int memo_len;
+  status = vctr_get_memo_len(ptr_v->tbsp, ptr_v->uqid, &is_memo, &memo_len);
+  cBYE(status);
+  lua_pushboolean(L, is_memo);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 //----------------------------------------
 static int l_chnk_incr_num_readers( lua_State *L) {
   int status = 0;
@@ -1051,6 +1092,7 @@ static int l_vctr_free( lua_State *L) {
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool is_found;
+#undef  VERBOSE
 #ifdef VERBOSE
   char *name = vctr_get_name(ptr_v->tbsp, ptr_v->uqid); 
   if ( ( name == NULL ) || ( *name == '\0' ) ) { 
@@ -1066,9 +1108,9 @@ static int l_vctr_free( lua_State *L) {
     goto BYE;
   }
   status = vctr_del(ptr_v->tbsp, ptr_v->uqid, &is_found); 
-  if ( status < 0 ) { 
+  if ( ( status < 0 ) && ( is_found ) ) { 
     char * name = NULL;
-    status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "name", NULL, 
+    status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "name", "get", 
         NULL, NULL, NULL, &name); 
     cBYE(status);
     printf("Error deleting vector [%s]\n", name);
@@ -1267,6 +1309,7 @@ static int l_vctr_add( lua_State *L)
       if ( is_memo_key ) {
         if ( is_memo == true ) { go_BYE(-1); }
       }
+      is_memo = false;
     }
     else {
       if ( is_memo_key ) {
@@ -1407,6 +1450,8 @@ static int l_get_lma_read( lua_State *L) {
   lua_setmetatable(L, -2); /* Set the metatable on the userdata. */
 
   status = vctr_get_lma_read(ptr_v->tbsp, ptr_v->uqid, ptr_x); cBYE(status);
+  if ( ( ptr_x->data == NULL ) || ( ptr_x->size == 0 ) )  { go_BYE(-1); }
+  // TODO P1 Shouldn't we pop the metatable from the stack??
   return 1;
 BYE:
   lua_pushnil(L);
@@ -1586,6 +1631,7 @@ static const struct luaL_Reg vector_methods[] = {
     //--------------------------------
     { "set_memo", l_vctr_set_memo},
     { "get_memo", l_vctr_get_memo },
+    { "is_memo", l_vctr_is_memo },
     //--------------------------------
     { "max_num_in_chunk", l_vctr_max_num_in_chunk },
     { "tbsp", l_vctr_tbsp },
@@ -1671,6 +1717,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "brk_nn_vec", l_vctr_brk_nn_vec },
     { "has_nn_vec", l_vctr_has_nn_vec },
     { "is_nn_vec", l_vctr_is_nn_vec },
+    { "has_parent", l_vctr_has_parent },
     //--------------------------------
     { "chnk_incr_num_readers", l_chnk_incr_num_readers },
     { "chnk_num_readers", l_chnk_get_num_readers },
@@ -1683,6 +1730,7 @@ static const struct luaL_Reg vector_functions[] = {
     //--------------------------------
     { "set_memo", l_vctr_set_memo},
     { "get_memo", l_vctr_get_memo },
+    { "is_memo", l_vctr_is_memo },
     //--------------------------------
     { "width", l_vctr_width },
     { "pr", l_vctr_print },

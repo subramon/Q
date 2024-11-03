@@ -25,7 +25,10 @@ local function permute_from_specialize(invec, p, optargs)
   assert(subs.bufsz > 0)
 
   subs.val_ctype  = cutils.str_qtype_to_str_ctype(subs.val_qtype)
+  assert(subs.val_ctype) 
+
   subs.perm_ctype = cutils.str_qtype_to_str_ctype(subs.perm_qtype)
+  assert(subs.perm_ctype) 
 
   subs.cast_x_as = "const " .. subs.val_ctype .. " * const"
   subs.cast_y_as = subs.val_ctype .. " *"

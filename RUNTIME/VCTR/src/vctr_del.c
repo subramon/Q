@@ -29,6 +29,8 @@ vctr_del(
   char *val_name = NULL;
   vctr_rs_hmap_key_t nn_key; memset(&nn_key, 0, sizeof(nn_key));
 
+  if ( uqid == 0 ) { goto BYE; } // Document why this happens
+
   status = vctr_is(tbsp, uqid, ptr_is_found, &where_found); cBYE(status);
   if ( !*ptr_is_found ) { goto BYE; }
   vctr_rs_hmap_val_t vctr_val = g_vctr_hmap[tbsp].bkts[where_found].val;
@@ -65,6 +67,13 @@ vctr_del(
   if ( vctr_val.name[0] != '\0' ) { printf("Deleting Vctr: %s \n", vctr_val.name); }
 #endif
   // delete lma file if it exists
+  // START HACK TODO P1 I am very unhappy with the hack below 
+  // It has do to with Lua calling garbage collection
+  // on nn vectors even when their parent is alive
+  if ( vctr_val.has_parent ) { 
+    goto BYE;
+  }
+  //--- END HACK 
   if ( ( is_lma ) && ( !is_persist ) ) {
     if ( vctr_val.num_readers != 0 ) { go_BYE(-1); }
     if ( vctr_val.num_writers != 0 ) { go_BYE(-1); }
@@ -122,10 +131,6 @@ vctr_del(
       &is_found); 
   cBYE(status);
   if ( !is_found ) { go_BYE(-1); }
-  uint64_t mem_used, dsk_used;
-  status = vctr_usage(tbsp, uqid, &mem_used, &dsk_used); cBYE(status);
-  if ( mem_used != 0 ) { go_BYE(-1); } 
-  if ( dsk_used != 0 ) { go_BYE(-1); } 
   // Delete nn vector if one exists
   if ( has_nn ) { 
     status = vctr_del(tbsp, nn_key, &is_found); cBYE(status);

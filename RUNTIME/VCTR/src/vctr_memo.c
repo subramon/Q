@@ -26,6 +26,7 @@ vctr_set_memo(
   if ( val.num_elements > 0 ) { go_BYE(-1); } 
   if ( val.is_persist ) { go_BYE(-1); } 
   if ( val.is_memo ) { go_BYE(-1); }  // cannot set twice
+  if ( memo_len == 0 ) { goto BYE; } // IMP: treated as nop
   //--------------------------
   g_vctr_hmap[tbsp].bkts[where_found].val.is_memo = true;
   g_vctr_hmap[tbsp].bkts[where_found].val.memo_len = memo_len;
@@ -64,7 +65,7 @@ vctr_memo(
   int status = 0;
 
   vctr_rs_hmap_val_t *ptr_vctr_val = &(g_vctr_hmap[0].bkts[vctr_loc].val);
-  if ( ptr_vctr_val->is_memo == false ) { return status; }
+  if ( ptr_vctr_val->memo_len == 0 ) { return status; }
   if ( ptr_vctr_val->is_eov ) { return status; }
 
   uint32_t nC = ptr_vctr_val->max_chnk_idx + 1 - ptr_vctr_val->min_chnk_idx;

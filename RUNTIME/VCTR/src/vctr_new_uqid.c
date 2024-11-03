@@ -10,3 +10,11 @@ vctr_new_uqid(
 {
   return ++g_vctr_uqid;
 }
+
+uint32_t
+vctr_uqid(
+    void
+    )
+{
+  return g_vctr_uqid;
+}

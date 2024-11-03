@@ -3,8 +3,8 @@
 cp ~/local/Q/config/q_config.lua save_config.lua
 # make new directories
 test -d "$Q_SRC_ROOT"
-datadir="$Q_SRC_ROOT/RUNTIME/VCTRS/test/TEST_IMPORT/data"
-metadir="$Q_SRC_ROOT/RUNTIME/VCTRS/test/TEST_IMPORT/meta"
+datadir="$Q_SRC_ROOT/RUNTIME/VCTR/test/TEST_IMPORT/data"
+metadir="$Q_SRC_ROOT/RUNTIME/VCTR/test/TEST_IMPORT/meta"
 rm -r -f $datadir
 rm -r -f $metadir
 mkdir -p $datadir

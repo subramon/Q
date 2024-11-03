@@ -1,7 +1,7 @@
 local plpath  = require 'pl.path'
 local Q       = require 'Q'
 local Scalar  = require 'libsclr'
-local lVector = require 'Q/RUNTIME/VCTRS/lua/lVector'
+local lVector = require 'Q/RUNTIME/VCTR/lua/lVector'
 local cVector = require 'libvctr'
 local qcfg    = require 'Q/UTILS/lua/qcfg'
 local lgutils = require 'liblgutils'

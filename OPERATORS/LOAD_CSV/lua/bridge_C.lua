@@ -41,22 +41,25 @@ local function bridge_C(
     subs.dotc = "OPERATORS/LOAD_CSV/src/load_csv_seq.c"
     subs.doth = "OPERATORS/LOAD_CSV/inc/load_csv_seq.h"
   end 
-  subs.incs = { "OPERATORS/LOAD_CSV/inc/", "UTILS/inc/" }
-  subs.srcs = { "UTILS/src/is_valid_chars_for_num.c", 
+  local utils_root = os.getenv("RSUTILS_SRC_ROOT")
+  assert(cutils.isdir(utils_root), "Directory not found " .. utils_root)
+  subs.incs = { "OPERATORS/LOAD_CSV/inc/", utils_root .. "/inc/" }
+  subs.srcs = { 
     "OPERATORS/LOAD_CSV/src/get_cell.c",
     "OPERATORS/LOAD_CSV/src/asc_to_bin.c",
     "OPERATORS/LOAD_CSV/src/get_fld_sep.c",
     "OPERATORS/LOAD_CSV/src/chk_data.c",
-    "UTILS/src/get_bit_u64.c",  
-    "UTILS/src/set_bit_u64.c",  
-    "UTILS/src/rs_mmap.c",  
-    "UTILS/src/trim.c",  
-    "UTILS/src/txt_to_I1.c", 
-    "UTILS/src/txt_to_I2.c", 
-    "UTILS/src/txt_to_I4.c", 
-    "UTILS/src/txt_to_I8.c", 
-    "UTILS/src/txt_to_F4.c", 
-    "UTILS/src/txt_to_F8.c", 
+    utils_root .. "/src/is_valid_chars_for_num.c", 
+    utils_root .. "/src/get_bit_u64.c",  
+    utils_root .. "/src/set_bit_u64.c",  
+    utils_root .. "/src/rs_mmap.c",  
+    utils_root .. "/src/trim.c",  
+    utils_root .. "/src/txt_to_I1.c", 
+    utils_root .. "/src/txt_to_I2.c", 
+    utils_root .. "/src/txt_to_I4.c", 
+    utils_root .. "/src/txt_to_I8.c", 
+    utils_root .. "/src/txt_to_F4.c", 
+    utils_root .. "/src/txt_to_F8.c", 
 }
   qc.q_add(subs); 
   local func_name = subs.fn

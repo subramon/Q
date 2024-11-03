@@ -14,14 +14,16 @@ return function(drg, val, ordr)
   assert(type(drg) == "lVector")
   assert(is_in(drg:qtype(), good_drg_types), 
     "Bad qtype for drag along field  = " .. drg:qtype())
-  assert(drg:memo_len() < 0) -- cannot memo, need full Vector 
+  -- TODO P3 Should following be assert(not drg:is_memo())
+  assert(drg:get_memo() <= 0) -- cannot memo, need full Vector 
   drg:eval() -- force an eval 
   assert(drg:is_eov())
   assert(drg:has_nulls() == false)
   --======================
   assert(type(val) == "lVector")
   assert(is_in(val:qtype(), good_val_types))
-  assert(val:memo_len() < 0) -- cannot memo, need full Vector 
+  -- TODO P3 Should following be assert(not val:is_memo())
+  assert(val:get_memo() <= 0) -- cannot memo, need full Vector 
   val:eval() -- force an eval 
   assert(val:is_eov())
   assert(val:has_nulls() == false)

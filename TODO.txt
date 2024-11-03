@@ -1,3 +1,10 @@
+Handle the fact that max length of vector name is set in
+~/Q/QJIT/HMAPS/VCTR/inc/ but should be checked by 
+functions such as load_csv()
+
+Also, remember that adding "nn_" means that actual length 
+of name of vector is 3 less than MAX_LEN_VCTR_NAME
+
 Make sure that nop does not cause error unless it should. See below
 Chunk 0 not found
 Line  27 of File chnk_nop.c

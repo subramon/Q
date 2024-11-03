@@ -34,7 +34,8 @@ vctr_chnks_to_lma(
   bool vctr_is_found; uint32_t vctr_where_found;
   status = vctr_is(tbsp, uqid, &vctr_is_found, &vctr_where_found); 
   cBYE(status);
-  if ( !vctr_is_found ) { go_BYE(-1); }
+  if ( !vctr_is_found ) { 
+    go_BYE(-1); }
   vctr_rs_hmap_val_t *v = &(g_vctr_hmap[tbsp].bkts[vctr_where_found].val);
   //-----------------------------------------------
   if ( v->is_lma ) { goto BYE; } // Nothing to do 

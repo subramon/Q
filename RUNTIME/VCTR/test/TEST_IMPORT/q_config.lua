@@ -11,7 +11,7 @@ T.out_of_band_port = 8008
 T.is_mem_mgr       = false
 
 local x = assert(os.getenv("Q_SRC_ROOT"))
-x = x .. "/RUNTIME/VCTRS/test/TEST_IMPORT/"
+x = x .. "/RUNTIME/VCTR/test/TEST_IMPORT/"
 
 T.meta_dir_root = x .. "meta"
 T.data_dir_root = x .. "data"

@@ -397,6 +397,17 @@ function lVector.new(args)
     -- for k, v in pairs(nn_args) do print(k, v) end 
     nn_vector._base_vec = assert(cVector.add(nn_args))
     assert(cVector.set_nn_vec(vector._base_vec, nn_vector._base_vec))
+    local uqid = cVector.uqid(vector._base_vec)
+    local nn_uqid = cVector.uqid(nn_vector._base_vec)
+    if ( args.name ) then 
+      -- print("For " .. args.name .. ", " .. nn_uqid .. " assigned as nn of " .. uqid)
+    else
+      -- print(nn_uqid .. " assigned as nn of " .. uqid)
+    end
+    vector.nn_vector = nn_vector 
+    -- TODO P0 Following is not working 
+    -- IMPORTANT Above is vital because otherwise nn_vector 
+    -- is getting garbage collected 
   end 
   --=================================================
   return vector
@@ -817,8 +828,8 @@ lVector.__gc = function (vec)
     -- print("Vector already dead.")
     return false
   end 
-  -- local vname = ifxthenyelsez(vec:name(), "anonymous_" .. vec:uqid())
-  -- print("GC CALLED on " .. tostring(vec:uqid()) .. " -> " .. vname)
+  local vname = ifxthenyelsez(vec:name(), "anonymous_" .. vec:uqid())
+  print("GC CALLED on " .. tostring(vec:uqid()) .. " -> " .. vname)
   --=========================================
   --[[ Not needed because done on C side 
   if ( vec:has_nn_vec() ) then 
@@ -827,6 +838,9 @@ lVector.__gc = function (vec)
   end
   --]]
   vec._is_dead = true
+  vec.nn_vector = nil -- break connection to nn_vector 
+  print("XXXXXXXXXX")
+  if ( cVector.has_parent(vec._base_vec) ) then print("Ignoring gc") end
   cVector.delete(vec._base_vec)
 end
 
@@ -842,8 +856,8 @@ function lVector:delete()
     print("Vector already dead.")
     return false
   end 
-  -- local vname = ifxthenyelsez(self:name(), "anonymous:" .. self:uqid())
-  -- print("DELETE CALLED on " .. vname)
+  local vname = ifxthenyelsez(self:name(), "anonymous:" .. self:uqid())
+  print("DELETE CALLED on " .. vname)
   -- cannot delete nn_vec, need to delete primary vec
   if ( cVector.is_nn_vec(self._base_vec) ) then 
     print("Need to kill parent, not me") 
@@ -1095,6 +1109,7 @@ function lVector:kill()
   -- print("Lua received kill for " .. self:name())
   local success = cVector.kill(self._base_vec)
   if ( self:has_nn_vec() ) then 
+    -- print("Lua received kill for nn of " .. self:name())
     local nn_vec = cVector.get_nn_vec(self._base_vec)
     nn_success = cVector.kill(nn_vec)
   end
@@ -1144,15 +1159,15 @@ end
 -- get_memo_len()
 -- set_memo()
 function lVector:is_memo()
-  local is_memo = assert(cVector.is_memo(self._base_vec))
+  local is_memo = cVector.is_memo(self._base_vec)
   assert(type(is_memo) == "boolean")
   return is_memo
 end
 function lVector:get_memo()
-  local is_memo, memo_len = cVector.get_memo(self._base_vec)
-  assert(type(is_memo) == "boolean")
+  local memo_len, is_memo = cVector.get_memo(self._base_vec)
   assert(type(memo_len) == "number")
-  return is_memo, memo_len
+  assert(type(is_memo) == "boolean")
+  return memo_len, is_memo
 end
 function lVector:set_memo(memo_len)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end

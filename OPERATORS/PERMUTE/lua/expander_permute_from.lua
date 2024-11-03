@@ -24,6 +24,7 @@ local function expander_permute_from(x, p, optargs)
   --=== STOP  handle nulls 
   local t_start = cutils.rdtsc()
 
+  x:nop()
   -- Now, get access to x's data and perform the operation
   assert(x:num_readers() == 0)
   local xcmem, nn_xcmem, n = x:get_lma_read()
@@ -65,7 +66,7 @@ local function expander_permute_from(x, p, optargs)
       -- release access to x 
       x:unget_lma_read()
       assert(x:num_readers() == 0)
-      x:kill()
+      x:kill(); -- TODO P3 Why not kill p as well?
       return 0
     end
     local pptr = get_ptr(p_chunk, subs.cast_p_as)
@@ -78,7 +79,7 @@ local function expander_permute_from(x, p, optargs)
       -- release access to x
       x:unget_lma_read()
       assert(x:num_readers() == 0)
-      x:kill()
+      x:kill(); -- TODO P3 Why not kill p as well?
     end
     l_chunk_num = l_chunk_num + 1 
     if ( nn_ybuf ) then

@@ -10,6 +10,16 @@ local q_src_root = qcfg.q_src_root
 -- some basic checks
 assert(cutils.isdir(q_src_root))
 --================================================
+-- This is used to create the .so file for a function "foo"
+-- The name of the sofile created is returned
+-- The function "foo" is provided in the file dotc
+-- srcs is an optional table consisting of other functions 
+-- needed by foo()
+-- incs is an optional table consisting of directories in which
+-- header files included by the .c files will be found 
+-- libs is an optional table consisting of other libraries needed
+-- For example, we may need to link in the math library in which case
+-- libs = { "-lm", }
 local function compile_and_link(
   dotc,  -- INPUT
   srcs, -- INPUT, any other files to be compiled
@@ -17,10 +27,9 @@ local function compile_and_link(
   libs,-- INPUT, any libraries that need to be linked
   fn -- INPUT
   )
-  -- TODO P4: What if no forward slash in dotc?
-  if ( string.find(dotc, "/") ~= 1 ) then
+  if ( string.sub(dotc, 1, 1) ~= "/" ) then
     -- we do not have fully qualified path
-    dotc = q_src_root .. "/" .. dotc
+    dotc = qcfg.q_src_root .. dotc
   end
   assert(cutils.isfile(dotc), "ERROR: File not found " .. dotc)
   local is_so, sofile = is_so_file(fn)
@@ -30,13 +39,12 @@ local function compile_and_link(
   end
   --===============================
   local str_incs = {}
-  local src_root = qcfg.q_src_root
   if ( incs ) then
     for _, v in ipairs(incs) do
       local incdir 
-      if ( string.find(v, "/") ~= 1 ) then
+      if ( string.sub(v, 1, 1) ~= "/") then 
         -- we do not have fully qualified path
-        incdir = src_root .. "/" .. v
+        incdir = qcfg.q_src_root .. v
       else
         incdir = v
       end 
@@ -50,8 +58,10 @@ local function compile_and_link(
   --===============================
   local str_srcs = {}
   if ( srcs ) then
-    for _, v in ipairs(srcs) do
-      local srcfile = qcfg.q_src_root .. v
+    for _, srcfile in ipairs(srcs) do
+      if ( string.sub(srcfile, 1, 1) ~= "/" ) then 
+        srcfile = qcfg.q_src_root .. srcfile
+      end 
       assert(cutils.isfile(srcfile), "File not found " .. srcfile)
       str_srcs[#str_srcs+1] = srcfile
     end
@@ -78,6 +88,6 @@ local function compile_and_link(
     end
   end
   assert(cutils.isfile(sofile))
-  return true
+  return sofile
 end
 return compile_and_link

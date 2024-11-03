@@ -135,11 +135,25 @@ vctr_get_set(
         break;
       case set : 
         if ( in_str == NULL ) { go_BYE(-1); }
-        if ( strlen(in_str) > MAX_LEN_VCTR_NAME ) { go_BYE(-1); }
+        if ( strlen(in_str) > MAX_LEN_VCTR_NAME ) { 
+          fprintf(stderr, "Name too long %s \n", in_str); 
+          go_BYE(-1); }
         strcpy(ptr_val->name, in_str);
 
         // TODO 
         break;
+      default : go_BYE(-1); break;
+    }
+  }
+  else if ( strcmp(meta, "has_parent") == 0 ) { 
+    switch ( mode ) { 
+      case get : 
+        *ptr_bl = val.has_parent;
+        break;
+        /* Set needs to be done elswehere
+      case set : 
+        break;
+        */
       default : go_BYE(-1); break;
     }
   }

@@ -146,7 +146,7 @@ local function load_csv(
   -- vales but still has a nn_vec. This will happen if you marked it as
   -- has_nulls==true. Caller's responsibility to clean this up
   --==============================================
-  for _, v in ipairs(M) do 
+  for i, v in ipairs(M) do 
     if ( v.is_load ) then 
       local tinfo = {}
       tinfo.name      = v.name
@@ -157,14 +157,26 @@ local function load_csv(
       end 
       tinfo.qtype     = v.qtype
       tinfo.max_num_in_chunk  = max_num_in_chunk
-      if ( tinfo.qtype == "SC" ) then tinfo.width = v.width end 
+      if ( tinfo.qtype == "SC" ) then 
+        tinfo.width = v.width 
+      elseif ( string.sub(tinfo.qtype, 1, 3) == "SC:") then
+        local w = string.sub(tinfo.qtype, 1+3)
+        local width = assert(tonumber(w))
+        assert(width > 1)
+        assert(width <= 1024 ) -- TODO P4 Document
+        tinfo.width = width
+        tinfo.qtype = "SC"
+      else
+        -- do not specify width except for SC
+        assert(tinfo.width == nil) 
+      end 
       local V = lVector(tinfo)
       V:set_name(v.name)
       if ( v.meaning ) then 
-        V:set_meta("_meta.meaning", M[i].meaning)
+        V:set_meta("_meta.meaning", v.meaning)
       end
       -- print("max_num_in_chunk for " .. v.name .. " is " ..  v.max_num_in_chunk)
-      V:memo(v.memo_len)
+      V:set_memo(v.memo_len)
       vectors[v.name] = V
     end
   end

@@ -74,7 +74,11 @@ vctr_put_chunk(
   // vector is implicitly at an end if insufficient elements sent
   if ( n < vctr_val.max_num_in_chnk ) { 
     // clean up any unnecessary chunks
-    status = vctr_memo(vctr_where, vctr_uqid); cBYE(status);
+    status = vctr_memo(vctr_where, vctr_uqid); 
+    if ( status < 0 ) { 
+      WHEREAMI;
+    }
+    cBYE(status);
     is_eov = true; 
   }
   // handle special case for empty vector 

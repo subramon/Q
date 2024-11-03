@@ -123,7 +123,7 @@ _G['g_time'] = {}
 _G['g_ctr']  = {}
 
 if ( lgutils.is_restore_session() ) then
-  print("restoring session")
+  print("Restoring session")
   -- OLD require "q_meta"
   local meta_file =  lgutils.meta_dir() .. "/q_meta.lua"
   print("Loading file " .. meta_file)
@@ -133,6 +133,5 @@ if ( lgutils.is_restore_session() ) then
 else
   print("NOT restoring session")
 end
-print("Session restored")
 --======================
 return require 'Q/q_export'

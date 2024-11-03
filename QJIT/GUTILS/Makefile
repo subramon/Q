@@ -70,7 +70,7 @@ src/process_req.o : QC_FLAGS += -Wunused-parameter
 ${MYSO} : ${OBJS}
 	gcc -shared ${OBJS} -o ${MYSO} ${RS_LIBS} ${QLDFLAGS}
 
-${QJIT_AUX_SO} : ${AUX_OBJS} ${VCTRS_SO} 
+${QJIT_AUX_SO} : ${AUX_OBJS} 
 	gcc -shared ${AUX_OBJS} \
 		-o ${QJIT_AUX_SO} ${RS_LIBS} ${QLDFLAGS}
 

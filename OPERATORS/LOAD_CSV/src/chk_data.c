@@ -3,8 +3,8 @@
 #include "chk_data.h"
 int 
 chk_data(
-    const char * const * const data, 
-    const char * const * const nn_data, 
+    char ** data, 
+    char ** nn_data, 
     uint32_t nC, 
     const bool * const has_nulls, // [nC]
     const bool * const is_load, // [nC]
