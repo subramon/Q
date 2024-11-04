@@ -79,8 +79,9 @@ return function (x, optargs)
   subs.incdir = "OPERATORS/F_TO_S/gen_inc/"
   subs.srcdir = "OPERATORS/F_TO_S/gen_src/"
   subs.incs = { "UTILS/inc", "OPERATORS/F_TO_S/inc/", "OPERATORS/F_TO_S/gen_inc/", }
+  local sclr_src_root = os.getenv("SCLR_SRC_ROOT")
   subs.structs = { "OPERATORS/F_TO_S/inc/sum_struct.h", 
-                   "RUNTIME/SCLR/inc/sclr_struct.h" }
+                   sclr_src_root .. "/inc/sclr_struct.h" }
   -- handle B1 as special case
   if ( qtype == "B1" ) then 
     subs.tmpl = nil

@@ -53,8 +53,8 @@ local function permute_from_specialize(invec, p, optargs)
   subs.tmpl   = "OPERATORS/PERMUTE/lua/permute_from.tmpl"
   subs.incdir = "OPERATORS/PERMUTE/gen_inc/"
   subs.srcdir = "OPERATORS/PERMUTE/gen_src/"
-  subs.incs = { "UTILS/inc/", "OPERATORS/PERMUTE/gen_inc/" }
-
+  subs.incs = { "UTILS/inc/", "OPERATORS/PERMUTE/gen_inc/",
+    os.getenv("RSUTILS_SRC_ROOT") .. "/inc/", }
   --========================================
   -- Now deal with nulls in input vector if any
   local nn_subs 
@@ -73,7 +73,8 @@ local function permute_from_specialize(invec, p, optargs)
     nn_subs.tmpl   = "OPERATORS/PERMUTE/lua/permute_from.tmpl"
     nn_subs.incdir = "OPERATORS/PERMUTE/gen_inc/"
     nn_subs.srcdir = "OPERATORS/PERMUTE/gen_src/"
-    nn_subs.incs = { "UTILS/inc/", "OPERATORS/PERMUTE/gen_inc/" }
+    nn_subs.incs = { "UTILS/inc/", "OPERATORS/PERMUTE/gen_inc/", 
+    os.getenv("RSUTILS_SRC_ROOT") .. "/inc/", }
   end
   --========================================
   return subs, nn_subs
