@@ -826,7 +826,7 @@ lVector.__gc = function (vec)
   end 
   if ( cVector.is(vec._base_vec) ) then 
     local vname = ifxthenyelsez(vec:name(), "anonymous_" .. vec:uqid())
-    print("GC CALLED on " .. tostring(vec:uqid()) .. " -> " .. vname)
+    -- print("GC CALLED on " .. tostring(vec:uqid()) .. " -> " .. vname)
   else
     return true -- already deleted 
   end
@@ -838,11 +838,11 @@ lVector.__gc = function (vec)
   end
   --]]
   if ( cVector.has_parent(vec._base_vec) ) then 
-    print("Ignoring gc for " .. vec:uqid()) 
+    -- print("Ignoring gc for " .. vec:uqid()) 
     return true
   end
   vec._is_dead = true
-  print("Deleting ", vec:uqid())
+  -- print("Deleting ", vec:uqid())
   cVector.delete(vec._base_vec)
   return true
 end
