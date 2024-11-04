@@ -45,7 +45,8 @@ vctr_get_set(
   vctr_rs_hmap_val_t val; memset(&val, 0, sizeof(vctr_rs_hmap_val_t));
   status = vctr_rs_hmap_get(&g_vctr_hmap[tbsp], &key, &val, &is_found, 
       &where_found);
-  if ( !is_found ) { go_BYE(-1); }
+  if ( !is_found ) { 
+    go_BYE(-1); }
   vctr_rs_hmap_val_t *ptr_val = &(g_vctr_hmap[tbsp].bkts[where_found].val);
   // do not access/modify vector in error state 
   if ( val.is_error ) { go_BYE(-1); } 

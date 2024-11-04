@@ -77,6 +77,7 @@ local function internal_save(
   assert(depth >= 0)
   assert(type(name) == "string")
   assert(#name > 0)
+  assert(type(uqid_to_vecs) == "table")
   --=======================================
   if ( ( type(value) == "number" ) or
        ( type(value) == "string" ) or
@@ -93,7 +94,7 @@ local function internal_save(
       fp:write("{}\n")     -- create a new table
       for k, v in pairs(tbl) do      -- save its fields
         local fieldname = string.format("%s[%s]", name, basic_serialize(k))
-        internal_save(depth+1, fieldname, v, Tsaved, fp)
+        internal_save(depth+1, fieldname, v, Tsaved, fp, uqid_to_vecs)
       end
     end
   elseif ( type(value) == "lVector" ) then
@@ -133,7 +134,7 @@ local function internal_save(
       end
       -- repeat above for nn vector assuming it exists
       if ( vec:has_nulls() ) then
-        local nn_vec  = vec:get_nulls()
+        local nn_vec  = vec:get_nn_vec()
         if ( not nn_vec:is_lma() ) then 
           nn_vec:make_mem(2) 
         end
@@ -205,6 +206,7 @@ local function save()
   fp:write("end\n"); -- close the scope
   fp:close()
   lgutils.save_session() -- saves data structures from C side 
+  print("Completed save")
   return meta_file
 end
 return require('Q/q_export').export('save', save)

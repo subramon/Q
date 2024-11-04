@@ -404,10 +404,6 @@ function lVector.new(args)
     else
       -- print(nn_uqid .. " assigned as nn of " .. uqid)
     end
-    vector.nn_vector = nn_vector 
-    -- TODO P0 Following is not working 
-    -- IMPORTANT Above is vital because otherwise nn_vector 
-    -- is getting garbage collected 
   end 
   --=================================================
   return vector
@@ -828,8 +824,12 @@ lVector.__gc = function (vec)
     -- print("Vector already dead.")
     return false
   end 
-  local vname = ifxthenyelsez(vec:name(), "anonymous_" .. vec:uqid())
-  print("GC CALLED on " .. tostring(vec:uqid()) .. " -> " .. vname)
+  if ( cVector.is(vec._base_vec) ) then 
+    local vname = ifxthenyelsez(vec:name(), "anonymous_" .. vec:uqid())
+    print("GC CALLED on " .. tostring(vec:uqid()) .. " -> " .. vname)
+  else
+    return true -- already deleted 
+  end
   --=========================================
   --[[ Not needed because done on C side 
   if ( vec:has_nn_vec() ) then 
@@ -837,11 +837,14 @@ lVector.__gc = function (vec)
     cVector.delete(nn_vec)
   end
   --]]
+  if ( cVector.has_parent(vec._base_vec) ) then 
+    print("Ignoring gc for " .. vec:uqid()) 
+    return true
+  end
   vec._is_dead = true
-  vec.nn_vector = nil -- break connection to nn_vector 
-  print("XXXXXXXXXX")
-  if ( cVector.has_parent(vec._base_vec) ) then print("Ignoring gc") end
+  print("Deleting ", vec:uqid())
   cVector.delete(vec._base_vec)
+  return true
 end
 
 -- DANGEROUS FUNCTION. Use with great care. This is because you 

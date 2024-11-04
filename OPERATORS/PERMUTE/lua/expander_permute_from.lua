@@ -24,7 +24,6 @@ local function expander_permute_from(x, p, optargs)
   --=== STOP  handle nulls 
   local t_start = cutils.rdtsc()
 
-  x:nop()
   -- Now, get access to x's data and perform the operation
   assert(x:num_readers() == 0)
   local xcmem, nn_xcmem, n = x:get_lma_read()

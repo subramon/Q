@@ -626,6 +626,21 @@ BYE:
   return 3;
 }
 //----------------------------------------
+static int l_vctr_is( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  bool b_is; uint32_t where;
+  status = vctr_is(ptr_v->tbsp, ptr_v->uqid, &b_is, &where); 
+  lua_pushboolean(L, b_is);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  lua_pushnumber(L, status);
+  return 3;
+}
+//----------------------------------------
 static int l_vctr_is_eov( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
@@ -1092,6 +1107,10 @@ static int l_vctr_free( lua_State *L) {
   int num_args = lua_gettop(L); if ( num_args != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
   bool is_found;
+  if (  ptr_v->uqid == 0 ) { 
+    // This is because of vctr_null() Not dangerous 
+    goto BYE;
+  }
 #undef  VERBOSE
 #ifdef VERBOSE
   char *name = vctr_get_name(ptr_v->tbsp, ptr_v->uqid); 
@@ -1103,10 +1122,6 @@ static int l_vctr_free( lua_State *L) {
   }
 #endif
 
-  if (  ptr_v->uqid == 0 ) { 
-    // This is because of vctr_null() Not dangerous 
-    goto BYE;
-  }
   status = vctr_del(ptr_v->tbsp, ptr_v->uqid, &is_found); 
   if ( ( status < 0 ) && ( is_found ) ) { 
     char * name = NULL;
@@ -1355,6 +1370,7 @@ static int l_vctr_add( lua_State *L)
   if ( str_name != NULL ) {
     status = vctr_get_set(ptr_v->tbsp, ptr_v->uqid, "name", "set",
         NULL, NULL, str_name, NULL); cBYE(status);
+    // printf("Setting name of %u to %s \n", ptr_v->uqid, str_name); 
   }
   if ( ( file_name != NULL ) && ( *file_name != '\0' ) ) {
     uint64_t num_elements = 0;
@@ -1597,6 +1613,7 @@ static const struct luaL_Reg vector_methods[] = {
     { "set_early_freeable", l_vctr_set_early_freeable },
     { "get_early_freeable", l_vctr_get_early_freeable },
     //--------------------------------
+    { "is", l_vctr_is },
     { "is_eov", l_vctr_is_eov },
     { "is_lma", l_vctr_is_lma },
     { "nop", l_vctr_nop },
@@ -1680,6 +1697,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "max_chnk_idx", l_vctr_max_chnk_idx },
     { "min_chnk_idx", l_vctr_min_chnk_idx },
     //--------------------------------
+    { "is", l_vctr_is },
     { "is_eov", l_vctr_is_eov },
     { "is_lma", l_vctr_is_lma },
     { "is_persist", l_vctr_is_persist },
