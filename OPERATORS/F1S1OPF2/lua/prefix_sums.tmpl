@@ -1,0 +1,58 @@
+return require 'Q/UTILS/lua/code_gen' {
+
+   declaration = [[
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#define WHEREAMI { fprintf(stderr, "Line %3d of File %s \n", __LINE__, __FILE__);  }
+
+//START_FOR_CDEF
+extern int
+${fn}(  
+      const ${f1_ctype} * const  in,  
+      uint32_t nR,
+      bool is_first,
+      ${f2_ctype}  * restrict out,  
+      ${f1_ctype} *ptr_last_val_prev_chunk
+      ) 
+;
+//STOP_FOR_CDEF
+
+   ]],
+   definition = [[
+
+#include "${fn}.h"
+
+int
+${fn}(  
+      const ${f1_ctype} * const in,  
+      uint32_t nR,
+      bool is_first,
+      ${f2_ctype} * restrict out,  
+      ${f1_ctype} *ptr_last_val_prev_chunk
+      )
+
+{
+  int status = 0;
+
+  //-- Some basic checks
+  if ( nR  == 0 ) { WHEREAMI; return -1; }
+  if ( in  == NULL ) { WHEREAMI; return -1; }
+  if ( out == NULL ) {WHEREAMI; return -1; }
+  //---------------------------------
+  if ( is_first ) {
+    out[0] = in[0];
+  }
+  else {
+    out[0] = in[0] + *ptr_last_val_prev_chunk;
+  }
+  for ( uint32_t i = 1; i < nR; i++ ) { 
+    out[i] = in[i] + out[i-1]; 
+  }
+  *ptr_last_val_prev_chunk = in[nR-1];
+BYE:
+  return status;
+}
+   ]]
+}
