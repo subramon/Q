@@ -54,7 +54,7 @@ local function skip_save(vec)
 
     is_skip = true 
   else
-    print("Saving Vector     " .. (vec:name() or "anonymous"))
+    -- print("Saving Vector     " .. (vec:name() or "anonymous"))
     is_skip = false 
   end
   return is_skip, is_dead

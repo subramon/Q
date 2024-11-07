@@ -339,7 +339,9 @@ vctr_chk(
       if ( chnk_val.num_elements != max_num_in_chnk ) { go_BYE(-1); }
     }
     chk_num_elements += chnk_val.num_elements;
-    if ( chnk_val.qtype != qtype ) { go_BYE(-1); }
+    if ( chnk_val.qtype != qtype ) { 
+      go_BYE(-1); 
+    }
 
     // if data not in L2, must be in L1  or in LMA 
     if ( chnk_val.l2_exists == false ) { 

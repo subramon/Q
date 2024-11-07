@@ -42,9 +42,10 @@ local function q_cdef( infile, incs)
     assert(type(pre_cdef) == "boolean")
     ffi.cdef(str_to_cdef)
     cdefd[infile] = true
-    if ( pre_cdef == false ) then 
+    if ( pre_cdef == true ) then  -- ??? WHY WAS THIS FALSE?
       -- cache rslt in cdef_file
-      print(cdef_file)
+      assert(type(cdef_file) == "string")
+      assert(cutils.isfile(cdef_file))
       assert(cutils.str_as_file(str_to_cdef, cdef_file))
     end
    end

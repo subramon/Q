@@ -55,7 +55,6 @@ return function (
       subs.dotc = "OPERATORS/F1OPF2/src/convert_F2_F4.c"
       subs.doth = "OPERATORS/F1OPF2/inc/convert_F2_F4.h"
     end
-    subs.incs = { "OPERATORS/F1OPF2/inc/", "UTILS/inc/" }
   elseif ( ( subs.f1_qtype == "F4" ) and ( subs.f2_qtype == "F2" ) ) then 
     subs.tmpl = nil
     if ( f1:has_nulls() ) then
@@ -65,13 +64,15 @@ return function (
       subs.dotc = "OPERATORS/F1OPF2/src/convert_F4_F2.c"
       subs.doth = "OPERATORS/F1OPF2/inc/convert_F4_F2.h"
     end
-    subs.incs = { "OPERATORS/F1OPF2/inc/", "UTILS/inc/" }
   else
-    subs.incs = { "OPERATORS/F1OPF2/gen_inc/", 
-      "OPERATORS/F1OPF2/inc/", "UTILS/inc/" }
+    -- nothing special to do 
   end
   subs.srcdir      = "OPERATORS/F1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1OPF2/gen_inc/"
+  local rsutils_src_root = assert(os.getenv("RSUTILS_SRC_ROOT"))
+  subs.incs        = { "OPERATORS/F1OPF2/inc/", 
+  "OPERATORS/F1OPF2/gen_inc/", 
+    rsutils_src_root .. "/inc/" }
   subs.libs        = { "-lgomp", "-lm" }
 --[[ TODO 
   -- for ISPC
