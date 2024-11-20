@@ -64,7 +64,9 @@ return function (
 
   subs.srcdir      = "OPERATORS/F1S1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1S1OPF2/gen_inc/"
-  subs.incs        = { "OPERATORS/F1S1OPF2/gen_inc/", "UTILS/inc/" }
+  local rsutils_src_root = assert(os.getenv("RSUTILS_SRC_ROOT"))
+  subs.incs        = { "OPERATORS/F1S1OPF2/gen_inc/", 
+      rsutils_src_root .. "/inc/" }
   subs.libs        = { "-lgomp", "-lm" }
 --[[ TODO 
   -- for ISPC
