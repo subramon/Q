@@ -151,14 +151,14 @@ ut2 : ${TEST2_OBJS} \
   	${VCTR_SO} ${CHNK_SO} ${CMEM_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
 	libvctr.so libvctr_core.so 
 	gcc ${TEST2_OBJS} \
-	${VCTR_SO} ${CHNK_SO} ${CMEM_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
+	${VCTR_SO} ${CHNK_SO} ${CMEM_SO} ${GUTILS_SO} ${RSUTILS_SO} ${RSLUTILS_SO} ${RSHMAP_SO} \
 	libvctr.so libvctr_core.so ${LUAJIT_SO} \
 	-o ut2 -lm -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
 ut_memo : ${TEST3_OBJS}  ${RSUTILS_SO} 
 	gcc ${TEST3_OBJS} \
 	libvctr_core.so \
-	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${CMEM_SO} ${RSUTILS_SO} ${RSHMAP_SO} \
+	${VCTR_SO} ${CHNK_SO} ${GUTILS_SO} ${CMEM_SO} ${RSUTILS_SO} ${RSLUTILS_SO} ${RSHMAP_SO} \
 	libvctr.so libvctr_core.so ${LUAJIT_SO} \
 	-o ut_memo -lm -lpthread ${QLDFLAGS} # -static-libasan
 #-------------------------------------------
