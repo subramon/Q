@@ -108,10 +108,14 @@ read_configs(
   printf("g_restore_session = %s \n", g_restore_session ? "true" : "false");
   if ( g_restore_session ) { 
    if ( !isdir(C.data_dir_root, NULL) ) { go_BYE(-1); }
+   if ( !isdir(C.meta_dir_root, NULL) ) { go_BYE(-1); }
   }
   else {
     if ( !isdir(C.data_dir_root, NULL) ) { 
       status = mkdir(C.data_dir_root, 0744); cBYE(status);
+    }
+    if ( !isdir(C.meta_dir_root, NULL) ) { 
+      status = mkdir(C.meta_dir_root, 0744); cBYE(status);
     }
   }
   
