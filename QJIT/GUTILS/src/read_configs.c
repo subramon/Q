@@ -106,6 +106,14 @@ read_configs(
   g_is_out_of_band  = C.is_out_of_band;
 
   printf("g_restore_session = %s \n", g_restore_session ? "true" : "false");
+  if ( g_restore_session ) { 
+   if ( !isdir(C.data_dir_root, NULL) ) { go_BYE(-1); }
+  }
+  else {
+    if ( !isdir(C.data_dir_root, NULL) ) { 
+      status = mkdir(C.data_dir_root, 0744); cBYE(status);
+    }
+  }
   
   real_data_dir_root = realpath(C.data_dir_root, NULL);
   if ( real_data_dir_root == NULL ) { 
