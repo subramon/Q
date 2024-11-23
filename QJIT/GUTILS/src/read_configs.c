@@ -111,12 +111,22 @@ read_configs(
    if ( !isdir(C.meta_dir_root, NULL) ) { go_BYE(-1); }
   }
   else {
-    if ( !isdir(C.data_dir_root, NULL) ) { 
-      status = mkdir(C.data_dir_root, 0744); cBYE(status);
+    // Following should be dine in init_session
+    // But I need realpath to work, so I do it here
+    // clean out out data 
+    if ( isdir(C.data_dir_root, NULL) ) { 
+      status = rmtree(C,data_dir_root); 
     }
-    if ( !isdir(C.meta_dir_root, NULL) ) { 
-      status = mkdir(C.meta_dir_root, 0744); cBYE(status);
+    if ( isdir(C.data_dir_root, NULL) ) { 
+      status = rmtree(C,data_dir_root); 
     }
+    //---------------------------
+    status = mkdir(C.data_dir_root, 0744); cBYE(status);
+    status = mkdir(C.meta_dir_root, 0744); cBYE(status);
+    //---------------------------
+    if ( !isdir(C.data_dir_root, NULL) ) { go_BYE(-1); }
+    if ( !isdir(C.meta_dir_root, NULL) ) { go_BYE(-1); }
+    //---------------------------
   }
   
   real_data_dir_root = realpath(C.data_dir_root, NULL);
