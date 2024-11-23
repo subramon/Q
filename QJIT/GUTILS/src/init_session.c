@@ -129,7 +129,8 @@ init_session(
     rmtree(g_data_dir_root[tbsp]);
     rmtree(g_meta_dir_root);
     status = mkdir(g_data_dir_root[tbsp], 0744); cBYE(status);
-    status = mkdir(g_meta_dir_root, 0744); cBYE(status);
+    if ( !isdir(g_data_dir_root[tbsp]) ) { go_BYE(-1); }
+    if ( !isdir(g_meta_dir_root) ) { go_BYE(-1); }
     printf("<<<<<<<<<<<< STARTED  NEW SESSION ============\n");
   }
 
