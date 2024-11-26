@@ -860,7 +860,7 @@ function lVector:delete()
     return false
   end 
   local vname = ifxthenyelsez(self:name(), "anonymous:" .. self:uqid())
-  print("DELETE CALLED on " .. vname)
+  -- print("DELETE CALLED on " .. vname)
   -- cannot delete nn_vec, need to delete primary vec
   if ( cVector.is_nn_vec(self._base_vec) ) then 
     print("Need to kill parent, not me") 
