@@ -107,3 +107,4 @@ export PATH=$PATH:$Q_ROOT/bin/
 echo "Environment variables for Q good to go"
 set +e
 
+
