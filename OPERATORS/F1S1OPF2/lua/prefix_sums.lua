@@ -16,8 +16,8 @@ local function prefix_sums(f1, optargs )
   assert(qc[func_name], "Missing symbol " .. func_name)
   --======================
   local chunk_idx = 0
-  local last_val = cmem.new({ size = ffi.sizeof(subs.f1_ctype)})
-  local cst_last_val = ffi.cast(subs.cast_f1_as, get_ptr(last_val))
+  local last_cnt = cmem.new({ size = ffi.sizeof(subs.f2_ctype)})
+  local cst_last_cnt = ffi.cast(subs.cast_f1_as, get_ptr(last_cnt))
   --============================================
   local first_call = true
   local f2_gen = function(chunk_num)
@@ -32,13 +32,13 @@ local function prefix_sums(f1, optargs )
     --===========================================
     local cst_f1_buf = ffi.cast(subs.cast_f1_as, get_ptr(f1_buf))
     local start_time = cutils.rdtsc()
-    qc[func_name](cst_f1_buf, f1_len, first_call, cst_f2_buf, cst_last_val)
+    qc[func_name](cst_f1_buf, f1_len, first_call, cst_f2_buf, cst_last_cnt)
     record_time(start_time, func_name)
     f1:unget_chunk(chunk_idx)
     first_call = false
     chunk_idx = chunk_idx + 1
     if ( f1_len < subs.max_num_in_chunk ) then 
-      last_val:delete() -- no more calls 
+      last_cnt:delete() -- no more calls 
     end 
     return f1_len, f2_buf
   end

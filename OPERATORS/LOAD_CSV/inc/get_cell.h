@@ -9,6 +9,7 @@ get_cell(
     bool is_last_col,
     char *buf,
     char *lbuf,
-    size_t bufsz
+    size_t bufsz,
+    bool *ptr_is_err
     );
 //STOP_FOR_CDEF

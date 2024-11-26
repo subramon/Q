@@ -29,7 +29,6 @@ vctr_chnks_to_lma(
   char *X = NULL, *bak_X = NULL; size_t nX = 0, bak_nX = 0;
   char *l2_file = NULL;
 
-  if ( tbsp != 0 ) { go_BYE(-1); } 
   if ( uqid == 0 ) { go_BYE(-1); } 
   bool vctr_is_found; uint32_t vctr_where_found;
   status = vctr_is(tbsp, uqid, &vctr_is_found, &vctr_where_found); 
@@ -54,6 +53,10 @@ vctr_chnks_to_lma(
   if ( v->X != NULL ) { go_BYE(-1); }
   if ( v->nX != 0 ) { go_BYE(-1); }
   //-----------------------------------------------
+  // Note that the tbsp check comes in late in life
+  // This allows us to access lma from another tbsp as
+  // long as we don't create it 
+  if ( tbsp != 0 ) { go_BYE(-1); } 
   // START: Create new empty backup file 
   lma_file = l2_file_name(0, uqid, ((uint32_t)~0));
   if ( lma_file == NULL ) { go_BYE(-1); }
