@@ -27,7 +27,7 @@ export RSHMAP_SRC_ROOT=$HOME/RSHMAP/  # Where  RSHMAP has been checked out
 export CMEM_SRC_ROOT=$HOME/CMEM/  # Where  CMEM has been checked out
 export SCLR_SRC_ROOT=$HOME/SCLR/  # Where  SCLR has been checked out
 #-----------------------------------
-export Q_ROOT="/home/subramon/local/Q/"
+export Q_ROOT="/home/ubuntu/local/Q/"
 # export Q_ROOT="/mnt/storage/local/Q/"
 # export Q_ROOT="/storeB/local/Q/"
 echo "Q_ROOT= $Q_ROOT"
@@ -106,5 +106,4 @@ export PATH=$PATH:$Q_ROOT/bin/
 
 echo "Environment variables for Q good to go"
 set +e
-
 
