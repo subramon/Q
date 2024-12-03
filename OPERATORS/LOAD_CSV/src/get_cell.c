@@ -1,8 +1,9 @@
 //START_INCLUDES
-#include "stdio.h"
-#include "stdint.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include "q_macros.h"
 #include "trim.h"
 //STOP_INCLUDES
@@ -17,7 +18,8 @@ get_cell(
     bool is_last_col,
     char *buf,
     char *lbuf,
-    size_t bufsz
+    size_t bufsz,
+    bool *ptr_is_err
     )
 //STOP_FUNC_DECL
 {
@@ -88,6 +90,13 @@ get_cell(
       continue;
     }
     if ( bufidx >= bufsz ) { go_BYE(-1); }
+    // if you have not started with a dquote, then you cannot
+    // have eoln inside you
+    if ( !start_dquote ) { 
+      if ( X[xidx] == eoln ) { 
+        *ptr_is_err = true; WHEREAMI; return 0;
+      }
+    }
     lbuf[bufidx++] = X[xidx++];
   }
 BYE:

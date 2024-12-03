@@ -105,12 +105,15 @@ load_csv_seq(
     // If trimming needed, we need to send a buffer for that purpose
     char *tmp_buf = NULL;
     if ( is_trim[col_ctr] ) { tmp_buf = lbuf; }
+    bool is_err = false;
     xidx = get_cell(X, nX, xidx, fld_sep, is_last_col, buf, 
-        tmp_buf, max_width-1);
+        tmp_buf, max_width-1, &is_err);
+    if ( is_err ) { go_BYE(-1); }
     // Deal with header line 
     //row_ctr == 0 means we are reading the first line which is the header
     if ( ( is_hdr )  && ( *ptr_file_offset == 0 ) ) {
       if ( row_ctr != 0 ) { go_BYE(-1); }
+      printf("col[%u] = %s \n", col_ctr, buf); 
       col_ctr++;
       if ( is_last_col ) {
         col_ctr = 0;
@@ -165,6 +168,8 @@ load_csv_seq(
     // write data 
     status = asc_to_bin(buf, is_val_null, c_qtypes[col_ctr], 
         width[col_ctr], row_ctr, data[col_ctr]);
+    fprintf(stderr, "row %lu, col %d, cell [%s]\n",
+          row_ctr, col_ctr, buf);
     if ( status < 0 ) { 
       fprintf(stderr, "Error for row %lu, col %d, cell [%s]\n",
           row_ctr, col_ctr, buf);

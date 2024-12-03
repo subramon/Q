@@ -42,7 +42,6 @@ local function SC_to_lkp_C(
       nn_buf:zero()
       nn_buf:stealable(true)
       nn_out_ptr = get_ptr(nn_buf, subs.nn_cast_buf_as)
-      print("nn_out_ptr = ", nn_out_ptr)
     end
     -- STOP  Allocate output 
     -- START Gather input 
