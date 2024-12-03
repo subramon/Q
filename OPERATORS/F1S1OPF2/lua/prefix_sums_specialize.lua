@@ -13,10 +13,15 @@ return function (
   subs.f1_ctype   = cutils.str_qtype_to_str_ctype(subs.f1_qtype)
   subs.cast_f1_as  = subs.f1_ctype .. " *"
 
-  assert(is_in(subs.f1_qtype, 
-    { "I1", "I2", "I4", "I8", "UI1", "UI2", "UI4", "UI8", "F4", "F8", }))
-
-  subs.f2_qtype = subs.f1_qtype
+  if (is_in(subs.f1_qtype, { "I1", "I2", "I4", "I8", })) then
+    subs.f2_qtype = "I8"
+  elseif (is_in(subs.f1_qtype, { "UI1", "UI2", "UI4", "UI8", })) then
+    subs.f2_qtype = "UI8"
+  elseif (is_in(subs.f1_qtype, { "F4", "F8", })) then
+    subs.f2_qtype = "F8"
+  else
+    error("bad input type")
+  end
   if ( optargs ) then
     assert(type(optargs) == "table")
     if ( optargs.out_qtype ) then 

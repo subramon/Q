@@ -127,6 +127,8 @@ init_session(
     cBYE(status);
 
     /* done in read_configs 
+    // rmtree(g_data_dir_root[tbsp]);
+    // status = mkdir(g_data_dir_root[tbsp], 0744); cBYE(status);
     rmtree(g_data_dir_root[tbsp]);
     rmtree(g_meta_dir_root);
     status = mkdir(g_data_dir_root[tbsp], 0744); cBYE(status);

@@ -14,7 +14,7 @@ ${fn}(
       uint32_t nR,
       bool is_first,
       ${f2_ctype}  * restrict out,  
-      ${f1_ctype} *ptr_last_val_prev_chunk
+      ${f2_ctype} *ptr_last_out_prev_chunk
       ) 
 ;
 //STOP_FOR_CDEF
@@ -30,7 +30,7 @@ ${fn}(
       uint32_t nR,
       bool is_first,
       ${f2_ctype} * restrict out,  
-      ${f1_ctype} *ptr_last_val_prev_chunk
+      ${f2_ctype} *ptr_last_out_prev_chunk
       )
 
 {
@@ -45,12 +45,12 @@ ${fn}(
     out[0] = in[0];
   }
   else {
-    out[0] = in[0] + *ptr_last_val_prev_chunk;
+    out[0] = in[0] + *ptr_last_out_prev_chunk;
   }
   for ( uint32_t i = 1; i < nR; i++ ) { 
     out[i] = in[i] + out[i-1]; 
   }
-  *ptr_last_val_prev_chunk = in[nR-1];
+  *ptr_last_out_prev_chunk = out[nR-1];
 BYE:
   return status;
 }

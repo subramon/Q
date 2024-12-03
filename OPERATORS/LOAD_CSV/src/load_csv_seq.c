@@ -113,7 +113,7 @@ load_csv_seq(
     //row_ctr == 0 means we are reading the first line which is the header
     if ( ( is_hdr )  && ( *ptr_file_offset == 0 ) ) {
       if ( row_ctr != 0 ) { go_BYE(-1); }
-      printf("col[%u] = %s \n", col_ctr, buf); 
+      // printf("col[%u] = %s \n", col_ctr, buf); 
       col_ctr++;
       if ( is_last_col ) {
         col_ctr = 0;
