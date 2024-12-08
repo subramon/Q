@@ -292,11 +292,12 @@ BYE:
   return 2;
 }
 //-----------------------------------
-static int l_vctr_brk_nn_vec( lua_State *L) {
+static int l_vctr_del_nn_vec( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
   VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
-  status = vctr_brk_nn_vec(ptr_v->tbsp, ptr_v->uqid); cBYE(status);
+  // note the "true" argument which says to delete the nn vector
+  status = vctr_brk_nn_vec(ptr_v->tbsp, ptr_v->uqid, true ); cBYE(status);
   lua_pushboolean(L, true);
   return 1;
 BYE:
@@ -304,6 +305,21 @@ BYE:
   lua_pushstring(L, __func__);
   return 2;
 }
+//-----------------------------------
+//-----------------------------------
+static int l_vctr_brk_nn_vec( lua_State *L) {
+  int status = 0;
+  if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
+  VCTR_REC_TYPE *ptr_v = (VCTR_REC_TYPE *)luaL_checkudata(L, 1, "Vector");
+  status = vctr_brk_nn_vec(ptr_v->tbsp, ptr_v->uqid, false); cBYE(status);
+  lua_pushboolean(L, true);
+  return 1;
+BYE:
+  lua_pushnil(L);
+  lua_pushstring(L, __func__);
+  return 2;
+}
+//-----------------------------------
 static int l_vctr_get_nn_vec( lua_State *L) {
   int status = 0;
   if (  lua_gettop(L) != 1 ) { go_BYE(-1); }
@@ -1733,6 +1749,7 @@ static const struct luaL_Reg vector_functions[] = {
     { "set_nn_vec", l_vctr_set_nn_vec },
     { "get_nn_vec", l_vctr_get_nn_vec },
     { "brk_nn_vec", l_vctr_brk_nn_vec },
+    { "del_nn_vec", l_vctr_del_nn_vec },
     { "has_nn_vec", l_vctr_has_nn_vec },
     { "is_nn_vec", l_vctr_is_nn_vec },
     { "has_parent", l_vctr_has_parent },

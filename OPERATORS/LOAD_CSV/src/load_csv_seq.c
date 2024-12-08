@@ -168,8 +168,6 @@ load_csv_seq(
     // write data 
     status = asc_to_bin(buf, is_val_null, c_qtypes[col_ctr], 
         width[col_ctr], row_ctr, data[col_ctr]);
-    fprintf(stderr, "row %lu, col %d, cell [%s]\n",
-          row_ctr, col_ctr, buf);
     if ( status < 0 ) { 
       fprintf(stderr, "Error for row %lu, col %d, cell [%s]\n",
           row_ctr, col_ctr, buf);

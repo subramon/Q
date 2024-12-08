@@ -15,5 +15,6 @@ vctr_get_nn_vec(
 extern int
 vctr_brk_nn_vec(
     uint32_t base_tbsp,
-    uint32_t base_uqid
+    uint32_t base_uqid,
+    bool del_nn
     );
