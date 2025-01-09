@@ -1,1 +1,4 @@
+Get rid of CNTR and MAGG and replace by HMAP
+
+
 Might be prodcing libcmem and libsclr twice, once in old way and once in new
