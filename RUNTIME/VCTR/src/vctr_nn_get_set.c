@@ -83,7 +83,8 @@ BYE:
 int
 vctr_brk_nn_vec(
     uint32_t base_tbsp,
-    uint32_t base_uqid
+    uint32_t base_uqid,
+    bool del_nn
     )
 {
   int status = 0;
@@ -114,6 +115,11 @@ vctr_brk_nn_vec(
   g_vctr_hmap[base_tbsp].bkts[nn_where].val.has_parent = false;
   g_vctr_hmap[base_tbsp].bkts[nn_where].val.parent_key = 0;
 
+  if ( del_nn ) { 
+    bool is_found; 
+    status = vctr_del(base_tbsp, nn_uqid, &is_found);  cBYE(status);
+    if ( !is_found ) { go_BYE(-1); }
+  }
 BYE:
   return status;
 }

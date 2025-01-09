@@ -54,7 +54,7 @@ local function skip_save(vec)
 
     is_skip = true 
   else
-    -- print("Saving Vector     " .. (vec:name() or "anonymous"))
+    print("Saving Vector name = " .. vec:name() .. " uqid = " .. vec:uqid())
     is_skip = false 
   end
   return is_skip, is_dead
@@ -133,13 +133,14 @@ local function internal_save(
         uqid_to_vecs[uqid] = rand_name
       end
       -- repeat above for nn vector assuming it exists
-      if ( vec:has_nulls() ) then
+      if ( vec:has_nn_vec() ) then
         local nn_vec  = vec:get_nn_vec()
         if ( not nn_vec:is_lma() ) then 
           nn_vec:make_mem(2) 
         end
         nn_vec:persist()  
         local nn_uqid = nn_vec:uqid()
+        print("persisting nn for base ", nn_uqid, uqid)
         local rand_name = uqid_to_vecs[uqid] 
         if ( rand_name ) then
           -- nothing todo 

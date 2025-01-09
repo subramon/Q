@@ -98,7 +98,11 @@ init_session(
         if ( vctr_uqid > g_vctr_uqid ) { g_vctr_uqid = vctr_uqid; } 
         //--- Set usage statistics
         uint64_t mem, dsk; 
-        status = vctr_usage(tbsp, vctr_uqid, &mem, &dsk); cBYE(status);
+        status = vctr_usage(tbsp, vctr_uqid, &mem, &dsk); 
+        if ( status != 0 ) { 
+          WHEREAMI;
+        }
+        cBYE(status);
         if ( mem != 0 ) { go_BYE(-1); } // cannot have mem at this stage
         if ( dsk == 0 ) { go_BYE(-1); } // must have   dsk at this stage
         status = incr_dsk_used(dsk); cBYE(status);

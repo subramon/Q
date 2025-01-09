@@ -275,6 +275,9 @@ function lVector.new(args)
   vector._meta = {} -- for meta data stored in vector
   vector._is_dead = false -- will be set to true upon deletion
   assert(type(args) == "table")
+  -- TODO P1 experimental Following is to see if we can
+  -- avoid gc kicking in earlier than desirable
+  if ( args.gc_saver ) then vector._gc_saver = gc_saver end
   --=================================================
   if ( args.uqid )  then 
     -- print("Rehydrating " .. args.uqid)
@@ -832,6 +835,8 @@ lVector.__gc = function (vec)
   end
   --=========================================
   --[[ Not needed because done on C side 
+  -- TODO P1 I don't think this is enough. Causes problems
+  -- when we save and restore 
   if ( vec:has_nn_vec() ) then 
     local nn_vec = cVector.get_nn_vec(self._base_vec)
     cVector.delete(nn_vec)
@@ -1214,8 +1219,13 @@ end
 -- has_nn_vec
 -- is_nn_vec
 -- set_nn_vec
+-- del_nn_vec
 function lVector:brk_nn_vec()
   assert(cVector.brk_nn_vec(self._base_vec))
+  return self
+end
+function lVector:del_nn_vec()
+  assert(cVector.del_nn_vec(self._base_vec))
   return self
 end
 function lVector:get_nn_vec()

@@ -11,7 +11,7 @@ SC_to_lkp_C_${out_qtype}(
     bool *nn_in_strs, // [n]
     uint32_t n,
     uint32_t width,
-    const char ** const lkp,
+    char ** lkp,
     uint32_t n_lkp,
     ${out_ctype} *outvals, // [n]  
     bool *nn_outvals // [n]  
@@ -36,7 +36,7 @@ SC_to_lkp_C_${out_qtype}(
     bool *nn_in_strs, // [n]
     uint32_t n,
     uint32_t width,
-    const char ** const lkp,
+    char ** lkp,
     uint32_t n_lkp,
     ${out_ctype} *outvals, // [n]  
     bool *nn_outvals // [n]  
@@ -60,7 +60,7 @@ SC_to_lkp_C_${out_qtype}(
   if ( nn_in_strs == NULL ) { if ( nn_outvals != NULL ) { go_BYE(-1); } }
   if ( nn_in_strs != NULL ) { if ( nn_outvals == NULL ) { go_BYE(-1); } }
 #endif
-// TODO #pragma omp parallel for schedule(static, 1024)
+#pragma omp parallel for schedule(static, 1024)
   for ( uint32_t i = 0; i < n; i++ ) { 
     char *cptr = in_strs + (i*width);
     outvals[i] = 0;

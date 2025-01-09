@@ -5,6 +5,7 @@ local cutils        = require 'libcutils'
 local get_ptr       = require 'Q/UTILS/lua/get_ptr'
 local qc            = require 'Q/UTILS/lua/qcore'
 local tbl_of_str_to_C_array = require 'Q/UTILS/lua/tbl_of_str_to_C_array'
+local tbl_to_C_2d   = require 'RSUTILS/lua/tbl_to_C_2d'
 local lVector       = require 'Q/RUNTIME/VCTR/lua/lVector'
 local function SC_to_lkp_C(
   invec, 
@@ -21,15 +22,16 @@ local function SC_to_lkp_C(
     However, if I do, then it gets gc'd not right away but on the nth call
     where n varies. So I had to create it within the function gen()
     which is inefficient 
-    local lkp, n_lkp = tbl_of_str_to_C_array(lkp_tbl)
     TODO P1 This needs to be fixed one way or another.
+    See attempt below 
     --]]
-
+  local lkp, n_lkp = tbl_to_C_2d(lkp_tbl)
+  assert(lkp)
+  assert(n_lkp > 0)
 
   local l_chunk_num = 0
   local function gen(chunk_num)
     assert(chunk_num == l_chunk_num)
-    local lkp, n_lkp = tbl_of_str_to_C_array(lkp_tbl)
     -- START ALlocate output 
     local buf = cmem.new({ size = subs.bufsz, qtype = subs.out_qtype})
     buf:zero()
@@ -42,7 +44,6 @@ local function SC_to_lkp_C(
       nn_buf:zero()
       nn_buf:stealable(true)
       nn_out_ptr = get_ptr(nn_buf, subs.nn_cast_buf_as)
-      print("nn_out_ptr = ", nn_out_ptr)
     end
     -- STOP  Allocate output 
     -- START Gather input 
@@ -70,6 +71,7 @@ local function SC_to_lkp_C(
   vargs.gen = gen
   vargs.has_nulls = subs.has_nulls
   vargs.max_num_in_chunk = subs.max_num_in_chunk
+  vargs.gc_saver = {lkp, n_lkp} -- to avoid gc TODO P1 experimental 
   return lVector(vargs)
 end
 return SC_to_lkp_C

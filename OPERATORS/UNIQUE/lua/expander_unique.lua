@@ -18,7 +18,11 @@ local function expander_unique(op, a)
   assert(qc[func_name], "Symbol not defined " .. func_name)
 
   -- TODO P1 Check that a is sorted. a = sort_utility(a)
-  assert(a:get_meta("sort_order") == "asc") -- TODO Improve 
+  -- TODO Improve 
+  assert( ( a:get_meta("sort_order") == "asc") or
+          ( a:get_meta("sort_order") == "dsc") or
+          ( a:get_meta("grouped") == true) ) 
+  --grouped is weaker but sufficient, sorted is stronger
   
   -- records which element of input buffer to examine
   local in_idx = ffi.new("uint32_t[?]", 1)

@@ -70,7 +70,7 @@ vctr_get_set(
   else if ( strcmp(meta, "lma") == 0 ) { 
     switch ( mode ) { 
       case get : *ptr_bl = val.is_lma; break;
-      // NOT HERE case set : ptr_val->is_error = *ptr_bl; break; 
+                 // NOT HERE case set : ptr_val->is_error = *ptr_bl; break; 
       default : go_BYE(-1); break;
     }
   }
@@ -152,9 +152,21 @@ vctr_get_set(
         *ptr_bl = val.has_parent;
         break;
         /* Set needs to be done elswehere
-      case set : 
+           case set : 
+           break;
+           */
+      default : go_BYE(-1); break;
+    }
+  }
+  else if ( strcmp(meta, "nn_key") == 0 ) {
+    switch ( mode ) {
+      case get :
+        *ptr_i8 = val.nn_key;
         break;
-        */
+        /* Set needs to be done elswehere
+           case set :
+           break;
+           */
       default : go_BYE(-1); break;
     }
   }
@@ -164,9 +176,9 @@ vctr_get_set(
         *ptr_bl = val.has_nn;
         break;
         /* Set needs to be done elswehere
-      case set : 
-        break;
-        */
+           case set : 
+           break;
+           */
       default : go_BYE(-1); break;
     }
   }
@@ -176,9 +188,9 @@ vctr_get_set(
         *ptr_bl = val.has_parent;
         break;
         /* Set needs to be done elswehere
-      case set : 
-        break;
-        */
+           case set : 
+           break;
+           */
       default : go_BYE(-1); break;
     }
   }

@@ -3,6 +3,8 @@
 #include <lauxlib.h>
 #include <lualib.h>
 #include "q_config.h"
+#include "isdir.h"
+#include "rmtree.h"
 
 #include "qjit_globals.h"
 #include "read_configs.h"
@@ -107,25 +109,25 @@ read_configs(
 
   printf("g_restore_session = %s \n", g_restore_session ? "true" : "false");
   if ( g_restore_session ) { 
-   if ( !isdir(C.data_dir_root, NULL) ) { go_BYE(-1); }
-   if ( !isdir(C.meta_dir_root, NULL) ) { go_BYE(-1); }
+   if ( !isdir(C.data_dir_root) ) { go_BYE(-1); }
+   if ( !isdir(C.meta_dir_root) ) { go_BYE(-1); }
   }
   else {
     // Following should be dine in init_session
     // But I need realpath to work, so I do it here
     // clean out out data 
-    if ( isdir(C.data_dir_root, NULL) ) { 
-      status = rmtree(C,data_dir_root); 
+    if ( isdir(C.data_dir_root) ) { 
+      status = rmtree(C.data_dir_root); 
     }
-    if ( isdir(C.data_dir_root, NULL) ) { 
-      status = rmtree(C,data_dir_root); 
+    if ( isdir(C.meta_dir_root) ) { 
+      status = rmtree(C.meta_dir_root); 
     }
     //---------------------------
     status = mkdir(C.data_dir_root, 0744); cBYE(status);
     status = mkdir(C.meta_dir_root, 0744); cBYE(status);
     //---------------------------
-    if ( !isdir(C.data_dir_root, NULL) ) { go_BYE(-1); }
-    if ( !isdir(C.meta_dir_root, NULL) ) { go_BYE(-1); }
+    if ( !isdir(C.data_dir_root) ) { go_BYE(-1); }
+    if ( !isdir(C.meta_dir_root) ) { go_BYE(-1); }
     //---------------------------
   }
   
