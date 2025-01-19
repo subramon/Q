@@ -1,3 +1,6 @@
+Things like mem_allowed should be on a per tbsp basis 
+
+
 Handle the fact that max length of vector name is set in
 ~/Q/QJIT/HMAPS/VCTR/inc/ but should be checked by 
 functions such as load_csv()

@@ -130,13 +130,9 @@ function lHMap:put_chunk(chnk_idx)
   local n = 0
   --=======================================================
   local key_chunks = {}
-  local key_width = ffi.new("uint32_t[?]", #self._keyvecs)
-  local sum_key_width = 0
   for k, v in ipairs(self._keyvecs) do 
-    key_width[k-1] = v:width(k)
-    sum_key_width = sum_key_width + key_width[k-1] 
     local ln, x, nn_x = v:get_chunk(chnk_idx)
-    -- all chunks have same length 
+    -- all chunks must have same length 
     if ( k == 1 ) then n = ln else assert(n == ln) end 
     assert(type(nn_x) == "nil") -- not handled just yet
     key_chunks[k] == x 
@@ -190,7 +186,7 @@ end
 function lHMap:put_chunk(chnk, n, nn_chnk)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
   -- cannot put into complete vector 
-  assert(self:is_eov() == false) 
+  assert(self:is_locked() == false) 
   -- cannot put into nn vector 
   assert(not cHMap.is_nn_vec(self._base_vec))
   --============

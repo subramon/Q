@@ -62,6 +62,7 @@ init_session(
       mk_new_session = true;
     }
     if ( mk_new_session ) {
+      printf("NOT restoring session beause meta files not present\n");
       g_restore_session = false;
     }
   }

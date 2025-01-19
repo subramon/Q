@@ -7,7 +7,7 @@
 #include "qtypes.h"
 #include "get_file_size.h"
 #include "cmem_struct.h"
-#include "get_int_from_tbl.h"
+#include "get_num_from_tbl.h"
 #include "get_str_from_tbl.h"
 #include "get_bool_from_tbl.h"
 #include "vctr_struct.h"
@@ -1235,7 +1235,7 @@ static int l_vctr_rehydrate( lua_State *L)
 {
   int status = 0;
   VCTR_REC_TYPE *ptr_v = NULL;
-  bool is_key; int64_t itmp; 
+  bool is_key; double dtmp; 
   uint32_t uqid = 0, tbsp = 0;
   // width needed only for SC; all other qtypes have known fixed widths
   //--- get args passed from Lua 
@@ -1245,13 +1245,13 @@ static int l_vctr_rehydrate( lua_State *L)
   // CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
   //------------------- get qtype and width
   //-------------------------------------------
-  status = get_int_from_tbl(L, 1, "uqid", &is_key, &itmp); cBYE(status);
+  status = get_num_from_tbl(L, 1, "uqid", &is_key, &dtmp); cBYE(status);
   if ( !is_key )  { go_BYE(-1); } 
-  uqid = (uint32_t)itmp;
+  uqid = (uint32_t)dtmp;
   //-------------------------------------------
-  status = get_int_from_tbl(L, 1, "tbsp", &is_key, &itmp); cBYE(status);
+  status = get_num_from_tbl(L, 1, "tbsp", &is_key, &dtmp); cBYE(status);
   if ( !is_key )  { go_BYE(-1); } 
-  tbsp = (uint32_t)itmp;
+  tbsp = (uint32_t)dtmp;
   //-------------------------------------------
 
   ptr_v = (VCTR_REC_TYPE *)lua_newuserdata(L, sizeof(VCTR_REC_TYPE));
@@ -1281,7 +1281,7 @@ static int l_vctr_add( lua_State *L)
   bool is_memo = false;           int64_t memo_len = 0; 
   bool is_early_freeable = false; int64_t num_free_ignore = 0;
   bool is_killable = false;       int64_t num_kill_ignore = 0;
-  bool is_key; int64_t itmp; 
+  bool is_key; double dtmp;  
   const char * str_qtype = NULL, *str_name = NULL, *file_name = NULL;
   uint32_t width = 0; 
   uint32_t max_num_in_chnk;
@@ -1291,7 +1291,8 @@ static int l_vctr_add( lua_State *L)
   if ( !lua_istable(L, 1) ) { go_BYE(-1); }
   luaL_checktype(L, 1, LUA_TTABLE ); // another way of checking
   // CMEM_REC_TYPE *ptr_c = luaL_checkudata(L, 2, "CMEM");
-  status = get_int_from_tbl(L, 1, "num_free_ignore", &is_key, &num_free_ignore);  
+  status = get_num_from_tbl(L, 1, "num_free_ignore", &is_key, &dtmp);
+  num_free_ignore = (int64_t)dtmp;
   cBYE(status);
   //------------------- get name
   status = get_str_from_tbl(L, 1, "name", &is_key, &str_name);  
@@ -1307,34 +1308,34 @@ static int l_vctr_add( lua_State *L)
   qtype_t qtype  = get_c_qtype(str_qtype);
   if ( qtype == Q0 ) { go_BYE(-1); }
   //-------------------- get width 
-  status = get_int_from_tbl(L, 1, "width", &is_key, &itmp); cBYE(status);
+  status = get_num_from_tbl(L, 1, "width", &is_key, &dtmp); cBYE(status);
   if ( is_key )  { 
-    if ( itmp < 1 ) { go_BYE(-1); }
+    if ( dtmp < 1 ) { go_BYE(-1); }
+    width = (uint32_t)dtmp;
   }
   else { // must specify width for SC 
     if ( qtype == SC ) { go_BYE(-1); } 
-    itmp = get_width_c_qtype(qtype);
+    width = get_width_c_qtype(qtype);
   }
-  width = (uint32_t)itmp;
   // need to keep 1 char for nullc when qtype == SC 
   if ( qtype == SC ) { if ( width < 2 ) { go_BYE(-1); } }
   //-------------------------------------------
-  status = get_int_from_tbl(L, 1, "max_num_in_chunk", &is_key, &itmp); 
+  status = get_num_from_tbl(L, 1, "max_num_in_chunk", &is_key, &dtmp); 
   cBYE(status);
   if ( !is_key )  { go_BYE(-1); }
-  if ( itmp <= 0 ) { go_BYE(-1); }
-  max_num_in_chnk = (uint32_t)itmp;
+  if ( dtmp <= 0 ) { go_BYE(-1); }
+  max_num_in_chnk = (uint32_t)dtmp;
   //-------------------------------------------
   // logic here is a bit awkward because of needing to support
   // historical usage when only memo_len was provided 
   bool memo_len_key;;
-  status = get_int_from_tbl(L, 1, "memo_len", &memo_len_key, &itmp); 
+  status = get_num_from_tbl(L, 1, "memo_len", &memo_len_key, &dtmp); 
   cBYE(status);
   bool is_memo_key;
   status = get_bool_from_tbl(L, 1, "is_memo", &is_memo_key, &is_memo);
   cBYE(status);
   if ( memo_len_key ) { 
-    memo_len = itmp;
+    memo_len = (int64_t)dtmp;
     if ( memo_len <= 0 ) { 
       memo_len = 0; 
       if ( is_memo_key ) {
@@ -1357,8 +1358,8 @@ static int l_vctr_add( lua_State *L)
       &is_early_freeable);
   cBYE(status);
   if ( is_key )  { 
-    status = get_int_from_tbl(L, 1, "num_free_ignore", &is_key, 
-        &num_free_ignore);  
+    status = get_num_from_tbl(L, 1, "num_free_ignore", &is_key, &dtmp);
+    num_free_ignore = (int64_t)dtmp;
     cBYE(status);
   }
   //-------------------------------------------
@@ -1366,8 +1367,8 @@ static int l_vctr_add( lua_State *L)
       &is_killable);
   cBYE(status);
   if ( is_key )  { 
-  status = get_int_from_tbl(L, 1, "num_kill_ignore", &is_key, 
-      &num_kill_ignore);  
+  status = get_num_from_tbl(L, 1, "num_kill_ignore", &is_key, &dtmp);
+  num_kill_ignore = (int64_t)dtmp;
   cBYE(status);
   }
 
@@ -1390,11 +1391,11 @@ static int l_vctr_add( lua_State *L)
   }
   if ( ( file_name != NULL ) && ( *file_name != '\0' ) ) {
     uint64_t num_elements = 0;
-    status = get_int_from_tbl(L, 1, "num_elements", &is_key, &itmp); 
+    status = get_num_from_tbl(L, 1, "num_elements", &is_key, &dtmp); 
     cBYE(status);
     if ( is_key )  { 
-      if ( itmp < 1 ) { go_BYE(-1); } 
-      num_elements = (uint64_t)itmp;
+      if ( dtmp < 1 ) { go_BYE(-1); }
+      num_elements = (uint64_t)dtmp;
     }
     status = vctr_set_lma(ptr_v->tbsp, ptr_v->uqid, file_name, num_elements); 
     cBYE(status);
