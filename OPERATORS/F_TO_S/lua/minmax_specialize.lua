@@ -10,7 +10,6 @@ local good_qtypes =  { "BL", "I1", "I2", "I4", "I8", "F4", "F8",
 local qc        = require 'Q/UTILS/lua/qcore'
 
 qc.q_cdef("OPERATORS/F_TO_S/inc/minmax_struct.h", { "UTILS/inc/" })
-qc.q_cdef("RUNTIME/SCLR/inc/sclr_struct.h", { "UTILS/inc/" })
 
 return function (operator, x, optargs)
   assert(type(operator) == "string")
@@ -68,7 +67,8 @@ return function (operator, x, optargs)
   subs.tmpl   = "OPERATORS/F_TO_S/lua/minmax.tmpl"
   subs.libs = { "-lgomp", }
   subs.incs = { "UTILS/inc", "OPERATORS/F_TO_S/inc/", "OPERATORS/F_TO_S/gen_inc/", }
+  local sclr_src_root = os.getenv("SCLR_SRC_ROOT")
   subs.structs = { "OPERATORS/F_TO_S/inc/minmax_struct.h",
-                   "RUNTIME/SCLR/inc/sclr_struct.h" }
+                   sclr_src_root .. "/inc/sclr_struct.h" }
   return subs
 end

@@ -1245,13 +1245,16 @@ function lVector:is_nn_vec()
 end
 function lVector:set_nn_vec(nn_vec)
   if ( self.is_dead ~= nil ) then assert(self._is_dead == false) end
+  -- nn_vec must be a Vector of type B1 or BL
+  assert(type(nn_vec) == "lVector")
+  assert((nn_vec:qtype() == "BL") or (nn_vec:qtype() == "B1"))
   -- must not have an nn_vec currently
   assert(not cVector.has_nn_vec(self._base_vec))
   -- cannot set nn_vec to an nn_vec
   assert(not cVector.is_nn_vec(self._base_vec))
   -- Limitation of current implementation
   -- input nn_vec cannot be the nn vec for another vector
-  assert(not cVector.is_nn_vec(nn_vec))
+  assert(not cVector.is_nn_vec(nn_vec._base_vec))
   -- cannot be your own nn_vec 
   assert(self:uqid() ~= nn_vec:uqid())
   --===============

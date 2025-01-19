@@ -42,6 +42,16 @@ get_cell(
   memset(buf, '\0', bufsz);
   char last_char;
   bool start_dquote = false;
+  // Handle special case of \\N for null value 
+  if ( X[xidx] == bslash ) { 
+    if ( xidx + 2 >= nX ) {
+      if ( ( X[xidx+1] == 'N' ) && ( X[xidx+2] == fld_sep ) ) {
+        // this is null 
+      }
+    }
+    return xidx+3; 
+  }
+  //-------------------------------------------------------
   if ( X[xidx] == dquote ) { // must end with dquote
     start_dquote = true;
     last_char = '"';

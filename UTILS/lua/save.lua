@@ -54,7 +54,7 @@ local function skip_save(vec)
 
     is_skip = true 
   else
-    print("Saving Vector name = " .. vec:name() .. " uqid = " .. vec:uqid())
+    -- print("Saving Vector name = " .. vec:name() .. " uqid = " .. vec:uqid())
     is_skip = false 
   end
   return is_skip, is_dead
@@ -140,7 +140,7 @@ local function internal_save(
         end
         nn_vec:persist()  
         local nn_uqid = nn_vec:uqid()
-        print("persisting nn for base ", nn_uqid, uqid)
+        -- print("persisting nn for base ", nn_uqid, uqid)
         local rand_name = uqid_to_vecs[uqid] 
         if ( rand_name ) then
           -- nothing todo 

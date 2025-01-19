@@ -52,14 +52,17 @@ init_session(
   // to be created
   if ( g_restore_session ) {
     bool mk_new_session = false;
-    if ( !isfile_in_dir("_vctr_meta.csv", g_meta_dir_root) ) {
-      mk_new_session = true;
-    }
-    if ( !isfile_in_dir("_vctr_bkts.bin", g_meta_dir_root) ) {
-      mk_new_session = true;
-    }
-    if ( !isfile_in_dir("_vctr_full.bin", g_meta_dir_root) ) {
-      mk_new_session = true;
+    for ( ; ; ) { 
+      if ( !isfile_in_dir("_vctr_meta.csv", g_meta_dir_root) ) {
+        mk_new_session = true; break;
+      }
+      if ( !isfile_in_dir("_vctr_bkts.bin", g_meta_dir_root) ) {
+        mk_new_session = true; break;
+      }
+      if ( !isfile_in_dir("_vctr_full.bin", g_meta_dir_root) ) {
+        mk_new_session = true; break;
+      }
+      break;
     }
     if ( mk_new_session ) {
       printf("NOT restoring session beause meta files not present\n");
