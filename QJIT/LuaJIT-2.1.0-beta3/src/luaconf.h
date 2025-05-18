@@ -98,6 +98,7 @@
 #define LUA_PROMPT	"> "	/* Interactive prompt. */
 #define LUA_PROMPT2	">> "	/* Continuation prompt. */
 #define LUA_MAXINPUT	512	/* Max. input line length. */
+#else
 #endif
 
 /* Note: changing the following defines breaks the Lua 5.1 ABI. */

@@ -3,6 +3,7 @@ CC = gcc
 
 INCS := -I./inc/
 INCS += -I${RSUTILS_SRC_ROOT}/inc/
+INCS += -I${RSLUTILS_SRC_ROOT}/inc/
 #-- for hashmaps for chnk and vector 
 INCS += -I${RSHMAP_SRC_ROOT}/fixed_len_kv/common/inc/
 INCS += -I../HMAPS/VCTR/inc/
@@ -24,6 +25,7 @@ all : ${MYSO} ${ALTSO} ${QJIT_AUX_SO}
 #-------------------------------------------
 RS_LIBS := -lpthread
 RS_LIBS += -levent
+RS_LIBS += -levent_pthreads # for webserver
 RS_LIBS += -latomic  # This was neeeded on Raspberry Pi 
 # Otherwise, some of the atomics were not found 
 
@@ -42,6 +44,8 @@ AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/extract_name_value.c
 AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/get_body.c 
 AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/handler.c 
 AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/webserver.c 
+
+AUX_SRCS += ${RSLUTILS_SRC_ROOT}/src/mk_lua_state.c 
 AUX_SRCS += ./src/get_cli_arg.c 
 
 AUX_OBJS = $(AUX_SRCS:.c=.o)

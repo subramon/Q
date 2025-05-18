@@ -1,17 +1,3 @@
-// START: RAMESH
-#include <pthread.h>
-#include <stdbool.h>
-#include <inttypes.h>
-#include "q_macros.h"
-
-#define MAIN_PGM
-#include "qjit_globals.h"
-#include "init_globals.h"
-#include "read_configs.h"
-#include "init_session.h"
-#include "free_globals.h"
-#include "lua_state.h"
-// STOP: RAMESH
 /*
 ** LuaJIT frontend. Runs commands, scripts, read-eval-print (REPL) etc.
 ** Copyright (C) 2005-2017 Mike Pall. See Copyright Notice in luajit.h
@@ -23,6 +9,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+// START: RAMESH
+#include <pthread.h>
+#include <stdbool.h>
+#include <inttypes.h>
+#include "q_macros.h"
+// STOP : RAMESH
+
 
 #define luajit_c
 
@@ -55,6 +48,15 @@ lua_State *L; // IMPORTANT: THIS IS A GLOBAL
 static lua_State *globalL = NULL;
 static const char *progname = LUA_PROGNAME;
 
+// START: RAMESH
+#define MAIN_PGM
+#include "qjit_globals.h"
+#include "init_globals.h"
+#include "read_configs.h"
+#include "init_session.h"
+#include "free_globals.h"
+#include "lua_state.h"
+// STOP: RAMESH
 #if !LJ_TARGET_CONSOLE
 static void lstop(lua_State *L, lua_Debug *ar)
 {
