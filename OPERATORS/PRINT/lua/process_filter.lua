@@ -7,7 +7,7 @@ local function process_filter(filter, vec_length)
     where = filter.where
     if ( where ) then
       assert(type(where) == "lVector")
-      assert(where:qtype() == "B1")
+      assert(where:qtype() == "BL") -- TODO P0 Was B1 will BL work?
       assert(not where:has_nulls())
     end
     if ( lb ) then

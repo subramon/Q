@@ -131,4 +131,5 @@ local print_csv = function (
   if ( fp ) then io.close(fp)  end 
   return true
 end
-return require('Q/q_export').export('print_csv', print_csv)
+require('Q/q_export').export('print_csv', print_csv)
+return print_csv

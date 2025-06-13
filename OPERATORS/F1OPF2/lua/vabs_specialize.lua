@@ -53,7 +53,10 @@ return function (
   subs.tmpl        = "OPERATORS/F1OPF2/lua/f1opf2.tmpl"
   subs.srcdir      = "OPERATORS/F1OPF2/gen_src/"
   subs.incdir      = "OPERATORS/F1OPF2/gen_inc/"
-  subs.incs        = { "OPERATORS/F1OPF2/gen_inc/", "UTILS/inc/" }
+  local rsutils_src_root = os.getenv("RSUTILS_SRC_ROOT")
+  assert(cutils.isdir(rsutils_src_root))
+  subs.incs        = { "OPERATORS/F1OPF2/gen_inc/", 
+    rsutils_src_root .. "/inc/" }
   subs.libs        = { "-lgomp", "-lm" }
   return subs
 end

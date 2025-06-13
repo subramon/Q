@@ -98,7 +98,7 @@ local function load_csv(
         c_data:delete(); nn_c_data:delete()
         --===================================
         if ( this_num_rows_read > 0 ) then 
-          for _, v in ipairs(M) do 
+          for k1, v in ipairs(M) do 
             if ( ( v.name ~= my_name )  and ( v.is_load ) ) then
               -- print("putting chunk for " .. v.name)
               vectors[v.name]:put_chunk(

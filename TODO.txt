@@ -1,3 +1,8 @@
+When I was running with require 'strict, I got this error
+qjit: /home/ubuntu/Q/RUNTIME/VCTR/lua/lVector.lua:830: bad argument #1 to 'is' (Vector expected, got nil)
+Disappeared without strict
+
+
 Things like mem_allowed should be on a per tbsp basis 
 
 

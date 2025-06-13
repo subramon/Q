@@ -63,6 +63,7 @@ require "Q/OPERATORS/UNPACK/lua/unpack"
 
 --== These are from QTILS 
 require 'Q/QTILS/lua/fold'
+require 'Q/QTILS/lua/head'
 --[[
 require "Q/OPERATORS/F_IN_PLACE/lua/f_in_place"
 require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
@@ -71,7 +72,6 @@ require "Q/OPERATORS/F1F2_IN_PLACE/lua/f1f2_in_place"
 --== These are from QTILS 
 require 'Q/QTILS/lua/nop'
 require 'Q/QTILS/lua/avg'
-require 'Q/QTILS/lua/head'
 
 
 -- TODO P2 REWRITE require "Q/OPERATORS/AINB/lua/ainb"

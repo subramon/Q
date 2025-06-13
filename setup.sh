@@ -27,8 +27,8 @@ export RSHMAP_SRC_ROOT=$HOME/RSHMAP/  # Where  RSHMAP has been checked out
 export CMEM_SRC_ROOT=$HOME/CMEM/  # Where  CMEM has been checked out
 export SCLR_SRC_ROOT=$HOME/SCLR/  # Where  SCLR has been checked out
 #-----------------------------------
-# export Q_ROOT="/home/ubuntu/local/Q/"
-export Q_ROOT="/home/subramon/local/Q/"
+export Q_ROOT="/home/ubuntu/local/Q/"
+# export Q_ROOT="/home/subramon/local/Q/"
 # export Q_ROOT="/mnt/storage/local/Q/"
 # export Q_ROOT="/storeB/local/Q/"
 echo "Q_ROOT= $Q_ROOT"
@@ -96,7 +96,7 @@ CURR_PATH=`pwd`
 cd $Q_SRC_ROOT
 cd ../
 #- meta directory to LUA_PATH is for q_meta used to restore sessions
-export LUA_PATH="${RSUTILS_SRC_ROOOT}/RSUTILS/lua/?.lua;${Q_ROOT}/meta/?.lua;${Q_ROOT}/config/?.lua;`pwd`/?.lua;`pwd`/?/init.lua;;"
+export LUA_PATH="${RSUTILS_SRC_ROOT}/lua/?.lua;${Q_ROOT}/meta/?.lua;${Q_ROOT}/config/?.lua;`pwd`/?.lua;`pwd`/?/init.lua;;"
 export LUA_CPATH="${Q_ROOT}/lib/?.so;;"
 cd $CURR_PATH
 echo "LUA_PATH= $LUA_PATH"

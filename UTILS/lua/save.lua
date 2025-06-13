@@ -21,7 +21,7 @@ local function skip_save(vec)
   local is_error             = vec:is_error() 
   local is_early_freeable, _ = vec:get_early_freeable() 
   local is_killable, _       = vec:get_killable() 
-  local memo_len, _          = vec:get_memo() 
+  local memo_len, is_memo    = vec:get_memo() 
   local is_nn_vec            = vec:is_nn_vec() 
 
   assert(type(num_elements)      == "number")

@@ -12,7 +12,7 @@ local get_max_num_in_chunk       = require 'Q/UTILS/lua/get_max_num_in_chunk'
  --======================================
 local function load_bin(
   args,
-  opt_args
+  optargs
   )
   -- START: Process args
   assert(type(args) == "table")
@@ -60,12 +60,15 @@ local function load_bin(
   end
 
   --== START Make C code 
+  local rsutils_src_root = assert(os.getenv("RSUTILS_SRC_ROOT"))
+  assert(cutils.isdir(rsutils_src_root))
+
   local subs = {}
   subs.fn = "load_data_from_file"
   subs.dotc = "OPERATORS/LOAD_BIN/src/load_data_from_file.c"
   subs.doth = "OPERATORS/LOAD_BIN/inc/load_data_from_file.h"
-  subs.incs = { "OPERATORS/LOAD_BIN/inc/", "UTILS/inc/", }
-  subs.srcs = { "UTILS/src/rs_mmap.c", }
+  subs.incs = { rsutils_src_root .. "/inc/", "OPERATORS/LOAD_BIN/inc/", "UTILS/inc/", }
+  subs.srcs = { rsutils_src_root .. "/src/rs_mmap.c", }
   qc.q_add(subs); 
   --=======================================
   vargs.qtype = qtype 
@@ -122,6 +125,7 @@ local function load_bin(
       assert(num_in_file > 0)
       -- how much space do we have in buffer
       local space_in_buf = vargs.max_num_in_chunk - num_copied
+      local num_to_copy = 0
       if ( num_in_file > space_in_buf ) then 
         num_to_copy = space_in_buf
       else

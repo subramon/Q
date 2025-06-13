@@ -32,6 +32,7 @@ init_session(
   // For webserver 
   if ( g_is_webserver ) {  
     printf("Spawned webserver\n");
+    g_web_info.n_threads = 1; // TODO P3 Make this configurable
     g_web_info.is_external = true;
     status = pthread_create(&g_webserver, NULL, &webserver, &g_web_info);
     cBYE(status);
