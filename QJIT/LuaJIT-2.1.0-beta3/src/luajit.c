@@ -627,6 +627,9 @@ int main(int argc, char **argv)
   int status;
   // START: RAMESH 
   int mod_argc = 0; char **mod_argv = NULL; 
+  /* We do the same as Rserve does 	
+   * Starting with Rserve 0.1-9 special command line arguments are supported in addition to the config file. Normally Rserve passes all arguments to R, but several special ones are processed and removed from the list before initializing R. Those parameters override any settings specified in the config file.
+  */
   status = init_globals(argc, argv, &mod_argc, &mod_argv); cBYE(status);
   status = read_configs(); cBYE(status);
   status = init_session(); cBYE(status);
