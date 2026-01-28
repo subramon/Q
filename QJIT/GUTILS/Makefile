@@ -4,6 +4,7 @@ CC = gcc
 INCS := -I./inc/
 INCS += -I${RSUTILS_SRC_ROOT}/inc/
 INCS += -I${RSLUTILS_SRC_ROOT}/inc/
+INCS += -I${RSWUTILS_SRC_ROOT}/inc/
 #-- for hashmaps for chnk and vector 
 INCS += -I${RSHMAP_SRC_ROOT}/fixed_len_kv/common/inc/
 INCS += -I../HMAPS/VCTR/inc/
@@ -39,11 +40,11 @@ AUX_SRCS += ./src/init_session.c
 AUX_SRCS += ./src/read_configs.c 
 AUX_SRCS += ./src/process_req.c 
 
-AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/extract_api_args.c 
-AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/extract_name_value.c 
-AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/get_body.c 
-AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/handler.c 
-AUX_SRCS += ${RSUTILS_SRC_ROOT}/src/webserver.c 
+AUX_SRCS += ${RSWUTILS_SRC_ROOT}/src/extract_api_args.c 
+AUX_SRCS += ${RSWUTILS_SRC_ROOT}/src/extract_name_value.c 
+AUX_SRCS += ${RSWUTILS_SRC_ROOT}/src/get_body.c 
+AUX_SRCS += ${RSWUTILS_SRC_ROOT}/src/web_handler.c 
+AUX_SRCS += ${RSWUTILS_SRC_ROOT}/src/webserver.c 
 
 AUX_SRCS += ${RSLUTILS_SRC_ROOT}/src/mk_lua_state.c 
 AUX_SRCS += ./src/get_cli_arg.c 

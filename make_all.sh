@@ -32,6 +32,11 @@ cd $DIR && make clean && make
 cp librslutils.so $Q_ROOT/lib/
 cd -
 #------------------------------------------------
+DIR=$RSWUTILS_SRC_ROOT/src/; test -d $DIR
+cd $DIR && make clean && make 
+cp librswutils.so $Q_ROOT/lib/
+cd -
+#------------------------------------------------
 DIR=$RSHMAP_SRC_ROOT/fixed_len_kv/common/; test -d $DIR
 cd $DIR && make clean && make
 cp librs_hmap_core.so $Q_ROOT/lib/

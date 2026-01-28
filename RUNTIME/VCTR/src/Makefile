@@ -3,6 +3,7 @@ CC=gcc
 INCS := -I../inc/ 
 INCS += -I${RSUTILS_SRC_ROOT}/inc/
 INCS += -I${RSLUTILS_SRC_ROOT}/inc/
+INCS += -I${RSWUTILS_SRC_ROOT}/inc/
 INCS += -I${RSHMAP_SRC_ROOT}/fixed_len_kv/common/inc/
 INCS += -I${CMEM_SRC_ROOT}/inc/
 INCS += -I${SCLR_SRC_ROOT}/inc/

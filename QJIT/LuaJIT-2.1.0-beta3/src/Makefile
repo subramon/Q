@@ -683,6 +683,7 @@ INCS += -I../../HMAPS/CHNK/inc/
 INCS += -I../../HMAPS/CHNK/gen_inc/
 #------
 INCS += -I${RSUTILS_SRC_ROOT}/inc/
+INCS += -I${RSWUTILS_SRC_ROOT}/inc/
 INCS += -I../../GUTILS/inc/
 # INCS += -I../../../RUNTIME/VCTR/inc/
 
@@ -723,6 +724,7 @@ RS_LIBS += ${Q_ROOT}/lib/libvctr_rs_hmap.so
 RS_LIBS += ${Q_ROOT}/lib/libchnk_rs_hmap.so
 RS_LIBS += ${Q_ROOT}/lib/librs_hmap_core.so 
 RS_LIBS += ${Q_ROOT}/lib/librsutils.so 
+RS_LIBS += ${Q_ROOT}/lib/librswutils.so 
 RS_LIBS += ${Q_ROOT}/lib/libvctr_core.so 
 
 $(LUAJIT_A): $(LJVMCORE_O)
@@ -743,7 +745,7 @@ $(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP)
 		-o $@ $(LUAJIT_O) \
 		$(TARGET_O) \
 		$(TARGET_ALIBS) \
-		${RS_LIBS} 
+		${RS_LIBS} -lcurl -ljansson
 	$(Q)$(TARGET_STRIP) $@
 	mkdir -p ${Q_ROOT}/bin/
 	cp luajit ${Q_ROOT}/bin/qjit # TODO Improve this 

@@ -123,8 +123,15 @@ read_configs(
       status = rmtree(C.meta_dir_root); 
     }
     //---------------------------
-    status = mkdir(C.data_dir_root, 0744); cBYE(status);
+    status = mkdir(C.data_dir_root, 0744); 
+    if ( status != 0 ) { 
+      printf("Unable to make directory %s \n", C.data_dir_root);
+    }
+    cBYE(status);
     status = mkdir(C.meta_dir_root, 0744); cBYE(status);
+    if ( status != 0 ) { 
+      printf("Unable to make directory %s \n", C.meta_dir_root);
+    }
     //---------------------------
     if ( !isdir(C.data_dir_root) ) { go_BYE(-1); }
     if ( !isdir(C.meta_dir_root) ) { go_BYE(-1); }

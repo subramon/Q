@@ -13,6 +13,7 @@ apt-get  --yes install luarocks
 apt-get  --yes install make
 apt-get  --yes install valgrind
 apt-get  --yes install wget
+apt-get  --yes install libjansson-dev
 #-----
 apt-get  --yes install bc
 apt-get  --yes install dc
