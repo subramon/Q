@@ -13,9 +13,9 @@ cplus = Q.vvadd(c3, c4)
 --======== break1
 Q.head(cplus)
 --======== break2
-v_enorm = Q.enorm(c3, c4)
+v_enorm = Q.f_enorm(c3, c4)
 --======== break3
-assert(l_enorm == nil)
+assert(v_enorm == nil)
 f_enorm = 
   Q.register("Q/OPERATORS/F1F2OPF3/lua/expander_f1f2opf3", "f_enorm")
 assert(type(f_enorm) == "function")

@@ -73,9 +73,10 @@ local function validate_meta(
     local width -- how many bytes to allocate per element
     if qtype == "SC" then 
       -- remember 1 byte for nullc
-      width = assert(fld_M.width)
-      assert(type(width) ==  "number")
-      assert(width >= 2)
+      width = assert(fld_M.width, "qtype == SC => width must be provided")
+      assert(type(width) ==  "number",  "width of SC field must be a number")
+
+      assert(width >= 2, "width of SC field >= 2")
       assert(width <= qcfg.max_width_SC, "max width is " .. qcfg.max_width_SC)
     elseif fld_M.qtype == "B1" then 
       width = 1
